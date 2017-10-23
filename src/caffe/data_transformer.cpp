@@ -15,7 +15,7 @@ namespace caffe {
 template<typename Dtype>
 DataTransformer<Dtype>::DataTransformer(const TransformationParameter& param,
                                         Phase phase,
-                                        device *device_context)
+                                        Device *device_context)
     : param_(param),
       phase_(phase), device_(device_context) {
   // check if we want to use mean_file
@@ -551,6 +551,6 @@ int_tp DataTransformer<Dtype>::Rand(int_tp n) {
   return ((*rng)() % n);
 }
 
-INSTANTIATE_CLASS(DataTransformer);
+INSTANTIATE_CLASS_1T(DataTransformer);
 
 }  // namespace caffe

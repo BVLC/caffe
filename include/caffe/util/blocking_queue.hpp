@@ -35,7 +35,7 @@ class BlockingQueue {
   class sync;
 
   std::queue<T> queue_;
-  std::shared_ptr<sync> sync_;
+  shared_ptr<sync> sync_;
 
 DISABLE_COPY_AND_ASSIGN(BlockingQueue);
 };

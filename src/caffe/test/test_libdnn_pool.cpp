@@ -661,7 +661,7 @@ class LibDNNPoolingLayerNDTest : public GPUDeviceTest<TypeParam> {
 
     TypeParam *bottom_data = blob_bottom_->mutable_cpu_data();
 
-    std::vector<TypeParam> maxval(8 * 8);
+    vector<TypeParam> maxval(8 * 8);
 
     for (int_tp cd = 0; cd < d; ++cd) {
       for (int_tp ch = 0; ch < h; ++ch) {
@@ -710,7 +710,7 @@ class LibDNNPoolingLayerNDTest : public GPUDeviceTest<TypeParam> {
 
     TypeParam *bottom_data = blob_bottom_->mutable_cpu_data();
 
-    std::vector<TypeParam> maxval(8);
+    vector<TypeParam> maxval(8);
 
     for (int_tp cd = 0; cd < d; ++cd) {
       for (int_tp ch = 0; ch < h; ++ch) {
@@ -731,7 +731,7 @@ class LibDNNPoolingLayerNDTest : public GPUDeviceTest<TypeParam> {
       top_diff[i] = maxval[i];
     }
 
-    std::vector<bool> prop_down;
+    vector<bool> prop_down;
     prop_down.push_back(true);
 
     layer.Backward(this->blob_top_vec_, prop_down, this->blob_bottom_vec_);
@@ -857,7 +857,7 @@ class LibDNNComparativePoolTest : public GPUDeviceTest<TypeParam> {
     shape.add_dim(fmaps);   // Channels
 
 
-    std::vector<int_tp> pooled_size(dims);
+    vector<int_tp> pooled_size(dims);
 
     for (int_tp i = 0; i < dims; ++i) {
       pooling_param->add_kernel_size(kernelRand(this->rng_));
@@ -1050,7 +1050,7 @@ class LibDNNComparativePoolTest : public GPUDeviceTest<TypeParam> {
     shape.add_dim(fmaps);   // Channels
 
 
-    std::vector<int_tp> pooled_size(dims);
+    vector<int_tp> pooled_size(dims);
 
     for (int_tp i = 0; i < dims; ++i) {
       pooling_param->add_kernel_size(kernelRand(this->rng_));
@@ -1173,7 +1173,7 @@ class LibDNNComparativePoolTest : public GPUDeviceTest<TypeParam> {
     layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
     ref_layer.Forward(this->blob_bottom_vec_ref_, this->blob_top_vec_ref_);
 
-    std::vector<bool> prop_down(1, true);
+    vector<bool> prop_down(1, true);
 
     layer.Backward(blob_top_vec_, prop_down, blob_bottom_vec_);
     ref_layer.Backward(blob_top_vec_ref_, prop_down, blob_bottom_vec_ref_);

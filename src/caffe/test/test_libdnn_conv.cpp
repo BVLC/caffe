@@ -26,7 +26,7 @@ namespace caffe {
 // accumulate through explicit loops over input, output, and filters.
 template <typename Dtype>
 void libdnn_convtest(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
-    const vector<std::shared_ptr<Blob<Dtype> > >& weights,
+    const vector<shared_ptr<Blob<Dtype> > >& weights,
     Blob<Dtype>* out) {
   const bool has_depth = (out->num_axes() == 5);
   if (!has_depth) { CHECK_EQ(4, out->num_axes()); }
@@ -82,14 +82,14 @@ void libdnn_convtest(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
       for (int_tp o = 0; o < o_g; o++) {
         for (int_tp k = 0; k < k_g; k++) {
           for (int_tp z = 0; z < (has_depth ? out->shape(2) : 1); z++) {
-            for (int_tp y = 0; y < out->shape(2 + has_depth); y++) {
-              for (int_tp x = 0; x < out->shape(3 + has_depth); x++) {
+            for (int_tp Y = 0; Y < out->shape(2 + has_depth); Y++) {
+              for (int_tp X = 0; X < out->shape(3 + has_depth); X++) {
                 for (int_tp r = 0; r < kernel_d; r++) {
                   for (int_tp p = 0; p < kernel_h; p++) {
                     for (int_tp q = 0; q < kernel_w; q++) {
                       int_tp in_z = z * stride_d - pad_d + r * dilation_d;
-                      int_tp in_y = y * stride_h - pad_h + p * dilation_h;
-                      int_tp in_x = x * stride_w - pad_w + q * dilation_w;
+                      int_tp in_y = Y * stride_h - pad_h + p * dilation_h;
+                      int_tp in_x = X * stride_w - pad_w + q * dilation_w;
                       if (in_z >= 0 && in_z < (has_depth ? in->shape(2) : 1)
                           && in_y >= 0 && in_y < in->shape(2 + has_depth)
                           && in_x >= 0 && in_x < in->shape(3 + has_depth)) {
@@ -106,8 +106,8 @@ void libdnn_convtest(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
                         out_offset[0] = n;
                         out_offset[1] = o + o_head;
                         if (has_depth) { out_offset[2] = z; }
-                        out_offset[2 + has_depth] = y;
-                        out_offset[3 + has_depth] = x;
+                        out_offset[2 + has_depth] = Y;
+                        out_offset[3 + has_depth] = X;
                         out_data[out->offset(out_offset)] +=
                             in->data_at(in_offset)
                             * weights[0]->data_at(weight_offset);
@@ -128,13 +128,13 @@ void libdnn_convtest(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
     for (int_tp n = 0; n < out->shape(0); n++) {
       for (int_tp o = 0; o < out->shape(1); o++) {
         for (int_tp z = 0; z < (has_depth ? out->shape(2) : 1); z++) {
-          for (int_tp y = 0; y < out->shape(2 + has_depth); y++) {
-            for (int_tp x = 0; x < out->shape(3 + has_depth); x++) {
+          for (int_tp Y = 0; Y < out->shape(2 + has_depth); Y++) {
+            for (int_tp X = 0; X < out->shape(3 + has_depth); X++) {
               out_offset[0] = n;
               out_offset[1] = o;
               if (has_depth) { out_offset[2] = z; }
-              out_offset[2 + has_depth] = y;
-              out_offset[3 + has_depth] = x;
+              out_offset[2 + has_depth] = Y;
+              out_offset[3 + has_depth] = X;
               out_data[out->offset(out_offset)] += bias_data[o];
             }
           }
@@ -146,11 +146,11 @@ void libdnn_convtest(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
 
 template void libdnn_convtest(const Blob<float>* in,
     ConvolutionParameter* conv_param,
-    const vector<std::shared_ptr<Blob<float> > >& weights,
+    const vector<shared_ptr<Blob<float> > >& weights,
     Blob<float>* out);
 template void libdnn_convtest(const Blob<double>* in,
     ConvolutionParameter* conv_param,
-    const vector<std::shared_ptr<Blob<double> > >& weights,
+    const vector<shared_ptr<Blob<double> > >& weights,
     Blob<double>* out);
 
 template <typename Dtype>
@@ -189,7 +189,7 @@ class LibDNNConvolutionLayerTest : public GPUDeviceTest<Dtype> {
   Blob<Dtype>* const blob_bottom_2_;
   Blob<Dtype>* const blob_top_;
   Blob<Dtype>* const blob_top_2_;
-  std::shared_ptr<Blob<Dtype> > ref_blob_top_;
+  shared_ptr<Blob<Dtype> > ref_blob_top_;
   vector<Blob<Dtype>*> blob_bottom_vec_;
   vector<Blob<Dtype>*> blob_top_vec_;
 };
@@ -207,7 +207,7 @@ TYPED_TEST(LibDNNConvolutionLayerTest, TestSetupLibDNN) {
   convolution_param->set_num_output(4);
   this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
   this->blob_top_vec_.push_back(this->blob_top_2_);
-  std::shared_ptr<Layer<TypeParam> > layer(
+  shared_ptr<Layer<TypeParam> > layer(
       new LibDNNConvolutionLayer<TypeParam>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), 2);
@@ -245,7 +245,7 @@ TYPED_TEST(LibDNNConvolutionLayerTest, TestSimpleConvolutionLibDNN) {
   convolution_param->mutable_weight_filler()->set_type("gaussian");
   convolution_param->mutable_bias_filler()->set_type("constant");
   convolution_param->mutable_bias_filler()->set_value(0.1);
-  std::shared_ptr<Layer<TypeParam> > layer(
+  shared_ptr<Layer<TypeParam> > layer(
       new LibDNNConvolutionLayer<TypeParam>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -279,7 +279,7 @@ TYPED_TEST(LibDNNConvolutionLayerTest, TestSimpleConvolutionGroupLibDNN) {
   convolution_param->mutable_weight_filler()->set_type("gaussian");
   convolution_param->mutable_bias_filler()->set_type("constant");
   convolution_param->mutable_bias_filler()->set_value(0.1);
-  std::shared_ptr<Layer<TypeParam> > layer(
+  shared_ptr<Layer<TypeParam> > layer(
       new LibDNNConvolutionLayer<TypeParam>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -300,13 +300,13 @@ TYPED_TEST(LibDNNConvolutionLayerTest, TestSobelConvolutionLibDNN) {
   // as a single filter then comparing the result
   // as the convolution of two rectangular filters.
   // Fill bottoms with identical Gaussian noise.
-  std::shared_ptr<GaussianFiller<TypeParam> > filler;
+  shared_ptr<GaussianFiller<TypeParam> > filler;
   FillerParameter filler_param;
   filler_param.set_value(1.);
   filler.reset(new GaussianFiller<TypeParam>(filler_param));
   filler->Fill(this->blob_bottom_);
   this->blob_bottom_2_->CopyFrom(*this->blob_bottom_);
-  // Compute Sobel G_x operator as 3 x 3 convolution.
+  // Compute Sobel G_x operator as 3 X 3 convolution.
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
       layer_param.mutable_convolution_param();
@@ -314,13 +314,13 @@ TYPED_TEST(LibDNNConvolutionLayerTest, TestSobelConvolutionLibDNN) {
   convolution_param->add_stride(2);
   convolution_param->set_num_output(1);
   convolution_param->set_bias_term(false);
-  std::shared_ptr<Layer<TypeParam> > layer(
+  shared_ptr<Layer<TypeParam> > layer(
       new LibDNNConvolutionLayer<TypeParam>(layer_param));
   layer->blobs().resize(1);
   layer->blobs()[0].reset(new Blob<TypeParam>(1, 3, 3, 3));
   TypeParam* weights = layer->blobs()[0]->mutable_cpu_data();
   for (int_tp c = 0; c < 3; ++c) {
-    int_tp i = c * 9;  // 3 x 3 filter
+    int_tp i = c * 9;  // 3 X 3 filter
     weights[i +  0] = -1;
     weights[i +  1] =  0;
     weights[i +  2] =  1;
@@ -333,11 +333,11 @@ TYPED_TEST(LibDNNConvolutionLayerTest, TestSobelConvolutionLibDNN) {
   }
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  // Compute Sobel G_x operator as separable 3 x 1 and 1 x 3 convolutions.
+  // Compute Sobel G_x operator as separable 3 X 1 and 1 X 3 convolutions.
   // (1) the [1 2 1] column filter
   vector<Blob<TypeParam>*> sep_blob_bottom_vec;
   vector<Blob<TypeParam>*> sep_blob_top_vec;
-  std::shared_ptr<Blob<TypeParam> > blob_sep(new Blob<TypeParam>());
+  shared_ptr<Blob<TypeParam> > blob_sep(new Blob<TypeParam>());
   sep_blob_bottom_vec.push_back(this->blob_bottom_2_);
   sep_blob_top_vec.push_back(this->blob_top_2_);
   convolution_param->clear_kernel_size();
@@ -353,7 +353,7 @@ TYPED_TEST(LibDNNConvolutionLayerTest, TestSobelConvolutionLibDNN) {
   layer->blobs()[0].reset(new Blob<TypeParam>(1, 3, 3, 1));
   TypeParam* weights_1 = layer->blobs()[0]->mutable_cpu_data();
   for (int_tp c = 0; c < 3; ++c) {
-    int_tp i = c * 3;  // 3 x 1 filter
+    int_tp i = c * 3;  // 3 X 1 filter
     weights_1[i +  0] = 1;
     weights_1[i +  1] = 2;
     weights_1[i +  2] = 1;
@@ -535,7 +535,7 @@ class LibDNNConvolutionNDLayerTest : public GPUDeviceTest<TypeParam> {
 
     *top_diff = 1;
 
-    std::vector<bool> prop_down;
+    vector<bool> prop_down;
     prop_down.push_back(true);
 
     layer.Backward(this->blob_top_vec_, prop_down, this->blob_bottom_vec_);
@@ -972,7 +972,7 @@ class LibDNNComparativeConvTest : public GPUDeviceTest<TypeParam> {
     layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
     ref_layer.Forward(this->blob_bottom_vec_ref_, this->blob_top_vec_ref_);
 
-    std::vector<bool> prop_down(1, true);
+    vector<bool> prop_down(1, true);
 
     layer.Backward(blob_top_vec_, prop_down, blob_bottom_vec_);
     ref_layer.Backward(blob_top_vec_ref_, prop_down, blob_bottom_vec_ref_);

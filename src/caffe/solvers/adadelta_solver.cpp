@@ -12,13 +12,14 @@ void AdaDeltaSolver<Dtype>::AdaDeltaPreSolve() {
   for (int i = 0; i < net_params.size(); ++i) {
         const vector<int_tp>& shape = net_params[i]->shape();
         this->history_.push_back(
-         std::shared_ptr<Blob<Dtype> >(new Blob<Dtype>(shape, this->device_)));
+         shared_ptr<Blob<Dtype> >(new Blob<Dtype>(shape, this->device_)));
   }
 }
 
 #ifndef CPU_ONLY
 template<typename Dtype>
-void adadelta_update_gpu(device* dev, int_tp N, Dtype* g, Dtype* h, Dtype* h2,
+void adadelta_update_gpu(Device* dev, DeviceProgram* dev_prog, uint_tp n,
+                         vptr<Dtype> g, vptr<Dtype> h, vptr<Dtype> h2,
                          Dtype momentum, Dtype delta, Dtype local_rate);
 #endif
 
@@ -91,7 +92,8 @@ void AdaDeltaSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
   }
   case Caffe::GPU: {
 #ifndef CPU_ONLY
-    adadelta_update_gpu(this->device_, net_params[param_id]->count(),
+    adadelta_update_gpu(this->device_, this->device_program_.get(),
+        net_params[param_id]->count(),
         net_params[param_id]->mutable_gpu_diff(),
         this->history_[param_id]->mutable_gpu_data(),
         this->history_[update_history_offset + param_id]->mutable_gpu_data(),
@@ -106,7 +108,7 @@ void AdaDeltaSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
   }
 }
 
-INSTANTIATE_CLASS(AdaDeltaSolver);
+INSTANTIATE_CLASS_1T(AdaDeltaSolver);
 REGISTER_SOLVER_CLASS(AdaDelta);
 
 }  // namespace caffe

@@ -71,9 +71,9 @@ class LibDNN {
  protected:
   explicit LibDNN();
   virtual void GenerateKernels() = 0;
-  virtual std::string string_identifier() = 0;
-  std::string generate_header();
-  std::string generate_common_defs();
+  virtual string string_identifier() = 0;
+  string generate_header();
+  string generate_common_defs();
   bool CompileKernels();
   void AllocateMemory(void** ptr, uint_tp size, int_tp flags);
   void SetMemory(Dtype* memory, int_tp count, int_tp offset, Dtype value);
@@ -85,7 +85,7 @@ class LibDNN {
 #endif  // USE_CUDA
 
   template<class T>
-  inline void add_def(std::stringstream& ss,  // NOLINT
+  inline void add_def(stringstream& ss,  // NOLINT
       const char* name, T value) {
     ss << "#ifdef " << name << std::endl;
     ss << "#undef " << name << std::endl;
@@ -102,12 +102,12 @@ class LibDNN {
   }
 
   template<class T>
-  inline void add_def(std::stringstream& ss,  // NOLINT
-      const std::string name, T value) {
+  inline void add_def(stringstream& ss,  // NOLINT
+      const string name, T value) {
     add_def(ss, name.c_str(), value);
   }
 
-  device* dev_ptr_;
+  Device* dev_ptr_;
 
 #ifdef USE_OPENCL
   viennacl::ocl::program ocl_program_;
@@ -118,7 +118,7 @@ class LibDNN {
   CUmodule cuda_module_;
 #endif  // USE_CUDA
 
-  std::string kernel_;
+  string kernel_;
   bool fast_unsafe_math_;
 };
 
@@ -131,13 +131,13 @@ struct LibDNNConvConfig {
     stride(1, 1),
     dilation(1, 1)
   {}
-  device* dev_ptr = nullptr;
-  std::vector<int_tp> in_shape;
-  std::vector<int_tp> out_shape;
-  std::vector<int_tp> kernel;
-  std::vector<int_tp> pad;
-  std::vector<int_tp> stride;
-  std::vector<int_tp> dilation;
+  Device* dev_ptr = nullptr;
+  vector<int_tp> in_shape;
+  vector<int_tp> out_shape;
+  vector<int_tp> kernel;
+  vector<int_tp> pad;
+  vector<int_tp> stride;
+  vector<int_tp> dilation;
   int_tp group = 1;
   bool bias_term = false;
   bool fast_unsafe_math = false;
@@ -177,22 +177,22 @@ class LibDNNConv : public LibDNN<Dtype> {
 
  protected:
   void GenerateKernels();
-  std::string string_identifier();
-  std::string generate_fw_defs();
-  std::string generate_bw_defs();
-  std::string generate_wg_defs();
-  std::string generate_gemm_core(std::shared_ptr<LibDNNTuner> tuner,
+  string string_identifier();
+  string generate_fw_defs();
+  string generate_bw_defs();
+  string generate_wg_defs();
+  string generate_gemm_core(shared_ptr<LibDNNTuner> tuner,
                                  bool dterm);
-  std::string generate_accreg_init(std::shared_ptr<LibDNNTuner> tuner,
+  string generate_accreg_init(shared_ptr<LibDNNTuner> tuner,
                                    bool dterm, bool load);
-  std::string generate_fw_kernels(std::string name);
-  std::string generate_bw_kernels(std::string name);
-  std::string generate_wg_kernels(std::string name);
+  string generate_fw_kernels(string name);
+  string generate_bw_kernels(string name);
+  string generate_wg_kernels(string name);
 
   // Autotuners
-  std::shared_ptr<LibDNNTuner> fw_tuner_;
-  std::shared_ptr<LibDNNTuner> bw_tuner_;
-  std::shared_ptr<LibDNNTuner> wg_tuner_;
+  shared_ptr<LibDNNTuner> fw_tuner_;
+  shared_ptr<LibDNNTuner> bw_tuner_;
+  shared_ptr<LibDNNTuner> wg_tuner_;
 
   // Forward GEMM sizes
   int_tp M_FW_;
@@ -221,12 +221,12 @@ class LibDNNConv : public LibDNN<Dtype> {
   int_tp fmaps_out_;
   int_tp group_;
 
-  std::vector<int_tp> pad_;
-  std::vector<int_tp> stride_;
-  std::vector<int_tp> dilation_;
-  std::vector<int_tp> kernel_shape_;
-  std::vector<int_tp> im_in_shape_;
-  std::vector<int_tp> im_out_shape_;
+  vector<int_tp> pad_;
+  vector<int_tp> stride_;
+  vector<int_tp> dilation_;
+  vector<int_tp> kernel_shape_;
+  vector<int_tp> im_in_shape_;
+  vector<int_tp> im_out_shape_;
 
   // Compile and method flags
   bool weights_backward_;
@@ -250,13 +250,13 @@ struct LibDNNDeconvConfig {
     stride(1, 1),
     dilation(1, 1)
   {}
-  device* dev_ptr = nullptr;
-  std::vector<int_tp> in_shape;
-  std::vector<int_tp> out_shape;
-  std::vector<int_tp> kernel;
-  std::vector<int_tp> pad;
-  std::vector<int_tp> stride;
-  std::vector<int_tp> dilation;
+  Device* dev_ptr = nullptr;
+  vector<int_tp> in_shape;
+  vector<int_tp> out_shape;
+  vector<int_tp> kernel;
+  vector<int_tp> pad;
+  vector<int_tp> stride;
+  vector<int_tp> dilation;
   int_tp group = 1;
   bool bias_term = false;
   bool fast_unsafe_math = false;
@@ -294,13 +294,13 @@ class LibDNNDeconv : public LibDNNConv<Dtype> {
 
  protected:
   void GenerateKernels();
-  std::string string_identifier();
-  std::string generate_fw_defs();
-  std::string generate_bw_defs();
-  std::string generate_wg_defs();
-  std::string generate_fw_kernels(std::string name);
-  std::string generate_bw_kernels(std::string name);
-  std::string generate_wg_kernels(std::string name);
+  string string_identifier();
+  string generate_fw_defs();
+  string generate_bw_defs();
+  string generate_wg_defs();
+  string generate_fw_kernels(string name);
+  string generate_bw_kernels(string name);
+  string generate_wg_kernels(string name);
 
   // Bias GEMV sizes
   int_tp M_BG_;
@@ -339,9 +339,9 @@ class LibDNNConvSpatial : public LibDNNConv<Dtype> {
 
  protected:
   void GenerateKernels();
-  std::string string_identifier();
-  std::string generate_fw_defs();
-  std::string generate_fw_kernels(int_tp kernelType,
+  string string_identifier();
+  string generate_fw_defs();
+  string generate_fw_kernels(int_tp kernelType,
                                   int_tp blockM,
                                   int_tp blockK,
                                   int_tp blockN);
@@ -367,10 +367,10 @@ class LibDNNConvSpatial : public LibDNNConv<Dtype> {
                  bool tune, bool swizzle, bool null_local,
                  int_tp type = 0) {
       kernelName = name;
-      for (int_tp x = 0; x < 3; x++) {
-        local_work_size[x] = local_size[x];
-        global_work_size[x] = global_size[x];
-        workItem_output[x] = workItem[x];
+      for (int_tp X = 0; X < 3; X++) {
+        local_work_size[X] = local_size[X];
+        global_work_size[X] = global_size[X];
+        workItem_output[X] = workItem[X];
       }
       autoTune = tune;
       swizzle_weights = swizzle;
@@ -430,7 +430,7 @@ class LibDNNConvSpatial : public LibDNNConv<Dtype> {
                               int_tp swizzle_factor,
                               bool interleave = false);
   virtual void generate_key();
-  virtual std::string generate_specific_key(int_tp type, int_tp blockWidth,
+  virtual string generate_specific_key(int_tp type, int_tp blockWidth,
   int_tp blockHeight,
                                             int_tp blockDepth);
   virtual void calculate_global_size(int_tp batch, int_tp* workItemOutput,
@@ -450,7 +450,7 @@ class LibDNNConvSpatial : public LibDNNConv<Dtype> {
   void cleanTmpSubBuffers(const Dtype *bottom,
                           const Dtype *top);
   std::map<std::tuple<cl_mem, size_t, size_t>, cl_mem> subBufferMap;
-  std::vector<cl_mem> tmpSubBuffers;
+  vector<cl_mem> tmpSubBuffers;
   const Dtype* bottom_data_;
   Dtype* top_data_;
   Dtype* col_data_;
@@ -475,7 +475,7 @@ class LibDNNConvSpatial : public LibDNNConv<Dtype> {
   /// K_ is the dimension of an unrolled input for a single group, which is the
   /// leading dimension of the data matrix.
 
-  /// N_ is the spatial dimension of the output, the H x W, which are the last
+  /// N_ is the spatial dimension of the output, the H X W, which are the last
   /// dimensions of the data and filter matrices.
 
   bool tuned_;
@@ -485,10 +485,10 @@ class LibDNNConvSpatial : public LibDNNConv<Dtype> {
   // need to handle it.
   bool need_padding_;
 
-  std::string key_;
-  std::string short_key_;
-  std::string kernel_name_;
-  std::stringstream cache_path_;
+  string key_;
+  string short_key_;
+  string kernel_name_;
+  stringstream cache_path_;
 
   Dtype *swizzled_weights_;
 
@@ -513,10 +513,10 @@ class LibDNNConvSpatial : public LibDNNConv<Dtype> {
   int_tp blockM_;
   int_tp blockK_;
   int_tp blockN_;
-  std::string options_;
+  string options_;
 
   LibDNNConvConfig config_;
-  std::shared_ptr<LibDNNConv<Dtype> > libdnn_conv_;
+  shared_ptr<LibDNNConv<Dtype> > libdnn_conv_;
 };
 #endif
 
@@ -529,13 +529,13 @@ struct LibDNNPoolConfig {
     stride(1, 1),
     dilation(1, 1)
   {}
-  device* dev_ptr = nullptr;
-  std::vector<int_tp> in_shape;
-  std::vector<int_tp> out_shape;
-  std::vector<int_tp> kernel;
-  std::vector<int_tp> pad;
-  std::vector<int_tp> stride;
-  std::vector<int_tp> dilation;
+  Device* dev_ptr = nullptr;
+  vector<int_tp> in_shape;
+  vector<int_tp> out_shape;
+  vector<int_tp> kernel;
+  vector<int_tp> pad;
+  vector<int_tp> stride;
+  vector<int_tp> dilation;
   bool use_top_mask = false;
   bool fast_unsafe_math = false;
   libdnnPoolingMethod_t pool_method = LIBDNN_POOLING_METHOD_MAX;
@@ -562,30 +562,30 @@ class LibDNNPool : public LibDNN<Dtype> {
 
  protected:
   void GenerateKernels();
-  std::string string_identifier();
-  std::string generate_fw_defs();
-  std::string generate_bw_defs();
-  std::string generate_fw_kernels(std::string name, bool test_mode);
-  std::string generate_fwtr_kernels(std::string name);
-  std::string generate_fwte_kernels(std::string name);
-  std::string generate_bw_kernels(std::string name);
+  string string_identifier();
+  string generate_fw_defs();
+  string generate_bw_defs();
+  string generate_fw_kernels(string name, bool test_mode);
+  string generate_fwtr_kernels(string name);
+  string generate_fwte_kernels(string name);
+  string generate_bw_kernels(string name);
 
  private:
   LibDNNPoolConfig config_;
 
   // Autotuners
-  std::shared_ptr<LibDNNTuner> fw_tuner_;
-  std::shared_ptr<LibDNNTuner> bw_tuner_;
+  shared_ptr<LibDNNTuner> fw_tuner_;
+  shared_ptr<LibDNNTuner> bw_tuner_;
 
   // Pooling parameters
   int_tp num_axes_;
 
-  std::vector<int_tp> pad_;
-  std::vector<int_tp> stride_;
-  std::vector<int_tp> dilation_;
-  std::vector<int_tp> kernel_shape_;
-  std::vector<int_tp> im_in_shape_;
-  std::vector<int_tp> im_out_shape_;
+  vector<int_tp> pad_;
+  vector<int_tp> stride_;
+  vector<int_tp> dilation_;
+  vector<int_tp> kernel_shape_;
+  vector<int_tp> im_in_shape_;
+  vector<int_tp> im_out_shape_;
 
   // Working memory for stochastic and max pooling
   int_tp* mask_ = nullptr;

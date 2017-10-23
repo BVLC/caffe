@@ -37,7 +37,7 @@
 
 using namespace caffe;  // NOLINT(build/namespaces)
 using boost::scoped_ptr;
-using std::string;
+using string;
 
 DEFINE_string(backend, "lmdb", "The backend for storing the result");
 

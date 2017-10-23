@@ -72,13 +72,13 @@ void SGDSolver<Dtype>::PreSolve() {
   for (uint_tp i = 0; i < net_params.size(); ++i) {
     const vector<int_tp>& shape = net_params[i]->shape();
     history_.push_back(
-        std::shared_ptr<Blob<Dtype>>(
+        shared_ptr<Blob<Dtype>>(
             new Blob<Dtype>(shape, this->device_)));
     update_.push_back(
-        std::shared_ptr<Blob<Dtype>>(
+        shared_ptr<Blob<Dtype>>(
             new Blob<Dtype>(shape, this->device_)));
     temp_.push_back(
-        std::shared_ptr<Blob<Dtype>>(
+        shared_ptr<Blob<Dtype>>(
             new Blob<Dtype>(shape, this->device_)));
   }
 }
@@ -137,19 +137,9 @@ void SGDSolver<Dtype>::Normalize(int param_id) {
     }
     case Caffe::GPU: {
 #ifndef CPU_ONLY
-      if (this->device_->backend() == BACKEND_CUDA) {
-#ifdef USE_CUDA
-        caffe_gpu_scal(net_params[param_id]->count(), accum_normalization,
-                       net_params[param_id]->mutable_gpu_diff());
-#endif  // USE_CUDA
-      } else {
-#ifdef USE_OPENCL
-        greentea_gpu_scal(this->device_->id(),
-                          net_params[param_id]->count(), accum_normalization,
-                          (cl_mem) (net_params[param_id]->mutable_gpu_diff()),
-                          0);
-#endif  // USE_OPENCL
-      }
+      this->device_->template scal<Dtype>(net_params[param_id]->count(),
+                                 accum_normalization,
+                                 net_params[param_id]->mutable_gpu_diff());
 #else
       NO_GPU;
 #endif
@@ -157,8 +147,8 @@ void SGDSolver<Dtype>::Normalize(int param_id) {
     }
     default:
       LOG(FATAL)<< "Unknown caffe mode: " << Caffe::mode();
-    }
   }
+}
 
 template<typename Dtype>
 void SGDSolver<Dtype>::Regularize(int param_id) {
@@ -191,55 +181,25 @@ void SGDSolver<Dtype>::Regularize(int param_id) {
     }
     case Caffe::GPU: {
 #ifndef CPU_ONLY
-      if (this->device_->backend() == BACKEND_CUDA) {
-#ifdef USE_CUDA
-        if (local_decay) {
-          if (regularization_type == "L2") {
-            // add weight decay
-            caffe_gpu_axpy(net_params[param_id]->count(),
-                local_decay,
-                net_params[param_id]->gpu_data(),
-                net_params[param_id]->mutable_gpu_diff());
-          } else if (regularization_type == "L1") {
-            caffe_gpu_sign(net_params[param_id]->count(),
-                net_params[param_id]->gpu_data(),
-                temp_[param_id]->mutable_gpu_data());
-            caffe_gpu_axpy(net_params[param_id]->count(),
-                local_decay,
-                temp_[param_id]->gpu_data(),
-                net_params[param_id]->mutable_gpu_diff());
-          } else {
-            LOG(FATAL)<< "Unknown regularization type: "
-                << regularization_type;
-          }
+      if (local_decay) {
+        if (regularization_type == "L2") {
+          // add weight decay
+          this->device_->axpy<Dtype>(net_params[param_id]->count(),
+              local_decay,
+              net_params[param_id]->gpu_data(),
+              net_params[param_id]->mutable_gpu_diff());
+        } else if (regularization_type == "L1") {
+          this->device_->sign<Dtype>(net_params[param_id]->count(),
+              net_params[param_id]->gpu_data(),
+              temp_[param_id]->mutable_gpu_data());
+          this->device_->axpy<Dtype>(net_params[param_id]->count(),
+              local_decay,
+              temp_[param_id]->gpu_data(),
+              net_params[param_id]->mutable_gpu_diff());
+        } else {
+          LOG(FATAL)<< "Unknown regularization type: "
+              << regularization_type;
         }
-#endif  // USE_CUDA
-      } else {
-#ifdef USE_OPENCL
-        if (local_decay) {
-          if (regularization_type == "L2") {
-            // add weight decay
-            greentea_gpu_axpy<Dtype>(this->device_->id(),
-                                     net_params[param_id]->count(),
-                local_decay,
-                (cl_mem)(net_params[param_id]->gpu_data()), 0,
-                (cl_mem)(net_params[param_id]->mutable_gpu_diff()), 0);
-          } else if (regularization_type == "L1") {
-            greentea_gpu_sign<Dtype>(this->device_->id(),
-                                     net_params[param_id]->count(),
-                (cl_mem)(net_params[param_id]->gpu_data()), 0,
-                (cl_mem)(temp_[param_id]->mutable_gpu_data()), 0);
-            greentea_gpu_axpy<Dtype>(this->device_->id(),
-                                     net_params[param_id]->count(),
-                local_decay,
-                (cl_mem)(temp_[param_id]->gpu_data()), 0,
-                (cl_mem)(net_params[param_id]->mutable_gpu_diff()), 0);
-          } else {
-            LOG(FATAL)<< "Unknown regularization type: "
-                << regularization_type;
-          }
-        }
-#endif  // USE_OPENCL
       }
 #else
       NO_GPU;
@@ -254,8 +214,9 @@ void SGDSolver<Dtype>::Regularize(int param_id) {
 
 #ifndef CPU_ONLY
 template<typename Dtype>
-void sgd_update_gpu(device* dev, int_tp N, Dtype* g, Dtype* h, Dtype momentum,
-                    Dtype local_rate);
+void sgd_update_gpu(Device* dev, DeviceProgram* dev_prog,
+                    uint_tp n, vptr<Dtype> g, vptr<Dtype> h,
+                    Dtype momentum, Dtype local_rate);
 #endif
 
 template <typename Dtype>
@@ -277,10 +238,11 @@ void SGDSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
     }
     case Caffe::GPU: {
 #ifndef CPU_ONLY
-    sgd_update_gpu(this->device_, net_params[param_id]->count(),
-        net_params[param_id]->mutable_gpu_diff(),
-        history_[param_id]->mutable_gpu_data(),
-        momentum, local_rate);
+    sgd_update_gpu(this->device_, this->device_program_.get(),
+                   net_params[param_id]->count(),
+                   net_params[param_id]->mutable_gpu_diff(),
+                   history_[param_id]->mutable_gpu_data(),
+                   momentum, local_rate);
 #else
       NO_GPU;
 #endif
@@ -408,7 +370,7 @@ void SGDSolver<Dtype>::RestoreSolverStateFromHDF5(const string& state_file) {
 #endif  // USE_HDF5
 }
 
-INSTANTIATE_CLASS(SGDSolver);
+INSTANTIATE_CLASS_1T(SGDSolver);
 REGISTER_SOLVER_CLASS(SGD);
 
 }  // namespace caffe

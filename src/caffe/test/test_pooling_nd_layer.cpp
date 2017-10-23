@@ -73,7 +73,7 @@ class PoolingNDLayerTest : public GPUDeviceTest<TypeParam> {
 
     TypeParam *bottom_data = blob_bottom_->mutable_cpu_data();
 
-    std::vector<TypeParam> maxval(8 * 8);
+    vector<TypeParam> maxval(8 * 8);
 
     for (int_tp cd = 0; cd < d; ++cd) {
       for (int_tp ch = 0; ch < h; ++ch) {
@@ -122,7 +122,7 @@ class PoolingNDLayerTest : public GPUDeviceTest<TypeParam> {
 
     TypeParam *bottom_data = blob_bottom_->mutable_cpu_data();
 
-    std::vector<TypeParam> maxval(8);
+    vector<TypeParam> maxval(8);
 
     for (int_tp cd = 0; cd < d; ++cd) {
       for (int_tp ch = 0; ch < h; ++ch) {
@@ -143,7 +143,7 @@ class PoolingNDLayerTest : public GPUDeviceTest<TypeParam> {
       top_diff[i] = maxval[i];
     }
 
-    std::vector<bool> prop_down;
+    vector<bool> prop_down;
     prop_down.push_back(true);
 
     layer.Backward(this->blob_top_vec_, prop_down, this->blob_bottom_vec_);

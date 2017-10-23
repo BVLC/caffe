@@ -135,15 +135,15 @@ void LibDNNTuner::Tune(libdnnTunerMethod_t method) {
 }
 
 void LibDNNTuner::Snapshot(double score) {
-  std::shared_ptr<LibDNNTunerSnapshot>
+  shared_ptr<LibDNNTunerSnapshot>
         snapshot(new LibDNNTunerSnapshot(score, &params_));
   snapshots_.push_back(snapshot);
   snapshot_queue_.push(snapshot);
 }
 
 void LibDNNTuner::RestoreSnapshot(
-    std::shared_ptr<LibDNNTunerSnapshot> snapshot) {
-  std::vector<std::shared_ptr<LibDNNTunerParam>>* params =
+    shared_ptr<LibDNNTunerSnapshot> snapshot) {
+  vector<shared_ptr<LibDNNTunerParam>>* params =
       snapshot->get_params();
   for (int i = 0; i < params_.size(); ++i) {
     params_[i]->update((*params)[i]);
@@ -151,9 +151,9 @@ void LibDNNTuner::RestoreSnapshot(
 }
 
 template<class T>
-void LibDNNTuner::add_range_param(std::string name,
+void LibDNNTuner::add_range_param(string name,
                                   T def_value, T min, T max, T step) {
-  std::vector<T> values;
+  vector<T> values;
 
   T value = static_cast<T>(def_value);
 
@@ -174,25 +174,25 @@ void LibDNNTuner::add_range_param(std::string name,
   while (value <= vmax) {
     value += step;
     if (value >= vmin && value <= vmax) {
-      values.push_back(value);  std::vector<T> set_values;
+      values.push_back(value);  vector<T> set_values;
     }
   }
 
   add_set_param(name, def_value, values);
 }
-template void LibDNNTuner::add_range_param(std::string name, float def_value,
+template void LibDNNTuner::add_range_param(string name, float def_value,
                                   float min, float max, float step);
-template void LibDNNTuner::add_range_param(std::string name, double def_value,
+template void LibDNNTuner::add_range_param(string name, double def_value,
                                   double min, double max, double step);
-template void LibDNNTuner::add_range_param(std::string name, int32_t def_value,
+template void LibDNNTuner::add_range_param(string name, int32_t def_value,
                                   int32_t min, int32_t max, int32_t step);
-template void LibDNNTuner::add_range_param(std::string name, int64_t def_value,
+template void LibDNNTuner::add_range_param(string name, int64_t def_value,
                                   int64_t min, int64_t max, int64_t step);
 
 template<class T>
 void LibDNNTuner::add_range_param(const char* name,
                                   T def_value, T min, T max, T step) {
-  std::string str(name);
+  string str(name);
   add_range_param<T>(str, def_value, min, max, step);
 }
 template void LibDNNTuner::add_range_param(const char* name, float def_value,
@@ -206,10 +206,10 @@ template void LibDNNTuner::add_range_param(const char* name, int64_t def_value,
 
 
 template<class T>
-void LibDNNTuner::add_set_param(std::string name,
-                                T def_value, std::vector<T> values) {
+void LibDNNTuner::add_set_param(string name,
+                                T def_value, vector<T> values) {
   if (is_same<T, float>::value || is_same<T, double>::value) {
-    std::vector<double> set_values;
+    vector<double> set_values;
     int_tp def_idx = -1;
     for (int_tp i = 0; i < values.size(); ++i) {
       set_values.push_back(values[i]);
@@ -221,15 +221,15 @@ void LibDNNTuner::add_set_param(std::string name,
       def_idx = set_values.size();
       set_values.push_back(def_value);
     }
-    std::shared_ptr<LibDNNTunerParam> param(
+    shared_ptr<LibDNNTunerParam> param(
         new LibDNNTunerParamReal(this, name, set_values, def_idx));
     params_.push_back(param);
-    param_map_.insert(std::pair<std::string,
-                      std::shared_ptr<LibDNNTunerParam>>(name, param));
+    param_map_.insert(std::pair<string,
+                      shared_ptr<LibDNNTunerParam>>(name, param));
   }
 
   if (is_same<T, bool>::value) {
-    std::vector<bool> set_values;
+    vector<bool> set_values;
     int_tp def_idx = -1;
     for (int_tp i = 0; i < values.size(); ++i) {
       set_values.push_back(values[i]);
@@ -241,15 +241,15 @@ void LibDNNTuner::add_set_param(std::string name,
       def_idx = set_values.size();
       set_values.push_back(def_value);
     }
-    std::shared_ptr<LibDNNTunerParam> param(
+    shared_ptr<LibDNNTunerParam> param(
         new LibDNNTunerParamBool(this, name, set_values, def_idx));
     params_.push_back(param);
-    param_map_.insert(std::pair<std::string,
-                      std::shared_ptr<LibDNNTunerParam>>(name, param));
+    param_map_.insert(std::pair<string,
+                      shared_ptr<LibDNNTunerParam>>(name, param));
   }
 
   if (is_same<T, int32_t>::value || is_same<T, int64_t>::value) {
-    std::vector<int64_t> set_values;
+    vector<int64_t> set_values;
     int_tp def_idx = -1;
     for (int_tp i = 0; i < values.size(); ++i) {
       set_values.push_back(values[i]);
@@ -261,25 +261,25 @@ void LibDNNTuner::add_set_param(std::string name,
       def_idx = set_values.size();
       set_values.push_back(def_value);
     }
-    std::shared_ptr<LibDNNTunerParam>
+    shared_ptr<LibDNNTunerParam>
           param(new LibDNNTunerParamInt(this, name, set_values, def_idx));
     params_.push_back(param);
-    param_map_.insert(std::pair<std::string,
-                      std::shared_ptr<LibDNNTunerParam>>(name, param));
+    param_map_.insert(std::pair<string,
+                      shared_ptr<LibDNNTunerParam>>(name, param));
   }
 }
-template void LibDNNTuner::add_set_param(std::string name,
-                            float def_value, std::vector<float> values);
-template void LibDNNTuner::add_set_param(std::string name,
-                            double def_value, std::vector<double> values);
-template void LibDNNTuner::add_set_param(std::string name,
-                            int32_t def_value, std::vector<int32_t> values);
-template void LibDNNTuner::add_set_param(std::string name,
-                            int64_t def_value, std::vector<int64_t> values);
+template void LibDNNTuner::add_set_param(string name,
+                            float def_value, vector<float> values);
+template void LibDNNTuner::add_set_param(string name,
+                            double def_value, vector<double> values);
+template void LibDNNTuner::add_set_param(string name,
+                            int32_t def_value, vector<int32_t> values);
+template void LibDNNTuner::add_set_param(string name,
+                            int64_t def_value, vector<int64_t> values);
 
 template<class T>
 void LibDNNTuner::restrict_param(const char* name, T min_value, T max_value) {
-  std::string str(name);
+  string str(name);
   restrict_param<T>(str, min_value, max_value);
 }
 template void LibDNNTuner::restrict_param(const char* name,
@@ -293,220 +293,220 @@ template void LibDNNTuner::restrict_param(const char* name,
 
 
 template<class T>
-void LibDNNTuner::restrict_param(std::string name,
+void LibDNNTuner::restrict_param(string name,
                                           T min_value, T max_value) {
-  std::shared_ptr<LibDNNTunerParam> param = param_map_.at(name);
+  shared_ptr<LibDNNTunerParam> param = param_map_.at(name);
 
-  std::shared_ptr<LibDNNTunerParamBool> param_bool =
+  shared_ptr<LibDNNTunerParamBool> param_bool =
       std::dynamic_pointer_cast<LibDNNTunerParamBool>(param);
   if (param_bool.get() != nullptr) {
     param_bool->restrict_values(min_value, max_value);
   }
 
-  std::shared_ptr<LibDNNTunerParamInt> param_int =
+  shared_ptr<LibDNNTunerParamInt> param_int =
       std::dynamic_pointer_cast<LibDNNTunerParamInt>(param);
   if (param_int.get() != nullptr) {
     param_int->restrict_values(min_value, max_value);
   }
 
-  std::shared_ptr<LibDNNTunerParamReal> param_real =
+  shared_ptr<LibDNNTunerParamReal> param_real =
       std::dynamic_pointer_cast<LibDNNTunerParamReal>(param);
   if (param_real.get() != nullptr) {
     param_real->restrict_values(min_value, max_value);
   }
 }
-template void LibDNNTuner::restrict_param(std::string name,
+template void LibDNNTuner::restrict_param(string name,
                             float min_value, float max_value);
-template void LibDNNTuner::restrict_param(std::string name,
+template void LibDNNTuner::restrict_param(string name,
                             double min_value, double max_value);
-template void LibDNNTuner::restrict_param(std::string name,
+template void LibDNNTuner::restrict_param(string name,
                             int32_t min_value, int32_t max_value);
-template void LibDNNTuner::restrict_param(std::string name,
+template void LibDNNTuner::restrict_param(string name,
                             int64_t min_value, int64_t max_value);
 
 
 template<>
-void LibDNNTuner::add_constraint(std::vector<std::string> con_params,
-                    std::vector<std::string> con_adapt,
-                    std::function<bool(std::vector<bool>)> con_func) {
-  std::shared_ptr<LibDNNTunerConstraint> constraint;
-  constraint = std::shared_ptr<LibDNNTunerConstraint>(
+void LibDNNTuner::add_constraint(vector<string> con_params,
+                    vector<string> con_adapt,
+                    std::function<bool(vector<bool>)> con_func) {
+  shared_ptr<LibDNNTunerConstraint> constraint;
+  constraint = shared_ptr<LibDNNTunerConstraint>(
       new LibDNNTunerConstraintBool(
       this, con_params, con_adapt, con_func));
   constraints_.push_back(constraint);
   for (int_tp i = 0; i < con_params.size(); ++i) {
-    std::shared_ptr<LibDNNTunerParam> param = param_map_.at(con_params[i]);
+    shared_ptr<LibDNNTunerParam> param = param_map_.at(con_params[i]);
     param->add_constraint(constraint);
   }
 }
 template<>
-void LibDNNTuner::add_constraint(std::vector<std::string> con_params,
-                    std::vector<std::string> con_adapt,
-                    std::function<bool(std::vector<double>)> con_func) {
-  std::shared_ptr<LibDNNTunerConstraint> constraint;
-  constraint = std::shared_ptr<LibDNNTunerConstraint>(
+void LibDNNTuner::add_constraint(vector<string> con_params,
+                    vector<string> con_adapt,
+                    std::function<bool(vector<double>)> con_func) {
+  shared_ptr<LibDNNTunerConstraint> constraint;
+  constraint = shared_ptr<LibDNNTunerConstraint>(
       new LibDNNTunerConstraintReal(
       this, con_params, con_adapt, con_func));
   constraints_.push_back(constraint);
   for (int_tp i = 0; i < con_params.size(); ++i) {
-    std::shared_ptr<LibDNNTunerParam> param = param_map_.at(con_params[i]);
+    shared_ptr<LibDNNTunerParam> param = param_map_.at(con_params[i]);
     param->add_constraint(constraint);
   }
 }
 template<>
-void LibDNNTuner::add_constraint(std::vector<std::string> con_params,
-                    std::vector<std::string> con_adapt,
-                    std::function<bool(std::vector<int64_t>)> con_func) {
-  std::shared_ptr<LibDNNTunerConstraint> constraint;
-  constraint = std::shared_ptr<LibDNNTunerConstraint>(
+void LibDNNTuner::add_constraint(vector<string> con_params,
+                    vector<string> con_adapt,
+                    std::function<bool(vector<int64_t>)> con_func) {
+  shared_ptr<LibDNNTunerConstraint> constraint;
+  constraint = shared_ptr<LibDNNTunerConstraint>(
       new LibDNNTunerConstraintInt(
       this, con_params, con_adapt, con_func));
   constraints_.push_back(constraint);
   for (int_tp i = 0; i < con_params.size(); ++i) {
-    std::shared_ptr<LibDNNTunerParam> param = param_map_.at(con_params[i]);
+    shared_ptr<LibDNNTunerParam> param = param_map_.at(con_params[i]);
     param->add_constraint(constraint);
   }
 }
 
 template<class T>
-void LibDNNTuner::add_constraint(std::vector<const char*> con_params,
-                    std::vector<const char*> con_adapt,
-                    std::function<bool(std::vector<T>)> con_func) {
-  std::vector<std::string> con_params_str;
-  std::vector<std::string> con_adapt_str;
+void LibDNNTuner::add_constraint(vector<const char*> con_params,
+                    vector<const char*> con_adapt,
+                    std::function<bool(vector<T>)> con_func) {
+  vector<string> con_params_str;
+  vector<string> con_adapt_str;
 
   for (int_tp i = 0; i < con_params.size(); ++i) {
-    std::string str(con_params[i]);
+    string str(con_params[i]);
     con_params_str.push_back(str);
   }
 
   for (int_tp i = 0; i < con_adapt.size(); ++i) {
-    std::string str(con_adapt[i]);
+    string str(con_adapt[i]);
     con_adapt_str.push_back(str);
   }
 
   add_constraint(con_params_str, con_adapt_str, con_func);
 }
-template void LibDNNTuner::add_constraint(std::vector<const char*> con_params,
-                           std::vector<const char*> con_adapt,
-                           std::function<bool(std::vector<bool>)> con_func);
-template void LibDNNTuner::add_constraint(std::vector<const char*> con_params,
-                           std::vector<const char*> con_adapt,
-                           std::function<bool(std::vector<double>)> con_func);
-template void LibDNNTuner::add_constraint(std::vector<const char*> con_params,
-                           std::vector<const char*> con_adapt,
-                           std::function<bool(std::vector<int64_t>)> con_func);
+template void LibDNNTuner::add_constraint(vector<const char*> con_params,
+                           vector<const char*> con_adapt,
+                           std::function<bool(vector<bool>)> con_func);
+template void LibDNNTuner::add_constraint(vector<const char*> con_params,
+                           vector<const char*> con_adapt,
+                           std::function<bool(vector<double>)> con_func);
+template void LibDNNTuner::add_constraint(vector<const char*> con_params,
+                           vector<const char*> con_adapt,
+                           std::function<bool(vector<int64_t>)> con_func);
 
 template<class T>
-void LibDNNTuner::add_constraint(std::vector<const char*> con_params,
-                    std::vector<std::string> con_adapt,
-                    std::function<bool(std::vector<T>)> con_func) {
-  std::vector<std::string> con_params_str;
-  std::vector<std::string> con_adapt_str;
+void LibDNNTuner::add_constraint(vector<const char*> con_params,
+                    vector<string> con_adapt,
+                    std::function<bool(vector<T>)> con_func) {
+  vector<string> con_params_str;
+  vector<string> con_adapt_str;
 
   for (int_tp i = 0; i < con_params.size(); ++i) {
-    std::string str(con_params[i]);
+    string str(con_params[i]);
     con_params_str.push_back(str);
   }
 
   for (int_tp i = 0; i < con_adapt.size(); ++i) {
-    std::string str(con_adapt[i]);
+    string str(con_adapt[i]);
     con_adapt_str.push_back(str);
   }
 }
-template void LibDNNTuner::add_constraint(std::vector<const char*> con_params,
-                           std::vector<std::string> con_adapt,
-                           std::function<bool(std::vector<bool>)> con_func);
-template void LibDNNTuner::add_constraint(std::vector<const char*> con_params,
-                           std::vector<std::string> con_adapt,
-                           std::function<bool(std::vector<double>)> con_func);
-template void LibDNNTuner::add_constraint(std::vector<const char*> con_params,
-                           std::vector<std::string> con_adapt,
-                           std::function<bool(std::vector<int64_t>)> con_func);
+template void LibDNNTuner::add_constraint(vector<const char*> con_params,
+                           vector<string> con_adapt,
+                           std::function<bool(vector<bool>)> con_func);
+template void LibDNNTuner::add_constraint(vector<const char*> con_params,
+                           vector<string> con_adapt,
+                           std::function<bool(vector<double>)> con_func);
+template void LibDNNTuner::add_constraint(vector<const char*> con_params,
+                           vector<string> con_adapt,
+                           std::function<bool(vector<int64_t>)> con_func);
 
 template<class T>
-void LibDNNTuner::add_constraint(std::vector<std::string> con_params,
-                    std::vector<const char*> con_adapt,
-                    std::function<bool(std::vector<T>)> con_func) {
-  std::vector<std::string> con_params_str;
-  std::vector<std::string> con_adapt_str;
+void LibDNNTuner::add_constraint(vector<string> con_params,
+                    vector<const char*> con_adapt,
+                    std::function<bool(vector<T>)> con_func) {
+  vector<string> con_params_str;
+  vector<string> con_adapt_str;
 
   for (int_tp i = 0; i < con_params.size(); ++i) {
-    std::string str(con_params[i]);
+    string str(con_params[i]);
     con_params_str.push_back(str);
   }
 
   for (int_tp i = 0; i < con_adapt.size(); ++i) {
-    std::string str(con_adapt[i]);
+    string str(con_adapt[i]);
     con_adapt_str.push_back(str);
   }
 }
-template void LibDNNTuner::add_constraint(std::vector<std::string> con_params,
-                           std::vector<const char*> con_adapt,
-                           std::function<bool(std::vector<bool>)> con_func);
-template void LibDNNTuner::add_constraint(std::vector<std::string> con_params,
-                           std::vector<const char*> con_adapt,
-                           std::function<bool(std::vector<double>)> con_func);
-template void LibDNNTuner::add_constraint(std::vector<std::string> con_params,
-                           std::vector<const char*> con_adapt,
-                           std::function<bool(std::vector<int32_t>)> con_func);
+template void LibDNNTuner::add_constraint(vector<string> con_params,
+                           vector<const char*> con_adapt,
+                           std::function<bool(vector<bool>)> con_func);
+template void LibDNNTuner::add_constraint(vector<string> con_params,
+                           vector<const char*> con_adapt,
+                           std::function<bool(vector<double>)> con_func);
+template void LibDNNTuner::add_constraint(vector<string> con_params,
+                           vector<const char*> con_adapt,
+                           std::function<bool(vector<int32_t>)> con_func);
 
 template<class T>
 void LibDNNTuner::add_set_param(const char* name,
-                                T def_value, std::vector<T> values) {
-  std::string str(name);
+                                T def_value, vector<T> values) {
+  string str(name);
   add_set_param<T>(str, def_value, values);
 }
 template void LibDNNTuner::add_set_param(const char* name,
-                            float def_value, std::vector<float> values);
+                            float def_value, vector<float> values);
 template void LibDNNTuner::add_set_param(const char* name,
-                            double def_value, std::vector<double> values);
+                            double def_value, vector<double> values);
 template void LibDNNTuner::add_set_param(const char* name,
-                            int32_t def_value, std::vector<int32_t> values);
+                            int32_t def_value, vector<int32_t> values);
 template void LibDNNTuner::add_set_param(const char* name,
-                            int64_t def_value, std::vector<int64_t> values);
+                            int64_t def_value, vector<int64_t> values);
 
-void LibDNNTuner::add_boolean_param(std::string name,
+void LibDNNTuner::add_boolean_param(string name,
                                     bool def_value, bool inverse) {
-  std::vector<bool> set_values;
+  vector<bool> set_values;
   set_values.push_back(def_value);
   if (inverse) {
     set_values.push_back(!def_value);
   }
-  std::shared_ptr<LibDNNTunerParam> param(
+  shared_ptr<LibDNNTunerParam> param(
       new LibDNNTunerParamBool(this, name, set_values, 0));
   params_.push_back(param);
-  param_map_.insert(std::pair<std::string,
-                    std::shared_ptr<LibDNNTunerParam>>(name, param));
+  param_map_.insert(std::pair<string,
+                    shared_ptr<LibDNNTunerParam>>(name, param));
 }
 
 void LibDNNTuner::add_boolean_param(const char* name,
                                     bool def_value, bool inverse) {
-  std::string str(name);
+  string str(name);
   add_boolean_param(str, def_value, inverse);
 }
 
 
 template<class T>
-T LibDNNTuner::get_param(std::string name) {
+T LibDNNTuner::get_param(string name) {
   T value;
-  std::shared_ptr<LibDNNTunerParam> param = param_map_.at(name);
+  shared_ptr<LibDNNTunerParam> param = param_map_.at(name);
 
-  std::shared_ptr<LibDNNTunerParamBool> param_bool =
+  shared_ptr<LibDNNTunerParamBool> param_bool =
       std::dynamic_pointer_cast<LibDNNTunerParamBool>(param);
   if (param_bool.get() != nullptr) {
     value = static_cast<T>(param_bool->get_value());
     return value;
   }
 
-  std::shared_ptr<LibDNNTunerParamInt> param_int =
+  shared_ptr<LibDNNTunerParamInt> param_int =
       std::dynamic_pointer_cast<LibDNNTunerParamInt>(param);
   if (param_int.get() != nullptr) {
     value = static_cast<T>(param_int->get_value());
     return value;
   }
 
-  std::shared_ptr<LibDNNTunerParamReal> param_real =
+  shared_ptr<LibDNNTunerParamReal> param_real =
       std::dynamic_pointer_cast<LibDNNTunerParamReal>(param);
   if (param_real.get() != nullptr) {
     value = static_cast<T>(param_real->get_value());
@@ -515,15 +515,15 @@ T LibDNNTuner::get_param(std::string name) {
 
   return value;
 }
-template float LibDNNTuner::get_param(std::string name);
-template double LibDNNTuner::get_param(std::string name);
-template int32_t LibDNNTuner::get_param(std::string name);
-template int64_t LibDNNTuner::get_param(std::string name);
-template bool LibDNNTuner::get_param(std::string name);
+template float LibDNNTuner::get_param(string name);
+template double LibDNNTuner::get_param(string name);
+template int32_t LibDNNTuner::get_param(string name);
+template int64_t LibDNNTuner::get_param(string name);
+template bool LibDNNTuner::get_param(string name);
 
 template<class T>
 T LibDNNTuner::get_param(const char* name) {
-  std::string str(name);
+  string str(name);
   return get_param<T>(str);
 }
 template float LibDNNTuner::get_param(const char* name);
@@ -532,7 +532,7 @@ template int32_t LibDNNTuner::get_param(const char* name);
 template int64_t LibDNNTuner::get_param(const char* name);
 template bool LibDNNTuner::get_param(const char* name);
 
-std::string LibDNNTunerParam::get_name() {
+string LibDNNTunerParam::get_name() {
   return name_;
 }
 
@@ -583,7 +583,7 @@ void LibDNNTunerParam::set_def_idx(int_tp def_idx) {
 }
 
 void LibDNNTunerParam::add_constraint(
-    std::shared_ptr<LibDNNTunerConstraint> constraint) {
+    shared_ptr<LibDNNTunerConstraint> constraint) {
   constraints_.push_back(constraint);
 }
 
@@ -591,7 +591,7 @@ double LibDNNTunerSnapshot::get_score() {
   return score_;
 }
 
-std::vector<std::shared_ptr<LibDNNTunerParam>>*
+vector<shared_ptr<LibDNNTunerParam>>*
   LibDNNTunerSnapshot::get_params() {
   return &params_;
 }
@@ -620,35 +620,35 @@ bool LibDNNTunerParamBool::get_value() {
   return values_[curr_idx_];
 }
 
-const std::vector<int64_t>& LibDNNTunerParamInt::get_values() {
+const vector<int64_t>& LibDNNTunerParamInt::get_values() {
   return values_;
 }
-const std::vector<double>& LibDNNTunerParamReal::get_values() {
+const vector<double>& LibDNNTunerParamReal::get_values() {
   return values_;
 }
-const std::vector<bool>& LibDNNTunerParamBool::get_values() {
+const vector<bool>& LibDNNTunerParamBool::get_values() {
   return values_;
 }
 
 
-std::shared_ptr<LibDNNTunerParam> LibDNNTunerParamInt::clone() {
-  return std::shared_ptr<LibDNNTunerParamInt>
+shared_ptr<LibDNNTunerParam> LibDNNTunerParamInt::clone() {
+  return shared_ptr<LibDNNTunerParamInt>
       (new LibDNNTunerParamInt(*this));
 }
 
-std::shared_ptr<LibDNNTunerParam> LibDNNTunerParamReal::clone() {
-  return std::shared_ptr<LibDNNTunerParamReal>
+shared_ptr<LibDNNTunerParam> LibDNNTunerParamReal::clone() {
+  return shared_ptr<LibDNNTunerParamReal>
       (new LibDNNTunerParamReal(*this));
 }
 
-std::shared_ptr<LibDNNTunerParam> LibDNNTunerParamBool::clone() {
-  return std::shared_ptr<LibDNNTunerParamBool>
+shared_ptr<LibDNNTunerParam> LibDNNTunerParamBool::clone() {
+  return shared_ptr<LibDNNTunerParamBool>
       (new LibDNNTunerParamBool(*this));
 }
 
 void LibDNNTunerParamInt::restrict_values(
     int64_t min_value, int64_t max_value) {
-  std::vector<int64_t> new_values;
+  vector<int64_t> new_values;
   int64_t def_value = values_[def_idx_];
   int64_t curr_value = values_[curr_idx_];
   for (int_tp i = 0; i < values_.size(); ++i) {
@@ -696,7 +696,7 @@ void LibDNNTunerParamInt::restrict_values(
 
 void LibDNNTunerParamReal::restrict_values(
     double min_value, double max_value) {
-  std::vector<double> new_values;
+  vector<double> new_values;
   double def_value = values_[def_idx_];
   double curr_value = values_[curr_idx_];
   for (int_tp i = 0; i < values_.size(); ++i) {
@@ -744,7 +744,7 @@ void LibDNNTunerParamReal::restrict_values(
 
 void LibDNNTunerParamBool::restrict_values(
     bool min_value, bool max_value) {
-  std::vector<bool> new_values;
+  vector<bool> new_values;
   bool def_value = values_[def_idx_];
   bool curr_value = values_[curr_idx_];
   for (int_tp i = 0; i < values_.size(); ++i) {
@@ -790,13 +790,13 @@ void LibDNNTunerParamBool::restrict_values(
   }
 }
 
-void LibDNNTunerParam::update(std::shared_ptr<LibDNNTunerParam> other) {
+void LibDNNTunerParam::update(shared_ptr<LibDNNTunerParam> other) {
   curr_idx_ = other->get_curr_idx();
   def_idx_ = other->get_def_idx();
 }
 
 bool LibDNNTunerConstraintBool::evaluate() {
-  std::vector<bool> values;
+  vector<bool> values;
 
   for (int_tp i = 0; i < con_params_.size(); ++i) {
     values.push_back(tuner_->get_param<bool>(con_params_[i]));
@@ -806,7 +806,7 @@ bool LibDNNTunerConstraintBool::evaluate() {
 }
 
 bool LibDNNTunerConstraintInt::evaluate() {
-  std::vector<int64_t> values;
+  vector<int64_t> values;
 
   for (int_tp i = 0; i < con_params_.size(); ++i) {
     values.push_back(tuner_->get_param<int64_t>(con_params_[i]));
@@ -816,7 +816,7 @@ bool LibDNNTunerConstraintInt::evaluate() {
 }
 
 bool LibDNNTunerConstraintReal::evaluate() {
-  std::vector<double> values;
+  vector<double> values;
 
   for (int_tp i = 0; i < con_params_.size(); ++i) {
     values.push_back(tuner_->get_param<double>(con_params_[i]));

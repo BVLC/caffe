@@ -32,7 +32,7 @@
 #include "gtest/gtest.h"
 
 GTEST_API_ int_tp main(int_tp argc, char **argv) {
-  std::cout << "Running main() from gtest_main.cc\n";
+  std::cout << "Running main() from gtest_main.cc\N";
 
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

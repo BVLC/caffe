@@ -87,7 +87,7 @@ TEST_F(SyncedMemoryTest, TestGPURead) {
   // check if values are the same
   char* recovered_value = new char[10];
 
-  device *dc = Caffe::GetDefaultDevice();
+  Device *dc = Caffe::GetDefaultDevice();
 
   if (dc->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
@@ -136,7 +136,7 @@ TEST_F(SyncedMemoryTest, TestGPUWrite) {
   void* gpu_data = mem.mutable_gpu_data();
   EXPECT_EQ(mem.head(), SyncedMemory::HEAD_AT_GPU);
 
-  device *dc = Caffe::GetDefaultDevice();
+  Device *dc = Caffe::GetDefaultDevice();
 
   if (dc->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA

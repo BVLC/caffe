@@ -22,7 +22,7 @@ void FillDatum(const int_tp label, const int_tp channels, const int_tp height,
   datum->set_height(height);
   datum->set_width(width);
   int_tp size = channels * height * width;
-  std::string* data = datum->mutable_data();
+  string* data = datum->mutable_data();
   for (int_tp j = 0; j < size; ++j) {
     int_tp datum = unique_pixels ? j : label;
     data->push_back(static_cast<uint8_t>(datum));

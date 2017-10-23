@@ -6,8 +6,9 @@ namespace caffe {
 
 #ifndef CPU_ONLY
 template<typename Dtype>
-void rmsprop_update_gpu(device* dev, int_tp N, Dtype* g, Dtype* h,
-                        Dtype rms_decay, Dtype delta, Dtype local_rate);
+void rmsprop_update_gpu(Device* dev, DeviceProgram* dev_prog, uint_tp n,
+                        vptr<Dtype> g, vptr<Dtype> h, Dtype rms_decay,
+                        Dtype delta, Dtype local_rate);
 #endif
 
 template <typename Dtype>
@@ -51,7 +52,8 @@ void RMSPropSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
     break;
   case Caffe::GPU:
 #ifndef CPU_ONLY
-    rmsprop_update_gpu(this->device_, net_params[param_id]->count(),
+    rmsprop_update_gpu(this->device_, this->device_program_.get(),
+        net_params[param_id]->count(),
         net_params[param_id]->mutable_gpu_diff(),
         this->history_[param_id]->mutable_gpu_data(),
         rms_decay, delta, local_rate);
@@ -64,7 +66,7 @@ void RMSPropSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
   }
 }
 
-INSTANTIATE_CLASS(RMSPropSolver);
+INSTANTIATE_CLASS_1T(RMSPropSolver);
 REGISTER_SOLVER_CLASS(RMSProp);
 
 }  // namespace caffe

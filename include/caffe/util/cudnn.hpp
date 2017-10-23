@@ -86,8 +86,8 @@ inline void setTensorNdDesc(cudnnTensorDescriptor_t* desc,
   int_tp cudnn_dims = std::max(total_dims, (int_tp)4);
   int_tp padding = std::max((int_tp)0, cudnn_dims - total_dims);
 
-  std::vector<int> shape_int(cudnn_dims);
-  std::vector<int> stride_int(cudnn_dims);
+  vector<int> shape_int(cudnn_dims);
+  vector<int> stride_int(cudnn_dims);
 
   for (int_tp i = cudnn_dims - 1; i >= 0; --i) {
     if (i < padding) {
@@ -111,8 +111,8 @@ template <typename Dtype>
 inline void setTensorNdDesc(cudnnTensorDescriptor_t* desc,
     const int_tp total_dims, const int_tp* shape) {
 
-  std::vector<int_tp> full_shape(total_dims);
-  std::vector<int_tp> full_stride(total_dims);
+  vector<int_tp> full_shape(total_dims);
+  vector<int_tp> full_stride(total_dims);
 
   for (int_tp i = total_dims - 1; i >= 0; --i) {
     full_shape[i] = shape[i];
@@ -133,8 +133,8 @@ inline void setTensorNdDesc(cudnnTensorDescriptor_t* desc,
     const int_tp num_spatial_dims,
     const int_tp n, const int_tp c, const int_tp* shape) {
 
-  std::vector<int_tp> full_shape(num_spatial_dims + 2);
-  std::vector<int_tp> full_stride(num_spatial_dims + 2);
+  vector<int_tp> full_shape(num_spatial_dims + 2);
+  vector<int_tp> full_stride(num_spatial_dims + 2);
 
   full_shape[0] = n;
   full_shape[1] = c;
@@ -159,7 +159,7 @@ inline void createFilterDesc(cudnnFilterDescriptor_t* desc,
     const int_tp num_spatial_dims,
     const int_tp n, const int_tp c, const int_tp* shape) {
 
-  std::vector<int> shape_int(num_spatial_dims + 2);
+  vector<int> shape_int(num_spatial_dims + 2);
 
   shape_int[0] = n;
   shape_int[1] = c;
@@ -187,9 +187,9 @@ inline void setConvolutionDesc(cudnnConvolutionDescriptor_t* conv,
     cudnnTensorDescriptor_t bottom, cudnnFilterDescriptor_t filter,
     const int_tp num_spatial_dims, const int_tp* pad, const int_tp* stride) {
 
-  std::vector<int> pad_int(num_spatial_dims);
-  std::vector<int> stride_int(num_spatial_dims);
-  std::vector<int> upscale_int(num_spatial_dims);
+  vector<int> pad_int(num_spatial_dims);
+  vector<int> stride_int(num_spatial_dims);
+  vector<int> upscale_int(num_spatial_dims);
 
   for (int_tp i = 0; i < num_spatial_dims; ++i) {
     pad_int[i] = pad[i];
@@ -224,9 +224,9 @@ inline void createPoolingDesc(cudnnPoolingDescriptor_t* pool_desc,
   }
   CUDNN_CHECK(cudnnCreatePoolingDescriptor(pool_desc));
 
-  std::vector<int> shape_int(num_spatial_dims);
-  std::vector<int> pad_int(num_spatial_dims);
-  std::vector<int> stride_int(num_spatial_dims);
+  vector<int> shape_int(num_spatial_dims);
+  vector<int> pad_int(num_spatial_dims);
+  vector<int> stride_int(num_spatial_dims);
 
   for (int_tp i = 0; i < num_spatial_dims; ++i) {
     shape_int[i] = shape[i];

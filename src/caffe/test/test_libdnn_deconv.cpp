@@ -66,7 +66,7 @@ TYPED_TEST(LibDNNDeconvolutionLayerTest, TestSetup) {
   convolution_param->set_num_output(4);
   this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
   this->blob_top_vec_.push_back(this->blob_top_2_);
-  std::shared_ptr<Layer<TypeParam> > layer(
+  shared_ptr<Layer<TypeParam> > layer(
       new LibDNNDeconvolutionLayer<TypeParam>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), 2);
@@ -105,7 +105,7 @@ TYPED_TEST(LibDNNDeconvolutionLayerTest, TestSimpleDeconvolution) {
   convolution_param->mutable_weight_filler()->set_value(1);
   convolution_param->mutable_bias_filler()->set_type("constant");
   convolution_param->mutable_bias_filler()->set_value(0.1);
-  std::shared_ptr<Layer<TypeParam> > layer(
+  shared_ptr<Layer<TypeParam> > layer(
       new LibDNNDeconvolutionLayer<TypeParam>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   // constant-fill the bottom blobs
@@ -555,7 +555,7 @@ class LibDNNComparativeDeconvTest : public GPUDeviceTest<TypeParam> {
     layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
     ref_layer.Forward(this->blob_bottom_vec_ref_, this->blob_top_vec_ref_);
 
-    std::vector<bool> prop_down(1, true);
+    vector<bool> prop_down(1, true);
 
     layer.Backward(blob_top_vec_, prop_down, blob_bottom_vec_);
     ref_layer.Backward(blob_top_vec_ref_, prop_down, blob_bottom_vec_ref_);

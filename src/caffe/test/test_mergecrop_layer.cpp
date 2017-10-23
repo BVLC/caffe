@@ -106,7 +106,7 @@ class MergeCropLayerTest : public GPUDeviceTest<TypeParam> {
     layer.Forward(blob_bottom_vec_, blob_top_vec_);
 
     if (op == MergeCropParameter_MergeOp_STACK) {
-      // Test copy from A & B
+      // Test copy from a & b
       for (int_tp i = 0; i < blob_top_->count(); ++i) {
         int val = i < blob_bottom_a_->count() ? i : i - blob_bottom_a_->count();
         int out = 0;
@@ -126,7 +126,7 @@ class MergeCropLayerTest : public GPUDeviceTest<TypeParam> {
         // std::cout << i << " - " << out << std::endl;
       }
     } else {
-      // Test copy from A & B
+      // Test copy from a & b
       for (int_tp i = 0; i < blob_top_->count(); ++i) {
         int val = i < blob_bottom_a_->count() ? i : i - blob_bottom_a_->count();
         int out = 0;
@@ -187,7 +187,7 @@ class MergeCropLayerTest : public GPUDeviceTest<TypeParam> {
     vector<bool> propagate_down(blob_bottom_vec_.size(), true);
     layer.Backward(blob_top_vec_, propagate_down, blob_bottom_vec_);
 
-    // Test copy to A
+    // Test copy to a
     for (int_tp i = 0; i < blob_bottom_a_->count(); ++i) {
       int val = i;
       int out = 0;

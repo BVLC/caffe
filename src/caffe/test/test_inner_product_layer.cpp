@@ -45,7 +45,7 @@ class InnerProductLayerTest : public MultiDeviceTest<TypeParam> {
   Blob<Dtype>* const blob_top_;
   vector<Blob<Dtype>*> blob_bottom_vec_;
   vector<Blob<Dtype>*> blob_top_vec_;
-  std::shared_ptr<Blob<Dtype> > ref_blob_top_;
+  shared_ptr<Blob<Dtype> > ref_blob_top_;
 };
 
 TYPED_TEST_CASE(InnerProductLayerTest, TestDtypesAndDevices);
@@ -57,7 +57,7 @@ TYPED_TEST(InnerProductLayerTest, TestSetUp) {
   InnerProductParameter* inner_product_param =
       layer_param.mutable_inner_product_param();
   inner_product_param->set_num_output(10);
-  std::shared_ptr<InnerProductLayer<Dtype> > layer(
+  shared_ptr<InnerProductLayer<Dtype> > layer(
       new InnerProductLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), 2);
@@ -76,7 +76,7 @@ TYPED_TEST(InnerProductLayerTest, TestSetUpTransposeFalse) {
       layer_param.mutable_inner_product_param();
   inner_product_param->set_num_output(10);
   inner_product_param->set_transpose(false);
-  std::shared_ptr<InnerProductLayer<Dtype> > layer(
+  shared_ptr<InnerProductLayer<Dtype> > layer(
       new InnerProductLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(2, this->blob_top_->num());
@@ -98,7 +98,7 @@ TYPED_TEST(InnerProductLayerTest, TestSetUpTransposeTrue) {
       layer_param.mutable_inner_product_param();
   inner_product_param->set_num_output(10);
   inner_product_param->set_transpose(true);
-  std::shared_ptr<InnerProductLayer<Dtype> > layer(
+  shared_ptr<InnerProductLayer<Dtype> > layer(
       new InnerProductLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(2, this->blob_top_->num());
@@ -121,7 +121,7 @@ TYPED_TEST(InnerProductLayerTest, TestForward) {
   inner_product_param->mutable_bias_filler()->set_type("uniform");
   inner_product_param->mutable_bias_filler()->set_min(1);
   inner_product_param->mutable_bias_filler()->set_max(2);
-  std::shared_ptr<InnerProductLayer<Dtype> > layer(
+  shared_ptr<InnerProductLayer<Dtype> > layer(
       new InnerProductLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -154,27 +154,27 @@ TYPED_TEST(InnerProductLayerTest, TestForwardVGGFC6) {
     inner_product_param->set_bias_term(false);
     inner_product_param->set_transpose(false);
     inner_product_param->mutable_weight_filler()->set_type("uniform");
-    std::shared_ptr<InnerProductLayer<Dtype> > layer(
+    shared_ptr<InnerProductLayer<Dtype> > layer(
         new InnerProductLayer<Dtype>(layer_param));
     layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
 
     this->MakeReferenceTop(blob_top);
-    const Dtype* A = blob_bottom->cpu_data();
-    const Dtype* B = layer->blobs()[0]->cpu_data();
-    Dtype* C = this->ref_blob_top_->mutable_cpu_data();
-    int_tp M = blob_bottom->shape()[0];
-    int_tp N = layer->blobs()[0]->shape(0);
-    int_tp K = layer->blobs()[0]->shape(1);
+    const Dtype* a = blob_bottom->cpu_data();
+    const Dtype* b = layer->blobs()[0]->cpu_data();
+    Dtype* c = this->ref_blob_top_->mutable_cpu_data();
+    int_tp m = blob_bottom->shape()[0];
+    int_tp n = layer->blobs()[0]->shape(0);
+    int_tp k = layer->blobs()[0]->shape(1);
 
     if (!std::is_same<Dtype, half_float::half>::value || i <= 2) {
-      caffe_cpu_gemm(CblasNoTrans, CblasTrans, M, N, K,
-                     (Dtype)1., A, B, (Dtype)0., C);
+      caffe_cpu_gemm(CblasNoTrans, CblasTrans, m, n, k,
+                     (Dtype)1., a, b, (Dtype)0., c);
 
       const Dtype* data = blob_top->cpu_data();
       const int_tp count = blob_top->count();
       for (int_tp i = 0; i < count; ++i) {
-        EXPECT_NEAR(data[i], C[i], 1e-1);
+        EXPECT_NEAR(data[i], c[i], 1e-1);
       }
     }
     if (Caffe::mode() == Caffe::GPU) {
@@ -188,15 +188,15 @@ TYPED_TEST(InnerProductLayerTest, TestForwardVGGFC6) {
       timer.Stop();
       float elapsedTime = timer.MilliSeconds();
       elapsedTime /= times;
-      std::cout << "MNK(" << M << "," << N << "," << K << ") Time is: "
+      std::cout << "MNK(" << m << "," << n << "," << k << ") Time is: "
                 << elapsedTime
                 << " ms" << std::endl;
       std::cout << "I/O: "
-                << static_cast<double>(M*K + K*N + M*N) * sizeof(Dtype)
+                << static_cast<double>(m*k + k*n + m*n) * sizeof(Dtype)
                    /elapsedTime / 1e6
                 << "GB/s" << std::endl;
       std::cout << "FLOPS: "
-                << static_cast<double>(M*N*(2*K-1)/elapsedTime/1e6) <<"GFLOPS"
+                << static_cast<double>(m*n*(2*k-1)/elapsedTime/1e6) <<"GFLOPS"
                 << std::endl;
     }
     delete blob_bottom;
@@ -225,28 +225,28 @@ TYPED_TEST(InnerProductLayerTest, TestForwardVGGFC6_AddEdge) {
     inner_product_param->set_bias_term(false);
     inner_product_param->set_transpose(false);
     inner_product_param->mutable_weight_filler()->set_type("uniform");
-    std::shared_ptr<InnerProductLayer<Dtype> > layer(
+    shared_ptr<InnerProductLayer<Dtype> > layer(
         new InnerProductLayer<Dtype>(layer_param));
     layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
 
     this->MakeReferenceTop(blob_top);
-    const Dtype* A = blob_bottom->cpu_data();
-    const Dtype* B = layer->blobs()[0]->cpu_data();
-    Dtype* C = this->ref_blob_top_->mutable_cpu_data();
-    int_tp M = blob_bottom->shape()[0];
-    int_tp N = layer->blobs()[0]->shape(0);
-    int_tp K = layer->blobs()[0]->shape(1);
+    const Dtype* a = blob_bottom->cpu_data();
+    const Dtype* b = layer->blobs()[0]->cpu_data();
+    Dtype* c = this->ref_blob_top_->mutable_cpu_data();
+    int_tp m = blob_bottom->shape()[0];
+    int_tp n = layer->blobs()[0]->shape(0);
+    int_tp k = layer->blobs()[0]->shape(1);
 
     if (!std::is_same<Dtype, half_float::half>::value || i <= 2) {
-      caffe_cpu_gemm(CblasNoTrans, CblasTrans, M, N, K, (Dtype)1.,
-                     A, B, (Dtype)0., C);
+      caffe_cpu_gemm(CblasNoTrans, CblasTrans, m, n, k, (Dtype)1.,
+                     a, b, (Dtype)0., c);
 
       const Dtype* data = blob_top->cpu_data();
       const int_tp count = blob_top->count();
       std::cout << blob_top->count() << std::endl;
       for (int_tp i = 0; i < count; ++i) {
-        EXPECT_NEAR(data[i], C[i], 1e-1);
+        EXPECT_NEAR(data[i], c[i], 1e-1);
       }
     }
     if (Caffe::mode() == Caffe::GPU) {
@@ -260,15 +260,15 @@ TYPED_TEST(InnerProductLayerTest, TestForwardVGGFC6_AddEdge) {
       timer.Stop();
       float elapsedTime = timer.MilliSeconds();
       elapsedTime /= times;
-      std::cout << "MNK(" << M << "," << N << "," << K << ") Time is: "
+      std::cout << "MNK(" << m << "," << n << "," << k << ") Time is: "
                 << elapsedTime
                 << " ms" << std::endl;
       std::cout << "I/O: "
-                << static_cast<double>(M*K + K*N + M*N) * sizeof(Dtype)
+                << static_cast<double>(m*k + k*n + m*n) * sizeof(Dtype)
                    /elapsedTime / 1e6
                 << "GB/s" << std::endl;
       std::cout << "FLOPS: "
-                << static_cast<double>(M*N*(2*K-1)/elapsedTime/1e6) <<"GFLOPS"
+                << static_cast<double>(m*n*(2*k-1)/elapsedTime/1e6) <<"GFLOPS"
                 << std::endl;
     }
     delete blob_bottom;
@@ -278,21 +278,21 @@ TYPED_TEST(InnerProductLayerTest, TestForwardVGGFC6_AddEdge) {
 #endif
 
 template <typename Dtype>
-void gemv(const vector<std::shared_ptr<Blob<Dtype> > >& A,
+void gemv(const vector<shared_ptr<Blob<Dtype> > >& a,
           const int offA,
-          const int M,
-          const int N,
-          const Blob<Dtype>* x,
+          const int m,
+          const int n,
+          const Blob<Dtype>* X,
           const int offx,
-          Blob<Dtype>* y,
+          Blob<Dtype>* Y,
           const int offy,
           const float alpha,
           const float beta) {
-  const unsigned rows = M;
-  const unsigned cols = N;
-  const Dtype* mat = A[0]->cpu_data() + offA;
-  const Dtype* vec = x->cpu_data() + offx;
-  Dtype* out_data = y->mutable_cpu_data() + offy;
+  const unsigned rows = m;
+  const unsigned cols = n;
+  const Dtype* mat = a[0]->cpu_data() + offA;
+  const Dtype* vec = X->cpu_data() + offx;
+  Dtype* out_data = Y->mutable_cpu_data() + offy;
 
   for (unsigned int r = 0; r < rows; r++) {
     out_data[r] = beta * out_data[r];
@@ -302,24 +302,24 @@ void gemv(const vector<std::shared_ptr<Blob<Dtype> > >& A,
   }
 }
 
-template void gemv(const vector<std::shared_ptr<Blob<float> > >& A,
+template void gemv(const vector<shared_ptr<Blob<float> > >& a,
           const int offA,
-          const int M,
-          const int N,
-          const Blob<float>* x,
+          const int m,
+          const int n,
+          const Blob<float>* X,
           const int offx,
-          Blob<float>* y,
+          Blob<float>* Y,
           const int offy,
           const float alpha,
           const float beta);
 
-template void gemv(const vector<std::shared_ptr<Blob<double> > >& A,
+template void gemv(const vector<shared_ptr<Blob<double> > >& a,
           const int offA,
-          const int M,
-          const int N,
-          const Blob<double>* x,
+          const int m,
+          const int n,
+          const Blob<double>* X,
           const int offx,
-          Blob<double>* y,
+          Blob<double>* Y,
           const int offy,
           const float alpha,
           const float beta);
@@ -343,7 +343,7 @@ TYPED_TEST(InnerProductLayerTest, TestForwardGemvFC6) {
   inner_product_param->set_num_output(4096);
   inner_product_param->set_bias_term(false);
   inner_product_param->mutable_weight_filler()->set_type("uniform");
-  std::shared_ptr<InnerProductLayer<Dtype> > layer(
+  shared_ptr<InnerProductLayer<Dtype> > layer(
       new InnerProductLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -394,7 +394,7 @@ TYPED_TEST(InnerProductLayerTest, TestForwardGemvFC7) {
   inner_product_param->set_num_output(4096);
   inner_product_param->set_bias_term(false);
   inner_product_param->mutable_weight_filler()->set_type("uniform");
-  std::shared_ptr<InnerProductLayer<Dtype> > layer(
+  shared_ptr<InnerProductLayer<Dtype> > layer(
       new InnerProductLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -443,7 +443,7 @@ TYPED_TEST(InnerProductLayerTest, TestForwardGemvFC8) {
   inner_product_param->set_num_output(1000);
   inner_product_param->set_bias_term(false);
   inner_product_param->mutable_weight_filler()->set_type("uniform");
-  std::shared_ptr<InnerProductLayer<Dtype> > layer(
+  shared_ptr<InnerProductLayer<Dtype> > layer(
       new InnerProductLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -493,7 +493,7 @@ TYPED_TEST(InnerProductLayerTest, TestForwardGemvFC_dev1) {
   inner_product_param->set_num_output(1003);
   inner_product_param->set_bias_term(false);
   inner_product_param->mutable_weight_filler()->set_type("uniform");
-  std::shared_ptr<InnerProductLayer<Dtype> > layer(
+  shared_ptr<InnerProductLayer<Dtype> > layer(
       new InnerProductLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -541,30 +541,30 @@ TYPED_TEST(InnerProductLayerTest, TestGEMV) {
     inner_product_param->set_num_output(1003);
     inner_product_param->set_bias_term(false);
     inner_product_param->mutable_weight_filler()->set_type("uniform");
-    std::shared_ptr<InnerProductLayer<Dtype> > layer(
+    shared_ptr<InnerProductLayer<Dtype> > layer(
         new InnerProductLayer<Dtype>(layer_param));
 
     layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
-    device *dc = Caffe::GetDefaultDevice();
-    const Dtype* x = this->blob_bottom_vec_[0]->gpu_data();
-    Dtype* y = this->blob_top_vec_[0]->mutable_gpu_data();
+    Device *dc = Caffe::GetDefaultDevice();
+    const Dtype* X = this->blob_bottom_vec_[0]->gpu_data();
+    Dtype* Y = this->blob_top_vec_[0]->mutable_gpu_data();
     Dtype alpha = 2.5;
     Dtype beta = 2;
-    unsigned int M = layer->blobs()[0]->shape(0);
-    unsigned int N = layer->blobs()[0]->shape(1);
+    unsigned int m = layer->blobs()[0]->shape(0);
+    unsigned int n = layer->blobs()[0]->shape(1);
     //  add offset
-    unsigned int offA = M * N / 2;
+    unsigned int offA = m * n / 2;
     unsigned int offx = 0;
-    unsigned int offy = M / 2;
-    M /= 2;
+    unsigned int offy = m / 2;
+    m /= 2;
     greentea_gpu_gemv<Dtype>(dc->id(), CblasNoTrans,
-                           M, N,
+                           m, n,
                            alpha,
                            (cl_mem)layer->blobs()[0]->gpu_data(),
-                           offA, (cl_mem)x,
-                           offx, beta, (cl_mem)y,
+                           offA, (cl_mem)X,
+                           offx, beta, (cl_mem)Y,
                            offy);
-    gemv(layer->blobs(), offA, M, N,
+    gemv(layer->blobs(), offA, m, n,
         blob_bottom, offx, this->MakeReferenceTop(blob_top), offy, alpha, beta);
 
     const Dtype* data = blob_top->cpu_data();
@@ -597,7 +597,7 @@ TYPED_TEST(InnerProductLayerTest, TestForwardTranspose) {
   inner_product_param->mutable_bias_filler()->set_min(1);
   inner_product_param->mutable_bias_filler()->set_max(2);
   inner_product_param->set_transpose(false);
-  std::shared_ptr<InnerProductLayer<Dtype> > layer(
+  shared_ptr<InnerProductLayer<Dtype> > layer(
       new InnerProductLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -608,7 +608,7 @@ TYPED_TEST(InnerProductLayerTest, TestForwardTranspose) {
   this->blob_top_vec_.clear();
   this->blob_top_vec_.push_back(new Blob<Dtype>());
   inner_product_param->set_transpose(true);
-  std::shared_ptr<InnerProductLayer<Dtype> > ip_t(
+  shared_ptr<InnerProductLayer<Dtype> > ip_t(
       new InnerProductLayer<Dtype>(layer_param));
   ip_t->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   const int_tp count_w = layer->blobs()[0]->count();
@@ -653,7 +653,7 @@ TYPED_TEST(InnerProductLayerTest, TestForwardNoBatch) {
   inner_product_param->mutable_bias_filler()->set_type("uniform");
   inner_product_param->mutable_bias_filler()->set_min(1);
   inner_product_param->mutable_bias_filler()->set_max(2);
-  std::shared_ptr<InnerProductLayer<Dtype> > layer(
+  shared_ptr<InnerProductLayer<Dtype> > layer(
       new InnerProductLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -711,7 +711,7 @@ TYPED_TEST(InnerProductLayerTest, TestBackwardTranspose) {
   inner_product_param->mutable_bias_filler()->set_min(1);
   inner_product_param->mutable_bias_filler()->set_max(2);
   inner_product_param->set_transpose(false);
-  std::shared_ptr<InnerProductLayer<Dtype> > layer(
+  shared_ptr<InnerProductLayer<Dtype> > layer(
       new InnerProductLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -744,7 +744,7 @@ TYPED_TEST(InnerProductLayerTest, TestBackwardTranspose) {
   this->blob_top_vec_.clear();
   this->blob_top_vec_.push_back(new Blob<Dtype>());
   inner_product_param->set_transpose(true);
-  std::shared_ptr<InnerProductLayer<Dtype> > ip_t(
+  shared_ptr<InnerProductLayer<Dtype> > ip_t(
       new InnerProductLayer<Dtype>(layer_param));
   ip_t->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   // manually copy and transpose the weights from 1st IP layer into 2nd

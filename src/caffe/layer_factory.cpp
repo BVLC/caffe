@@ -61,7 +61,7 @@ void LayerRegistry<Dtype>::AddCreator(const string& type, Creator creator) {
 
 // Get a layer using a LayerParameter.
 template <typename Dtype>
-std::shared_ptr<Layer<Dtype> > LayerRegistry<Dtype>::CreateLayer(
+shared_ptr<Layer<Dtype> > LayerRegistry<Dtype>::CreateLayer(
     const LayerParameter& param) {
   if (Caffe::root_solver()) {
     LOG(INFO) << "Creating layer " << param.name();
@@ -107,7 +107,7 @@ string LayerRegistry<Dtype>::LayerTypeListString() {
 template <typename Dtype>
 LayerRegisterer<Dtype>::LayerRegisterer(
     const string& type,
-    std::shared_ptr<Layer<Dtype> > (*creator)(const LayerParameter&)) {
+    shared_ptr<Layer<Dtype> > (*creator)(const LayerParameter&)) {
   // LOG(INFO) << "Registering layer type: " << type;
   LayerRegistry<Dtype>::AddCreator(type, creator);
 }
@@ -135,7 +135,7 @@ bool checkPoolingDilated(PoolingParameter param) {
 
 // Get convolution layer according to engine.
 template<typename Dtype>
-std::shared_ptr<Layer<Dtype> > GetConvolutionLayer(const LayerParameter& param) {
+shared_ptr<Layer<Dtype> > GetConvolutionLayer(const LayerParameter& param) {
   ConvolutionParameter_Engine engine = param.convolution_param().engine();
   if (engine == ConvolutionParameter_Engine_DEFAULT) {
     engine = ConvolutionParameter_Engine_CAFFE;
@@ -162,13 +162,13 @@ std::shared_ptr<Layer<Dtype> > GetConvolutionLayer(const LayerParameter& param) 
 
 #ifdef USE_INTEL_SPATIAL
   if (engine == ConvolutionParameter_Engine_INTEL_SPATIAL) {
-    return std::shared_ptr<Layer<Dtype> >
+    return shared_ptr<Layer<Dtype> >
              (new ConvolutionLayerSpatial<Dtype>(param));
   }
 #endif  // USE_INTEL_SPATIAL
 #ifdef USE_FFT
   if (engine == ConvolutionParameter_Engine_FFT) {
-    return std::shared_ptr<Layer<Dtype> >
+    return shared_ptr<Layer<Dtype> >
              (new ConvolutionLayerFFT<Dtype>(param));
   }
 #endif  // USE_FFT
@@ -183,18 +183,18 @@ std::shared_ptr<Layer<Dtype> > GetConvolutionLayer(const LayerParameter& param) 
   }
 
   if (engine == ConvolutionParameter_Engine_CAFFE) {
-    return std::shared_ptr<Layer<Dtype> >(new ConvolutionLayer<Dtype>(param));
+    return shared_ptr<Layer<Dtype> >(new ConvolutionLayer<Dtype>(param));
 #ifdef USE_CUDNN
   } else if (engine == ConvolutionParameter_Engine_CUDNN) {
     if (checkConvolutionDilated(param.convolution_param())) {
       LOG(FATAL) << "CuDNN doesn't support the dilated convolution at Layer "
                  << param.name();
     }
-    return std::shared_ptr<Layer<Dtype> >(new CuDNNConvolutionLayer<Dtype>(param));
+    return shared_ptr<Layer<Dtype> >(new CuDNNConvolutionLayer<Dtype>(param));
 #endif  // USE_CUDNN
 #ifdef USE_LIBDNN
   } else if (engine == ConvolutionParameter_Engine_LIBDNN) {
-    return std::shared_ptr<Layer<Dtype> >(new LibDNNConvolutionLayer<Dtype>(param));
+    return shared_ptr<Layer<Dtype> >(new LibDNNConvolutionLayer<Dtype>(param));
 #endif  // USE_LIBDNN
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
@@ -207,7 +207,7 @@ REGISTER_LAYER_CREATOR(Convolution, GetConvolutionLayer);
 
 // Get deconvolution layer according to engine.
 template<typename Dtype>
-std::shared_ptr<Layer<Dtype> > GetDeconvolutionLayer(const LayerParameter& param) {
+shared_ptr<Layer<Dtype> > GetDeconvolutionLayer(const LayerParameter& param) {
   ConvolutionParameter_Engine engine = param.convolution_param().engine();
   if (engine == ConvolutionParameter_Engine_DEFAULT) {
     engine = ConvolutionParameter_Engine_CAFFE;
@@ -218,11 +218,11 @@ std::shared_ptr<Layer<Dtype> > GetDeconvolutionLayer(const LayerParameter& param
   }
 
   if (engine == ConvolutionParameter_Engine_CAFFE) {
-    return std::shared_ptr<Layer<Dtype> >(new
+    return shared_ptr<Layer<Dtype> >(new
                                      DeconvolutionLayer<Dtype>(param));
 #ifdef USE_LIBDNN
   } else if (engine == ConvolutionParameter_Engine_LIBDNN) {
-    return std::shared_ptr<Layer<Dtype> >(new
+    return shared_ptr<Layer<Dtype> >(new
                                      LibDNNDeconvolutionLayer<Dtype>(param));
 #endif  // USE_LIBDNN
   } else {
@@ -236,7 +236,7 @@ REGISTER_LAYER_CREATOR(Deconvolution, GetDeconvolutionLayer);
 
 // Get pooling layer according to engine.
 template<typename Dtype>
-std::shared_ptr<Layer<Dtype> > GetPoolingLayer(const LayerParameter& param) {
+shared_ptr<Layer<Dtype> > GetPoolingLayer(const LayerParameter& param) {
   PoolingParameter_Engine engine = param.pooling_param().engine();
   if (engine == PoolingParameter_Engine_DEFAULT) {
     engine = PoolingParameter_Engine_CAFFE;
@@ -246,23 +246,23 @@ std::shared_ptr<Layer<Dtype> > GetPoolingLayer(const LayerParameter& param) {
   }
   if (engine == PoolingParameter_Engine_LIBDNN) {
 #ifdef USE_LIBDNN
-    return std::shared_ptr<Layer<Dtype> >(new LibDNNPoolingLayer<Dtype>(param));
+    return shared_ptr<Layer<Dtype> >(new LibDNNPoolingLayer<Dtype>(param));
 #endif  // USE_LIBDNN
   } else if (engine == PoolingParameter_Engine_CAFFE
       || Caffe::GetDevice(param.device(), true)->backend() == BACKEND_OPENCL
       || checkPoolingDilated(param.pooling_param())) {
-    return std::shared_ptr<Layer<Dtype> >(new PoolingLayer<Dtype>(param));
+    return shared_ptr<Layer<Dtype> >(new PoolingLayer<Dtype>(param));
 #ifdef USE_CUDNN
   } else if (engine == PoolingParameter_Engine_CUDNN) {
     if (param.top_size() > 1) {
       LOG(INFO) << "cuDNN does not support multiple tops. "
                 << "Using Caffe's own pooling layer.";
-      return std::shared_ptr<Layer<Dtype> >(new PoolingLayer<Dtype>(param));
+      return shared_ptr<Layer<Dtype> >(new PoolingLayer<Dtype>(param));
     }
     if (checkPoolingDilated(param.pooling_param())) {
       LOG(FATAL) << "CuDNN doesn't support the dilated pooling at Layer "
                  << param.name();
-      return std::shared_ptr<Layer<Dtype> >(new PoolingLayer<Dtype>(param));
+      return shared_ptr<Layer<Dtype> >(new PoolingLayer<Dtype>(param));
     }
     // CuDNN assumes layers are not being modified in place, thus
     // breaking our index tracking for updates in some cases in Caffe.
@@ -270,9 +270,9 @@ std::shared_ptr<Layer<Dtype> > GetPoolingLayer(const LayerParameter& param) {
     // cuDNN, use Caffe layer to max pooling, or don't use in place
     // layers after max pooling layers
     if (param.pooling_param().pool() == PoolingParameter_PoolMethod_MAX) {
-        return std::shared_ptr<Layer<Dtype> >(new PoolingLayer<Dtype>(param));
+        return shared_ptr<Layer<Dtype> >(new PoolingLayer<Dtype>(param));
     } else {
-        return std::shared_ptr<Layer<Dtype> >(new CuDNNPoolingLayer<Dtype>(param));
+        return shared_ptr<Layer<Dtype> >(new CuDNNPoolingLayer<Dtype>(param));
     }
 #endif
   } else {
@@ -285,7 +285,7 @@ REGISTER_LAYER_CREATOR(Pooling, GetPoolingLayer);
 
 // Get LRN layer according to engine
 template <typename Dtype>
-std::shared_ptr<Layer<Dtype> > GetLRNLayer(const LayerParameter& param) {
+shared_ptr<Layer<Dtype> > GetLRNLayer(const LayerParameter& param) {
   LRNParameter_Engine engine = param.lrn_param().engine();
 
   if (engine == LRNParameter_Engine_DEFAULT) {
@@ -297,19 +297,19 @@ std::shared_ptr<Layer<Dtype> > GetLRNLayer(const LayerParameter& param) {
 
   if (engine == LRNParameter_Engine_CAFFE
       || Caffe::GetDevice(param.device(), true)->backend() == BACKEND_OPENCL) {
-    return std::shared_ptr<Layer<Dtype> >(new LRNLayer<Dtype>(param));
+    return shared_ptr<Layer<Dtype> >(new LRNLayer<Dtype>(param));
 #ifdef USE_CUDNN
   } else if (engine == LRNParameter_Engine_CUDNN) {
     LRNParameter lrn_param = param.lrn_param();
 
     if (lrn_param.norm_region() ==LRNParameter_NormRegion_WITHIN_CHANNEL) {
-      return std::shared_ptr<Layer<Dtype> >(new CuDNNLCNLayer<Dtype>(param));
+      return shared_ptr<Layer<Dtype> >(new CuDNNLCNLayer<Dtype>(param));
     } else {
       // local size is too big to be handled through cuDNN
       if (param.lrn_param().local_size() > CUDNN_LRN_MAX_N) {
-        return std::shared_ptr<Layer<Dtype> >(new LRNLayer<Dtype>(param));
+        return shared_ptr<Layer<Dtype> >(new LRNLayer<Dtype>(param));
       } else {
-        return std::shared_ptr<Layer<Dtype> >(new CuDNNLRNLayer<Dtype>(param));
+        return shared_ptr<Layer<Dtype> >(new CuDNNLRNLayer<Dtype>(param));
       }
     }
 #endif
@@ -323,7 +323,7 @@ REGISTER_LAYER_CREATOR(LRN, GetLRNLayer);
 
 // Get relu layer according to engine.
 template<typename Dtype>
-std::shared_ptr<Layer<Dtype> > GetReLULayer(const LayerParameter& param) {
+shared_ptr<Layer<Dtype> > GetReLULayer(const LayerParameter& param) {
   ReLUParameter_Engine engine = param.relu_param().engine();
   if (engine == ReLUParameter_Engine_DEFAULT) {
     engine = ReLUParameter_Engine_CAFFE;
@@ -333,10 +333,10 @@ std::shared_ptr<Layer<Dtype> > GetReLULayer(const LayerParameter& param) {
   }
   if (engine == ReLUParameter_Engine_CAFFE
       || Caffe::GetDevice(param.device(), true)->backend() == BACKEND_OPENCL) {
-    return std::shared_ptr<Layer<Dtype> >(new ReLULayer<Dtype>(param));
+    return shared_ptr<Layer<Dtype> >(new ReLULayer<Dtype>(param));
 #ifdef USE_CUDNN
   } else if (engine == ReLUParameter_Engine_CUDNN) {
-    return std::shared_ptr<Layer<Dtype> >(new CuDNNReLULayer<Dtype>(param));
+    return shared_ptr<Layer<Dtype> >(new CuDNNReLULayer<Dtype>(param));
 #endif
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
@@ -348,7 +348,7 @@ REGISTER_LAYER_CREATOR(ReLU, GetReLULayer);
 
 // Get sigmoid layer according to engine.
 template<typename Dtype>
-std::shared_ptr<Layer<Dtype> > GetSigmoidLayer(const LayerParameter& param) {
+shared_ptr<Layer<Dtype> > GetSigmoidLayer(const LayerParameter& param) {
   SigmoidParameter_Engine engine = param.sigmoid_param().engine();
   if (engine == SigmoidParameter_Engine_DEFAULT) {
     engine = SigmoidParameter_Engine_CAFFE;
@@ -358,10 +358,10 @@ std::shared_ptr<Layer<Dtype> > GetSigmoidLayer(const LayerParameter& param) {
   }
   if (engine == SigmoidParameter_Engine_CAFFE
       || Caffe::GetDevice(param.device(), true)->backend() == BACKEND_OPENCL) {
-    return std::shared_ptr<Layer<Dtype> >(new SigmoidLayer<Dtype>(param));
+    return shared_ptr<Layer<Dtype> >(new SigmoidLayer<Dtype>(param));
 #ifdef USE_CUDNN
   } else if (engine == SigmoidParameter_Engine_CUDNN) {
-    return std::shared_ptr<Layer<Dtype> >(new CuDNNSigmoidLayer<Dtype>(param));
+    return shared_ptr<Layer<Dtype> >(new CuDNNSigmoidLayer<Dtype>(param));
 #endif
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
@@ -373,7 +373,7 @@ REGISTER_LAYER_CREATOR(Sigmoid, GetSigmoidLayer);
 
 // Get softmax layer according to engine.
 template<typename Dtype>
-std::shared_ptr<Layer<Dtype> > GetSoftmaxLayer(const LayerParameter& param) {
+shared_ptr<Layer<Dtype> > GetSoftmaxLayer(const LayerParameter& param) {
   SoftmaxParameter_Engine engine = param.softmax_param().engine();
   if (engine == SoftmaxParameter_Engine_DEFAULT) {
     engine = SoftmaxParameter_Engine_CAFFE;
@@ -383,10 +383,10 @@ std::shared_ptr<Layer<Dtype> > GetSoftmaxLayer(const LayerParameter& param) {
   }
   if (engine == SoftmaxParameter_Engine_CAFFE
       || Caffe::GetDevice(param.device(), true)->backend() == BACKEND_OPENCL) {
-    return std::shared_ptr<Layer<Dtype> >(new SoftmaxLayer<Dtype>(param));
+    return shared_ptr<Layer<Dtype> >(new SoftmaxLayer<Dtype>(param));
 #ifdef USE_CUDNN
   } else if (engine == SoftmaxParameter_Engine_CUDNN) {
-    return std::shared_ptr<Layer<Dtype> >(new CuDNNSoftmaxLayer<Dtype>(param));
+    return shared_ptr<Layer<Dtype> >(new CuDNNSoftmaxLayer<Dtype>(param));
 #endif
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
@@ -398,7 +398,7 @@ REGISTER_LAYER_CREATOR(Softmax, GetSoftmaxLayer);
 
 // Get tanh layer according to engine.
 template<typename Dtype>
-std::shared_ptr<Layer<Dtype> > GetTanHLayer(const LayerParameter& param) {
+shared_ptr<Layer<Dtype> > GetTanHLayer(const LayerParameter& param) {
   TanHParameter_Engine engine = param.tanh_param().engine();
   if (engine == TanHParameter_Engine_DEFAULT) {
     engine = TanHParameter_Engine_CAFFE;
@@ -408,10 +408,10 @@ std::shared_ptr<Layer<Dtype> > GetTanHLayer(const LayerParameter& param) {
   }
   if (engine == TanHParameter_Engine_CAFFE
       || Caffe::GetDevice(param.device(), true)->backend() == BACKEND_OPENCL) {
-    return std::shared_ptr<Layer<Dtype> >(new TanHLayer<Dtype>(param));
+    return shared_ptr<Layer<Dtype> >(new TanHLayer<Dtype>(param));
 #ifdef USE_CUDNN
   } else if (engine == TanHParameter_Engine_CUDNN) {
-    return std::shared_ptr<Layer<Dtype> >(new CuDNNTanHLayer<Dtype>(param));
+    return shared_ptr<Layer<Dtype> >(new CuDNNTanHLayer<Dtype>(param));
 #endif
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
@@ -423,12 +423,12 @@ REGISTER_LAYER_CREATOR(TanH, GetTanHLayer);
 
 #ifdef WITH_PYTHON_LAYER
 template <typename Dtype>
-std::shared_ptr<Layer<Dtype> > GetPythonLayer(const LayerParameter& param) {
+shared_ptr<Layer<Dtype> > GetPythonLayer(const LayerParameter& param) {
   Py_Initialize();
   try {
     bp::object module = bp::import(param.python_param().module().c_str());
     bp::object layer = module.attr(param.python_param().layer().c_str())(param);
-    return bp::extract<std::shared_ptr<PythonLayer<Dtype> > >(layer)();
+    return bp::extract<shared_ptr<PythonLayer<Dtype> > >(layer)();
   } catch (bp::error_already_set) {
     PyErr_Print();
     throw;

@@ -18,7 +18,7 @@ namespace caffe {
 // accumulate through explicit loops over input, output, and filters.
 template <typename Dtype> static
 void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
-                const vector<std::shared_ptr<Blob<Dtype> > >& weights,
+                const vector<shared_ptr<Blob<Dtype> > >& weights,
                 Blob<Dtype>* out) {
   // Kernel size, stride, and pad
   int kernel_h, kernel_w;
@@ -59,12 +59,12 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
       k_head = k_g * g;
       for (int o = 0; o < o_g; o++) {
         for (int k = 0; k < k_g; k++) {
-          for (int y = 0; y < out->shape(2); y++) {
-            for (int x = 0; x < out->shape(3); x++) {
+          for (int Y = 0; Y < out->shape(2); Y++) {
+            for (int X = 0; X < out->shape(3); X++) {
               for (int p = 0; p < kernel_h; p++) {
                 for (int q = 0; q < kernel_w; q++) {
-                  int in_y = y * stride_h - pad_h + p;
-                  int in_x = x * stride_w - pad_w + q;
+                  int in_y = Y * stride_h - pad_h + p;
+                  int in_x = X * stride_w - pad_w + q;
                   if (in_y >= 0 && in_y < in->height()
                     && in_x >= 0 && in_x < in->width()) {
                     weight_offset[0] = o + o_head;
@@ -77,8 +77,8 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
                     in_offset[3] = in_x;
                     out_offset[0] = n;
                     out_offset[1] = o + o_head;
-                    out_offset[2] = y;
-                    out_offset[3] = x;
+                    out_offset[2] = Y;
+                    out_offset[3] = X;
                     out_data[out->offset(out_offset)] +=
                         in->data_at(in_offset)
                         * weights[0]->data_at(weight_offset);
@@ -96,12 +96,12 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
     const Dtype* bias_data = weights[1]->cpu_data();
     for (int n = 0; n < out->shape(0); n++) {
       for (int o = 0; o < out->shape(1); o++) {
-        for (int y = 0; y < out->shape(2); y++) {
-          for (int x = 0; x < out->shape(3); x++) {
+        for (int Y = 0; Y < out->shape(2); Y++) {
+          for (int X = 0; X < out->shape(3); X++) {
               out_offset[0] = n;
               out_offset[1] = o;
-              out_offset[2] = y;
-              out_offset[3] = x;
+              out_offset[2] = Y;
+              out_offset[3] = X;
               out_data[out->offset(out_offset)] += bias_data[o];
           }
         }
@@ -112,11 +112,11 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
 
 template void caffe_conv(const Blob<float>* in,
                          ConvolutionParameter* conv_param,
-                         const vector<std::shared_ptr<Blob<float> > >& weights,
+                         const vector<shared_ptr<Blob<float> > >& weights,
                          Blob<float>* out);
 template void caffe_conv(const Blob<double>* in,
                          ConvolutionParameter* conv_param,
-                         const vector<std::shared_ptr<Blob<double> > >& weights,
+                         const vector<shared_ptr<Blob<double> > >& weights,
                          Blob<double>* out);
 // test FFT
 
@@ -158,7 +158,7 @@ class ConvolutionLayerTest_FFT : public MultiDeviceTest<TypeParam> {
   Blob<Dtype>* const blob_bottom_2_;
   Blob<Dtype>* const blob_top_;
   Blob<Dtype>* const blob_top_2_;
-  std::shared_ptr<Blob<Dtype> > ref_blob_top_;
+  shared_ptr<Blob<Dtype> > ref_blob_top_;
   vector<Blob<Dtype>*> blob_bottom_vec_;
   vector<Blob<Dtype>*> blob_top_vec_;
 };
@@ -175,7 +175,7 @@ TYPED_TEST(ConvolutionLayerTest_FFT, TestSetup_FFT) {
   convolution_param->set_num_output(4);
   this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
   this->blob_top_vec_.push_back(this->blob_top_2_);
-  std::shared_ptr<Layer<Dtype> > layer(
+  shared_ptr<Layer<Dtype> > layer(
       new ConvolutionLayerFFT<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), 2);
@@ -214,7 +214,7 @@ TYPED_TEST(ConvolutionLayerTest_FFT, TestSimpleConvolution_FFT) {
   convolution_param->mutable_weight_filler()->set_type("gaussian");
   convolution_param->mutable_bias_filler()->set_type("constant");
   convolution_param->mutable_bias_filler()->set_value(0.1);
-  std::shared_ptr<Layer<Dtype> > layer(
+  shared_ptr<Layer<Dtype> > layer(
       new ConvolutionLayerFFT<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -252,7 +252,7 @@ TYPED_TEST(ConvolutionLayerTest_FFT, Test1x1Convolution_FFT) {
   convolution_param->mutable_weight_filler()->set_type("gaussian");
   convolution_param->mutable_bias_filler()->set_type("constant");
   convolution_param->mutable_bias_filler()->set_value(0.1);
-  std::shared_ptr<Layer<Dtype> > layer(
+  shared_ptr<Layer<Dtype> > layer(
       new ConvolutionLayerFFT<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -282,7 +282,7 @@ TYPED_TEST(ConvolutionLayerTest_FFT, TestSimpleConvolutionGroup_FFT) {
   convolution_param->mutable_weight_filler()->set_type("gaussian");
   convolution_param->mutable_bias_filler()->set_type("constant");
   convolution_param->mutable_bias_filler()->set_value(0.1);
-  std::shared_ptr<Layer<Dtype> > layer(
+  shared_ptr<Layer<Dtype> > layer(
       new ConvolutionLayerFFT<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -304,13 +304,13 @@ TYPED_TEST(ConvolutionLayerTest_FFT, TestSobelConvolution_FFT) {
   // as the convolution of two rectangular filters.
   typedef typename TypeParam::Dtype Dtype;
   // Fill bottoms with identical Gaussian noise.
-  std::shared_ptr<GaussianFiller<Dtype> > filler;
+  shared_ptr<GaussianFiller<Dtype> > filler;
   FillerParameter filler_param;
   filler_param.set_value(1.);
   filler.reset(new GaussianFiller<Dtype>(filler_param));
   filler->Fill(this->blob_bottom_);
   this->blob_bottom_2_->CopyFrom(*this->blob_bottom_);
-  // Compute Sobel G_x operator as 3 x 3 convolution.
+  // Compute Sobel G_x operator as 3 X 3 convolution.
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
       layer_param.mutable_convolution_param();
@@ -319,13 +319,13 @@ TYPED_TEST(ConvolutionLayerTest_FFT, TestSobelConvolution_FFT) {
   convolution_param->set_num_output(1);
   convolution_param->set_bias_term(false);
 
-  std::shared_ptr<Layer<Dtype> > layer(
+  shared_ptr<Layer<Dtype> > layer(
       new ConvolutionLayerFFT<Dtype>(layer_param));
   layer->blobs().resize(1);
   layer->blobs()[0].reset(new Blob<Dtype>(1, 3, 3, 3));
   Dtype* weights = layer->blobs()[0]->mutable_cpu_data();
   for (int c = 0; c < 3; ++c) {
-    int i = c * 9;  // 3 x 3 filter
+    int i = c * 9;  // 3 X 3 filter
     weights[i +  0] = -1;
     weights[i +  1] =  0;
     weights[i +  2] =  1;
@@ -338,11 +338,11 @@ TYPED_TEST(ConvolutionLayerTest_FFT, TestSobelConvolution_FFT) {
   }
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  // Compute Sobel G_x operator as separable 3 x 1 and 1 x 3 convolutions.
+  // Compute Sobel G_x operator as separable 3 X 1 and 1 X 3 convolutions.
   // (1) the [1 2 1] column filter
   vector<Blob<Dtype>*> sep_blob_bottom_vec;
   vector<Blob<Dtype>*> sep_blob_top_vec;
-  std::shared_ptr<Blob<Dtype> > blob_sep(new Blob<Dtype>());
+  shared_ptr<Blob<Dtype> > blob_sep(new Blob<Dtype>());
   sep_blob_bottom_vec.push_back(this->blob_bottom_2_);
   sep_blob_top_vec.push_back(this->blob_top_2_);
   convolution_param->clear_kernel_size();
@@ -359,7 +359,7 @@ TYPED_TEST(ConvolutionLayerTest_FFT, TestSobelConvolution_FFT) {
   layer->blobs()[0].reset(new Blob<Dtype>(1, 3, 3, 1));
   Dtype* weights_1 = layer->blobs()[0]->mutable_cpu_data();
   for (int c = 0; c < 3; ++c) {
-    int i = c * 3;  // 3 x 1 filter
+    int i = c * 3;  // 3 X 1 filter
     weights_1[i +  0] = 1;
     weights_1[i +  1] = 2;
     weights_1[i +  2] = 1;

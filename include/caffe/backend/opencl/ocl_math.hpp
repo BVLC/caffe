@@ -5,7 +5,7 @@
 #include "caffe/backend/device.hpp"
 
 #ifdef USE_OPENCL
-#include "caffe/backend/opencl/ocl_device.hpp"
+#include "ocl_device.hpp"
 
 #include <boost/math/special_functions/next.hpp>
 #include <boost/random.hpp>
@@ -57,6 +57,6 @@
 #define VCL_COL_MAJOR
 #endif
 
-
+#endif  // USE_OPENCL
 
 #endif  // CAFFE_BACKEND_OPENCL_OCL_MATH_HPP_

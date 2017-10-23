@@ -6,7 +6,8 @@ namespace caffe {
 
 #ifndef CPU_ONLY
 template<typename Dtype>
-void adagrad_update_gpu(device* dev, int_tp N, Dtype* g, Dtype* h, Dtype delta,
+void adagrad_update_gpu(Device* dev, DeviceProgram* dev_prog, uint_tp n,
+                        vptr<Dtype> g, vptr<Dtype> h, Dtype delta,
                         Dtype local_rate);
 #endif
 
@@ -49,8 +50,8 @@ void AdaGradSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
     }
     case Caffe::GPU: {
 #ifndef CPU_ONLY
-    adagrad_update_gpu(this->device_, net_params[param_id]->count(),
-        net_params[param_id]->mutable_gpu_diff(),
+    adagrad_update_gpu(this->device_, this->device_program_.get(),
+        net_params[param_id]->count(), net_params[param_id]->mutable_gpu_diff(),
         this->history_[param_id]->mutable_gpu_data(), delta, local_rate);
 #else
       NO_GPU;
@@ -62,7 +63,7 @@ void AdaGradSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
     }
   }
 
-INSTANTIATE_CLASS(AdaGradSolver);
+INSTANTIATE_CLASS_1T(AdaGradSolver);
 REGISTER_SOLVER_CLASS(AdaGrad);
 
 }  // namespace caffe

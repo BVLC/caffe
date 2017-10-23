@@ -3,17 +3,17 @@
 
 #include "caffe/blob.hpp"
 
-#include "../../include/caffe/backend/device.hpp"
+#include "caffe/backend/device.hpp"
 #include "caffe/common.hpp"
 #include "caffe/syncedmem.hpp"
 #include "caffe/util/math_functions.hpp"
 
 namespace caffe {
 
-template<typename Dtype, typename Mtype>
-bool Blob<Dtype, Mtype>::Reshape(const int_tp num, const int_tp channels,
-                          const int_tp height, const int_tp width) {
-  vector<int_tp> shape(4);
+template<typename Dtype>
+bool Blob<Dtype>::Reshape(const uint_tp num, const uint_tp channels,
+                          const uint_tp height, const uint_tp width) {
+  vector<uint_tp> shape(4);
   shape[0] = num;
   shape[1] = channels;
   shape[2] = height;
@@ -21,23 +21,23 @@ bool Blob<Dtype, Mtype>::Reshape(const int_tp num, const int_tp channels,
   return Reshape(shape, shape);
 }
 
-template<typename Dtype, typename Mtype>
-bool Blob<Dtype, Mtype>::Reshape(const vector<int_tp>& shape) {
+template<typename Dtype>
+bool Blob<Dtype>::Reshape(const vector<uint_tp>& shape) {
   return Reshape(shape, shape);
 }
 
-template<typename Dtype, typename Mtype>
-bool Blob<Dtype, Mtype>::Reshape(const vector<int_tp>& shape,
-                                 const vector<int_tp>& shape_stride) {
+template<typename Dtype>
+bool Blob<Dtype>::Reshape(const vector<uint_tp>& shape,
+                                 const vector<uint_tp>& shape_stride) {
   CHECK_LE(shape.size(), kMaxBlobAxes);
   count_ = 1;
   shape_.resize(shape.size());
-  if (!shape_data_ || shape_data_->size() < shape.size() * sizeof(int_tp)) {
+  if (!shape_data_ || shape_data_->size() < shape.size() * sizeof(uint_tp)) {
     shape_data_.reset(
-        new SyncedMemory<Dtype, Mtype>(shape.size() * sizeof(int_tp), device_));
+        new SyncedMemory(shape.size() * sizeof(uint_tp), device_));
   }
-  int_tp* shape_data = static_cast<int_tp*>(shape_data_->mutable_cpu_data());
-  for (int_tp i = 0; i < shape.size(); ++i) {
+  uint_tp* shape_data = static_cast<uint_tp*>(shape_data_->mutable_cpu_data());
+  for (uint_tp i = 0; i < shape.size(); ++i) {
     CHECK_GE(shape[i], 0);
     if (count_ != 0) {
 #ifdef USE_INDEX_64
@@ -59,151 +59,151 @@ bool Blob<Dtype, Mtype>::Reshape(const vector<int_tp>& shape,
   return false;
 }
 
-template<typename Dtype, typename Mtype>
-bool Blob<Dtype, Mtype>::Reshape(const BlobShape& shape,
+template<typename Dtype>
+bool Blob<Dtype>::Reshape(const BlobShape& shape,
                                  const BlobShape& shape_stride) {
   CHECK_LE(shape.dim_size(), kMaxBlobAxes);
-  vector<int_tp> shape_vec(shape.dim_size());
-  vector<int_tp> shape_stride_vec(shape.dim_size());
-  for (int_tp i = 0; i < shape.dim_size(); ++i) {
+  vector<uint_tp> shape_vec(shape.dim_size());
+  vector<uint_tp> shape_stride_vec(shape.dim_size());
+  for (uint_tp i = 0; i < shape.dim_size(); ++i) {
     shape_vec[i] = shape.dim(i);
     shape_stride_vec[i] = shape_stride.dim(i);
   }
   return Reshape(shape_vec, shape_stride_vec);
 }
 
-template<typename Dtype, typename Mtype>
-bool Blob<Dtype, Mtype>::Reshape(const BlobShape& shape) {
+template<typename Dtype>
+bool Blob<Dtype>::Reshape(const BlobShape& shape) {
   CHECK_LE(shape.dim_size(), kMaxBlobAxes);
-  vector<int_tp> shape_vec(shape.dim_size());
-  for (int_tp i = 0; i < shape.dim_size(); ++i) {
+  vector<uint_tp> shape_vec(shape.dim_size());
+  for (uint_tp i = 0; i < shape.dim_size(); ++i) {
     shape_vec[i] = shape.dim(i);
   }
   return Reshape(shape_vec, shape_vec);
 }
 
-template<typename Dtype, typename Mtype>
-bool Blob<Dtype, Mtype>::ReshapeLike(const Blob<Dtype, Mtype>& other) {
+template<typename Dtype>
+bool Blob<Dtype>::ReshapeLike(const Blob<Dtype>& other) {
   return Reshape(other.shape());
 }
 
-template<typename Dtype, typename Mtype>
-Blob<Dtype, Mtype>::Blob(const int_tp num, const int_tp channels, const int_tp height,
-                  const int_tp width, device *device_context)
+template<typename Dtype>
+Blob<Dtype>::Blob(const uint_tp num, const uint_tp channels,
+                  const uint_tp height, const uint_tp width,
+                  Device *device_context)
     // capacity_ must be initialized before calling Reshape
     : capacity_(0), device_(device_context) {
   Reshape(num, channels, height, width);
 }
 
-template<typename Dtype, typename Mtype>
-Blob<Dtype, Mtype>::Blob(const vector<int_tp>& shape, device *device_context)
+template<typename Dtype>
+Blob<Dtype>::Blob(const vector<uint_tp>& shape, Device *device_context)
     // capacity_ must be initialized before calling Reshape
     : capacity_(0), device_(device_context) {
   Reshape(shape);
 }
 
 template <typename Dtype>
-const int_tp* Blob<Dtype, Mtype>::gpu_shape() const {
+vptr<const uint_tp> Blob<Dtype>::gpu_shape() const {
   CHECK(shape_data_);
-  return (const int_tp*)shape_data_->gpu_data();
+  return shape_data_->gpu_data();
 }
 
 template <typename Dtype>
-const Dtype* Blob<Dtype, Mtype>::cpu_data() const {
+const Dtype* Blob<Dtype>::cpu_data() const {
   CHECK(data_);
   return (const Dtype*) data_->cpu_data();
 }
 
-template<typename Dtype, typename Mtype>
-void Blob<Dtype, Mtype>::set_cpu_data(Dtype* data) {
+template<typename Dtype>
+void Blob<Dtype>::set_cpu_data(Dtype* data) {
   CHECK(data);
   // Make sure CPU and GPU sizes remain equal
   size_t size = count_ * sizeof(Dtype);
   if (data_->size() != size) {
-    data_.reset(new SyncedMemory(size, device_, dtypeof<Dtype>()));
-    diff_.reset(new SyncedMemory(size, device_, dtypeof<Dtype>()));
+    data_.reset(new SyncedMemory(size, device_));
+    diff_.reset(new SyncedMemory(size, device_));
   }
   data_->set_cpu_data(data);
 }
 
-template<typename Dtype, typename Mtype>
-const Dtype* Blob<Dtype, Mtype>::gpu_data() const {
+template<typename Dtype>
+vptr<const Dtype> Blob<Dtype>::gpu_data() const {
   CHECK(data_);
-  return (const Dtype*) data_->gpu_data();
+  return data_->gpu_data();
 }
 
-template <typename Dtype, typename Mtype>
-void Blob<Dtype, Mtype>::set_gpu_data(Dtype* data) {
-  CHECK(data);
+template <typename Dtype>
+void Blob<Dtype>::set_gpu_data(vptr<Dtype> data) {
   // Make sure CPU and GPU sizes remain equal
   size_t size = count_ * sizeof(Dtype);
   if (data_->size() != size) {
-    data_.reset(new SyncedMemory<Dtype, Mtype>(size, device_));
-    diff_.reset(new SyncedMemory<Dtype, Mtype>(size, device_));
+    data_.reset(new SyncedMemory(size, device_));
+    diff_.reset(new SyncedMemory(size, device_));
   }
   data_->set_gpu_data(data);
 }
 
-template <typename Dtype, typename Mtype>
-const Dtype* Blob<Dtype, Mtype>::cpu_diff() const {
+template <typename Dtype>
+const Dtype* Blob<Dtype>::cpu_diff() const {
   CHECK(diff_);
   return (const Dtype*) diff_->cpu_data();
 }
 
-template<typename Dtype, typename Mtype>
-const Dtype* Blob<Dtype, Mtype>::gpu_diff() const {
+template<typename Dtype>
+vptr<const Dtype> Blob<Dtype>::gpu_diff() const {
   CHECK(diff_);
-  return (const Dtype*) diff_->gpu_data();
+  return diff_->gpu_data();
 }
 
-template<typename Dtype, typename Mtype>
-Dtype* Blob<Dtype, Mtype>::mutable_cpu_data() {
+template<typename Dtype>
+Dtype* Blob<Dtype>::mutable_cpu_data() {
   CHECK(data_);
   return static_cast<Dtype*>(data_->mutable_cpu_data());
 }
 
-template<typename Dtype, typename Mtype>
-Dtype* Blob<Dtype, Mtype>::mutable_gpu_data() {
+template<typename Dtype>
+vptr<Dtype> Blob<Dtype>::mutable_gpu_data() {
   CHECK(data_);
-  return static_cast<Dtype*>(data_->mutable_gpu_data());
+  return vptr<Dtype>(data_->mutable_gpu_data());
 }
 
-template<typename Dtype, typename Mtype>
-Dtype* Blob<Dtype, Mtype>::mutable_cpu_diff() {
+template<typename Dtype>
+Dtype* Blob<Dtype>::mutable_cpu_diff() {
   CHECK(diff_);
   return static_cast<Dtype*>(diff_->mutable_cpu_data());
 }
 
-template<typename Dtype, typename Mtype>
-Dtype* Blob<Dtype, Mtype>::mutable_gpu_diff() {
+template<typename Dtype>
+vptr<Dtype> Blob<Dtype>::mutable_gpu_diff() {
   CHECK(diff_);
-  return static_cast<Dtype*>(diff_->mutable_gpu_data());
+  return diff_->mutable_gpu_data();
 }
 
-template<typename Dtype, typename Mtype>
-void Blob<Dtype, Mtype>::ShareData(const Blob& other) {
+template<typename Dtype>
+void Blob<Dtype>::ShareData(const Blob& other) {
   CHECK_EQ(count_, other.count());
   data_ = other.data();
 }
 
-template<typename Dtype, typename Mtype>
-void Blob<Dtype, Mtype>::ShareDiff(const Blob& other) {
+template<typename Dtype>
+void Blob<Dtype>::ShareDiff(const Blob& other) {
   CHECK_EQ(count_, other.count());
   diff_ = other.diff();
 }
 
 // The "update" method is used for parameter blobs in a Net, which are stored
 // as Blob<float> or Blob<double> -- hence we do not define it for
-// Blob<int_tp> or Blob<uint_tp>.
-template<> void Blob<uint_tp, uint_tp>::Update() {
+// Blob<uint_tp> or Blob<uint_tp>.
+template<> void Blob<uint_tp>::Update() {
   NOT_IMPLEMENTED;
 }
-template<> void Blob<int_tp, int_tp>::Update() {
+template<> void Blob<int_tp>::Update() {
   NOT_IMPLEMENTED;
 }
 
-template<typename Dtype, typename Mtype>
-void Blob<Dtype, Mtype>::Update() {
+template<typename Dtype>
+void Blob<Dtype>::Update() {
   // We will perform update based on where the data is located.
   switch (data_->head()) {
     case SyncedMemory::HEAD_AT_CPU: {
@@ -218,19 +218,8 @@ void Blob<Dtype, Mtype>::Update() {
     case SyncedMemory::SYNCED: {
 #ifndef CPU_ONLY
       // perform computation on GPU
-      if (device_->backend() == Backend::BACKEND_CUDA) {
-#ifdef USE_CUDA
-        caffe_gpu_axpy<Dtype>(count_, Dtype(-1),
-                              static_cast<const Dtype*>(diff_->gpu_data()),
-                              static_cast<Dtype*>(data_->mutable_gpu_data()));
-#endif
-      } else {
-#ifdef USE_OPENCL
-        greentea_gpu_axpy<Dtype>(device_->id(), count_, Dtype(-1),
-                                 (cl_mem) (diff_->gpu_data()), 0,
-                                 (cl_mem) (data_->mutable_gpu_data()), 0);
-#endif
-      }
+      device_->axpy<Dtype>(count_, Dtype(-1), diff_->gpu_data(),
+                           data_->mutable_gpu_data());
 #else
       NO_GPU;
 #endif
@@ -238,17 +227,12 @@ void Blob<Dtype, Mtype>::Update() {
     }
     default:
       LOG(FATAL)<< "Syncedmem not initialized.";
-    }
   }
+}
 
 template<> uint_tp Blob<uint_tp>::asum_data() const {
   NOT_IMPLEMENTED;
   return 0;
-}
-
-template<typename Dtype, typename Mtype>
-device *Blob<Dtype>::get_device() {
-  return device_;
 }
 
 template<> int_tp Blob<int_tp>::asum_data() const {
@@ -256,8 +240,13 @@ template<> int_tp Blob<int_tp>::asum_data() const {
   return 0;
 }
 
-template<typename Dtype, typename Mtype>
-Dtype Blob<Dtype, Mtype>::asum_data() const {
+template<typename Dtype>
+Device *Blob<Dtype>::get_device() {
+  return device_;
+}
+
+template<typename Dtype>
+Dtype Blob<Dtype>::asum_data() const {
   if (!data_) {
     return (Dtype)0;
   }
@@ -267,20 +256,9 @@ Dtype Blob<Dtype, Mtype>::asum_data() const {
     case SyncedMemory::HEAD_AT_GPU:
     case SyncedMemory::SYNCED: {
 #ifndef CPU_ONLY
-      if (device_->backend() == Backend::BACKEND_CUDA) {
-#ifdef USE_CUDA
-        Dtype asum;
-        caffe_gpu_asum(count_, gpu_data(), &asum);
-        return asum;
-#endif
-      } else {
-#ifdef USE_OPENCL
-        Dtype asum;
-        greentea_gpu_asum(device_->id(), count_, (cl_mem) gpu_data(), 0,
-                          &asum);
-        return asum;
-#endif
-      }
+      Dtype asum;
+      device_->asum<Dtype>(count_, gpu_data(), &asum);
+      return asum;
 #else
       NO_GPU;
 #endif
@@ -289,7 +267,7 @@ Dtype Blob<Dtype, Mtype>::asum_data() const {
       return 0;
     default:
       LOG(FATAL)<< "Unknown SyncedMemory head state: " << data_->head();
-    }
+  }
   return 0;
 }
 
@@ -303,8 +281,8 @@ template<> int_tp Blob<int_tp>::asum_diff() const {
   return 0;
 }
 
-template<typename Dtype, typename Mtype>
-Dtype Blob<Dtype, Mtype>::asum_diff() const {
+template<typename Dtype>
+Dtype Blob<Dtype>::asum_diff() const {
   if (!diff_) {
     return 0;
   }
@@ -314,20 +292,9 @@ Dtype Blob<Dtype, Mtype>::asum_diff() const {
     case SyncedMemory::HEAD_AT_GPU:
     case SyncedMemory::SYNCED: {
 #ifndef CPU_ONLY
-      if (device_->backend() == Backend::BACKEND_CUDA) {
-#ifdef USE_CUDA
-        Dtype asum;
-        caffe_gpu_asum(count_, gpu_diff(), &asum);
-        return asum;
-#endif
-      } else {
-#ifdef USE_OPENCL
-        Dtype asum;
-        greentea_gpu_asum(device_->id(), count_, (cl_mem) gpu_diff(), 0,
-                          &asum);
-        return asum;
-#endif
-      }
+      Dtype asum;
+      device_->asum<Dtype>(count_, gpu_diff(), &asum);
+      return asum;
 #else
       NO_GPU;
 #endif
@@ -350,10 +317,12 @@ template<> int_tp Blob<int_tp>::sumsq_data() const {
   return 0;
 }
 
-template<typename Dtype, typename Mtype>
-Dtype Blob<Dtype, Mtype>::sumsq_data() const {
+template<typename Dtype>
+Dtype Blob<Dtype>::sumsq_data() const {
   Dtype sumsq;
+  Dtype gpu_sumsq;
   const Dtype* data;
+  vptr<const Dtype> gpu_vptr_data;
   if (!data_) {
     return 0;
   }
@@ -366,17 +335,9 @@ Dtype Blob<Dtype, Mtype>::sumsq_data() const {
     case SyncedMemory::HEAD_AT_GPU:
     case SyncedMemory::SYNCED: {
 #ifndef CPU_ONLY
-      data = gpu_data();
-      if (device_->backend() == Backend::BACKEND_CUDA) {
-#ifdef USE_CUDA
-        caffe_gpu_dot(count_, data, data, &sumsq);
-#endif
-      } else {
-#ifdef USE_OPENCL
-        greentea_gpu_dot(device_->id(), count_, (cl_mem) data, 0,
-                         (cl_mem) data, 0, &sumsq);
-#endif
-      }
+      gpu_vptr_data = gpu_data();
+      device_->dot<Dtype>(count_, gpu_vptr_data, gpu_vptr_data, &gpu_sumsq);
+      sumsq = gpu_sumsq;
 #else
       NO_GPU;
 #endif
@@ -400,10 +361,12 @@ template<> int_tp Blob<int_tp>::sumsq_diff() const {
   return 0;
 }
 
-template<typename Dtype, typename Mtype>
-Dtype Blob<Dtype, Mtype>::sumsq_diff() const {
+template<typename Dtype>
+Dtype Blob<Dtype>::sumsq_diff() const {
   Dtype sumsq;
+  Dtype gpu_sumsq;
   const Dtype* diff;
+  vptr<Dtype> gpu_diff;
   if (!diff_) {
     return 0;
   }
@@ -416,17 +379,8 @@ Dtype Blob<Dtype, Mtype>::sumsq_diff() const {
     case SyncedMemory::HEAD_AT_GPU:
     case SyncedMemory::SYNCED: {
 #ifndef CPU_ONLY
-      diff = gpu_diff();
-      if (device_->backend() == Backend::BACKEND_CUDA) {
-#ifdef USE_CUDA
-        caffe_gpu_dot(count_, diff, diff, &sumsq);
-#endif
-      } else {
-#ifdef USE_OPENCL
-        greentea_gpu_dot(device_->id(), count_, (cl_mem) diff, 0,
-                         (cl_mem) diff, 0, &sumsq);
-#endif
-      }
+      device_->dot<Dtype>(count_, gpu_diff, gpu_diff, &gpu_sumsq);
+      sumsq = gpu_sumsq;
 #else
       NO_GPU;
 #endif
@@ -448,9 +402,10 @@ template<> void Blob<int_tp>::scale_data(int_tp scale_factor) {
   NOT_IMPLEMENTED;
 }
 
-template<typename Dtype, typename Mtype>
-void Blob<Dtype, Mtype>::scale_data(Dtype scale_factor) {
+template<typename Dtype>
+void Blob<Dtype>::scale_data(Dtype scale_factor) {
   Dtype* data;
+  vptr<Dtype> gpu_data;
   if (!data_) {
     return;
   }
@@ -463,17 +418,8 @@ void Blob<Dtype, Mtype>::scale_data(Dtype scale_factor) {
     case SyncedMemory::HEAD_AT_GPU:
     case SyncedMemory::SYNCED: {
 #ifndef CPU_ONLY
-      data = mutable_gpu_data();
-      if (device_->backend() == Backend::BACKEND_CUDA) {
-#ifdef USE_CUDA
-        caffe_gpu_scal(count_, scale_factor, data);
-#endif
-      } else {
-#ifdef USE_OPENCL
-        greentea_gpu_scal(device_->id(), count_, scale_factor,
-                          (cl_mem) data, 0);
-#endif
-      }
+      gpu_data = mutable_gpu_data();
+      device_->scal<Dtype>(count_, scale_factor, gpu_data);
       return;
 #else
       NO_GPU;
@@ -494,46 +440,38 @@ template<> void Blob<int_tp>::scale_diff(int_tp scale_factor) {
   NOT_IMPLEMENTED;
 }
 
-template<typename Dtype, typename Mtype>
-void Blob<Dtype, Mtype>::scale_diff(Dtype scale_factor) {
+template<typename Dtype>
+void Blob<Dtype>::scale_diff(Dtype scale_factor) {
   Dtype* diff;
+  vptr<Dtype> gpu_vptr_diff;
   if (!diff_) {
     return;
   }
   switch (diff_->head()) {
-    case SyncedMemory<Dtype, Mtype>::HEAD_AT_CPU: {
+    case SyncedMemory::HEAD_AT_CPU: {
       diff = mutable_cpu_diff();
       caffe_scal(count_, scale_factor, diff);
       return;
     }
-    case SyncedMemory<Dtype, Mtype>::HEAD_AT_GPU:
-    case SyncedMemory<Dtype, Mtype>::SYNCED: {
+    case SyncedMemory::HEAD_AT_GPU:
+    case SyncedMemory::SYNCED: {
 #ifndef CPU_ONLY
-      diff = mutable_gpu_diff();
-      if (device_->backend() == Backend::BACKEND_CUDA) {
-#ifdef USE_CUDA
-        caffe_gpu_scal(count_, scale_factor, diff);
-#endif
-      } else {
-#ifdef USE_OPENCL
-        greentea_gpu_scal(device_->id(), count_, scale_factor,
-                          (cl_mem) diff, 0);
-#endif
-      }
+      gpu_vptr_diff = mutable_gpu_diff();
+      device_->scal<Dtype>(count_, scale_factor, gpu_vptr_diff);
       return;
 #else
       NO_GPU;
 #endif
     }
-    case SyncedMemory<Dtype, Mtype>::UNINITIALIZED:
+    case SyncedMemory::UNINITIALIZED:
       return;
     default:
       LOG(FATAL)<< "Unknown SyncedMemory head state: " << diff_->head();
     }
   }
 
-template<typename Dtype, typename Mtype>
-bool Blob<Dtype, Mtype>::ShapeEquals(const BlobProto& other) {
+template<typename Dtype>
+bool Blob<Dtype>::ShapeEquals(const BlobProto& other) {
   if (other.has_num() || other.has_channels() || other.has_height()
       || other.has_width()) {
     // Using deprecated 4D Blob dimensions --
@@ -541,21 +479,21 @@ bool Blob<Dtype, Mtype>::ShapeEquals(const BlobProto& other) {
     // Note: we do not use the normal Blob::num(), Blob::channels(), etc.
     // methods as these index from the beginning of the blob shape, where legacy
     // parameter blobs were indexed from the end of the blob shape (e.g., bias
-    // Blob shape (1 x 1 x 1 x N), IP layer weight Blob shape (1 x 1 x M x N)).
+    // Blob shape (1 X 1 X 1 X n), IP layer weight Blob shape (1 X 1 X m X n)).
     return shape_.size() <= 4 && LegacyShape(-4) == other.num()
         && LegacyShape(-3) == other.channels()
         && LegacyShape(-2) == other.height()
         && LegacyShape(-1) == other.width();
   }
-  vector<int_tp> other_shape(other.shape().dim_size());
-  for (int_tp i = 0; i < other.shape().dim_size(); ++i) {
+  vector<uint_tp> other_shape(other.shape().dim_size());
+  for (uint_tp i = 0; i < other.shape().dim_size(); ++i) {
     other_shape[i] = other.shape().dim(i);
   }
   return shape_ == other_shape;
 }
 
-template<typename Dtype, typename Mtype>
-void Blob<Dtype, Mtype>::CopyFrom(const Blob& source, bool copy_diff, bool reshape) {
+template<typename Dtype>
+void Blob<Dtype>::CopyFrom(const Blob& source, bool copy_diff, bool reshape) {
   if (source.count() != count_ || source.shape() != shape_) {
     if (reshape) {
       ReshapeLike(source);
@@ -565,28 +503,12 @@ void Blob<Dtype, Mtype>::CopyFrom(const Blob& source, bool copy_diff, bool resha
   }
   switch (Caffe::mode()) {
     case Caffe::GPU: {
-      if (device_->backend() == BACKEND_CUDA) {
-        if (copy_diff) {
-          caffe_copy(count_, source.gpu_diff(),
-              static_cast<Dtype*>(diff_->mutable_gpu_data()));
-        } else {
-          caffe_copy(count_, source.gpu_data(),
-              static_cast<Dtype*>(data_->mutable_gpu_data()));
-        }
+      if (copy_diff) {
+        device_->copy(count_, source.gpu_diff(),
+                      vptr<Dtype>(diff_->mutable_gpu_data()));
       } else {
-#ifdef USE_OPENCL
-        if (copy_diff) {
-          greentea_copy<Dtype>(
-              count_, (cl_mem) (source.gpu_diff()), 0,
-              (cl_mem) (diff_->mutable_gpu_data()), 0,
-              &viennacl::ocl::get_context(device_->id()));
-        } else {
-          greentea_copy<Dtype>(
-              count_, (cl_mem) (source.gpu_data()), 0,
-              (cl_mem) (data_->mutable_gpu_data()), 0,
-              &viennacl::ocl::get_context(device_->id()));
-        }
-#endif
+        device_->copy(count_, source.gpu_data(),
+                      vptr<Dtype>(data_->mutable_gpu_data()));
       }
       break;
     }
@@ -605,10 +527,10 @@ void Blob<Dtype, Mtype>::CopyFrom(const Blob& source, bool copy_diff, bool resha
   }
 }
 
-template<typename Dtype, typename Mtype>
-void Blob<Dtype, Mtype>::FromProto(const BlobProto& proto, bool reshape) {
+template<typename Dtype>
+void Blob<Dtype>::FromProto(const BlobProto& proto, bool reshape) {
   if (reshape) {
-    vector<int_tp> shape;
+    vector<uint_tp> shape;
     if (proto.has_num() || proto.has_channels() || proto.has_height()
         || proto.has_width()) {
       // Using deprecated 4D Blob dimensions --
@@ -620,7 +542,7 @@ void Blob<Dtype, Mtype>::FromProto(const BlobProto& proto, bool reshape) {
       shape[3] = proto.width();
     } else {
       shape.resize(proto.shape().dim_size());
-      for (int_tp i = 0; i < proto.shape().dim_size(); ++i) {
+      for (uint_tp i = 0; i < proto.shape().dim_size(); ++i) {
         shape[i] = proto.shape().dim(i);
       }
     }
@@ -632,93 +554,93 @@ void Blob<Dtype, Mtype>::FromProto(const BlobProto& proto, bool reshape) {
   Dtype* data_vec = mutable_cpu_data();
   if (proto.double_data_size() > 0) {
     CHECK_EQ(count_, proto.double_data_size());
-    for (int_tp i = 0; i < count_; ++i) {
+    for (uint_tp i = 0; i < count_; ++i) {
       data_vec[i] = proto.double_data(i);
     }
   } else {
     CHECK_EQ(count_, proto.data_size());
-    for (int_tp i = 0; i < count_; ++i) {
+    for (uint_tp i = 0; i < count_; ++i) {
       data_vec[i] = proto.data(i);
     }
   }
   if (proto.double_diff_size() > 0) {
     CHECK_EQ(count_, proto.double_diff_size());
     Dtype* diff_vec = mutable_cpu_diff();
-    for (int_tp i = 0; i < count_; ++i) {
+    for (uint_tp i = 0; i < count_; ++i) {
       diff_vec[i] = proto.double_diff(i);
     }
   } else if (proto.diff_size() > 0) {
     CHECK_EQ(count_, proto.diff_size());
     Dtype* diff_vec = mutable_cpu_diff();
-    for (int_tp i = 0; i < count_; ++i) {
+    for (uint_tp i = 0; i < count_; ++i) {
       diff_vec[i] = proto.diff(i);
     }
   }
 }
 
-template <typename Mtype>
-void Blob<half, Mtype>::ToProto(BlobProto* proto, bool write_diff) const {
+template<>
+void Blob<half_float::half>::ToProto(BlobProto* proto, bool write_diff) const {
   proto->clear_shape();
-  for (int_tp i = 0; i < shape_.size(); ++i) {
+  for (uint_tp i = 0; i < shape_.size(); ++i) {
     proto->mutable_shape()->add_dim(shape_[i]);
   }
   proto->clear_double_data();
   proto->clear_double_diff();
-  const half* data_vec = cpu_data();
-  for (int_tp i = 0; i < count_; ++i) {
+  const half_float::half* data_vec = cpu_data();
+  for (uint_tp i = 0; i < count_; ++i) {
     proto->add_double_data(data_vec[i]);
   }
   if (write_diff) {
-    const half* diff_vec = cpu_diff();
-    for (int_tp i = 0; i < count_; ++i) {
+    const half_float::half* diff_vec = cpu_diff();
+    for (uint_tp i = 0; i < count_; ++i) {
       proto->add_double_diff(diff_vec[i]);
     }
   }
 }
 
-template <typename Mtype>
-void Blob<double, Mtype>::ToProto(BlobProto* proto, bool write_diff) const {
+template<>
+void Blob<double>::ToProto(BlobProto* proto, bool write_diff) const {
   proto->clear_shape();
-  for (int_tp i = 0; i < shape_.size(); ++i) {
+  for (uint_tp i = 0; i < shape_.size(); ++i) {
     proto->mutable_shape()->add_dim(shape_[i]);
   }
   proto->clear_double_data();
   proto->clear_double_diff();
   const double* data_vec = cpu_data();
-  for (int_tp i = 0; i < count_; ++i) {
+  for (uint_tp i = 0; i < count_; ++i) {
     proto->add_double_data(data_vec[i]);
   }
   if (write_diff) {
     const double* diff_vec = cpu_diff();
-    for (int_tp i = 0; i < count_; ++i) {
+    for (uint_tp i = 0; i < count_; ++i) {
       proto->add_double_diff(diff_vec[i]);
     }
   }
 }
 
-template <typename Mtype>
-void Blob<float, Mtype>::ToProto(BlobProto* proto, bool write_diff) const {
+template<>
+void Blob<float>::ToProto(BlobProto* proto, bool write_diff) const {
   proto->clear_shape();
-  for (int_tp i = 0; i < shape_.size(); ++i) {
+  for (uint_tp i = 0; i < shape_.size(); ++i) {
     proto->mutable_shape()->add_dim(shape_[i]);
   }
   proto->clear_data();
   proto->clear_diff();
   const float* data_vec = cpu_data();
-  for (int_tp i = 0; i < count_; ++i) {
+  for (uint_tp i = 0; i < count_; ++i) {
     proto->add_data(data_vec[i]);
   }
   if (write_diff) {
     const float* diff_vec = cpu_diff();
-    for (int_tp i = 0; i < count_; ++i) {
+    for (uint_tp i = 0; i < count_; ++i) {
       proto->add_diff(diff_vec[i]);
     }
   }
 }
 
-INSTANTIATE_CLASS_2T(Blob);
-template class Blob<int_tp, int_tp>;
-template class Blob<uint_tp, uint_tp>;
+INSTANTIATE_CLASS_1T(Blob);
+template class Blob<int_tp>;
+template class Blob<uint_tp>;
 
 }  // namespace caffe
 

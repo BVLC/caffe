@@ -5,10 +5,10 @@
 
 namespace caffe {
 
-template <typename Dtype, typename Ctype, typename MItype, typename MOtype>
-void DummyDataLayer<Dtype, Ctype, MItype, MOtype>::LayerSetUp(
-      const vector<Blob<Dtype, MItype>*>& bottom,
-      const vector<Blob<Dtype, MOtype>*>& top) {
+template<typename Dtype, typename MItype, typename MOtype>
+void DummyDataLayer<Dtype, MItype, MOtype>::LayerSetUp(
+      const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top) {
   const int_tp num_top = top.size();
   const DummyDataParameter& param = this->layer_param_.dummy_data_param();
   const int_tp num_data_filler = param.data_filler_size();
@@ -98,9 +98,10 @@ void DummyDataLayer<Dtype, Ctype, MItype, MOtype>::LayerSetUp(
   }
 }
 
-template <typename Dtype>
-void DummyDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {
+template<typename Dtype, typename MItype, typename MOtype>
+void DummyDataLayer<Dtype, MItype, MOtype>::Forward_cpu(
+      const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top) {
   for (int_tp i = 0; i < top.size(); ++i) {
     const int_tp filler_id = (fillers_.size() > 1) ? i : 0;
     if (refill_[filler_id]) {

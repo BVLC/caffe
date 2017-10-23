@@ -23,7 +23,7 @@ void hdf5_load_nd_dataset_helper(
   CHECK_LE(ndims, max_dim);
 
   // Verify that the data format is what we expect: float or double.
-  std::vector<hsize_t> dims(ndims);
+  vector<hsize_t> dims(ndims);
   H5T_class_t class_;
   status = H5LTget_dataset_info(
       file_id, dataset_name_, dims.data(), &class_, NULL);

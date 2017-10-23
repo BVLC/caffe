@@ -52,7 +52,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
       datum.set_channels(2);
       datum.set_height(3);
       datum.set_width(4);
-      std::string* data = datum.mutable_data();
+      string* data = datum.mutable_data();
       for (int_tp j = 0; j < 24; ++j) {
         int_tp datum = unique_pixels ? j : i;
         data->push_back(static_cast<uint8_t>(datum));
@@ -144,7 +144,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
       datum.set_channels(2);
       datum.set_height(i % 2 + 1);
       datum.set_width(i % 4 + 1);
-      std::string* data = datum.mutable_data();
+      string* data = datum.mutable_data();
       const int_tp data_size = datum.channels() * datum.height()
           * datum.width();
       for (int_tp j = 0; j < data_size; ++j) {
@@ -366,7 +366,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
   virtual ~DataLayerTest() { delete blob_top_data_; delete blob_top_label_; }
 
   DataParameter_DB backend_;
-  std::shared_ptr<string> filename_;
+  shared_ptr<string> filename_;
   Blob<Dtype>* const blob_top_data_;
   Blob<Dtype>* const blob_top_label_;
   vector<Blob<Dtype>*> blob_bottom_vec_;

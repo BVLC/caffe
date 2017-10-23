@@ -13,7 +13,7 @@
 
 #ifdef USE_OPENCV
 using namespace caffe;  // NOLINT(build/namespaces)
-using std::string;
+using string;
 
 /* Pair (label, confidence) representing a prediction. */
 typedef std::pair<string, float> Prediction;
@@ -25,24 +25,24 @@ class Classifier {
              const string& mean_file,
              const string& label_file);
 
-  std::vector<Prediction> Classify(const cv::Mat& img, int_tp N = 5);
+  vector<Prediction> Classify(const cv::Mat& img, int_tp N = 5);
 
  private:
   void SetMean(const string& mean_file);
 
-  std::vector<float> Predict(const cv::Mat& img);
+  vector<float> Predict(const cv::Mat& img);
 
-  void WrapInputLayer(std::vector<cv::Mat>* input_channels);
+  void WrapInputLayer(vector<cv::Mat>* input_channels);
 
   void Preprocess(const cv::Mat& img,
-                  std::vector<cv::Mat>* input_channels);
+                  vector<cv::Mat>* input_channels);
 
  private:
-  std::shared_ptr<Net<float> > net_;
+  shared_ptr<Net<float> > net_;
   cv::Size input_geometry_;
   int_tp num_channels_;
   cv::Mat mean_;
-  std::vector<string> labels_;
+  vector<string> labels_;
 };
 
 // Get all available GPU devices
@@ -111,29 +111,29 @@ static bool PairCompare(const std::pair<float, int_tp>& lhs,
 }
 
 /* Return the indices of the top N values of vector v. */
-static std::vector<int_tp> Argmax(const std::vector<float>& v, int_tp N) {
-  std::vector<std::pair<float, int_tp> > pairs;
+static vector<int_tp> Argmax(const vector<float>& v, int_tp N) {
+  vector<std::pair<float, int_tp> > pairs;
   for (size_t i = 0; i < v.size(); ++i) {
-    pairs.push_back(std::make_pair(v[i], static_cast<int_tp>(i)));
+    pairs.push_back(make_pair(v[i], static_cast<int_tp>(i)));
   }
   std::partial_sort(pairs.begin(), pairs.begin() + N, pairs.end(), PairCompare);
 
-  std::vector<int_tp> result;
+  vector<int_tp> result;
   for (int_tp i = 0; i < N; ++i)
     result.push_back(pairs[i].second);
   return result;
 }
 
 /* Return the top N predictions. */
-std::vector<Prediction> Classifier::Classify(const cv::Mat& img, int_tp N) {
-  std::vector<float> output = Predict(img);
+vector<Prediction> Classifier::Classify(const cv::Mat& img, int_tp N) {
+  vector<float> output = Predict(img);
 
   N = std::min<int_tp>(labels_.size(), N);
-  std::vector<int_tp> maxN = Argmax(output, N);
-  std::vector<Prediction> predictions;
+  vector<int_tp> maxN = Argmax(output, N);
+  vector<Prediction> predictions;
   for (int_tp i = 0; i < N; ++i) {
     int_tp idx = maxN[i];
-    predictions.push_back(std::make_pair(labels_[idx], output[idx]));
+    predictions.push_back(make_pair(labels_[idx], output[idx]));
   }
 
   return predictions;
@@ -151,7 +151,7 @@ void Classifier::SetMean(const string& mean_file) {
     << "Number of channels of mean file doesn't match input layer.";
 
   /* The format of the mean file is planar 32-bit float BGR or grayscale. */
-  std::vector<cv::Mat> channels;
+  vector<cv::Mat> channels;
   float* data = mean_blob.mutable_cpu_data();
   for (int_tp i = 0; i < num_channels_; ++i) {
     /* Extract an individual channel. */
@@ -170,25 +170,25 @@ void Classifier::SetMean(const string& mean_file) {
   mean_ = cv::Mat(input_geometry_, mean.type(), channel_mean);
 }
 
-std::vector<float> Classifier::Predict(const cv::Mat& img) {
+vector<float> Classifier::Predict(const cv::Mat& img) {
   Blob<float>* input_layer = net_->input_blobs()[0];
   input_layer->Reshape(1, num_channels_,
                        input_geometry_.height, input_geometry_.width);
   /* Forward dimension change to all layers. */
   net_->Reshape();
 
-  std::vector<cv::Mat> input_channels;
+  vector<cv::Mat> input_channels;
   WrapInputLayer(&input_channels);
 
   Preprocess(img, &input_channels);
 
   net_->Forward();
 
-  /* Copy the output layer to a std::vector */
+  /* Copy the output layer to a vector */
   Blob<float>* output_layer = net_->output_blobs()[0];
   const float* begin = output_layer->cpu_data();
   const float* end = begin + output_layer->shape(1);
-  return std::vector<float>(begin, end);
+  return vector<float>(begin, end);
 }
 
 /* Wrap the input layer of the network in separate cv::Mat objects
@@ -196,7 +196,7 @@ std::vector<float> Classifier::Predict(const cv::Mat& img) {
  * don't need to rely on cudaMemcpy2D. The last preprocessing
  * operation will write the separate channels directly to the input
  * layer. */
-void Classifier::WrapInputLayer(std::vector<cv::Mat>* input_channels) {
+void Classifier::WrapInputLayer(vector<cv::Mat>* input_channels) {
   Blob<float>* input_layer = net_->input_blobs()[0];
 
   int_tp width = input_layer->width();
@@ -210,7 +210,7 @@ void Classifier::WrapInputLayer(std::vector<cv::Mat>* input_channels) {
 }
 
 void Classifier::Preprocess(const cv::Mat& img,
-                            std::vector<cv::Mat>* input_channels) {
+                            vector<cv::Mat>* input_channels) {
   /* Convert the input image to the input image format of the network. */
   cv::Mat sample;
   if (img.channels()== 3 && num_channels_ == 1)
@@ -272,7 +272,7 @@ int main(int argc, char** argv) {
 
   cv::Mat img = cv::imread(file, -1);
   CHECK(!img.empty()) << "Unable to decode image " << file;
-  std::vector<Prediction> predictions = classifier.Classify(img);
+  vector<Prediction> predictions = classifier.Classify(img);
 
   /* Print the top N predictions. */
   for (uint_tp i = 0; i < predictions.size(); ++i) {

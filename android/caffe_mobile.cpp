@@ -16,8 +16,8 @@
 
 using std::clock;
 using std::clock_t;
-using std::string;
-using std::vector;
+using string;
+using vector;
 
 using caffe::Blob;
 using caffe::Caffe;
@@ -106,7 +106,7 @@ void CaffeMobile::SetMean(const string &mean_file) {
       << "Number of channels of mean file doesn't match input layer.";
 
   /* The format of the mean file is planar 32-bit float BGR or grayscale. */
-  std::vector<cv::Mat> channels;
+  vector<cv::Mat> channels;
   float *data = mean_blob.mutable_cpu_data();
   for (int i = 0; i < num_channels_; ++i) {
     /* Extract an individual channel. */
@@ -131,7 +131,7 @@ void CaffeMobile::SetScale(const float scale) {
 }
 
 void CaffeMobile::Preprocess(const cv::Mat &img,
-                             std::vector<cv::Mat> *input_channels) {
+                             vector<cv::Mat> *input_channels) {
   /* Convert the input image to the input image format of the network. */
   cv::Mat sample;
   if (img.channels() == 3 && num_channels_ == 1)
@@ -178,7 +178,7 @@ void CaffeMobile::Preprocess(const cv::Mat &img,
       << "Input channels are not wrapping the input layer of the network.";
 }
 
-void CaffeMobile::WrapInputLayer(std::vector<cv::Mat> *input_channels) {
+void CaffeMobile::WrapInputLayer(vector<cv::Mat> *input_channels) {
   Blob<float> *input_layer = net_->input_blobs()[0];
 
   int width = input_layer->width();
@@ -211,7 +211,7 @@ vector<float> CaffeMobile::Forward(const cv::Mat &img) {
   LOG(INFO) << "Forwarding time: " << 1000.0 * (t_end - t_start) / CLOCKS_PER_SEC
             << " ms.";
 
-  /* Copy the output layer to a std::vector */
+  /* Copy the output layer to a vector */
   Blob<float> *output_layer = net_->output_blobs()[0];
   const float *begin = output_layer->cpu_data();
   const float *end = begin + output_layer->channels();
@@ -233,7 +233,7 @@ CaffeMobile::ExtractFeatures(const cv::Mat &img,
                              const string &str_blob_names) {
   Forward(img);
 
-  vector<std::string> blob_names;
+  vector<string> blob_names;
   boost::split(blob_names, str_blob_names, boost::is_any_of(","));
 
   size_t num_features = blob_names.size();
@@ -244,7 +244,7 @@ CaffeMobile::ExtractFeatures(const cv::Mat &img,
 
   vector<vector<float>> features;
   for (size_t i = 0; i < num_features; i++) {
-    const std::shared_ptr<Blob<float>> &feat = net_->blob_by_name(blob_names[i]);
+    const shared_ptr<Blob<float>> &feat = net_->blob_by_name(blob_names[i]);
     features.push_back(
         vector<float>(feat->cpu_data(), feat->cpu_data() + feat->count()));
   }

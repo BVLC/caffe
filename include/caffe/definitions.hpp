@@ -1,8 +1,23 @@
 #ifndef CAFFE_DEFINITIONS_HPP_
 #define CAFFE_DEFINITIONS_HPP_
 
-#include <stdint.h>
+#include <cstddef>
+#include <cstdio>
+#include <math.h>
+#include <climits>
+#include <cmath>
+#include <fstream>  // NOLINT(readability/streams)
+#include <iostream>  // NOLINT(readability/streams)
+#include <map>
+#include <memory>
+#include <set>
+#include <sstream>
+#include <string>
+#include <tuple>
+#include <utility>  // pair
+#include <vector>
 
+#include <boost/variant.hpp>
 
 #ifdef USE_INDEX_64
 // Types used for parameters, offset computations and so on
@@ -22,6 +37,35 @@
 #define uint_tpc unsigned int  // NOLINT
 #endif
 
+#ifndef CAFFE_MALLOC_PAGE_ALIGN
+#define CAFFE_MALLOC_PAGE_ALIGN 4096
+#endif  // CAFFE_MALLOC_PAGE_ALIGN
+
+#ifndef CAFFE_MALLOC_CACHE_ALIGN
+#define CAFFE_MALLOC_CACHE_ALIGN 64
+#endif  // CAFFE_MALLOC_CACHE_ALIGN
+
+namespace caffe {
+
+// Common functions and classes from std that Caffe often uses.
+using std::fstream;
+using std::ios;
+using std::isnan;
+using std::isinf;
+using std::iterator;
+using std::make_pair;
+using std::map;
+using std::ostringstream;
+using std::pair;
+using std::tuple;
+using std::set;
+using std::string;
+using std::stringstream;
+using std::vector;
+using std::shared_ptr;
+using boost::variant;
+
+}
 
 
 #endif /* CAFFE_DEFINITIONS_HPP_ */

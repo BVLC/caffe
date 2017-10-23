@@ -49,7 +49,7 @@ TEST_F(CommonTest, TestRandSeedCPU) {
 #ifndef CPU_ONLY  // GPU Caffe singleton test.
 
 TEST_F(CommonTest, TestRandSeedGPU) {
-  device *dc = Caffe::GetDefaultDevice();
+  Device *dc = Caffe::GetDefaultDevice();
 
   if (dc->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA

@@ -5,30 +5,15 @@
   #include "caffe_config.h"
 #endif
 
-#include <boost/std::shared_ptr.hpp>
 #include <gflags/gflags.h>
 #include <glog/logging.h>
 
-#include <math.h>
-#include <climits>
-#include <cmath>
-#include <fstream>  // NOLINT(readability/streams)
-#include <iostream>  // NOLINT(readability/streams)
-#include <map>
-#include <memory>
-#include <set>
-#include <sstream>
-#include <string>
-#include <utility>  // pair
-#include <vector>
-
 #include "caffe/definitions.hpp"
+
 
 #ifdef CMAKE_WINDOWS_BUILD
   #include "caffe/export.hpp"
 #endif
-
-#include "caffe/util/fp16.hpp"
 
 #ifdef USE_CUDA
 #include "caffe/backend/cuda/caffe_cuda.hpp"
@@ -64,6 +49,8 @@ private:\
 // Instantiate a pointer class
 #define INSTANTIATE_POINTER_CLASS(classname) \
   char gInstantiationGuard##classname; \
+  template class classname<bool>; \
+  template class classname<char>; \
   template class classname<int8_t>; \
   template class classname<uint8_t>; \
   template class classname<int16_t>; \
@@ -75,7 +62,21 @@ private:\
   template class classname<half_float::half>; \
   template class classname<float>; \
   template class classname<double>; \
-  template class classname<void>;
+  template class classname<void>; \
+  template class classname<const bool>; \
+  template class classname<const char>; \
+  template class classname<const int8_t>; \
+  template class classname<const uint8_t>; \
+  template class classname<const int16_t>; \
+  template class classname<const uint16_t>; \
+  template class classname<const int32_t>; \
+  template class classname<const uint32_t>; \
+  template class classname<const int64_t>; \
+  template class classname<const uint64_t>; \
+  template class classname<const half_float::half>; \
+  template class classname<const float>; \
+  template class classname<const double>; \
+  template class classname<const void>;
 
 // Instantiate a class with float and double specifications.
 #define INSTANTIATE_CLASS_1T(classname) \
@@ -88,29 +89,34 @@ private:\
   template class classname<float, float>; \
   template class classname<double, double>;
 
+#define INSTANTIATE_CLASS_3T(classname) \
+  char gInstantiationGuard##classname; \
+  template class classname<float, float, float>; \
+  template class classname<double, double, double>;
+
 #define INSTANTIATE_LAYER_GPU_FORWARD(classname) \
-  template void classname<float, float, float, float>::Forward_gpu( \
-      const std::vector<Blob<float, float>*>& bottom, \
-      const std::vector<Blob<float, float>*>& top); \
-  template void classname<double, double, double, double>::Forward_gpu( \
-      const std::vector<Blob<double, double>*>& bottom, \
-      const std::vector<Blob<double, double>*>& top);
+  template void classname<float, float, float>::Forward_gpu( \
+      const vector<Blob<float>*>& bottom, \
+      const vector<Blob<float>*>& top); \
+  template void classname<double, double, double>::Forward_gpu( \
+      const vector<Blob<double>*>& bottom, \
+      const vector<Blob<double>*>& top);
 
 #define INSTANTIATE_LAYER_GPU_BACKWARD(classname) \
-  template void classname<float>::Backward_gpu( \
-      const std::vector<Blob<float>*>& top, \
-      const std::vector<bool>& propagate_down, \
-      const std::vector<Blob<float>*>& bottom); \
-  template void classname<double>::Backward_gpu( \
-      const std::vector<Blob<double>*>& top, \
-      const std::vector<bool>& propagate_down, \
-      const std::vector<Blob<double>*>& bottom)
+  template void classname<float, float, float>::Backward_gpu( \
+      const vector<Blob<float>*>& top, \
+      const vector<bool>& propagate_down, \
+      const vector<Blob<float>*>& bottom); \
+  template void classname<double, double, double>::Backward_gpu( \
+      const vector<Blob<double>*>& top, \
+      const vector<bool>& propagate_down, \
+      const vector<Blob<double>*>& bottom)
 
 #define INSTANTIATE_LAYER_GPU_FUNCS(classname) \
   INSTANTIATE_LAYER_GPU_FORWARD(classname); \
   INSTANTIATE_LAYER_GPU_BACKWARD(classname)
 
-// A simple macro to mark codes that are not implemented, so that when the code
+// a simple macro to mark codes that are not implemented, so that when the code
 // is executed we will see a fatal log.
 #define NOT_IMPLEMENTED LOG(FATAL) << "Not Implemented Yet"
 
@@ -144,29 +150,13 @@ namespace cv {class Mat;}
 
 namespace caffe {
 
-class device;
+class Device;
 
-// Common functions and classes from std that caffe often uses.
-using std::fstream;
-using std::ios;
-using std::isnan;
-using std::isinf;
-using std::iterator;
-using std::make_pair;
-using std::map;
-using std::ostringstream;
-using std::pair;
-using std::set;
-using std::string;
-using std::stringstream;
-using std::vector;
-using std::shared_ptr;
-
-// A global initialization function that you should call in your main function.
+// a global initialization function that you should call in your main function.
 // Currently it initializes google flags and google logging.
 void GlobalInit(int* pargc, char*** pargv);
 
-// A singleton class to hold common caffe stuff, such as the handler that
+// a singleton class to hold common caffe stuff, such as the handler that
 // caffe is going to use for cublas, curand, etc.
 class Caffe {
  public:
@@ -192,7 +182,7 @@ class Caffe {
     void* generator();
    private:
     class Generator;
-    std::shared_ptr<Generator> generator_;
+    shared_ptr<Generator> generator_;
   };
 
   // Getters for boost rng, curand, and cublas handles
@@ -226,14 +216,14 @@ class Caffe {
   // it personally but better to note it here in the header file.
   inline static void set_mode(Brew mode) { Get().mode_ = mode; }
   // Sets the random seed of both boost and curand
-  static void set_random_seed(const size_t seed, device* device_context);
+  static void set_random_seed(const size_t seed, Device* device_context);
   // Sets the device. Since we have cublas and curand stuff, set device also
   // requires us to reset those values.
   static void SetDevice(const int device_id);
   // Teardown the device
   static void TeardownDevice(const int device_id);
   // Switch the current device
-  static void SelectDevice(device* device_context);
+  static void SelectDevice(Device* device_context);
   static void SelectDevice(int id, bool listId);
 
   // Prints the current GPU status.
@@ -253,18 +243,18 @@ class Caffe {
   inline static bool root_solver() { return Get().solver_rank_ == 0; }
 
   // Get the default device
-  static device *GetDefaultDevice();
-  static device *GetCPUDevice();
+  static Device *GetDefaultDevice();
+  static Device *GetCPUDevice();
 
   // Prints info about all devices
   static int EnumerateDevices(bool silent = false);
   // Prepares contexts for devices to use
-  static void SetDevices(std::vector<int> device_ids);
+  static void SetDevices(vector<int> device_ids);
   // Finish executing gpu kernels on the specified-device.
   static void Synchronize(int device_id);
 
   // Get a device context
-  static device *GetDevice(int id, bool listId);
+  static Device *GetDevice(int id, bool listId);
 
  protected:
 #ifndef CPU_ONLY
@@ -277,13 +267,13 @@ class Caffe {
   ClFFTState cl_fft_state_;
 #endif
 #endif  // !CPU_ONLY
-  std::shared_ptr<RNG> random_generator_;
+  shared_ptr<RNG> random_generator_;
   Brew mode_;
   // The shared ptrs are being referenced on every thread,
   // while the default device will be handled thread local
-  std::shared_ptr<device> cpu_device_;
-  device* default_device_;
-  static vector<std::shared_ptr< device> > devices_;
+  shared_ptr<Device> cpu_device_;
+  Device* default_device_;
+  static vector<shared_ptr<Device> > devices_;
 
   // Parallel training
   int solver_count_;

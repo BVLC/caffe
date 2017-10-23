@@ -26,62 +26,62 @@ class LibDNNTuner;
 
 class LibDNNTunerConstraint {
  public:
-  LibDNNTunerConstraint(LibDNNTuner* tuner, std::vector<std::string> con_params,
-                        std::vector<std::string> con_adapt) :
+  LibDNNTunerConstraint(LibDNNTuner* tuner, vector<string> con_params,
+                        vector<string> con_adapt) :
   tuner_(tuner), con_params_(con_params), con_adapt_(con_adapt) {
   }
   virtual bool evaluate() = 0;
  protected:
   LibDNNTuner* tuner_;
-  std::vector<std::string> con_params_;
-  std::vector<std::string> con_adapt_;
+  vector<string> con_params_;
+  vector<string> con_adapt_;
 };
 
 class LibDNNTunerConstraintBool : public LibDNNTunerConstraint {
  public:
   LibDNNTunerConstraintBool(LibDNNTuner* tuner,
-                            std::vector<std::string> con_params,
-                            std::vector<std::string> con_adapt,
-                            std::function<bool(std::vector<bool>)> func) :
+                            vector<string> con_params,
+                            vector<string> con_adapt,
+                            std::function<bool(vector<bool>)> func) :
                             LibDNNTunerConstraint(tuner, con_params, con_adapt),
                             func_(func) {
   }
   bool evaluate();
  protected:
-  std::function<bool(std::vector<bool>)> func_;
+  std::function<bool(vector<bool>)> func_;
 };
 
 class LibDNNTunerConstraintReal : public LibDNNTunerConstraint {
  public:
   LibDNNTunerConstraintReal(LibDNNTuner* tuner,
-                            std::vector<std::string> con_params,
-                            std::vector<std::string> con_adapt,
-                            std::function<bool(std::vector<double>)> func) :
+                            vector<string> con_params,
+                            vector<string> con_adapt,
+                            std::function<bool(vector<double>)> func) :
                             LibDNNTunerConstraint(tuner, con_params, con_adapt),
                             func_(func) {
   }
   bool evaluate();
  protected:
-  std::function<bool(std::vector<double>)> func_;
+  std::function<bool(vector<double>)> func_;
 };
 
 class LibDNNTunerConstraintInt : public LibDNNTunerConstraint {
  public:
   LibDNNTunerConstraintInt(LibDNNTuner* tuner,
-                           std::vector<std::string> con_params,
-                           std::vector<std::string> con_adapt,
-                           std::function<bool(std::vector<int64_t>)> func) :
+                           vector<string> con_params,
+                           vector<string> con_adapt,
+                           std::function<bool(vector<int64_t>)> func) :
                            LibDNNTunerConstraint(tuner, con_params, con_adapt),
                            func_(func) {
   }
   bool evaluate();
  protected:
-  std::function<bool(std::vector<int64_t>)> func_;
+  std::function<bool(vector<int64_t>)> func_;
 };
 
 class LibDNNTunerParam {
  public:
-  LibDNNTunerParam(LibDNNTuner* tuner, std::string name, int_tp def_idx) :
+  LibDNNTunerParam(LibDNNTuner* tuner, string name, int_tp def_idx) :
     constraints_(), tuner_(tuner), name_(name),
     curr_idx_(def_idx), def_idx_(def_idx)
   {}
@@ -91,9 +91,9 @@ class LibDNNTunerParam {
   {}
 
   virtual int_tp count_values() = 0;
-  virtual std::shared_ptr<LibDNNTunerParam> clone() = 0;
+  virtual shared_ptr<LibDNNTunerParam> clone() = 0;
 
-  std::string get_name();
+  string get_name();
 
   libdnnTunerParamStatus_t advance(int_tp offset);
 
@@ -101,13 +101,13 @@ class LibDNNTunerParam {
   int_tp get_def_idx();
   void set_curr_idx(int_tp curr_idx);
   void set_def_idx(int_tp def_idx);
-  void update(std::shared_ptr<LibDNNTunerParam> other);
-  void add_constraint(std::shared_ptr<LibDNNTunerConstraint> constraint);
+  void update(shared_ptr<LibDNNTunerParam> other);
+  void add_constraint(shared_ptr<LibDNNTunerConstraint> constraint);
 
  protected:
-  std::vector<std::shared_ptr<LibDNNTunerConstraint>> constraints_;
+  vector<shared_ptr<LibDNNTunerConstraint>> constraints_;
   LibDNNTuner* tuner_;
-  std::string name_;
+  string name_;
   int_tp curr_idx_;
   int_tp def_idx_;
 };
@@ -115,7 +115,7 @@ class LibDNNTunerParam {
 class LibDNNTunerParamInt: public LibDNNTunerParam {
  public:
   LibDNNTunerParamInt(LibDNNTuner* tuner,
-                      std::string name, std::vector<int64_t> values,
+                      string name, vector<int64_t> values,
                       int_tp def_idx) :
                       LibDNNTunerParam(tuner, name, def_idx) {
     values_ = values;
@@ -124,18 +124,18 @@ class LibDNNTunerParamInt: public LibDNNTunerParam {
     LibDNNTunerParam(other), values_(other.values_) {
   }
   int64_t get_value();
-  const std::vector<int64_t>& get_values();
+  const vector<int64_t>& get_values();
   int_tp count_values();
-  std::shared_ptr<LibDNNTunerParam> clone();
+  shared_ptr<LibDNNTunerParam> clone();
   void restrict_values(int64_t min_value, int64_t max_value);
  protected:
-  std::vector<int64_t> values_;
+  vector<int64_t> values_;
 };
 
 class LibDNNTunerParamBool: public LibDNNTunerParam {
  public:
   LibDNNTunerParamBool(LibDNNTuner* tuner,
-                       std::string name, std::vector<bool> values,
+                       string name, vector<bool> values,
                        int_tp def_idx) :
                        LibDNNTunerParam(tuner, name, def_idx) {
     values_ = values;
@@ -144,18 +144,18 @@ class LibDNNTunerParamBool: public LibDNNTunerParam {
     LibDNNTunerParam(other), values_(other.values_) {
   }
   bool get_value();
-  const std::vector<bool>& get_values();
+  const vector<bool>& get_values();
   int_tp count_values();
-  virtual std::shared_ptr<LibDNNTunerParam> clone();
+  virtual shared_ptr<LibDNNTunerParam> clone();
   void restrict_values(bool min_value, bool max_value);
  protected:
-  std::vector<bool> values_;
+  vector<bool> values_;
 };
 
 class LibDNNTunerParamReal: public LibDNNTunerParam {
  public:
   LibDNNTunerParamReal(LibDNNTuner* tuner,
-                       std::string name, std::vector<double> values,
+                       string name, vector<double> values,
                        int_tp def_idx) :
                        LibDNNTunerParam(tuner, name, def_idx) {
     values_ = values;
@@ -164,12 +164,12 @@ class LibDNNTunerParamReal: public LibDNNTunerParam {
     LibDNNTunerParam(other), values_(other.values_) {
   }
   double get_value();
-  const std::vector<double>& get_values();
+  const vector<double>& get_values();
   int_tp count_values();
-  virtual std::shared_ptr<LibDNNTunerParam> clone();
+  virtual shared_ptr<LibDNNTunerParam> clone();
   void restrict_values(double min_value, double max_value);
  protected:
-  std::vector<double> values_;
+  vector<double> values_;
 };
 
 
@@ -177,26 +177,26 @@ class LibDNNTunerParamReal: public LibDNNTunerParam {
 class LibDNNTunerSnapshot {
  public:
   LibDNNTunerSnapshot(double score,
-                      std::vector<std::shared_ptr<LibDNNTunerParam>>* params) :
+                      vector<shared_ptr<LibDNNTunerParam>>* params) :
     score_(score) {
       for (int i = 0; i < params->size(); ++i) {
-        std::shared_ptr<LibDNNTunerParam> param((*params)[i]->clone());
+        shared_ptr<LibDNNTunerParam> param((*params)[i]->clone());
         params_.push_back(param);
       }
   }
   double get_score();
-  std::vector<std::shared_ptr<LibDNNTunerParam>>* get_params();
+  vector<shared_ptr<LibDNNTunerParam>>* get_params();
  protected:
   double score_;
-  std::vector<std::shared_ptr<LibDNNTunerParam>> params_;
+  vector<shared_ptr<LibDNNTunerParam>> params_;
 };
 
 class LibDNNTunerSnapshotCompare {
  public:
   explicit LibDNNTunerSnapshotCompare(const bool& revparam = false)
     { reverse_ = revparam; }
-  bool operator() (std::shared_ptr<LibDNNTunerSnapshot>& lhs,  // NOLINT
-                   std::shared_ptr<LibDNNTunerSnapshot>& rhs) const {  // NOLINT
+  bool operator() (shared_ptr<LibDNNTunerSnapshot>& lhs,  // NOLINT
+                   shared_ptr<LibDNNTunerSnapshot>& rhs) const {  // NOLINT
     if (reverse_)
       return (lhs->get_score() > rhs->get_score());
     else
@@ -215,58 +215,58 @@ class LibDNNTuner {
 
   void Tune(libdnnTunerMethod_t method);
 
-  std::string Serialize();
+  string Serialize();
 
-  void Restore(std::string json);
+  void Restore(string json);
 
   void Snapshot(double score);
-  void RestoreSnapshot(std::shared_ptr<LibDNNTunerSnapshot> snapshot);
+  void RestoreSnapshot(shared_ptr<LibDNNTunerSnapshot> snapshot);
 
   void set_setup_routine(std::function<bool()> fun);
 
   void set_benchmark_routine(std::function<double()> fun);
 
-  void add_boolean_param(std::string name, bool def_value, bool inverse);
+  void add_boolean_param(string name, bool def_value, bool inverse);
   void add_boolean_param(const char* name, bool def_value, bool inverse);
 
   template<class T>
-  void add_range_param(std::string name, T def_value, T min, T max, T step);
+  void add_range_param(string name, T def_value, T min, T max, T step);
   template<class T>
   void add_range_param(const char* name, T def_value, T min, T max, T step);
 
   template<class T>
-  void add_set_param(std::string name, T def_value, std::vector<T> values);
+  void add_set_param(string name, T def_value, vector<T> values);
   template<class T>
-  void add_set_param(const char* name, T def_value, std::vector<T> values);
+  void add_set_param(const char* name, T def_value, vector<T> values);
 
   template<class T>
-  void restrict_param(std::string name, T min_value, T max_value);
+  void restrict_param(string name, T min_value, T max_value);
   template<class T>
   void restrict_param(const char* name, T min_value, T max_value);
 
   template<class T>
-  void add_constraint(std::vector<std::string> con_params,
-                      std::vector<std::string> con_adapt,
-                      std::function<bool(std::vector<T>)> con_func);
+  void add_constraint(vector<string> con_params,
+                      vector<string> con_adapt,
+                      std::function<bool(vector<T>)> con_func);
 
   template<class T>
-  void add_constraint(std::vector<const char*> con_params,
-                      std::vector<const char*> con_adapt,
-                      std::function<bool(std::vector<T>)> con_func);
+  void add_constraint(vector<const char*> con_params,
+                      vector<const char*> con_adapt,
+                      std::function<bool(vector<T>)> con_func);
 
   template<class T>
-  void add_constraint(std::vector<const char*> con_params,
-                      std::vector<std::string> con_adapt,
-                      std::function<bool(std::vector<T>)> con_func);
+  void add_constraint(vector<const char*> con_params,
+                      vector<string> con_adapt,
+                      std::function<bool(vector<T>)> con_func);
 
 
   template<class T>
-  void add_constraint(std::vector<std::string> con_params,
-                      std::vector<const char*> con_adapt,
-                      std::function<bool(std::vector<T>)> con_func);
+  void add_constraint(vector<string> con_params,
+                      vector<const char*> con_adapt,
+                      std::function<bool(vector<T>)> con_func);
 
   template<class T>
-  T get_param(std::string name);
+  T get_param(string name);
   template<class T>
   T get_param(const char* name);
 
@@ -277,15 +277,15 @@ class LibDNNTuner {
   std::function<bool()> setup_routine_;
   std::function<double()> benchmark_routine_;
 
-  std::priority_queue<std::shared_ptr<LibDNNTunerSnapshot>,
-    std::vector<std::shared_ptr<LibDNNTunerSnapshot>>,
+  std::priority_queue<shared_ptr<LibDNNTunerSnapshot>,
+    vector<shared_ptr<LibDNNTunerSnapshot>>,
     LibDNNTunerSnapshotCompare> snapshot_queue_;
 
-  std::vector<std::shared_ptr<LibDNNTunerSnapshot>> snapshots_;
+  vector<shared_ptr<LibDNNTunerSnapshot>> snapshots_;
 
-  std::vector<std::shared_ptr<LibDNNTunerConstraint> > constraints_;
-  std::vector<std::shared_ptr<LibDNNTunerParam> > params_;
-  std::map<std::string, std::shared_ptr<LibDNNTunerParam>> param_map_;
+  vector<shared_ptr<LibDNNTunerConstraint> > constraints_;
+  vector<shared_ptr<LibDNNTunerParam> > params_;
+  std::map<string, shared_ptr<LibDNNTunerParam>> param_map_;
 };
 
 }  // namespace caffe

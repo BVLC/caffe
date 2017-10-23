@@ -29,18 +29,16 @@ SolverAction::Enum Solver<Dtype>::GetRequestedAction() {
 }
 
 template<typename Dtype>
-Solver<Dtype>::Solver(const SolverParameter& param)
+Solver<Dtype>::Solver(const SolverParameter& param, Device* dev)
     : net_(),
-      device_(Caffe::GetDefaultDevice()), callbacks_(),
-              requested_early_exit_(false) {
+      device_(dev), callbacks_(), requested_early_exit_(false) {
   Init(param);
 }
 
 template<typename Dtype>
-Solver<Dtype>::Solver(const string& param_file)
+Solver<Dtype>::Solver(const string& param_file, Device* dev)
     : net_(),
-      device_(Caffe::GetDefaultDevice()), callbacks_(),
-              requested_early_exit_(false) {
+      device_(dev), callbacks_(), requested_early_exit_(false) {
   SolverParameter param;
   ReadSolverParamsFromTextFileOrDie(param_file, &param);
   Init(param);
@@ -49,6 +47,10 @@ Solver<Dtype>::Solver(const string& param_file)
 
 template <typename Dtype>
 void Solver<Dtype>::Init(const SolverParameter& param) {
+  // Initialize solver GPU kernels
+  if (Caffe::mode() == Caffe::GPU) {
+    GenerateProgram();
+  }
   LOG_IF(INFO, Caffe::root_solver()) << "Initializing solver from parameters: "
     << std::endl << param.DebugString();
   param_ = param;
@@ -357,7 +359,7 @@ void Solver<Dtype>::Test(const int_tp test_net_id) {
   ShareTrainedLayersWith(net_.get());
   vector<Dtype> test_score;
   vector<int_tp> test_score_output_id;
-  const std::shared_ptr<Net<Dtype> >& test_net = test_nets_[test_net_id];
+  const shared_ptr<Net<Dtype> >& test_net = test_nets_[test_net_id];
   Dtype loss = 0;
   for (int_tp i = 0; i < param_.test_iter(test_net_id); ++i) {
     SolverAction::Enum request = GetRequestedAction();

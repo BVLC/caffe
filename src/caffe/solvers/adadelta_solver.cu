@@ -1,61 +1,87 @@
 #include "caffe/backend/device.hpp"
 #include "caffe/util/math_functions.hpp"
-
-#ifdef USE_OPENCL
-#include "caffe/greentea/greentea.hpp"
-#include "caffe/greentea/greentea_math_functions.hpp"
-#endif
+#include "caffe/sgd_solvers.hpp"
 
 namespace caffe {
 
-#ifdef USE_CUDA
-template <typename Dtype>
-__global__ void AdaDeltaUpdate(int_tp N, Dtype* g, Dtype* h, Dtype* h2,
-    Dtype momentum, Dtype delta, Dtype local_rate) {
-  CUDA_KERNEL_LOOP(i, N) {
-    float gi = g[i];
-    float hi = h[i] = momentum * h[i] + (1-momentum) * gi * gi;
-    gi = gi * sqrt((h2[i] + delta) / (hi + delta));
-    h2[i] = momentum * h2[i] + (1-momentum) * gi * gi;
-    g[i] = local_rate * gi;
-  }
+template<typename Dtype>
+void AdaDeltaSolver<Dtype>::GenerateProgram() {
+  this->device_program_ = this->device_->CreateProgram();
+  stringstream ss;
+
+  ss << this->device_program_->setup();
+  ss << this->device_program_->template define_type<Dtype>("Dtype");
+
+  KernelArgs args;
+  args.push_back(this->device_program_->template create_kernel_arg<uint_tp>("n",
+                    KERNEL_ARG_CONST));
+  args.push_back(this->device_program_->template create_kernel_arg<Dtype>("g",
+                    KERNEL_ARG_GLOBAL_MEM));
+  args.push_back(this->device_program_->template create_kernel_arg<Dtype>("h",
+                    KERNEL_ARG_GLOBAL_MEM));
+  args.push_back(this->device_program_->template create_kernel_arg<Dtype>("h2",
+                    KERNEL_ARG_GLOBAL_MEM));
+  args.push_back(this->device_program_->template create_kernel_arg<Dtype>(
+                    "momentum", KERNEL_ARG_CONST));
+  args.push_back(this->device_program_->template create_kernel_arg<Dtype>(
+                    "delta", KERNEL_ARG_CONST));
+  args.push_back(this->device_program_->template create_kernel_arg<Dtype>(
+                    "local_rate", KERNEL_ARG_CONST));
+  ss << this->device_program_->function("AdaDeltaUpdate", args);
+  ss << this->device_program_->kernel_loop("uint_tp", "i", "n");
+  ss << "Dtype gi = g[i];" << std::endl;
+  ss << "Dtype hi = h[i] = momentum * h[i] + (1-momentum) * gi * gi;"
+     << std::endl;
+  ss << "gi = gi * sqrt((h2[i] + delta) / (hi + delta));" << std::endl;
+  ss << "h2[i] = momentum * h2[i] + (1-momentum) * gi * gi;" << std::endl;
+  ss << "g[i] = local_rate * gi;" << std::endl;
+  ss << "}" << std::endl;
+  ss << "}" << std::endl;
+
+  this->device_program_->set_source(ss.str());
+  this->device_program_->Compile(true, true);
 }
-#endif
 
 template <typename Dtype>
-void adadelta_update_gpu(device* dev, int_tp N, Dtype* g, Dtype* h, Dtype* h2,
+void adadelta_update_gpu(Device* dev, DeviceProgram* dev_prog, uint_tp n,
+                         vptr<Dtype> g, vptr<Dtype> h, vptr<Dtype> h2,
                          Dtype momentum, Dtype delta, Dtype local_rate) {
-  if (dev->backend() == BACKEND_CUDA) {
-#ifdef USE_CUDA
-    AdaDeltaUpdate<Dtype>  // NOLINT_NEXT_LINE(whitespace/operators)
-    CUDA_KERNEL(CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS) (
-        N, g, h, h2, momentum, delta, local_rate);
-    CUDA_POST_KERNEL_CHECK;
-#endif  // USE_CUDA
-  } else {
-#ifdef USE_OPENCL
-    viennacl::ocl::context &ctx = viennacl::ocl::get_context(dev->id());
-    viennacl::ocl::program &program = dev->program();
-    viennacl::ocl::kernel &oclk_ada_delta_update = program.get_kernel(
-        CL_KERNEL_SELECT("ada_delta_update"));
-    viennacl::ocl::enqueue(
-        oclk_ada_delta_update(N, WrapHandle((cl_mem) g, &ctx),
-                              WrapHandle((cl_mem) h, &ctx),
-                              WrapHandle((cl_mem) h2, &ctx),
-                              fixup_arg_type(momentum), fixup_arg_type(delta),
-                              fixup_arg_type(local_rate)),
-        ctx.get_queue());
-#endif  // USE_OPENCL
-  }
+  shared_ptr<DeviceKernel> kernel = dev_prog->GetKernel("AdaDeltaUpdate");
+  kernel->add_arg(&n);
+  kernel->add_arg(&g);
+  kernel->add_arg(&h);
+  kernel->add_arg(&h2);
+  kernel->add_arg(&momentum);
+  kernel->add_arg(&delta);
+  kernel->add_arg(&local_rate);
+
+  vector<size_t> work_size(1, n);
+  vector<size_t> group;
+  vector<size_t> local;
+  dev->get_threads(&work_size, &group, &local, kernel.get(), true);
+  kernel->Execute(group, local);
 }
 
 #ifdef USE_GPU_HALF
-template void adadelta_update_gpu<half>(device*, int_tp, half*, half*,
-                                        half*, half, half, half);
-#endif
-template void adadelta_update_gpu<float>(device*, int_tp, float*, float*,
-                                         float*, float, float, float);
-template void adadelta_update_gpu<double>(device*, int_tp, double*, double*,
-                                          double*, double, double, double);
+template void adadelta_update_gpu<half_float::half>(Device* dev,
+                  DeviceProgram* dev_prog,
+                  uint_tp n, vptr<half_float::half> g, vptr<half_float::half> h,
+                  vptr<half_float::half> h2, half_float::half momentum,
+                  half_float::half delta, half_float::half local_rate);
+#endif  // USE_GPU_HALF
+#ifdef USE_GPU_SINGLE
+template void adadelta_update_gpu<float>(Device* dev,
+                  DeviceProgram* dev_prog,
+                  uint_tp n, vptr<float> g, vptr<float> h,
+                  vptr<float> h2, float momentum,
+                  float delta, float local_rate);
+#endif  // USE_GPU_SINGLE
+#ifdef USE_GPU_DOUBLE
+template void adadelta_update_gpu<double>(Device* dev,
+                  DeviceProgram* dev_prog,
+                  uint_tp n, vptr<double> g, vptr<double> h,
+                  vptr<double> h2, double momentum,
+                  double delta, double local_rate);
+#endif  // USE_GPU_DOUBLE
 
 }  // namespace caffe
