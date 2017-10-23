@@ -16,6 +16,7 @@
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/hdf5.hpp"
 #include "caffe/util/insert_splits.hpp"
+#include "caffe/util/insert_conversions.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/upgrade_proto.hpp"
 
@@ -23,13 +24,13 @@ namespace caffe {
 
 
 template<typename Dtype>
-Net<Dtype>::Net(const NetParameter& param, device* device_context)
+Net<Dtype>::Net(const NetParameter& param, Device* device_context)
     : device_(device_context) {
   Init(param);
 }
 
 template<typename Dtype>
-Net<Dtype>::Net(const string& param_file, Phase phase, device* device_context,
+Net<Dtype>::Net(const string& param_file, Phase phase, Device* device_context,
                 const int level, const vector<string>* stages)
     : device_(device_context) {
   NetParameter param;
@@ -58,8 +59,15 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
               << filtered_param.DebugString();
   }
   // Create a copy of filtered_param with splits added where necessary.
-  NetParameter param;
-  InsertSplits(filtered_param, &param);
+  NetParameter splitted_param;
+  InsertSplits(filtered_param, &splitted_param);
+  // Create a copy of splitted_param with type conversions added where
+  // necessary.
+  NetParameter converted_param;
+  InsertConversions(splitted_param, &converted_param);
+
+  NetParameter param = converted_param;
+
   // Basically, build all the layers and set up its connections.
   name_ = param.name();
   map<string, int_tp> blob_name_to_idx;
@@ -388,7 +396,7 @@ template <typename Dtype>
 void Net<Dtype>::AppendTop(const NetParameter& param, const int_tp layer_id,
                            const int_tp top_id, set<string>* available_blobs,
                            map<string, int_tp>* blob_name_to_idx) {
-  std::shared_ptr<LayerParameter> layer_param(
+  shared_ptr<LayerParameter> layer_param(
       new LayerParameter(param.layer(layer_id)));
   const string& blob_name = (layer_param->top_size() > top_id) ?
       layer_param->top(top_id) : "(automatic)";
@@ -412,7 +420,7 @@ void Net<Dtype>::AppendTop(const NetParameter& param, const int_tp layer_id,
     if (Caffe::root_solver()) {
       LOG(INFO) << layer_param->name() << " -> " << blob_name;
     }
-    std::shared_ptr<Blob<Dtype> > blob_pointer(new Blob<Dtype>());
+    shared_ptr<Blob<Dtype> > blob_pointer(new Blob<Dtype>());
     const int_tp blob_id = blobs_.size();
     blobs_.push_back(blob_pointer);
     blob_names_.push_back(blob_name);
@@ -729,7 +737,7 @@ void Net<Dtype>::ShareTrainedLayersWith(const Net* other) {
       continue;
     }
     DLOG(INFO)<< "Copying source layer " << source_layer_name;
-    vector<std::shared_ptr<Blob<Dtype> > >& target_blobs = layers_[target_layer_id]
+    vector<shared_ptr<Blob<Dtype> > >& target_blobs = layers_[target_layer_id]
         ->blobs();
     CHECK_EQ(target_blobs.size(), source_layer->blobs().size())
         << "Incompatible number of blobs for layer " << source_layer_name;
@@ -797,7 +805,7 @@ void Net<Dtype>::CopyTrainedLayersFrom(const NetParameter& param) {
       continue;
     }
     DLOG(INFO)<< "Copying source layer " << source_layer_name;
-    vector<std::shared_ptr<Blob<Dtype> > >& target_blobs = layers_[target_layer_id]
+    vector<shared_ptr<Blob<Dtype> > >& target_blobs = layers_[target_layer_id]
         ->blobs();
     CHECK_EQ(target_blobs.size(), source_layer.blobs_size())
         << "Incompatible number of blobs for layer " << source_layer_name;
@@ -857,7 +865,7 @@ void Net<Dtype>::CopyTrainedLayersFromHDF5(const string trained_filename) {
     }
     int_tp target_layer_id = layer_names_index_[source_layer_name];
     DLOG(INFO) << "Copying source layer " << source_layer_name;
-    vector<std::shared_ptr<Blob<Dtype> > >& target_blobs =
+    vector<shared_ptr<Blob<Dtype> > >& target_blobs =
         layers_[target_layer_id]->blobs();
     hid_t layer_hid = H5Gopen2(data_hid, source_layer_name.c_str(),
         H5P_DEFAULT);
@@ -989,18 +997,8 @@ void Net<Dtype>::ClearParamDiffs() {
       break;
     case Caffe::GPU:
 #ifndef CPU_ONLY
-      if (device_->backend() == BACKEND_CUDA) {
-#ifdef USE_CUDA
-      caffe_gpu_set(blob->count(), static_cast<Dtype>(0),
+      device_->set<Dtype>(blob->count(), static_cast<Dtype>(0),
                     blob->mutable_gpu_diff());
-#endif  // USE_CUDA
-      } else {
-#ifdef USE_OPENCL
-          greentea_gpu_set(device_->id(),
-                           blob->count(), static_cast<Dtype>(0),
-                           (cl_mem)(blob->mutable_gpu_diff()), 0);
-#endif  // USE_OPENCL
-      }
 #else
         NO_GPU;
 #endif
@@ -1024,9 +1022,9 @@ bool Net<Dtype>::has_blob(const string& blob_name) const {
 }
 
 template<typename Dtype>
-const std::shared_ptr<Blob<Dtype> > Net<Dtype>::blob_by_name(
+const shared_ptr<Blob<Dtype> > Net<Dtype>::blob_by_name(
     const string& blob_name) const {
-  std::shared_ptr<Blob<Dtype> > blob_ptr;
+  shared_ptr<Blob<Dtype> > blob_ptr;
   if (has_blob(blob_name)) {
     blob_ptr = blobs_[blob_names_index_.find(blob_name)->second];
   } else {
@@ -1042,9 +1040,9 @@ bool Net<Dtype>::has_layer(const string& layer_name) const {
 }
 
 template<typename Dtype>
-const std::shared_ptr<Layer<Dtype> > Net<Dtype>::layer_by_name(
+const shared_ptr<Layer<Dtype> > Net<Dtype>::layer_by_name(
     const string& layer_name) const {
-  std::shared_ptr<Layer<Dtype> > layer_ptr;
+  shared_ptr<Layer<Dtype> > layer_ptr;
   if (has_layer(layer_name)) {
     layer_ptr = layers_[layer_names_index_.find(layer_name)->second];
   } else {

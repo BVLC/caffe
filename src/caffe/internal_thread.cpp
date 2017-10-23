@@ -18,7 +18,7 @@ bool InternalThread::must_stop() {
   return thread_ && thread_->interruption_requested();
 }
 
-void InternalThread::StartInternalThread(device* dev) {
+void InternalThread::StartInternalThread(Device* dev) {
   CHECK(!is_started()) << "Threads should persist and not be restarted.";
 
   thread_device_ = dev;
@@ -37,7 +37,7 @@ void InternalThread::StartInternalThread(device* dev) {
   }
 }
 
-void InternalThread::entry(device* dev, Caffe::Brew mode, int_tp rand_seed,
+void InternalThread::entry(Device* dev, Caffe::Brew mode, int_tp rand_seed,
     int_tp solver_count, int_tp solver_rank, bool multiprocess) {
   Caffe::SelectDevice(dev);
   Caffe::set_mode(mode);

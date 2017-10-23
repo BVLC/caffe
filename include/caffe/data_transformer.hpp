@@ -17,7 +17,7 @@ template<typename Dtype>
 class DataTransformer {
  public:
   explicit DataTransformer(const TransformationParameter& param, Phase phase,
-                           device *device_context);
+                           Device *device_context);
   virtual ~DataTransformer() {
   }
 
@@ -44,7 +44,7 @@ class DataTransformer {
    * transform_param block to a vector of Datum.
    *
    * @param datum_vector
-   *    A vector of Datum containing the data to be transformed.
+   *    a vector of Datum containing the data to be transformed.
    * @param transformed_blob
    *    This is destination blob. It can be part of top blob's data if
    *    set_cpu_data() is used. See memory_layer.cpp for an example.
@@ -58,7 +58,7 @@ class DataTransformer {
    * transform_param block to a vector of Mat.
    *
    * @param mat_vector
-   *    A vector of Mat containing the data to be transformed.
+   *    a vector of Mat containing the data to be transformed.
    * @param transformed_blob
    *    This is destination blob. It can be part of top blob's data if
    *    set_cpu_data() is used. See memory_layer.cpp for an example.
@@ -84,7 +84,7 @@ class DataTransformer {
    * transform_param block to all the num images in a input_blob.
    *
    * @param input_blob
-   *    A Blob containing the data to be transformed. It applies the same
+   *    a Blob containing the data to be transformed. It applies the same
    *    transformation to all the num images in the blob.
    * @param transformed_blob
    *    This is destination blob, it will contain as many images as the
@@ -106,7 +106,7 @@ class DataTransformer {
    *    It uses the first element to infer the shape of the blob.
    *
    * @param datum_vector
-   *    A vector of Datum containing the data to be transformed.
+   *    a vector of Datum containing the data to be transformed.
    */
   vector<int_tp> InferBlobShape(const vector<Datum> & datum_vector);
   /**
@@ -115,7 +115,7 @@ class DataTransformer {
    *    It uses the first element to infer the shape of the blob.
    *
    * @param mat_vector
-   *    A vector of Mat containing the data to be transformed.
+   *    a vector of Mat containing the data to be transformed.
    */
 #ifdef USE_OPENCV
   vector<int_tp> InferBlobShape(const vector<cv::Mat> & mat_vector);
@@ -136,7 +136,7 @@ class DataTransformer {
    * @param n
    *    The upperbound (exclusive) value of the random number.
    * @return
-   *    A uniformly random integer value from ({0, 1, ..., n-1}).
+   *    a uniformly random integer value from ({0, 1, ..., n-1}).
    */
   virtual int_tp Rand(int_tp n);
 
@@ -144,11 +144,11 @@ class DataTransformer {
   // Tranformation parameters
   TransformationParameter param_;
 
-  std::shared_ptr<Caffe::RNG> rng_;
+  shared_ptr<Caffe::RNG> rng_;
   Phase phase_;
   Blob<Dtype> data_mean_;
   vector<Dtype> mean_values_;
-  device *device_;
+  Device *device_;
 };
 
 }  // namespace caffe

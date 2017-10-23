@@ -1,73 +1,264 @@
-#include "caffe/backend/opencl/caffe_opencl.hpp"
 #include "caffe/backend/opencl/ocl_device.hpp"
+#include "caffe/backend/opencl/ocl_device_program.hpp"
+#include "caffe/backend/opencl/caffe_opencl.hpp"
+#include "caffe/backend/opencl/ocl_dev_ptr.hpp"
 
 namespace caffe {
 
 #ifdef USE_OPENCL
 
-void ocl_device::Init() {
+OclDevice::OclDevice(uint_tp id, uint_tp list_id) {
+  this->current_queue_id_ = 0;
+  this->max_local_sizes_ = vector<size_t>(3, 0);
+  this->max_group_sizes_ = vector<size_t>(3, 0);
+  this->id_ = id;
+  this->list_id_ = list_id;
+  this->backend_ = BACKEND_OPENCL;
+  this->memory_usage_ = 0;
+  this->peak_memory_usage_ = 0;
+  this->host_unified_ = false;
+  this->name_ = "";
+}
+
+void OclDevice::Init() {
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(id_);
 
-  std::vector<size_t> temp(3);
-  clGetDeviceInfo(ctx.devices()[0].id(),
-                  CL_DEVICE_MAX_WORK_ITEM_SIZES,
-                  3 * sizeof(size_t), &temp[0], NULL);
-  workgroup_sizes_[0] = temp[0];
-  workgroup_sizes_[1] = temp[1];
-  workgroup_sizes_[2] = temp[2];
+  {
+    vector<size_t> temp(3);
+    clGetDeviceInfo(ctx.devices()[0].id(),
+                    CL_DEVICE_MAX_WORK_ITEM_SIZES,
+                    3 * sizeof(size_t), &temp[0], NULL);
+    max_local_sizes_[0] = temp[0];
+    max_local_sizes_[1] = temp[1];
+    max_local_sizes_[2] = temp[2];
+  }
 
+  {
+    clGetDeviceInfo(ctx.devices()[0].id(),
+                    CL_DEVICE_MAX_WORK_GROUP_SIZE,
+                    1 * sizeof(size_t), &max_local_size_, NULL);
+  }
+
+   max_group_sizes_[0] = SIZE_MAX;
+   max_group_sizes_[1] = SIZE_MAX;
+   max_group_sizes_[2] = SIZE_MAX;
+
+  {
 #ifdef DISABLE_DEVICE_HOST_UNIFIED_MEMORY
-  host_unified_ = false;
-  LOG(INFO) << "CL_DEVICE_HOST_UNIFIED_MEMORY: disabled";
+    host_unified_ = false;
+    LOG(INFO) << "CL_DEVICE_HOST_UNIFIED_MEMORY: disabled";
 #else
-  cl_bool host_unified;
-  clGetDeviceInfo(ctx.devices()[0].id(),
-                  CL_DEVICE_HOST_UNIFIED_MEMORY,
-                  sizeof(cl_bool), &host_unified, NULL);
-  LOG(INFO) << "CL_DEVICE_HOST_UNIFIED_MEMORY: " << host_unified;
-  host_unified_ = host_unified;
+    cl_bool host_unified;
+    clGetDeviceInfo(ctx.devices()[0].id(),
+                    CL_DEVICE_HOST_UNIFIED_MEMORY,
+                    sizeof(cl_bool), &host_unified, NULL);
+    LOG(INFO) << "CL_DEVICE_HOST_UNIFIED_MEMORY: " << host_unified;
+    host_unified_ = host_unified
+        || ctx.devices()[0].type() == CL_DEVICE_TYPE_CPU;
 #endif  // DISABLE_DEVICE_HOST_UNIFIED_MEMORY
-  for (int q = 0; q < GREENTEA_QUEUE_COUNT - 1; ++q) {
+  }
+
+  for (int q = 0; q < OPENCL_QUEUE_COUNT - 1; ++q) {
     ctx.add_queue(ctx.devices()[0]);
   }
 }
 
+shared_ptr<DeviceProgram> OclDevice::CreateProgram() {
+  return std::make_shared<OclDeviceProgram>(this);
+}
 
-std::string ocl_device::name() {
-  viennacl::ocl::context &ctx = viennacl::ocl::get_context(id_);
 
-  size_t size;
-  size_t max_size = 1024 * 1024;
-  clGetDeviceInfo(ctx.devices()[0].id(), CL_DEVICE_NAME,
-                  0, NULL, &size);
+string OclDevice::name() {
+  if (name_ == "") {
+    viennacl::ocl::context &ctx = viennacl::ocl::get_context(id_);
 
-  // Cap at 1 MB to capture faulty OpenCL implementations (nVidia)
-  std::vector<char> exts(std::min(size, max_size));
+    size_t size;
+    size_t max_size = 1024 * 1024;
+    clGetDeviceInfo(ctx.devices()[0].id(), CL_DEVICE_NAME,
+                    0, NULL, &size);
 
-  clGetDeviceInfo(ctx.devices()[0].id(), CL_DEVICE_NAME,
-                  std::min(size, max_size), &(exts[0]), NULL);
+    // Cap at 1 MB to capture faulty OpenCL implementations (nVidia)
+    vector<char> exts(std::min(size, max_size));
 
-  std::string extsstr(&(exts[0]));
-  std::replace(extsstr.begin(), extsstr.end(), ' ', '_');
-  name_ = extsstr;
+    clGetDeviceInfo(ctx.devices()[0].id(), CL_DEVICE_NAME,
+                    std::min(size, max_size), &(exts[0]), NULL);
+
+    string extsstr(&(exts[0]));
+    std::replace(extsstr.begin(), extsstr.end(), ' ', '_');
+    name_ = extsstr;
+  }
   return name_;
 }
 
-uint_tp ocl_device::num_queues() {
-  return GREENTEA_QUEUE_COUNT;
+void OclDevice::MallocMemHost(void** ptr, uint_tp size) {
+#ifdef USE_MKL
+  *ptr = mkl_malloc(size ? size : 1, 64);
+#else
+#ifdef _MSC_VER
+  *ptr = malloc(((size - 1) / CAFFE_MALLOC_CACHE_ALIGN + 1)
+                * CAFFE_MALLOC_CACHE_ALIGN);
+#else
+  CHECK_EQ(0, posix_memalign(ptr, CAFFE_MALLOC_PAGE_ALIGN,
+           ((size - 1) / CAFFE_MALLOC_CACHE_ALIGN + 1)
+           * CAFFE_MALLOC_CACHE_ALIGN))
+              << "Host memory allocation error of size: "
+              << size << " b";
+#endif  // _MSC_VER
+#endif  // USE_MKL
+  CHECK(*ptr) << "Host allocation of size " << size << " failed";
 }
 
-bool ocl_device::CheckVendor(std::string vendor) {
+void OclDevice::FreeMemHost(void* ptr) {
+#ifdef USE_MKL
+  mkl_free(ptr);
+#else
+  free(ptr);
+#endif  // USE_MKL
+}
+
+vptr<void> OclDevice::MallocMemDevice(uint_tp size, void** ptr,
+                                               bool zero_copy) {
+  cl_mem gpu_ptr;
+  viennacl::ocl::context &ctx = viennacl::ocl::get_context(this->id());
+  cl_int err;
+  if (zero_copy) {
+    uint_tp zero_copy_size = (size + CAFFE_MALLOC_CACHE_ALIGN - 1)
+                            & ~(CAFFE_MALLOC_CACHE_ALIGN - 1);
+    this->MallocMemHost(ptr, zero_copy_size);
+    gpu_ptr = clCreateBuffer(ctx.handle().get(),
+                      CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR,
+                      zero_copy_size, *ptr, &err);
+    void *mapped_ptr = clEnqueueMapBuffer(ctx.get_queue().handle().get(),
+                                          gpu_ptr, true,
+                                          CL_MAP_READ | CL_MAP_WRITE,
+                                          0, size, 0, NULL, NULL, NULL);
+    CHECK_EQ(mapped_ptr, *ptr)
+      << "Device claims it support zero copy"
+      << " but failed to create correct user ptr buffer";
+    clEnqueueUnmapMemObject(ctx.get_queue().handle().get(),
+                            gpu_ptr, mapped_ptr, 0, NULL, NULL);
+  } else {
+    gpu_ptr = clCreateBuffer(ctx.handle().get(),
+                                 CL_MEM_READ_WRITE,
+                                 size, nullptr, &err);
+  }
+  CHECK_EQ(0, err) << "OpenCL buffer allocation of size " << size << " failed.";
+  return vptr<void>(std::make_shared<ocl_dev_ptr<void> >(gpu_ptr));
+}
+
+void OclDevice::FreeMemDevice(vptr<void> ptr) {
+  viennacl::ocl::context &ctx = viennacl::ocl::get_context(this->id());
+  ctx.get_queue().finish();
+  CHECK_EQ(CL_SUCCESS, clReleaseMemObject(ptr.get_ocl_mem()))
+      << "OpenCL memory corruption";
+  ctx.get_queue().finish();
+}
+
+bool OclDevice::CheckZeroCopy(vptr<const void> gpu_ptr, void* cpu_ptr,
+                                       uint_tp size) {
+  viennacl::ocl::context &ctx = viennacl::ocl::get_context(this->id());
+  void *mapped_ptr = clEnqueueMapBuffer(ctx.get_queue().handle().get(),
+                        gpu_ptr.get_ocl_mem(), true, CL_MAP_READ | CL_MAP_WRITE,
+                        0, size, 0, NULL, NULL, NULL);
+  CHECK_EQ(mapped_ptr, cpu_ptr)
+    << "Device claims it support zero copy"
+    << " but failed to create correct user ptr buffer";
+  bool zero_copy_result = (mapped_ptr == cpu_ptr);
+  clEnqueueUnmapMemObject(ctx.get_queue().handle().get(),
+                          gpu_ptr.get_ocl_mem(),
+                          mapped_ptr, 0, NULL, NULL);
+  ctx.get_queue().finish();
+  return zero_copy_result;
+}
+
+
+uint_tp OclDevice::num_queues() {
+  return OPENCL_QUEUE_COUNT;
+}
+
+void OclDevice::get_threads(const vector<size_t>* work_size,
+                         vector<size_t>* local,
+                         vector<size_t>* group,
+                         DeviceKernel* kernel,
+                         bool auto_select) {
+  viennacl::ocl::context &ctx = viennacl::ocl::get_context(id_);
+
+  // Let the OpenCL implementation choose sizes
+  if (auto_select) {
+    for(uint_tp i = 0; i < work_size->size(); ++i) {
+      local->insert(local->begin() + i, 0);
+      group->insert(group->begin() + i, 0);
+    }
+    return;
+  } else {
+    for(uint_tp i = 0; i < work_size->size(); ++i) {
+      local->insert(local->begin() + i, 1);
+      group->insert(group->begin() + i, 1);
+    }
+  }
+
+  size_t local_size_multiple_kernel = 1;
+  size_t max_local_size_kernel = 1;
+  vector<size_t> max_global_sizes_kernel(3, 1);
+
+  // Figure out what the kernel allows according to the OpenCL implementation
+  if (OclDeviceKernel* const ocl_dev_kernel
+                          = dynamic_cast<OclDeviceKernel*>(kernel)) {
+    cl_kernel ocl_kernel = ocl_dev_kernel->get_ocl_kernel().handle().get();
+    // Get OpenCL estimate on kernel's allowance for work group sizes
+    clGetKernelWorkGroupInfo(ocl_kernel, ctx.devices()[0].id(),
+                             CL_KERNEL_GLOBAL_WORK_SIZE,
+                             3 * sizeof(size_t),
+                             &max_global_sizes_kernel[0],
+                             NULL);
+    clGetKernelWorkGroupInfo(ocl_kernel, ctx.devices()[0].id(),
+                             CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE,
+                             sizeof(size_t),
+                             &local_size_multiple_kernel,
+                             NULL);
+    clGetKernelWorkGroupInfo(ocl_kernel, ctx.devices()[0].id(),
+                             CL_KERNEL_WORK_GROUP_SIZE,
+                             sizeof(size_t),
+                             &max_local_size_kernel,
+                             NULL);
+  }
+
+  bool done = false;
+  while (!done) {
+    for (uint_tp i = 0; i < work_size->size(); ++i) {
+      if (!done
+          && ((*local)[i] < (*work_size)[i])
+          && ((*local)[i] * 2 < max_local_sizes_[i])) {
+        (*local)[i] *= 2;
+      }
+      size_t total_local_size = 1;
+      for (uint_tp j = 0; j < work_size->size(); ++j) {
+        total_local_size *= (*local)[j];
+      }
+      if ((total_local_size > max_local_size_kernel) ||
+          (total_local_size > max_local_size_)) {
+        (*local)[i] /= 2;
+        done = true;
+      }
+    }
+  }
+
+  for (uint_tp i = 0; i < work_size->size(); ++i) {
+    (*group)[i] = ((*work_size)[i] - 1) / ((*local)[i]) + 1;
+  }
+}
+
+bool OclDevice::CheckVendor(string vendor) {
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(id_);
   const viennacl::ocl::device &device = ctx.current_device();
 
-  if (device.vendor().find(vendor) != std::string::npos) {
+  if (device.vendor().find(vendor) != string::npos) {
       return true;
   }
   return false;
 }
 
-bool ocl_device::CheckCapability(std::string cap) {
+bool OclDevice::CheckCapability(string cap) {
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(id_);
 
   size_t size;
@@ -76,17 +267,17 @@ bool ocl_device::CheckCapability(std::string cap) {
                   0, NULL, &size);
 
   // Cap at 1 MB to capture faulty OpenCL implementations (nVidia)
-  std::vector<char> exts(std::min(size, max_size));
+  vector<char> exts(std::min(size, max_size));
 
   clGetDeviceInfo(ctx.devices()[0].id(), CL_DEVICE_EXTENSIONS,
                   std::min(size, max_size), &(exts[0]), NULL);
 
-  std::string extsstr(&(exts[0]));
-  return extsstr.find(cap) != std::string::npos;
+  string extsstr(&(exts[0]));
+  return extsstr.find(cap) != string::npos;
 }
 
 
-bool ocl_device::CheckType(std::string type) {
+bool OclDevice::CheckType(string type) {
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(id_);
   const viennacl::ocl::device &device = ctx.current_device();
 
@@ -97,13 +288,13 @@ bool ocl_device::CheckType(std::string type) {
   return false;
 }
 
-void ocl_device::SwitchQueue(uint_tp id) {
+void OclDevice::SwitchQueue(uint_tp id) {
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(id_);
   ctx.switch_queue(id % num_queues());
   current_queue_id_ = id % num_queues();
 }
 
-void ocl_device::FinishQueues() {
+void OclDevice::FinishQueues() {
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(id_);
   for (int i = 0; i < num_queues(); ++i) {
     ctx.switch_queue(i);
@@ -113,11 +304,17 @@ void ocl_device::FinishQueues() {
   current_queue_id_ = 0;
 }
 
-bool ocl_device::is_host_unified() {
+bool OclDevice::is_host_unified() {
   return host_unified_;
 }
 
-const char* ocl_device::clGetErrorString(cl_int error) {
+bool OclDevice::is_beignet() {
+  viennacl::ocl::context &ctx = viennacl::ocl::get_context(id_);
+  return ctx.devices()[0].opencl_c_version().find("beignet")
+         != string::npos;
+}
+
+const char* OclDevice::clGetErrorString(cl_int error) {
   switch (error) {
   case 0: return "CL_SUCCESS";
   case -1: return "CL_DEVICE_NOT_FOUND";
@@ -188,31 +385,31 @@ const char* ocl_device::clGetErrorString(cl_int error) {
   case -1005: return "CL_D3D10_RESOURCE_NOT_ACQUIRED_KHR";
   case -1024: return "clBLAS: Functionality is not implemented";
   case -1023: return "clBLAS: Library is not initialized yet";
-  case -1022: return "clBLAS: Matrix A is not a valid memory object";
-  case -1021: return "clBLAS: Matrix B is not a valid memory object";
-  case -1020: return "clBLAS: Matrix C is not a valid memory object";
-  case -1019: return "clBLAS: Vector X is not a valid memory object";
-  case -1018: return "clBLAS: Vector Y is not a valid memory object";
-  case -1017: return "clBLAS: An input dimension (M:N:K) is invalid";
-  case -1016: return "clBLAS: Leading dimension A must not be less than the "
+  case -1022: return "clBLAS: Matrix a is not a valid memory object";
+  case -1021: return "clBLAS: Matrix b is not a valid memory object";
+  case -1020: return "clBLAS: Matrix c is not a valid memory object";
+  case -1019: return "clBLAS: Vector x is not a valid memory object";
+  case -1018: return "clBLAS: Vector y is not a valid memory object";
+  case -1017: return "clBLAS: An input dimension (m:n:k) is invalid";
+  case -1016: return "clBLAS: Leading dimension a must not be less than the "
       "size of the first dimension";
-  case -1015: return "clBLAS: Leading dimension B must not be less than the "
+  case -1015: return "clBLAS: Leading dimension b must not be less than the "
       "size of the second dimension";
-  case -1014: return "clBLAS: Leading dimension C must not be less than the "
+  case -1014: return "clBLAS: Leading dimension c must not be less than the "
       "size of the third dimension";
-  case -1013: return "clBLAS: The increment for a vector X must not be 0";
-  case -1012: return "clBLAS: The increment for a vector Y must not be 0";
-  case -1011: return "clBLAS: The memory object for Matrix A is too small";
-  case -1010: return "clBLAS: The memory object for Matrix B is too small";
-  case -1009: return "clBLAS: The memory object for Matrix C is too small";
-  case -1008: return "clBLAS: The memory object for Vector X is too small";
-  case -1007: return "clBLAS: The memory object for Vector Y is too small";
+  case -1013: return "clBLAS: The increment for a vector x must not be 0";
+  case -1012: return "clBLAS: The increment for a vector y must not be 0";
+  case -1011: return "clBLAS: The memory object for Matrix a is too small";
+  case -1010: return "clBLAS: The memory object for Matrix b is too small";
+  case -1009: return "clBLAS: The memory object for Matrix c is too small";
+  case -1008: return "clBLAS: The memory object for Vector x is too small";
+  case -1007: return "clBLAS: The memory object for Vector y is too small";
   default: return "Unknown OpenCL error";
   }
 }
 
 #ifdef USE_CLFFT
-const char* ocl_device::clfftGetErrorString(clfftStatus status) {
+const char* OclDevice::clfftGetErrorString(clfftStatus status) {
   switch (status) {
   case CLFFT_SUCCESS:
     return "CLFFT_SUCCESS";
@@ -334,4 +531,4 @@ const char* ocl_device::clfftGetErrorString(clfftStatus status) {
 
 #endif  // USE_OPENCL
 
-}
+}  // namespace caffe

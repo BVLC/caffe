@@ -18,8 +18,8 @@
 extern "C" {
 #endif
 
-using std::string;
-using std::vector;
+using string;
+using vector;
 using caffe::CaffeMobile;
 
 int getTimeSec() {

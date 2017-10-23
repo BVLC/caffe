@@ -5,13 +5,14 @@ namespace caffe {
 
 #ifdef USE_OPENCL
 
-void ocl_device::gemv_half(const CBLAS_TRANSPOSE TransA, const uint_tp M,
-                    const uint_tp N, const half_float::half alpha,
-                    vptr<half_float::half> A,
-                    vptr<half_float::half> x, const half_float::half beta,
-                    vptr<half_float::half> y) {
+void OclDevice::gemv_half(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
+                          const uint_tp n, const half_float::half alpha,
+                          vptr<const half_float::half> a,
+                          vptr<const half_float::half> x,
+                          const half_float::half beta,
+                          vptr<half_float::half> y) {
 #if defined(USE_GPU_HALF)
-  uint_tp offA = A.get_ocl_off();
+  uint_tp offA = a.get_ocl_off();
   uint_tp offx = x.get_ocl_off();
   uint_tp offy = y.get_ocl_off();
 
@@ -19,32 +20,32 @@ void ocl_device::gemv_half(const CBLAS_TRANSPOSE TransA, const uint_tp M,
 
 #if defined(USE_CLBLAS)
   clblasTranspose clTransA =
-  (TransA == CblasNoTrans) ? clblasNoTrans : clblasTrans;
+  (trans_a == CblasNoTrans) ? clblasNoTrans : clblasTrans;
 
   cl_command_queue queue = ctx.get_queue().handle().get();
 
   OPENCL_CL_BLAS_CHECK(
       clblasHgemv(clblasRowMajor,
-          clTransA, M, N, alpha, A.get_ocl_mem(), offA, N, x.get_ocl_mem(),
+          clTransA, m, n, alpha, a.get_ocl_mem(), offA, n, x.get_ocl_mem(),
           offx, 1, beta, y.get_ocl_mem(), offy, 1, 1, &queue, 0, NULL, NULL));
 #elif defined(USE_CLBLAST)
 
   cl_command_queue queue = ctx.get_queue().handle().get();
 
   clblast::Layout layout = clblast::Layout::kRowMajor;
-  clblast::Transpose a_transpose = (TransA == CblasNoTrans) ?
+  clblast::Transpose a_transpose = (trans_a == CblasNoTrans) ?
     clblast::Transpose::kNo : clblast::Transpose::kYes;
 
-  const size_t ldA = N;
+  const size_t ldA = n;
   const size_t incx = 1;
   const size_t incy = 1;
 
   OPENCL_CLBLAST_CHECK(
     clblast::Gemv<half_float::half>(
       layout, a_transpose,
-      M, N,
+      m, n,
       alpha,
-      A.get_ocl_mem(), offA, ldA,
+      a.get_ocl_mem(), offA, ldA,
       x.get_ocl_mem(), offx, incx,
       beta,
       y.get_ocl_mem(), offy, incy,
@@ -58,12 +59,12 @@ void ocl_device::gemv_half(const CBLAS_TRANSPOSE TransA, const uint_tp M,
 #endif // USE_GPU_HALF
 }
 
-void ocl_device::gemv_float(const CBLAS_TRANSPOSE TransA, const uint_tp M,
-                    const uint_tp N, const float alpha,
-                    vptr<float> A,
-                    vptr<float> x, const float beta,
-                    vptr<float> y) {
-  uint_tp offA = A.get_ocl_off();
+void OclDevice::gemv_float(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
+                           const uint_tp n, const float alpha,
+                           vptr<const float> a,
+                           vptr<const float> x, const float beta,
+                           vptr<float> y) {
+  uint_tp offA = a.get_ocl_off();
   uint_tp offx = x.get_ocl_off();
   uint_tp offy = y.get_ocl_off();
 
@@ -71,21 +72,21 @@ void ocl_device::gemv_float(const CBLAS_TRANSPOSE TransA, const uint_tp M,
 
   if (ctx.devices()[0].type() == CL_DEVICE_TYPE_CPU) {
     float* Aptr = reinterpret_cast<float*>(clEnqueueMapBuffer(
-        ctx.get_queue().handle().get(), A.get_ocl_mem(), true, CL_MAP_READ,
-        sizeof(float) * offA, sizeof(float) * M * N, 0, NULL, NULL, NULL));
+        ctx.get_queue().handle().get(), a.get_ocl_mem(), true, CL_MAP_READ,
+        sizeof(float) * offA, sizeof(float) * m * n, 0, NULL, NULL, NULL));
     float* xptr = reinterpret_cast<float*>(clEnqueueMapBuffer(
         ctx.get_queue().handle().get(), x.get_ocl_mem(), true, CL_MAP_READ,
-        sizeof(float) * offx, sizeof(float) * (TransA == CblasTrans) ? M : N, 0,
+        sizeof(float) * offx, sizeof(float) * (trans_a == CblasTrans) ? m : n, 0,
         NULL,
         NULL, NULL));
     float* yptr = reinterpret_cast<float*>(clEnqueueMapBuffer(
         ctx.get_queue().handle().get(), y.get_ocl_mem(), true,
         CL_MAP_READ | CL_MAP_WRITE, sizeof(float) * offy,
-        sizeof(float) * (TransA == CblasTrans) ? N : M, 0, NULL, NULL, NULL));
+        sizeof(float) * (trans_a == CblasTrans) ? n : m, 0, NULL, NULL, NULL));
 
-    caffe_cpu_gemv<float>(TransA, M, N, alpha, Aptr, xptr, beta, yptr);
+    caffe_cpu_gemv<float>(trans_a, m, n, alpha, Aptr, xptr, beta, yptr);
 
-    clEnqueueUnmapMemObject(ctx.get_queue().handle().get(), A.get_ocl_mem(),
+    clEnqueueUnmapMemObject(ctx.get_queue().handle().get(), a.get_ocl_mem(),
                             Aptr, 0, NULL, NULL);
     clEnqueueUnmapMemObject(ctx.get_queue().handle().get(), x.get_ocl_mem(),
                             xptr, 0, NULL, NULL);
@@ -94,32 +95,32 @@ void ocl_device::gemv_float(const CBLAS_TRANSPOSE TransA, const uint_tp M,
   } else {
 #if defined(USE_CLBLAS)
     clblasTranspose clTransA =
-    (TransA == CblasNoTrans) ? clblasNoTrans : clblasTrans;
+    (trans_a == CblasNoTrans) ? clblasNoTrans : clblasTrans;
 
     cl_command_queue queue = ctx.get_queue().handle().get();
 
     OPENCL_CL_BLAS_CHECK(
         clblasSgemv(clblasRowMajor,
-            clTransA, M, N, alpha, A.get_ocl_mem(), offA, N, x.get_ocl_mem(),
+            clTransA, m, n, alpha, a.get_ocl_mem(), offA, n, x.get_ocl_mem(),
             offx, 1, beta, y.get_ocl_mem(), offy, 1, 1, &queue, 0, NULL, NULL));
 #elif defined(USE_CLBLAST)
 
     cl_command_queue queue = ctx.get_queue().handle().get();
 
     clblast::Layout layout = clblast::Layout::kRowMajor;
-    clblast::Transpose a_transpose = (TransA == CblasNoTrans) ?
+    clblast::Transpose a_transpose = (trans_a == CblasNoTrans) ?
       clblast::Transpose::kNo : clblast::Transpose::kYes;
 
-    const size_t ldA = N;
+    const size_t ldA = n;
     const size_t incx = 1;
     const size_t incy = 1;
 
     OPENCL_CLBLAST_CHECK(
       clblast::Gemv<float>(
         layout, a_transpose,
-        M, N,
+        m, n,
         alpha,
-        A.get_ocl_mem(), offA, ldA,
+        a.get_ocl_mem(), offA, ldA,
         x.get_ocl_mem(), offx, incx,
         beta,
         y.get_ocl_mem(), offy, incy,
@@ -133,23 +134,23 @@ void ocl_device::gemv_float(const CBLAS_TRANSPOSE TransA, const uint_tp M,
         uint_tp, int_tp>::size_type difference_type;
 
     viennacl::vector_base<float, size_t, ptrdiff_t> v1(
-        x.get_ocl_mem(), size_type((TransA == CblasTrans) ? M : N),
+        x.get_ocl_mem(), size_type((trans_a == CblasTrans) ? m : n),
         size_type(offx), difference_type(1), ctx);
     viennacl::vector_base<float, size_t, ptrdiff_t> v2(
-        y.get_ocl_mem(), size_type((TransA == CblasTrans) ? N : M),
+        y.get_ocl_mem(), size_type((trans_a == CblasTrans) ? n : m),
         size_type(offy), difference_type(1), ctx);
     viennacl::matrix_base<float, size_t, ptrdiff_t> mat(
-                                  A.get_ocl_mem(), ctx, size_type(M),
+                                  a.get_ocl_mem(), ctx, size_type(m),
                                   size_type(0),
                                   difference_type(1),
-                                  size_type(M),
-                                  size_type(N),
+                                  size_type(m),
+                                  size_type(n),
                                   size_type(offA),
                                   difference_type(1),
-                                  size_type(N)
+                                  size_type(n)
                                   VCL_ROW_MAJOR);
     v2 *= beta;
-    if (TransA == CblasTrans) {
+    if (trans_a == CblasTrans) {
       v2 += alpha * viennacl::linalg::prod(viennacl::trans(mat), v1);
     } else {
       v2 += alpha * viennacl::linalg::prod(mat, v1);
@@ -158,12 +159,12 @@ void ocl_device::gemv_float(const CBLAS_TRANSPOSE TransA, const uint_tp M,
   }
 }
 
-void ocl_device::gemv_double(const CBLAS_TRANSPOSE TransA, const uint_tp M,
-                    const uint_tp N, const double alpha,
-                    vptr<double> A,
-                    vptr<double> x, const double beta,
-                    vptr<double> y) {
-  uint_tp offA = A.get_ocl_off();
+void OclDevice::gemv_double(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
+                            const uint_tp n, const double alpha,
+                            vptr<const double> a,
+                            vptr<const double> x, const double beta,
+                            vptr<double> y) {
+  uint_tp offA = a.get_ocl_off();
   uint_tp offx = x.get_ocl_off();
   uint_tp offy = y.get_ocl_off();
 
@@ -171,20 +172,20 @@ void ocl_device::gemv_double(const CBLAS_TRANSPOSE TransA, const uint_tp M,
 
   if (ctx.devices()[0].type() == CL_DEVICE_TYPE_CPU) {
     double* Aptr = reinterpret_cast<double*>(clEnqueueMapBuffer(
-        ctx.get_queue().handle().get(), A.get_ocl_mem(), true, CL_MAP_READ,
-        sizeof(double) * offA, sizeof(double) * M * N, 0, NULL, NULL, NULL));
+        ctx.get_queue().handle().get(), a.get_ocl_mem(), true, CL_MAP_READ,
+        sizeof(double) * offA, sizeof(double) * m * n, 0, NULL, NULL, NULL));
     double* xptr = reinterpret_cast<double*>(clEnqueueMapBuffer(
         ctx.get_queue().handle().get(), x.get_ocl_mem(), true, CL_MAP_READ,
-        sizeof(double) * offx, sizeof(double) * (TransA == CblasTrans) ? M : N,
+        sizeof(double) * offx, sizeof(double) * (trans_a == CblasTrans) ? m : n,
             0, NULL, NULL, NULL));
     double* yptr = reinterpret_cast<double*>(clEnqueueMapBuffer(
         ctx.get_queue().handle().get(), y.get_ocl_mem(), true,
         CL_MAP_READ | CL_MAP_WRITE, sizeof(double) * offy,
-        sizeof(double) * (TransA == CblasTrans) ? N : M, 0, NULL, NULL, NULL));
+        sizeof(double) * (trans_a == CblasTrans) ? n : m, 0, NULL, NULL, NULL));
 
-    caffe_cpu_gemv<double>(TransA, M, N, alpha, Aptr, xptr, beta, yptr);
+    caffe_cpu_gemv<double>(trans_a, m, n, alpha, Aptr, xptr, beta, yptr);
 
-    clEnqueueUnmapMemObject(ctx.get_queue().handle().get(), A.get_ocl_mem(),
+    clEnqueueUnmapMemObject(ctx.get_queue().handle().get(), a.get_ocl_mem(),
                             Aptr, 0, NULL, NULL);
     clEnqueueUnmapMemObject(ctx.get_queue().handle().get(), x.get_ocl_mem(),
                             xptr, 0, NULL, NULL);
@@ -193,32 +194,32 @@ void ocl_device::gemv_double(const CBLAS_TRANSPOSE TransA, const uint_tp M,
   } else {
 #if defined(USE_CLBLAS)
     clblasTranspose clTransA =
-    (TransA == CblasNoTrans) ? clblasNoTrans : clblasTrans;
+    (trans_a == CblasNoTrans) ? clblasNoTrans : clblasTrans;
 
     cl_command_queue queue = ctx.get_queue().handle().get();
 
     OPENCL_CL_BLAS_CHECK(
         clblasDgemv(clblasRowMajor,
-            clTransA, M, N, alpha, A.get_ocl_mem(), offA, N, x.get_ocl_mem(),
+            clTransA, m, n, alpha, a.get_ocl_mem(), offA, n, x.get_ocl_mem(),
             offx, 1, beta, y.get_ocl_mem(), offy, 1, 1, &queue, 0, NULL, NULL));
 #elif defined(USE_CLBLAST)
 
     cl_command_queue queue = ctx.get_queue().handle().get();
 
     clblast::Layout layout = clblast::Layout::kRowMajor;
-    clblast::Transpose a_transpose = (TransA == CblasNoTrans) ?
+    clblast::Transpose a_transpose = (trans_a == CblasNoTrans) ?
       clblast::Transpose::kNo : clblast::Transpose::kYes;
 
-    const size_t ldA = N;
+    const size_t ldA = n;
     const size_t incx = 1;
     const size_t incy = 1;
 
     OPENCL_CLBLAST_CHECK(
       clblast::Gemv<double>(
         layout, a_transpose,
-        M, N,
+        m, n,
         alpha,
-        A.get_ocl_mem(), offA, ldA,
+        a.get_ocl_mem(), offA, ldA,
         x.get_ocl_mem(), offx, incx,
         beta,
         y.get_ocl_mem(), offy, incy,
@@ -232,23 +233,23 @@ void ocl_device::gemv_double(const CBLAS_TRANSPOSE TransA, const uint_tp M,
         uint_tp, int_tp>::size_type difference_type;
 
     viennacl::vector_base<double, size_t, ptrdiff_t> v1(
-        x.get_ocl_mem(), size_type((TransA == CblasTrans) ? M : N),
+        x.get_ocl_mem(), size_type((trans_a == CblasTrans) ? m : n),
         size_type(offx), difference_type(1), ctx);
     viennacl::vector_base<double, size_t, ptrdiff_t> v2(
-        y.get_ocl_mem(), size_type((TransA == CblasTrans) ? N : M),
+        y.get_ocl_mem(), size_type((trans_a == CblasTrans) ? n : m),
         size_type(offy), difference_type(1), ctx);
     viennacl::matrix_base<double, size_t, ptrdiff_t> mat(
-                                  A.get_ocl_mem(), ctx, size_type(M),
+                                  a.get_ocl_mem(), ctx, size_type(m),
                                   size_type(0),
                                   difference_type(1),
-                                  size_type(M),
-                                  size_type(N),
+                                  size_type(m),
+                                  size_type(n),
                                   size_type(offA),
                                   difference_type(1),
-                                  size_type(N)
+                                  size_type(n)
                                   VCL_ROW_MAJOR);
     v2 *= beta;
-    if (TransA == CblasTrans) {
+    if (trans_a == CblasTrans) {
       v2 += alpha * viennacl::linalg::prod(viennacl::trans(mat), v1);
     } else {
       v2 += alpha * viennacl::linalg::prod(mat, v1);
@@ -257,7 +258,6 @@ void ocl_device::gemv_double(const CBLAS_TRANSPOSE TransA, const uint_tp M,
   }
 }
 
-
 #endif  // USE_OPENCL
 
-}
+}  // namespace caffe

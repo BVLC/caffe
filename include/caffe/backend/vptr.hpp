@@ -1,48 +1,172 @@
 #ifndef CAFFE_BACKEND_VPTR_HPP_
 #define CAFFE_BACKEND_VPTR_HPP_
 
-#include <cstddef>
 #include "caffe/definitions.hpp"
+#include "caffe/backend/backend.hpp"
 #include "caffe/backend/dev_ptr.hpp"
+#include "caffe/backend/opencl/caffe_opencl.hpp"
+#include "3rdparty/half/half.hpp"
 
 namespace caffe {
 
-template<typename Mtype>
+template<typename Dtype, typename = void>
 class vptr {
-  explicit vptr();
+};
 
-  template<typename Otype>
-  explicit vptr(const vptr<Otype> &other);
-
+template<typename Dtype>
+class vptr<Dtype, typename const_enable_if<Dtype>::type> {
  public:
-  dev_ptr<Mtype>* get();
+  explicit vptr();
+  explicit vptr(shared_ptr<dev_ptr<Dtype> > ptr);
 
+  vptr(const vptr<bool> &other);
+  vptr(const vptr<char> &other);
+  vptr(const vptr<int8_t> &other);
+  vptr(const vptr<int16_t> &other);
+  vptr(const vptr<int32_t> &other);
+  vptr(const vptr<int64_t> &other);
+  vptr(const vptr<uint8_t> &other);
+  vptr(const vptr<uint16_t> &other);
+  vptr(const vptr<uint32_t> &other);
+  vptr(const vptr<uint64_t> &other);
+  vptr(const vptr<half_float::half> &other);
+  vptr(const vptr<float> &other);
+  vptr(const vptr<double> &other);
+  vptr(const vptr<void> &other);
+
+  vptr(const vptr<const bool> &other);
+  vptr(const vptr<const char> &other);
+  vptr(const vptr<const int8_t> &other);
+  vptr(const vptr<const int16_t> &other);
+  vptr(const vptr<const int32_t> &other);
+  vptr(const vptr<const int64_t> &other);
+  vptr(const vptr<const uint8_t> &other);
+  vptr(const vptr<const uint16_t> &other);
+  vptr(const vptr<const uint32_t> &other);
+  vptr(const vptr<const uint64_t> &other);
+  vptr(const vptr<const half_float::half> &other);
+  vptr(const vptr<const float> &other);
+  vptr(const vptr<const double> &other);
+  vptr(const vptr<const void> &other);
+
+  shared_ptr<dev_ptr<Dtype> > get_dev_ptr() const;
+  dev_ptr<Dtype>* get() const;
+
+  // Convenience implementation access (CUDA)
 #ifdef USE_CUDA
-  Mtype* get_cuda_ptr();
+  Dtype* get_cuda_ptr() const;
+  void* get_cuda_ptr_ptr() const;
 #endif
 
+  // Convenience implementation access (OpenCL)
 #ifdef USE_OPENCL
-  cl_mem get_ocl_mem();
-  uint_tp get_ocl_off();
+  cl_mem get_ocl_mem() const;
+  uint_tp get_ocl_off() const;
 #endif
 
-  template<typename Otype>
-  vptr<Mtype> operator=(const vptr<Otype> &other);
+  vptr<Dtype>& operator=(const vptr<bool> &other);
+  vptr<Dtype>& operator=(const vptr<char> &other);
+  vptr<Dtype>& operator=(const vptr<int8_t> &other);
+  vptr<Dtype>& operator=(const vptr<int16_t> &other);
+  vptr<Dtype>& operator=(const vptr<int32_t> &other);
+  vptr<Dtype>& operator=(const vptr<int64_t> &other);
+  vptr<Dtype>& operator=(const vptr<uint8_t> &other);
+  vptr<Dtype>& operator=(const vptr<uint16_t> &other);
+  vptr<Dtype>& operator=(const vptr<uint32_t> &other);
+  vptr<Dtype>& operator=(const vptr<uint64_t> &other);
+  vptr<Dtype>& operator=(const vptr<half_float::half> &other);
+  vptr<Dtype>& operator=(const vptr<float> &other);
+  vptr<Dtype>& operator=(const vptr<double> &other);
+  vptr<Dtype>& operator=(const vptr<void> &other);
 
-  vptr<Mtype> operator++();
-  vptr<Mtype> operator--();
-  vptr<Mtype> operator++(uint_tp val);
-  vptr<Mtype> operator--(uint_tp val);
-  vptr<Mtype> operator+(uint_tp val);
-  vptr<Mtype> operator-(uint_tp val);
-  vptr<Mtype> operator+=(uint_tp val);
-  vptr<Mtype> operator-=(uint_tp val);
+  vptr<Dtype>& operator=(const vptr<const bool> &other);
+  vptr<Dtype>& operator=(const vptr<const char> &other);
+  vptr<Dtype>& operator=(const vptr<const int8_t> &other);
+  vptr<Dtype>& operator=(const vptr<const int16_t> &other);
+  vptr<Dtype>& operator=(const vptr<const int32_t> &other);
+  vptr<Dtype>& operator=(const vptr<const int64_t> &other);
+  vptr<Dtype>& operator=(const vptr<const uint8_t> &other);
+  vptr<Dtype>& operator=(const vptr<const uint16_t> &other);
+  vptr<Dtype>& operator=(const vptr<const uint32_t> &other);
+  vptr<Dtype>& operator=(const vptr<const uint64_t> &other);
+  vptr<Dtype>& operator=(const vptr<const half_float::half> &other);
+  vptr<Dtype>& operator=(const vptr<const float> &other);
+  vptr<Dtype>& operator=(const vptr<const double> &other);
+  vptr<Dtype>& operator=(const vptr<const void> &other);
 
- private:
-  template<typename Otype>
-  vptr<Mtype> instance(const vptr<Otype> &other);
+  vptr<Dtype> operator++();
+  vptr<Dtype> operator--();
+  vptr<Dtype> operator++(int val);
+  vptr<Dtype> operator--(int val);
+  vptr<Dtype> operator+(uint_tp val);
+  vptr<Dtype> operator-(uint_tp val);
+  vptr<Dtype> operator+=(uint_tp val);
+  vptr<Dtype> operator-=(uint_tp val);
 
-  std::shared_ptr<dev_ptr<Mtype> > dev_ptr_;
+  shared_ptr<dev_ptr<Dtype> > dev_ptr_;
+};
+
+template<typename Dtype>
+class vptr<Dtype, typename non_const_enable_if<Dtype>::type> {
+ public:
+  explicit vptr();
+  explicit vptr(shared_ptr<dev_ptr<Dtype> > ptr);
+
+  vptr(const vptr<bool> &other);
+  vptr(const vptr<char> &other);
+  vptr(const vptr<int8_t> &other);
+  vptr(const vptr<int16_t> &other);
+  vptr(const vptr<int32_t> &other);
+  vptr(const vptr<int64_t> &other);
+  vptr(const vptr<uint8_t> &other);
+  vptr(const vptr<uint16_t> &other);
+  vptr(const vptr<uint32_t> &other);
+  vptr(const vptr<uint64_t> &other);
+  vptr(const vptr<half_float::half> &other);
+  vptr(const vptr<float> &other);
+  vptr(const vptr<double> &other);
+  vptr(const vptr<void> &other);
+
+  shared_ptr<dev_ptr<Dtype> > get_dev_ptr() const;
+  dev_ptr<Dtype>* get() const;
+
+  // Convenience implementation access (CUDA)
+#ifdef USE_CUDA
+  Dtype* get_cuda_ptr() const;
+  void* get_cuda_ptr_ptr() const;
+#endif
+
+  // Convenience implementation access (OpenCL)
+#ifdef USE_OPENCL
+  cl_mem get_ocl_mem() const;
+  uint_tp get_ocl_off() const;
+#endif
+
+  vptr<Dtype>& operator=(const vptr<bool> &other);
+  vptr<Dtype>& operator=(const vptr<char> &other);
+  vptr<Dtype>& operator=(const vptr<int8_t> &other);
+  vptr<Dtype>& operator=(const vptr<int16_t> &other);
+  vptr<Dtype>& operator=(const vptr<int32_t> &other);
+  vptr<Dtype>& operator=(const vptr<int64_t> &other);
+  vptr<Dtype>& operator=(const vptr<uint8_t> &other);
+  vptr<Dtype>& operator=(const vptr<uint16_t> &other);
+  vptr<Dtype>& operator=(const vptr<uint32_t> &other);
+  vptr<Dtype>& operator=(const vptr<uint64_t> &other);
+  vptr<Dtype>& operator=(const vptr<half_float::half> &other);
+  vptr<Dtype>& operator=(const vptr<float> &other);
+  vptr<Dtype>& operator=(const vptr<double> &other);
+  vptr<Dtype>& operator=(const vptr<void> &other);
+
+  vptr<Dtype> operator++();
+  vptr<Dtype> operator--();
+  vptr<Dtype> operator++(int val);
+  vptr<Dtype> operator--(int val);
+  vptr<Dtype> operator+(uint_tp val);
+  vptr<Dtype> operator-(uint_tp val);
+  vptr<Dtype> operator+=(uint_tp val);
+  vptr<Dtype> operator-=(uint_tp val);
+
+  shared_ptr<dev_ptr<Dtype> > dev_ptr_;
 };
 
 }  // namespace caffe

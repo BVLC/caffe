@@ -1,5 +1,5 @@
-#ifndef CAFFE_UTIL_caffe_cpu_fft_H_
-#define CAFFE_UTIL_caffe_cpu_fft_H_
+#ifndef CAFFE_UTIL_FFT_HPP_
+#define CAFFE_UTIL_FFT_HPP_
 #ifdef CMAKE_BUILD
 #include <caffe_config.h>
 #endif
@@ -69,7 +69,7 @@ template <typename Dtype> void caffe_cpu_fft_execute_dft_c2r(const void* plan,
 #ifdef USE_OPENCL
 template <typename T>
 struct DtypeComplex {
-  T x, y;
+  T X, Y;
 };
 void clear_gpu_fft_buffer(void* data, const int size);
 template <typename Dtype>
@@ -161,4 +161,4 @@ void reshape_weights(DtypeComplex<Dtype>* dst, DtypeComplex<Dtype>* src,
 
 #endif  // USE_FFT
 
-#endif  // CAFFE_UTIL_caffe_cpu_fft_H_
+#endif  // CAFFE_UTIL_FFT_HPP_

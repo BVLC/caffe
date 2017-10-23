@@ -1,25 +1,22 @@
 #ifndef CAFFE_BACKEND_OPENCL_CAFFE_OPENCL_HPP_
 #define CAFFE_BACKEND_OPENCL_CAFFE_OPENCL_HPP_
 
-#define VIENNACL_PROFILING_ENABLED
-
 #ifdef CMAKE_BUILD
 #include "caffe_config.h"
 #endif
 
 #include <vector>
 
-namespace caffe {
-
 // Define ViennaCL/GreenTea flags
 #ifdef USE_OPENCL
-#ifndef NDEBUG
-#define NDEBUG
-#endif
 
 #ifndef VIENNACL_WITH_OPENCL
 #define VIENNACL_WITH_OPENCL
-#endif
+#endif  // VIENNACL_PROFILING_ENABLED
+
+#ifndef VIENNACL_PROFILING_ENABLED
+#define VIENNACL_PROFILING_ENABLED
+#endif  // VIENNACL_PROFILING_ENABLED
 
 #ifndef __APPLE__
 #include "CL/cl.h"
@@ -41,23 +38,11 @@ namespace caffe {
 #include "viennacl/ocl/platform.hpp"
 #include "viennacl/vector.hpp"
 
-#ifndef GREENTEA_QUEUE_COUNT
-#define GREENTEA_QUEUE_COUNT 1
-#endif
+namespace caffe {
 
-viennacl::ocl::handle<cl_mem> WrapHandle(cl_mem in,
-                                         viennacl::ocl::context *ctx);
-bool IsBeignet(viennacl::ocl::context *ctx);
-
-template<typename T, typename U>
-struct is_same {
-  static const bool value = false;
-};
-
-template<typename T>
-struct is_same<T, T> {
-  static const bool value = true;
-};
+#ifndef OPENCL_QUEUE_COUNT
+#define OPENCL_QUEUE_COUNT 1
+#endif  // OPENCL_QUEUE_COUNT
 
 #if defined(USE_CLBLAS) && defined(USE_CLBLAST)
 #error Only one of USE_CLBLAS and USE_CLBLAST can be defined!
@@ -79,17 +64,12 @@ struct is_same<T, T> {
     "GREENTEA ERROR: CLBlast error";}
 #endif
 
-// Macro to select the single (_float) or double (_double) precision kernel
-#define CL_KERNEL_SELECT(kernel) \
-  is_same<Dtype, float>::value ? \
-      kernel "_float" : (is_same<Dtype, double>::value ?\
-       kernel "_double" : kernel "_half")
-
+const char* clGetErrorString(cl_int error);
 
 #define OCL_CHECK(condition) \
   do { \
     cl_int error = (condition); \
-    CHECK_EQ(error, CL_SUCCESS) << " " << caffe::clGetErrorString(error); \
+    CHECK_EQ(error, CL_SUCCESS) << " " << clGetErrorString(error); \
   } while (0)
 
 #ifdef USE_FFT
@@ -104,23 +84,25 @@ struct is_same<T, T> {
 #endif  // USE_FFT
 
 
+/*
 #define OCL_LOCAL_WORKGROUP_SIZE 256
 
 // OCL: number of work groups
-inline int CAFFE_GET_BLOCKS_OCL(const int N) {
-  return (N + OCL_LOCAL_WORKGROUP_SIZE - 1) / OCL_LOCAL_WORKGROUP_SIZE;
+inline int CAFFE_GET_BLOCKS_OCL(const int n) {
+  return (n + OCL_LOCAL_WORKGROUP_SIZE - 1) / OCL_LOCAL_WORKGROUP_SIZE;
 }
-inline int CAFFE_GET_BLOCKS_OCL(const int N, const int lws) {
-  return (N + lws - 1) / lws;
+inline int CAFFE_GET_BLOCKS_OCL(const int n, const int lws) {
+  return (n + lws - 1) / lws;
 }
 
 // OCL: get padded global work size
-inline int CAFFE_GET_PADDED_GLOBAL_WORK_SIZE(const int N) {
-  return CAFFE_GET_BLOCKS_OCL(N) * OCL_LOCAL_WORKGROUP_SIZE;
+inline int CAFFE_GET_PADDED_GLOBAL_WORK_SIZE(const int n) {
+  return CAFFE_GET_BLOCKS_OCL(n) * OCL_LOCAL_WORKGROUP_SIZE;
 }
-inline int CAFFE_GET_PADDED_GLOBAL_WORK_SIZE(const int N, const int lws) {
-  return CAFFE_GET_BLOCKS_OCL(N, lws) * lws;
+inline int CAFFE_GET_PADDED_GLOBAL_WORK_SIZE(const int n, const int lws) {
+  return CAFFE_GET_BLOCKS_OCL(n, lws) * lws;
 }
+*/
 
 #endif  // USE_OPENCL
 

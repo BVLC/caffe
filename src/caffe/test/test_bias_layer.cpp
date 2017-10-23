@@ -74,7 +74,7 @@ TYPED_TEST(BiasLayerTest, TestForwardEltwise) {
   this->blob_bottom_vec_.push_back(this->blob_bottom_eltwise_);
   LayerParameter layer_param;
   layer_param.mutable_bias_param()->set_axis(0);
-  std::shared_ptr<BiasLayer<Dtype> > layer(new BiasLayer<Dtype>(layer_param));
+  shared_ptr<BiasLayer<Dtype> > layer(new BiasLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   ASSERT_EQ(this->blob_bottom_->shape(), this->blob_top_->shape());
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -98,7 +98,7 @@ TYPED_TEST(BiasLayerTest, TestForwardEltwiseInPlace) {
   this->blob_bottom_vec_.push_back(this->blob_bottom_eltwise_);
   LayerParameter layer_param;
   layer_param.mutable_bias_param()->set_axis(0);
-  std::shared_ptr<BiasLayer<Dtype> > layer(new BiasLayer<Dtype>(layer_param));
+  shared_ptr<BiasLayer<Dtype> > layer(new BiasLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   const Dtype* data = this->blob_bottom_->cpu_data();
@@ -120,7 +120,7 @@ TYPED_TEST(BiasLayerTest, TestBackwardEltwiseInPlace) {
   this->blob_bottom_vec_.push_back(this->blob_bottom_eltwise_);
   LayerParameter layer_param;
   layer_param.mutable_bias_param()->set_axis(0);
-  std::shared_ptr<BiasLayer<Dtype> > layer(new BiasLayer<Dtype>(layer_param));
+  shared_ptr<BiasLayer<Dtype> > layer(new BiasLayer<Dtype>(layer_param));
   Blob<Dtype> top_diff(this->blob_bottom_->shape());
   FillerParameter filler_param;
   filler_param.set_type("gaussian");
@@ -168,7 +168,7 @@ TYPED_TEST(BiasLayerTest, TestForwardEltwiseWithParam) {
   bias_param->set_axis(0);
   bias_param->set_num_axes(-1);
   bias_param->mutable_filler()->set_type("gaussian");
-  std::shared_ptr<BiasLayer<Dtype> > layer(new BiasLayer<Dtype>(layer_param));
+  shared_ptr<BiasLayer<Dtype> > layer(new BiasLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   ASSERT_EQ(this->blob_bottom_->shape(), this->blob_top_->shape());
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -188,7 +188,7 @@ TYPED_TEST(BiasLayerTest, TestForwardBroadcastBegin) {
   this->blob_bottom_vec_.push_back(this->blob_bottom_broadcast_0_);
   LayerParameter layer_param;
   layer_param.mutable_bias_param()->set_axis(0);
-  std::shared_ptr<BiasLayer<Dtype> > layer(new BiasLayer<Dtype>(layer_param));
+  shared_ptr<BiasLayer<Dtype> > layer(new BiasLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   ASSERT_EQ(this->blob_bottom_->shape(), this->blob_top_->shape());
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -213,7 +213,7 @@ TYPED_TEST(BiasLayerTest, TestForwardBroadcastMiddle) {
   this->blob_bottom_vec_.push_back(this->blob_bottom_broadcast_1_);
   LayerParameter layer_param;
   layer_param.mutable_bias_param()->set_axis(1);
-  std::shared_ptr<BiasLayer<Dtype> > layer(new BiasLayer<Dtype>(layer_param));
+  shared_ptr<BiasLayer<Dtype> > layer(new BiasLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   ASSERT_EQ(this->blob_bottom_->shape(), this->blob_top_->shape());
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -241,7 +241,7 @@ TYPED_TEST(BiasLayerTest, TestForwardBroadcastMiddleInPlace) {
   this->blob_bottom_vec_.push_back(this->blob_bottom_broadcast_1_);
   LayerParameter layer_param;
   layer_param.mutable_bias_param()->set_axis(1);
-  std::shared_ptr<BiasLayer<Dtype> > layer(new BiasLayer<Dtype>(layer_param));
+  shared_ptr<BiasLayer<Dtype> > layer(new BiasLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   const Dtype delta = std::is_same<Dtype, half_float::half>::value ?
@@ -267,7 +267,7 @@ TYPED_TEST(BiasLayerTest, TestBackwardBroadcastMiddleInPlace) {
   this->blob_bottom_vec_.push_back(this->blob_bottom_broadcast_1_);
   LayerParameter layer_param;
   layer_param.mutable_bias_param()->set_axis(1);
-  std::shared_ptr<BiasLayer<Dtype> > layer(new BiasLayer<Dtype>(layer_param));
+  shared_ptr<BiasLayer<Dtype> > layer(new BiasLayer<Dtype>(layer_param));
   Blob<Dtype> top_diff(this->blob_bottom_->shape());
   FillerParameter filler_param;
   filler_param.set_type("gaussian");
@@ -315,7 +315,7 @@ TYPED_TEST(BiasLayerTest, TestForwardBroadcastMiddleWithParam) {
   bias_param->set_axis(1);
   bias_param->set_num_axes(2);
   bias_param->mutable_filler()->set_type("gaussian");
-  std::shared_ptr<BiasLayer<Dtype> > layer(new BiasLayer<Dtype>(layer_param));
+  shared_ptr<BiasLayer<Dtype> > layer(new BiasLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   ASSERT_EQ(this->blob_bottom_->shape(), this->blob_top_->shape());
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -339,7 +339,7 @@ TYPED_TEST(BiasLayerTest, TestForwardBroadcastEnd) {
   this->blob_bottom_vec_.push_back(this->blob_bottom_broadcast_2_);
   LayerParameter layer_param;
   layer_param.mutable_bias_param()->set_axis(2);
-  std::shared_ptr<BiasLayer<Dtype> > layer(new BiasLayer<Dtype>(layer_param));
+  shared_ptr<BiasLayer<Dtype> > layer(new BiasLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   ASSERT_EQ(this->blob_bottom_->shape(), this->blob_top_->shape());
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -363,7 +363,7 @@ TYPED_TEST(BiasLayerTest, TestForwardBias) {
   typedef typename TypeParam::Dtype Dtype;
   this->blob_bottom_vec_.push_back(this->blob_bottom_bias_);
   LayerParameter layer_param;
-  std::shared_ptr<BiasLayer<Dtype> > layer(new BiasLayer<Dtype>(layer_param));
+  shared_ptr<BiasLayer<Dtype> > layer(new BiasLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   ASSERT_EQ(this->blob_bottom_->shape(), this->blob_top_->shape());
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -383,7 +383,7 @@ TYPED_TEST(BiasLayerTest, TestForwardBiasAxis2) {
   this->blob_bottom_vec_.push_back(this->blob_bottom_bias_);
   LayerParameter layer_param;
   layer_param.mutable_bias_param()->set_axis(2);
-  std::shared_ptr<BiasLayer<Dtype> > layer(new BiasLayer<Dtype>(layer_param));
+  shared_ptr<BiasLayer<Dtype> > layer(new BiasLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   ASSERT_EQ(this->blob_bottom_->shape(), this->blob_top_->shape());
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);

@@ -44,7 +44,7 @@ class AccuracyLayerTest : public CPUDeviceTest<Dtype> {
     filler.Fill(this->blob_bottom_data_);
 
     const uint_tp prefetch_rng_seed = caffe_rng_rand();
-    std::shared_ptr<Caffe::RNG> rng(new Caffe::RNG(prefetch_rng_seed));
+    shared_ptr<Caffe::RNG> rng(new Caffe::RNG(prefetch_rng_seed));
     caffe::rng_t* prefetch_rng =
           static_cast<caffe::rng_t*>(rng->generator());
     Dtype* label_data = blob_bottom_label_->mutable_cpu_data();

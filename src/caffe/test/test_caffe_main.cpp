@@ -103,7 +103,7 @@ int main(int argc, char** argv) {
     device = TEST_DEVICE;
   }
   cout << "Setting to use device " << device << endl;
-  Caffe::SetDevices(std::vector<int>{device});
+  Caffe::SetDevices(vector<int>{device});
   Caffe::SetDevice(device);
 #endif
   // invoke the test.

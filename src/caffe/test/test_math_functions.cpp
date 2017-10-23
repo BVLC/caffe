@@ -62,42 +62,42 @@ TYPED_TEST(CPUMathFunctionsTest, TestNothing) {
 
 TYPED_TEST(CPUMathFunctionsTest, TestAsum) {
   int_tp n = this->blob_bottom_->count();
-  const TypeParam* x = this->blob_bottom_->cpu_data();
+  const TypeParam* X = this->blob_bottom_->cpu_data();
   TypeParam std_asum = 0;
   for (int_tp i = 0; i < n; ++i) {
-    std_asum += std::fabs(x[i]);
+    std_asum += std::fabs(X[i]);
   }
-  TypeParam cpu_asum = caffe_cpu_asum<TypeParam>(n, x);
+  TypeParam cpu_asum = caffe_cpu_asum<TypeParam>(n, X);
   EXPECT_LT((cpu_asum - std_asum) / std_asum, 1e-2);
 }
 
 TYPED_TEST(CPUMathFunctionsTest, TestSign) {
   int_tp n = this->blob_bottom_->count();
-  const TypeParam* x = this->blob_bottom_->cpu_data();
-  caffe_cpu_sign<TypeParam>(n, x, this->blob_bottom_->mutable_cpu_diff());
+  const TypeParam* X = this->blob_bottom_->cpu_data();
+  caffe_cpu_sign<TypeParam>(n, X, this->blob_bottom_->mutable_cpu_diff());
   const TypeParam* signs = this->blob_bottom_->cpu_diff();
   for (int_tp i = 0; i < n; ++i) {
-    EXPECT_EQ(signs[i], x[i] > 0 ? 1 : (x[i] < 0 ? -1 : 0));
+    EXPECT_EQ(signs[i], X[i] > 0 ? 1 : (X[i] < 0 ? -1 : 0));
   }
 }
 
 TYPED_TEST(CPUMathFunctionsTest, TestSgnbit) {
   int_tp n = this->blob_bottom_->count();
-  const TypeParam* x = this->blob_bottom_->cpu_data();
-  caffe_cpu_sgnbit<TypeParam>(n, x, this->blob_bottom_->mutable_cpu_diff());
+  const TypeParam* X = this->blob_bottom_->cpu_data();
+  caffe_cpu_sgnbit<TypeParam>(n, X, this->blob_bottom_->mutable_cpu_diff());
   const TypeParam* signbits = this->blob_bottom_->cpu_diff();
   for (int_tp i = 0; i < n; ++i) {
-    EXPECT_EQ(signbits[i], x[i] < 0 ? 1 : 0);
+    EXPECT_EQ(signbits[i], X[i] < 0 ? 1 : 0);
   }
 }
 
 TYPED_TEST(CPUMathFunctionsTest, TestFabs) {
   int_tp n = this->blob_bottom_->count();
-  const TypeParam* x = this->blob_bottom_->cpu_data();
-  caffe_abs<TypeParam>(n, x, this->blob_bottom_->mutable_cpu_diff());
+  const TypeParam* X = this->blob_bottom_->cpu_data();
+  caffe_abs<TypeParam>(n, X, this->blob_bottom_->mutable_cpu_diff());
   const TypeParam* abs_val = this->blob_bottom_->cpu_diff();
   for (int_tp i = 0; i < n; ++i) {
-    EXPECT_EQ(abs_val[i], x[i] > 0 ? x[i] : -x[i]);
+    EXPECT_EQ(abs_val[i], X[i] > 0 ? X[i] : -X[i]);
   }
 }
 
@@ -108,9 +108,9 @@ TYPED_TEST(CPUMathFunctionsTest, TestScale) {
   caffe_cpu_scale<TypeParam>(n, alpha, this->blob_bottom_->cpu_data(),
                              this->blob_bottom_->mutable_cpu_diff());
   const TypeParam* scaled = this->blob_bottom_->cpu_diff();
-  const TypeParam* x = this->blob_bottom_->cpu_data();
+  const TypeParam* X = this->blob_bottom_->cpu_data();
   for (int_tp i = 0; i < n; ++i) {
-    EXPECT_EQ(scaled[i], x[i] * alpha);
+    EXPECT_EQ(scaled[i], X[i] * alpha);
   }
 }
 
@@ -139,18 +139,18 @@ TYPED_TEST(GPUMathFunctionsTest, TestAsum) {
     n = 512;
     precision = 0.1;
   }
-  const TypeParam* x = this->blob_bottom_->cpu_data();
+  const TypeParam* X = this->blob_bottom_->cpu_data();
   TypeParam std_asum = 0;
   for (int_tp i = 0; i < n; ++i) {
-    std_asum += fabs(x[i]);
+    std_asum += fabs(X[i]);
   }
   TypeParam gpu_asum;
 
-  device *dc = Caffe::GetDefaultDevice();
+  Device *dc = Caffe::GetDefaultDevice();
 
   if (dc->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
-    caffe_gpu_asum<TypeParam>(n, this->blob_bottom_->gpu_data(), &gpu_asum);
+    this->device_->template asum<Dtype><TypeParam>(n, this->blob_bottom_->gpu_data(), &gpu_asum);
 #endif  // USE_CUDA
   } else {
 #ifdef USE_OPENCL
@@ -164,11 +164,11 @@ TYPED_TEST(GPUMathFunctionsTest, TestAsum) {
 TYPED_TEST(GPUMathFunctionsTest, TestSign) {
   int_tp n = this->blob_bottom_->count();
 
-  device *dc = Caffe::GetDefaultDevice();
+  Device *dc = Caffe::GetDefaultDevice();
 
   if (dc->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
-    caffe_gpu_sign<TypeParam>(n, this->blob_bottom_->gpu_data(),
+    this->device_->template sign<Dtype><TypeParam>(n, this->blob_bottom_->gpu_data(),
                             this->blob_bottom_->mutable_gpu_diff());
 #endif  // USE_CUDA
   } else {
@@ -180,16 +180,16 @@ TYPED_TEST(GPUMathFunctionsTest, TestSign) {
   }
 
   const TypeParam* signs = this->blob_bottom_->cpu_diff();
-  const TypeParam* x = this->blob_bottom_->cpu_data();
+  const TypeParam* X = this->blob_bottom_->cpu_data();
   for (int_tp i = 0; i < n; ++i) {
-    EXPECT_EQ(signs[i], x[i] > 0 ? 1 : (x[i] < 0 ? -1 : 0));
+    EXPECT_EQ(signs[i], X[i] > 0 ? 1 : (X[i] < 0 ? -1 : 0));
   }
 }
 
 TYPED_TEST(GPUMathFunctionsTest, TestSgnbit) {
   int_tp n = this->blob_bottom_->count();
 
-  device *dc = Caffe::GetDefaultDevice();
+  Device *dc = Caffe::GetDefaultDevice();
 
   if (dc->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
@@ -205,16 +205,16 @@ TYPED_TEST(GPUMathFunctionsTest, TestSgnbit) {
   }
 
   const TypeParam* signbits = this->blob_bottom_->cpu_diff();
-  const TypeParam* x = this->blob_bottom_->cpu_data();
+  const TypeParam* X = this->blob_bottom_->cpu_data();
   for (int_tp i = 0; i < n; ++i) {
-    EXPECT_EQ(signbits[i], x[i] < 0 ? 1 : 0);
+    EXPECT_EQ(signbits[i], X[i] < 0 ? 1 : 0);
   }
 }
 
 TYPED_TEST(GPUMathFunctionsTest, TestFabs) {
   int_tp n = this->blob_bottom_->count();
 
-  device *dc = Caffe::GetDefaultDevice();
+  Device *dc = Caffe::GetDefaultDevice();
 
   if (dc->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
@@ -230,9 +230,9 @@ TYPED_TEST(GPUMathFunctionsTest, TestFabs) {
   }
 
   const TypeParam* abs_val = this->blob_bottom_->cpu_diff();
-  const TypeParam* x = this->blob_bottom_->cpu_data();
+  const TypeParam* X = this->blob_bottom_->cpu_data();
   for (int_tp i = 0; i < n; ++i) {
-    EXPECT_EQ(abs_val[i], x[i] > 0 ? x[i] : -x[i]);
+    EXPECT_EQ(abs_val[i], X[i] > 0 ? X[i] : -X[i]);
   }
 }
 
@@ -241,10 +241,10 @@ TYPED_TEST(GPUMathFunctionsTest, TestScale) {
   TypeParam alpha = this->blob_bottom_->cpu_diff()[caffe_rng_rand() %
                                                    this->blob_bottom_->count()];
 
-  device *dc = Caffe::GetDefaultDevice();
+  Device *dc = Caffe::GetDefaultDevice();
   if (dc->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
-    caffe_gpu_scale<TypeParam>(n, alpha, this->blob_bottom_->gpu_data(),
+    this->device_->scale<TypeParam>(n, alpha, this->blob_bottom_->gpu_data(),
                              this->blob_bottom_->mutable_gpu_diff());
 #endif  // USE_CUDA
   } else {
@@ -256,9 +256,9 @@ TYPED_TEST(GPUMathFunctionsTest, TestScale) {
   }
 
   const TypeParam* scaled = this->blob_bottom_->cpu_diff();
-  const TypeParam* x = this->blob_bottom_->cpu_data();
+  const TypeParam* X = this->blob_bottom_->cpu_data();
   for (int_tp i = 0; i < n; ++i) {
-    EXPECT_EQ(scaled[i], x[i] * alpha);
+    EXPECT_EQ(scaled[i], X[i] * alpha);
   }
 }
 
@@ -267,7 +267,7 @@ TYPED_TEST(GPUMathFunctionsTest, TestCopy) {
   const TypeParam* bottom_data = this->blob_bottom_->gpu_data();
   TypeParam* top_data = this->blob_top_->mutable_gpu_data();
 
-  device *dc = Caffe::GetDefaultDevice();
+  Device *dc = Caffe::GetDefaultDevice();
   if (dc->backend() == BACKEND_CUDA) {
   #ifdef USE_CUDA
     caffe_copy(n, bottom_data, top_data);

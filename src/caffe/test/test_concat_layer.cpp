@@ -24,7 +24,7 @@ class ConcatLayerTest : public MultiDeviceTest<TypeParam> {
         blob_top_(new Blob<Dtype>()) {}
   virtual void SetUp() {
     // fill the values
-    std::shared_ptr<ConstantFiller<Dtype> > filler;
+    shared_ptr<ConstantFiller<Dtype> > filler;
     FillerParameter filler_param;
     filler_param.set_value(1.);
     filler.reset(new ConstantFiller<Dtype>(filler_param));

@@ -2,7 +2,7 @@
 #define CAFFE_INTERNAL_THREAD_HPP_
 
 #include "caffe/common.hpp"
-#include "device.hpp"
+#include "caffe/backend/device.hpp"
 
 /**
  Forward declare boost::thread instead of including boost/thread.hpp
@@ -31,7 +31,7 @@ class InternalThread {
    * thread values, e.g. device id, solver index etc. The random seed
    * is initialized using caffe_rng_rand.
    */
-  void StartInternalThread(device* device_context);
+  void StartInternalThread(Device* device_context);
 
   /** Will not return until the internal thread has exited. */
   void StopInternalThread();
@@ -47,13 +47,13 @@ class InternalThread {
   /* Should be tested when running loops to exit when requested. */
   bool must_stop();
 
-  device* thread_device_;
+  Device* thread_device_;
 
  private:
-  void entry(device* dev, Caffe::Brew mode, int_tp rand_seed,
+  void entry(Device* dev, Caffe::Brew mode, int_tp rand_seed,
       int_tp solver_count, int_tp solver_rank, bool multiprocess);
 
-  std::shared_ptr<boost::thread> thread_;
+  shared_ptr<boost::thread> thread_;
 };
 
 }  // namespace caffe

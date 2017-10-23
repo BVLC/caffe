@@ -213,7 +213,7 @@ TYPED_TEST(ArgMaxLayerTest, TestCPUAxis) {
   // Now, check values
   int_tp max_ind;
   TypeParam max_val;
-  std::vector<int_tp> shape = this->blob_bottom_->shape();
+  vector<int_tp> shape = this->blob_bottom_->shape();
   for (int_tp i = 0; i < shape[1]; ++i) {
     for (int_tp j = 0; j < shape[2]; ++j) {
       for (int_tp k = 0; k < shape[3]; ++k) {
@@ -240,7 +240,7 @@ TYPED_TEST(ArgMaxLayerTest, TestCPUAxisTopK) {
   // Now, check values
   int_tp max_ind;
   TypeParam max_val;
-  std::vector<int_tp> shape = this->blob_bottom_->shape();
+  vector<int_tp> shape = this->blob_bottom_->shape();
   for (int_tp i = 0; i < shape[0]; ++i) {
     for (int_tp j = 0; j < shape[1]; ++j) {
       for (int_tp k = 0; k < shape[3]; ++k) {
@@ -273,7 +273,7 @@ TYPED_TEST(ArgMaxLayerTest, TestCPUAxisMaxValTopK) {
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   // Now, check values
   TypeParam max_val;
-  std::vector<int_tp> shape = this->blob_bottom_->shape();
+  vector<int_tp> shape = this->blob_bottom_->shape();
   for (int_tp i = 0; i < shape[0]; ++i) {
     for (int_tp j = 0; j < shape[1]; ++j) {
       for (int_tp k = 0; k < shape[2]; ++k) {

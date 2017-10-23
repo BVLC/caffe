@@ -76,7 +76,7 @@ void convert_dataset(const char* image_filename, const char* label_filename,
   char label_i;
   char label_j;
   char* pixels = new char[2 * rows * cols];
-  std::string value;
+  string value;
   caffe::Datum datum;
   datum.set_channels(2);  // one channel for each image in the pair
   datum.set_height(rows);
@@ -97,7 +97,7 @@ void convert_dataset(const char* image_filename, const char* label_filename,
       datum.set_label(0);
     }
     datum.SerializeToString(&value);
-    std::string key_str = caffe::format_int(itemid, 8);
+    string key_str = caffe::format_int(itemid, 8);
     db->Put(leveldb::WriteOptions(), key_str, value);
   }
 

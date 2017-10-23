@@ -18,7 +18,7 @@ namespace caffe {
   * client may optionally provide in order to request early termination
   * or saving a snapshot without exiting. In the executable caffe, this
   * mechanism is used to allow the snapshot to be saved when stopping
-  * execution with a SIGINT (Ctrl-C).
+  * execution with a SIGINT (Ctrl-c).
   */
   namespace SolverAction {
     enum Enum {
@@ -43,8 +43,8 @@ typedef boost::function<SolverAction::Enum()> ActionCallback;
 template<typename Dtype>
 class Solver {
  public:
-  explicit Solver(const SolverParameter& param);
-  explicit Solver(const string& param_file);
+  explicit Solver(const SolverParameter& param, Device* dev);
+  explicit Solver(const string& param_file, Device* dev);
   void Init(const SolverParameter& param);
   void InitTrainNet();
   void InitTestNets();
@@ -76,8 +76,8 @@ class Solver {
   void Snapshot();
   virtual ~Solver() {}
   inline const SolverParameter& param() const { return param_; }
-  inline std::shared_ptr<Net<Dtype> > net() { return net_; }
-  inline const vector<std::shared_ptr<Net<Dtype> > >& test_nets() {
+  inline shared_ptr<Net<Dtype> > net() { return net_; }
+  inline const vector<shared_ptr<Net<Dtype> > >& test_nets() {
     return test_nets_;
   }
 
@@ -114,7 +114,7 @@ class Solver {
     return "";
   }
 
-  inline device *get_device() {
+  inline Device *get_device() {
     return device_;
   }
 
@@ -132,18 +132,20 @@ class Solver {
   virtual void RestoreSolverStateFromBinaryProto(const string& state_file) = 0;
   void DisplayOutputBlobs(const int_tp net_id);
   void UpdateSmoothedLoss(Dtype loss, int_tp start_iter, int_tp average_loss);
+  virtual void GenerateProgram() = 0;
 
   SolverParameter param_;
   int_tp iter_;
   int_tp current_step_;
-  std::shared_ptr<Net<Dtype> > net_;
-  vector<std::shared_ptr<Net<Dtype> > > test_nets_;
-  device* device_;
+  shared_ptr<Net<Dtype> > net_;
+  vector<shared_ptr<Net<Dtype> > > test_nets_;
+  Device* device_;
+  shared_ptr<DeviceProgram> device_program_;
   vector<Callback*> callbacks_;
   vector<Dtype> losses_;
   Dtype smoothed_loss_;
 
-  // A function that can be set by a client of the Solver to provide indication
+  // a function that can be set by a client of the Solver to provide indication
   // that it wants a snapshot saved and/or to exit early.
   ActionCallback action_request_function_;
 

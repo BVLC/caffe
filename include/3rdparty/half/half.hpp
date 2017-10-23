@@ -1064,7 +1064,7 @@ namespace half_float
 	/// means it can be standard-conformantly copied using raw binary copies. But in this context some more words about the
 	/// actual size of the type. Although the half is representing an IEEE 16-bit type, it does not neccessarily have to be of
 	/// exactly 16-bits size. But on any reasonable implementation the actual binary representation of this type will most
-	/// probably not ivolve any additional "magic" or padding beyond the simple binary representation of the underlying 16-bit
+	/// probably not involve any additional "magic" or padding beyond the simple binary representation of the underlying 16-bit
 	/// IEEE number, even if not strictly guaranteed by the standard. But even then it only has an actual size of 16 bits if
 	/// your C++ implementation supports an unsigned integer type of exactly 16 bits width. But this should be the case on
 	/// nearly any reasonable platform.
@@ -1206,28 +1206,28 @@ namespace half_float
 		struct functions
 		{
 			/// Addition implementation.
-			/// \param x first operand
-			/// \param y second operand
+			/// \param X first operand
+			/// \param Y second operand
 			/// \return Half-precision sum stored in single-precision
-			static expr plus(float x, float y) { return expr(x+y); }
+			static expr plus(float X, float Y) { return expr(X+Y); }
 
 			/// Subtraction implementation.
-			/// \param x first operand
-			/// \param y second operand
+			/// \param X first operand
+			/// \param Y second operand
 			/// \return Half-precision difference stored in single-precision
-			static expr minus(float x, float y) { return expr(x-y); }
+			static expr minus(float X, float Y) { return expr(X-Y); }
 
 			/// Multiplication implementation.
-			/// \param x first operand
-			/// \param y second operand
+			/// \param X first operand
+			/// \param Y second operand
 			/// \return Half-precision product stored in single-precision
-			static expr multiplies(float x, float y) { return expr(x*y); }
+			static expr multiplies(float X, float Y) { return expr(X*Y); }
 
 			/// Division implementation.
-			/// \param x first operand
-			/// \param y second operand
+			/// \param X first operand
+			/// \param Y second operand
 			/// \return Half-precision quotient stored in single-precision
-			static expr divides(float x, float y) { return expr(x/y); }
+			static expr divides(float X, float Y) { return expr(X/Y); }
 
 			/// Output implementation.
 			/// \param out stream to write to
@@ -1248,29 +1248,29 @@ namespace half_float
 			}
 
 			/// Modulo implementation.
-			/// \param x first operand
-			/// \param y second operand
+			/// \param X first operand
+			/// \param Y second operand
 			/// \return Half-precision division remainder stored in single-precision
-			static expr fmod(float x, float y) { return expr(std::fmod(x, y)); }
+			static expr fmod(float X, float Y) { return expr(std::fmod(X, Y)); }
 
 			/// Remainder implementation.
-			/// \param x first operand
-			/// \param y second operand
+			/// \param X first operand
+			/// \param Y second operand
 			/// \return Half-precision division remainder stored in single-precision
-			static expr remainder(float x, float y)
+			static expr remainder(float X, float Y)
 			{
 			#if HALF_ENABLE_CPP11_CMATH
-				return expr(std::remainder(x, y));
+				return expr(std::remainder(X, Y));
 			#else
-				if(builtin_isnan(x) || builtin_isnan(y))
+				if(builtin_isnan(X) || builtin_isnan(Y))
 					return expr(std::numeric_limits<float>::quiet_NaN());
-				float ax = std::fabs(x), ay = std::fabs(y);
+				float ax = std::fabs(X), ay = std::fabs(Y);
 				if(ax >= 65536.0f || ay < std::ldexp(1.0f, -24))
 					return expr(std::numeric_limits<float>::quiet_NaN());
 				if(ay >= 65536.0f)
-					return expr(x);
+					return expr(X);
 				if(ax == ay)
-					return expr(builtin_signbit(x) ? -0.0f : 0.0f);
+					return expr(builtin_signbit(X) ? -0.0f : 0.0f);
 				ax = std::fmod(ax, ay+ay);
 				float y2 = 0.5f * ay;
 				if(ax > y2)
@@ -1279,28 +1279,28 @@ namespace half_float
 					if(ax >= y2)
 						ax -= ay;
 				}
-				return expr(builtin_signbit(x) ? -ax : ax);
+				return expr(builtin_signbit(X) ? -ax : ax);
 			#endif
 			}
 
 			/// Remainder implementation.
-			/// \param x first operand
-			/// \param y second operand
+			/// \param X first operand
+			/// \param Y second operand
 			/// \param quo address to store quotient bits at
 			/// \return Half-precision division remainder stored in single-precision
-			static expr remquo(float x, float y, int *quo)
+			static expr remquo(float X, float Y, int *quo)
 			{
 			#if HALF_ENABLE_CPP11_CMATH
-				return expr(std::remquo(x, y, quo));
+				return expr(std::remquo(X, Y, quo));
 			#else
-				if(builtin_isnan(x) || builtin_isnan(y))
+				if(builtin_isnan(X) || builtin_isnan(Y))
 					return expr(std::numeric_limits<float>::quiet_NaN());
-				bool sign = builtin_signbit(x), qsign = static_cast<bool>(sign^builtin_signbit(y));
-				float ax = std::fabs(x), ay = std::fabs(y);
+				bool sign = builtin_signbit(X), qsign = static_cast<bool>(sign^builtin_signbit(Y));
+				float ax = std::fabs(X), ay = std::fabs(Y);
 				if(ax >= 65536.0f || ay < std::ldexp(1.0f, -24))
 					return expr(std::numeric_limits<float>::quiet_NaN());
 				if(ay >= 65536.0f)
-					return expr(x);
+					return expr(X);
 				if(ax == ay)
 					return *quo = qsign ? -1 : 1, expr(sign ? -0.0f : 0.0f);
 				ax = std::fmod(ax, 8.0f*ay);
@@ -1331,29 +1331,29 @@ namespace half_float
 			}
 
 			/// Positive difference implementation.
-			/// \param x first operand
-			/// \param y second operand
+			/// \param X first operand
+			/// \param Y second operand
 			/// \return Positive difference stored in single-precision
-			static expr fdim(float x, float y)
+			static expr fdim(float X, float Y)
 			{
 			#if HALF_ENABLE_CPP11_CMATH
-				return expr(std::fdim(x, y));
+				return expr(std::fdim(X, Y));
 			#else
-				return expr((x<=y) ? 0.0f : (x-y));
+				return expr((X<=Y) ? 0.0f : (X-Y));
 			#endif
 			}
 
 			/// Fused multiply-add implementation.
-			/// \param x first operand
-			/// \param y second operand
+			/// \param X first operand
+			/// \param Y second operand
 			/// \param z third operand
-			/// \return \a x * \a y + \a z stored in single-precision
-			static expr fma(float x, float y, float z)
+			/// \return \a X * \a Y + \a z stored in single-precision
+			static expr fma(float X, float Y, float z)
 			{
 			#if HALF_ENABLE_CPP11_CMATH && defined(FP_FAST_FMAF)
-				return expr(std::fma(x, y, z));
+				return expr(std::fma(X, Y, z));
 			#else
-				return expr(x*y+z);
+				return expr(X*Y+z);
 			#endif
 			}
 
@@ -1445,16 +1445,16 @@ namespace half_float
 			}
 
 			/// Hypotenuse implementation.
-			/// \param x first argument
-			/// \param y second argument
+			/// \param X first argument
+			/// \param Y second argument
 			/// \return function value stored in single-preicision
-			static expr hypot(float x, float y)
+			static expr hypot(float X, float Y)
 			{
 			#if HALF_ENABLE_CPP11_CMATH
-				return expr(std::hypot(x, y));
+				return expr(std::hypot(X, Y));
 			#else
-				return expr((builtin_isinf(x) || builtin_isinf(y)) ? std::numeric_limits<float>::infinity() :
-					static_cast<float>(std::sqrt(static_cast<double>(x)*x+static_cast<double>(y)*y)));
+				return expr((builtin_isinf(X) || builtin_isinf(Y)) ? std::numeric_limits<float>::infinity() :
+					static_cast<float>(std::sqrt(static_cast<double>(X)*X+static_cast<double>(Y)*Y)));
 			#endif
 			}
 
@@ -1495,10 +1495,10 @@ namespace half_float
 			static expr atan(float arg) { return expr(std::atan(arg)); }
 
 			/// Arc tangent implementation.
-			/// \param x first argument
-			/// \param y second argument
+			/// \param X first argument
+			/// \param Y second argument
 			/// \return function value stored in single-preicision
-			static expr atan2(float x, float y) { return expr(std::atan2(x, y)); }
+			static expr atan2(float X, float Y) { return expr(std::atan2(X, Y)); }
 
 			/// Hyperbolic sine implementation.
 			/// \param arg function argument
@@ -1831,10 +1831,10 @@ namespace half_float
 			}
 
 			/// Sign implementation
-			/// \param x first operand
-			/// \param y second operand
+			/// \param X first operand
+			/// \param Y second operand
 			/// \return composed value
-			static half copysign(half x, half y) { return half(binary, x.data_^((x.data_^y.data_)&0x8000)); }
+			static half copysign(half X, half Y) { return half(binary, X.data_^((X.data_^Y.data_)&0x8000)); }
 
 			/// Classification implementation.
 			/// \param arg value to classify
@@ -1877,83 +1877,83 @@ namespace half_float
 			static bool signbit(half arg) { return (arg.data_&0x8000) != 0; }
 
 			/// Comparison implementation.
-			/// \param x first operand
-			/// \param y second operand
+			/// \param X first operand
+			/// \param Y second operand
 			/// \retval true if operands equal
 			/// \retval false else
-			static bool isequal(half x, half y) { return (x.data_==y.data_ || !((x.data_|y.data_)&0x7FFF)) && !isnan(x); }
+			static bool isequal(half X, half Y) { return (X.data_==Y.data_ || !((X.data_|Y.data_)&0x7FFF)) && !isnan(X); }
 
 			/// Comparison implementation.
-			/// \param x first operand
-			/// \param y second operand
+			/// \param X first operand
+			/// \param Y second operand
 			/// \retval true if operands not equal
 			/// \retval false else
-			static bool isnotequal(half x, half y) { return (x.data_!=y.data_ && ((x.data_|y.data_)&0x7FFF)) || isnan(x); }
+			static bool isnotequal(half X, half Y) { return (X.data_!=Y.data_ && ((X.data_|Y.data_)&0x7FFF)) || isnan(X); }
 
 			/// Comparison implementation.
-			/// \param x first operand
-			/// \param y second operand
-			/// \retval true if \a x > \a y
+			/// \param X first operand
+			/// \param Y second operand
+			/// \retval true if \a X > \a Y
 			/// \retval false else
-			static bool isgreater(half x, half y)
+			static bool isgreater(half X, half Y)
 			{
-				int xabs = x.data_ & 0x7FFF, yabs = y.data_ & 0x7FFF;
-				return xabs<=0x7C00 && yabs<=0x7C00 && (((xabs==x.data_) ? xabs : -xabs) > ((yabs==y.data_) ? yabs : -yabs));
+				int xabs = X.data_ & 0x7FFF, yabs = Y.data_ & 0x7FFF;
+				return xabs<=0x7C00 && yabs<=0x7C00 && (((xabs==X.data_) ? xabs : -xabs) > ((yabs==Y.data_) ? yabs : -yabs));
 			}
 
 			/// Comparison implementation.
-			/// \param x first operand
-			/// \param y second operand
-			/// \retval true if \a x >= \a y
+			/// \param X first operand
+			/// \param Y second operand
+			/// \retval true if \a X >= \a Y
 			/// \retval false else
-			static bool isgreaterequal(half x, half y)
+			static bool isgreaterequal(half X, half Y)
 			{
-				int xabs = x.data_ & 0x7FFF, yabs = y.data_ & 0x7FFF;
-				return xabs<=0x7C00 && yabs<=0x7C00 && (((xabs==x.data_) ? xabs : -xabs) >= ((yabs==y.data_) ? yabs : -yabs));
+				int xabs = X.data_ & 0x7FFF, yabs = Y.data_ & 0x7FFF;
+				return xabs<=0x7C00 && yabs<=0x7C00 && (((xabs==X.data_) ? xabs : -xabs) >= ((yabs==Y.data_) ? yabs : -yabs));
 			}
 
 			/// Comparison implementation.
-			/// \param x first operand
-			/// \param y second operand
-			/// \retval true if \a x < \a y
+			/// \param X first operand
+			/// \param Y second operand
+			/// \retval true if \a X < \a Y
 			/// \retval false else
-			static bool isless(half x, half y)
+			static bool isless(half X, half Y)
 			{
-				int xabs = x.data_ & 0x7FFF, yabs = y.data_ & 0x7FFF;
-				return xabs<=0x7C00 && yabs<=0x7C00 && (((xabs==x.data_) ? xabs : -xabs) < ((yabs==y.data_) ? yabs : -yabs));
+				int xabs = X.data_ & 0x7FFF, yabs = Y.data_ & 0x7FFF;
+				return xabs<=0x7C00 && yabs<=0x7C00 && (((xabs==X.data_) ? xabs : -xabs) < ((yabs==Y.data_) ? yabs : -yabs));
 			}
 
 			/// Comparison implementation.
-			/// \param x first operand
-			/// \param y second operand
-			/// \retval true if \a x <= \a y
+			/// \param X first operand
+			/// \param Y second operand
+			/// \retval true if \a X <= \a Y
 			/// \retval false else
-			static bool islessequal(half x, half y)
+			static bool islessequal(half X, half Y)
 			{
-				int xabs = x.data_ & 0x7FFF, yabs = y.data_ & 0x7FFF;
-				return xabs<=0x7C00 && yabs<=0x7C00 && (((xabs==x.data_) ? xabs : -xabs) <= ((yabs==y.data_) ? yabs : -yabs));
+				int xabs = X.data_ & 0x7FFF, yabs = Y.data_ & 0x7FFF;
+				return xabs<=0x7C00 && yabs<=0x7C00 && (((xabs==X.data_) ? xabs : -xabs) <= ((yabs==Y.data_) ? yabs : -yabs));
 			}
 
 			/// Comparison implementation.
-			/// \param x first operand
-			/// \param y second operand
-			/// \retval true if either \a x > \a y nor \a x < \a y
+			/// \param X first operand
+			/// \param Y second operand
+			/// \retval true if either \a X > \a Y nor \a X < \a Y
 			/// \retval false else
-			static bool islessgreater(half x, half y)
+			static bool islessgreater(half X, half Y)
 			{
-				int xabs = x.data_ & 0x7FFF, yabs = y.data_ & 0x7FFF;
+				int xabs = X.data_ & 0x7FFF, yabs = Y.data_ & 0x7FFF;
 				if(xabs > 0x7C00 || yabs > 0x7C00)
 					return false;
-				int a = (xabs==x.data_) ? xabs : -xabs, b = (yabs==y.data_) ? yabs : -yabs;
+				int a = (xabs==X.data_) ? xabs : -xabs, b = (yabs==Y.data_) ? yabs : -yabs;
 				return a < b || a > b;
 			}
 
 			/// Comparison implementation.
-			/// \param x first operand
-			/// \param y second operand
+			/// \param X first operand
+			/// \param Y second operand
 			/// \retval true if operand unordered
 			/// \retval false else
-			static bool isunordered(half x, half y) { return isnan(x) || isnan(y); }
+			static bool isunordered(half X, half Y) { return isnan(X) || isnan(Y); }
 
 		private:
 			static double erf(double arg)
@@ -2003,58 +2003,58 @@ namespace half_float
 		template<typename T,typename U> struct binary_specialized
 		{
 			/// Minimum implementation.
-			/// \param x first operand
-			/// \param y second operand
+			/// \param X first operand
+			/// \param Y second operand
 			/// \return minimum value
-			static expr fmin(float x, float y)
+			static expr fmin(float X, float Y)
 			{
 			#if HALF_ENABLE_CPP11_CMATH
-				return expr(std::fmin(x, y));
+				return expr(std::fmin(X, Y));
 			#else
-				if(builtin_isnan(x))
-					return expr(y);
-				if(builtin_isnan(y))
-					return expr(x);
-				return expr(std::min(x, y));
+				if(builtin_isnan(X))
+					return expr(Y);
+				if(builtin_isnan(Y))
+					return expr(X);
+				return expr(std::min(X, Y));
 			#endif
 			}
 
 			/// Maximum implementation.
-			/// \param x first operand
-			/// \param y second operand
+			/// \param X first operand
+			/// \param Y second operand
 			/// \return maximum value
-			static expr fmax(float x, float y)
+			static expr fmax(float X, float Y)
 			{
 			#if HALF_ENABLE_CPP11_CMATH
-				return expr(std::fmax(x, y));
+				return expr(std::fmax(X, Y));
 			#else
-				if(builtin_isnan(x))
-					return expr(y);
-				if(builtin_isnan(y))
-					return expr(x);
-				return expr(std::max(x, y));
+				if(builtin_isnan(X))
+					return expr(Y);
+				if(builtin_isnan(Y))
+					return expr(X);
+				return expr(std::max(X, Y));
 			#endif
 			}
 		};
 		template<> struct binary_specialized<half,half>
 		{
-			static half fmin(half x, half y)
+			static half fmin(half X, half Y)
 			{
-				int xabs = x.data_ & 0x7FFF, yabs = y.data_ & 0x7FFF;
+				int xabs = X.data_ & 0x7FFF, yabs = Y.data_ & 0x7FFF;
 				if(xabs > 0x7C00)
-					return y;
+					return Y;
 				if(yabs > 0x7C00)
-					return x;
-				return (((xabs==x.data_) ? xabs : -xabs) > ((yabs==y.data_) ? yabs : -yabs)) ? y : x;
+					return X;
+				return (((xabs==X.data_) ? xabs : -xabs) > ((yabs==Y.data_) ? yabs : -yabs)) ? Y : X;
 			}
-			static half fmax(half x, half y)
+			static half fmax(half X, half Y)
 			{
-				int xabs = x.data_ & 0x7FFF, yabs = y.data_ & 0x7FFF;
+				int xabs = X.data_ & 0x7FFF, yabs = Y.data_ & 0x7FFF;
 				if(xabs > 0x7C00)
-					return y;
+					return Y;
 				if(yabs > 0x7C00)
-					return x;
-				return (((xabs==x.data_) ? xabs : -xabs) < ((yabs==y.data_) ? yabs : -yabs)) ? y : x;
+					return X;
+				return (((xabs==X.data_) ? xabs : -xabs) < ((yabs==Y.data_) ? yabs : -yabs)) ? Y : X;
 			}
 		};
 
@@ -2111,74 +2111,74 @@ namespace half_float
 		/// \{
 
 		/// Comparison for equality.
-		/// \param x first operand
-		/// \param y second operand
+		/// \param X first operand
+		/// \param Y second operand
 		/// \retval true if operands equal
 		/// \retval false else
-		template<typename T,typename U> typename enable<bool,T,U>::type operator==(T x, U y) { return functions::isequal(x, y); }
+		template<typename T,typename U> typename enable<bool,T,U>::type operator==(T X, U Y) { return functions::isequal(X, Y); }
 
 		/// Comparison for inequality.
-		/// \param x first operand
-		/// \param y second operand
+		/// \param X first operand
+		/// \param Y second operand
 		/// \retval true if operands not equal
 		/// \retval false else
-		template<typename T,typename U> typename enable<bool,T,U>::type operator!=(T x, U y) { return functions::isnotequal(x, y); }
+		template<typename T,typename U> typename enable<bool,T,U>::type operator!=(T X, U Y) { return functions::isnotequal(X, Y); }
 
 		/// Comparison for less than.
-		/// \param x first operand
-		/// \param y second operand
-		/// \retval true if \a x less than \a y
+		/// \param X first operand
+		/// \param Y second operand
+		/// \retval true if \a X less than \a Y
 		/// \retval false else
-		template<typename T,typename U> typename enable<bool,T,U>::type operator<(T x, U y) { return functions::isless(x, y); }
+		template<typename T,typename U> typename enable<bool,T,U>::type operator<(T X, U Y) { return functions::isless(X, Y); }
 
 		/// Comparison for greater than.
-		/// \param x first operand
-		/// \param y second operand
-		/// \retval true if \a x greater than \a y
+		/// \param X first operand
+		/// \param Y second operand
+		/// \retval true if \a X greater than \a Y
 		/// \retval false else
-		template<typename T,typename U> typename enable<bool,T,U>::type operator>(T x, U y) { return functions::isgreater(x, y); }
+		template<typename T,typename U> typename enable<bool,T,U>::type operator>(T X, U Y) { return functions::isgreater(X, Y); }
 
 		/// Comparison for less equal.
-		/// \param x first operand
-		/// \param y second operand
-		/// \retval true if \a x less equal \a y
+		/// \param X first operand
+		/// \param Y second operand
+		/// \retval true if \a X less equal \a Y
 		/// \retval false else
-		template<typename T,typename U> typename enable<bool,T,U>::type operator<=(T x, U y) { return functions::islessequal(x, y); }
+		template<typename T,typename U> typename enable<bool,T,U>::type operator<=(T X, U Y) { return functions::islessequal(X, Y); }
 
 		/// Comparison for greater equal.
-		/// \param x first operand
-		/// \param y second operand
-		/// \retval true if \a x greater equal \a y
+		/// \param X first operand
+		/// \param Y second operand
+		/// \retval true if \a X greater equal \a Y
 		/// \retval false else
-		template<typename T,typename U> typename enable<bool,T,U>::type operator>=(T x, U y) { return functions::isgreaterequal(x, y); }
+		template<typename T,typename U> typename enable<bool,T,U>::type operator>=(T X, U Y) { return functions::isgreaterequal(X, Y); }
 
 		/// \}
 		/// \name Arithmetic operators
 		/// \{
 
 		/// Add halfs.
-		/// \param x left operand
-		/// \param y right operand
+		/// \param X left operand
+		/// \param Y right operand
 		/// \return sum of half expressions
-		template<typename T,typename U> typename enable<expr,T,U>::type operator+(T x, U y) { return functions::plus(x, y); }
+		template<typename T,typename U> typename enable<expr,T,U>::type operator+(T X, U Y) { return functions::plus(X, Y); }
 
 		/// Subtract halfs.
-		/// \param x left operand
-		/// \param y right operand
+		/// \param X left operand
+		/// \param Y right operand
 		/// \return difference of half expressions
-		template<typename T,typename U> typename enable<expr,T,U>::type operator-(T x, U y) { return functions::minus(x, y); }
+		template<typename T,typename U> typename enable<expr,T,U>::type operator-(T X, U Y) { return functions::minus(X, Y); }
 
 		/// Multiply halfs.
-		/// \param x left operand
-		/// \param y right operand
+		/// \param X left operand
+		/// \param Y right operand
 		/// \return product of half expressions
-		template<typename T,typename U> typename enable<expr,T,U>::type operator*(T x, U y) { return functions::multiplies(x, y); }
+		template<typename T,typename U> typename enable<expr,T,U>::type operator*(T X, U Y) { return functions::multiplies(X, Y); }
 
 		/// Divide halfs.
-		/// \param x left operand
-		/// \param y right operand
+		/// \param X left operand
+		/// \param Y right operand
 		/// \return quotient of half expressions
-		template<typename T,typename U> typename enable<expr,T,U>::type operator/(T x, U y) { return functions::divides(x, y); }
+		template<typename T,typename U> typename enable<expr,T,U>::type operator/(T X, U Y) { return functions::divides(X, Y); }
 
 		/// Identity.
 		/// \param arg operand
@@ -2227,80 +2227,80 @@ namespace half_float
 		inline expr fabs(expr arg) { return unary_specialized<expr>::fabs(arg); }
 
 		/// Remainder of division.
-		/// \param x first operand
-		/// \param y second operand
+		/// \param X first operand
+		/// \param Y second operand
 		/// \return remainder of floating point division.
-//		template<typename T,typename U> typename enable<expr,T,U>::type fmod(T x, U y) { return functions::fmod(x, y); }
-		inline expr fmod(half x, half y) { return functions::fmod(x, y); }
-		inline expr fmod(half x, expr y) { return functions::fmod(x, y); }
-		inline expr fmod(expr x, half y) { return functions::fmod(x, y); }
-		inline expr fmod(expr x, expr y) { return functions::fmod(x, y); }
+//		template<typename T,typename U> typename enable<expr,T,U>::type fmod(T X, U Y) { return functions::fmod(X, Y); }
+		inline expr fmod(half X, half Y) { return functions::fmod(X, Y); }
+		inline expr fmod(half X, expr Y) { return functions::fmod(X, Y); }
+		inline expr fmod(expr X, half Y) { return functions::fmod(X, Y); }
+		inline expr fmod(expr X, expr Y) { return functions::fmod(X, Y); }
 
 		/// Remainder of division.
-		/// \param x first operand
-		/// \param y second operand
+		/// \param X first operand
+		/// \param Y second operand
 		/// \return remainder of floating point division.
-//		template<typename T,typename U> typename enable<expr,T,U>::type remainder(T x, U y) { return functions::remainder(x, y); }
-		inline expr remainder(half x, half y) { return functions::remainder(x, y); }
-		inline expr remainder(half x, expr y) { return functions::remainder(x, y); }
-		inline expr remainder(expr x, half y) { return functions::remainder(x, y); }
-		inline expr remainder(expr x, expr y) { return functions::remainder(x, y); }
+//		template<typename T,typename U> typename enable<expr,T,U>::type remainder(T X, U Y) { return functions::remainder(X, Y); }
+		inline expr remainder(half X, half Y) { return functions::remainder(X, Y); }
+		inline expr remainder(half X, expr Y) { return functions::remainder(X, Y); }
+		inline expr remainder(expr X, half Y) { return functions::remainder(X, Y); }
+		inline expr remainder(expr X, expr Y) { return functions::remainder(X, Y); }
 
 		/// Remainder of division.
-		/// \param x first operand
-		/// \param y second operand
+		/// \param X first operand
+		/// \param Y second operand
 		/// \param quo address to store some bits of quotient at
 		/// \return remainder of floating point division.
-//		template<typename T,typename U> typename enable<expr,T,U>::type remquo(T x, U y, int *quo) { return functions::remquo(x, y, quo); }
-		inline expr remquo(half x, half y, int *quo) { return functions::remquo(x, y, quo); }
-		inline expr remquo(half x, expr y, int *quo) { return functions::remquo(x, y, quo); }
-		inline expr remquo(expr x, half y, int *quo) { return functions::remquo(x, y, quo); }
-		inline expr remquo(expr x, expr y, int *quo) { return functions::remquo(x, y, quo); }
+//		template<typename T,typename U> typename enable<expr,T,U>::type remquo(T X, U Y, int *quo) { return functions::remquo(X, Y, quo); }
+		inline expr remquo(half X, half Y, int *quo) { return functions::remquo(X, Y, quo); }
+		inline expr remquo(half X, expr Y, int *quo) { return functions::remquo(X, Y, quo); }
+		inline expr remquo(expr X, half Y, int *quo) { return functions::remquo(X, Y, quo); }
+		inline expr remquo(expr X, expr Y, int *quo) { return functions::remquo(X, Y, quo); }
 
 		/// Fused multiply add.
-		/// \param x first operand
-		/// \param y second operand
+		/// \param X first operand
+		/// \param Y second operand
 		/// \param z third operand
-		/// \return ( \a x * \a y ) + \a z rounded as one operation.
-//		template<typename T,typename U,typename V> typename enable<expr,T,U,V>::type fma(T x, U y, V z) { return functions::fma(x, y, z); }
-		inline expr fma(half x, half y, half z) { return functions::fma(x, y, z); }
-		inline expr fma(half x, half y, expr z) { return functions::fma(x, y, z); }
-		inline expr fma(half x, expr y, half z) { return functions::fma(x, y, z); }
-		inline expr fma(half x, expr y, expr z) { return functions::fma(x, y, z); }
-		inline expr fma(expr x, half y, half z) { return functions::fma(x, y, z); }
-		inline expr fma(expr x, half y, expr z) { return functions::fma(x, y, z); }
-		inline expr fma(expr x, expr y, half z) { return functions::fma(x, y, z); }
-		inline expr fma(expr x, expr y, expr z) { return functions::fma(x, y, z); }
+		/// \return ( \a X * \a Y ) + \a z rounded as one operation.
+//		template<typename T,typename U,typename V> typename enable<expr,T,U,V>::type fma(T X, U Y, V z) { return functions::fma(X, Y, z); }
+		inline expr fma(half X, half Y, half z) { return functions::fma(X, Y, z); }
+		inline expr fma(half X, half Y, expr z) { return functions::fma(X, Y, z); }
+		inline expr fma(half X, expr Y, half z) { return functions::fma(X, Y, z); }
+		inline expr fma(half X, expr Y, expr z) { return functions::fma(X, Y, z); }
+		inline expr fma(expr X, half Y, half z) { return functions::fma(X, Y, z); }
+		inline expr fma(expr X, half Y, expr z) { return functions::fma(X, Y, z); }
+		inline expr fma(expr X, expr Y, half z) { return functions::fma(X, Y, z); }
+		inline expr fma(expr X, expr Y, expr z) { return functions::fma(X, Y, z); }
 
 		/// Maximum of half expressions.
-		/// \param x first operand
-		/// \param y second operand
+		/// \param X first operand
+		/// \param Y second operand
 		/// \return maximum of operands
-//		template<typename T,typename U> typename result<T,U>::type fmax(T x, U y) { return binary_specialized<T,U>::fmax(x, y); }
-		inline half fmax(half x, half y) { return binary_specialized<half,half>::fmax(x, y); }
-		inline expr fmax(half x, expr y) { return binary_specialized<half,expr>::fmax(x, y); }
-		inline expr fmax(expr x, half y) { return binary_specialized<expr,half>::fmax(x, y); }
-		inline expr fmax(expr x, expr y) { return binary_specialized<expr,expr>::fmax(x, y); }
+//		template<typename T,typename U> typename result<T,U>::type fmax(T X, U Y) { return binary_specialized<T,U>::fmax(X, Y); }
+		inline half fmax(half X, half Y) { return binary_specialized<half,half>::fmax(X, Y); }
+		inline expr fmax(half X, expr Y) { return binary_specialized<half,expr>::fmax(X, Y); }
+		inline expr fmax(expr X, half Y) { return binary_specialized<expr,half>::fmax(X, Y); }
+		inline expr fmax(expr X, expr Y) { return binary_specialized<expr,expr>::fmax(X, Y); }
 
 		/// Minimum of half expressions.
-		/// \param x first operand
-		/// \param y second operand
+		/// \param X first operand
+		/// \param Y second operand
 		/// \return minimum of operands
-//		template<typename T,typename U> typename result<T,U>::type fmin(T x, U y) { return binary_specialized<T,U>::fmin(x, y); }
-		inline half fmin(half x, half y) { return binary_specialized<half,half>::fmin(x, y); }
-		inline expr fmin(half x, expr y) { return binary_specialized<half,expr>::fmin(x, y); }
-		inline expr fmin(expr x, half y) { return binary_specialized<expr,half>::fmin(x, y); }
-		inline expr fmin(expr x, expr y) { return binary_specialized<expr,expr>::fmin(x, y); }
+//		template<typename T,typename U> typename result<T,U>::type fmin(T X, U Y) { return binary_specialized<T,U>::fmin(X, Y); }
+		inline half fmin(half X, half Y) { return binary_specialized<half,half>::fmin(X, Y); }
+		inline expr fmin(half X, expr Y) { return binary_specialized<half,expr>::fmin(X, Y); }
+		inline expr fmin(expr X, half Y) { return binary_specialized<expr,half>::fmin(X, Y); }
+		inline expr fmin(expr X, expr Y) { return binary_specialized<expr,expr>::fmin(X, Y); }
 
 		/// Positive difference.
-		/// \param x first operand
-		/// \param y second operand
-		/// \return \a x - \a y or 0 if difference negative
-//		template<typename T,typename U> typename enable<expr,T,U>::type fdim(T x, U y) { return functions::fdim(x, y); }
-		inline expr fdim(half x, half y) { return functions::fdim(x, y); }
-		inline expr fdim(half x, expr y) { return functions::fdim(x, y); }
-		inline expr fdim(expr x, half y) { return functions::fdim(x, y); }
-		inline expr fdim(expr x, expr y) { return functions::fdim(x, y); }
+		/// \param X first operand
+		/// \param Y second operand
+		/// \return \a X - \a Y or 0 if difference negative
+//		template<typename T,typename U> typename enable<expr,T,U>::type fdim(T X, U Y) { return functions::fdim(X, Y); }
+		inline expr fdim(half X, half Y) { return functions::fdim(X, Y); }
+		inline expr fdim(half X, expr Y) { return functions::fdim(X, Y); }
+		inline expr fdim(expr X, half Y) { return functions::fdim(X, Y); }
+		inline expr fdim(expr X, expr Y) { return functions::fdim(X, Y); }
 
 		/// Get NaN value.
 		/// \return quiet NaN
@@ -2378,14 +2378,14 @@ namespace half_float
 		inline expr cbrt(expr arg) { return functions::cbrt(arg); }
 
 		/// Hypotenuse function.
-		/// \param x first argument
-		/// \param y second argument
+		/// \param X first argument
+		/// \param Y second argument
 		/// \return square root of sum of squares without internal over- or underflows
-//		template<typename T,typename U> typename enable<expr,T,U>::type hypot(T x, U y) { return functions::hypot(x, y); }
-		inline expr hypot(half x, half y) { return functions::hypot(x, y); }
-		inline expr hypot(half x, expr y) { return functions::hypot(x, y); }
-		inline expr hypot(expr x, half y) { return functions::hypot(x, y); }
-		inline expr hypot(expr x, expr y) { return functions::hypot(x, y); }
+//		template<typename T,typename U> typename enable<expr,T,U>::type hypot(T X, U Y) { return functions::hypot(X, Y); }
+		inline expr hypot(half X, half Y) { return functions::hypot(X, Y); }
+		inline expr hypot(half X, expr Y) { return functions::hypot(X, Y); }
+		inline expr hypot(expr X, half Y) { return functions::hypot(X, Y); }
+		inline expr hypot(expr X, expr Y) { return functions::hypot(X, Y); }
 
 		/// Power function.
 		/// \param base first argument
@@ -2444,14 +2444,14 @@ namespace half_float
 		inline expr atan(expr arg) { return functions::atan(arg); }
 
 		/// Arc tangent function.
-		/// \param x first argument
-		/// \param y second argument
+		/// \param X first argument
+		/// \param Y second argument
 		/// \return arc tangent value
-//		template<typename T,typename U> typename enable<expr,T,U>::type atan2(T x, U y) { return functions::atan2(x, y); }
-		inline expr atan2(half x, half y) { return functions::atan2(x, y); }
-		inline expr atan2(half x, expr y) { return functions::atan2(x, y); }
-		inline expr atan2(expr x, half y) { return functions::atan2(x, y); }
-		inline expr atan2(expr x, expr y) { return functions::atan2(x, y); }
+//		template<typename T,typename U> typename enable<expr,T,U>::type atan2(T X, U Y) { return functions::atan2(X, Y); }
+		inline expr atan2(half X, half Y) { return functions::atan2(X, Y); }
+		inline expr atan2(half X, expr Y) { return functions::atan2(X, Y); }
+		inline expr atan2(expr X, half Y) { return functions::atan2(X, Y); }
+		inline expr atan2(expr X, expr Y) { return functions::atan2(X, Y); }
 
 		/// \}
 		/// \name Hyperbolic functions
@@ -2686,14 +2686,14 @@ namespace half_float
 		inline half nexttoward(expr from, long double to) { return functions::nexttoward(from, to); }
 
 		/// Take sign.
-		/// \param x value to change sign for
-		/// \param y value to take sign from
-		/// \return value equal to \a x in magnitude and to \a y in sign
-//		template<typename T,typename U> typename enable<half,T,U>::type copysign(T x, U y) { return functions::copysign(x, y); }
-		inline half copysign(half x, half y) { return functions::copysign(x, y); }
-		inline half copysign(half x, expr y) { return functions::copysign(x, y); }
-		inline half copysign(expr x, half y) { return functions::copysign(x, y); }
-		inline half copysign(expr x, expr y) { return functions::copysign(x, y); }
+		/// \param X value to change sign for
+		/// \param Y value to take sign from
+		/// \return value equal to \a X in magnitude and to \a Y in sign
+//		template<typename T,typename U> typename enable<half,T,U>::type copysign(T X, U Y) { return functions::copysign(X, Y); }
+		inline half copysign(half X, half Y) { return functions::copysign(X, Y); }
+		inline half copysign(half X, expr Y) { return functions::copysign(X, Y); }
+		inline half copysign(expr X, half Y) { return functions::copysign(X, Y); }
+		inline half copysign(expr X, expr Y) { return functions::copysign(X, Y); }
 
 		/// \}
 		/// \name Floating point classification
@@ -2756,70 +2756,70 @@ namespace half_float
 		/// \{
 
 		/// Comparison for greater than.
-		/// \param x first operand
-		/// \param y second operand
-		/// \retval true if \a x greater than \a y
+		/// \param X first operand
+		/// \param Y second operand
+		/// \retval true if \a X greater than \a Y
 		/// \retval false else
-//		template<typename T,typename U> typename enable<bool,T,U>::type isgreater(T x, U y) { return functions::isgreater(x, y); }
-		inline bool isgreater(half x, half y) { return functions::isgreater(x, y); }
-		inline bool isgreater(half x, expr y) { return functions::isgreater(x, y); }
-		inline bool isgreater(expr x, half y) { return functions::isgreater(x, y); }
-		inline bool isgreater(expr x, expr y) { return functions::isgreater(x, y); }
+//		template<typename T,typename U> typename enable<bool,T,U>::type isgreater(T X, U Y) { return functions::isgreater(X, Y); }
+		inline bool isgreater(half X, half Y) { return functions::isgreater(X, Y); }
+		inline bool isgreater(half X, expr Y) { return functions::isgreater(X, Y); }
+		inline bool isgreater(expr X, half Y) { return functions::isgreater(X, Y); }
+		inline bool isgreater(expr X, expr Y) { return functions::isgreater(X, Y); }
 
 		/// Comparison for greater equal.
-		/// \param x first operand
-		/// \param y second operand
-		/// \retval true if \a x greater equal \a y
+		/// \param X first operand
+		/// \param Y second operand
+		/// \retval true if \a X greater equal \a Y
 		/// \retval false else
-//		template<typename T,typename U> typename enable<bool,T,U>::type isgreaterequal(T x, U y) { return functions::isgreaterequal(x, y); }
-		inline bool isgreaterequal(half x, half y) { return functions::isgreaterequal(x, y); }
-		inline bool isgreaterequal(half x, expr y) { return functions::isgreaterequal(x, y); }
-		inline bool isgreaterequal(expr x, half y) { return functions::isgreaterequal(x, y); }
-		inline bool isgreaterequal(expr x, expr y) { return functions::isgreaterequal(x, y); }
+//		template<typename T,typename U> typename enable<bool,T,U>::type isgreaterequal(T X, U Y) { return functions::isgreaterequal(X, Y); }
+		inline bool isgreaterequal(half X, half Y) { return functions::isgreaterequal(X, Y); }
+		inline bool isgreaterequal(half X, expr Y) { return functions::isgreaterequal(X, Y); }
+		inline bool isgreaterequal(expr X, half Y) { return functions::isgreaterequal(X, Y); }
+		inline bool isgreaterequal(expr X, expr Y) { return functions::isgreaterequal(X, Y); }
 
 		/// Comparison for less than.
-		/// \param x first operand
-		/// \param y second operand
-		/// \retval true if \a x less than \a y
+		/// \param X first operand
+		/// \param Y second operand
+		/// \retval true if \a X less than \a Y
 		/// \retval false else
-//		template<typename T,typename U> typename enable<bool,T,U>::type isless(T x, U y) { return functions::isless(x, y); }
-		inline bool isless(half x, half y) { return functions::isless(x, y); }
-		inline bool isless(half x, expr y) { return functions::isless(x, y); }
-		inline bool isless(expr x, half y) { return functions::isless(x, y); }
-		inline bool isless(expr x, expr y) { return functions::isless(x, y); }
+//		template<typename T,typename U> typename enable<bool,T,U>::type isless(T X, U Y) { return functions::isless(X, Y); }
+		inline bool isless(half X, half Y) { return functions::isless(X, Y); }
+		inline bool isless(half X, expr Y) { return functions::isless(X, Y); }
+		inline bool isless(expr X, half Y) { return functions::isless(X, Y); }
+		inline bool isless(expr X, expr Y) { return functions::isless(X, Y); }
 
 		/// Comparison for less equal.
-		/// \param x first operand
-		/// \param y second operand
-		/// \retval true if \a x less equal \a y
+		/// \param X first operand
+		/// \param Y second operand
+		/// \retval true if \a X less equal \a Y
 		/// \retval false else
-//		template<typename T,typename U> typename enable<bool,T,U>::type islessequal(T x, U y) { return functions::islessequal(x, y); }
-		inline bool islessequal(half x, half y) { return functions::islessequal(x, y); }
-		inline bool islessequal(half x, expr y) { return functions::islessequal(x, y); }
-		inline bool islessequal(expr x, half y) { return functions::islessequal(x, y); }
-		inline bool islessequal(expr x, expr y) { return functions::islessequal(x, y); }
+//		template<typename T,typename U> typename enable<bool,T,U>::type islessequal(T X, U Y) { return functions::islessequal(X, Y); }
+		inline bool islessequal(half X, half Y) { return functions::islessequal(X, Y); }
+		inline bool islessequal(half X, expr Y) { return functions::islessequal(X, Y); }
+		inline bool islessequal(expr X, half Y) { return functions::islessequal(X, Y); }
+		inline bool islessequal(expr X, expr Y) { return functions::islessequal(X, Y); }
 
 		/// Comarison for less or greater.
-		/// \param x first operand
-		/// \param y second operand
+		/// \param X first operand
+		/// \param Y second operand
 		/// \retval true if either less or greater
 		/// \retval false else
-//		template<typename T,typename U> typename enable<bool,T,U>::type islessgreater(T x, U y) { return functions::islessgreater(x, y); }
-		inline bool islessgreater(half x, half y) { return functions::islessgreater(x, y); }
-		inline bool islessgreater(half x, expr y) { return functions::islessgreater(x, y); }
-		inline bool islessgreater(expr x, half y) { return functions::islessgreater(x, y); }
-		inline bool islessgreater(expr x, expr y) { return functions::islessgreater(x, y); }
+//		template<typename T,typename U> typename enable<bool,T,U>::type islessgreater(T X, U Y) { return functions::islessgreater(X, Y); }
+		inline bool islessgreater(half X, half Y) { return functions::islessgreater(X, Y); }
+		inline bool islessgreater(half X, expr Y) { return functions::islessgreater(X, Y); }
+		inline bool islessgreater(expr X, half Y) { return functions::islessgreater(X, Y); }
+		inline bool islessgreater(expr X, expr Y) { return functions::islessgreater(X, Y); }
 
 		/// Check if unordered.
-		/// \param x first operand
-		/// \param y second operand
+		/// \param X first operand
+		/// \param Y second operand
 		/// \retval true if unordered (one or two NaN operands)
 		/// \retval false else
-//		template<typename T,typename U> typename enable<bool,T,U>::type isunordered(T x, U y) { return functions::isunordered(x, y); }
-		inline bool isunordered(half x, half y) { return functions::isunordered(x, y); }
-		inline bool isunordered(half x, expr y) { return functions::isunordered(x, y); }
-		inline bool isunordered(expr x, half y) { return functions::isunordered(x, y); }
-		inline bool isunordered(expr x, expr y) { return functions::isunordered(x, y); }
+//		template<typename T,typename U> typename enable<bool,T,U>::type isunordered(T X, U Y) { return functions::isunordered(X, Y); }
+		inline bool isunordered(half X, half Y) { return functions::isunordered(X, Y); }
+		inline bool isunordered(half X, expr Y) { return functions::isunordered(X, Y); }
+		inline bool isunordered(expr X, half Y) { return functions::isunordered(X, Y); }
+		inline bool isunordered(expr X, expr Y) { return functions::isunordered(X, Y); }
 
 		/// \name Casting
 		/// \{

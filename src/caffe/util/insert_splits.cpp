@@ -39,7 +39,7 @@ void InsertSplits(const NetParameter& param, NetParameter* param_split) {
       const string& blob_name = layer_param.top(j);
       blob_name_to_last_top_idx[blob_name] = make_pair(i, j);
     }
-    // A use of a top blob as a loss should be handled similarly to the use of
+    // a use of a top blob as a loss should be handled similarly to the use of
     // a top blob as a bottom blob to another layer.
     const int_tp last_loss =
         std::min(layer_param.loss_weight_size(), layer_param.top_size());

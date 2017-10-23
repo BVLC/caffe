@@ -324,7 +324,7 @@ TEST_F(IOTest, TestDecodeDatumToCVMat) {
 TEST_F(IOTest, TestDecodeDatumToCVMatContent) {
   string filename = EXAMPLES_SOURCE_DIR "images/cat.jpg";
   Datum datum;
-  EXPECT_TRUE(ReadImageToDatum(filename, 0, std::string("jpg"), &datum));
+  EXPECT_TRUE(ReadImageToDatum(filename, 0, string("jpg"), &datum));
   cv::Mat cv_img = DecodeDatumToCVMat(datum, true);
   cv::Mat cv_img_ref = ReadImageToCVMat(filename);
   EXPECT_EQ(cv_img_ref.channels(), cv_img.channels());
@@ -404,7 +404,7 @@ TEST_F(IOTest, TestDecodeDatumToCVMatNativeGray) {
 TEST_F(IOTest, TestDecodeDatumToCVMatContentNative) {
   string filename = EXAMPLES_SOURCE_DIR "images/cat.jpg";
   Datum datum;
-  EXPECT_TRUE(ReadImageToDatum(filename, 0, std::string("jpg"), &datum));
+  EXPECT_TRUE(ReadImageToDatum(filename, 0, string("jpg"), &datum));
   cv::Mat cv_img = DecodeDatumToCVMatNative(datum);
   cv::Mat cv_img_ref = ReadImageToCVMat(filename);
   EXPECT_EQ(cv_img_ref.channels(), cv_img.channels());

@@ -33,7 +33,7 @@ namespace caffe {
 template<typename Dtype>
 class Params {
  public:
-  explicit Params(std::shared_ptr<Solver<Dtype> > root_solver);
+  explicit Params(shared_ptr<Solver<Dtype> > root_solver);
   virtual ~Params() {
   }
 
@@ -59,7 +59,7 @@ DISABLE_COPY_AND_ASSIGN(Params);
 template<typename Dtype>
 class GPUParams : public Params<Dtype> {
  public:
-  GPUParams(std::shared_ptr<Solver<Dtype> > root_solver, int device);
+  GPUParams(shared_ptr<Solver<Dtype> > root_solver, int device);
   virtual ~GPUParams();
 
   void Configure(Solver<Dtype>* solver) const;
@@ -79,12 +79,12 @@ class NCCL : public GPUParams<Dtype>,
   /**
    * Single process version.
    */
-  explicit NCCL(std::shared_ptr<Solver<Dtype> > solver);
+  explicit NCCL(shared_ptr<Solver<Dtype> > solver);
   /**
    * In multi-process settings, first create a NCCL id (new_uid), then
    * pass it to each process to create connected instances.
    */
-  NCCL(std::shared_ptr<Solver<Dtype> > solver, const string& uid);
+  NCCL(shared_ptr<Solver<Dtype> > solver, const string& uid);
   ~NCCL();
 
   boost::barrier* barrier();
@@ -117,7 +117,7 @@ class NCCL : public GPUParams<Dtype>,
   ncclComm_t comm_;
   cudaStream_t stream_;
 
-  std::shared_ptr<Solver<Dtype> > solver_;
+  shared_ptr<Solver<Dtype> > solver_;
   // Should not be necessary, https://github.com/NVIDIA/nccl/issues/37
   boost::barrier* barrier_;
   using Params<Dtype>::size_;

@@ -40,8 +40,8 @@ LibDNNPool<Dtype>::LibDNNPool(LibDNNPoolConfig config) {
     im_out_shape_.push_back(config.out_shape[dims - spatial_dims + i]);
   }
 
-  fw_tuner_ = std::shared_ptr<LibDNNTuner>(new LibDNNTuner());
-  bw_tuner_ = std::shared_ptr<LibDNNTuner>(new LibDNNTuner());
+  fw_tuner_ = shared_ptr<LibDNNTuner>(new LibDNNTuner());
+  bw_tuner_ = shared_ptr<LibDNNTuner>(new LibDNNTuner());
 
   fw_tuner_->add_range_param<int_tp>("LW0", 8, 4, 16, 4);
   bw_tuner_->add_range_param<int_tp>("LW0", 8, 4, 16, 4);
@@ -60,8 +60,8 @@ const LibDNNPoolConfig LibDNNPool<Dtype>::get_config() {
 
 
 template<typename Dtype>
-std::string LibDNNPool<Dtype>::string_identifier() {
-  std::stringstream ss;
+string LibDNNPool<Dtype>string_identifier() {
+  stringstream ss;
   ss << "POOL_";
   switch (pool_method_) {
     case LIBDNN_POOLING_METHOD_MAX:
@@ -130,8 +130,8 @@ std::string LibDNNPool<Dtype>::string_identifier() {
 }
 
 template<typename Dtype>
-std::string LibDNNPool<Dtype>::generate_fw_defs() {
-  std::stringstream ss;
+string LibDNNPool<Dtype>::generate_fw_defs() {
+  stringstream ss;
 
   // Number of spatial axes
   LibDNN<Dtype>::add_def(ss, "v_nax", num_axes_);
@@ -165,8 +165,8 @@ std::string LibDNNPool<Dtype>::generate_fw_defs() {
 
 
 template<typename Dtype>
-std::string LibDNNPool<Dtype>::generate_bw_defs() {
-  std::stringstream ss;
+string LibDNNPool<Dtype>::generate_bw_defs() {
+  stringstream ss;
 
   // Number of spatial axes
   LibDNN<Dtype>::add_def(ss, "v_nax", num_axes_);
@@ -198,9 +198,9 @@ std::string LibDNNPool<Dtype>::generate_bw_defs() {
 }
 
 template<typename Dtype>
-std::string LibDNNPool<Dtype>::generate_fw_kernels(std::string name,
+string LibDNNPool<Dtype>::generate_fw_kernels(string name,
                                                    bool test_mode) {
-  std::stringstream ss;
+  stringstream ss;
 #ifdef USE_GPU_HALF
   if (std::is_same<Dtype, half_float::half>::value) {
     ss << "#define DTYPE_MAX HALF_MAX" << std::endl;
@@ -280,7 +280,7 @@ std::string LibDNNPool<Dtype>::generate_fw_kernels(std::string name,
     }
   }
 
-  std::vector<int_tp> d_iter;
+  vector<int_tp> d_iter;
   int_tp curr_idx = 0;
 
   for (int_tp i = 0; i < kernel_shape_.size(); ++i) {
@@ -442,15 +442,15 @@ std::string LibDNNPool<Dtype>::generate_fw_kernels(std::string name,
 }
 
 template<typename Dtype>
-std::string LibDNNPool<Dtype>::generate_fwtr_kernels(std::string name) {
-  std::stringstream ss;
+string LibDNNPool<Dtype>::generate_fwtr_kernels(string name) {
+  stringstream ss;
   ss << generate_fw_kernels(name, false);
   return ss.str();
 }
 
 template<typename Dtype>
-std::string LibDNNPool<Dtype>::generate_fwte_kernels(std::string name) {
-  std::stringstream ss;
+string LibDNNPool<Dtype>::generate_fwte_kernels(string name) {
+  stringstream ss;
   ss << generate_fw_kernels(name, true);
   return ss.str();
 }
@@ -458,8 +458,8 @@ std::string LibDNNPool<Dtype>::generate_fwte_kernels(std::string name) {
 
 
 template<typename Dtype>
-std::string LibDNNPool<Dtype>::generate_bw_kernels(std::string name) {
-  std::stringstream ss;
+string LibDNNPool<Dtype>::generate_bw_kernels(string name) {
+  stringstream ss;
 
   ss << "__kernel void " + name + "(";
   ss << "__global const Dtype* __restrict top_diff, ";
@@ -523,7 +523,7 @@ std::string LibDNNPool<Dtype>::generate_bw_kernels(std::string name) {
          << "+ get_global_id(1) * v_imso + in_idx;" << std::endl;
     }
 
-    std::vector<int_tp> d_iter;
+    vector<int_tp> d_iter;
 
     for (int_tp i = 0; i < kernel_shape_.size(); ++i) {
       d_iter.push_back(0);
@@ -787,7 +787,7 @@ std::string LibDNNPool<Dtype>::generate_bw_kernels(std::string name) {
 
 template<typename Dtype>
 void LibDNNPool<Dtype>::GenerateKernels() {
-  std::stringstream ss;
+  stringstream ss;
 
   ss << LibDNN<Dtype>::generate_header();
   ss << generate_fw_defs();

@@ -8,84 +8,48 @@
 #endif
 
 #include "caffe/common.hpp"
+#include "caffe/backend/vptr.hpp"
 #include "caffe/util/math_functions.hpp"
-
-#define OPENCL_PAGE_ALIGN 4096
-#define OPENCL_CACHE_ALIGN 64
 
 namespace caffe {
 
-void CaffeMallocHost(void** ptr, int_tp size, device* device_context);
-
-void CaffeFreeHost(void* ptr, device* device_context);
+class Device;
 
 /**
  * @brief Manages memory allocation and synchronization between the host (CPU)
  *        and device (GPU).
- *
- * TODO(dox): more thorough description.
  */
 
-template<typename Dtype, typename Mtype>
 class SyncedMemory {
  public:
-#ifdef USE_OPENCL
-  explicit SyncedMemory(device *device_context)
+  explicit SyncedMemory(Device *device_context)
       : cpu_ptr_(NULL),
-        gpu_ptr_(NULL),
+        gpu_ptr_(vptr<void>()),
         size_(0),
         head_(UNINITIALIZED),
         own_cpu_data_(false),
         own_gpu_data_(false),
         own_zero_copy_data_(false),
-        device_(device_context),
-        cl_gpu_mem_(NULL) {
+        device_(device_context) {
   }
-  explicit SyncedMemory(uint_tp size, device *device_context)
+  explicit SyncedMemory(uint_tp size, Device *device_context)
       : cpu_ptr_(NULL),
-        gpu_ptr_(NULL),
+        gpu_ptr_(vptr<void>()),
         size_(size),
         head_(UNINITIALIZED),
         own_cpu_data_(false),
         own_gpu_data_(false),
         own_zero_copy_data_(false),
-        device_(device_context),
-        cl_gpu_mem_(NULL) {
+        device_(device_context) {
   }
-#else
-  explicit SyncedMemory(device *device_context,
-                        DataType mem_init_type)
-      : cpu_ptr_(NULL),
-        gpu_ptr_(NULL),
-        size_(0),
-        head_(UNINITIALIZED),
-        own_cpu_data_(false),
-        own_gpu_data_(false),
-        own_zero_copy_data_(false),
-        device_(device_context),
-        mem_init_type_(mem_init_type) {
-  }
-  explicit SyncedMemory(uint_tp size, device *device_context,
-                        DataType mem_init_type)
-      : cpu_ptr_(NULL),
-        gpu_ptr_(NULL),
-        size_(size),
-        head_(UNINITIALIZED),
-        own_cpu_data_(false),
-        own_gpu_data_(false),
-        own_zero_copy_data_(false),
-        device_(device_context),
-        mem_init_type_(mem_init_type) {
-  }
-#endif
 
   ~SyncedMemory();
   const void* cpu_data();
   void set_cpu_data(void* data);
-  const void* gpu_data();
-  void set_gpu_data(void* data);
+  vptr<const void> gpu_data();
+  void set_gpu_data(vptr<void> data);
   void* mutable_cpu_data();
-  void* mutable_gpu_data();
+  vptr<void> mutable_gpu_data();
   enum SyncedHead {
     UNINITIALIZED,
     HEAD_AT_CPU,
@@ -99,31 +63,20 @@ class SyncedMemory {
     return size_;
   }
 
-#ifndef CPU_ONLY
-#ifdef USE_CUDA
-//  void async_gpu_push(const cudaStream_t& stream);
-#endif  // USE_CUDA
-#endif  // !CPU_ONLY
-
  private:
   void check_device();
 
   void to_cpu();
   void to_gpu();
   void* cpu_ptr_;
-  void* gpu_ptr_;
+  vptr<void> gpu_ptr_;
 
   uint_tp size_;
   SyncedHead head_;
   bool own_cpu_data_;
   bool own_gpu_data_;
   bool own_zero_copy_data_;
-  device *device_;
-
-#ifdef USE_OPENCL
-  cl_mem cl_gpu_mem_;
-#endif
-
+  Device *device_;
 
 DISABLE_COPY_AND_ASSIGN(SyncedMemory);
 };

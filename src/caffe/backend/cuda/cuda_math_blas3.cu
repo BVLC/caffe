@@ -3,12 +3,12 @@
 #include <cstring>
 #include <functional>
 
+#include "caffe/backend/cuda/cuda_device.hpp"
 #include "caffe/common.hpp"
 #include "caffe/backend/backend.hpp"
 #include "caffe/backend/vptr.hpp"
 #include "caffe/backend/dev_ptr.hpp"
 #include "caffe/backend/cuda/caffe_cuda.hpp"
-#include "caffe/backend/cuda/cuda_device.hpp"
 #include "caffe/backend/cuda/cuda_dev_ptr.hpp"
 
 #ifdef USE_CUDA
@@ -22,63 +22,64 @@ namespace caffe {
 
 #ifdef USE_CUDA
 
-void cuda_device::gemm_half(const CBLAS_TRANSPOSE TransA,
-                            const CBLAS_TRANSPOSE TransB,
-                            const uint_tp M, const uint_tp N, const uint_tp K,
-                            const half_float::half alpha,
-                            vptr<half_float::half> A,
-                            vptr<half_float::half> B,
-                            const half_float::half beta,
-                            vptr<half_float::half> C) {
+void CudaDevice::gemm_half(const CBLAS_TRANSPOSE trans_a,
+                           const CBLAS_TRANSPOSE trans_b,
+                           const uint_tp m, const uint_tp n, const uint_tp k,
+                           const half_float::half alpha,
+                           vptr<const half_float::half> a,
+                           vptr<const half_float::half> b,
+                           const half_float::half beta,
+                           vptr<half_float::half> c) {
   // Note that cublas follows fortran order.
-  int_tp lda = (TransA == CblasNoTrans) ? K : M;
-  int_tp ldb = (TransB == CblasNoTrans) ? N : K;
+  int_tp lda = (trans_a == CblasNoTrans) ? k : m;
+  int_tp ldb = (trans_b == CblasNoTrans) ? n : k;
   cublasOperation_t cuTransA =
-      (TransA == CblasNoTrans) ? CUBLAS_OP_N : CUBLAS_OP_T;
+      (trans_a == CblasNoTrans) ? CUBLAS_OP_N : CUBLAS_OP_T;
   cublasOperation_t cuTransB =
-      (TransB == CblasNoTrans) ? CUBLAS_OP_N : CUBLAS_OP_T;
+      (trans_b == CblasNoTrans) ? CUBLAS_OP_N : CUBLAS_OP_T;
   CUBLAS_CHECK(cublasHgemm(Caffe::cublas_handle(), cuTransB, cuTransA,
-                      N, M, K, static_cast<half*>(&alpha),
-                      static_cast<half*>(B.get_cuda_ptr()),
-                      ldb, static_cast<half*>(A.get_cuda_ptr()),
-                      lda, static_cast<half*>(&beta),
-                      static_cast<half*>(C.get_cuda_ptr()), N));
+                      n, m, k, reinterpret_cast<const half*>(&alpha),
+                      reinterpret_cast<const half*>(b.get_cuda_ptr()),
+                      ldb, reinterpret_cast<const half*>(a.get_cuda_ptr()),
+                      lda, reinterpret_cast<const half*>(&beta),
+                      reinterpret_cast<half*>(c.get_cuda_ptr()), n));
 }
 
-void cuda_device::gemm_float(const CBLAS_TRANSPOSE TransA,
-                             const CBLAS_TRANSPOSE TransB,
-                             const uint_tp M, const uint_tp N, const uint_tp K,
-                             const float alpha, vptr<float> A, vptr<float> B,
-                             const float beta, vptr<float> C) {
+void CudaDevice::gemm_float(const CBLAS_TRANSPOSE trans_a,
+                            const CBLAS_TRANSPOSE trans_b,
+                            const uint_tp m, const uint_tp n, const uint_tp k,
+                            const float alpha, vptr<const float> a,
+                            vptr<const float> b, const float beta,
+                            vptr<float> c) {
   // Note that cublas follows fortran order.
-  int_tp lda = (TransA == CblasNoTrans) ? K : M;
-  int_tp ldb = (TransB == CblasNoTrans) ? N : K;
+  int_tp lda = (trans_a == CblasNoTrans) ? k : m;
+  int_tp ldb = (trans_b == CblasNoTrans) ? n : k;
   cublasOperation_t cuTransA =
-      (TransA == CblasNoTrans) ? CUBLAS_OP_N : CUBLAS_OP_T;
+      (trans_a == CblasNoTrans) ? CUBLAS_OP_N : CUBLAS_OP_T;
   cublasOperation_t cuTransB =
-      (TransB == CblasNoTrans) ? CUBLAS_OP_N : CUBLAS_OP_T;
+      (trans_b == CblasNoTrans) ? CUBLAS_OP_N : CUBLAS_OP_T;
   CUBLAS_CHECK(cublasSgemm(Caffe::cublas_handle(), cuTransB, cuTransA,
-                      N, M, K, &alpha, B.get_cuda_ptr(),
-                      ldb, A.get_cuda_ptr(), lda, &beta, C.get_cuda_ptr(), N));
+                      n, m, k, &alpha, b.get_cuda_ptr(),
+                      ldb, a.get_cuda_ptr(), lda, &beta, c.get_cuda_ptr(), n));
 }
 
-void cuda_device::gemm_double(const CBLAS_TRANSPOSE TransA,
-                              const CBLAS_TRANSPOSE TransB,
-                              const uint_tp M, const uint_tp N, const uint_tp K,
-                              const double alpha, vptr<double> A,
-                              vptr<double> B, const double beta,
-                              vptr<double> C) {
+void CudaDevice::gemm_double(const CBLAS_TRANSPOSE trans_a,
+                             const CBLAS_TRANSPOSE trans_b,
+                             const uint_tp m, const uint_tp n, const uint_tp k,
+                             const double alpha, vptr<const double> a,
+                             vptr<const double> b, const double beta,
+                             vptr<double> c) {
   // Note that cublas follows fortran order.
-  int_tp lda = (TransA == CblasNoTrans) ? K : M;
-  int_tp ldb = (TransB == CblasNoTrans) ? N : K;
+  int_tp lda = (trans_a == CblasNoTrans) ? k : m;
+  int_tp ldb = (trans_b == CblasNoTrans) ? n : k;
   cublasOperation_t cuTransA =
-      (TransA == CblasNoTrans) ? CUBLAS_OP_N : CUBLAS_OP_T;
+      (trans_a == CblasNoTrans) ? CUBLAS_OP_N : CUBLAS_OP_T;
   cublasOperation_t cuTransB =
-      (TransB == CblasNoTrans) ? CUBLAS_OP_N : CUBLAS_OP_T;
+      (trans_b == CblasNoTrans) ? CUBLAS_OP_N : CUBLAS_OP_T;
   CUBLAS_CHECK(cublasDgemm(Caffe::cublas_handle(), cuTransB, cuTransA,
-                           N, M, K, &alpha, B.get_cuda_ptr(),
-                           ldb, A.get_cuda_ptr(), lda, &beta,
-                           C.get_cuda_ptr(), N));
+                           n, m, k, &alpha, b.get_cuda_ptr(),
+                           ldb, a.get_cuda_ptr(), lda, &beta,
+                           c.get_cuda_ptr(), n));
 }
 
 

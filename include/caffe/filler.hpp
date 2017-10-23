@@ -29,7 +29,7 @@ class Filler {
 };
 // class Filler
 
-/// @brief Fills a Blob with constant values @f$ x = 0 @f$.
+/// @brief Fills a Blob with constant values @f$ X = 0 @f$.
 template<typename Dtype>
 class ConstantFiller : public Filler<Dtype> {
  public:
@@ -49,7 +49,7 @@ class ConstantFiller : public Filler<Dtype> {
   }
 };
 
-/// @brief Fills a Blob with uniformly distributed values @f$ x\sim U(a, b) @f$.
+/// @brief Fills a Blob with uniformly distributed values @f$ X\sim U(a, b) @f$.
 template<typename Dtype>
 class UniformFiller : public Filler<Dtype> {
  public:
@@ -66,7 +66,7 @@ class UniformFiller : public Filler<Dtype> {
   }
 };
 
-/// @brief Fills a Blob with Gaussian-distributed values @f$ x = a @f$.
+/// @brief Fills a Blob with Gaussian-distributed values @f$ X = a @f$.
 template<typename Dtype>
 class GaussianFiller : public Filler<Dtype> {
  public:
@@ -90,9 +90,7 @@ class GaussianFiller : public Filler<Dtype> {
       const int_tp num_outputs = blob->shape(0);
       Dtype non_zero_probability = Dtype(sparse) / Dtype(num_outputs);
       rand_vec_.reset(
-          new SyncedMemory(blob->count() * sizeof(int_tp),
-                   blob->get_device(),
-                   std::is_same<int_tp, int32_t>::value ? DINT32 : DINT64));
+          new SyncedMemory(blob->count() * sizeof(int_tp), blob->get_device()));
       int_tp* mask = reinterpret_cast<int_tp*>(rand_vec_->mutable_cpu_data());
       caffe_rng_bernoulli(blob->count(), non_zero_probability, mask);
       for (int_tp i = 0; i < blob->count(); ++i) {
@@ -102,10 +100,10 @@ class GaussianFiller : public Filler<Dtype> {
   }
 
  protected:
-  std::shared_ptr<SyncedMemory> rand_vec_;
+  shared_ptr<SyncedMemory> rand_vec_;
 };
 
-/** @brief Fills a Blob with values @f$ x \in [0, 1] @f$
+/** @brief Fills a Blob with values @f$ X \in [0, 1] @f$
  *         such that @f$ \forall i \sum_j x_{ij} = 1 @f$.
  */
 template<typename Dtype>
@@ -137,11 +135,11 @@ class PositiveUnitballFiller : public Filler<Dtype> {
 };
 
 /**
- * @brief Fills a Blob with values @f$ x \sim U(-a, +a) @f$ where @f$ a @f$ is
+ * @brief Fills a Blob with values @f$ X \sim U(-a, +a) @f$ where @f$ a @f$ is
  *        set inversely proportional to number of incoming nodes, outgoing
  *        nodes, or their average.
  *
- * A Filler based on the paper [Bengio and Glorot 2010]: Understanding
+ * a Filler based on the paper [Bengio and Glorot 2010]: Understanding
  * the difficulty of training deep feedforward neuralnetworks.
  *
  * It fills the incoming matrix by randomly sampling uniform data from [-scale,
@@ -180,11 +178,11 @@ class XavierFiller : public Filler<Dtype> {
 
 
 /**
- * @brief Fills a Blob with values @f$ x \sim N(0, \sigma^2) @f$ where
+ * @brief Fills a Blob with values @f$ X \sim n(0, \sigma^2) @f$ where
  *        @f$ \sigma^2 @f$ is set inversely proportional to number of incoming
  *        nodes, outgoing nodes, or their average.
  *
- * A Filler based on the paper [He, Zhang, Ren and Sun 2015]: Specifically
+ * a Filler based on the paper [He, Zhang, Ren and Sun 2015]: Specifically
  * accounts for ReLU nonlinearities.
  *
  * Aside: for another perspective on the scaling factor, see the derivation of
@@ -225,8 +223,8 @@ class MSRAFiller : public Filler<Dtype> {
 /*!
 @brief Fills a Blob with coefficients for bilinear interpolation.
 
-A common use case is with the DeconvolutionLayer acting as upsampling.
-You can upsample a feature map with shape of (B, C, H, W) by any integer factor
+a common use case is with the DeconvolutionLayer acting as upsampling.
+You can upsample a feature map with shape of (b, c, H, W) by any integer factor
 using the following proto.
 \code
 layer {
@@ -234,7 +232,7 @@ layer {
   bottom: "{{bottom_name}}" top: "{{top_name}}"
   convolution_param {
     kernel_size: {{2 * factor - factor % 2}} stride: {{factor}}
-    num_output: {{C}} group: {{C}}
+    num_output: {{c}} group: {{c}}
     pad: {{ceil((factor - 1) / 2.)}}
     weight_filler: { type: "bilinear" } bias_term: false
   }
@@ -242,11 +240,11 @@ layer {
 }
 \endcode
 Please use this by replacing `{{}}` with your values. By specifying
-`num_output: {{C}} group: {{C}}`, it behaves as
+`num_output: {{c}} group: {{c}}`, it behaves as
 channel-wise convolution. The filter shape of this deconvolution layer will be
-(C, 1, K, K) where K is `kernel_size`, and this filler will set a (K, K)
+(c, 1, k, k) where k is `kernel_size`, and this filler will set a (k, k)
 interpolation kernel for every channel of the filter identically. The resulting
-shape of the top feature map will be (B, C, factor * H, factor * W).
+shape of the top feature map will be (b, c, factor * H, factor * W).
 Note that the learning rate and the
 weight decay are set to 0 in order to keep coefficient values of bilinear
 interpolation unchanged during training. If you apply this to an image, this
@@ -267,9 +265,9 @@ class BilinearFiller : public Filler<Dtype> {
     int_tp f = ceil(blob->width() / 2.);
     float c = (2 * f - 1 - f % 2) / (2. * f);
     for (int_tp i = 0; i < blob->count(); ++i) {
-      float x = i % blob->width();
-      float y = (i / blob->width()) % blob->height();
-      data[i] = (1 - fabs(x / f - c)) * (1 - fabs(y / f - c));
+      float X = i % blob->width();
+      float Y = (i / blob->width()) % blob->height();
+      data[i] = (1 - fabs(X / f - c)) * (1 - fabs(Y / f - c));
     }
     CHECK_EQ(this->filler_param_.sparse(), -1)
          << "Sparsity not supported by this Filler.";
@@ -284,7 +282,7 @@ class BilinearFiller : public Filler<Dtype> {
  */
 template<typename Dtype>
 Filler<Dtype>* GetFiller(const FillerParameter& param) {
-  const std::string& type = param.type();
+  const string& type = param.type();
   if (type == "constant") {
     return new ConstantFiller<Dtype>(param);
   } else if (type == "gaussian") {

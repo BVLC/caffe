@@ -129,7 +129,7 @@ class ConvolutionNDLayerTest : public GPUDeviceTest<TypeParam> {
 
     *top_diff = 1;
 
-    std::vector<bool> prop_down;
+    vector<bool> prop_down;
     prop_down.push_back(true);
 
     layer.Backward(this->blob_top_vec_, prop_down, this->blob_bottom_vec_);

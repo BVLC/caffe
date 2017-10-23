@@ -13,16 +13,16 @@
 
 namespace caffe {
 
-double tanh_naive(double x) {
-  if (x < -40) {
+double tanh_naive(double X) {
+  if (X < -40) {
     // avoid negative overflow
     return -1;
-  } else if (x > 40) {
+  } else if (X > 40) {
     // avoid positive overflow
     return 1;
   } else {
-    // exact expression for tanh, which is unstable for large x
-    double exp2x = exp(2 * x);
+    // exact expression for tanh, which is unstable for large X
+    double exp2x = exp(2 * X);
     return (exp2x - 1.0) / (exp2x + 1.0);
   }
 }

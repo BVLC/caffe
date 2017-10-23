@@ -137,7 +137,7 @@ class PoolingNDSKLayerTest : public GPUDeviceTest<TypeParam> {
     TypeParam *top_diff = blob_top_->mutable_cpu_diff();
     top_diff[0] = maxval;
 
-    std::vector<bool> prop_down;
+    vector<bool> prop_down;
     prop_down.push_back(true);
 
     layer.Backward(this->blob_top_vec_, prop_down, this->blob_bottom_vec_);

@@ -46,15 +46,15 @@ LibDNNDeconv<Dtype>::LibDNNDeconv(LibDNNDeconvConfig config) {
     this->im_out_shape_.push_back(config.out_shape[dims - spatial_dims + i]);
   }
 
-  this->bw_tuner_ = std::shared_ptr<LibDNNTuner>(new LibDNNTuner());
-  this->fw_tuner_ = std::shared_ptr<LibDNNTuner>(new LibDNNTuner());
-  this->wg_tuner_ = std::shared_ptr<LibDNNTuner>(new LibDNNTuner());
+  this->bw_tuner_ = shared_ptr<LibDNNTuner>(new LibDNNTuner());
+  this->fw_tuner_ = shared_ptr<LibDNNTuner>(new LibDNNTuner());
+  this->wg_tuner_ = shared_ptr<LibDNNTuner>(new LibDNNTuner());
 
   // Setup tuning parameters
 
   // Work groups
   for (int id = 0; id < 2; ++id) {
-    std::vector<int_tp> workgroup_sizes;
+    vector<int_tp> workgroup_sizes;
     workgroup_sizes.push_back(1);
     workgroup_sizes.push_back(2);
     for (int_tp i = 4; i < LibDNN<Dtype>::dev_ptr_->workgroup_size(id);
@@ -83,108 +83,108 @@ LibDNNDeconv<Dtype>::LibDNNDeconv(LibDNNDeconvConfig config) {
   this->fw_tuner_->template add_range_param<int_tp>("WPTM", 4, 2, 16, 2);
   this->wg_tuner_->template add_range_param<int_tp>("WPTM", 4, 2, 16, 2);
 
-  this->bw_tuner_->template add_set_param<int_tp>("VWM", 4, std::vector<int_tp>(
+  this->bw_tuner_->template add_set_param<int_tp>("VWM", 4, vector<int_tp>(
       {1, 2, 4, 8, 16 }));
-  this->fw_tuner_->template add_set_param<int_tp>("VWM", 4, std::vector<int_tp>(
+  this->fw_tuner_->template add_set_param<int_tp>("VWM", 4, vector<int_tp>(
       {1, 2, 4, 8, 16 }));
-  this->wg_tuner_->template add_set_param<int_tp>("VWM", 4, std::vector<int_tp>(
+  this->wg_tuner_->template add_set_param<int_tp>("VWM", 4, vector<int_tp>(
       {1, 2, 4, 8, 16 }));
 
   this->bw_tuner_->template add_range_param<int_tp>("WPTN", 4, 2, 16, 2);
   this->fw_tuner_->template add_range_param<int_tp>("WPTN", 4, 2, 16, 2);
   this->wg_tuner_->template add_range_param<int_tp>("WPTN", 4, 2, 16, 2);
 
-  this->bw_tuner_->template add_set_param<int_tp>("VWN", 4, std::vector<int_tp>(
+  this->bw_tuner_->template add_set_param<int_tp>("VWN", 4, vector<int_tp>(
       {1, 2, 4, 8, 16 }));
-  this->fw_tuner_->template add_set_param<int_tp>("VWN", 4, std::vector<int_tp>(
+  this->fw_tuner_->template add_set_param<int_tp>("VWN", 4, vector<int_tp>(
       {1, 2, 4, 8, 16 }));
-  this->wg_tuner_->template add_set_param<int_tp>("VWN", 4, std::vector<int_tp>(
+  this->wg_tuner_->template add_set_param<int_tp>("VWN", 4, vector<int_tp>(
       {1, 2, 4, 8, 16 }));
 
   // Constraint using TSK, TSM, RTSM and RTSN. Adapt TSK if constraint fails.
   this->bw_tuner_->template add_constraint<int64_t>(
-    std::vector<std::string>({"TSK", "WPTM", "workgroup_size_1"}),
-    std::vector<std::string>({"TSK"}), [](std::vector<int64_t> args) -> bool {
+    vector<string>({"TSK", "WPTM", "workgroup_size_1"}),
+    vector<string>({"TSK"}), [](vector<int64_t> args) -> bool {
       return (args[0] * args[1]) % (args[2]) == 0;
     });
   this->fw_tuner_->template add_constraint<int64_t>(
-    std::vector<std::string>({"TSK", "WPTM", "workgroup_size_1"}), std::vector<
-    std::string>({"TSK"}), [](std::vector<int64_t> args) -> bool {
+    vector<string>({"TSK", "WPTM", "workgroup_size_1"}), vector<
+    string>({"TSK"}), [](vector<int64_t> args) -> bool {
       return (args[0] * args[1]) % (args[2]) == 0;
     });
   this->wg_tuner_->template add_constraint<int64_t>(
-    std::vector<std::string>({"TSK", "WPTM", "workgroup_size_1"}), std::vector<
-    std::string>({"TSK"}), [](std::vector<int64_t> args) -> bool {
+    vector<string>({"TSK", "WPTM", "workgroup_size_1"}), vector<
+    string>({"TSK"}), [](vector<int64_t> args) -> bool {
       return (args[0] * args[1]) % (args[2]) == 0;
     });
   // Constraint using TSK, TSN, RTSN and RTSM. Adapt TSK if constraint fails.
   this->bw_tuner_->template add_constraint<int64_t>(
-    std::vector<std::string>({"TSK", "WPTN", "workgroup_size_0"}),
-    std::vector<std::string>({"TSK"}), [](std::vector<int64_t> args) -> bool {
+    vector<string>({"TSK", "WPTN", "workgroup_size_0"}),
+    vector<string>({"TSK"}), [](vector<int64_t> args) -> bool {
       return (args[0] * args[1]) % (args[2]) == 0;
     });
   this->fw_tuner_->template add_constraint<int64_t>(
-    std::vector<std::string>({"TSK", "WPTN", "workgroup_size_0"}),
-    std::vector<std::string>({"TSK"}), [](std::vector<int64_t> args) -> bool {
+    vector<string>({"TSK", "WPTN", "workgroup_size_0"}),
+    vector<string>({"TSK"}), [](vector<int64_t> args) -> bool {
       return (args[0] * args[1]) % (args[2]) == 0;
     });
   this->wg_tuner_->template add_constraint<int64_t>(
-    std::vector<std::string>({"TSK", "WPTN", "workgroup_size_0"}),
-    std::vector<std::string>({"TSK"}), [](std::vector<int64_t> args) -> bool {
+    vector<string>({"TSK", "WPTN", "workgroup_size_0"}),
+    vector<string>({"TSK"}), [](vector<int64_t> args) -> bool {
       return (args[0] * args[1]) % (args[2]) == 0;
     });
   this->bw_tuner_->template add_constraint<int64_t>(
-    std::vector<std::string>({"TSK", "TSK_UNROLL"}),
-    std::vector<std::string>({"TSK_UNROLL"}),
-    [](std::vector<int64_t> args) -> bool {
+    vector<string>({"TSK", "TSK_UNROLL"}),
+    vector<string>({"TSK_UNROLL"}),
+    [](vector<int64_t> args) -> bool {
       return args[0] % args[1] == 0;
     });
   this->fw_tuner_->template add_constraint<int64_t>(
-    std::vector<std::string>({"TSK", "TSK_UNROLL"}),
-    std::vector<std::string>({"TSK_UNROLL"}),
-    [](std::vector<int64_t> args) -> bool {
+    vector<string>({"TSK", "TSK_UNROLL"}),
+    vector<string>({"TSK_UNROLL"}),
+    [](vector<int64_t> args) -> bool {
       return args[0] % args[1] == 0;
     });
   this->wg_tuner_->template add_constraint<int64_t>(
-    std::vector<std::string>({"TSK", "TSK_UNROLL"}),
-    std::vector<std::string>({"TSK_UNROLL"}),
-    [](std::vector<int64_t> args) -> bool {
+    vector<string>({"TSK", "TSK_UNROLL"}),
+    vector<string>({"TSK_UNROLL"}),
+    [](vector<int64_t> args) -> bool {
       return args[0] % args[1] == 0;
     });
   this->bw_tuner_->template add_constraint<int64_t>(
-    std::vector<std::string>({"WPTM", "VWM"}),
-    std::vector<std::string>({"WPTM"}),
-    [](std::vector<int64_t> args) -> bool {
+    vector<string>({"WPTM", "VWM"}),
+    vector<string>({"WPTM"}),
+    [](vector<int64_t> args) -> bool {
       return args[0] % args[1] == 0;
     });
   this->fw_tuner_->template add_constraint<int64_t>(
-    std::vector<std::string>({"WPTM", "VWM"}),
-    std::vector<std::string>({"WPTM"}),
-    [](std::vector<int64_t> args) -> bool {
+    vector<string>({"WPTM", "VWM"}),
+    vector<string>({"WPTM"}),
+    [](vector<int64_t> args) -> bool {
       return args[0] % args[1] == 0;
     });
   this->wg_tuner_->template add_constraint<int64_t>(
-    std::vector<std::string>({"WPTM", "VWM"}),
-    std::vector<std::string>({"WPTM"}),
-    [](std::vector<int64_t> args) -> bool {
+    vector<string>({"WPTM", "VWM"}),
+    vector<string>({"WPTM"}),
+    [](vector<int64_t> args) -> bool {
       return args[0] % args[1] == 0;
     });
   this->bw_tuner_->template add_constraint<int64_t>(
-    std::vector<std::string>({"WPTN", "VWN"}),
-    std::vector<std::string>({"WPTN"}),
-    [](std::vector<int64_t> args) -> bool {
+    vector<string>({"WPTN", "VWN"}),
+    vector<string>({"WPTN"}),
+    [](vector<int64_t> args) -> bool {
       return args[0] % args[1] == 0;
     });
   this->fw_tuner_->template add_constraint<int64_t>(
-    std::vector<std::string>({"WPTN", "VWN"}),
-    std::vector<std::string>({"WPTN"}),
-    [](std::vector<int64_t> args) -> bool {
+    vector<string>({"WPTN", "VWN"}),
+    vector<string>({"WPTN"}),
+    [](vector<int64_t> args) -> bool {
       return args[0] % args[1] == 0;
     });
   this->wg_tuner_->template add_constraint<int64_t>(
-    std::vector<std::string>({"WPTN", "VWN"}),
-    std::vector<std::string>({"WPTN"}),
-    [](std::vector<int64_t> args) -> bool {
+    vector<string>({"WPTN", "VWN"}),
+    vector<string>({"WPTN"}),
+    [](vector<int64_t> args) -> bool {
       return args[0] % args[1] == 0;
     });
 
@@ -225,8 +225,8 @@ const LibDNNDeconvConfig LibDNNDeconv<Dtype>::get_config() {
 }
 
 template<typename Dtype>
-std::string LibDNNDeconv<Dtype>::string_identifier() {
-  std::stringstream ss;
+string LibDNNDeconv<Dtype>string_identifier() {
+  stringstream ss;
   ss << "DECONV_";
   if (std::is_same<Dtype, double>::value) {
     ss << "double_";
@@ -287,8 +287,8 @@ std::string LibDNNDeconv<Dtype>::string_identifier() {
 }
 
 template<typename Dtype>
-std::string LibDNNDeconv<Dtype>::generate_bw_defs() {
-  std::stringstream ss;
+string LibDNNDeconv<Dtype>::generate_bw_defs() {
+  stringstream ss;
 
   // Number of spatial axes
   LibDNN<Dtype>::add_def(ss, "v_nax", this->num_axes_);
@@ -358,10 +358,10 @@ std::string LibDNNDeconv<Dtype>::generate_bw_defs() {
 
   // GEMM definitions
   LibDNN<Dtype>::add_def(ss, "MG", this->MG_BW_);
-  LibDNN<Dtype>::add_def(ss, "M", this->M_BW_);
-  LibDNN<Dtype>::add_def(ss, "N", this->N_BW_);
+  LibDNN<Dtype>::add_def(ss, "m", this->M_BW_);
+  LibDNN<Dtype>::add_def(ss, "n", this->N_BW_);
   LibDNN<Dtype>::add_def(ss, "KG", this->KG_BW_);
-  LibDNN<Dtype>::add_def(ss, "K", this->K_BW_);
+  LibDNN<Dtype>::add_def(ss, "k", this->K_BW_);
 
   // Local memory padding
   LibDNN<Dtype>::add_def(ss, "v_pad_A",
@@ -372,55 +372,55 @@ std::string LibDNNDeconv<Dtype>::generate_bw_defs() {
                          get_param<int>("lmem_this->pad_B"));
 
   // Definitions as on http://www.cedricnugteren.nl/tutorial.php?page=8
-  // The tile-size in dimension M
+  // The tile-size in dimension m
   LibDNN<Dtype>::add_def(
       ss, "TSM", this->bw_tuner_->template get_param<int>("WPTM")
           * this->bw_tuner_->template
           get_param<int>("workgroup_size_1"));
-  // The tile-size in dimension N
+  // The tile-size in dimension n
   LibDNN<Dtype>::add_def(
       ss, "TSN", this->bw_tuner_->template get_param<int>("WPTN")
           * this->bw_tuner_->template get_param<int>("workgroup_size_0"));
-  // The tile-size in dimension K
+  // The tile-size in dimension k
   LibDNN<Dtype>::add_def(ss, "TSK", this->bw_tuner_->template
                          get_param<int>("TSK"));
   // TSK unrolling
   LibDNN<Dtype>::add_def(ss, "TSK_UNROLL",
                          this->bw_tuner_->template
                          get_param<int>("TSK_UNROLL"));
-  // The work-per-thread in dimension M
+  // The work-per-thread in dimension m
   LibDNN<Dtype>::add_def(ss, "WPTM", this->bw_tuner_->template
                          get_param<int>("WPTM"));
   LibDNN<Dtype>::add_def(ss, "VWM", this->bw_tuner_->template
                          get_param<int>("VWM"));
-  // The work-per-thread in dimension N
+  // The work-per-thread in dimension n
   LibDNN<Dtype>::add_def(ss, "WPTN", this->bw_tuner_->template
                          get_param<int>("WPTN"));
   LibDNN<Dtype>::add_def(ss, "VWN", this->bw_tuner_->template
                          get_param<int>("VWN"));
-  // The reduced tile-size in dimension M
+  // The reduced tile-size in dimension m
   LibDNN<Dtype>::add_def(ss, "RTSM",
                          this->bw_tuner_->template
                          get_param<int>("workgroup_size_1"));
-  // The reduced tile-size in dimension N
+  // The reduced tile-size in dimension n
   LibDNN<Dtype>::add_def(ss, "RTSN",
                          this->bw_tuner_->template
                          get_param<int>("workgroup_size_0"));
-  // Loads-per-thread for A
+  // Loads-per-thread for a
   LibDNN<Dtype>::add_def(ss, "LPTA", "((TSK*TSM)/(RTSM*RTSN))");
-  // Loads-per-thread for B
+  // Loads-per-thread for b
   LibDNN<Dtype>::add_def(ss, "LPTB", "((TSK*TSN)/(RTSM*RTSN))");
 
   // Num tiles needs to be next higher even integer
   // (due to some quirky bug in AMD OpenCL 2.0 on Windows)
-  LibDNN<Dtype>::add_def(ss, "v_num_tiles", "(((K - 1)/(TSK*2) + 1)*2)");
+  LibDNN<Dtype>::add_def(ss, "v_num_tiles", "(((k - 1)/(TSK*2) + 1)*2)");
 
   return ss.str();
 }
 
 template<typename Dtype>
-std::string LibDNNDeconv<Dtype>::generate_fw_defs() {
-  std::stringstream ss;
+string LibDNNDeconv<Dtype>::generate_fw_defs() {
+  stringstream ss;
 
   // Number of spatial axes
   LibDNN<Dtype>::add_def(ss, "v_nax", this->num_axes_);
@@ -525,10 +525,10 @@ std::string LibDNNDeconv<Dtype>::generate_fw_defs() {
 
   // GEMM definitions
   LibDNN<Dtype>::add_def(ss, "MG", this->MG_FW_);
-  LibDNN<Dtype>::add_def(ss, "M", this->M_FW_);
-  LibDNN<Dtype>::add_def(ss, "N", this->N_FW_);
+  LibDNN<Dtype>::add_def(ss, "m", this->M_FW_);
+  LibDNN<Dtype>::add_def(ss, "n", this->N_FW_);
   LibDNN<Dtype>::add_def(ss, "KG", this->KG_FW_);
-  LibDNN<Dtype>::add_def(ss, "K", this->K_FW_);
+  LibDNN<Dtype>::add_def(ss, "k", this->K_FW_);
 
   // Local memory padding
   LibDNN<Dtype>::add_def(ss, "v_pad_A",
@@ -539,58 +539,58 @@ std::string LibDNNDeconv<Dtype>::generate_fw_defs() {
                          get_param<int>("lmem_this->pad_B"));
 
   // Definitions as on http://www.cedricnugteren.nl/tutorial.php?page=8
-  // The tile-size in dimension M
+  // The tile-size in dimension m
   LibDNN<Dtype>::add_def(
       ss,
       "TSM",
       this->fw_tuner_->template get_param<int>("WPTM")
           * this->fw_tuner_->template get_param<int>("workgroup_size_1"));
-  // The tile-size in dimension N
+  // The tile-size in dimension n
   LibDNN<Dtype>::add_def(
       ss,
       "TSN",
       this->fw_tuner_->template get_param<int>("WPTN")
           * this->fw_tuner_->template get_param<int>("workgroup_size_0"));
-  // The tile-size in dimension K
+  // The tile-size in dimension k
   LibDNN<Dtype>::add_def(ss, "TSK", this->fw_tuner_->template
                          get_param<int>("TSK"));
   // TSK unrolling
   LibDNN<Dtype>::add_def(ss, "TSK_UNROLL",
                          this->fw_tuner_->template
                          get_param<int>("TSK_UNROLL"));
-  // The work-per-thread in dimension M
+  // The work-per-thread in dimension m
   LibDNN<Dtype>::add_def(ss, "WPTM", this->fw_tuner_->template
                          get_param<int>("WPTM"));
   LibDNN<Dtype>::add_def(ss, "VWM", this->fw_tuner_->template
                          get_param<int>("VWM"));
-  // The work-per-thread in dimension N
+  // The work-per-thread in dimension n
   LibDNN<Dtype>::add_def(ss, "WPTN", this->fw_tuner_->template
                          get_param<int>("WPTN"));
   LibDNN<Dtype>::add_def(ss, "VWN", this->fw_tuner_->template
                          get_param<int>("VWN"));
-  // The reduced tile-size in dimension M
+  // The reduced tile-size in dimension m
   LibDNN<Dtype>::add_def(ss, "RTSM",
                          this->fw_tuner_->template
                          get_param<int>("workgroup_size_1"));
-  // The reduced tile-size in dimension N
+  // The reduced tile-size in dimension n
   LibDNN<Dtype>::add_def(ss, "RTSN",
                          this->fw_tuner_->template
                          get_param<int>("workgroup_size_0"));
-  // Loads-per-thread for A
+  // Loads-per-thread for a
   LibDNN<Dtype>::add_def(ss, "LPTA", "((TSK*TSM)/(RTSM*RTSN))");
-  // Loads-per-thread for B
+  // Loads-per-thread for b
   LibDNN<Dtype>::add_def(ss, "LPTB", "((TSK*TSN)/(RTSM*RTSN))");
 
   // Num tiles needs to be next higher even integer
   // (due to some quirky bug in AMD OpenCL 2.0 on Windows)
-  LibDNN<Dtype>::add_def(ss, "v_num_tiles", "(((K - 1)/(TSK*2) + 1)*2)");
+  LibDNN<Dtype>::add_def(ss, "v_num_tiles", "(((k - 1)/(TSK*2) + 1)*2)");
 
   return ss.str();
 }
 
 template<typename Dtype>
-std::string LibDNNDeconv<Dtype>::generate_wg_defs() {
-  std::stringstream ss;
+string LibDNNDeconv<Dtype>::generate_wg_defs() {
+  stringstream ss;
 
   // Number of spatial axes
   LibDNN<Dtype>::add_def(ss, "v_nax", this->num_axes_);
@@ -675,10 +675,10 @@ std::string LibDNNDeconv<Dtype>::generate_wg_defs() {
 
   // GEMM definitions
   LibDNN<Dtype>::add_def(ss, "MG", this->MG_WG_);
-  LibDNN<Dtype>::add_def(ss, "M", this->M_WG_);
-  LibDNN<Dtype>::add_def(ss, "N", this->N_WG_);
+  LibDNN<Dtype>::add_def(ss, "m", this->M_WG_);
+  LibDNN<Dtype>::add_def(ss, "n", this->N_WG_);
   LibDNN<Dtype>::add_def(ss, "NG", this->NG_WG_);
-  LibDNN<Dtype>::add_def(ss, "K", this->K_WG_);
+  LibDNN<Dtype>::add_def(ss, "k", this->K_WG_);
   LibDNN<Dtype>::add_def(ss, "MGB", this->MG_BG_);
   LibDNN<Dtype>::add_def(ss, "MB", this->M_BG_);
   LibDNN<Dtype>::add_def(ss, "NB", this->N_WG_);
@@ -694,51 +694,51 @@ std::string LibDNNDeconv<Dtype>::generate_wg_defs() {
                          get_param<int>("lmem_this->pad_B"));
 
   // Definitions as on http://www.cedricnugteren.nl/tutorial.php?page=8
-  // The tile-size in dimension M
+  // The tile-size in dimension m
   LibDNN<Dtype>::add_def(
       ss,
       "TSM",
       this->wg_tuner_->template get_param<int>("WPTM")
           * this->wg_tuner_->template get_param<int>("workgroup_size_1"));
-  // The tile-size in dimension N
+  // The tile-size in dimension n
   LibDNN<Dtype>::add_def(
       ss,
       "TSN",
       this->wg_tuner_->template get_param<int>("WPTN")
           * this->wg_tuner_->template get_param<int>("workgroup_size_0"));
-  // The tile-size in dimension K
+  // The tile-size in dimension k
   LibDNN<Dtype>::add_def(ss, "TSK", this->wg_tuner_->template
                          get_param<int>("TSK"));
   // TSK unrolling
   LibDNN<Dtype>::add_def(ss, "TSK_UNROLL",
                          this->wg_tuner_->template
                          get_param<int>("TSK_UNROLL"));
-  // The work-per-thread in dimension M
+  // The work-per-thread in dimension m
   LibDNN<Dtype>::add_def(ss, "WPTM", this->wg_tuner_->template
                          get_param<int>("WPTM"));
   LibDNN<Dtype>::add_def(ss, "VWM", this->wg_tuner_->template
                          get_param<int>("VWM"));
-  // The work-per-thread in dimension N
+  // The work-per-thread in dimension n
   LibDNN<Dtype>::add_def(ss, "WPTN", this->wg_tuner_->template
                          get_param<int>("WPTN"));
   LibDNN<Dtype>::add_def(ss, "VWN", this->wg_tuner_->template
                          get_param<int>("VWN"));
-  // The reduced tile-size in dimension M
+  // The reduced tile-size in dimension m
   LibDNN<Dtype>::add_def(ss, "RTSM",
                          this->wg_tuner_->template
                          get_param<int>("workgroup_size_1"));
-  // The reduced tile-size in dimension N
+  // The reduced tile-size in dimension n
   LibDNN<Dtype>::add_def(ss, "RTSN",
                          this->wg_tuner_->template
                          get_param<int>("workgroup_size_0"));
-  // Loads-per-thread for A
+  // Loads-per-thread for a
   LibDNN<Dtype>::add_def(ss, "LPTA", "((TSK*TSM)/(RTSM*RTSN))");
-  // Loads-per-thread for B
+  // Loads-per-thread for b
   LibDNN<Dtype>::add_def(ss, "LPTB", "((TSK*TSN)/(RTSM*RTSN))");
 
   // Num tiles needs to be next higher even integer
   // (due to some quirky bug in AMD OpenCL 2.0 on Windows)
-  LibDNN<Dtype>::add_def(ss, "v_num_tiles", "(((K - 1)/(TSK*2) + 1)*2)");
+  LibDNN<Dtype>::add_def(ss, "v_num_tiles", "(((k - 1)/(TSK*2) + 1)*2)");
   LibDNN<Dtype>::add_def(ss, "v_num_tiles_B", "(((KB - 1)/(TSK*2) + 1)*2)");
 
 
@@ -746,8 +746,8 @@ std::string LibDNNDeconv<Dtype>::generate_wg_defs() {
 }
 
 template<typename Dtype>
-std::string LibDNNDeconv<Dtype>::generate_bw_kernels(std::string name) {
-  std::stringstream ss;
+string LibDNNDeconv<Dtype>::generate_bw_kernels(string name) {
+  stringstream ss;
 
   int wptn = this->bw_tuner_->template get_param<int>("WPTN");
   int wptm = this->bw_tuner_->template get_param<int>("WPTM");
@@ -803,10 +803,10 @@ std::string LibDNNDeconv<Dtype>::generate_bw_kernels(std::string name) {
   }
 
   if (this->group_ > 1) {
-    ss << "__global const Dtype* Aptr = wg + group * (M * K);" << std::endl;
+    ss << "__global const Dtype* Aptr = wg + group * (m * k);" << std::endl;
     ss << "__global const Dtype* Bptr = im_in + v_B_off * batch "
        << "+ group * (v_B_off / v_g);" << std::endl;
-    ss << "__global Dtype* Cptr = im_out + v_C_off * batch + group * (M * N);"
+    ss << "__global Dtype* Cptr = im_out + v_C_off * batch + group * (m * n);"
        << std::endl;
   } else {
     ss << "__global const Dtype* Aptr = wg;" << std::endl;
@@ -815,7 +815,7 @@ std::string LibDNNDeconv<Dtype>::generate_bw_kernels(std::string name) {
   }
 
   // Initialize the accumulation registers
-  ss << "{" << std::endl;  // Scoping for C registers
+  ss << "{" << std::endl;  // Scoping for c registers
   ss << this->generate_accreg_init(this->bw_tuner_, false, false);
 
   ss << "{" << std::endl;  // Scoping for load & compute block
@@ -823,8 +823,8 @@ std::string LibDNNDeconv<Dtype>::generate_bw_kernels(std::string name) {
   ss << "#pragma unroll 1" << std::endl;
   ss << "for (int_tp t = 0; t < v_num_tiles; ++t) {" << std::endl;
 
-  // Load one tile of A into local memory
-  ss << "{" << std::endl;  // Scoping for loading A
+  // Load one tile of a into local memory
+  ss << "{" << std::endl;  // Scoping for loading a
     ss << "#pragma unroll 4" << std::endl;
     ss << "for (int_tp la = 0; la < LPTA; ++la) {" << std::endl;
     ss << "int_tp tid = tidm * RTSN + tidn;" << std::endl;
@@ -832,16 +832,16 @@ std::string LibDNNDeconv<Dtype>::generate_bw_kernels(std::string name) {
     ss << "int_tp row = id / TSK;" << std::endl;
     ss << "int_tp col = id % TSK;" << std::endl;
     ss << "int_tp tiledIndex = TSK * t + col;" << std::endl;
-    ss << "if ((offM + row) < M && tiledIndex < K) {" << std::endl;
-    ss << "Asub[row][col] = Aptr[(offM + row) * K + tiledIndex];" << std::endl;
-    ss << "} else {" << std::endl;  // M-K-Guard
+    ss << "if ((offM + row) < m && tiledIndex < k) {" << std::endl;
+    ss << "Asub[row][col] = Aptr[(offM + row) * k + tiledIndex];" << std::endl;
+    ss << "} else {" << std::endl;  // m-k-Guard
     ss << "Asub[row][col] = 0.0;" << std::endl;
     ss << "}" << std::endl;
     ss << "}" << std::endl;  // LPTA
-  ss << "}" << std::endl;  // Scoping for loading A
+  ss << "}" << std::endl;  // Scoping for loading a
 
-  // Load one tile of B into local memory
-  ss << "{" << std::endl;  // Scoping for loading B
+  // Load one tile of b into local memory
+  ss << "{" << std::endl;  // Scoping for loading b
   ss << "#pragma unroll 4" << std::endl;
   ss << "for (int_tp lb = 0; lb < LPTB; ++lb) {" << std::endl;
   ss << "int_tp tid = tidm * RTSN + tidn;" << std::endl;
@@ -850,7 +850,7 @@ std::string LibDNNDeconv<Dtype>::generate_bw_kernels(std::string name) {
   ss << "int_tp row = id / TSN;" << std::endl;
   ss << "int_tp tiledIndex = TSK * t + row;" << std::endl;
 
-  ss << "if ((offN + col) < N && tiledIndex < K) {" << std::endl;
+  ss << "if ((offN + col) < n && tiledIndex < k) {" << std::endl;
   // Define temporary registers
   for (int_tp i = 0; i < this->num_axes_; ++i) {
     ss << "int_tp d_iter_" << i << ";" << std::endl;
@@ -903,7 +903,7 @@ std::string LibDNNDeconv<Dtype>::generate_bw_kernels(std::string name) {
   ss << "Bsub[row][col] = 0.0;" << std::endl;
   ss << "}" << std::endl;
   ss << "}" << std::endl;
-  ss << "}" << std::endl;  // Scoping for loading B
+  ss << "}" << std::endl;  // Scoping for loading b
 
   // Synchronize to make sure the tile is loaded
   ss << "barrier(CLK_LOCAL_MEM_FENCE);" << std::endl;
@@ -917,7 +917,7 @@ std::string LibDNNDeconv<Dtype>::generate_bw_kernels(std::string name) {
   ss << "}" << std::endl;
   ss << "}" << std::endl;  // Scoping for load & compute block
 
-  // Store the final results in C
+  // Store the final results in c
   ss << "#pragma unroll" << std::endl;
   ss << "for (int_tp wm=0; wm<WPTM; ++wm) {" << std::endl;
   ss << "int_tp globalRow = offM + tidm + wm * RTSM;"
@@ -926,13 +926,13 @@ std::string LibDNNDeconv<Dtype>::generate_bw_kernels(std::string name) {
   ss << "for (int_tp wn=0; wn<WPTN; ++wn) {" << std::endl;
   ss << "int_tp globalCol = offN + tidn + wn * RTSN;"
      << std::endl;
-  ss << "if (globalRow < M && globalCol < N) {" << std::endl;
-  ss << "Cptr[globalRow * N + globalCol] = "
+  ss << "if (globalRow < m && globalCol < n) {" << std::endl;
+  ss << "Cptr[globalRow * n + globalCol] = "
      << "((Dtype*)(&(Creg[wm][wn/VWN])))[wn%VWN];" << std::endl;
-  ss << "}" << std::endl;   // M-N-Guard
-  ss << "}" << std::endl;   // For (N)
-  ss << "}" << std::endl;   // For (M)
-  ss << "}" << std::endl;   // Scoping for C registers
+  ss << "}" << std::endl;   // m-n-Guard
+  ss << "}" << std::endl;   // For (n)
+  ss << "}" << std::endl;   // For (m)
+  ss << "}" << std::endl;   // Scoping for c registers
 
   // Kernel
   ss << "}" << std::endl;
@@ -941,8 +941,8 @@ std::string LibDNNDeconv<Dtype>::generate_bw_kernels(std::string name) {
 }
 
 template<typename Dtype>
-std::string LibDNNDeconv<Dtype>::generate_wg_kernels(std::string name) {
-  std::stringstream ss;
+string LibDNNDeconv<Dtype>::generate_wg_kernels(string name) {
+  stringstream ss;
 
   int wptn = this->wg_tuner_->template get_param<int>("WPTN");
   int wptm = this->wg_tuner_->template get_param<int>("WPTM");
@@ -1001,7 +1001,7 @@ std::string LibDNNDeconv<Dtype>::generate_wg_kernels(std::string name) {
        << " + group * (v_A_off / v_g);" << std::endl;
     ss << "__global const Dtype* Bptr = im_out + batch * v_B_off"
        << " + group * (v_B_off / v_g);" << std::endl;
-    ss << "__global Dtype* Cptr = wg + group * (M * N);" << std::endl;
+    ss << "__global Dtype* Cptr = wg + group * (m * n);" << std::endl;
   } else {
     ss << "__global const Dtype* Aptr = im_in + batch * v_A_off;" << std::endl;
     ss << "__global const Dtype* Bptr = im_out + batch * v_B_off;" << std::endl;
@@ -1009,7 +1009,7 @@ std::string LibDNNDeconv<Dtype>::generate_wg_kernels(std::string name) {
   }
 
   // Initialize the accumulation registers
-  ss << "{" << std::endl;  // Scoping for C registers
+  ss << "{" << std::endl;  // Scoping for c registers
   ss << this->generate_accreg_init(this->wg_tuner_, false,
                             this->wgalgo_ == LIBDNN_CONVOLUTION_WG_ALGO_DIRECT);
 
@@ -1023,8 +1023,8 @@ std::string LibDNNDeconv<Dtype>::generate_wg_kernels(std::string name) {
   ss << "#pragma unroll 1" << std::endl;
   ss << "for (int_tp t = 0; t < v_num_tiles; ++t) {" << std::endl;
 
-  // Load one tile of A into local memory
-  ss << "{" << std::endl;  // Scoping for loading A
+  // Load one tile of a into local memory
+  ss << "{" << std::endl;  // Scoping for loading a
   ss << "#pragma unroll 1" << std::endl;
   ss << "for (int_tp la = 0; la < LPTA; ++la) {" << std::endl;
   ss << "int_tp tid = tidm * RTSN + tidn;" << std::endl;
@@ -1034,16 +1034,16 @@ std::string LibDNNDeconv<Dtype>::generate_wg_kernels(std::string name) {
   ss << "int_tp tiledIndex = TSK * t + col;" << std::endl;
 
   // Load weights (wg) into Asub
-  ss << "if ((offM + row) < M && tiledIndex < K) {" << std::endl;
-  ss << "Asub[row][col] = Aptr[(offM + row) * K + tiledIndex];" << std::endl;
+  ss << "if ((offM + row) < m && tiledIndex < k) {" << std::endl;
+  ss << "Asub[row][col] = Aptr[(offM + row) * k + tiledIndex];" << std::endl;
   ss << "} else {" << std::endl;
   ss << "Asub[row][col] = 0.0;" << std::endl;
   ss << "}" << std::endl;
   ss << "}" << std::endl;
-  ss << "}" << std::endl;  // Scoping for loading A
+  ss << "}" << std::endl;  // Scoping for loading a
 
-  // Load one tile of B into local memory
-  ss << "{" << std::endl;  // Scoping for loading B
+  // Load one tile of b into local memory
+  ss << "{" << std::endl;  // Scoping for loading b
   ss << "#pragma unroll 4" << std::endl;
   ss << "for (int_tp lb = 0; lb < LPTB; ++lb) {" << std::endl;
   ss << "int_tp tid = tidm * RTSN + tidn;" << std::endl;
@@ -1052,7 +1052,7 @@ std::string LibDNNDeconv<Dtype>::generate_wg_kernels(std::string name) {
   ss << "int_tp row = id / TSN;" << std::endl;
   ss << "int_tp tiledIndex = TSK * t + row;" << std::endl;
 
-  ss << "if ((offN + col) < N && tiledIndex < K) {" << std::endl;
+  ss << "if ((offN + col) < n && tiledIndex < k) {" << std::endl;
   // Define temporary registers
   for (int_tp i = 0; i < this->num_axes_; ++i) {
     ss << "int_tp d_iter_" << i << ";" << std::endl;
@@ -1105,7 +1105,7 @@ std::string LibDNNDeconv<Dtype>::generate_wg_kernels(std::string name) {
   ss << "Bsub[row][col] = 0.0;" << std::endl;
   ss << "}" << std::endl;
   ss << "}" << std::endl;
-  ss << "}" << std::endl;  // Scoping for loading B
+  ss << "}" << std::endl;  // Scoping for loading b
 
 
   // Synchronize to make sure the tile is loaded
@@ -1129,7 +1129,7 @@ std::string LibDNNDeconv<Dtype>::generate_wg_kernels(std::string name) {
   }
   ss << "}" << std::endl;  // Scoping for load & compute block
 
-  // Store the final results in C
+  // Store the final results in c
   ss << "#pragma unroll" << std::endl;
   ss << "for (int_tp wm=0; wm<WPTM; ++wm) {" << std::endl;
   ss << "int_tp globalRow = offM + tidm + wm * RTSM;"
@@ -1138,19 +1138,19 @@ std::string LibDNNDeconv<Dtype>::generate_wg_kernels(std::string name) {
   ss << "for (int_tp wn=0; wn<WPTN; ++wn) {" << std::endl;
   ss << "int_tp globalCol = offN + tidn + wn * RTSN;"
      << std::endl;
-  ss << "if (globalRow < M && globalCol < N) {" << std::endl;
+  ss << "if (globalRow < m && globalCol < n) {" << std::endl;
   if (this->wgalgo_ == LIBDNN_CONVOLUTION_WG_ALGO_DIRECT) {
-    ss << "Cptr[globalRow * N + globalCol] = "
+    ss << "Cptr[globalRow * n + globalCol] = "
        << "((Dtype*)(&(Creg[wm][wn/VWN])))[wn%VWN];" << std::endl;
   }
   if (this->wgalgo_ == LIBDNN_CONVOLUTION_WG_ALGO_ATOMIC) {
-    ss << "atomicAdd(&(Cptr[globalRow * N + globalCol]), "
+    ss << "atomicAdd(&(Cptr[globalRow * n + globalCol]), "
        << "((Dtype*)(&(Creg[wm][wn/VWN])))[wn%VWN]);" << std::endl;
   }
-  ss << "}" << std::endl;   // M-N-Guard
-  ss << "}" << std::endl;   // For (N)
-  ss << "}" << std::endl;   // For (M)
-  ss << "}" << std::endl;   // Scoping for C registers
+  ss << "}" << std::endl;   // m-n-Guard
+  ss << "}" << std::endl;   // For (n)
+  ss << "}" << std::endl;   // For (m)
+  ss << "}" << std::endl;   // Scoping for c registers
 
   // Kernel
   ss << "}" << std::endl;
@@ -1243,8 +1243,8 @@ std::string LibDNNDeconv<Dtype>::generate_wg_kernels(std::string name) {
   ss << "#pragma unroll 1" << std::endl;
   ss << "for (int_tp t = 0; t < v_num_tiles_B; ++t) {" << std::endl;
 
-  // Load one tile of A into local memory
-  ss << "{" << std::endl;  // Scoping for loading A
+  // Load one tile of a into local memory
+  ss << "{" << std::endl;  // Scoping for loading a
   ss << "#pragma unroll 1" << std::endl;
   ss << "for (int_tp la = 0; la < LPTA; ++la) {" << std::endl;
   ss << "int_tp tid = tidm * RTSN + tidn;" << std::endl;
@@ -1260,7 +1260,7 @@ std::string LibDNNDeconv<Dtype>::generate_wg_kernels(std::string name) {
   ss << "Asub[row][col] = 0.0;" << std::endl;
   ss << "}" << std::endl;
   ss << "}" << std::endl;
-  ss << "}" << std::endl;  // Scoping for loading A
+  ss << "}" << std::endl;  // Scoping for loading a
 
   // Synchronize to make sure the tile is loaded
   ss << "barrier(CLK_LOCAL_MEM_FENCE);" << std::endl;
@@ -1326,7 +1326,7 @@ std::string LibDNNDeconv<Dtype>::generate_wg_kernels(std::string name) {
        << "((Dtype*)(&(Dreg[wm/VWM])))[wm%VWM]);" << std::endl;
   }
   ss << "}" << std::endl;
-  ss << "}" << std::endl;   // For (M)
+  ss << "}" << std::endl;   // For (m)
   ss << "}" << std::endl;   // Scoping for D registers
 
   // Kernel
@@ -1336,8 +1336,8 @@ std::string LibDNNDeconv<Dtype>::generate_wg_kernels(std::string name) {
 }
 
 template<typename Dtype>
-std::string LibDNNDeconv<Dtype>::generate_fw_kernels(std::string name) {
-  std::stringstream ss;
+string LibDNNDeconv<Dtype>::generate_fw_kernels(string name) {
+  stringstream ss;
 
   int wptn = this->fw_tuner_->template get_param<int>("WPTN");
   int wptm = this->fw_tuner_->template get_param<int>("WPTM");
@@ -1414,7 +1414,7 @@ std::string LibDNNDeconv<Dtype>::generate_fw_kernels(std::string name) {
 
 
   // Initialize the accumulation registers
-  ss << "{" << std::endl;  // Scoping for C registers
+  ss << "{" << std::endl;  // Scoping for c registers
   ss << this->generate_accreg_init(this->fw_tuner_, false, false);
 
   ss << "{" << std::endl;  // Scoping for load & compute block
@@ -1422,8 +1422,8 @@ std::string LibDNNDeconv<Dtype>::generate_fw_kernels(std::string name) {
   ss << "#pragma unroll 1" << std::endl;
   ss << "for (int_tp t = 0; t < v_num_tiles; ++t) {" << std::endl;
 
-  // Load one tile of A into local memory
-  ss << "{" << std::endl;  // Scoping for loading A
+  // Load one tile of a into local memory
+  ss << "{" << std::endl;  // Scoping for loading a
   ss << "for (int_tp la = 0; la < LPTA; ++la) {" << std::endl;
   ss << "int_tp tid = tidm * RTSN + tidn;" << std::endl;
   ss << "int_tp id = la * RTSN * RTSM + tid;" << std::endl;
@@ -1434,33 +1434,33 @@ std::string LibDNNDeconv<Dtype>::generate_fw_kernels(std::string name) {
   if (this->bwalgo_ == LIBDNN_CONVOLUTION_BW_ALGO_IM2COL) {
     // Load weights (wg) into Asub, flip fin/fout and inverse spatially
     // Compute kidx and midx, the column and row index of the
-    // weights in the original A (weights) matrix
+    // weights in the original a (weights) matrix
     ss << "int_tp kidx = (v_ks - 1 - tiledIndex % v_ks) + (offM + row) * v_ks;"
        << std::endl;
     ss << "int_tp midx = tiledIndex / v_ks;" << std::endl;
     // Check range of the spatially flipped, fin/fout inverted weights
-    ss << "if ((offM + row) < M && tiledIndex < K) {" << std::endl;
+    ss << "if ((offM + row) < m && tiledIndex < k) {" << std::endl;
     // Access weights with the original (translated) weight indices
     ss << "Asub[row][col] = Aptr[kidx + (v_fout / v_g * v_ks) * midx];"
        << std::endl;
-    ss << "} else {" << std::endl;  // M-K-Guard
+    ss << "} else {" << std::endl;  // m-k-Guard
     ss << "Asub[row][col] = 0.0;" << std::endl;
     ss << "}" << std::endl;
   }
 
   if (this->bwalgo_ == LIBDNN_CONVOLUTION_BW_ALGO_COL2IM_ATOMIC) {
-    // Load weights (wg) into Asub, read A transposed
-    ss << "if ((offM + row) < M && tiledIndex < K) {" << std::endl;
-    ss << "Asub[row][col] = Aptr[tiledIndex * M + offM + row];" << std::endl;
-    ss << "} else {" << std::endl;  // M-K-Guard
+    // Load weights (wg) into Asub, read a transposed
+    ss << "if ((offM + row) < m && tiledIndex < k) {" << std::endl;
+    ss << "Asub[row][col] = Aptr[tiledIndex * m + offM + row];" << std::endl;
+    ss << "} else {" << std::endl;  // m-k-Guard
     ss << "Asub[row][col] = 0.0;" << std::endl;
     ss << "}" << std::endl;
   }
   ss << "}" << std::endl;
-  ss << "}" << std::endl;  // Scoping for loading A
+  ss << "}" << std::endl;  // Scoping for loading a
 
-  // Load one tile of B into local memory
-  ss << "{" << std::endl;  // Scoping for loading B
+  // Load one tile of b into local memory
+  ss << "{" << std::endl;  // Scoping for loading b
   ss << "#pragma unroll 4" << std::endl;
   ss << "for (int_tp lb = 0; lb < LPTB; ++lb) {" << std::endl;
   ss << "int_tp tid = tidm * RTSN + tidn;" << std::endl;
@@ -1469,10 +1469,10 @@ std::string LibDNNDeconv<Dtype>::generate_fw_kernels(std::string name) {
   ss << "int_tp row = id / TSN;" << std::endl;
   ss << "int_tp tiledIndex = TSK * t + row;" << std::endl;
 
-  ss << "if ((offN + col) < N && tiledIndex < K) {" << std::endl;
+  ss << "if ((offN + col) < n && tiledIndex < k) {" << std::endl;
 
   if (this->bwalgo_ == LIBDNN_CONVOLUTION_BW_ALGO_IM2COL) {
-    // Load from B with im2col transformation
+    // Load from b with im2col transformation
 
     // Define temporary registers
     for (int_tp i = 0; i < this->num_axes_; ++i) {
@@ -1516,22 +1516,22 @@ std::string LibDNNDeconv<Dtype>::generate_fw_kernels(std::string name) {
     // tiledIndex now holds the memory offset for the input image
     ss << "Bsub[row][col] = Bptr[tiledIndex];" << std::endl;
     ss << "} else {" << std::endl;
-    // Out of B's image dimensions
+    // Out of b's image dimensions
     ss << "Bsub[row][col] = 0.0;" << std::endl;
     ss << "}" << std::endl;
   }
 
   if (this->bwalgo_ == LIBDNN_CONVOLUTION_BW_ALGO_COL2IM_ATOMIC) {
-    // Load from B without transformation
-    ss << "Bsub[row][col] = Bptr[(offN + col) + tiledIndex * N];" << std::endl;
+    // Load from b without transformation
+    ss << "Bsub[row][col] = Bptr[(offN + col) + tiledIndex * n];" << std::endl;
   }
 
   ss << "} else {" << std::endl;
-  // Out of B's matrix dimensions
+  // Out of b's matrix dimensions
   ss << "Bsub[row][col] = 0.0;" << std::endl;
   ss << "}" << std::endl;
   ss << "}" << std::endl;
-  ss << "}" << std::endl;  // Scoping for loading B
+  ss << "}" << std::endl;  // Scoping for loading b
 
   // Synchronize to make sure the tile is loaded
   ss << "barrier(CLK_LOCAL_MEM_FENCE);" << std::endl;
@@ -1545,7 +1545,7 @@ std::string LibDNNDeconv<Dtype>::generate_fw_kernels(std::string name) {
   ss << "}" << std::endl;
   ss << "}" << std::endl;  // Scoping for load & compute block
 
-  // Store the final results in C
+  // Store the final results in c
   ss << "#pragma unroll" << std::endl;
   ss << "for (int_tp wm=0; wm<WPTM; ++wm) {" << std::endl;
   ss << "int_tp globalRow = offM + tidm + wm * RTSM;" <<std::endl;
@@ -1557,8 +1557,8 @@ std::string LibDNNDeconv<Dtype>::generate_fw_kernels(std::string name) {
   ss << "int_tp globalCol = offN + tidn + wn * RTSN;" << std::endl;
 
   if (this->bwalgo_ == LIBDNN_CONVOLUTION_BW_ALGO_IM2COL) {
-    ss << "if (globalRow < M && globalCol < N) {" << std::endl;
-    ss << "Cptr[globalRow * N + globalCol] = ";
+    ss << "if (globalRow < m && globalCol < n) {" << std::endl;
+    ss << "Cptr[globalRow * n + globalCol] = ";
     if (this->bias_term_) {
       ss << "((Dtype*)(&(Creg[wm][wn/VWN])))[wn%VWN]"
          << " + v_bmul * biasval;" << std::endl;
@@ -1593,7 +1593,7 @@ std::string LibDNNDeconv<Dtype>::generate_fw_kernels(std::string name) {
       ss << "imageIndex = imageIndex / v_imsi_" << i << ";" << std::endl;
     }
 
-    ss << "in_range &= tiledIndex < v_fout && globalRow < M && globalCol < N;"
+    ss << "in_range &= tiledIndex < v_fout && globalRow < m && globalCol < n;"
        << std::endl;
     ss << "int_tp d_iter_im;" << std::endl;
     for (int_tp i = 0; i < this->num_axes_; ++i) {
@@ -1617,7 +1617,7 @@ std::string LibDNNDeconv<Dtype>::generate_fw_kernels(std::string name) {
 
   ss << "}" << std::endl;
   ss << "}" << std::endl;
-  ss << "}" << std::endl;   // Scoping for C registers
+  ss << "}" << std::endl;   // Scoping for c registers
 
   // Kernel
   ss << "}" << std::endl;
@@ -1627,7 +1627,7 @@ std::string LibDNNDeconv<Dtype>::generate_fw_kernels(std::string name) {
 
 template<typename Dtype>
 void LibDNNDeconv<Dtype>::GenerateKernels() {
-  std::stringstream ss;
+  stringstream ss;
 
   ss << LibDNN<Dtype>::generate_header();
   ss << generate_fw_defs();

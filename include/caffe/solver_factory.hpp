@@ -1,5 +1,5 @@
 /**
- * @brief A solver factory that allows one to register solvers, similar to
+ * @brief a solver factory that allows one to register solvers, similar to
  * layer factory. During runtime, registered solvers could be called by passing
  * a SolverParameter protobuffer to the CreateSolver function:
  *
@@ -12,10 +12,10 @@
  *     // your implementations
  *   };
  *
- * and its type is its C++ class name, but without the "Solver" at the end
+ * and its type is its c++ class name, but without the "Solver" at the end
  * ("MyAwesomeSolver" -> "MyAwesome").
  *
- * If the solver is going to be created simply by its constructor, in your C++
+ * If the solver is going to be created simply by its constructor, in your c++
  * file, add the following line:
  *
  *    REGISTER_SOLVER_CLASS(MyAwesome);

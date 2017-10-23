@@ -20,7 +20,7 @@ namespace caffe {
 // accumulate through explicit loops over input, output, and filters.
 template <typename Dtype>
 void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
-    const vector<std::shared_ptr<Blob<Dtype> > >& weights,
+    const vector<shared_ptr<Blob<Dtype> > >& weights,
     Blob<Dtype>* out) {
   const bool has_depth = (out->num_axes() == 5);
   if (!has_depth) { CHECK_EQ(4, out->num_axes()); }
@@ -76,14 +76,14 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
       for (int_tp o = 0; o < o_g; o++) {
         for (int_tp k = 0; k < k_g; k++) {
           for (int_tp z = 0; z < (has_depth ? out->shape(2) : 1); z++) {
-            for (int_tp y = 0; y < out->shape(2 + has_depth); y++) {
-              for (int_tp x = 0; x < out->shape(3 + has_depth); x++) {
+            for (int_tp Y = 0; Y < out->shape(2 + has_depth); Y++) {
+              for (int_tp X = 0; X < out->shape(3 + has_depth); X++) {
                 for (int_tp r = 0; r < kernel_d; r++) {
                   for (int_tp p = 0; p < kernel_h; p++) {
                     for (int_tp q = 0; q < kernel_w; q++) {
                       int_tp in_z = z * stride_d - pad_d + r * dilation_d;
-                      int_tp in_y = y * stride_h - pad_h + p * dilation_h;
-                      int_tp in_x = x * stride_w - pad_w + q * dilation_w;
+                      int_tp in_y = Y * stride_h - pad_h + p * dilation_h;
+                      int_tp in_x = X * stride_w - pad_w + q * dilation_w;
                       if (in_z >= 0 && in_z < (has_depth ? in->shape(2) : 1)
                           && in_y >= 0 && in_y < in->shape(2 + has_depth)
                           && in_x >= 0 && in_x < in->shape(3 + has_depth)) {
@@ -100,8 +100,8 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
                         out_offset[0] = n;
                         out_offset[1] = o + o_head;
                         if (has_depth) { out_offset[2] = z; }
-                        out_offset[2 + has_depth] = y;
-                        out_offset[3 + has_depth] = x;
+                        out_offset[2 + has_depth] = Y;
+                        out_offset[3 + has_depth] = X;
                         out_data[out->offset(out_offset)] +=
                             in->data_at(in_offset)
                             * weights[0]->data_at(weight_offset);
@@ -122,13 +122,13 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
     for (int_tp n = 0; n < out->shape(0); n++) {
       for (int_tp o = 0; o < out->shape(1); o++) {
         for (int_tp z = 0; z < (has_depth ? out->shape(2) : 1); z++) {
-          for (int_tp y = 0; y < out->shape(2 + has_depth); y++) {
-            for (int_tp x = 0; x < out->shape(3 + has_depth); x++) {
+          for (int_tp Y = 0; Y < out->shape(2 + has_depth); Y++) {
+            for (int_tp X = 0; X < out->shape(3 + has_depth); X++) {
               out_offset[0] = n;
               out_offset[1] = o;
               if (has_depth) { out_offset[2] = z; }
-              out_offset[2 + has_depth] = y;
-              out_offset[3 + has_depth] = x;
+              out_offset[2 + has_depth] = Y;
+              out_offset[3 + has_depth] = X;
               out_data[out->offset(out_offset)] += bias_data[o];
             }
           }
@@ -140,11 +140,11 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
 
 template void caffe_conv(const Blob<float>* in,
     ConvolutionParameter* conv_param,
-    const vector<std::shared_ptr<Blob<float> > >& weights,
+    const vector<shared_ptr<Blob<float> > >& weights,
     Blob<float>* out);
 template void caffe_conv(const Blob<double>* in,
     ConvolutionParameter* conv_param,
-    const vector<std::shared_ptr<Blob<double> > >& weights,
+    const vector<shared_ptr<Blob<double> > >& weights,
     Blob<double>* out);
 
 template <typename TypeParam>
@@ -185,7 +185,7 @@ class ConvolutionLayerTest : public MultiDeviceTest<TypeParam> {
   Blob<Dtype>* const blob_bottom_2_;
   Blob<Dtype>* const blob_top_;
   Blob<Dtype>* const blob_top_2_;
-  std::shared_ptr<Blob<Dtype> > ref_blob_top_;
+  shared_ptr<Blob<Dtype> > ref_blob_top_;
   vector<Blob<Dtype>*> blob_bottom_vec_;
   vector<Blob<Dtype>*> blob_top_vec_;
 };
@@ -202,7 +202,7 @@ TYPED_TEST(ConvolutionLayerTest, TestSetup) {
   convolution_param->set_num_output(4);
   this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
   this->blob_top_vec_.push_back(this->blob_top_2_);
-  std::shared_ptr<Layer<Dtype> > layer(
+  shared_ptr<Layer<Dtype> > layer(
       new ConvolutionLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), 2);
@@ -241,7 +241,7 @@ TYPED_TEST(ConvolutionLayerTest, TestSimpleConvolution) {
   convolution_param->mutable_weight_filler()->set_type("gaussian");
   convolution_param->mutable_bias_filler()->set_type("constant");
   convolution_param->mutable_bias_filler()->set_value(0.1);
-  std::shared_ptr<Layer<Dtype> > layer(
+  shared_ptr<Layer<Dtype> > layer(
       new ConvolutionLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -287,7 +287,7 @@ TYPED_TEST(ConvolutionLayerTest, TestDilatedConvolution) {
   convolution_param->mutable_weight_filler()->set_type("gaussian");
   convolution_param->mutable_bias_filler()->set_type("constant");
   convolution_param->mutable_bias_filler()->set_value(0.1);
-  std::shared_ptr<Layer<Dtype> > layer(
+  shared_ptr<Layer<Dtype> > layer(
       new ConvolutionLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -322,7 +322,7 @@ TYPED_TEST(ConvolutionLayerTest, Test0DConvolution) {
   convolution_param->set_axis(3);
   convolution_param->mutable_weight_filler()->set_type("gaussian");
   convolution_param->mutable_bias_filler()->set_type("gaussian");
-  std::shared_ptr<Layer<Dtype> > layer(
+  shared_ptr<Layer<Dtype> > layer(
       new ConvolutionLayer<Dtype>(layer_param));
   vector<int_tp> top_shape = this->blob_bottom_->shape();
   top_shape[3] = kNumOutput;
@@ -376,7 +376,7 @@ TYPED_TEST(ConvolutionLayerTest, TestSimple3DConvolution) {
   convolution_param->set_num_output(4);
   convolution_param->mutable_weight_filler()->set_type("gaussian");
   convolution_param->mutable_bias_filler()->set_type("gaussian");
-  std::shared_ptr<Layer<Dtype> > layer(
+  shared_ptr<Layer<Dtype> > layer(
       new ConvolutionLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -425,7 +425,7 @@ TYPED_TEST(ConvolutionLayerTest, TestDilated3DConvolution) {
   convolution_param->set_num_output(4);
   convolution_param->mutable_weight_filler()->set_type("gaussian");
   convolution_param->mutable_bias_filler()->set_type("gaussian");
-  std::shared_ptr<Layer<Dtype> > layer(
+  shared_ptr<Layer<Dtype> > layer(
       new ConvolutionLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -461,7 +461,7 @@ TYPED_TEST(ConvolutionLayerTest, Test1x1Convolution) {
   convolution_param->mutable_weight_filler()->set_type("gaussian");
   convolution_param->mutable_bias_filler()->set_type("constant");
   convolution_param->mutable_bias_filler()->set_value(0.1);
-  std::shared_ptr<Layer<Dtype> > layer(
+  shared_ptr<Layer<Dtype> > layer(
       new ConvolutionLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -491,7 +491,7 @@ TYPED_TEST(ConvolutionLayerTest, TestSimpleConvolutionGroup) {
   convolution_param->mutable_weight_filler()->set_type("gaussian");
   convolution_param->mutable_bias_filler()->set_type("constant");
   convolution_param->mutable_bias_filler()->set_value(0.1);
-  std::shared_ptr<Layer<Dtype> > layer(
+  shared_ptr<Layer<Dtype> > layer(
       new ConvolutionLayer<Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -515,13 +515,13 @@ TYPED_TEST(ConvolutionLayerTest, TestSobelConvolution) {
   // as the convolution of two rectangular filters.
   typedef typename TypeParam::Dtype Dtype;
   // Fill bottoms with identical Gaussian noise.
-  std::shared_ptr<GaussianFiller<Dtype> > filler;
+  shared_ptr<GaussianFiller<Dtype> > filler;
   FillerParameter filler_param;
   filler_param.set_value(1.);
   filler.reset(new GaussianFiller<Dtype>(filler_param));
   filler->Fill(this->blob_bottom_);
   this->blob_bottom_2_->CopyFrom(*this->blob_bottom_);
-  // Compute Sobel G_x operator as 3 x 3 convolution.
+  // Compute Sobel G_x operator as 3 X 3 convolution.
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
       layer_param.mutable_convolution_param();
@@ -529,13 +529,13 @@ TYPED_TEST(ConvolutionLayerTest, TestSobelConvolution) {
   convolution_param->add_stride(2);
   convolution_param->set_num_output(1);
   convolution_param->set_bias_term(false);
-  std::shared_ptr<Layer<Dtype> > layer(
+  shared_ptr<Layer<Dtype> > layer(
       new ConvolutionLayer<Dtype>(layer_param));
   layer->blobs().resize(1);
   layer->blobs()[0].reset(new Blob<Dtype>(1, 3, 3, 3));
   Dtype* weights = layer->blobs()[0]->mutable_cpu_data();
   for (int_tp c = 0; c < 3; ++c) {
-    int_tp i = c * 9;  // 3 x 3 filter
+    int_tp i = c * 9;  // 3 X 3 filter
     weights[i +  0] = -1;
     weights[i +  1] =  0;
     weights[i +  2] =  1;
@@ -548,11 +548,11 @@ TYPED_TEST(ConvolutionLayerTest, TestSobelConvolution) {
   }
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  // Compute Sobel G_x operator as separable 3 x 1 and 1 x 3 convolutions.
+  // Compute Sobel G_x operator as separable 3 X 1 and 1 X 3 convolutions.
   // (1) the [1 2 1] column filter
   vector<Blob<Dtype>*> sep_blob_bottom_vec;
   vector<Blob<Dtype>*> sep_blob_top_vec;
-  std::shared_ptr<Blob<Dtype> > blob_sep(new Blob<Dtype>());
+  shared_ptr<Blob<Dtype> > blob_sep(new Blob<Dtype>());
   sep_blob_bottom_vec.push_back(this->blob_bottom_2_);
   sep_blob_top_vec.push_back(this->blob_top_2_);
   convolution_param->clear_kernel_size();
@@ -568,7 +568,7 @@ TYPED_TEST(ConvolutionLayerTest, TestSobelConvolution) {
   layer->blobs()[0].reset(new Blob<Dtype>(1, 3, 3, 1));
   Dtype* weights_1 = layer->blobs()[0]->mutable_cpu_data();
   for (int_tp c = 0; c < 3; ++c) {
-    int_tp i = c * 3;  // 3 x 1 filter
+    int_tp i = c * 3;  // 3 X 1 filter
     weights_1[i +  0] = 1;
     weights_1[i +  1] = 2;
     weights_1[i +  2] = 1;
@@ -865,7 +865,7 @@ class CuDNNConvolutionLayerTest : public GPUDeviceTest<Dtype> {
   Blob<Dtype>* const blob_bottom_2_;
   Blob<Dtype>* const blob_top_;
   Blob<Dtype>* const blob_top_2_;
-  std::shared_ptr<Blob<Dtype> > ref_blob_top_;
+  shared_ptr<Blob<Dtype> > ref_blob_top_;
   vector<Blob<Dtype>*> blob_bottom_vec_;
   vector<Blob<Dtype>*> blob_top_vec_;
 };
@@ -884,7 +884,7 @@ TYPED_TEST(CuDNNConvolutionLayerTest, TestSetupCuDNN) {
     convolution_param->set_num_output(4);
     this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
     this->blob_top_vec_.push_back(this->blob_top_2_);
-    std::shared_ptr<Layer<TypeParam> > layer(
+    shared_ptr<Layer<TypeParam> > layer(
         new CuDNNConvolutionLayer<TypeParam>(layer_param));
     layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     EXPECT_EQ(this->blob_top_->num(), 2);
@@ -924,7 +924,7 @@ TYPED_TEST(CuDNNConvolutionLayerTest, TestSimpleConvolutionCuDNN) {
     convolution_param->mutable_weight_filler()->set_type("gaussian");
     convolution_param->mutable_bias_filler()->set_type("constant");
     convolution_param->mutable_bias_filler()->set_value(0.1);
-    std::shared_ptr<Layer<TypeParam> > layer(
+    shared_ptr<Layer<TypeParam> > layer(
         new CuDNNConvolutionLayer<TypeParam>(layer_param));
     layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -962,7 +962,7 @@ TYPED_TEST(CuDNNConvolutionLayerTest, TestSimpleConvolutionGroupCuDNN) {
     convolution_param->mutable_weight_filler()->set_type("gaussian");
     convolution_param->mutable_bias_filler()->set_type("constant");
     convolution_param->mutable_bias_filler()->set_value(0.1);
-    std::shared_ptr<Layer<TypeParam> > layer(
+    shared_ptr<Layer<TypeParam> > layer(
         new CuDNNConvolutionLayer<TypeParam>(layer_param));
     layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -987,13 +987,13 @@ TYPED_TEST(CuDNNConvolutionLayerTest, TestSobelConvolutionCuDNN) {
       // as a single filter then comparing the result
       // as the convolution of two rectangular filters.
     // Fill bottoms with identical Gaussian noise.
-    std::shared_ptr<GaussianFiller<TypeParam> > filler;
+    shared_ptr<GaussianFiller<TypeParam> > filler;
     FillerParameter filler_param;
     filler_param.set_value(1.);
     filler.reset(new GaussianFiller<TypeParam>(filler_param));
     filler->Fill(this->blob_bottom_);
     this->blob_bottom_2_->CopyFrom(*this->blob_bottom_);
-    // Compute Sobel G_x operator as 3 x 3 convolution.
+    // Compute Sobel G_x operator as 3 X 3 convolution.
     LayerParameter layer_param;
     ConvolutionParameter* convolution_param =
         layer_param.mutable_convolution_param();
@@ -1001,13 +1001,13 @@ TYPED_TEST(CuDNNConvolutionLayerTest, TestSobelConvolutionCuDNN) {
     convolution_param->add_stride(2);
     convolution_param->set_num_output(1);
     convolution_param->set_bias_term(false);
-    std::shared_ptr<Layer<TypeParam> > layer(
+    shared_ptr<Layer<TypeParam> > layer(
         new CuDNNConvolutionLayer<TypeParam>(layer_param));
     layer->blobs().resize(1);
     layer->blobs()[0].reset(new Blob<TypeParam>(1, 3, 3, 3));
     TypeParam* weights = layer->blobs()[0]->mutable_cpu_data();
     for (int_tp c = 0; c < 3; ++c) {
-      int_tp i = c * 9;  // 3 x 3 filter
+      int_tp i = c * 9;  // 3 X 3 filter
       weights[i +  0] = -1;
       weights[i +  1] =  0;
       weights[i +  2] =  1;
@@ -1020,11 +1020,11 @@ TYPED_TEST(CuDNNConvolutionLayerTest, TestSobelConvolutionCuDNN) {
     }
     layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-    // Compute Sobel G_x operator as separable 3 x 1 and 1 x 3 convolutions.
+    // Compute Sobel G_x operator as separable 3 X 1 and 1 X 3 convolutions.
     // (1) the [1 2 1] column filter
     vector<Blob<TypeParam>*> sep_blob_bottom_vec;
     vector<Blob<TypeParam>*> sep_blob_top_vec;
-    std::shared_ptr<Blob<TypeParam> > blob_sep(new Blob<TypeParam>());
+    shared_ptr<Blob<TypeParam> > blob_sep(new Blob<TypeParam>());
     sep_blob_bottom_vec.push_back(this->blob_bottom_2_);
     sep_blob_top_vec.push_back(this->blob_top_2_);
     convolution_param->clear_kernel_size();
@@ -1040,7 +1040,7 @@ TYPED_TEST(CuDNNConvolutionLayerTest, TestSobelConvolutionCuDNN) {
     layer->blobs()[0].reset(new Blob<TypeParam>(1, 3, 3, 1));
     TypeParam* weights_1 = layer->blobs()[0]->mutable_cpu_data();
     for (int_tp c = 0; c < 3; ++c) {
-      int_tp i = c * 3;  // 3 x 1 filter
+      int_tp i = c * 3;  // 3 X 1 filter
       weights_1[i +  0] = 1;
       weights_1[i +  1] = 2;
       weights_1[i +  2] = 1;

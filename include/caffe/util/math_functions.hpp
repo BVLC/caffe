@@ -15,69 +15,71 @@ namespace caffe {
 // Caffe gemm provides a simpler interface to the gemm functions, with the
 // limitation that the data has to be contiguous in memory.
 template<typename Dtype>
-void caffe_cpu_gemm(const CBLAS_TRANSPOSE TransA, const CBLAS_TRANSPOSE TransB,
-                    const int_tp M, const int_tp N, const int_tp K,
-                    const Dtype alpha, const Dtype* A, const Dtype* B,
-                    const Dtype beta, Dtype* C);
+void caffe_cpu_gemm(const CBLAS_TRANSPOSE trans_a, const CBLAS_TRANSPOSE trans_b,
+                    const int_tp m, const int_tp n, const int_tp k,
+                    const Dtype alpha, const Dtype* a, const Dtype* b,
+                    const Dtype beta, Dtype* c);
 
 template<typename Dtype>
-void caffe_cpu_gemv(const CBLAS_TRANSPOSE TransA, const int_tp M,
-                    const int_tp N, const Dtype alpha, const Dtype* A,
-                    const Dtype* x, const Dtype beta, Dtype* y);
+void caffe_cpu_gemv(const CBLAS_TRANSPOSE trans_a, const int_tp m,
+                    const int_tp n, const Dtype alpha, const Dtype* a,
+                    const Dtype* X, const Dtype beta, Dtype* Y);
 
 template<typename Dtype>
-void caffe_axpy(const int_tp N, const Dtype alpha, const Dtype* X, Dtype* Y);
+void caffe_axpy(const int_tp n, const Dtype alpha, const Dtype* X, Dtype* Y);
 
 template<typename Dtype>
-void caffe_cpu_axpby(const int_tp N, const Dtype alpha, const Dtype* X,
+void caffe_cpu_axpby(const int_tp n, const Dtype alpha, const Dtype* X,
                      const Dtype beta, Dtype* Y);
 
 template<typename Dtype>
-void caffe_cpu_copy(const int_tp N, const Dtype* X, Dtype* Y);
+void caffe_cpu_copy(const int_tp n, const Dtype* X, Dtype* Y);
 
 template<typename Dtype>
-void caffe_copy(const int_tp N, const Dtype *X, Dtype *Y);
+void caffe_copy(const int_tp n, const Dtype *X, Dtype *Y);
 
 template<typename Dtype>
-void caffe_set(const int_tp N, const Dtype alpha, Dtype *X);
+void caffe_set(const int_tp n, const Dtype alpha, Dtype *X);
 
-inline void caffe_memset(const uint_tp N, const int_tp alpha, void* X) {
-  memset(X, alpha, N);  // NOLINT(caffe/alt_fn)
+inline void caffe_memset(const uint_tp n, const int_tp alpha, void* X) {
+  memset(X, alpha, n);  // NOLINT(caffe/alt_fn)
 }
 
 template<typename Dtype>
-void caffe_add_scalar(const int_tp N, const Dtype alpha, Dtype *X);
+void caffe_add_scalar(const int_tp n, const Dtype alpha, Dtype *X);
 
 template<typename Dtype>
-void caffe_scal(const int_tp N, const Dtype alpha, Dtype *X);
+void caffe_scal(const int_tp n, const Dtype alpha, Dtype *X);
 
 template<typename Dtype>
-void caffe_sqr(const int_tp N, const Dtype* a, Dtype* y);
+void caffe_sqr(const int_tp n, const Dtype* a, Dtype* Y);
 
 template <typename Dtype>
-void caffe_sqrt(const int_tp N, const Dtype* a, Dtype* y);
+void caffe_sqrt(const int_tp n, const Dtype* a, Dtype* Y);
 
 template <typename Dtype>
-void caffe_add(const int_tp N, const Dtype* a, const Dtype* b, Dtype* y);
+void caffe_add(const int_tp n, const Dtype* a, const Dtype* b, Dtype* Y);
 
 template<typename Dtype>
-void caffe_sub(const int_tp N, const Dtype* a, const Dtype* b, Dtype* y);
+void caffe_sub(const int_tp n, const Dtype* a, const Dtype* b, Dtype* Y);
 
 template<typename Dtype>
-void caffe_mul(const int_tp N, const Dtype* a, const Dtype* b, Dtype* y);
+void caffe_mul(const int_tp n, const Dtype* a, const Dtype* b, Dtype* Y);
 
 template<typename Dtype>
-void caffe_div(const int_tp N, const Dtype* a, const Dtype* b, Dtype* y);
+void caffe_div(const int_tp n, const Dtype* a, const Dtype* b, Dtype* Y);
 
 template<typename Dtype>
-void caffe_powx(const int_tp n, const Dtype* a, const Dtype b, Dtype* y);
+void caffe_powx(const int_tp n, const Dtype* a, const Dtype b, Dtype* Y);
 
 uint_tp caffe_rng_rand();
 
 template<typename Dtype>
 Dtype caffe_nextafter(const Dtype b);
 
-void caffe_rng_uniform(const int_tp n, uint_tp* r);
+void caffe_rng_uniform(const uint_tp n, uint32_t* r);
+
+void caffe_rng_uniform(const uint_tp n, uint64_t* r);
 
 template<typename Dtype>
 void caffe_rng_uniform(const int_tp n, const Dtype a, const Dtype b, Dtype* r);
@@ -91,24 +93,24 @@ template<typename Dtype, typename Itype>
 void caffe_rng_bernoulli(const int_tp n, const Dtype p, Itype* r);
 
 template<typename Dtype>
-void caffe_exp(const int_tp n, const Dtype* a, Dtype* y);
+void caffe_exp(const int_tp n, const Dtype* a, Dtype* Y);
 
 template<typename Dtype>
-void caffe_log(const int_tp n, const Dtype* a, Dtype* y);
+void caffe_log(const int_tp n, const Dtype* a, Dtype* Y);
 
 template<typename Dtype>
-void caffe_abs(const int_tp n, const Dtype* a, Dtype* y);
+void caffe_abs(const int_tp n, const Dtype* a, Dtype* Y);
 
 template<typename Dtype>
-Dtype caffe_cpu_dot(const int_tp n, const Dtype* x, const Dtype* y);
+Dtype caffe_cpu_dot(const int_tp n, const Dtype* X, const Dtype* Y);
 
 template<typename Dtype>
-Dtype caffe_cpu_strided_dot(const int_tp n, const Dtype* x, const int_tp incx,
-                            const Dtype* y, const int_tp incy);
+Dtype caffe_cpu_strided_dot(const int_tp n, const Dtype* X, const int_tp incx,
+                            const Dtype* Y, const int_tp incy);
 
-// Returns the sum of the absolute values of the elements of vector x
+// Returns the sum of the absolute values of the elements of vector X
 template<typename Dtype>
-Dtype caffe_cpu_asum(const int_tp n, const Dtype* x);
+Dtype caffe_cpu_asum(const int_tp n, const Dtype* X);
 
 // the branchless, type-safe version from
 // http://stackoverflow.com/questions/1903954/is-there-a-standard-sign-function-signum-sgn-in-c-c
@@ -125,28 +127,28 @@ inline int8_t caffe_sign(Dtype val) {
 // So they have to be pasted here temporarily.
 #define DEFINE_CAFFE_CPU_UNARY_FUNC(name, operation) \
   template<typename Dtype> \
-  void caffe_cpu_##name(const int_tp n, const Dtype* x, Dtype* y) { \
-    CHECK_GT(n, 0); CHECK(x); CHECK(y); \
+  void caffe_cpu_##name(const int_tp n, const Dtype* X, Dtype* Y) { \
+    CHECK_GT(n, 0); CHECK(X); CHECK(Y); \
     for (int_tp i = 0; i < n; ++i) { \
       operation; \
     } \
   }
 
 // output is 1 for the positives, 0 for zero, and -1 for the negatives
-DEFINE_CAFFE_CPU_UNARY_FUNC(sign, y[i] = caffe_sign<Dtype>(x[i]))
+DEFINE_CAFFE_CPU_UNARY_FUNC(sign, Y[i] = caffe_sign<Dtype>(X[i]))
 
 // This returns a nonzero value if the input has its sign bit set.
 // The name sngbit is meant to avoid conflicts with std::signbit in the macro.
 // The extra parens are needed because CUDA < 6.5 defines signbit as a macro,
 // and we don't want that to expand here when CUDA headers are also included.
 DEFINE_CAFFE_CPU_UNARY_FUNC(sgnbit, \
-    y[i] = static_cast<bool>((std::signbit)(x[i])))
+    Y[i] = static_cast<bool>((std::signbit)(X[i])))
 
-DEFINE_CAFFE_CPU_UNARY_FUNC(fabs, y[i] = std::fabs(x[i]))
+DEFINE_CAFFE_CPU_UNARY_FUNC(fabs, Y[i] = std::fabs(X[i]))
 
 template<typename Dtype>
-void caffe_cpu_scale(const int_tp n, const Dtype alpha, const Dtype *x,
-                     Dtype* y);
+void caffe_cpu_scale(const int_tp n, const Dtype alpha, const Dtype *X,
+                     Dtype* Y);
 
 }  // namespace caffe
 

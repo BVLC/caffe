@@ -3,16 +3,17 @@
 #include <cstring>
 #include <functional>
 
+#include "caffe/backend/cuda/cuda_device.hpp"
+#include "caffe/util/math_functions.hpp"
+
 #include "caffe/common.hpp"
 #include "caffe/backend/backend.hpp"
 #include "caffe/backend/vptr.hpp"
 #include "caffe/backend/dev_ptr.hpp"
 #include "caffe/backend/cuda/caffe_cuda.hpp"
-#include "caffe/backend/cuda/cuda_device.hpp"
 #include "caffe/backend/cuda/cuda_dev_ptr.hpp"
 
 #ifdef USE_CUDA
-
 #include <math_functions.h>  // CUDA's, not caffe's, for fabs, signbit
 #include <thrust/device_vector.h>
 #include <thrust/functional.h>  // thrust::plus
@@ -23,312 +24,136 @@ namespace caffe {
 
 #ifdef USE_CUDA
 
-void cuda_device::memcpy(const uint_tp N, vptr<void> X, vptr<void> Y) {
-  if (X != Y) {
-    CUDA_CHECK(cudaMemcpy(Y.get_cuda_ptr(), X.get_cuda_ptr(),
-                          N, cudaMemcpyDefault));  // NOLINT(caffe/alt_fn)
+void CudaDevice::memcpy(const uint_tp n, vptr<const void> x, vptr<void> y) {
+  if (x.get_cuda_ptr() != y.get_cuda_ptr()) {
+    CUDA_CHECK(cudaMemcpy(y.get_cuda_ptr(), x.get_cuda_ptr(),
+                          n, cudaMemcpyDefault));  // NOLINT(caffe/alt_fn)
   }
 }
 
-
-template<typename Dtype>
-__global__ void set_kernel(const int_tp n, const Dtype alpha, Dtype* y) {
-  CUDA_KERNEL_LOOP(index, n) {
-    y[index] = alpha;
+void CudaDevice::memcpy(const uint_tp n, const void* x, vptr<void> y) {
+  if (x != y.get_cuda_ptr()) {
+    CUDA_CHECK(cudaMemcpy(y.get_cuda_ptr(), x,
+                          n, cudaMemcpyDefault));  // NOLINT(caffe/alt_fn)
   }
 }
 
-template<typename Dtype>
-void cuda_device::set(const int_tp N, const Dtype alpha, Dtype* Y) {
-  if (alpha == 0) {
-    CUDA_CHECK(cudaMemset(Y, 0, sizeof(Dtype) * N));  // NOLINT(caffe/alt_fn)
-    return;
-  }
-  // NOLINT_NEXT_LINE(whitespace/operators)
-  set_kernel<Dtype> CUDA_KERNEL(CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS)(
-      N, alpha, Y);
-}
-
-
-template<typename Dtype>
-__global__ void add_scalar_kernel(const int_tp n, const Dtype alpha, Dtype* y) {
-  CUDA_KERNEL_LOOP(index, n) {
-    y[index] += alpha;
+void CudaDevice::memcpy(const uint_tp n, vptr<const void> x, void* y) {
+  if (x.get_cuda_ptr() != y) {
+    CUDA_CHECK(cudaMemcpy(y, x.get_cuda_ptr(),
+                          n, cudaMemcpyDefault));  // NOLINT(caffe/alt_fn)
   }
 }
 
-template<>
-void cuda_device::add_scalar(const int_tp N, const float alpha, vptr<float> Y) {
-  // NOLINT_NEXT_LINE(whitespace/operators)
-  add_scalar_kernel<float> CUDA_KERNEL(CAFFE_GET_BLOCKS(N),
-                                       CAFFE_CUDA_NUM_THREADS)(
-      N, alpha, Y);
+void CudaDevice::rng_uniform(const uint_tp n, vptr<uint32_t> r) {
+  CURAND_CHECK(curandGenerate(Caffe::curand_generator(), r.get_cuda_ptr(), n));
 }
 
-template<>
-void cuda_device::add_scalar(const int_tp N, const double alpha, vptr<double> Y) {
-  // NOLINT_NEXT_LINE(whitespace/operators)
-  add_scalar_kernel<double> CUDA_KERNEL(CAFFE_GET_BLOCKS(N),
-                                        CAFFE_CUDA_NUM_THREADS)(
-      N, alpha, Y);
+void CudaDevice::rng_uniform(const uint_tp n, vptr<uint64_t> r) {
+  CURAND_CHECK(curandGenerateLongLong(Caffe::curand_generator64(),
+                   reinterpret_cast<unsigned long long*>(r.get_cuda_ptr()), n));
 }
 
-template<typename Dtype>
-__global__ void add_kernel(const int_tp n, const Dtype* a, const Dtype* b,
-                           Dtype* y) {
-  CUDA_KERNEL_LOOP(index, n) {
-    y[index] = a[index] + b[index];
-  }
+void CudaDevice::rng_uniform_half(const uint_tp n, const half_float::half a,
+                                   const half_float::half b,
+                                   vptr<half_float::half> r) {
+  // TODO: CUDA based implementation
+  vector<half_float::half> random(n);  // NOLINT
+  caffe_rng_uniform(n, a, b, &random[0]);
+  this->memcpy(sizeof(half_float::half) * n, &random[0], r);
 }
 
-template<>
-void cuda_device::add<float>(const int_tp N, vptr<float> a, vptr<float> b,
-                          vptr<float> y) {
-  // NOLINT_NEXT_LINE(whitespace/operators)
-  add_kernel<float> CUDA_KERNEL(CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS)(
-      N, a, b, y);
-}
-
-template<>
-void cuda_device::add<double>(const int_tp N, const vptr<double> a, const vptr<double> b,
-                           vptr<double> y) {
-  // NOLINT_NEXT_LINE(whitespace/operators)
-  add_kernel<double> CUDA_KERNEL(CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS)(
-      N, a, b, y);
-}
-
-template<typename Dtype>
-__global__ void sub_kernel(const int_tp n, const Dtype* a, const Dtype* b,
-                           Dtype* y) {
-  CUDA_KERNEL_LOOP(index, n) {
-    y[index] = a[index] - b[index];
-  }
-}
-
-template<>
-void cuda_device::sub<float>(const int_tp N, vptr<float> a, vptr<float> b,
-                          vptr<float> y) {
-  // NOLINT_NEXT_LINE(whitespace/operators)
-  sub_kernel<float> CUDA_KERNEL(CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS)(
-      N, a, b, y);
-}
-
-template<>
-void cuda_device::sub<double>(const int_tp N, const vptr<double> a, const vptr<double> b,
-                           vptr<double> y) {
-  // NOLINT_NEXT_LINE(whitespace/operators)
-  sub_kernel<double> CUDA_KERNEL(CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS)(
-      N, a, b, y);
-}
-
-template<typename Dtype>
-__global__ void mul_kernel(const int_tp n, const Dtype* a, const Dtype* b,
-                           Dtype* y) {
-  CUDA_KERNEL_LOOP(index, n) {
-    y[index] = a[index] * b[index];
-  }
-}
-
-template<>
-void cuda_device::mul<float>(const int_tp N, vptr<float> a, vptr<float> b,
-                          vptr<float> y) {
-  // NOLINT_NEXT_LINE(whitespace/operators)
-  mul_kernel<float> CUDA_KERNEL(CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS)(
-      N, a, b, y);
-}
-
-template<>
-void cuda_device::mul<double>(const int_tp N, const vptr<double> a, const vptr<double> b,
-                           vptr<double> y) {
-  // NOLINT_NEXT_LINE(whitespace/operators)
-  mul_kernel<double> CUDA_KERNEL(CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS)(
-      N, a, b, y);
-}
-
-template<typename Dtype>
-__global__ void div_kernel(const int_tp n, const Dtype* a, const Dtype* b,
-                           Dtype* y) {
-  CUDA_KERNEL_LOOP(index, n) {
-    y[index] = a[index] / b[index];
-  }
-}
-
-template<>
-void cuda_device::div<float>(const int_tp N, vptr<float> a, vptr<float> b,
-                          vptr<float> y) {
-  // NOLINT_NEXT_LINE(whitespace/operators)
-  div_kernel<float> CUDA_KERNEL(CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS)(
-      N, a, b, y);
-}
-
-template<>
-void cuda_device::div<double>(const int_tp N, const vptr<double> a, const vptr<double> b,
-                           vptr<double> y) {
-  // NOLINT_NEXT_LINE(whitespace/operators)
-  div_kernel<double> CUDA_KERNEL(CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS)(
-      N, a, b, y);
-}
-
-template<typename Dtype>
-__global__ void abs_kernel(const int_tp n, const Dtype* a, Dtype* y) {
-  CUDA_KERNEL_LOOP(index, n) {
-    y[index] = abs(a[index]);
-  }
-}
-
-template<>
-void cuda_device::abs<float>(const int_tp N, vptr<float> a, vptr<float> y) {
-  // NOLINT_NEXT_LINE(whitespace/operators)
-  abs_kernel<float> CUDA_KERNEL(CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS)(
-      N, a, y);
-}
-
-template<>
-void cuda_device::abs<double>(const int_tp N, const vptr<double> a, vptr<double> y) {
-  // NOLINT_NEXT_LINE(whitespace/operators)
-  abs_kernel<double> CUDA_KERNEL(CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS)(
-      N, a, y);
-}
-
-template<typename Dtype>
-__global__ void exp_kernel(const int_tp n, const Dtype* a, Dtype* y) {
-  CUDA_KERNEL_LOOP(index, n) {
-    y[index] = exp(a[index]);
-  }
-}
-
-template<>
-void cuda_device::exp<float>(const int_tp N, vptr<float> a, vptr<float> y) {
-  // NOLINT_NEXT_LINE(whitespace/operators)
-  exp_kernel<float> CUDA_KERNEL(CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS)(
-      N, a, y);
-}
-
-template<>
-void cuda_device::exp<double>(const int_tp N, const vptr<double> a, vptr<double> y) {
-  // NOLINT_NEXT_LINE(whitespace/operators)
-  exp_kernel<double> CUDA_KERNEL(CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS)(
-      N, a, y);
-}
-
-template<typename Dtype>
-__global__ void log_kernel(const int_tp n, const Dtype* a, Dtype* y) {
-  CUDA_KERNEL_LOOP(index, n) {
-    y[index] = log(a[index]);
-  }
-}
-
-template<>
-void cuda_device::log<float>(const int_tp N, vptr<float> a, vptr<float> y) {
-  // NOLINT_NEXT_LINE(whitespace/operators)
-  log_kernel<float> CUDA_KERNEL(CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS)(
-      N, a, y);
-}
-
-template<>
-void cuda_device::log<double>(const int_tp N, const vptr<double> a, vptr<double> y) {
-  // NOLINT_NEXT_LINE(whitespace/operators)
-  log_kernel<double> CUDA_KERNEL(CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS)(
-      N, a, y);
-}
-
-template<typename Dtype>
-__global__ void powx_kernel(const int_tp n, const Dtype* a, const Dtype alpha,
-                            Dtype* y) {
-  CUDA_KERNEL_LOOP(index, n) {
-    y[index] = pow(a[index], alpha);
-  }
-}
-
-template<>
-void cuda_device::powx<float>(const int_tp N, vptr<float> a, const float alpha,
-                           vptr<float> y) {
-  // NOLINT_NEXT_LINE(whitespace/operators)
-  powx_kernel<float> CUDA_KERNEL(CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS)(
-      N, a, alpha, y);
-}
-
-template<>
-void cuda_device::powx<double>(const int_tp N, const vptr<double> a, const double alpha,
-                            vptr<double> y) {
-  // NOLINT_NEXT_LINE(whitespace/operators)
-  powx_kernel<double> CUDA_KERNEL(CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS)(
-      N, a, alpha, y);
-}
-
-template <typename Dtype>
-__global__ void sqrt_kernel(const int_tp n, const Dtype* a, Dtype* y) {
-  CUDA_KERNEL_LOOP(index, n) {
-    y[index] = sqrt(a[index]);
-  }
-}
-
-template <>
-void cuda_device::sqrt<float>(const int_tp N, vptr<float> a, vptr<float> y) {
-  // NOLINT_NEXT_LINE(whitespace/operators)
-  sqrt_kernel<float>CUDA_KERNEL(CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS)(
-      N, a, y);
-}
-
-template <>
-void cuda_device::sqrt<double>(const int_tp N, const vptr<double> a, vptr<double> y) {
-  // NOLINT_NEXT_LINE(whitespace/operators)
-  sqrt_kernel<double>CUDA_KERNEL(CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS)(
-      N, a, y);
-}
-
-DEFINE_AND_INSTANTIATE_GPU_UNARY_FUNC(sign, y[index] = (Dtype(0) < x[index])
-                                      - (x[index] < Dtype(0)));
-
-DEFINE_AND_INSTANTIATE_GPU_UNARY_FUNC(sgnbit, y[index] = signbit(x[index]));
-
-
-void cuda_device::rng_uniform(const int_tp n, unsigned int* r) {  // NOLINT
-  CURAND_CHECK(curandGenerate(Caffe::curand_generator(), r, n));
-}
-
-void cuda_device::rng_uniform(const int_tp n, unsigned long long* r) {  // NOLINT
-  CURAND_CHECK(curandGenerateLongLong(Caffe::curand_generator64(), r, n));
-}
-
-template<>
-void cuda_device::rng_uniform<float>(const int_tp n, const float a, const float b,
-                                  vptr<float> r) {
-  CURAND_CHECK(curandGenerateUniform(Caffe::curand_generator(), r, n));
+void CudaDevice::rng_uniform_float(const uint_tp n, const float a,
+                                    float b,
+                                    vptr<float> r) {
+  CURAND_CHECK(curandGenerateUniform(Caffe::curand_generator(),
+                                     r.get_cuda_ptr(), n));
   const float range = b - a;
   if (range != static_cast<float>(1)) {
-    cuda_device::scal(n, range, r);
+    CudaDevice::scal(n, range, r);
   }
   if (a != static_cast<float>(0)) {
-    cuda_device::add_scalar(n, a, r);
+    CudaDevice::add_scalar(n, a, r);
   }
 }
 
-template<>
-void cuda_device::rng_uniform<double>(const int_tp n, const double a,
-                                   const double b, vptr<double> r) {
-  CURAND_CHECK(curandGenerateUniformDouble(Caffe::curand_generator(), r, n));
+void CudaDevice::rng_uniform_double(const uint_tp n, const double a,
+                                    const double b,
+                                    vptr<double> r) {
+  CURAND_CHECK(curandGenerateUniformDouble(Caffe::curand_generator(),
+                                           r.get_cuda_ptr(), n));
   const double range = b - a;
   if (range != static_cast<double>(1)) {
-    cuda_device::scal(n, range, r);
+    CudaDevice::scal(n, range, r);
   }
   if (a != static_cast<double>(0)) {
-    cuda_device::add_scalar(n, a, r);
+    CudaDevice::add_scalar(n, a, r);
   }
 }
 
-void cuda_device::rng_gaussian_float(const uint_tp n,
-                      const float mu, const float sigma, vptr<float> r) {
+void CudaDevice::rng_gaussian_half(const uint_tp n, const half_float::half mu,
+                                    const half_float::half sigma,
+                                    vptr<half_float::half> r) {
+  // TODO: CUDA based implementation
+  vector<half_float::half> random(n);  // NOLINT
+  caffe_rng_gaussian(n, mu, sigma, &random[0]);
+  this->memcpy(sizeof(half_float::half) * n, &random[0], r);
+}
+
+void CudaDevice::rng_gaussian_float(const uint_tp n, const float mu,
+                                     const float sigma, vptr<float> r) {
   CURAND_CHECK(
       curandGenerateNormal(Caffe::curand_generator(), r.get_cuda_ptr(),
                            n, mu, sigma));
 }
 
-template<>
-void cuda_device::rng_gaussian(const int_tp n, const double mu, const double sigma,
-                            double* r) {
+void CudaDevice::rng_gaussian_double(const uint_tp n, const double mu,
+                                      const double sigma, vptr<double> r) {
   CURAND_CHECK(
-      curandGenerateNormalDouble(Caffe::curand_generator(), r, n, mu, sigma));
+      curandGenerateNormalDouble(Caffe::curand_generator(), r.get_cuda_ptr(),
+                                 n, mu, sigma));
+}
+
+void CudaDevice::rng_bernoulli_half(const uint_tp n, const half_float::half p,
+                                    vptr<int> r) {
+  vector<half_float::half> random(n);  // NOLINT
+  caffe_rng_bernoulli(n, p, &random[0]);
+  this->memcpy(sizeof(half_float::half) * n, &random[0], r);
+}
+
+void CudaDevice::rng_bernoulli_float(const uint_tp n, const float p,
+                                     vptr<int> r) {
+  vector<float> random(n);  // NOLINT
+  caffe_rng_bernoulli(n, p, &random[0]);
+  this->memcpy(sizeof(float) * n, &random[0], r);
+}
+
+void CudaDevice::rng_bernoulli_double(const uint_tp n, const double p,
+                                      vptr<int> r) {
+  vector<double> random(n);  // NOLINT
+  caffe_rng_bernoulli(n, p, &random[0]);
+  this->memcpy(sizeof(double) * n, &random[0], r);
+}
+
+void CudaDevice::rng_bernoulli_half(const uint_tp n, const half_float::half p,
+                                    vptr<unsigned int> r) {
+  vector<half_float::half> random(n);  // NOLINT
+  caffe_rng_bernoulli(n, p, &random[0]);
+  this->memcpy(sizeof(half_float::half) * n, &random[0], r);
+}
+
+void CudaDevice::rng_bernoulli_float(const uint_tp n, const float p,
+                                     vptr<unsigned int> r) {
+  vector<float> random(n);  // NOLINT
+  caffe_rng_bernoulli(n, p, &random[0]);
+  this->memcpy(sizeof(float) * n, &random[0], r);
+}
+
+void CudaDevice::rng_bernoulli_double(const uint_tp n, const double p,
+                                      vptr<unsigned int> r) {
+  vector<double> random(n);  // NOLINT
+  caffe_rng_bernoulli(n, p, &random[0]);
+  this->memcpy(sizeof(double) * n, &random[0], r);
 }
 
 

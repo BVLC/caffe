@@ -15,8 +15,8 @@ LibDNN<Dtype>::LibDNN() {
 }
 
 template<typename Dtype>
-std::string LibDNN<Dtype>::generate_header() {
-  std::stringstream ss;
+string LibDNN<Dtype>::generate_header() {
+  stringstream ss;
 
   if (dev_ptr_->backend() == BACKEND_OPENCL) {
     if (std::is_same<Dtype, double>::value) {
@@ -94,21 +94,21 @@ std::string LibDNN<Dtype>::generate_header() {
     ss << "#define KERNEL_ARG_DTYPE Dtype" << std::endl;
   }
 
-  std::vector<std::string> elems4({
+  vector<string> elems4({
       "x", "y", "z", "w" });
-  std::vector<std::string> elems16({
+  vector<string> elems16({
       "s0", "s1", "s2", "s3", "s4", "s5", "s6", "s7",
       "s8", "s9", "sA", "sB", "sC", "sD", "sE", "sF" });
 
   for (int_tp i = 1; i <= 16; i *= 2) {
     for (int_tp j = 0; j < i; ++j) {
       if (i == 1) {
-        ss << "#define VEC_" << i << "_" << j << "(X)" << " X" << std::endl;
+        ss << "#define VEC_" << i << "_" << j << "(x)" << " x" << std::endl;
       } else if (i < 8) {
-        ss << "#define VEC_" << i << "_" << j << "(X)" << " X." << elems4[j]
+        ss << "#define VEC_" << i << "_" << j << "(x)" << " x." << elems4[j]
            << std::endl;
       } else {
-        ss << "#define VEC_" << i << "_" << j << "(X)" << " X." << elems16[j]
+        ss << "#define VEC_" << i << "_" << j << "(x)" << " x." << elems16[j]
            << std::endl;
       }
     }
@@ -131,7 +131,7 @@ std::string LibDNN<Dtype>::generate_header() {
     // Mainly from: http://www.cedricnugteren.nl/tutorial.php?page=10
     ss << "#define __kernel __placeholder__" << std::endl;
     ss << "#define __global" << std::endl;
-    ss << "#define __placeholder__ extern \"C\" __global__" << std::endl;
+    ss << "#define __placeholder__ extern \"c\" __global__" << std::endl;
     ss << "#define __local __shared__" << std::endl;
     ss << "#define __restricted __restricted__" << std::endl;
     ss << "#define barrier(x) __syncthreads()" << std::endl;
@@ -173,8 +173,8 @@ std::string LibDNN<Dtype>::generate_header() {
     ss << "}" << std::endl;
   }
 
-  std::vector<std::string> atomic_funcs({ "Add", "Sub", "Mul", "Div" });
-  std::vector<std::string> atomic_ops({ "+", "-", "*", "/" });
+  vector<string> atomic_funcs({ "Add", "Sub", "Mul", "Div" });
+  vector<string> atomic_ops({ "+", "-", "*", "/" });
 
   // Atomic operations
   if (dev_ptr_->backend() == BACKEND_OPENCL) {
@@ -245,7 +245,7 @@ std::string LibDNN<Dtype>::generate_header() {
 
 template<typename Dtype>
 bool LibDNN<Dtype>::CompileKernels() {
-  std::string code_ext = "";
+  string code_ext = "";
 
   if (dev_ptr_->backend() == BACKEND_OPENCL) {
     code_ext = ".cl";
@@ -279,7 +279,7 @@ template<typename Dtype>
 viennacl::ocl::program LibDNN<Dtype>::CompileKernelsOpenCL(
     viennacl::ocl::context *ctx) {
 
-  std::string build_opts = "";
+  string build_opts = "";
 
   if (fast_unsafe_math_) {
     build_opts += "-cl-fast-relaxed-math -cl-mad-enable ";
@@ -316,15 +316,15 @@ template<typename Dtype>
 nvrtcProgram LibDNN<Dtype>::CompileKernelsCuda() {
   nvrtcCreateProgram(&cuda_program_, kernel_.c_str(), NULL, 0, NULL, NULL);
 
-  std::vector<const char*> build_opts;
+  vector<const char*> build_opts;
 
   cudaDeviceProp prop;
   cudaGetDeviceProperties(&prop, dev_ptr_->id());
 
-  std::string arch_opt = "--gpu-architecture=compute_"
+  string arch_opt = "--gpu-architecture=compute_"
       + std::to_string(prop.major) + std::to_string(prop.minor);
-  std::string stdcpp_opt = "--std=c++11";
-  std::string fum_opt = "--use_fast_math";
+  string stdcpp_opt = "--std=c++11";
+  string fum_opt = "--use_fast_math";
 
   build_opts.push_back(arch_opt.c_str());
   build_opts.push_back(stdcpp_opt.c_str());
@@ -343,7 +343,7 @@ nvrtcProgram LibDNN<Dtype>::CompileKernelsCuda() {
 #ifdef LIBDNN_DEBUG
   size_t log_size;
   nvrtcGetProgramLogSize(cuda_program_, &log_size);
-  std::vector<char> log(log_size);
+  vector<char> log(log_size);
   nvrtcGetProgramLog(cuda_program_, log.data());
 
   std::cout << "CUDA compile log:" << std::endl;

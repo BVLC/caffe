@@ -8,271 +8,710 @@
 
 namespace caffe {
 
-template<typename Mtype>
-vptr<Mtype>::vptr()
-  : dev_ptr_(std::shared_ptr<dev_ptr<Mtype>>(nullptr)) {
+template<typename Dtype>
+vptr<Dtype, typename const_enable_if<Dtype>::type>::vptr()
+  : dev_ptr_(shared_ptr<dev_ptr<Dtype>>(nullptr)) {}
+template<typename Dtype>
+vptr<Dtype, typename non_const_enable_if<Dtype>::type>::vptr()
+  : dev_ptr_(shared_ptr<dev_ptr<Dtype>>(nullptr)) {}
 
+
+template<typename Dtype>
+vptr<Dtype, typename const_enable_if<Dtype>::type>
+  ::vptr(shared_ptr<dev_ptr<Dtype> > ptr) : dev_ptr_(ptr) {}
+template<typename Dtype>
+vptr<Dtype, typename non_const_enable_if<Dtype>::type>
+  ::vptr(shared_ptr<dev_ptr<Dtype> > ptr) : dev_ptr_(ptr) {}
+
+
+template<typename Dtype>
+vptr<Dtype, typename const_enable_if<Dtype>::type>
+  ::vptr(const vptr<bool> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+}
+template<typename Dtype>
+vptr<Dtype, typename non_const_enable_if<Dtype>::type>
+  ::vptr(const vptr<bool> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
 }
 
-template<typename Mtype>
-template<typename Otype>
-vptr<Mtype>::vptr(const vptr<Otype> &other)
-  : dev_ptr_(std::shared_ptr<dev_ptr<Mtype>>(nullptr)) {
-  instance(other);
+template<typename Dtype>
+vptr<Dtype, typename const_enable_if<Dtype>::type>
+  ::vptr(const vptr<char> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+}
+template<typename Dtype>
+vptr<Dtype, typename non_const_enable_if<Dtype>::type>
+  ::vptr(const vptr<char> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
 }
 
-template<typename Mtype>
-template<>
-vptr<Mtype>::vptr(const vptr<int8_t> &other);
+template<typename Dtype>
+vptr<Dtype, typename const_enable_if<Dtype>::type>
+  ::vptr(const vptr<int8_t> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+}
+template<typename Dtype>
+vptr<Dtype, typename non_const_enable_if<Dtype>::type>
+  ::vptr(const vptr<int8_t> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+}
 
-template<typename Mtype>
-template<>
-vptr<Mtype>::vptr(const vptr<uint8_t> &other);
+template<typename Dtype>
+vptr<Dtype, typename const_enable_if<Dtype>::type>
+  ::vptr(const vptr<int16_t> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+}
+template<typename Dtype>
+vptr<Dtype, typename non_const_enable_if<Dtype>::type>
+  ::vptr(const vptr<int16_t> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+}
 
-template<typename Mtype>
-template<>
-vptr<Mtype>::vptr(const vptr<int16_t> &other);
+template<typename Dtype>
+vptr<Dtype, typename const_enable_if<Dtype>::type>
+  ::vptr(const vptr<int32_t> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+}
+template<typename Dtype>
+vptr<Dtype, typename non_const_enable_if<Dtype>::type>
+  ::vptr(const vptr<int32_t> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+}
 
-template<typename Mtype>
-template<>
-vptr<Mtype>::vptr(const vptr<uint16_t> &other);
+template<typename Dtype>
+vptr<Dtype, typename const_enable_if<Dtype>::type>
+  ::vptr(const vptr<int64_t> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+}
+template<typename Dtype>
+vptr<Dtype, typename non_const_enable_if<Dtype>::type>
+  ::vptr(const vptr<int64_t> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+}
 
-template<typename Mtype>
-template<>
-vptr<Mtype>::vptr(const vptr<int32_t> &other);
+template<typename Dtype>
+vptr<Dtype, typename const_enable_if<Dtype>::type>
+  ::vptr(const vptr<uint8_t> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+}
+template<typename Dtype>
+vptr<Dtype, typename non_const_enable_if<Dtype>::type>
+  ::vptr(const vptr<uint8_t> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+}
 
-template<typename Mtype>
-template<>
-vptr<Mtype>::vptr(const vptr<uint32_t> &other);
+template<typename Dtype>
+vptr<Dtype, typename const_enable_if<Dtype>::type>
+  ::vptr(const vptr<uint16_t> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+}
+template<typename Dtype>
+vptr<Dtype, typename non_const_enable_if<Dtype>::type>
+  ::vptr(const vptr<uint16_t> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+}
 
-template<typename Mtype>
-template<>
-vptr<Mtype>::vptr(const vptr<int64_t> &other);
+template<typename Dtype>
+vptr<Dtype, typename const_enable_if<Dtype>::type>
+  ::vptr(const vptr<uint32_t> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+}
+template<typename Dtype>
+vptr<Dtype, typename non_const_enable_if<Dtype>::type>
+  ::vptr(const vptr<uint32_t> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+}
 
-template<typename Mtype>
-template<>
-vptr<Mtype>::vptr(const vptr<uint64_t> &other);
+template<typename Dtype>
+vptr<Dtype, typename const_enable_if<Dtype>::type>
+  ::vptr(const vptr<uint64_t> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+}
+template<typename Dtype>
+vptr<Dtype, typename non_const_enable_if<Dtype>::type>
+  ::vptr(const vptr<uint64_t> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+}
 
-template<typename Mtype>
-template<>
-vptr<Mtype>::vptr(const vptr<half_float::half> &other);
+template<typename Dtype>
+vptr<Dtype, typename const_enable_if<Dtype>::type>
+  ::vptr(const vptr<half_float::half> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+}
+template<typename Dtype>
+vptr<Dtype, typename non_const_enable_if<Dtype>::type>
+  ::vptr(const vptr<half_float::half> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+}
 
-template<typename Mtype>
-template<>
-vptr<Mtype>::vptr(const vptr<float> &other);
+template<typename Dtype>
+vptr<Dtype, typename const_enable_if<Dtype>::type>
+  ::vptr(const vptr<float> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+}
+template<typename Dtype>
+vptr<Dtype, typename non_const_enable_if<Dtype>::type>
+  ::vptr(const vptr<float> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+}
 
-template<typename Mtype>
-template<>
-vptr<Mtype>::vptr(const vptr<double> &other);
+template<typename Dtype>
+vptr<Dtype, typename const_enable_if<Dtype>::type>
+  ::vptr(const vptr<double> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+}
+template<typename Dtype>
+vptr<Dtype, typename non_const_enable_if<Dtype>::type>
+  ::vptr(const vptr<double> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+}
 
-template<typename Mtype>
-template<>
-vptr<Mtype>::vptr(const vptr<void> &other);
+template<typename Dtype>
+vptr<Dtype, typename const_enable_if<Dtype>::type>
+  ::vptr(const vptr<void> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+}
+template<typename Dtype>
+vptr<Dtype, typename non_const_enable_if<Dtype>::type>
+  ::vptr(const vptr<void> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+}
 
 
-template<typename Mtype>
-dev_ptr<Mtype>* vptr<Mtype>::get() {
+template<typename Dtype>
+vptr<Dtype, typename const_enable_if<Dtype>::type>
+  ::vptr(const vptr<const bool> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+}
+template<typename Dtype>
+vptr<Dtype, typename const_enable_if<Dtype>::type>
+  ::vptr(const vptr<const char> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+}
+template<typename Dtype>
+vptr<Dtype, typename const_enable_if<Dtype>::type>
+  ::vptr(const vptr<const int8_t> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+}
+template<typename Dtype>
+vptr<Dtype, typename const_enable_if<Dtype>::type>
+  ::vptr(const vptr<const int16_t> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+}
+template<typename Dtype>
+vptr<Dtype, typename const_enable_if<Dtype>::type>
+  ::vptr(const vptr<const int32_t> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+}
+template<typename Dtype>
+vptr<Dtype, typename const_enable_if<Dtype>::type>
+  ::vptr(const vptr<const int64_t> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+}
+template<typename Dtype>
+vptr<Dtype, typename const_enable_if<Dtype>::type>
+  ::vptr(const vptr<const uint8_t> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+}
+template<typename Dtype>
+vptr<Dtype, typename const_enable_if<Dtype>::type>
+  ::vptr(const vptr<const uint16_t> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+}
+template<typename Dtype>
+vptr<Dtype, typename const_enable_if<Dtype>::type>
+  ::vptr(const vptr<const uint32_t> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+}
+template<typename Dtype>
+vptr<Dtype, typename const_enable_if<Dtype>::type>
+  ::vptr(const vptr<const uint64_t> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+}
+template<typename Dtype>
+vptr<Dtype, typename const_enable_if<Dtype>::type>
+  ::vptr(const vptr<const half_float::half> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+}
+template<typename Dtype>
+vptr<Dtype, typename const_enable_if<Dtype>::type>
+  ::vptr(const vptr<const float> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+}
+template<typename Dtype>
+vptr<Dtype, typename const_enable_if<Dtype>::type>
+  ::vptr(const vptr<const double> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+}
+template<typename Dtype>
+vptr<Dtype, typename const_enable_if<Dtype>::type>
+  ::vptr(const vptr<const void> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+}
+
+
+template<typename Dtype>
+dev_ptr<Dtype>* vptr<Dtype, typename const_enable_if<Dtype>::type>::get()
+    const {
+  return dev_ptr_.get();
+}
+template<typename Dtype>
+dev_ptr<Dtype>* vptr<Dtype, typename non_const_enable_if<Dtype>::type>::get()
+    const {
   return dev_ptr_.get();
 }
 
-#ifdef USE_CUDA
-template<typename Mtype>
-Mtype* vptr<Mtype>::get_cuda_ptr() {
-  return dynamic_cast<cuda_dev_ptr<Mtype> >(dev_ptr_.get())->get_cuda_ptr();
+template<typename Dtype>
+shared_ptr<dev_ptr<Dtype> > vptr<Dtype,
+                   typename const_enable_if<Dtype>::type>::get_dev_ptr() const {
+  return dev_ptr_;
 }
-#endif
+template<typename Dtype>
+shared_ptr<dev_ptr<Dtype> > vptr<Dtype,
+               typename non_const_enable_if<Dtype>::type>::get_dev_ptr() const {
+  return dev_ptr_;
+}
+
+#ifdef USE_CUDA
+template<typename Dtype>
+Dtype* vptr<Dtype, typename const_enable_if<Dtype>::type>::get_cuda_ptr()
+    const {
+  return (dynamic_cast<cuda_dev_ptr<Dtype>*>(dev_ptr_.get()))->get();
+}
+template<typename Dtype>
+Dtype* vptr<Dtype, typename non_const_enable_if<Dtype>::type>::get_cuda_ptr()
+    const {
+  return (dynamic_cast<cuda_dev_ptr<Dtype>*>(dev_ptr_.get()))->get();
+}
+template<typename Dtype>
+void* vptr<Dtype, typename const_enable_if<Dtype>::type>
+                                                    ::get_cuda_ptr_ptr() const {
+  return (dynamic_cast<cuda_dev_ptr<Dtype>*>(dev_ptr_.get()))->get_ptr();
+}
+template<typename Dtype>
+void* vptr<Dtype, typename non_const_enable_if<Dtype>::type>
+                                                    ::get_cuda_ptr_ptr() const {
+  return (dynamic_cast<cuda_dev_ptr<Dtype>*>(dev_ptr_.get()))->get_ptr();
+}
+#endif  // USE_CUDA
 
 #ifdef USE_OPENCL
-template<typename Mtype>
-cl_mem vptr<Mtype>::get_ocl_mem() {
-  return dynamic_cast<ocl_dev_ptr<Mtype> >(dev_ptr_.get())->get_ocl_mem();
+template<typename Dtype>
+cl_mem vptr<Dtype, typename const_enable_if<Dtype>::type>::get_ocl_mem()
+    const {
+  return (dynamic_cast<ocl_dev_ptr<Dtype>*>(dev_ptr_.get()))->get_ocl_mem();
 }
-template<typename Mtype>
-uint_tp vptr<Mtype>::get_ocl_off() {
-  return dynamic_cast<ocl_dev_ptr<Mtype> >(dev_ptr_.get())->get_off();
+template<typename Dtype>
+cl_mem vptr<Dtype, typename non_const_enable_if<Dtype>::type>::get_ocl_mem()
+    const {
+  return (dynamic_cast<ocl_dev_ptr<Dtype>*>(dev_ptr_.get()))->get_ocl_mem();
 }
-#endif
-
-
-template<typename Mtype>
-template<typename Otype>
-vptr<Mtype> vptr<Mtype>::instance(const vptr<Otype> &other) {
-#ifdef USE_CUDA
-  if (dynamic_cast<cuda_dev_ptr<Otype>>(other.get())) {
-    dev_ptr_ = std::make_shared<dev_ptr<Mtype> >(
-        cuda_dev_ptr<Mtype>(dynamic_cast<cuda_dev_ptr<Otype>>(other.get())));
-  }
-#endif
-#ifdef USE_OPENCL
-  if (dynamic_cast<ocl_dev_ptr<Otype>*>(other.get())) {
-    dev_ptr_ = std::make_shared<dev_ptr<Mtype> >(
-        cl_dev_ptr<Mtype>(dynamic_cast<ocl_dev_ptr<Otype>*>(other.get())));
-  }
-#endif
-  return this;
+template<typename Dtype>
+uint_tp vptr<Dtype, typename const_enable_if<Dtype>::type>::get_ocl_off()
+    const {
+  return (dynamic_cast<ocl_dev_ptr<Dtype>*>(dev_ptr_.get()))->get_off();
 }
-
-template<typename Mtype>
-template<>
-vptr<Mtype> vptr<Mtype>::instance(const vptr<int8_t> &other);
-
-template<typename Mtype>
-template<>
-vptr<Mtype> vptr<Mtype>::instance(const vptr<uint8_t> &other);
-
-template<typename Mtype>
-template<>
-vptr<Mtype> vptr<Mtype>::instance(const vptr<int16_t> &other);
-
-template<typename Mtype>
-template<>
-vptr<Mtype> vptr<Mtype>::instance(const vptr<uint16_t> &other);
-
-template<typename Mtype>
-template<>
-vptr<Mtype> vptr<Mtype>::instance(const vptr<int32_t> &other);
-
-template<typename Mtype>
-template<>
-vptr<Mtype> vptr<Mtype>::instance(const vptr<uint32_t> &other);
-
-template<typename Mtype>
-template<>
-vptr<Mtype> vptr<Mtype>::instance(const vptr<int64_t> &other);
-
-template<typename Mtype>
-template<>
-vptr<Mtype> vptr<Mtype>::instance(const vptr<uint64_t> &other);
-
-template<typename Mtype>
-template<>
-vptr<Mtype> vptr<Mtype>::instance(const vptr<half_float::half> &other);
-
-template<typename Mtype>
-template<>
-vptr<Mtype> vptr<Mtype>::instance(const vptr<float> &other);
-
-template<typename Mtype>
-template<>
-vptr<Mtype> vptr<Mtype>::instance(const vptr<double> &other);
-
-template<typename Mtype>
-template<>
-vptr<Mtype> vptr<Mtype>::instance(const vptr<void> &other);
+template<typename Dtype>
+uint_tp vptr<Dtype, typename non_const_enable_if<Dtype>::type>::get_ocl_off()
+    const {
+  return (dynamic_cast<ocl_dev_ptr<Dtype>*>(dev_ptr_.get()))->get_off();
+}
+#endif  // USE_OPENCL
 
 
-
-template<typename Mtype>
-vptr<Mtype> vptr<Mtype>::operator++() {
-  instance(this);
-  dev_ptr_.get()->increment(1);
-  return this;
+template<typename Dtype>
+vptr<Dtype> vptr<Dtype, typename const_enable_if<Dtype>::type>
+                                                                ::operator++() {
+  dev_ptr_ = dev_ptr_->instance((Dtype*)nullptr);
+  dev_ptr_->increment(1);
+  return *this;
+}
+template<typename Dtype>
+vptr<Dtype> vptr<Dtype, typename non_const_enable_if<Dtype>::type>
+                                                                ::operator++() {
+  dev_ptr_ = dev_ptr_->instance((Dtype*)nullptr);
+  dev_ptr_->increment(1);
+  return *this;
 }
 
-template<typename Mtype>
-vptr<Mtype> vptr<Mtype>::operator++(uint_tp val) {
-  vptr<Mtype> old_vptr(this);
-  instance(this);
-  dev_ptr_.get()->increment(1);
+template<typename Dtype>
+vptr<Dtype> vptr<Dtype, typename const_enable_if<Dtype>::type>
+                                                         ::operator++(int val) {
+  vptr<Dtype> old_vptr(*this);
+  dev_ptr_ = dev_ptr_->instance((Dtype*)nullptr);
+  dev_ptr_->increment(1);
+  return old_vptr;
+}
+template<typename Dtype>
+vptr<Dtype> vptr<Dtype, typename non_const_enable_if<Dtype>::type>
+                                                         ::operator++(int val) {
+  vptr<Dtype> old_vptr(*this);
+  dev_ptr_ = dev_ptr_->instance((Dtype*)nullptr);
+  dev_ptr_->increment(1);
   return old_vptr;
 }
 
-template<typename Mtype>
-vptr<Mtype> vptr<Mtype>::operator--() {
-  instance(this);
-  dev_ptr_.get()->decrement(1);
-  return this;
+template<typename Dtype>
+vptr<Dtype> vptr<Dtype, typename const_enable_if<Dtype>::type>
+                                                                ::operator--() {
+  dev_ptr_ = dev_ptr_->instance((Dtype*)nullptr);
+  dev_ptr_->decrement(1);
+  return *this;
+}
+template<typename Dtype>
+vptr<Dtype> vptr<Dtype, typename non_const_enable_if<Dtype>::type>
+                                                                ::operator--() {
+  dev_ptr_ = dev_ptr_->instance((Dtype*)nullptr);
+  dev_ptr_->decrement(1);
+  return *this;
 }
 
-template<typename Mtype>
-vptr<Mtype> vptr<Mtype>::operator--(uint_tp val) {
-  vptr<Mtype> old_vptr(this);
-  instance(this);
+template<typename Dtype>
+vptr<Dtype> vptr<Dtype, typename const_enable_if<Dtype>::type>
+                                                         ::operator--(int val) {
+  vptr<Dtype> old_vptr(*this);
+  dev_ptr_ = dev_ptr_->instance((Dtype*)nullptr);
   dev_ptr_.get()->decrement(1);
   return old_vptr;
 }
+template<typename Dtype>
+vptr<Dtype> vptr<Dtype, typename non_const_enable_if<Dtype>::type>
+                                                         ::operator--(int val) {
+  vptr<Dtype> old_vptr(*this);
+  dev_ptr_ = dev_ptr_->instance((Dtype*)nullptr);
+  dev_ptr_->decrement(1);
+  return old_vptr;
+}
 
-template<typename Mtype>
-vptr<Mtype> vptr<Mtype>::operator+(uint_tp val) {
-  vptr<Mtype> new_vptr(this);
-  new_vptr.get()->increment(val);
+template<typename Dtype>
+vptr<Dtype> vptr<Dtype, typename const_enable_if<Dtype>::type>
+                                                      ::operator+(uint_tp val) {
+  vptr<Dtype> new_vptr(*this);
+  new_vptr += val;
+  return new_vptr;
+}
+template<typename Dtype>
+vptr<Dtype> vptr<Dtype, typename non_const_enable_if<Dtype>::type>
+                                                      ::operator+(uint_tp val) {
+  vptr<Dtype> new_vptr(*this);
+  new_vptr += val;
   return new_vptr;
 }
 
-template<typename Mtype>
-vptr<Mtype> vptr<Mtype>::operator-(uint_tp val) {
-  vptr<Mtype> new_vptr(this);
-  new_vptr.get()->decrement(val);
+template<typename Dtype>
+vptr<Dtype> vptr<Dtype, typename const_enable_if<Dtype>::type>
+                                                      ::operator-(uint_tp val) {
+  vptr<Dtype> new_vptr(*this);
+  new_vptr -= val;
+  return new_vptr;
+}
+template<typename Dtype>
+vptr<Dtype> vptr<Dtype, typename non_const_enable_if<Dtype>::type>
+                                                      ::operator-(uint_tp val) {
+  vptr<Dtype> new_vptr(*this);
+  new_vptr -= val;
   return new_vptr;
 }
 
-template<typename Mtype>
-vptr<Mtype> vptr<Mtype>::operator+=(uint_tp val) {
-  dev_ptr_.get()->increment(val);
-  return this;
+template<typename Dtype>
+vptr<Dtype> vptr<Dtype, typename const_enable_if<Dtype>::type>
+                                                     ::operator+=(uint_tp val) {
+  dev_ptr_ = dev_ptr_->instance((Dtype*)nullptr);
+  dev_ptr_->increment(val);
+  return *this;
+}
+template<typename Dtype>
+vptr<Dtype> vptr<Dtype, typename non_const_enable_if<Dtype>::type>
+                                                     ::operator+=(uint_tp val) {
+  dev_ptr_ = dev_ptr_->instance((Dtype*)nullptr);
+  dev_ptr_->increment(val);
+  return *this;
 }
 
-template<typename Mtype>
-vptr<Mtype> vptr<Mtype>::operator-=(uint_tp val) {
-  dev_ptr_.get()->decrement(val);
-  return this;
+template<typename Dtype>
+vptr<Dtype> vptr<Dtype, typename const_enable_if<Dtype>::type>
+                                                     ::operator-=(uint_tp val) {
+  dev_ptr_ = dev_ptr_->instance((Dtype*)nullptr);
+  dev_ptr_->decrement(val);
+  return *this;
+}
+template<typename Dtype>
+vptr<Dtype> vptr<Dtype, typename non_const_enable_if<Dtype>::type>
+                                                     ::operator-=(uint_tp val) {
+  dev_ptr_ = dev_ptr_->instance((Dtype*)nullptr);
+  dev_ptr_->decrement(val);
+  return *this;
 }
 
 
-template<typename Mtype>
-template<typename Otype>
-vptr<Mtype> vptr<Mtype>::operator=(const vptr<Otype> &other) {
-  return instance(other);
+template<typename Dtype>
+vptr<Dtype>& vptr<Dtype, typename const_enable_if<Dtype>::type>
+                                          ::operator=(const vptr<bool> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+  return *this;
+}
+template<typename Dtype>
+vptr<Dtype>& vptr<Dtype, typename non_const_enable_if<Dtype>::type>
+                                          ::operator=(const vptr<bool> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+  return *this;
 }
 
-template<typename Mtype>
-template<>
-vptr<Mtype> vptr<Mtype>::operator=(const vptr<int8_t> &other);
+template<typename Dtype>
+vptr<Dtype>& vptr<Dtype, typename const_enable_if<Dtype>::type>
+                                          ::operator=(const vptr<char> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+  return *this;
+}
+template<typename Dtype>
+vptr<Dtype>& vptr<Dtype, typename non_const_enable_if<Dtype>::type>
+                                          ::operator=(const vptr<char> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+  return *this;
+}
 
-template<typename Mtype>
-template<>
-vptr<Mtype> vptr<Mtype>::operator=(const vptr<uint8_t> &other);
+template<typename Dtype>
+vptr<Dtype>& vptr<Dtype, typename const_enable_if<Dtype>::type>
+                                        ::operator=(const vptr<int8_t> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+  return *this;
+}
+template<typename Dtype>
+vptr<Dtype>& vptr<Dtype, typename non_const_enable_if<Dtype>::type>
+                                        ::operator=(const vptr<int8_t> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+  return *this;
+}
 
-template<typename Mtype>
-template<>
-vptr<Mtype> vptr<Mtype>::operator=(const vptr<int16_t> &other);
+template<typename Dtype>
+vptr<Dtype>& vptr<Dtype, typename const_enable_if<Dtype>::type>
+                                       ::operator=(const vptr<int16_t> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+  return *this;
+}
+template<typename Dtype>
+vptr<Dtype>& vptr<Dtype, typename non_const_enable_if<Dtype>::type>
+                                       ::operator=(const vptr<int16_t> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+  return *this;
+}
 
-template<typename Mtype>
-template<>
-vptr<Mtype> vptr<Mtype>::operator=(const vptr<uint16_t> &other);
+template<typename Dtype>
+vptr<Dtype>& vptr<Dtype, typename const_enable_if<Dtype>::type>
+                                       ::operator=(const vptr<int32_t> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+  return *this;
+}
+template<typename Dtype>
+vptr<Dtype>& vptr<Dtype, typename non_const_enable_if<Dtype>::type>
+                                       ::operator=(const vptr<int32_t> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+  return *this;
+}
 
-template<typename Mtype>
-template<>
-vptr<Mtype> vptr<Mtype>::operator=(const vptr<int32_t> &other);
+template<typename Dtype>
+vptr<Dtype>& vptr<Dtype, typename const_enable_if<Dtype>::type>
+                                       ::operator=(const vptr<int64_t> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+  return *this;
+}
+template<typename Dtype>
+vptr<Dtype>& vptr<Dtype, typename non_const_enable_if<Dtype>::type>
+                                       ::operator=(const vptr<int64_t> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+  return *this;
+}
 
-template<typename Mtype>
-template<>
-vptr<Mtype> vptr<Mtype>::operator=(const vptr<uint32_t> &other);
+template<typename Dtype>
+vptr<Dtype>& vptr<Dtype, typename const_enable_if<Dtype>::type>
+                                       ::operator=(const vptr<uint8_t> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+  return *this;
+}
+template<typename Dtype>
+vptr<Dtype>& vptr<Dtype, typename non_const_enable_if<Dtype>::type>
+                                       ::operator=(const vptr<uint8_t> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+  return *this;
+}
 
-template<typename Mtype>
-template<>
-vptr<Mtype> vptr<Mtype>::operator=(const vptr<int64_t> &other);
+template<typename Dtype>
+vptr<Dtype>& vptr<Dtype, typename const_enable_if<Dtype>::type>
+                                      ::operator=(const vptr<uint16_t> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+  return *this;
+}
+template<typename Dtype>
+vptr<Dtype>& vptr<Dtype, typename non_const_enable_if<Dtype>::type>
+                                      ::operator=(const vptr<uint16_t> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+  return *this;
+}
 
-template<typename Mtype>
-template<>
-vptr<Mtype> vptr<Mtype>::operator=(const vptr<uint64_t> &other);
+template<typename Dtype>
+vptr<Dtype>& vptr<Dtype, typename const_enable_if<Dtype>::type>
+                                      ::operator=(const vptr<uint32_t> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+  return *this;
+}
+template<typename Dtype>
+vptr<Dtype>& vptr<Dtype, typename non_const_enable_if<Dtype>::type>
+                                      ::operator=(const vptr<uint32_t> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+  return *this;
+}
 
-template<typename Mtype>
-template<>
-vptr<Mtype> vptr<Mtype>::operator=(const vptr<half_float::half> &other);
+template<typename Dtype>
+vptr<Dtype>& vptr<Dtype, typename const_enable_if<Dtype>::type>
+                                      ::operator=(const vptr<uint64_t> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+  return *this;
+}
+template<typename Dtype>
+vptr<Dtype>& vptr<Dtype, typename non_const_enable_if<Dtype>::type>
+                                      ::operator=(const vptr<uint64_t> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+  return *this;
+}
 
-template<typename Mtype>
-template<>
-vptr<Mtype> vptr<Mtype>::operator=(const vptr<float> &other);
+template<typename Dtype>
+vptr<Dtype>& vptr<Dtype, typename const_enable_if<Dtype>::type>
+                              ::operator=(const vptr<half_float::half> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+  return *this;
+}
+template<typename Dtype>
+vptr<Dtype>& vptr<Dtype, typename non_const_enable_if<Dtype>::type>
+                              ::operator=(const vptr<half_float::half> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+  return *this;
+}
 
-template<typename Mtype>
-template<>
-vptr<Mtype> vptr<Mtype>::operator=(const vptr<double> &other);
+template<typename Dtype>
+vptr<Dtype>& vptr<Dtype, typename const_enable_if<Dtype>::type>
+                                         ::operator=(const vptr<float> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+  return *this;
+}
+template<typename Dtype>
+vptr<Dtype>& vptr<Dtype, typename non_const_enable_if<Dtype>::type>
+                                         ::operator=(const vptr<float> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+  return *this;
+}
 
-template<typename Mtype>
-template<>
-vptr<Mtype> vptr<Mtype>::operator=(const vptr<void> &other);
+template<typename Dtype>
+vptr<Dtype>& vptr<Dtype, typename const_enable_if<Dtype>::type>
+                                        ::operator=(const vptr<double> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+  return *this;
+}
+template<typename Dtype>
+vptr<Dtype>& vptr<Dtype, typename non_const_enable_if<Dtype>::type>
+                                        ::operator=(const vptr<double> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+  return *this;
+}
 
+template<typename Dtype>
+vptr<Dtype>& vptr<Dtype, typename const_enable_if<Dtype>::type>
+                                          ::operator=(const vptr<void> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+  return *this;
+}
+template<typename Dtype>
+vptr<Dtype>& vptr<Dtype, typename non_const_enable_if<Dtype>::type>
+                                          ::operator=(const vptr<void> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+  return *this;
+}
+
+
+template<typename Dtype>
+vptr<Dtype>& vptr<Dtype, typename const_enable_if<Dtype>::type>
+                                    ::operator=(const vptr<const bool> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+  return *this;
+}
+template<typename Dtype>
+vptr<Dtype>& vptr<Dtype, typename const_enable_if<Dtype>::type>
+                                    ::operator=(const vptr<const char> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+  return *this;
+}
+template<typename Dtype>
+vptr<Dtype>& vptr<Dtype, typename const_enable_if<Dtype>::type>
+                                  ::operator=(const vptr<const int8_t> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+  return *this;
+}
+template<typename Dtype>
+vptr<Dtype>& vptr<Dtype, typename const_enable_if<Dtype>::type>
+                                 ::operator=(const vptr<const int16_t> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+  return *this;
+}
+template<typename Dtype>
+vptr<Dtype>& vptr<Dtype, typename const_enable_if<Dtype>::type>
+                                 ::operator=(const vptr<const int32_t> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+  return *this;
+}
+template<typename Dtype>
+vptr<Dtype>& vptr<Dtype, typename const_enable_if<Dtype>::type>
+                                 ::operator=(const vptr<const int64_t> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+  return *this;
+}
+template<typename Dtype>
+vptr<Dtype>& vptr<Dtype, typename const_enable_if<Dtype>::type>
+                                 ::operator=(const vptr<const uint8_t> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+  return *this;
+}
+template<typename Dtype>
+vptr<Dtype>& vptr<Dtype, typename const_enable_if<Dtype>::type>
+                                ::operator=(const vptr<const uint16_t> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+  return *this;
+}
+template<typename Dtype>
+vptr<Dtype>& vptr<Dtype, typename const_enable_if<Dtype>::type>
+                                ::operator=(const vptr<const uint32_t> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+  return *this;
+}
+template<typename Dtype>
+vptr<Dtype>& vptr<Dtype, typename const_enable_if<Dtype>::type>
+                                ::operator=(const vptr<const uint64_t> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+  return *this;
+}
+template<typename Dtype>
+vptr<Dtype>& vptr<Dtype, typename const_enable_if<Dtype>::type>
+                        ::operator=(const vptr<const half_float::half> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+  return *this;
+}
+template<typename Dtype>
+vptr<Dtype>& vptr<Dtype, typename const_enable_if<Dtype>::type>
+                                   ::operator=(const vptr<const float> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+  return *this;
+}
+template<typename Dtype>
+vptr<Dtype>& vptr<Dtype, typename const_enable_if<Dtype>::type>
+                                  ::operator=(const vptr<const double> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+  return *this;
+}
+template<typename Dtype>
+vptr<Dtype>& vptr<Dtype, typename const_enable_if<Dtype>::type>
+                                  ::operator=(const vptr<const void> &other) {
+  dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
+  return *this;
+}
 
 INSTANTIATE_POINTER_CLASS(vptr)
 

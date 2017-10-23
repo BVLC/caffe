@@ -17,21 +17,19 @@ namespace bp = boost::python;
 #include "caffe/backend/device.hpp"
 #include "caffe/util/signal_handler.h"
 
-#ifdef USE_LIBDNN
-#include "caffe/layers/libdnn_conv_layer.hpp"
-#endif
-
 using caffe::Blob;
 using caffe::Caffe;
 using caffe::Net;
 using caffe::Layer;
 using caffe::Solver;
-using caffe::std::shared_ptr;
-using caffe::string;
 using caffe::Timer;
-using caffe::vector;
 using caffe::device;
+
+using string;
 using std::ostringstream;
+using shared_ptr;
+using vector;
+
 
 DEFINE_string(gpu, "",
     "Optional; run in GPU mode on given device IDs separated by ','."
@@ -67,7 +65,7 @@ DEFINE_bool(lt, false,
 
 // A simple registry for caffe commands.
 typedef int (*BrewFunction)();
-typedef std::map<caffe::string, BrewFunction> BrewMap;
+typedef std::map<string, BrewFunction> BrewMap;
 BrewMap g_brew_map;
 
 #define RegisterBrewFunction(func) \
@@ -81,7 +79,7 @@ class __Registerer_##func { \
 __Registerer_##func g_registerer_##func; \
 }
 
-static BrewFunction GetBrewFunction(const caffe::string& name) {
+static BrewFunction GetBrewFunction(const string& name) {
   if (g_brew_map.count(name)) {
     return g_brew_map[name];
   } else {
@@ -175,8 +173,8 @@ RegisterBrewFunction(device_query);
 
 // Load the weights from the specified caffemodel(s) into the train and
 // test nets.
-void CopyLayers(caffe::Solver<float>* solver, const std::string& model_list) {
-  std::vector<std::string> model_names;
+void CopyLayers(caffe::Solver<float>* solver, const string& model_list) {
+  vector<string> model_names;
   boost::split(model_names, model_list, boost::is_any_of(",") );
   for (int i = 0; i < model_names.size(); ++i) {
     LOG(INFO) << "Finetuning from " << model_names[i];
@@ -190,7 +188,7 @@ void CopyLayers(caffe::Solver<float>* solver, const std::string& model_list) {
 // Translate the signal effect the user specified on the command-line to the
 // corresponding enumeration.
 caffe::SolverAction::Enum GetRequestedAction(
-    const std::string& flag_value) {
+    const string& flag_value) {
   if (flag_value == "stop") {
     return caffe::SolverAction::STOP;
   }
@@ -260,7 +258,7 @@ int train() {
         GetRequestedAction(FLAGS_sigint_effect),
         GetRequestedAction(FLAGS_sighup_effect));
 
-  std::shared_ptr<caffe::Solver<float> >
+  shared_ptr<caffe::Solver<float> >
       solver(caffe::SolverRegistry<float>::CreateSolver(solver_param));
 
   solver->SetActionFunction(signal_handler.GetActionFunction());
@@ -331,7 +329,7 @@ int test() {
   float loss = 0;
   for (int_tp i = 0; i < FLAGS_iterations; ++i) {
     float iter_loss;
-    const vector<Blob<float>*>& result =
+    const vector<Blob<float, float>*>& result =
         caffe_net.Forward(&iter_loss);
     loss += iter_loss;
     int_tp idx = 0;
@@ -345,7 +343,7 @@ int test() {
         } else {
           test_score[idx] += score;
         }
-        const std::string& output_name = caffe_net.blob_names()[
+        const string& output_name = caffe_net.blob_names()[
             caffe_net.output_blob_indices()[j]];
         LOG(INFO) << "Batch " << i << ", " << output_name << " = " << score;
       }
@@ -354,7 +352,7 @@ int test() {
   loss /= FLAGS_iterations;
   LOG(INFO) << "Loss: " << loss;
   for (int_tp i = 0; i < test_score.size(); ++i) {
-    const std::string& output_name = caffe_net.blob_names()[
+    const string& output_name = caffe_net.blob_names()[
         caffe_net.output_blob_indices()[test_score_output_id[i]]];
     const float loss_weight = caffe_net.blob_loss_weights()[
         caffe_net.output_blob_indices()[test_score_output_id[i]]];
@@ -417,7 +415,7 @@ int time() {
     caffe_net.Backward();
   }
 
-  const vector<std::shared_ptr<Layer<float> > >& layers = caffe_net.layers();
+  const vector<shared_ptr<Layer<float> > >& layers = caffe_net.layers();
   const vector<vector<Blob<float>*> >& bottom_vecs = caffe_net.bottom_vecs();
   const vector<vector<Blob<float>*> >& top_vecs = caffe_net.top_vecs();
   const vector<vector<bool> >& bottom_need_backward =
@@ -429,8 +427,8 @@ int time() {
   Timer forward_timer;
   Timer backward_timer;
   Timer timer;
-  std::vector<double> forward_time_per_layer(layers.size(), 0.0);
-  std::vector<double> backward_time_per_layer(layers.size(), 0.0);
+  vector<double> forward_time_per_layer(layers.size(), 0.0);
+  vector<double> backward_time_per_layer(layers.size(), 0.0);
   double forward_time = 0.0;
   double backward_time = 0.0;
 
@@ -470,7 +468,7 @@ int time() {
   if (FLAGS_lt) {
     LOG(INFO) << "Average time per layer: ";
     for (int_tp i = 0; i < layers.size(); ++i) {
-      const caffe::string& layername = layers[i]->layer_param().name();
+      const string& layername = layers[i]->layer_param().name();
       LOG(INFO) << std::setfill(' ') << std::setw(10) << layername <<
         "\tforward: " << forward_time_per_layer[i] / 1000 /
         FLAGS_iterations << " ms.";
@@ -535,7 +533,7 @@ int autotune() {
 
   for (int i = 0; i < net.layers().size(); ++i) {
 #ifdef USE_LIBDNN
-    std::shared_ptr<caffe::LibDNNConvolutionLayer<float> > layer =
+    shared_ptr<caffe::LibDNNConvolutionLayer<float> > layer =
         boost::dynamic_pointer_cast<caffe::LibDNNConvolutionLayer<float> >
                 (net.layers()[i]);
     if (layer.get() != nullptr) {
@@ -575,7 +573,7 @@ int main(int argc, char** argv) {
 #ifdef WITH_PYTHON_LAYER
     try {
 #endif
-      return GetBrewFunction(caffe::string(argv[1]))();
+      return GetBrewFunction(string(argv[1]))();
 #ifdef WITH_PYTHON_LAYER
     } catch (bp::error_already_set) {
       PyErr_Print();

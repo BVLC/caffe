@@ -96,7 +96,7 @@ TYPED_TEST(RNNLayerTest, TestForward) {
   filler_param.set_std(1);
   GaussianFiller<Dtype> sequence_filler(filler_param);
   sequence_filler.Fill(&this->blob_bottom_);
-  std::shared_ptr<RNNLayer<Dtype> > layer(new RNNLayer<Dtype>(this->layer_param_));
+  shared_ptr<RNNLayer<Dtype> > layer(new RNNLayer<Dtype>(this->layer_param_));
   Caffe::set_random_seed(1701, Caffe::GetDefaultDevice());
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   LOG(INFO) << "Calling forward for full sequence RNN";

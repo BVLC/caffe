@@ -73,7 +73,7 @@ int main(int argc, char** argv) {
     datum.ParseFromString(cursor->value());
     DecodeDatumNative(&datum);
 
-    const std::string& data = datum.data();
+    const string& data = datum.data();
     size_in_datum = std::max<int_tp>(datum.data().size(),
         datum.float_data_size());
     CHECK_EQ(size_in_datum, data_size) << "Incorrect data field size " <<
@@ -110,7 +110,7 @@ int main(int argc, char** argv) {
   }
   const int_tp channels = sum_blob.channels();
   const int_tp dim = sum_blob.height() * sum_blob.width();
-  std::vector<float> mean_values(channels, 0.0);
+  vector<float> mean_values(channels, 0.0);
   LOG(INFO) << "Number of channels: " << channels;
   for (int_tp c = 0; c < channels; ++c) {
     for (int_tp i = 0; i < dim; ++i) {

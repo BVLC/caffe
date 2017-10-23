@@ -121,7 +121,7 @@ TYPED_TEST(LSTMLayerTest, TestForward) {
   GaussianFiller<Dtype> sequence_filler(filler_param);
   Caffe::set_random_seed(1, Caffe::GetDefaultDevice());
   sequence_filler.Fill(&this->blob_bottom_);
-  std::shared_ptr<LSTMLayer<Dtype> > layer(new LSTMLayer<Dtype>(this->layer_param_));
+  shared_ptr<LSTMLayer<Dtype> > layer(new LSTMLayer<Dtype>(this->layer_param_));
   Caffe::set_random_seed(1701, Caffe::GetDefaultDevice());
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   LOG(INFO) << "Calling forward for full sequence LSTM";

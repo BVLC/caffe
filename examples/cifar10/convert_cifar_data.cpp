@@ -20,7 +20,7 @@
 
 using caffe::Datum;
 using boost::scoped_ptr;
-using std::string;
+using string;
 namespace db = caffe::db;
 
 const int_tp kCIFARSize = 32;

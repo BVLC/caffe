@@ -34,14 +34,14 @@ class OpenCLKernelCompileTest : public GPUDeviceTest<TypeParam> {
 TYPED_TEST_CASE(OpenCLKernelCompileTest, TestDtypes);
 
 TYPED_TEST(OpenCLKernelCompileTest, TestCompile) {
-  device* dev = Caffe::GetDefaultDevice();
+  Device* dev = Caffe::GetDefaultDevice();
   bool failure = false;
   if (dev->backend() == BACKEND_OPENCL) {
     int kcount = getKernelBundleCount();
     for (int i = 0; i < kcount; ++i) {
-      std::string kernel = getKernelBundleSource<TypeParam>(i);
-      std::string name = getKernelBundleName(i);
-      std::string options = "";
+      string kernel = getKernelBundleSource<TypeParam>(i);
+      string name = getKernelBundleName(i);
+      string options = "";
 
       const char* kernel_program = kernel.c_str();
       size_t kernel_program_size = kernel.size();

@@ -9,7 +9,7 @@
 
 namespace caffe {
 
-inline std::string format_int(int_tp n, int_tp numberOfLeadingZeros = 0 ) {
+inline string format_int(int_tp n, int_tp numberOfLeadingZeros = 0 ) {
   std::ostringstream s;
   s << std::setw(numberOfLeadingZeros) << std::setfill('0') << n;
   return s.str();

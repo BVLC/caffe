@@ -186,7 +186,7 @@ class RandomNumberGeneratorTest : public ::testing::Test {
   void RngGaussianFillGPU(const Dtype mu, const Dtype sigma, void* gpu_data) {
     Dtype* rng_data = static_cast<Dtype*>(gpu_data);
 
-    device *dc = Caffe::GetDefaultDevice();
+    Device *dc = Caffe::GetDefaultDevice();
 
     if (dc->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
@@ -204,7 +204,7 @@ class RandomNumberGeneratorTest : public ::testing::Test {
     CHECK_GE(upper, lower);
     Dtype* rng_data = static_cast<Dtype*>(gpu_data);
 
-    device *dc = Caffe::GetDefaultDevice();
+    Device *dc = Caffe::GetDefaultDevice();
 
     if (dc->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
@@ -222,7 +222,7 @@ class RandomNumberGeneratorTest : public ::testing::Test {
   // caffe_gpu_rng_uniform.
   void RngUniformIntFillGPU(void* gpu_data) {
     uint_tp* rng_data = static_cast<uint_tp*>(gpu_data);
-    device *dc = Caffe::GetDefaultDevice();
+    Device *dc = Caffe::GetDefaultDevice();
 
     if (dc->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
@@ -245,10 +245,10 @@ class RandomNumberGeneratorTest : public ::testing::Test {
   uint_tp sample_size_;
   uint32_t seed_;
 
-  std::shared_ptr<SyncedMemory> data_;
-  std::shared_ptr<SyncedMemory> data_2_;
-  std::shared_ptr<SyncedMemory> int_data_;
-  std::shared_ptr<SyncedMemory> int_data_2_;
+  shared_ptr<SyncedMemory> data_;
+  shared_ptr<SyncedMemory> data_2_;
+  shared_ptr<SyncedMemory> int_data_;
+  shared_ptr<SyncedMemory> int_data_2_;
 };
 
 TYPED_TEST_CASE(RandomNumberGeneratorTest, TestDtypes);
