@@ -162,6 +162,17 @@ void MKLDNNConcatLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 
   if (concat_dimension == 0)
   {
+    //Need to re-calculate the shape duo to the change of batch size
+    num_ = 0;
+    channels_ = bottom[0]->channels();
+    height_ = bottom[0]->height();
+    width_ = bottom[0]->width();
+    //Also need to reshape the concat dim, in case the concat dim is just be reshaped by batch size
+    for (auto i = 0; i < num_concats_; ++i) {
+        split_dims[i] = bottom[i]->num();
+        num_ += split_dims[i];
+    }
+
     if (this->channels_ == bottom[0]->channels() &&
       this->height_ == bottom[0]->height() &&
       this->width_ == bottom[0]->width()) {
@@ -172,6 +183,15 @@ void MKLDNNConcatLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   }
   else if (concat_dimension == 1)
   {
+    num_ = bottom[0]->num();
+    channels_ = 0;
+    height_ = bottom[0]->height();
+    width_ = bottom[0]->width();
+    for (auto i = 0; i < num_concats_; ++i) {
+        split_dims[i] = bottom[i]->channels();
+        channels_ += split_dims[i];
+    }
+
     if (this->num_ == bottom[0]->num() &&
       this->height_ == bottom[0]->height() &&
       this->width_ == bottom[0]->width()) {
@@ -182,6 +202,15 @@ void MKLDNNConcatLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   }
   else if (concat_dimension == 2)
   {
+    num_ = bottom[0]->num();
+    channels_ = bottom[0]->channels();
+    height_ = 0;
+    width_ = bottom[0]->width();
+    for (auto i = 0; i < num_concats_; ++i) {
+        split_dims[i] = bottom[i]->height();
+        height_ += split_dims[i];
+    }
+
     if (this->num_ == bottom[0]->num() &&
       this->channels_ == bottom[0]->channels() &&
       this->width_ == bottom[0]->width()) {
@@ -192,6 +221,15 @@ void MKLDNNConcatLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   }
   else if (concat_dimension == 3)
   {
+    num_ = bottom[0]->num();
+    channels_ = bottom[0]->channels();
+    height_ = bottom[0]->height();
+    width_ = 0;
+    for (auto i = 0; i < num_concats_; ++i) {
+        split_dims[i] = bottom[i]->width();
+        width_ += split_dims[i];
+    }
+
     if (this->num_ == bottom[0]->num() &&
       this->channels_ == bottom[0]->channels() &&
       this->height_ == bottom[0]->height()) {
