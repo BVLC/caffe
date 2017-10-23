@@ -48,6 +48,8 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
   explicit ConvolutionLayerSpatial(const LayerParameter& param)
       : BaseConvolutionLayer<Dtype>(param) {
     winograd_weights_image_ = NULL;
+    bestKernelConfig = NULL;
+    pretuned_key_ = {0};
   }
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
                           const vector<Blob<Dtype>*>& top);
@@ -94,6 +96,196 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
     return false;
   }
   virtual void compute_output_shape();
+
+  struct PretunedKey{
+    //todo: change bits and possible orders
+    const static int EU_BITS = 8;
+    const static int KERNEL_W_BITS = 8;
+    const static int KERNEL_H_BITS = 8;
+    const static int PAD_W_BITS = 8;
+    const static int PAD_H_BITS = 8;
+    const static int STRIDE_W_BITS = 8;
+    const static int STRIDE_H_BITS = 8;
+    const static int DILATION_W_BITS = 8;
+    const static int DILATION_H_BITS = 8;
+    const static int GROUP_BITS = 8;
+    const static int INPUT_CHANNEL_BITS = 16;
+    const static int INPUT_W_BITS = 16;
+    const static int INPUT_H_BITS = 16;
+    const static int BATCH_SIZE_BITS = 16;
+    const static int OUTPUT_CHANNEL_PER_GROUP_BITS = 16;
+    const static int FUSE_TYPE_BITS = 6;
+    const static int HAS_BIAS_BITS = 1;
+    const static int DATA_TYPE_BITS = 1;
+
+    uint32_t eu:            EU_BITS;
+    uint32_t kernel_w:      KERNEL_W_BITS;
+    uint32_t kernel_h:      KERNEL_H_BITS;
+    uint32_t pad_w:         PAD_W_BITS;
+    uint32_t pad_h:         PAD_H_BITS;
+    uint32_t stride_w:      STRIDE_W_BITS;
+    uint32_t stride_h:      STRIDE_H_BITS;
+    uint32_t dilation_w:    DILATION_W_BITS;
+    uint32_t dilation_h:    DILATION_H_BITS;
+    uint32_t group:         GROUP_BITS;
+    uint32_t input_channel: INPUT_CHANNEL_BITS;
+    uint32_t input_w:       INPUT_W_BITS;
+    uint32_t input_h:       INPUT_H_BITS;
+    uint32_t batch_size:    BATCH_SIZE_BITS;
+    uint32_t output_channel_per_group:OUTPUT_CHANNEL_PER_GROUP_BITS;
+    uint32_t fuse_type:     FUSE_TYPE_BITS;
+    uint32_t has_bias:      HAS_BIAS_BITS;
+    uint32_t data_type:     DATA_TYPE_BITS;   // 1: float;  0: half
+
+    void set(uint32_t euv, uint32_t kernel_wv, uint32_t kernel_hv, uint32_t pad_wv, uint32_t pad_hv,
+             uint32_t stride_wv, uint32_t stride_hv, uint32_t dilation_wv, uint32_t dilation_hv,
+             uint32_t groupv, uint32_t input_channelv, uint32_t input_wv, uint32_t input_hv,
+             uint32_t batch_sizev, uint32_t output_channel_per_groupv, uint32_t fuse_typev, uint32_t has_biasv) {
+      //data_type is set outside
+
+      CHECK(euv < (1<<EU_BITS));
+      CHECK(kernel_wv < (1<<KERNEL_W_BITS));
+      CHECK(kernel_hv < (1<<KERNEL_H_BITS));
+      CHECK(pad_wv < (1<<PAD_W_BITS));
+      CHECK(pad_hv < (1<<PAD_H_BITS));
+      CHECK(stride_wv < (1<<STRIDE_W_BITS));
+      CHECK(stride_hv < (1<<STRIDE_H_BITS));
+      CHECK(dilation_wv < (1<<DILATION_W_BITS));
+      CHECK(dilation_hv < (1<<DILATION_H_BITS));
+      CHECK(groupv < (1<<GROUP_BITS));
+      CHECK(input_channelv < (1<<INPUT_CHANNEL_BITS));
+      CHECK(input_wv < (1<<INPUT_W_BITS));
+      CHECK(input_hv < (1<<INPUT_H_BITS));
+      CHECK(batch_sizev < (1<<BATCH_SIZE_BITS));
+      CHECK(output_channel_per_groupv < (1<<OUTPUT_CHANNEL_PER_GROUP_BITS));
+      CHECK(fuse_typev < (1<<FUSE_TYPE_BITS));
+      CHECK(has_biasv < (1<<HAS_BIAS_BITS));
+
+      eu = euv;
+      kernel_w = kernel_wv;
+      kernel_h = kernel_hv;
+      pad_w = pad_wv;
+      pad_h = pad_hv;
+      stride_w = stride_wv;
+      stride_h = stride_hv;
+      dilation_w = dilation_wv;
+      dilation_h = dilation_hv;
+      group = groupv;
+      input_channel = input_channelv;
+      input_w = input_wv;
+      input_h = input_hv;
+      batch_size = batch_sizev;
+      output_channel_per_group = output_channel_per_groupv;
+      fuse_type = fuse_typev;
+      has_bias = has_biasv;
+    }
+
+#define TIE(v) \
+        std::tie(v.eu, v.kernel_w, v.kernel_h, v.pad_w, v.pad_h,                \
+                 v.stride_w, v.stride_h, v.dilation_w, v.dilation_h,            \
+                 v.group, v.input_channel, v.input_w, v.input_h, v.batch_size,  \
+                 v.output_channel_per_group, v.fuse_type, v.has_bias, v.data_type)
+    bool operator<(const PretunedKey& rhs) const {
+      return TIE((*this)) < TIE(rhs);
+    }
+
+    bool operator==(const PretunedKey& rhs) const {
+      return TIE((*this)) == TIE(rhs);
+    }
+#undef TIE
+
+    // make sure that the output order should be the same as declaration
+    std::string str() const
+    {
+      std::stringstream ss;
+      ss << "{"
+         << eu << ","
+         << kernel_w << ","
+         << kernel_h << ","
+         << pad_w << ","
+         << pad_h << ","
+         << stride_w << ","
+         << stride_h << ","
+         << dilation_w << ","
+         << dilation_h << ","
+         << group << ","
+         << input_channel << ","
+         << input_w << ","
+         << input_h << ","
+         << batch_size << ","
+         << output_channel_per_group << ","
+         << fuse_type << ","
+         << has_bias << ","
+         << data_type
+         << "}";
+      return ss.str();
+    }
+  };
+
+  struct PretunedValue {
+    const static int BLOCK_W_BITS = 8;
+    const static int BLOCK_H_BITS = 8;
+    const static int BLOCK_D_BITS = 8;
+    const static int LOCAL_SIZE_X_BITS = 8;
+    const static int LOCAL_SIZE_Y_BITS = 8;
+    const static int LOCAL_SIZE_Z_BITS = 8;
+    const static int KERNEL_TYPE_BITS = 3;
+
+    uint32_t block_w:       BLOCK_W_BITS;
+    uint32_t block_h:       BLOCK_H_BITS;
+    uint32_t block_d:       BLOCK_D_BITS;         //simd_size
+    uint32_t local_size_x:  LOCAL_SIZE_X_BITS;
+    uint32_t local_size_y:  LOCAL_SIZE_Y_BITS;
+    uint32_t local_size_z:  LOCAL_SIZE_Z_BITS;
+    uint32_t kernel_type:   KERNEL_TYPE_BITS;
+
+    void set(uint32_t block_wv, uint32_t block_hv, uint32_t block_dv,
+             uint32_t local_size_xv, uint32_t local_size_yv, uint32_t local_size_zv,
+             uint32_t kernel_typev) {
+      CHECK(block_wv < (1<< BLOCK_W_BITS));
+      CHECK(block_hv < (1<< BLOCK_H_BITS));
+      CHECK(block_dv < (1<< BLOCK_D_BITS));
+      CHECK(local_size_xv < (1<<LOCAL_SIZE_X_BITS));
+      CHECK(local_size_yv < (1<<LOCAL_SIZE_Y_BITS));
+      CHECK(local_size_zv < (1<<LOCAL_SIZE_Z_BITS));
+      CHECK(kernel_typev < (1<<KERNEL_TYPE_BITS));
+
+      block_w = block_wv;
+      block_h = block_hv;
+      block_d = block_dv;
+      local_size_x = local_size_xv;
+      local_size_y = local_size_yv;
+      local_size_z = local_size_zv;
+      kernel_type = kernel_typev;
+    }
+
+    bool operator==(const PretunedValue& rhs) const {
+      return std::tie(block_w, block_h, block_d, local_size_x, local_size_y, local_size_z, kernel_type)
+             ==
+             std::tie(rhs.block_w, rhs.block_h, rhs.block_d,
+                      rhs.local_size_x, rhs.local_size_y, rhs.local_size_z,
+                      rhs.kernel_type);
+    }
+
+    // make sure that the output order should be the same as declaration
+    std::string str() const
+    {
+      std::stringstream ss;
+      ss << "{"
+         << block_w << ","
+         << block_h << ","
+         << block_d << ","
+         << local_size_x << ","
+         << local_size_y << ","
+         << local_size_z << ","
+         << kernel_type
+         << "}";
+      return ss.str();
+    }
+  };
+
+  // to save space, consider to merge key and value into one struct and use array
+  static std::map<PretunedKey, PretunedValue> pretuned_kv;
 
   struct kernelConfig {
     string kernelName;
@@ -292,6 +484,7 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
   std::string key_text_;
   std::string kernel_name_;
   std::stringstream cache_path_;
+  PretunedKey pretuned_key_;
 
   Blob<Dtype> input_transform_blob_;
   cl_mem winograd_weights_image_;
