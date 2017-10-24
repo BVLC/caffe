@@ -17,7 +17,7 @@ base_lr: 0.007
 lr_policy: "poly"
 power: 0.6
 display: 1
-max_iter: 10
+max_iter: 5000
 momentum: 0.9
 weight_decay: 0.0005
 snapshot: 50000
