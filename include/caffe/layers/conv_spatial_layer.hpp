@@ -70,33 +70,6 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
     return (IsFusedWithEltwise() || IsFusedWithPReLU()) ? false : true;
   }
 
-#ifdef USE_GREENTEA
-  ~ConvolutionLayerSpatial() {
-    if (winograd_weights_image_)
-      clReleaseMemObject(winograd_weights_image_);
-    winograd_weights_image_ = NULL;
-  }
-#endif
- protected:
-  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-                           const vector<Blob<Dtype>*>& top);
-
-  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-                           const vector<Blob<Dtype>*>& top);
-
-  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-                            const vector<bool>& propagate_down,
-                            const vector<Blob<Dtype>*>& bottom);
-
-  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-                            const vector<bool>& propagate_down,
-                            const vector<Blob<Dtype>*>& bottom);
-
-  virtual inline bool reverse_dimensions() {
-    return false;
-  }
-  virtual void compute_output_shape();
-
   struct PretunedKey{
     //todo: change bits and possible orders
     const static int EU_BITS = 8;
@@ -233,7 +206,7 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
 
     uint32_t block_w:       BLOCK_W_BITS;
     uint32_t block_h:       BLOCK_H_BITS;
-    uint32_t block_d:       BLOCK_D_BITS;         //simd_size
+    uint32_t block_d:       BLOCK_D_BITS;
     uint32_t local_size_x:  LOCAL_SIZE_X_BITS;
     uint32_t local_size_y:  LOCAL_SIZE_Y_BITS;
     uint32_t local_size_z:  LOCAL_SIZE_Z_BITS;
@@ -260,11 +233,17 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
     }
 
     bool operator==(const PretunedValue& rhs) const {
-      return std::tie(block_w, block_h, block_d, local_size_x, local_size_y, local_size_z, kernel_type)
+      return std::tie(block_w, block_h, block_d,
+                      local_size_x, local_size_y, local_size_z,
+                      kernel_type)
              ==
              std::tie(rhs.block_w, rhs.block_h, rhs.block_d,
                       rhs.local_size_x, rhs.local_size_y, rhs.local_size_z,
                       rhs.kernel_type);
+    }
+
+    bool operator!=(const PretunedValue& rhs) const {
+      return !(operator==(rhs));
     }
 
     // make sure that the output order should be the same as declaration
@@ -283,6 +262,33 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
       return ss.str();
     }
   };
+
+#ifdef USE_GREENTEA
+  ~ConvolutionLayerSpatial() {
+    if (winograd_weights_image_)
+      clReleaseMemObject(winograd_weights_image_);
+    winograd_weights_image_ = NULL;
+  }
+#endif
+ protected:
+  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+                           const vector<Blob<Dtype>*>& top);
+
+  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+                           const vector<Blob<Dtype>*>& top);
+
+  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+                            const vector<bool>& propagate_down,
+                            const vector<Blob<Dtype>*>& bottom);
+
+  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+                            const vector<bool>& propagate_down,
+                            const vector<Blob<Dtype>*>& bottom);
+
+  virtual inline bool reverse_dimensions() {
+    return false;
+  }
+  virtual void compute_output_shape();
 
   // to save space, consider to merge key and value into one struct and use array
   static std::map<PretunedKey, PretunedValue> pretuned_kv;

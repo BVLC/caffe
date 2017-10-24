@@ -1881,6 +1881,7 @@ void ConvolutionLayerSpatial<Dtype>::setup_convolution(
 
     static std::map<PretunedKey, PretunedValue> saved;
     if (saved.find(pretuned_key_) == saved.end()) {
+      //save to .txt file
       string fname = cache_path_.str() + "pretunedkv.txt";
       std::ofstream f(fname.c_str(), ios::app);
       //f << "{ //" << saved.size() << ":  " << key_ << std::endl;
@@ -1889,6 +1890,14 @@ void ConvolutionLayerSpatial<Dtype>::setup_convolution(
       f << v.str();
       f << "}," << std::endl;
       f.close();
+
+      //save to binary file PreTunedBinary
+      fname = cache_path_.str() + "pretunedkv.ptb";
+      f.open(fname, ios::app|ios::binary);
+      f.write(static_cast<char*>(static_cast<void*>(&pretuned_key_)),sizeof(pretuned_key_));
+      f.write(static_cast<char*>(static_cast<void*>(&v)),sizeof(v));
+      f.close();
+
       saved[pretuned_key_] = v;
     }
   }
