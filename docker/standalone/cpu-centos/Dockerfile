@@ -17,6 +17,7 @@ RUN yum install -y \
         cmake \
         git \
         wget \
+        ssh \
         atlas-devel \
         boost-devel \
         gflags-devel \
