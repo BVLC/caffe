@@ -92,12 +92,12 @@ function(caffe_pickup_caffe_sources root)
   # collect files
   file(GLOB test_hdrs    ${root}/include/caffe/test/test_*.h*)
   file(GLOB test_srcs    ${root}/src/caffe/test/test_*.cpp)
-  file(GLOB tool_srcs    ${root}/src/caffe/tool/*.cpp)
+  file(GLOB intel_tools_srcs    ${root}/src/caffe/opencl/vendors/intel/tools/*.cpp)
   file(GLOB_RECURSE hdrs ${root}/include/caffe/*.h*)
   file(GLOB_RECURSE srcs ${root}/src/caffe/*.cpp)
   list(REMOVE_ITEM  hdrs ${test_hdrs})
   list(REMOVE_ITEM  srcs ${test_srcs})
-  list(REMOVE_ITEM  srcs ${tool_srcs})
+  list(REMOVE_ITEM  srcs ${intel_tools_srcs})
 
   # adding headers to make the visible in some IDEs (Qt, VS, Xcode)
   list(APPEND srcs ${hdrs}
