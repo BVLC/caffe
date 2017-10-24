@@ -576,6 +576,10 @@ void Caffe::SetDevices(std::vector<int> device_ids) {
             shared_ptr<device> dev(
                 new device(device_id,
                                   initcount, Backend::BACKEND_OpenCL));
+            if (dev.get() == NULL) {
+              LOG(INFO) << "Failed to create new OpenCL device." << std::endl;
+              throw -1;
+            }
             Get().devices_.emplace_back(dev);
             dev->Init();
             ++initcount;

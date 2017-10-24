@@ -264,13 +264,14 @@ inline void SyncedMemory::to_gpu() {
             own_zero_copy_data_ = true;
         }
 
-        if (cl_gpu_mem_ == nullptr)
-            cl_gpu_mem_ = clCreateBuffer(ctx.handle().get(),
+        if (cl_gpu_mem_ == nullptr) {
+          cl_gpu_mem_ = clCreateBuffer(ctx.handle().get(),
                                          CL_MEM_READ_WRITE,
                                          size_, nullptr, &err);
 
-        CHECK_EQ(0, err) << "OpenCL buffer allocation of size "
-                        << size_ << " failed.";
+          CHECK_EQ(0, err) << "OpenCL buffer allocation of size "
+                          << size_ << " failed.";
+        }
 
         device_->IncreaseMemoryUsage(size_);
         if (!own_zero_copy_data_) {

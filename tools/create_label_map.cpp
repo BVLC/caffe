@@ -62,4 +62,5 @@ int main(int argc, char** argv) {
   ReadLabelFileToLabelMap(map_file, include_background, delimiter, &label_map);
 
   WriteProtoToTextFile(label_map, argv[2]);
+  return 0;
 }
