@@ -1342,6 +1342,8 @@ void ComputeLocLoss(const Blob<Dtype>& loc_pred, const Blob<Dtype>& loc_gt,
       const int num, const int num_priors, const LocLossType loc_loss_type,
       vector<vector<float> >* all_loc_loss) {
   int loc_count = loc_pred.count();
+  if (loc_count == 0)
+    return;
   CHECK_EQ(loc_count, loc_gt.count());
   Blob<Dtype> diff;
   const Dtype* diff_data = NULL;
