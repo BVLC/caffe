@@ -13,7 +13,7 @@ list(INSERT Caffe_LINKER_LIBS 0 PUBLIC proto) # note, crucial to prepend!
 # ---[ Tools
 add_subdirectory(tool)
 
-file(GLOB PRETUNED_BINARY_ZIPS ${PROJECT_SOURCE_DIR}/src/caffe/layers/*.ptb.tgz)
+file(GLOB PRETUNED_BINARY_ZIPS ${PROJECT_SOURCE_DIR}/src/caffe/opencl/vendors/intel/*.ptb.tgz)
 if(PRETUNED_BINARY_ZIPS)
 foreach(PRETUNED_BINARY_ZIP ${PRETUNED_BINARY_ZIPS})
   get_filename_component(PRETUNED_BINARY_UNZIP ${PRETUNED_BINARY_ZIP} NAME_WE)
