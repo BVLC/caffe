@@ -5,6 +5,8 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <thread>
+#include <mutex>
 
 #include "caffe/blob.hpp"
 #include "caffe/layer.hpp"
@@ -292,6 +294,7 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
 
   // to save space, consider to merge key and value into one struct and use array
   static std::map<PretunedKey, PretunedValue> pretuned_kv;
+  static std::mutex pretuned_mutex_;
 
   struct kernelConfig {
     string kernelName;

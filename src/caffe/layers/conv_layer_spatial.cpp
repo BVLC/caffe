@@ -20,6 +20,11 @@
 #include "viennacl/tools/sha1.hpp"
 #endif
 
+#ifdef __WIN32__
+#include <windows.h>
+#include <shlobj.h>
+#endif
+
 #include <boost/filesystem.hpp>
 
 // #define TEST_ALL_KERNELS
@@ -117,23 +122,35 @@ void ConvolutionLayerSpatial<Dtype>::LayerSetUp(
     cache_path_ << std::getenv("CLCAFFE_CACHE_PATH");
   else if (std::getenv("VIENNACL_CACHE_PATH"))
     cache_path_ << std::getenv("VIENNACL_CACHE_PATH") << "/clCaffe";
+#ifndef __WIN32__
   else if (std::getenv("HOME")) {
     cache_path_ << std::getenv("HOME") << "/.cache/clCaffe";
   }
-  cache_path_ << "/spatialkernels/";
-  const boost::filesystem::path& path = cache_path_.str();
-  const boost::filesystem::path& dir =
-                 boost::filesystem::unique_path(path).string();
-  bool hasCacheDir = false;
-  if (!boost::filesystem::exists(dir))
-    hasCacheDir = boost::filesystem::create_directories(dir);
-  else
-    hasCacheDir = boost::filesystem::is_directory(dir);
+#else
+  else {
+    char path[MAX_PATH];
+    if (SHGetFolderPathA(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, path) != S_OK) {
+      std::cerr << "Could not get the user's application data directory." << std::endl;
+      std::cerr << "Spatial convolution engine cache will be disabled."
+    }
+  }
+#endif
+  if (cache_path_.str() != "") {
+    cache_path_ << "/spatialkernels/";
+    const boost::filesystem::path& path = cache_path_.str();
+    const boost::filesystem::path& dir =
+                   boost::filesystem::unique_path(path).string();
+    bool hasCacheDir = false;
+    if (!boost::filesystem::exists(dir))
+      hasCacheDir = boost::filesystem::create_directories(dir);
+    else
+      hasCacheDir = boost::filesystem::is_directory(dir);
 
-  if (hasCacheDir != true) {
-    std::cout << "Failed to create cache directory,"
+    if (hasCacheDir != true) {
+      std::cout << "Failed to create cache directory,"
               << "will tune again for next running" << std::endl;
-    return;
+      return;
+    }
   }
 }
 
@@ -1871,56 +1888,59 @@ void ConvolutionLayerSpatial<Dtype>::setup_convolution(
   kernelQueue.clear();
 
   tuned_ = true;
-
   {
-    // be careful in pretune stage, following code does not consider multiple-thread/process
+    std::lock_guard<std::mutex>  lock(pretuned_mutex_);
     PretunedValue v;
     v.set(bestKernelConfig->workItem_output[0], bestKernelConfig->workItem_output[1], bestKernelConfig->workItem_output[2],
           bestKernelConfig->local_work_size[0], bestKernelConfig->local_work_size[1], bestKernelConfig->local_work_size[2],
           static_cast<int>(bestKernelConfig->kernelType));
+    if (cache_path_.str() != "") {
+      static std::map<PretunedKey, PretunedValue> saved;
+      if (saved.find(pretuned_key_) == saved.end()) {
+        //save to .txt file
+        string fname = cache_path_.str() + "pretunedkv.txt";
+        std::ofstream f(fname.c_str(), ios::app);
+        //f << "{ //" << saved.size() << ":  " << key_ << std::endl;
+        f << "{";
+        f << pretuned_key_.str() << ",";
+        f << v.str();
+        f << "}," << std::endl;
+        f.close();
 
-    static std::map<PretunedKey, PretunedValue> saved;
-    if (saved.find(pretuned_key_) == saved.end()) {
-      //save to .txt file
-      string fname = cache_path_.str() + "pretunedkv.txt";
-      std::ofstream f(fname.c_str(), ios::app);
-      //f << "{ //" << saved.size() << ":  " << key_ << std::endl;
-      f << "{";
-      f << pretuned_key_.str() << ",";
-      f << v.str();
-      f << "}," << std::endl;
-      f.close();
+        //save to binary file PreTunedBinary
+        fname = cache_path_.str() + "pretunedkv.ptb";
+        f.open(fname, ios::app|ios::binary);
+        f.write(static_cast<char*>(static_cast<void*>(&pretuned_key_)),sizeof(pretuned_key_));
+        f.write(static_cast<char*>(static_cast<void*>(&v)),sizeof(v));
+        f.close();
 
-      //save to binary file PreTunedBinary
-      fname = cache_path_.str() + "pretunedkv.ptb";
-      f.open(fname, ios::app|ios::binary);
-      f.write(static_cast<char*>(static_cast<void*>(&pretuned_key_)),sizeof(pretuned_key_));
-      f.write(static_cast<char*>(static_cast<void*>(&v)),sizeof(v));
-      f.close();
+        saved[pretuned_key_] = v;
+      }
 
-      saved[pretuned_key_] = v;
+      string outputFile;
+      outputFile = cache_path_.str() + key_;
+      std::ifstream cachedKernel(outputFile.c_str());
+      std::ofstream outputKernel;
+      outputKernel.open(outputFile.c_str());
+      outputKernel << bestKernelConfig->workItem_output[0] << " "
+                   << bestKernelConfig->workItem_output[1] << " "
+                   << bestKernelConfig->workItem_output[2] << " "
+                   << static_cast<int>(bestKernelConfig->kernelType) << " "
+                   << bestKernelConfig->global_work_size[0] << " "
+                   << bestKernelConfig->global_work_size[1] << " "
+                   << bestKernelConfig->global_work_size[2] << " "
+                   << bestKernelConfig->local_work_size[0] << " "
+                   << bestKernelConfig->local_work_size[1] << " "
+                   << bestKernelConfig->local_work_size[2] << " "
+                   << bestKernelConfig->swizzle_weights << " "
+                   << 0 << " "  // deprecated
+                   << bestKernelConfig->use_null_local << " ";
+      outputKernel.close();
+    }
+    if (pretuned_kv.find(pretuned_key_) == pretuned_kv.end()) {
+      pretuned_kv[pretuned_key_] = v;
     }
   }
-
-  string outputFile;
-  outputFile = cache_path_.str() + key_;
-  std::ifstream cachedKernel(outputFile.c_str());
-  std::ofstream outputKernel;
-  outputKernel.open(outputFile.c_str());
-  outputKernel << bestKernelConfig->workItem_output[0] << " "
-               << bestKernelConfig->workItem_output[1] << " "
-               << bestKernelConfig->workItem_output[2] << " "
-               << static_cast<int>(bestKernelConfig->kernelType) << " "
-               << bestKernelConfig->global_work_size[0] << " "
-               << bestKernelConfig->global_work_size[1] << " "
-               << bestKernelConfig->global_work_size[2] << " "
-               << bestKernelConfig->local_work_size[0] << " "
-               << bestKernelConfig->local_work_size[1] << " "
-               << bestKernelConfig->local_work_size[2] << " "
-               << bestKernelConfig->swizzle_weights << " "
-               << 0 << " "  // deprecated
-               << bestKernelConfig->use_null_local << " ";
-  outputKernel.close();
   ctx.cache_path(viennacl_cache_path);
 }
 
@@ -2047,108 +2067,110 @@ void ConvolutionLayerSpatial<Dtype>::load_cached_kernels(
   PretunedKey previouse_pt_key = pretuned_key_;
   generate_key();
   kernelConfig prev_kernel_config;
-
-  if (pretuned_kv.find(pretuned_key_) != pretuned_kv.end()) {
-    if (bestKernelConfig != NULL) {
-      CHECK(tuned_);
-      if (previouse_pt_key == pretuned_key_) {
-        return;
+  {
+    std::lock_guard<std::mutex>  lock(pretuned_mutex_);
+    if (pretuned_kv.find(pretuned_key_) != pretuned_kv.end()) {
+      if (bestKernelConfig != NULL) {
+        CHECK(tuned_);
+        if (previouse_pt_key == pretuned_key_) {
+          return;
+        } else {
+          prev_kernel_config = *bestKernelConfig;
+          viennacl::ocl::current_context().
+            delete_program(bestKernelConfig->kernelName);
+          delete bestKernelConfig;
+          bestKernelConfig = NULL;
+        }
+      }
+      PretunedValue& v = pretuned_kv[pretuned_key_];
+      create_convolution_kernel(bottom, top,
+                                static_cast<ConvType>(v.kernel_type),
+                                v.block_w, v.block_h, v.block_d);
+      int_tp kernel_index_ = kernelQueue.size() - 1;
+      if (kernel_index_ == -1) {
+        std::cerr << "Failed to get kernel from pretuned configurations. Just ignore it."
+                  << std::endl;
+        std::cerr << "Try pre-tune again..."
+                  << std::endl;
+        tuned_ = false;
       } else {
-        prev_kernel_config = *bestKernelConfig;
-        viennacl::ocl::current_context().
-          delete_program(bestKernelConfig->kernelName);
-        delete bestKernelConfig;
-        bestKernelConfig = NULL;
+        bestKernelConfig = kernelQueue[kernel_index_];
+        kernelQueue.clear();
+        bestKernelConfig->local_work_size[0] = v.local_size_x;
+        bestKernelConfig->local_work_size[1] = v.local_size_y;
+        bestKernelConfig->local_work_size[2] = v.local_size_z;
+        tuned_ = true;
+        if (need_swizzle(prev_kernel_config, *bestKernelConfig))
+          swizzled_weights_ = NULL;
+        return;
       }
     }
-
-    PretunedValue& v = pretuned_kv[pretuned_key_];
-    create_convolution_kernel(bottom, top,
-                              static_cast<ConvType>(v.kernel_type),
-                              v.block_w, v.block_h, v.block_d);
-    int_tp kernel_index_ = kernelQueue.size() - 1;
-    if (kernel_index_ == -1) {
-      std::cerr << "Failed to get kernel from pretuned configurations. Just ignore it."
-                << std::endl;
-      std::cerr << "Try pre-tune again..."
-                << std::endl;
+    if (tuned_) {
+      if (key_.compare(previous_key) == 0)
+        return;
       tuned_ = false;
-    } else {
-      bestKernelConfig = kernelQueue[kernel_index_];
-      kernelQueue.clear();
-      bestKernelConfig->local_work_size[0] = v.local_size_x;
-      bestKernelConfig->local_work_size[1] = v.local_size_y;
-      bestKernelConfig->local_work_size[2] = v.local_size_z;
-      tuned_ = true;
-      if (need_swizzle(prev_kernel_config, *bestKernelConfig))
-        swizzled_weights_ = NULL;
-      return;
+      prev_kernel_config = *bestKernelConfig;
+      viennacl::ocl::current_context().
+        delete_program(bestKernelConfig->kernelName);
+      delete bestKernelConfig;
+      bestKernelConfig = NULL;
     }
-  }
+    // Initializes unique kernel ID
+    kernel_uid_ = 0;
 
-  if (tuned_) {
-    if (key_.compare(previous_key) == 0)
-      return;
-    tuned_ = false;
-    prev_kernel_config = *bestKernelConfig;
-    viennacl::ocl::current_context().
-      delete_program(bestKernelConfig->kernelName);
-    delete bestKernelConfig;
-    bestKernelConfig = NULL;
-  }
-  // Initializes unique kernel ID
-  kernel_uid_ = 0;
-
-  // Find cached kernel configuration
-  string outputFile;
-  outputFile = cache_path_.str() + key_;
-  std::ifstream cachedKernel(outputFile.c_str());
-  if (!cachedKernel) {
-    outputFile = cache_path_.str() + old_key_;
-    cachedKernel.open(outputFile.c_str());
-  }
-  if (cachedKernel) {
-    int_tp x, y, z, type;
-    cachedKernel >> x;
-    cachedKernel >> y;
-    cachedKernel >> z;
-    cachedKernel >> type;
-    if (type == 2) {
-      if (z == 1)
-        z = 16;
-      CHECK_EQ(z == 16 || z == 8, true) << "invalid SIMD size" << std::endl;
+    // Find cached kernel configuration
+    if (cache_path_.str() != "") {
+      string outputFile;
+      outputFile = cache_path_.str() + key_;
+      std::ifstream cachedKernel(outputFile.c_str());
+      if (!cachedKernel) {
+        outputFile = cache_path_.str() + old_key_;
+        cachedKernel.open(outputFile.c_str());
+      }
+      if (cachedKernel) {
+        int_tp x, y, z, type;
+        cachedKernel >> x;
+        cachedKernel >> y;
+        cachedKernel >> z;
+        cachedKernel >> type;
+        if (type == 2) {
+          if (z == 1)
+            z = 16;
+          CHECK_EQ(z == 16 || z == 8, true) << "invalid SIMD size" << std::endl;
+        }
+        create_convolution_kernel(bottom, top, static_cast<ConvType>(type), x, y, z);
+        kernel_index_ = kernelQueue.size() - 1;
+        if (kernel_index_ == -1) {
+          std::cerr << "Failed to get kernel from cached configurations."
+                    << std::endl;
+          std::cerr << "Deleting broken cache file and try tuning again..."
+                    << std::endl;
+          string bakFile = outputFile + ".bak";
+          std::rename(outputFile.c_str(), bakFile.c_str());
+          return;
+        }
+        bestKernelConfig = kernelQueue[kernel_index_];
+        kernelQueue.clear();
+        // As we are using varying image size kernels now, let's skip the
+        // cached work group size and local group size here, and we already
+        // get correct work/local group size at the create_convolution kernel stage.
+        // To not break the previous trained record, for now just skipping them.
+        // Will use a totally different cache mechanism in the future.
+        size_t foo;  // for deprecated parameters.
+        cachedKernel >> foo;
+        cachedKernel >> foo;
+        cachedKernel >> foo;
+        cachedKernel >> bestKernelConfig->local_work_size[0];
+        cachedKernel >> bestKernelConfig->local_work_size[1];
+        cachedKernel >> bestKernelConfig->local_work_size[2];
+        cachedKernel >> bestKernelConfig->swizzle_weights;
+        cachedKernel >> foo;
+        cachedKernel >> bestKernelConfig->use_null_local;
+        tuned_ = true;
+        if (need_swizzle(prev_kernel_config, *bestKernelConfig))
+          swizzled_weights_ = NULL;
+      }
     }
-    create_convolution_kernel(bottom, top, static_cast<ConvType>(type), x, y, z);
-    kernel_index_ = kernelQueue.size() - 1;
-    if (kernel_index_ == -1) {
-      std::cerr << "Failed to get kernel from cached configurations."
-                << std::endl;
-      std::cerr << "Deleting broken cache file and try tuning again..."
-                << std::endl;
-      string bakFile = outputFile + ".bak";
-      std::rename(outputFile.c_str(), bakFile.c_str());
-      return;
-    }
-    bestKernelConfig = kernelQueue[kernel_index_];
-    kernelQueue.clear();
-    // As we are using varying image size kernels now, let's skip the
-    // cached work group size and local group size here, and we already
-    // get correct work/local group size at the create_convolution kernel stage.
-    // To not break the previous trained record, for now just skipping them.
-    // Will use a totally different cache mechanism in the future.
-    size_t foo;  // for deprecated parameters.
-    cachedKernel >> foo;
-    cachedKernel >> foo;
-    cachedKernel >> foo;
-    cachedKernel >> bestKernelConfig->local_work_size[0];
-    cachedKernel >> bestKernelConfig->local_work_size[1];
-    cachedKernel >> bestKernelConfig->local_work_size[2];
-    cachedKernel >> bestKernelConfig->swizzle_weights;
-    cachedKernel >> foo;
-    cachedKernel >> bestKernelConfig->use_null_local;
-    tuned_ = true;
-    if (need_swizzle(prev_kernel_config, *bestKernelConfig))
-      swizzled_weights_ = NULL;
   }
   return;
 }
@@ -2184,6 +2206,7 @@ STUB_GPU(ConvolutionLayerSpatial);
 #endif
 
 INSTANTIATE_CLASS(ConvolutionLayerSpatial);
+template <typename Dtype> std::mutex ConvolutionLayerSpatial<Dtype>::pretuned_mutex_;
 
 }  // namespace caffe
 #endif  // USE_INTEL_SPATIAL
