@@ -11,7 +11,7 @@ caffe_default_properties(proto)
 list(INSERT Caffe_LINKER_LIBS 0 PUBLIC proto) # note, crucial to prepend!
 
 # ---[ Tools
-add_subdirectory(tool)
+add_subdirectory(opencl/vendors/intel/tools)
 
 file(GLOB PRETUNED_BINARY_ZIPS ${PROJECT_SOURCE_DIR}/src/caffe/opencl/vendors/intel/*.ptb.tgz)
 if(PRETUNED_BINARY_ZIPS)
