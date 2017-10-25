@@ -99,10 +99,10 @@
             blockC03 += blockAxB03; \
         } \
     } else { \
-        blockC00 = isFirstColBlock ? BLOCKC_READ8( _C, coordC ) * beta : BLOCKC_READ8( _C, coordC );    coordC.y += 8; \
-        blockC01 = isFirstColBlock ? BLOCKC_READ8( _C, coordC ) * beta : BLOCKC_READ8( _C, coordC );    coordC.y += 8; \
-        blockC02 = isFirstColBlock ? BLOCKC_READ8( _C, coordC ) * beta : BLOCKC_READ8( _C, coordC );    coordC.y += 8; \
-        blockC03 = isFirstColBlock ? BLOCKC_READ8( _C, coordC ) * beta : BLOCKC_READ8( _C, coordC ); \
+        blockC00 = isFirstColBlock ? (Dtype)0. : BLOCKC_READ8( _C, coordC );    coordC.y += 8; \
+        blockC01 = isFirstColBlock ? (Dtype)0. : BLOCKC_READ8( _C, coordC );    coordC.y += 8; \
+        blockC02 = isFirstColBlock ? (Dtype)0. : BLOCKC_READ8( _C, coordC );    coordC.y += 8; \
+        blockC03 = isFirstColBlock ? (Dtype)0. : BLOCKC_READ8( _C, coordC ); \
         if (!ALPHA1) { \
           blockC00 = mad(blockAxB00, (Dtype8)alpha, blockC00); \
           blockC01 = mad(blockAxB01, (Dtype8)alpha, blockC01); \
