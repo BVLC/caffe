@@ -13,7 +13,6 @@
 #include <tuple>
 #include <vector>
 #include <mutex>
-
 #include "caffe/common.hpp"
 
 #include "caffe/device.hpp"
@@ -28,6 +27,12 @@
   #endif  // USE_CLBLAS or USE_CLBLAST
 #endif  // USE_GREENTEA
 
+#if defined(_MSC_VER)
+#include <windows.h>
+#include <shlobj.h>
+#endif
+
+#include <boost/filesystem.hpp>
 namespace caffe {
 
 // Make sure each thread can have different values.
@@ -36,10 +41,41 @@ static boost::thread_specific_ptr<Caffe> thread_instance_;
 // Pointer to the global instance of Caffe
 static Caffe* global_instance_ = NULL;
 static std::mutex global_instance_lock_;
+static std::mutex home_lock_;
 static std::atomic<bool> first(true);
+static string caffe_home_ = "";
 
 // Device contexts are initialized once and shared on all threads
 std::vector< shared_ptr<device> > Caffe::devices_;
+
+const std::string &Caffe::GetHome() {
+  std::lock_guard<std::mutex> lck(home_lock_);
+  if (caffe_home_ != "")
+    return caffe_home_;
+  else {
+    stringstream home;
+    if (std::getenv("CLCAFFE_CACHE_PATH"))
+      home << std::getenv("CLCAFFE_CACHE_PATH");
+    else if (std::getenv("VIENNACL_CACHE_PATH"))
+      home << std::getenv("VIENNACL_CACHE_PATH") << "/clCaffe/";
+    else {
+#if !defined(_MSC_VER)
+      if (std::getenv("HOME")) {
+        home << std::getenv("HOME") << "/.cache/clcaffe/";
+      }
+#else
+      char path[MAX_PATH];
+      if (SHGetFolderPathA(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, path) != S_OK) {
+        std::cerr << "Could not get the user's application data directory." << std::endl;
+      } else {
+        home << path << "/clcaffe/";
+      }
+#endif
+    }
+    caffe_home_ = home.str();
+  }
+  return caffe_home_;
+}
 
 Caffe& Caffe::Get() {
   if (first.exchange(false)) {
@@ -48,6 +84,26 @@ Caffe& Caffe::Get() {
     thread_instance_.reset(new Caffe());
     global_instance_lock_.lock();
     global_instance_ = thread_instance_.get();
+
+    // By default we want to enable viennacl cache mechanism to reduce
+    // the kernel build time at runtime.
+    if (!std::getenv("VIENNACL_CACHE_PATH")) {
+      stringstream viennacl_cache;
+      viennacl_cache << Caffe::GetHome();
+      if (viennacl_cache.str() != "") {
+        viennacl_cache << "/viennacl/";
+      }
+#if !defined(_MSC_VER)
+      setenv("VIENNACL_CACHE_PATH", viennacl_cache.str().c_str(), true);
+#else
+      _putenv_s("VIENNACL_CACHE_PATH", viennacl_cache.str().c_str());
+#endif
+      const boost::filesystem::path& path = viennacl_cache.str();
+      const boost::filesystem::path& dir =
+                   boost::filesystem::unique_path(path).string();
+      if (!boost::filesystem::exists(dir))
+        boost::filesystem::create_directories(dir);
+    }
     global_instance_lock_.unlock();
   }
   if (!thread_instance_.get()) {
@@ -58,7 +114,11 @@ Caffe& Caffe::Get() {
       global_instance_lock_.lock();
       if (global_instance_ == NULL) {
         global_instance_lock_.unlock();
+#if !defined(_MSC_VER)
         usleep(10000);
+#else
+       Sleep(10);
+#endif
       } else
         break;
     }

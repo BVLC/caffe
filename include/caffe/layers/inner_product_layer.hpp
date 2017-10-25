@@ -38,26 +38,22 @@ class InnerProductLayer : public Layer<Dtype> {
     innerprod_type_ = GEMM_TYPE_DEFAULT;
     tuned_ = false;
 
-    if (std::getenv("CLCAFFE_CACHE_PATH"))
-      cache_path_ << std::getenv("CLCAFFE_CACHE_PATH");
-    else if (std::getenv("VIENNACL_CACHE_PATH"))
-      cache_path_ << std::getenv("VIENNACL_CACHE_PATH") << "/clCaffe";
-    else if (std::getenv("HOME")) {
-      cache_path_ << std::getenv("HOME") << "/.cache/clCaffe";
-    }
-    cache_path_ << "/innerprod/";
-    const boost::filesystem::path& path = cache_path_.str();
-    const boost::filesystem::path& dir =
+    cache_path_ << Caffe::GetHome();
+    if (cache_path_.str() != "") {
+      cache_path_ << "/innerprod/";
+      const boost::filesystem::path& path = cache_path_.str();
+      const boost::filesystem::path& dir =
                    boost::filesystem::unique_path(path).string();
-    bool hasCacheDir = false;
-    if (!boost::filesystem::exists(dir))
-      hasCacheDir = boost::filesystem::create_directories(dir);
-    else
-      hasCacheDir = boost::filesystem::is_directory(dir);
+      bool hasCacheDir = false;
+      if (!boost::filesystem::exists(dir))
+        hasCacheDir = boost::filesystem::create_directories(dir);
+      else
+        hasCacheDir = boost::filesystem::is_directory(dir);
 
-    if (hasCacheDir != true) {
-      std::cout << "Failed to create cache directory,"
-                << "will tune again for next running" << std::endl;
+      if (hasCacheDir != true) {
+        std::cout << "Failed to create cache directory,"
+                  << "will tune again for next running" << std::endl;
+      }
     }
 #endif
   }

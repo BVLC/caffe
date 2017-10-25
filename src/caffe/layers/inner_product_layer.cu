@@ -726,12 +726,14 @@ void InnerProductLayer<Dtype>::tune_innerprod_type(const int_tp ctx_id,
         innerprod_type_ = gemm_tests[fastest_index];
       }
       // 3. store cache.
-      string outputFile;
-      outputFile = cache_path_.str() + key_;
-      std::ofstream outputKernel;
-      outputKernel.open(outputFile.c_str());
-      outputKernel << innerprod_type_;
-      outputKernel.close();
+      if (cache_path_.str() != "") {
+        string outputFile;
+        outputFile = cache_path_.str() + key_;
+        std::ofstream outputKernel;
+        outputKernel.open(outputFile.c_str());
+        outputKernel << innerprod_type_;
+        outputKernel.close();
+      }
       tuned_ = true;
       return;
     }

@@ -118,23 +118,7 @@ void ConvolutionLayerSpatial<Dtype>::LayerSetUp(
     }
   }
 
-  if (std::getenv("CLCAFFE_CACHE_PATH"))
-    cache_path_ << std::getenv("CLCAFFE_CACHE_PATH");
-  else if (std::getenv("VIENNACL_CACHE_PATH"))
-    cache_path_ << std::getenv("VIENNACL_CACHE_PATH") << "/clCaffe";
-#ifndef __WIN32__
-  else if (std::getenv("HOME")) {
-    cache_path_ << std::getenv("HOME") << "/.cache/clCaffe";
-  }
-#else
-  else {
-    char path[MAX_PATH];
-    if (SHGetFolderPathA(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, path) != S_OK) {
-      std::cerr << "Could not get the user's application data directory." << std::endl;
-      std::cerr << "Spatial convolution engine cache will be disabled."
-    }
-  }
-#endif
+  cache_path_ << Caffe::GetHome();
   if (cache_path_.str() != "") {
     cache_path_ << "/spatialkernels/";
     const boost::filesystem::path& path = cache_path_.str();
