@@ -12,6 +12,7 @@
 #include <ctime>
 #include <tuple>
 #include <vector>
+#include <mutex>
 
 #include "caffe/common.hpp"
 
@@ -33,7 +34,8 @@ namespace caffe {
 static boost::thread_specific_ptr<Caffe> thread_instance_;
 
 // Pointer to the global instance of Caffe
-static Caffe* global_instance_;
+static Caffe* global_instance_ = NULL;
+static std::mutex global_instance_lock_;
 static std::atomic<bool> first(true);
 
 // Device contexts are initialized once and shared on all threads
@@ -44,13 +46,24 @@ Caffe& Caffe::Get() {
     // The first call must be single threaded
     // and defines the global instance
     thread_instance_.reset(new Caffe());
+    global_instance_lock_.lock();
     global_instance_ = thread_instance_.get();
+    global_instance_lock_.unlock();
   }
   if (!thread_instance_.get()) {
     // Every thread initially gets a copy of the global initialization.
     // Later, every thread can switch to a different default device
     // or change other aspects of the Caffe object
+    while (1) {
+      global_instance_lock_.lock();
+      if (global_instance_ == NULL) {
+        global_instance_lock_.unlock();
+        usleep(10000);
+      } else
+        break;
+    }
     thread_instance_.reset(new Caffe(*global_instance_));
+    global_instance_lock_.unlock();
   }
   return *(thread_instance_.get());
 }
