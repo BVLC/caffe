@@ -479,6 +479,15 @@ shared_ptr<memory::desc> MKLDNNMemoryDescriptor<Dtype, is_diff>::get_memory_desc
 }
 
 template <typename Dtype, bool is_diff>
+size_t MKLDNNMemoryDescriptor<Dtype, is_diff>::get_memory_count() {
+  if (this->conversion_needed()) {
+    return this->prv_count();
+  } else {
+    return this->_blob->count();
+  }
+}
+
+template <typename Dtype, bool is_diff>
 shared_ptr<MKLDNNMemoryDescriptor<Dtype, is_diff> > get_mkldnn_prv_descriptor(Blob<Dtype>* blob)
 {
     shared_ptr<PrvMemDescr> blob_prv_mem_descriptor = is_diff ?

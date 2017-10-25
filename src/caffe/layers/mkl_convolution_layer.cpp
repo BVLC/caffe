@@ -97,92 +97,10 @@ void MKLConvolutionLayer<Dtype>::compute_output_shape() {
 }
 
 template <typename Dtype>
-MKLConvolutionLayer<Dtype>::~MKLConvolutionLayer() {
-    dnnDelete<Dtype>(convolutionFwd);
-    dnnDelete<Dtype>(convolutionBwdData);
-    dnnDelete<Dtype>(convolutionBwdFilter);
-    if (this->bias_term_)
-        dnnDelete<Dtype>(convolutionBwdBias);
-}
-
-template <typename Dtype>
-void MKLConvolutionLayer<Dtype>::Init(
-      const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {
-  this->width_ = bottom[0]->width();
-  this->height_ = bottom[0]->height();
-  this->num_ = bottom[0]->num();
-
-  // TODO: clean up this
-  kernel_w_ = this->kernel_shape_.cpu_data()[1];
-  kernel_h_ = this->kernel_shape_.cpu_data()[0];
-  stride_w_ = this->stride_.cpu_data()[1];
-  stride_h_ = this->stride_.cpu_data()[0];
-  pad_w_ = this->pad_.cpu_data()[1];
-  pad_h_ = this->pad_.cpu_data()[0];
-
-  this->bottom_shape_ = &bottom[0]->shape();
-  compute_output_shape();
+void MKLConvolutionLayer<Dtype>::CreateFwdPrimitive() {
   int status;
-  size_t n, g;
-  size_t iw, ih, ic;
-  size_t ow, oh, oc;
-  size_t kw, kh; /* filter */
+  size_t g = std::max(this->group_, 1);
   size_t dimension = 4;
-
-  g  = std::max(this->group_, 1);
-  n  = this->num_;
-  iw = this->width_;
-  ih = this->height_;
-  ic = this->channels_;
-
-  ow = this->width_out_;
-  oh = this->height_out_;
-  oc = this->num_output_;
-
-  kw = this->kernel_w_;
-  kh = this->kernel_h_;
-
-  size_t bdata_sizes[4] = {iw, ih, ic, n};
-  size_t bdata_strides[4] = {1, iw, iw*ih, iw*ih*ic};
-
-  /* starting with MKL 2017 Gold in case of groups filter layout
-   * becomes 5D, i.e. groups become a separate dimension */
-  size_t g_mkl2017 = g;
-  size_t f_dimension = dimension + (g != 1);
-  if (getMKLBuildDate() < 20160701) {
-      g_mkl2017 = 1;
-      f_dimension = dimension;
-  }
-
-  size_t fdata_sizes[5] = {kw, kh, ic/g, oc/g_mkl2017, g_mkl2017};
-  size_t fdata_strides[5]  = {1, kw, kw*kh, kw*kh*ic/g, kw*kh*ic/g*oc/g};
-
-  size_t bias_sizes[1] = {oc};
-  size_t bias_strides[1] = {1};
-
-  size_t tdata_sizes[4] = {ow, oh, oc, n};
-  size_t tdata_strides[4]  = {1, ow, ow*oh, ow*oh*oc};
-
-  size_t convolutionStrides[2] = {this->stride_w_, this->stride_h_};
-  int    inputOffset[2] = {-this->pad_w_, -this->pad_h_};
-
-  // Names are for debugging purposes only.
-  fwd_bottom_data ->name = "fwd_bottom_data   @ " + this->layer_param_.name();
-  fwd_top_data    ->name = "fwd_top_data      @ " + this->layer_param_.name();
-  fwd_filter_data ->name = "fwd_filter_data   @ " + this->layer_param_.name();
-  fwd_bias_data   ->name = "fwd_bias_data     @ " + this->layer_param_.name();
-  bwdd_top_diff   ->name = "bwdd_top_diff     @ " + this->layer_param_.name();
-  bwdd_bottom_diff->name = "bwdd_bottom_diff  @ " + this->layer_param_.name();
-  bwdd_filter_data->name = "bwdd_filter_data  @ " + this->layer_param_.name();
-  bwdf_top_diff   ->name = "bwdf_top_diff     @ " + this->layer_param_.name();
-  bwdf_bottom_data->name = "bwdf_bottom_data  @ " + this->layer_param_.name();
-  bwdf_filter_diff->name = "bwdf_filter_diff  @ " + this->layer_param_.name();
-  bwdf2fwd_filter_diff->name =
-                       "bwdf2fwd_filter_diff  @ " + this->layer_param_.name();
-  bwdb_top_diff   ->name = "bwdb_top_diff     @ " + this->layer_param_.name();
-  bwdb_bias_diff  ->name = "bwdb_bias_diff    @ " + this->layer_param_.name();
-
   // Free MKL primitives
   dnnDelete<Dtype>(convolutionFwd);
   if (this->bias_term_) {
@@ -227,6 +145,15 @@ void MKLConvolutionLayer<Dtype>::Init(
   if (this->bias_term_)
     fwd_bias_data->create_layouts(convolutionFwd, dnnResourceBias, 1,
                                   bias_sizes, bias_strides);
+
+}
+
+template <typename Dtype>
+void MKLConvolutionLayer<Dtype>::CreateBwdDataPrimitive() {
+  int status;
+  size_t g = std::max(this->group_, 1);
+  size_t dimension = 4;
+
 /*
  * Backward by data layer setup
  */
@@ -254,6 +181,14 @@ void MKLConvolutionLayer<Dtype>::Init(
   bwdd_filter_data->create_layouts(convolutionBwdData, dnnResourceFilter,
                                    f_dimension, fdata_sizes, fdata_strides);
 
+}
+
+template <typename Dtype>
+void MKLConvolutionLayer<Dtype>::CreateBwdFilterPrimitive() {
+  int status;
+  size_t g = std::max(this->group_, 1);
+  size_t dimension = 4;
+
 /*
  * Backward by filter layer setup
  */
@@ -278,10 +213,10 @@ void MKLConvolutionLayer<Dtype>::Init(
                                    dimension, bdata_sizes, bdata_strides);
   bwdf_top_diff   ->create_layouts(convolutionBwdFilter, dnnResourceDiffDst,
                                    dimension, tdata_sizes, tdata_strides);
-  bwdf_filter_diff->create_layouts(convolutionFwd, dnnResourceFilter,
+  bwdf_filter_diff->create_layouts(convolutionBwdFilter, dnnResourceDiffFilter,
                                    f_dimension, fdata_sizes, fdata_strides);
   // support for (iter_size > 1) requires additional buffer
-  bwdf_filter_diff_iter->create_layouts(convolutionFwd, dnnResourceFilter,
+  bwdf_filter_diff_iter->create_layouts(convolutionBwdFilter, dnnResourceDiffFilter,
                                    f_dimension, fdata_sizes, fdata_strides);
 
   // Note: this caused some trouble for older MKL
@@ -293,13 +228,19 @@ void MKLConvolutionLayer<Dtype>::Init(
         dnnResourceDiffFilter);
     bwdf2fwd_filter_diff->remove_user_layout();
     status = dnnLayoutCreateFromPrimitive<Dtype>(
-        &bwdf2fwd_filter_diff->layout_usr, convolutionFwd, dnnResourceFilter);
+        &bwdf2fwd_filter_diff->layout_usr, convolutionBwdFilter, dnnResourceDiffFilter);
     CHECK_EQ(status, 0) << "Failed dnnLayoutCreateFromPrimitive with status "
             << status << "\n";
 
     bwdf2fwd_filter_diff->create_conversions();
   }
+}
 
+template <typename Dtype>
+void MKLConvolutionLayer<Dtype>::CreateBwdBiasPrimitive() {
+  int status;
+  size_t g = std::max(this->group_, 1);
+  size_t dimension = 4;
 /*
  * Backward by bias layer setup
  */
@@ -327,6 +268,122 @@ void MKLConvolutionLayer<Dtype>::Init(
 }
 
 template <typename Dtype>
+MKLConvolutionLayer<Dtype>::~MKLConvolutionLayer() {
+    dnnDelete<Dtype>(convolutionFwd);
+    dnnDelete<Dtype>(convolutionBwdData);
+    dnnDelete<Dtype>(convolutionBwdFilter);
+    if (this->bias_term_)
+        dnnDelete<Dtype>(convolutionBwdBias);
+}
+
+template <typename Dtype>
+void MKLConvolutionLayer<Dtype>::Init(
+      const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  this->width_ = bottom[0]->width();
+  this->height_ = bottom[0]->height();
+  this->num_ = bottom[0]->num();
+
+  // TODO: clean up this
+  kernel_w_ = this->kernel_shape_.cpu_data()[1];
+  kernel_h_ = this->kernel_shape_.cpu_data()[0];
+  stride_w_ = this->stride_.cpu_data()[1];
+  stride_h_ = this->stride_.cpu_data()[0];
+  pad_w_ = this->pad_.cpu_data()[1];
+  pad_h_ = this->pad_.cpu_data()[0];
+
+  this->bottom_shape_ = &bottom[0]->shape();
+  compute_output_shape();
+  size_t n, g;
+  size_t iw, ih, ic;
+  size_t ow, oh, oc;
+  size_t kw, kh; /* filter */
+  size_t dimension = 4;
+
+  g  = std::max(this->group_, 1);
+  n  = this->num_;
+  iw = this->width_;
+  ih = this->height_;
+  ic = this->channels_;
+
+  ow = this->width_out_;
+  oh = this->height_out_;
+  oc = this->num_output_;
+
+  kw = this->kernel_w_;
+  kh = this->kernel_h_;
+
+  this->bdata_sizes[0] = iw;
+  this->bdata_sizes[1] = ih;
+  this->bdata_sizes[2] = ic;
+  this->bdata_sizes[3] = n;
+
+  this->bdata_strides[0] = 1;
+  this->bdata_strides[1] = iw;
+  this->bdata_strides[2] = iw*ih;
+  this->bdata_strides[3] = iw*ih*ic;
+
+  /* starting with MKL 2017 Gold in case of groups filter layout
+   * becomes 5D, i.e. groups become a separate dimension */
+  size_t g_mkl2017 = g;
+  f_dimension = dimension + (g != 1);
+  if (getMKLBuildDate() < 20160701) {
+      g_mkl2017 = 1;
+      f_dimension = dimension;
+  }
+
+  this->fdata_sizes[0] = kw;
+  this->fdata_sizes[1] = kh;
+  this->fdata_sizes[2] = ic/g;
+  this->fdata_sizes[3] = oc/g_mkl2017;
+  this->fdata_sizes[4] = g_mkl2017;
+
+  this->fdata_strides[0] = 1;
+  this->fdata_strides[1] = kw;
+  this->fdata_strides[2] = kw*kh;
+  this->fdata_strides[3] = kw*kh*ic/g;
+  this->fdata_strides[4] = kw*kh*ic/g*oc/g;
+
+  this->bias_sizes[0] = oc;
+
+  this->bias_strides[0] = 1;
+
+  this->tdata_sizes[0] = ow;
+  this->tdata_sizes[1] = oh;
+  this->tdata_sizes[2] = oc;
+  this->tdata_sizes[3] = n;
+
+  this->tdata_strides[0]  = 1;
+  this->tdata_strides[1]  = ow;
+  this->tdata_strides[2]  = ow*oh;
+  this->tdata_strides[3]  = ow*oh*oc;
+
+  this->convolutionStrides[0] = this->stride_w_;
+  this->convolutionStrides[1] = this->stride_h_;
+
+  this->inputOffset[0] = -this->pad_w_;
+  this->inputOffset[1] = -this->pad_h_;
+
+  // Names are for debugging purposes only.
+  fwd_bottom_data ->name = "fwd_bottom_data   @ " + this->layer_param_.name();
+  fwd_top_data    ->name = "fwd_top_data      @ " + this->layer_param_.name();
+  fwd_filter_data ->name = "fwd_filter_data   @ " + this->layer_param_.name();
+  fwd_bias_data   ->name = "fwd_bias_data     @ " + this->layer_param_.name();
+  bwdd_top_diff   ->name = "bwdd_top_diff     @ " + this->layer_param_.name();
+  bwdd_bottom_diff->name = "bwdd_bottom_diff  @ " + this->layer_param_.name();
+  bwdd_filter_data->name = "bwdd_filter_data  @ " + this->layer_param_.name();
+  bwdf_top_diff   ->name = "bwdf_top_diff     @ " + this->layer_param_.name();
+  bwdf_bottom_data->name = "bwdf_bottom_data  @ " + this->layer_param_.name();
+  bwdf_filter_diff->name = "bwdf_filter_diff  @ " + this->layer_param_.name();
+  bwdf2fwd_filter_diff->name =
+                       "bwdf2fwd_filter_diff  @ " + this->layer_param_.name();
+  bwdb_top_diff   ->name = "bwdb_top_diff     @ " + this->layer_param_.name();
+  bwdb_bias_diff  ->name = "bwdb_bias_diff    @ " + this->layer_param_.name();
+
+  CreateFwdPrimitive();
+}
+
+template <typename Dtype>
 void MKLConvolutionLayer<Dtype>::LayerSetUp(
       const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
@@ -338,14 +395,21 @@ void MKLConvolutionLayer<Dtype>::LayerSetUp(
 template <typename Dtype>
 void MKLConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  bool reinitialize = (this->width_ == bottom[0]->width() &&
-                       this->height_ == bottom[0]->height() &&
-                       this->channels_ == bottom[0]->channels() &&
-                       this->num_ == bottom[0]->num()) ? false : true;
+  this->reshape = (this->width_ == bottom[0]->width() &&
+                   this->height_ == bottom[0]->height() &&
+                   this->channels_ == bottom[0]->channels() &&
+                   this->num_ == bottom[0]->num()) ? false : true;
 
   BaseConvolutionLayer<Dtype>::ReshapeForMKL(bottom, top);
 
-  if (reinitialize == true) {
+  if (this->reshape == true) {
+    // when reshape happens, sync weight and bias data/diff to cpu.
+    this->blobs_[0]->mutable_cpu_data();
+    this->blobs_[0]->mutable_cpu_diff();
+    if (this->bias_term_) {
+      this->blobs_[1]->mutable_cpu_data();
+      this->blobs_[1]->mutable_cpu_diff();
+    }
     Init(bottom, top);
   }
 }
@@ -436,6 +500,9 @@ void MKLConvolutionLayer<Dtype>::Backward_cpu(
   if (propagate_down[0]) {
     void *res_convolutionBwdData[dnnResourceNumber];
 
+    if ((convolutionBwdData == NULL) || this->reshape)
+      CreateBwdDataPrimitive();
+
     res_convolutionBwdData[dnnResourceDiffDst] =
       bwdd_top_diff->get_converted_prv(top[0], true);
     // Currently this conversion adds padding to weights.
@@ -462,6 +529,9 @@ void MKLConvolutionLayer<Dtype>::Backward_cpu(
 
   if (this->param_propagate_down(0)) {
     void *res_convolutionBwdFilter[dnnResourceNumber];
+
+    if ((convolutionBwdFilter == NULL) || this->reshape)
+      CreateBwdFilterPrimitive();
 
     res_convolutionBwdFilter[dnnResourceDiffDst] =
             bwdf_top_diff->get_converted_prv(top[0], true);
@@ -555,6 +625,9 @@ void MKLConvolutionLayer<Dtype>::Backward_cpu(
 
   if (this->param_propagate_down(1)) {
     void *res_convolutionBwdBias[dnnResourceNumber];
+
+    if ((convolutionBwdBias == NULL) || this->reshape)
+      CreateBwdBiasPrimitive();
 
     res_convolutionBwdBias[dnnResourceDiffDst] =
             bwdb_top_diff->get_converted_prv(top[0], true);

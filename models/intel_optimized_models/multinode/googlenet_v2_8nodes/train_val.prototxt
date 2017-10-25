@@ -8,7 +8,7 @@ layer {
   type: "Data"
   data_param {
     source: "examples/imagenet/ilsvrc12_train_lmdb"
-    batch_size: 96
+    batch_size: 64 
     backend: LMDB
     shuffle: true
   }

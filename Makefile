@@ -103,6 +103,7 @@ DYNAMIC_NAME_SHORT := lib$(LIBRARY_NAME).so
 DYNAMIC_VERSIONED_NAME_SHORT := $(DYNAMIC_NAME_SHORT).$(DYNAMIC_VERSION_MAJOR).$(DYNAMIC_VERSION_MINOR).$(DYNAMIC_VERSION_REVISION)
 DYNAMIC_NAME := $(LIB_BUILD_DIR)/$(DYNAMIC_VERSIONED_NAME_SHORT)
 COMMON_FLAGS += -DCAFFE_VERSION=$(DYNAMIC_VERSION_MAJOR).$(DYNAMIC_VERSION_MINOR).$(DYNAMIC_VERSION_REVISION)
+COMMON_FLAGS += -std=c++11
 
 ##############################
 # Get all source files
@@ -318,6 +319,11 @@ else ifeq ($(UNAME), Darwin)
 	OSX_MINOR_VERSION := $(shell sw_vers -productVersion | cut -f 2 -d .)
 endif
 
+# Custom compiler
+ifdef CUSTOM_CXX
+	CXX := $(CUSTOM_CXX)
+endif
+
 # Linux
 ifeq ($(LINUX), 1)
 	CXX ?= /usr/bin/g++
@@ -365,19 +371,19 @@ else
 	ORIGIN := \$$ORIGIN
 endif
 
-# Custom compiler
-ifdef CUSTOM_CXX
-	CXX := $(CUSTOM_CXX)
-endif
-
 # Compiler flags
 ifneq (,$(findstring icpc,$(CXX)))
 	CXX_HARDENING_FLAGS += -fstack-protector
+	#Enable SGD FUSION if use intel compiler
+	COMMON_FLAGS += -DENABLE_SGD_FUSION
+
 else ifneq (,$(findstring clang++,$(CXX)))
 	CXX_HARDENING_FLAGS += -fPIE -fstack-protector
 else ifneq (,$(findstring g++,$(CXX)))
-	ifeq ($(shell echo | awk '{exit $(GCCVERSION) >= 4.9;}'), 1)
+	ifeq ($(shell echo | awk '{ print $(GCCVERSION) >= 4.9 }'), 1)
 		CXX_HARDENING_FLAGS += -fPIE -fstack-protector-strong
+		#Enable SGD FUSION if gcc version >= 4.9
+		COMMON_FLAGS += -DENABLE_SGD_FUSION
 	else
 		CXX_HARDENING_FLAGS += -fPIE -fstack-protector
 	endif	
@@ -500,7 +506,7 @@ ifeq ($(MKL_EXTERNAL), 1)
 	MKL_LDFLAGS+=-Wl,-rpath,$(MKLROOT)/lib
 endif
 
-	COMMON_FLAGS += -DUSE_MKL
+	COMMON_FLAGS += -DUSE_MKL -DMKL_ILP64
 	BLAS_INCLUDE ?= $(MKLROOT)/include
 	BLAS_LIB ?= $(MKLROOT)/lib $(MKLROOT)/lib/intel64
 
@@ -547,10 +553,6 @@ LIBRARY_DIRS += $(LIB_BUILD_DIR)
 # Automatic dependency generation (nvcc is handled separately)
 CXXFLAGS += -MMD -MP
 
-##########SGD FUSION#######################
-ifeq ($(ENABLE_SGD_FUSION), 1)
-        COMMON_FLAGS += -DENABLE_SGD_FUSION
-endif
 ###########################################
 #
 # Complete build flags.
@@ -827,6 +829,7 @@ $(PY_PROTO_INIT): | $(PY_PROTO_BUILD_DIR)
 	touch $(PY_PROTO_INIT)
 
 clean: mkldnn_clean
+	@echo "Will download the new version of MKL2017 and MLSL when clean and prepare the environment."
 	@- $(RM) -rf $(ALL_BUILD_DIRS)
 	@- $(RM) -rf $(OTHER_BUILD_DIR)
 	@- $(RM) -rf $(BUILD_DIR_LINK)

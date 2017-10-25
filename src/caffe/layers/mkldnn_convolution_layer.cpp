@@ -64,7 +64,11 @@ MKLDNNConvolutionLayer<Dtype>::MKLDNNConvolutionLayer(const LayerParameter& para
             , bwdd_top_diff_primitive(NULL), bwdd_weights_data_primitive(NULL)
             , bwdw_top_diff_primitive(NULL), bwdw_bottom_data_primitive(NULL)
             , width_(0), height_(0), width_out_(0), height_out_(0), kernel_w_(0), kernel_h_(0)
-            , stride_w_(0), stride_h_(0), pad_w_(0), pad_h_(0)
+            , stride_w_(0), stride_h_(0), pad_w_(0), pad_h_(0),
+            bwdw_weights_diff_iter(NULL),
+            bwdw_bias_diff_iter(NULL),
+            bwdw_weights_diff_memory_iter(NULL),
+            bwdw_bias_diff_memory_iter(NULL)
 {
   PERFORMANCE_EVENT_ID_RESET(perf_id_fw_);
   PERFORMANCE_EVENT_ID_RESET(perf_id_bw_);
@@ -117,6 +121,15 @@ void MKLDNNConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& botto
     ConvolutionLayer<Dtype>::LayerSetUp(bottom, top);
     init_properties(bottom, top);
     this->bottom_shape_ = &bottom[0]->shape();
+
+    // support for (iter_size > 1) requires additional buffer for weights diff and bias diff
+    // Because Net is initialized before Caffe::set_iter_size, so additional buffer should be new and set here
+    bwdw_weights_diff_iter_blob.reset(new Blob<Dtype>());
+    bwdw_weights_diff_iter_blob->ReshapeLike(*(this->blobs_[0]));
+    if (this->bias_term_) {
+      bwdw_bias_diff_iter_blob.reset(new Blob<Dtype>());
+      bwdw_bias_diff_iter_blob->ReshapeLike(*(this->blobs_[1]));
+    }
 }
 
 template <typename Dtype>
@@ -441,23 +454,53 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionBwd(const vector<Blob<Dtype>*
     bwdw_weights_diff->name = "bwdw_weights_diff  @ " + this->layer_param_.name();
     bwdw_weights_diff_memory = bwdw_weights_diff->create_output_memory();
 
+    if (Caffe::iter_size() > 1) {
+      // support for (iter_size > 1) weights diff requires additional buffer
+      shared_ptr<MemPD> prv_bwdw_weights_diff_memory_iter_pd(new MemPD(convBwdWeights_pd->diff_weights_primitive_desc()));
+      bwdw_weights_diff_iter.reset(new MKLDNNDiff<Dtype>(usr_weights_data_memory_pd, prv_bwdw_weights_diff_memory_iter_pd, bwdw_weights_diff_iter_blob.get(), this));
+      bwdw_weights_diff_memory_iter = bwdw_weights_diff_iter->create_output_memory();
+    }
+
     if (this->bias_term_) {
         shared_ptr<MemPD> prv_bwdw_bias_diff_memory_pd(new MemPD(convBwdWeights_pd->diff_bias_primitive_desc()));
         bwdw_bias_diff.reset(new MKLDNNDiff<Dtype>(usr_bias_data_memory_pd, prv_bwdw_bias_diff_memory_pd, this->blobs_[1].get(), this));
         bwdw_bias_diff->name = "bwdw_bias_diff     @ " + this->layer_param_.name();
         bwdw_bias_diff_memory = bwdw_bias_diff->create_output_memory();
 
-        convBwdWeights.reset(new convolution_backward_weights(*convBwdWeights_pd
+        if (Caffe::iter_size() > 1) {
+          // support for (iter_size > 1) bias diff requires additional buffer
+          shared_ptr<MemPD> prv_bwdw_bias_diff_memory_iter_pd(new MemPD(convBwdWeights_pd->diff_bias_primitive_desc()));
+          bwdw_bias_diff_iter.reset(new MKLDNNDiff<Dtype>(usr_bias_data_memory_pd, prv_bwdw_bias_diff_memory_iter_pd, bwdw_bias_diff_iter_blob.get(), this));
+          bwdw_bias_diff_memory_iter = bwdw_bias_diff_iter->create_output_memory();
+          convBwdWeights.reset(new convolution_backward_weights(*convBwdWeights_pd
+                        , *bwdw_bottom_data_primitive, *bwdw_top_diff_primitive
+                        , *bwdw_weights_diff_memory_iter, *bwdw_bias_diff_memory_iter));
+        } else {
+          convBwdWeights.reset(new convolution_backward_weights(*convBwdWeights_pd
                         , *bwdw_bottom_data_primitive, *bwdw_top_diff_primitive
                         , *bwdw_weights_diff_memory, *bwdw_bias_diff_memory));
+        }
 
         //bwdw_bias_diff->set_mkldnn_primitive(convBwdWeights);   //Wrong passed primitive! (For sure!)
         MKLDNNPrimitive<Dtype> bwdw_bias_diff_memory_transfer(bwdw_bias_diff_memory);
         bwdw_bias_diff->set_mkldnn_primitive(bwdw_bias_diff_memory_transfer);
+
+        if (Caffe::iter_size() > 1) {
+          // support for (iter_size > 1) bias diff requires additional buffer
+          MKLDNNPrimitive<Dtype> bwdw_bias_diff_memory_iter_transfer(bwdw_bias_diff_memory_iter);
+          bwdw_bias_diff_iter->set_mkldnn_primitive(bwdw_bias_diff_memory_iter_transfer);
+        }
     } else {
-        convBwdWeights.reset(new convolution_backward_weights(*convBwdWeights_pd
+        if (Caffe::iter_size() > 1) {
+          // if (iter_size > 1) then weights diff should be accumulated across iterations
+          convBwdWeights.reset(new convolution_backward_weights(*convBwdWeights_pd
+                        , *bwdw_bottom_data_primitive, *bwdw_top_diff_primitive
+                        , *bwdw_weights_diff_memory_iter));
+        } else {
+          convBwdWeights.reset(new convolution_backward_weights(*convBwdWeights_pd
                         , *bwdw_bottom_data_primitive, *bwdw_top_diff_primitive
                         , *bwdw_weights_diff_memory));
+        }
     }
 
     convBwdData.reset(new convolution_backward_data(*convBwdData_pd
@@ -488,6 +531,12 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionBwd(const vector<Blob<Dtype>*
     //bwdw_weights_diff->set_mkldnn_primitive(convBwdWeights);  //Wrong passed primitive! (TODO: Checking!)
     MKLDNNPrimitive<Dtype> bwdw_weights_diff_memory_transfer(bwdw_weights_diff_memory);
     bwdw_weights_diff->set_mkldnn_primitive(bwdw_weights_diff_memory_transfer);
+
+    if (Caffe::iter_size() > 1) {
+      // support for (iter_size > 1) weights diff requires additional buffer
+      MKLDNNPrimitive<Dtype> bwdw_weights_diff_memory_iter_transfer(bwdw_weights_diff_memory_iter);
+      bwdw_weights_diff_iter->set_mkldnn_primitive(bwdw_weights_diff_memory_iter_transfer);
+    }
 
     // Names are for debugging purposes only.
 }
@@ -571,6 +620,34 @@ void MKLDNNConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top
         PERFORMANCE_MEASUREMENT_BEGIN();
         convBwdWeights.submit();
         PERFORMANCE_MEASUREMENT_END_ID(perf_id_bw_weights_);
+
+        if (Caffe::iter_size() > 1) {
+          // if (iter_size > 1) then weights diff should be accumulated across iterations
+          if (this->blobs_[0]->prv_diff() != NULL) {
+            caffe_axpy(this->blobs_[0]->prv_diff_count(), Dtype(1),
+              (Dtype*)(bwdw_weights_diff_memory_iter->get_data_handle()),
+              this->blobs_[0]->mutable_prv_diff());
+          } else {
+            caffe_axpy(this->blobs_[0]->count(), Dtype(1),
+              (Dtype*)(bwdw_weights_diff_memory_iter->get_data_handle()),
+              this->blobs_[0]->mutable_cpu_diff());
+          }
+        }
+
+        if (this->param_propagate_down(1)) {
+          if (Caffe::iter_size() > 1) {
+            // if (iter_size > 1) then bias diff should be accumulated across iterations
+            if (this->blobs_[1]->prv_diff() != NULL) {
+              caffe_axpy(this->blobs_[1]->prv_diff_count(), Dtype(1),
+                (Dtype*)(bwdw_bias_diff_memory_iter->get_data_handle()),
+                this->blobs_[1]->mutable_prv_diff());
+            } else {
+              caffe_axpy(this->blobs_[1]->count(), Dtype(1),
+                (Dtype*)(bwdw_bias_diff_memory_iter->get_data_handle()),
+                this->blobs_[1]->mutable_cpu_diff());
+            }
+          }
+        }
     }
 }
 

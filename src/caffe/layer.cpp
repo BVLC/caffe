@@ -72,7 +72,7 @@ mn::Distribution & Layer<Dtype>::GetDistribution() {
 template <typename Dtype>
 bool Layer<Dtype>::Bypass(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
-  return GetDistribution().get_group_id() > 0;
+  return GetDistribution().get_global_part_id() > 0;
 }
 
 template <typename Dtype>
@@ -99,7 +99,9 @@ void Layer<Dtype>::MultinodeSetUp(const vector<Blob<Dtype>*>& bottom,
     CHECK_GT(shape.size(), 0);
     oc = shape[0];
     if (shape.size() > 1) ic = shape[1];
-    if (shape.size() >= 4) hw = shape[2] * shape[3];
+    for (int k = 2; k < shape.size(); k++) {
+      hw *= shape[k];
+    }
     // Note that MLSL expects the entire weights from a model group.
     // So we should multiply by model_parts here.
     reg_info.add_parameter_set<Dtype>(ic * oc * model_parts, hw);

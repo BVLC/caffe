@@ -54,7 +54,7 @@ template <typename Dtype>
 void MKLReLULayer<Dtype>::Init(
       const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  size_t dim = bottom[0]->shape().size();
+  this->dim = bottom[0]->shape().size();
   this->sizes_.resize(dim);
   this->strides_.resize(dim);
   for (size_t d = 0; d < dim; ++d) {
@@ -72,8 +72,6 @@ void MKLReLULayer<Dtype>::Init(
   this->bwd_top_diff_->name =    "bwd_top_diff      @ " +
                                  this->layer_param_.name();
 
-  this->fwd_bottom_data_->create_user_layout(dim, &(this->sizes_[0]),
-                                             &(this->strides_[0]), false);
   this->fwd_top_data_   ->create_user_layout(dim, &(this->sizes_[0]),
                                              &(this->strides_[0]), false);
   this->bwd_bottom_diff_->create_user_layout(dim, &(this->sizes_[0]),
@@ -100,10 +98,11 @@ void MKLReLULayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   NeuronLayer<Dtype>::Reshape(bottom, top);
 
   // Here I check for sizes whther to destroy primitives
-  size_t dim = bottom[0]->shape().size();
+  dim = bottom[0]->shape().size();
 
   // If dimensions of blobs are the same as they were then
   // do not really destroy primitives
+  reshape = false;
   if (dim == this->sizes_.size()) {
     // .. check for strides and size dims if they corresspond each other
 
@@ -123,7 +122,7 @@ void MKLReLULayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       return;
     }
   }
-
+  reshape = true;
   Init(bottom, top);
 }
 
@@ -135,7 +134,7 @@ void MKLReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     reinterpret_cast<void *>(const_cast<Dtype*>(bottom[0]->prv_data()));
 
   if (bottom_data) {
-    if (reluFwd_ == NULL) {
+    if (reluFwd_ == NULL || reshape) {
       // first pass
       CHECK_EQ((bottom[0]->get_prv_data_descriptor())->get_descr_type(),
               PrvMemDescr::PRV_DESCR_MKL2017);
@@ -155,9 +154,9 @@ void MKLReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 
       DLOG(INFO) << "Using layout of " << mem_descr->name
               << " as input layout for " << this->layer_param_.name();
+
       // copy shared_ptr
       fwd_bottom_data_ = mem_descr;
-
       fwd_top_data_   ->create_internal_layout(reluFwd_, dnnResourceDst);
       bwd_top_diff_   ->create_internal_layout(reluFwd_, dnnResourceDst);
       bwd_bottom_diff_->create_internal_layout(reluFwd_, dnnResourceSrc);
@@ -166,10 +165,12 @@ void MKLReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     DLOG(INFO) << "Using cpu_data in MKLReLULayer.";
     bottom_data =
       reinterpret_cast<void *>(const_cast<Dtype*>(bottom[0]->cpu_data()));
-    if (reluFwd_ == NULL) {
+    if (reluFwd_ == NULL || reshape) {
       // first pass
       dnnError_t e;
       Dtype negative_slope = this->layer_param_.relu_param().negative_slope();
+      this->fwd_bottom_data_->create_user_layout(dim, &(this->sizes_[0]),
+                                                 &(this->strides_[0]), false);
       e = dnnReLUCreateForward<Dtype>(&reluFwd_, NULL,
               fwd_bottom_data_->layout_usr, negative_slope);
       CHECK_EQ(e, E_SUCCESS);

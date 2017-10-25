@@ -67,22 +67,22 @@ void MKLPoolingLayer<Dtype>::Init(
   num_ = bottom[0]->num();
 
   if (pool_param.global_pooling()) {
-    CHECK(!(pool_param.has_kernel_size() ||
+    CHECK(!(pool_param.kernel_size_size() ||
       pool_param.has_kernel_h() || pool_param.has_kernel_w()))
       << "With Global_pooling: true Filter size cannot specified";
   } else {
-    CHECK(!pool_param.has_kernel_size() !=
+    CHECK(!pool_param.kernel_size_size() !=
       !(pool_param.has_kernel_h() && pool_param.has_kernel_w()))
       << "Filter size is kernel_size OR kernel_h and kernel_w; not both";
-    CHECK(pool_param.has_kernel_size() ||
+    CHECK(pool_param.kernel_size_size() ||
       (pool_param.has_kernel_h() && pool_param.has_kernel_w()))
       << "For non-square filters both kernel_h and kernel_w are required.";
   }
-  CHECK((!pool_param.has_pad() && pool_param.has_pad_h()
+  CHECK((!pool_param.pad_size() && pool_param.has_pad_h()
       && pool_param.has_pad_w())
       || (!pool_param.has_pad_h() && !pool_param.has_pad_w()))
       << "pad is pad OR pad_h and pad_w are required.";
-  CHECK((!pool_param.has_stride() && pool_param.has_stride_h()
+  CHECK((!pool_param.stride_size() && pool_param.has_stride_h()
       && pool_param.has_stride_w())
       || (!pool_param.has_stride_h() && !pool_param.has_stride_w()))
       << "Stride is stride OR stride_h and stride_w are required.";
@@ -91,8 +91,15 @@ void MKLPoolingLayer<Dtype>::Init(
     kernel_h_ = bottom[0]->height();
     kernel_w_ = bottom[0]->width();
   } else {
-    if (pool_param.has_kernel_size()) {
-      kernel_h_ = kernel_w_ = pool_param.kernel_size();
+    if (pool_param.kernel_size_size()) {
+      CHECK(pool_param.kernel_size_size() == 1 || pool_param.kernel_size_size() == 2)
+          << "kernel_size must be specified once, or 2 values for Height and Width";
+      if (pool_param.kernel_size_size() == 1) {
+        kernel_h_ = kernel_w_ = pool_param.kernel_size(0);
+      } else {
+        kernel_h_ = pool_param.kernel_size(0);
+        kernel_w_ = pool_param.kernel_size(1);
+      }
     } else {
       kernel_h_ = pool_param.kernel_h();
       kernel_w_ = pool_param.kernel_w();
@@ -101,13 +108,33 @@ void MKLPoolingLayer<Dtype>::Init(
   CHECK_GT(kernel_h_, 0) << "Filter dimensions cannot be zero.";
   CHECK_GT(kernel_w_, 0) << "Filter dimensions cannot be zero.";
   if (!pool_param.has_pad_h()) {
-    pad_h_ = pad_w_ = pool_param.pad();
+    // CHECK(pool_param.pad_size() == 0 || pool_param.pad_size() == 1 || pool_param.pad_size() == 2)
+    CHECK(pool_param.pad_size() < 3)
+          << "pad must be specified no more than 3 dimensions";
+    if (pool_param.pad_size() == 0) {
+      pad_h_ = pad_w_ = 0;
+    } else if (pool_param.pad_size() == 1) {
+      pad_h_ = pad_w_ = pool_param.pad(0);
+    } else {
+      pad_h_ = pool_param.pad(0);
+      pad_w_ = pool_param.pad(1);
+    }
   } else {
     pad_h_ = pool_param.pad_h();
     pad_w_ = pool_param.pad_w();
   }
   if (!pool_param.has_stride_h()) {
-    stride_h_ = stride_w_ = pool_param.stride();
+    // CHECK(pool_param.stride_size() == 0 || pool_param.stride_size() == 1 || pool_param.stride_size() == 2)
+    CHECK(pool_param.stride_size() < 3)
+        << "stride must be specified no more than 3 dimensions";
+    if (pool_param.stride_size() == 0) {
+      stride_h_ = stride_w_ = 1;
+    } else if (pool_param.stride_size() == 1) {
+      stride_h_ = stride_w_ = pool_param.stride(0);
+    } else {
+      stride_h_ = pool_param.stride(0);
+      stride_w_ = pool_param.stride(1);
+    }
   } else {
     stride_h_ = pool_param.stride_h();
     stride_w_ = pool_param.stride_w();
@@ -131,7 +158,7 @@ void MKLPoolingLayer<Dtype>::Init(
   pooled_width_ = static_cast<int>(ceil(static_cast<float>(
       bottom[0]->width() + 2 * pad_w_ - kernel_w_) / stride_w_)) + 1;
   bool force_exclude_padding_flag_ = false;
-  if (pad_h_ || pad_w_) {
+  if (pad_h_ || pad_w_ || kernel_h_ == 1 || kernel_w_ == 1) {
     // If we have padding, ensure that the last pooling starts strictly
     // inside the image (instead of at the padding); otherwise clip the last.
     if ((pooled_height_ - 1) * stride_h_ >= bottom[0]->height() + pad_h_) {
@@ -194,9 +221,7 @@ void MKLPoolingLayer<Dtype>::Init(
   }
 
 
-  size_t dim = 4;
-  size_t src_sizes[4], src_strides[4];
-  size_t dst_sizes[4], dst_strides[4];
+  dim = 4;
 
   src_sizes[0] = bottom[0]->width();
   src_sizes[1] = bottom[0]->height();
@@ -233,7 +258,6 @@ void MKLPoolingLayer<Dtype>::Init(
   bwd_top_diff->name =    "bwd_top_diff      @ " + this->layer_param_.name();
   bwd_bottom_diff->name = "bwd_bottom_diff   @ " + this->layer_param_.name();
 
-  fwd_bottom_data->create_user_layout(dim, src_sizes, src_strides, false);
   fwd_top_data   ->create_user_layout(dim, dst_sizes, dst_strides, false);
   bwd_bottom_diff->create_user_layout(dim, src_sizes, src_strides, false);
   bwd_top_diff   ->create_user_layout(dim, dst_sizes, dst_strides, false);
@@ -258,9 +282,10 @@ void MKLPoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       height_ == bottom[0]->height() &&
       width_ == bottom[0]->width() &&
       num_ == bottom[0]->num()) {
+    reshape = false;
     return;
   }
-
+  reshape = true;
   Init(bottom, top);
 }
 
@@ -285,8 +310,9 @@ void MKLPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   if (NULL == bottom_data) {
     bottom_data =
       reinterpret_cast<void *>(const_cast<Dtype*>(bottom[0]->cpu_data()));
-    if (NULL == poolingFwd) {
+    if (NULL == poolingFwd || reshape) {
       // Now create poolingFwd
+      fwd_bottom_data->create_user_layout(dim, src_sizes, src_strides, false);
       status = dnnPoolingCreateForward<Dtype>(&poolingFwd, NULL,
               this->algorithm, fwd_bottom_data->layout_usr,
               kernel_size, kernel_stride, src_offset, dnnBorderZeros);
@@ -298,7 +324,7 @@ void MKLPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
               kernel_size, kernel_stride, src_offset, dnnBorderZeros);
       CHECK_EQ(status, E_SUCCESS);
     }
-  } else if (NULL == poolingFwd) {
+  } else if (NULL == poolingFwd || reshape) {
     // Is it the first pass? Create a primitive.
     CHECK_EQ((bottom[0]->get_prv_data_descriptor())->get_descr_type(),
             PrvMemDescr::PRV_DESCR_MKL2017);
@@ -309,7 +335,6 @@ void MKLPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 
     DLOG(INFO) << "Using layout of " << mem_descr->name
             << " as input layout for " << this->layer_param_.name();
-
     // copy shared_ptr
     fwd_bottom_data = mem_descr;
 

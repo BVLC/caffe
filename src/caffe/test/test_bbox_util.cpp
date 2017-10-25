@@ -303,18 +303,27 @@ TEST_F(CPUBBoxUtilTest, TestOutputBBox) {
   resize_param.set_resize_mode(
       ResizeParameter_Resize_mode_FIT_LARGE_SIZE_AND_PAD);
   OutputBBox(bbox, img_size, has_resize, resize_param, &out_bbox);
-  CHECK_EQ(out_bbox.xmin(), 0.);
-  CHECK_EQ(out_bbox.ymin(), 50.);
-  CHECK_EQ(out_bbox.xmax(), 150.);
-  CHECK_EQ(out_bbox.ymax(), 150.);
+  //CHECK_EQ(out_bbox.xmin(), 0.);
+  //CHECK_EQ(out_bbox.ymin(), 50.);   //When change from GCC to ICC, it will lead the error out of threshold
+  //CHECK_EQ(out_bbox.xmax(), 150.);
+  //CHECK_EQ(out_bbox.ymax(), 150.);
+  static const float errorBound = 1e-4;
+  EXPECT_NEAR(out_bbox.xmin(), 0., errorBound);
+  EXPECT_NEAR(out_bbox.ymin(), 50., errorBound);
+  EXPECT_NEAR(out_bbox.xmax(), 150., errorBound);
+  EXPECT_NEAR(out_bbox.ymax(), 150., errorBound);
 
   img_size.first = 500;
   img_size.second = 300;
   OutputBBox(bbox, img_size, has_resize, resize_param, &out_bbox);
-  CHECK_EQ(out_bbox.xmin(), 0.);
-  CHECK_EQ(out_bbox.ymin(), 150.);
-  CHECK_EQ(out_bbox.xmax(), 50.);
-  CHECK_EQ(out_bbox.ymax(), 250.);
+  //CHECK_EQ(out_bbox.xmin(), 0.);
+  //CHECK_EQ(out_bbox.ymin(), 150.);
+  //CHECK_EQ(out_bbox.xmax(), 50.);   //When change from GCC to ICC, it will lead the error out of threshold
+  //CHECK_EQ(out_bbox.ymax(), 250.);
+  EXPECT_NEAR(out_bbox.xmin(), 0., errorBound);
+  EXPECT_NEAR(out_bbox.ymin(), 150., errorBound);
+  EXPECT_NEAR(out_bbox.xmax(), 50., errorBound);
+  EXPECT_NEAR(out_bbox.ymax(), 250., errorBound);
 }
 
 TEST_F(CPUBBoxUtilTest, TestJaccardOverlap) {

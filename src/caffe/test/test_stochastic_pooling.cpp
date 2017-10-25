@@ -93,8 +93,8 @@ TYPED_TEST_CASE(CPUStochasticPoolingLayerTest, TestDtypes);
 TYPED_TEST(CPUStochasticPoolingLayerTest, TestSetup) {
   LayerParameter layer_param;
   PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
-  pooling_param->set_kernel_size(3);
-  pooling_param->set_stride(2);
+  pooling_param->add_kernel_size(3);
+  pooling_param->add_stride(2);
   PoolingLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_->num());
@@ -116,8 +116,8 @@ TYPED_TEST(GPUStochasticPoolingLayerTest, TestStochastic) {
   LayerParameter layer_param;
   layer_param.set_phase(TRAIN);
   PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
-  pooling_param->set_kernel_size(3);
-  pooling_param->set_stride(2);
+  pooling_param->add_kernel_size(3);
+  pooling_param->add_stride(2);
   pooling_param->set_pool(PoolingParameter_PoolMethod_STOCHASTIC);
   PoolingLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -159,8 +159,8 @@ TYPED_TEST(GPUStochasticPoolingLayerTest, TestStochasticTestPhase) {
   LayerParameter layer_param;
   layer_param.set_phase(TEST);
   PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
-  pooling_param->set_kernel_size(3);
-  pooling_param->set_stride(2);
+  pooling_param->add_kernel_size(3);
+  pooling_param->add_stride(2);
   pooling_param->set_pool(PoolingParameter_PoolMethod_STOCHASTIC);
   PoolingLayer<TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -196,8 +196,8 @@ TYPED_TEST(GPUStochasticPoolingLayerTest, TestGradient) {
   LayerParameter layer_param;
   layer_param.set_phase(TRAIN);
   PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
-  pooling_param->set_kernel_size(3);
-  pooling_param->set_stride(2);
+  pooling_param->add_kernel_size(3);
+  pooling_param->add_stride(2);
   pooling_param->set_pool(PoolingParameter_PoolMethod_STOCHASTIC);
   PoolingLayer<TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-4, 1e-2);

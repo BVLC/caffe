@@ -55,6 +55,10 @@ using caffe::CAFFE_TEST_CUDA_PROP;
 int main(int argc, char** argv) {
   ::testing::InitGoogleMock(&argc, argv);
   caffe::GlobalInit(&argc, &argv);
+#ifdef USE_MLSL
+  caffe::mn::init(&argc, &argv);
+#endif
+
 #ifndef CPU_ONLY
   // Before starting testing, let's first print out a few cuda defice info.
   int device;

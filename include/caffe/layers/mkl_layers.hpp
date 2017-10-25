@@ -88,6 +88,11 @@ class MKLConvolutionLayer : public ConvolutionLayer<Dtype> {
   void Reshape(const vector<Blob<Dtype>*>& bottom,
           const vector<Blob<Dtype>*>& top);
 
+  void CreateFwdPrimitive();
+  void CreateBwdDataPrimitive();
+  void CreateBwdFilterPrimitive();
+  void CreateBwdBiasPrimitive();
+
  private:
   /* Fwd step */
   shared_ptr<MKLData<Dtype> > fwd_bottom_data, fwd_top_data, fwd_filter_data,
@@ -126,6 +131,25 @@ class MKLConvolutionLayer : public ConvolutionLayer<Dtype> {
          pad_h_;
 
   bool bprop_unpack_called;
+
+  // for reshape
+  bool reshape;
+  
+  size_t bdata_sizes[4];
+  size_t bdata_strides[4];
+
+  size_t f_dimension;
+  size_t fdata_sizes[5];
+  size_t fdata_strides[5];
+
+  size_t bias_sizes[1];
+  size_t bias_strides[1];
+
+  size_t tdata_sizes[4];
+  size_t tdata_strides[4];
+
+  size_t convolutionStrides[2];
+  int    inputOffset[2];
 
   PERFORMANCE_EVENT_ID_DECL(perf_id_fw_);
   PERFORMANCE_EVENT_ID_DECL(perf_id_bw_);
@@ -349,6 +373,10 @@ class MKLPoolingLayer : public Layer<Dtype> {
   shared_ptr<MKLDiff<Dtype> > bwd_top_diff, bwd_bottom_diff;
 
   dnnPrimitive_t poolingFwd, poolingBwd;
+  bool   reshape;
+  size_t dim;
+  size_t src_sizes[4], src_strides[4];
+  size_t dst_sizes[4], dst_strides[4];
 
   PERFORMANCE_EVENT_ID_DECL(perf_id_fw_);
   PERFORMANCE_EVENT_ID_DECL(perf_id_bw_);
@@ -409,6 +437,8 @@ class MKLReLULayer : public NeuronLayer<Dtype> {
   dnnPrimitive_t reluFwd_, reluBwd_;
   vector<size_t> sizes_;
   vector<size_t> strides_;
+  bool           reshape;
+  size_t         dim;
 
   PERFORMANCE_EVENT_ID_DECL(perf_id_fw_);
   PERFORMANCE_EVENT_ID_DECL(perf_id_bw_);
@@ -484,10 +514,11 @@ class MKLBatchNormLayer : public Layer<Dtype> {
         scaleShift_buffer_(static_cast<Dtype*>(NULL)),
         diffScaleShift_buffer_(static_cast<Dtype*>(NULL)),
         layout_usr_(static_cast<dnnLayout_t>(NULL)),
-        use_global_stats_(false),
         num_stats_batches_(1),
-        stats_batch_size_(0)
-      {
+        stats_batch_size_(0)      {
+        blobs_initialized_ = false;
+        use_global_stats_ = false;
+
         PERFORMANCE_EVENT_ID_RESET(perf_id_fw_);
         PERFORMANCE_EVENT_ID_RESET(perf_id_bw_);
       }
@@ -546,6 +577,8 @@ class MKLBatchNormLayer : public Layer<Dtype> {
   Dtype *diffScaleShift_buffer_;
   dnnLayout_t layout_usr_;
   bool use_global_stats_;
+
+  bool blobs_initialized_;
   int num_stats_batches_;
   int stats_batch_size_;
 

@@ -484,7 +484,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 152 (last added: mn_activation_param)
+// LayerParameter next available layer-specific ID: 156 (last added: spatial_dropout_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -540,6 +540,7 @@ message LayerParameter {
   optional AnnotatedDataParameter annotated_data_param = 200;
   optional ArgMaxParameter argmax_param = 103;
   optional BatchNormParameter batch_norm_param = 139;
+  optional BoxAnnotatorOHEMParameter box_annotator_ohem_param = 152;
   optional BiasParameter bias_param = 141;
   optional ConcatParameter concat_param = 104;
   optional ContrastiveLossParameter contrastive_loss_param = 105;
@@ -573,14 +574,17 @@ message LayerParameter {
   optional PoolingParameter pooling_param = 121;
   optional PowerParameter power_param = 122;
   optional PReLUParameter prelu_param = 131;
+  optional PSROIPoolingParameter psroi_pooling_param = 153;
   optional PriorBoxParameter prior_box_param = 203;
   optional PythonParameter python_param = 130;
   optional RecurrentParameter recurrent_param = 146;
   optional ReductionParameter reduction_param = 136;
   optional ReLUParameter relu_param = 123;
   optional ReshapeParameter reshape_param = 133;
+  optional ROIPoolingParameter roi_pooling_param = 154;
   optional ScaleParameter scale_param = 142;
   optional SigmoidParameter sigmoid_param = 124;
+  optional SmoothL1LossParameter smooth_l1_loss_param = 148;
   optional SoftmaxParameter softmax_param = 125;
   optional SPPParameter spp_param = 132;
   optional SplitParameter split_param = 147;
@@ -590,7 +594,7 @@ message LayerParameter {
   optional TileParameter tile_param = 138;
   optional VideoDataParameter video_data_param = 207;
   optional WindowDataParameter window_data_param = 129;
-
+  optional SpatialDropoutParameter spatial_dropout_param = 155;
   optional string engine = 149 [default = ""];
   
   optional MultinodeLayerParameter multinode = 150;
@@ -810,8 +814,10 @@ message LossParameter {
     VALID = 1;
     // Divide by the batch size.
     BATCH_SIZE = 2;
+    // Divide by pre-fixed normalizer
+    PRE_FIXED = 3;
     // Do not normalize the loss.
-    NONE = 3;
+    NONE = 4;
   }
   // For historical reasons, the default normalization for
   // SigmoidCrossEntropyLoss is BATCH_SIZE and *not* VALID.
@@ -820,6 +826,8 @@ message LossParameter {
   // is not specified, then setting this to false will be equivalent to
   // normalization = BATCH_SIZE to be consistent with previous behavior.
   optional bool normalize = 2;
+  // pre-fixed normalizer
+  optional float pre_fixed_normalizer = 4 [default = 1];
 }
 
 // Messages that store parameters used by individual layer types follow, in
@@ -915,6 +923,11 @@ message SplitParameter {
     MKLDNN = 4;
   }
   optional Engine engine = 1 [default = DEFAULT];
+}
+
+message BoxAnnotatorOHEMParameter {
+  required uint32 roi_per_img = 1; // number of rois for training
+  optional int32 ignore_label = 2 [default = -1]; // ignore_label in scoring
 }
 
 message BiasParameter {
@@ -1164,6 +1177,10 @@ message DetectionOutputParameter {
 }
 
 message DropoutParameter {
+  optional float dropout_ratio = 1 [default = 0.5]; // dropout ratio
+}
+
+message SpatialDropoutParameter {
   optional float dropout_ratio = 1 [default = 0.5]; // dropout ratio
 }
 
@@ -1499,16 +1516,19 @@ message PoolingParameter {
   optional bool avg_include_pad = 13 [default = true];
   optional PoolMethod pool = 1 [default = MAX]; // The pooling method
   // Pad, kernel size, and stride are all given as a single value for equal
-  // dimensions in height and width or as Y, X pairs.
-  optional uint32 pad = 4 [default = 0]; // The padding size (equal in Y, X)
-  optional uint32 pad_h = 9 [default = 0]; // The padding height
-  optional uint32 pad_w = 10 [default = 0]; // The padding width
-  optional uint32 kernel_size = 2; // The kernel size (square)
-  optional uint32 kernel_h = 5; // The kernel height
-  optional uint32 kernel_w = 6; // The kernel width
-  optional uint32 stride = 3 [default = 1]; // The stride (equal in Y, X)
-  optional uint32 stride_h = 7; // The stride height
-  optional uint32 stride_w = 8; // The stride width
+  // dimensions in all spatial dimensions, or once per spatial dimension.
+  repeated uint32 pad = 2; // The padding size defaults to 0
+  repeated uint32 kernel_size = 3; // The kernel size (square)
+  repeated uint32 stride = 4; // defaults to 1
+
+  // For 2D pooling only, the *_h and *_w versions may also be used to
+  // specify both spatial dimensions.
+  optional uint32 pad_h = 5 [default = 0]; // The padding height (2D only)
+  optional uint32 pad_w = 6 [default = 0]; // The padding width (2D only)
+  optional uint32 kernel_h = 7; // The kernel height (2D only)
+  optional uint32 kernel_w = 8; // The kernel width (2D only)
+  optional uint32 stride_h = 9 [default = 1]; // The stride height (2D only)
+  optional uint32 stride_w = 10 [default = 1]; // The stride width (2D only)
   enum Engine {
     DEFAULT = 0;
     CAFFE = 1;
@@ -1520,6 +1540,10 @@ message PoolingParameter {
   // If global_pooling then it will pool over the size of the bottom by doing
   // kernel_h = bottom->height and kernel_w = bottom->width
   optional bool global_pooling = 12 [default = false];
+  // The axis to interpret as "channels" when performing pooling.
+  // Preceding dimensions are treated as independent inputs;
+  // succeeding dimensions are treated as "spatial".
+  optional int32 axis = 14 [default = 1];
 }
 
 message PowerParameter {
@@ -1570,6 +1594,12 @@ message PriorBoxParameter {
   // Offset to the top left corner of each cell.
   optional float offset = 13 [default = 0.5];
 }
+
+message PSROIPoolingParameter {
+   required float spatial_scale = 1; 
+   required int32 output_dim = 2; // output channel number
+   required int32 group_size = 3; // number of groups to encode position-sensitive score maps
+ }
 
 message PythonParameter {
   optional string module = 1;
@@ -1716,6 +1746,18 @@ message ReshapeParameter {
   optional int32 num_axes = 3 [default = -1];
 }
 
+// Message that stores parameters used by ROIPoolingLayer
+message ROIPoolingParameter {
+  // Pad, kernel size, and stride are all given as a single value for equal
+  // dimensions in height and width or as Y, X pairs.
+  optional uint32 pooled_h = 1 [default = 0]; // The pooled output height
+  optional uint32 pooled_w = 2 [default = 0]; // The pooled output width
+  // Multiplicative spatial scale factor to translate ROI coords from their
+  // input scale to the scale used when pooling
+  optional float spatial_scale = 3 [default = 1];
+  repeated uint32 pooled_size = 4; // pooled size for 3D blobs
+}
+
 message ScaleParameter {
   // The first axis of bottom[0] (the first input Blob) along which to apply
   // bottom[1] (the second input Blob).  May be negative to index from the end
@@ -1771,6 +1813,13 @@ message SliceParameter {
 
   // DEPRECATED: alias for "axis" -- does not support negative indexing.
   optional uint32 slice_dim = 1 [default = 1];
+}
+
+message SmoothL1LossParameter {
+  // SmoothL1Loss(x) =
+  //   0.5 * (sigma * x) ** 2    -- if x < 1.0 / sigma / sigma
+  //   |x| - 0.5 / sigma / sigma -- otherwise
+  optional float sigma = 1 [default = 1];
 }
 
 // Message that stores parameters used by SoftmaxLayer, SoftmaxWithLossLayer

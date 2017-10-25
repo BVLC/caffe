@@ -49,7 +49,6 @@ namespace caffe {
 
 using boost::weak_ptr;
 
-map<const string, weak_ptr<DataReader::Body> > DataReader::bodies_;
 static boost::mutex bodies_mutex_;
 
 DataReader::DataReader(const LayerParameter& param)

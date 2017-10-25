@@ -43,6 +43,8 @@
 
 namespace caffe {
   namespace mn {
+    int nGroup = 1;
+    int nServer = 0;
     boost::mutex distrib_lock;
     std::map<std::pair<int,int>, boost::shared_ptr<Distribution>> *distrib_map;
 
@@ -53,6 +55,18 @@ namespace caffe {
           MLSL::Environment::GetEnv().Init(argc, argv);
           distrib_map =
             new std::map<std::pair<int,int>, boost::shared_ptr<Distribution>>();
+          if (use_param_server()) {
+            if (is_param_server()) {
+              // this is for paramter servers
+              MLSL::Environment::GetEnv().Configure("color=0");
+            }
+            else {
+              // this is for workers
+              int group_id = get_group_id();
+              std::string config_str = "color=" + std::to_string(group_id + 1);
+              MLSL::Environment::GetEnv().Configure(config_str.c_str());
+            }
+          }
         }
         ~initialize() {
           delete distrib_map;
@@ -61,30 +75,49 @@ namespace caffe {
       } __init{ argc, argv };
     }
     
-    shared_ptr<Distribution> create_distrib(
+    template<>  
+    MPI_Datatype DtypeToMPIDtype<float>() { return MPI_FLOAT; }
+
+    template<> 
+    MPI_Datatype DtypeToMPIDtype<double>() { return MPI_DOUBLE; }
+
+    template<>  
+    MLSL::DataType DtypeToMLSLDtype<float>() { return MLSL::DT_FLOAT; }
+
+    template<> 
+    MLSL::DataType DtypeToMLSLDtype<double>() { return MLSL::DT_DOUBLE; }
+
+    boost::shared_ptr<Distribution> create_distrib(
       int dataParts, int modelParts, int dataColor, int modelColor,
       int dataColorMax, int modelColorMax) {
-      return shared_ptr<Distribution>(
+      return boost::shared_ptr<Distribution>(
         new Distribution(dataParts, modelParts, dataColor, modelColor,
-                         dataColorMax, modelColorMax));
+          dataColorMax, modelColorMax));
+    }
+
+    boost::shared_ptr<Distribution> create_distrib(int dataParts, int modelParts) {
+      int node_id = get_node_id();
+      int num_nodes = get_group_size();
+      int modelColor = node_id / modelParts;
+      int dataColor = node_id % (num_nodes / dataParts);
+      return create_distrib(dataParts, modelParts, dataColor, modelColor);
+    }
+
+    boost::shared_ptr<Distribution> create_distrib() {
+      return create_distrib(get_group_size(), 1);
     }
 
     Distribution * get_distrib(int dataParts, int modelParts) {
       boost::mutex::scoped_lock l(distrib_lock);
       std::pair<int,int> key = std::make_pair(dataParts, modelParts);
       if (distrib_map->find(key) == distrib_map->end()) {
-        int node_id = get_node_id();
-        int num_nodes = get_nodes_count();
-        int modelColor = node_id / modelParts;
-        int dataColor = node_id % (num_nodes / dataParts);
-        (*distrib_map)[key] = boost::shared_ptr<Distribution>(
-          new Distribution(dataParts, modelParts, dataColor, modelColor));
+        (*distrib_map)[key] = create_distrib(dataParts, modelParts);
       }
       return (*distrib_map)[key].get();
     }
 
     Distribution * get_distrib() {
-      return get_distrib(get_nodes_count(), 1);
+      return get_distrib(get_group_size(), 1);
     }
   }
 }
