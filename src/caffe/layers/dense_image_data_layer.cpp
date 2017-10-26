@@ -135,7 +135,6 @@ void DenseImageDataLayer<Dtype>::ShuffleImages() {
 
 // This function is used to create a thread that prefetches the data.
 template <typename Dtype>
-//void DenseImageDataLayer<Dtype>::InternalThreadEntry() {
 void DenseImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   CPUTimer batch_timer;
   batch_timer.Start();

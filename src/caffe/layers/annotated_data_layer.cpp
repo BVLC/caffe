@@ -170,6 +170,13 @@ void AnnotatedDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
         expand_datum = &anno_datum;
       }
     }
+    AnnotatedDatum* rotate_datum = NULL;
+    if (transform_param.rotate()) {
+      rotate_datum = new AnnotatedDatum();
+      this->data_transformer_->RotateImage(*expand_datum, rotate_datum);
+    } else {
+      rotate_datum = expand_datum;
+    }
     AnnotatedDatum* sampled_datum = NULL;
     bool has_sampled = false;
     if (batch_samplers_.size() > 0) {
@@ -253,6 +260,9 @@ void AnnotatedDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     }
     if (transform_param.has_expand_param()) {
       delete expand_datum;
+    }
+    if (transform_param.rotate()) {
+      delete rotate_datum;
     }
     trans_time += timer.MicroSeconds();
 
