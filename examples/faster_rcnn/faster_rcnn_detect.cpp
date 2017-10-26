@@ -183,16 +183,18 @@ void Detector<Dtype>::ShowResult(const cv::Mat &img,
   if (objects.size() == 0)
     return;
 
+  cv::Mat show_img = img.clone();
+
   for (int i = 0; i < objects.size(); i++) {
     detect_result obj = objects[i];
-    cv::rectangle(img,
+    cv::rectangle(show_img,
                     cvPoint(obj.left, obj.top),
                     cvPoint(obj.right, obj.bottom),
                     cv::Scalar(255, 242, 35));
     std::stringstream ss;
     ss << classNames[obj.classid] << "/" << obj.confidence;
     std::string  text = ss.str();
-    cv::putText(img,
+    cv::putText(show_img,
                      text,
                      cvPoint(obj.left, obj.top + 20),
                      cv::FONT_HERSHEY_PLAIN,
@@ -200,7 +202,7 @@ void Detector<Dtype>::ShowResult(const cv::Mat &img,
                      cv::Scalar(0, 255, 255));
   }
 
-  cv::imshow("detections", img);
+  cv::imshow("detections", show_img);
   int key = cv::waitKey(static_cast<char>(0));
   if (key == 'q')
     exit(1);
