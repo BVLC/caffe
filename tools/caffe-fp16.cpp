@@ -87,17 +87,23 @@ class __Registerer_##func { \
 __Registerer_##func g_registerer_##func; \
 }
 
+int actions() {
+  LOG(ERROR) << "Available caffe actions:";
+  for (BrewMap::iterator it = g_brew_map.begin();
+       it != g_brew_map.end(); ++it) {
+    LOG(ERROR) << "\t" << it->first;
+  }
+  return 0;
+}
+
+RegisterBrewFunction(actions);
+
 static BrewFunction GetBrewFunction(const caffe::string& name) {
   if (g_brew_map.count(name)) {
     return g_brew_map[name];
   } else {
-    LOG(ERROR) << "Available caffe actions:";
-    for (BrewMap::iterator it = g_brew_map.begin();
-         it != g_brew_map.end(); ++it) {
-      LOG(ERROR) << "\t" << it->first;
-    }
-    LOG(FATAL) << "Unknown action: " << name;
-    return NULL;  // not reachable, just to suppress old compiler warnings.
+    LOG(ERROR) << "Unknown action: " << name;
+    return g_brew_map["actions"];  // not reachable, just to suppress old compiler warnings.
   }
 }
 
@@ -684,7 +690,7 @@ int main(int argc, char** argv) {
 #ifdef WITH_PYTHON_LAYER
     try {
 #endif
-      return GetBrewFunction(caffe::string(argv[1]))() != 0;
+      return GetBrewFunction(caffe::string(argv[1]))();
 #ifdef WITH_PYTHON_LAYER
     } catch (bp::error_already_set) {
       PyErr_Print();

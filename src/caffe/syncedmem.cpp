@@ -305,12 +305,14 @@ inline void SyncedMemory::to_gpu() {
             cl_gpu_mem_ = clCreateBuffer(
                 ctx.handle().get(), CL_MEM_READ_WRITE | CL_MEM_ALLOC_HOST_PTR,
                 size_, nullptr, &err);
+            CHECK_EQ(0, err) << "Failed to create OpenCL Buffer." << std::endl;
           } else if (ZEROCOPY_SUPPORTED(device_, cpu_ptr_, size_, own_cpu_data_)) {
               size_t aligned_size = ((size_ - 1)/OPENCL_CACHE_ALIGN + 1) *
                                     OPENCL_CACHE_ALIGN;
               cl_gpu_mem_ = clCreateBuffer(ctx.handle().get(),
                                CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR,
                                aligned_size, cpu_ptr_, &err);
+              CHECK_EQ(0, err) << "Failed to create OpenCL Buffer." << std::endl;
               void *mapped_ptr = clEnqueueMapBuffer(
                                     ctx.get_queue().handle().get(),
                                     (cl_mem) cl_gpu_mem_,
@@ -325,11 +327,12 @@ inline void SyncedMemory::to_gpu() {
                                       mapped_ptr, 0, NULL, NULL);
               own_zero_copy_data_ = true;
           }
-          if (cl_gpu_mem_ == nullptr)
+          if (cl_gpu_mem_ == nullptr) {
             cl_gpu_mem_ = clCreateBuffer(ctx.handle().get(), CL_MEM_READ_WRITE,
                                          size_, nullptr, &err);
-          CHECK_EQ(0, err) << "OpenCL buffer allocation of size "
-                          << size_ << " failed.";
+            CHECK_EQ(0, err) << "OpenCL buffer allocation of size "
+                            << size_ << " failed.";
+          }
           device_->IncreaseMemoryUsage(size_);
           gpu_ptr_ = reinterpret_cast<void*>(cl_gpu_mem_);
           // ctx.get_queue().finish();
