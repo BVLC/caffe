@@ -83,7 +83,7 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
     const static int STRIDE_H_BITS = 8;
     const static int DILATION_W_BITS = 8;
     const static int DILATION_H_BITS = 8;
-    const static int GROUP_BITS = 8;
+    const static int GROUP_BITS = 16;
     const static int INPUT_CHANNEL_BITS = 16;
     const static int INPUT_W_BITS = 16;
     const static int INPUT_H_BITS = 16;
