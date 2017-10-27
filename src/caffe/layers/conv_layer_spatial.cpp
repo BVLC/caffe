@@ -96,25 +96,14 @@ void ConvolutionLayerSpatial<Dtype>::LayerSetUp(
     negative_slope_ = 0;
 
   if (IsFusedWithPReLU()) {
+    int blob_index = this->blobs_.size();
+    this->blobs_.resize(blob_index + 1);
     if (this->layer_param_.convolution_param().prelu_param().channel_shared()) {
-      ConvolutionParameter *conv_fuse_param = this->layer_param_.mutable_convolution_param();
-      const Dtype* slope_data = this->bias_term_ ?
-                                this->blobs_[2]->cpu_data() : this->blobs_[1]->cpu_data();
-      switch (conv_fuse_param->fuse_type()) {
-        case ConvolutionParameter_FuseType_FUSED_CONV_PRELU:
-          conv_fuse_param->set_fuse_type(ConvolutionParameter_FuseType_FUSED_CONV_RELU);
-          break;
-        case ConvolutionParameter_FuseType_FUSED_CONV_ELTWISE_PRELU:
-          conv_fuse_param->set_fuse_type(ConvolutionParameter_FuseType_FUSED_CONV_ELTWISE_RELU);
-          break;
-        default:
-          std::cerr << "Unsupported fuse type: " << conv_fuse_param->fuse_type() << std::endl;
-      }
-      conv_fuse_param->mutable_relu_param()->set_negative_slope(slope_data[0]);
+      this->blobs_[blob_index].reset(new Blob<Dtype>(vector<int_tp>(0),
+                                            this->device_));
     } else {
-      vector<int_tp> slope_shape(1, this->num_output_);
-      shared_ptr<Blob<Dtype> > slope_blob(new Blob<Dtype>(slope_shape, this->device_));
-      this->blobs_.push_back(slope_blob);
+      this->blobs_[blob_index].reset(new Blob<Dtype>(vector<int_tp>(1, this->num_output_),
+                                            this->device_));
     }
   }
 
@@ -141,6 +130,27 @@ void ConvolutionLayerSpatial<Dtype>::LayerSetUp(
 template<typename Dtype>
 void ConvolutionLayerSpatial<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
                                              const vector<Blob<Dtype>*>& top) {
+
+  if (IsFusedWithPReLU()) {
+    if (this->layer_param_.convolution_param().prelu_param().channel_shared()) {
+      ConvolutionParameter *conv_fuse_param = this->layer_param_.mutable_convolution_param();
+      const Dtype* slope_data = this->bias_term_ ?
+                                this->blobs_[2]->cpu_data() : this->blobs_[1]->cpu_data();
+      switch (conv_fuse_param->fuse_type()) {
+        case ConvolutionParameter_FuseType_FUSED_CONV_PRELU:
+          conv_fuse_param->set_fuse_type(ConvolutionParameter_FuseType_FUSED_CONV_RELU);
+          break;
+        case ConvolutionParameter_FuseType_FUSED_CONV_ELTWISE_PRELU:
+          conv_fuse_param->set_fuse_type(ConvolutionParameter_FuseType_FUSED_CONV_ELTWISE_RELU);
+          break;
+        default:
+          std::cerr << "Unsupported fuse type: " << conv_fuse_param->fuse_type() << std::endl;
+      }
+      conv_fuse_param->mutable_relu_param()->set_negative_slope(slope_data[0]);
+      negative_slope_ = *slope_data;
+    }
+  }
+
   if (IsFusedWithEltwise()) {
     const vector<Blob<Dtype>*> bottom_image(bottom.begin(), bottom.end() - 1);
     BaseConvolutionLayer<Dtype>::Reshape(bottom_image, top);

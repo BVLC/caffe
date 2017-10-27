@@ -148,7 +148,7 @@ def fuse_layer(in_model, in_index, out_model, new_index):
         if has_relu(fuse_mode) and in_model.layer[in_index + fused_layer_count].relu_param.negative_slope != 0:
             out_model.layer[new_index].convolution_param.relu_param.negative_slope = in_model.layer[in_index + fused_layer_count].relu_param.negative_slope
         if has_prelu(fuse_mode) and in_model.layer[in_index + fused_layer_count].prelu_param.channel_shared != False:
-            out_model.layer[new_index].convolution_param.relu_param.negative_slope = in_model.layer[in_index + fused_layer_count].prelu_param.channel_shared
+            out_model.layer[new_index].convolution_param.prelu_param.channel_shared = in_model.layer[in_index + fused_layer_count].prelu_param.channel_shared
     if is_lrn_fusion(fuse_mode):
         new_top = in_model.layer[in_index + 1].top[0]
         out_model.layer[new_index].top.remove(out_model.layer[new_index].top[0])
@@ -280,8 +280,11 @@ def generate_weights(in_model, args):
                     print 'Incorrect fusion detected for Prelu, aborting'
                     exit(-1)
                 out_net.params[prm].add_blob()
-                out_net.params[prm][-1].reshape(in_net.params[prelu_prm][0].shape[0])
-                out_net.params[prm][-1].data[:] = in_net.params[prelu_prm][0].data[:]
+                out_net.params[prm][-1].data.reshape(in_net.params[prelu_prm][0].data.shape)
+                if (len(in_net.params[prelu_prm][0].data.shape) == 0):
+                    out_net.params[prm][-1].data[()] = in_net.params[prelu_prm][0].data[()]
+                else:
+                    out_net.params[prm][-1].data[:] = in_net.params[prelu_prm][0].data[:]
             continue
         print '    Processing ' + prm + ' with fusion mode %r, fusing the following layers' % fuse_mode
         for i in range(0, fused_layer_count):
