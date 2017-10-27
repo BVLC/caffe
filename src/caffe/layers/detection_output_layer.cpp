@@ -43,7 +43,7 @@ void DetectionOutputLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   output_directory_ = save_output_param.output_directory();
   if (!output_directory_.empty()) {
     if (boost::filesystem::is_directory(output_directory_)) {
-      boost::filesystem::remove_all(output_directory_);
+      // boost::filesystem::remove_all(output_directory_);
     }
     if (!boost::filesystem::create_directories(output_directory_)) {
         LOG(WARNING) << "Failed to create directory: " << output_directory_;
