@@ -266,10 +266,6 @@ void Solver<Dtype>::Step(int iters) {
     }
     ApplyUpdate();
 
-    // Increment the internal iter_ counter -- its value should always indicate
-    // the number of times the weights have been updated.
-    ++iter_;
-
     SolverAction::Enum request = GetRequestedAction();
 
     // Save a snapshot if needed.
