@@ -1,5 +1,5 @@
 # ---[ Configuration types
-set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "Possible configurations" FORCE)
+set(CMAKE_CONFIGURATION_TYPES "Debug;Release;RelWithDebInfo;" CACHE STRING "Possible configurations" FORCE)
 mark_as_advanced(CMAKE_CONFIGURATION_TYPES)
 
 if(DEFINED CMAKE_BUILD_TYPE)
