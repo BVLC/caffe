@@ -161,6 +161,11 @@ void MKLDNNBatchNormLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom
 {
     VLOG(1) << "MKLDNNBatchNormLayer<Dtype>::Reshape: " << this->layer_param_.name();
 
+    this->reshape = (this->width_ == bottom[0]->width() &&
+                     this->height_ == bottom[0]->height() &&
+                     this->channels_ == bottom[0]->channels() &&
+                     this->num_ == bottom[0]->num()) ? false : true;
+
     this->width_ = bottom[0]->width();
     this->height_ = bottom[0]->height();
     this->num_ = bottom[0]->num();
@@ -228,6 +233,7 @@ void MKLDNNBatchNormLayer<Dtype>::InitBatchNorm(const vector<Blob<Dtype>*>& bott
       subengines = "MKLDNN:CPU";
     EngineParser ep(subengines);
     unsigned subEngineIndex = 0;
+    BatchNormFwd_pd = NULL;
     for(; subEngineIndex < ep.getNumberOfSubEngines(); subEngineIndex++) {
       try {
         BatchNormFwd_pd.reset(new batch_normalization_forward::primitive_desc(BatchNormFwd_desc,
@@ -366,7 +372,7 @@ void MKLDNNBatchNormLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom
     LOG(INFO) << "MKLDNNBatchNormLayer<Dtype>::Forward_cpu: " << this->layer_param_.name();
 #endif
 
-    if(BatchNormFwd_pd == NULL)
+    if(BatchNormFwd_pd == NULL || this->reshape)
         InitBatchNorm(bottom, top);
     bool inplace = (bottom[0] == top[0]);
 
@@ -469,6 +475,7 @@ void MKLDNNBatchNormLayer<Dtype>::InitBatchNormBwd(
       subengines = "MKLDNN:CPU";
     EngineParser ep(subengines);
     unsigned subEngineIndex = 0;
+    BatchNormBwd_pd = NULL;
     for(; subEngineIndex < ep.getNumberOfSubEngines(); subEngineIndex++) {
       try {
         BatchNormBwd_pd.reset(new batch_normalization_backward::primitive_desc(
@@ -539,7 +546,7 @@ void MKLDNNBatchNormLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     LOG(INFO) << "MKLDNNBatchNormLayer<Dtype>::Backward_cpu: " << this->layer_param_.name();
 #endif
 
-    if (BatchNormBwd_pd == NULL)
+    if (BatchNormBwd_pd == NULL || this->reshape)
         InitBatchNormBwd(top, propagate_down, bottom);
     // making reorders if needed.
     bwd_top_diff->sync_before_read();

@@ -93,6 +93,8 @@ void MKLDNNConvolutionLayer<Dtype>::init_properties(const vector<Blob<Dtype>*>& 
     this->stride_h_ = this->stride_.cpu_data()[0];
     this->width_ = bottom[0]->width();
     this->height_ = bottom[0]->height();
+    this->channels_ = bottom[0]->channels();
+    this->num_ = bottom[0]->num();
     this->pad_w_ = this->pad_.cpu_data()[1];
     this->pad_h_ = this->pad_.cpu_data()[0];
     this->kernel_w_ = this->kernel_shape_.cpu_data()[1];
@@ -137,8 +139,12 @@ void MKLDNNConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom
                                             , const vector<Blob<Dtype>*>& top)
 {
     VLOG(1) << " MKLDNNConvolutionLayer<Dtype>::Reshape: " << this->layer_param_.name();
-    BaseConvolutionLayer<Dtype>::ReshapeForMKL(bottom, top);
+    this->reshape = (this->width_ == bottom[0]->width() &&
+                     this->height_ == bottom[0]->height() &&
+                     this->channels_ == bottom[0]->channels() &&
+                     this->num_ == bottom[0]->num()) ? false : true;
     init_properties(bottom, top);
+    BaseConvolutionLayer<Dtype>::ReshapeForMKL(bottom, top);
 }
 
 template <typename Dtype>
@@ -192,8 +198,9 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
       subengines = "MKLDNN:CPU";
     EngineParser ep(subengines);
     unsigned subEngineIndex = 0;
-    shared_ptr<convolution_relu_forward::primitive_desc> convReluFwd_pd;
+    shared_ptr<convolution_relu_forward::primitive_desc> convReluFwd_pd = NULL;
     mkldnn::algorithm eligibleAlgorithms[2] = {conv_algorithm, algorithm::convolution_direct};
+    convFwd_pd = NULL;
     for (auto &convAlgorithm : eligibleAlgorithms) {
         // ---- Initialize convolution primitive descriptor -------------
         shared_ptr<convolution_forward::desc> convFwd_desc;
@@ -308,7 +315,7 @@ void MKLDNNConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bott
                                                 , const vector<Blob<Dtype>*>& top)
 {
     VLOG(1) << "MKLDNNConvolutionLayer<Dtype>::Forward_cpu: " << this->layer_param_.name();
-    if( convFwd_pd == NULL)
+    if( convFwd_pd == NULL || this->reshape)
         InitConvolutionFwd(bottom, top);
     // making reorders if needed.
     fwd_bottom_data->sync_before_read();
@@ -371,6 +378,8 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionBwd(const vector<Blob<Dtype>*
     unsigned subEngineIndex = 0;
 
     auto eligibleAlgorithms = {conv_algorithm, algorithm::convolution_direct};
+    convBwdData_pd = NULL;
+    convBwdWeights_pd = NULL;
     for (auto &convAlgorithm : eligibleAlgorithms) {
         // ---- Initialize convolution primitive descriptor -------------
         shared_ptr<convolution_backward_data::desc> convBwdData_desc;
@@ -548,7 +557,7 @@ void MKLDNNConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top
                                                 , const vector<Blob<Dtype>*>& bottom)
 {
     VLOG(1) << "MKLDNNConvolutionLayer<Dtype>::Backward_cpu: " << this->layer_param_.name();
-    if( convBwdData_pd == NULL)
+    if( convBwdData_pd == NULL || this->reshape)
         InitConvolutionBwd(top, propagate_down, bottom);
     if (propagate_down[0]) {
         // making reorders if needed.

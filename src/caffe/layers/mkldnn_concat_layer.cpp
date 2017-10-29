@@ -174,11 +174,11 @@ void MKLDNNConcatLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     }
 
     if (this->channels_ == bottom[0]->channels() &&
-      this->height_ == bottom[0]->height() &&
-      this->width_ == bottom[0]->width()) {
-        reshape = false;
+        this->height_ == bottom[0]->height() &&
+        this->width_ == bottom[0]->width()) {
+      this->reshape = false;
     } else {
-      reshape = true;
+      this->reshape = true;
     }
   }
   else if (concat_dimension == 1)
@@ -193,11 +193,11 @@ void MKLDNNConcatLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     }
 
     if (this->num_ == bottom[0]->num() &&
-      this->height_ == bottom[0]->height() &&
-      this->width_ == bottom[0]->width()) {
-        reshape = false;
+        this->height_ == bottom[0]->height() &&
+        this->width_ == bottom[0]->width()) {
+      this->reshape = false;
     } else {
-      reshape = true;
+      this->reshape = true;
     }
   }
   else if (concat_dimension == 2)
@@ -212,11 +212,11 @@ void MKLDNNConcatLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     }
 
     if (this->num_ == bottom[0]->num() &&
-      this->channels_ == bottom[0]->channels() &&
-      this->width_ == bottom[0]->width()) {
-        reshape = false;
+        this->channels_ == bottom[0]->channels() &&
+        this->width_ == bottom[0]->width()) {
+      this->reshape = false;
     } else {
-      reshape = true;
+      this->reshape = true;
     }
   }
   else if (concat_dimension == 3)
@@ -231,11 +231,11 @@ void MKLDNNConcatLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     }
 
     if (this->num_ == bottom[0]->num() &&
-      this->channels_ == bottom[0]->channels() &&
-      this->height_ == bottom[0]->height()) {
-        reshape = false;
+        this->channels_ == bottom[0]->channels() &&
+        this->height_ == bottom[0]->height()) {
+      this->reshape = false;
     } else {
-      reshape = true;
+      this->reshape = true;
     }
   }
 
@@ -447,7 +447,7 @@ void MKLDNNConcatLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   LOG(INFO) << "MKLDNNConcatLayer<Dtype>::Forward_cpu: " << this->layer_param_.name();
 #endif
 
-  if ((NULL == concatFwd_pd) || (true == reshape))
+  if ((NULL == concatFwd_pd) || (true == this->reshape))
     InitConcatFwd(bottom, top);
   for (auto i = 0; i < num_concats_; i++) {
     // making reorders if needed.
@@ -472,7 +472,7 @@ void MKLDNNConcatLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top
   LOG(INFO) << "MKLDNNConcatLayer<Dtype>::Backward_cpu: " << this->layer_param_.name();
 #endif
 
-  if ((reorders.size() == 0) || (true == reshape))
+  if ((reorders.size() == 0) || (true == this->reshape))
     InitConcatBwd(top, propagate_down, bottom);
   bwd_top_diff->sync_before_read();
   for (auto i = 0; i < num_concats_; ++i) {

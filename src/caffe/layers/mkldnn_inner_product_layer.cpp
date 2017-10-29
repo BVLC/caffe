@@ -93,6 +93,8 @@ MKLDNNInnerProductLayer<Dtype>::MKLDNNInnerProductLayer(
   PERFORMANCE_EVENT_ID_RESET(perf_id_fw_);
   PERFORMANCE_EVENT_ID_RESET(perf_id_bw_);
   PERFORMANCE_EVENT_ID_RESET(perf_id_bw_weights_);
+  this->M_ = 0;
+  this->K_ = 0;
 }
 
 template <typename Dtype>
@@ -122,6 +124,17 @@ void MKLDNNInnerProductLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom
                                             , const vector<Blob<Dtype>*>& top)
 {
     VLOG(1) << "MKLDNNInnerProductLayer<Dtype>::Reshape: " << this->layer_param_.name();
+    const int axis = bottom[0]->CanonicalAxisIndex(
+        this->layer_param_.inner_product_param().axis());
+    if (this->M_ != bottom[0]->count(0, axis) ||
+        this->K_ != bottom[0]->count(axis) ||
+        this->w_ != bottom[0]->width() ||
+        this->h_ != bottom[0]->height()) {
+      this->reshape = true;
+    } else {
+      this->reshape = false;
+    }
+
     InnerProductLayer<Dtype>::Reshape(bottom, top);
 
     this->w_ = bottom[0]->width();
@@ -152,7 +165,6 @@ void MKLDNNInnerProductLayer<Dtype>::InitInnerProductFwd(const vector<Blob<Dtype
     memory::dims bias_tz = {oc};
 
 #ifdef DEBUG
-    LOG(INFO) << "has_spatial flag value: " << has_spatial;
     if (has_spatial)
     {
         LOG(INFO) << "Dimension of bottom for MKLDNN: " << n << " " << ic << " " << h << " " << w;
@@ -187,6 +199,7 @@ void MKLDNNInnerProductLayer<Dtype>::InitInnerProductFwd(const vector<Blob<Dtype
       subengines = "MKLDNN:CPU";
     EngineParser ep(subengines);
     unsigned subEngineIndex = 0;
+    ipFwd_pd = NULL;
     for(; subEngineIndex < ep.getNumberOfSubEngines(); subEngineIndex++) {
       try {
         ipFwd_pd.reset(new inner_product_forward::primitive_desc(*ipFwd_desc,
@@ -277,12 +290,12 @@ void MKLDNNInnerProductLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bot
     LOG(INFO) << "MKLDNNInnerProductLayer<Dtype>::Forward_cpu: " << this->layer_param_.name();
 #endif
 
-    if( ipFwd_pd == NULL)
+    if( ipFwd_pd == NULL || this->reshape)
         InitInnerProductFwd(bottom, top);
     // making reorders if needed.
     fwd_bottom_data->sync_before_read();
     fwd_weights_data->sync_before_read();
-    if (this->bias_term_) 
+    if (this->bias_term_)
       fwd_bias_data->sync_before_read();
     // update top that head at prv
     fwd_top_data->sync_before_write();
@@ -344,7 +357,7 @@ void MKLDNNInnerProductLayer<Dtype>::InitInnerProductBwd(const vector<Blob<Dtype
  else
     ipBwdWeights_desc.reset(new inner_product_backward_weights::desc(init_bottom_md, init_weights_md
                         , init_top_md));
-    
+
     ipBwdData_desc.reset(new inner_product_backward_data::desc(init_bottom_md, init_weights_md, init_top_md));
 
     // ---- Determining engine to use -----------------------
@@ -353,6 +366,8 @@ void MKLDNNInnerProductLayer<Dtype>::InitInnerProductBwd(const vector<Blob<Dtype
       subengines = "MKLDNN:CPU";
     EngineParser ep(subengines);
     unsigned subEngineIndex = 0;
+    ipBwdData_pd = NULL;
+    ipBwdWeights_pd = NULL;
     for(; subEngineIndex < ep.getNumberOfSubEngines(); subEngineIndex++) {
       try {
         ipBwdData_pd.reset(new inner_product_backward_data::primitive_desc(*ipBwdData_desc,
@@ -516,7 +531,7 @@ void MKLDNNInnerProductLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& to
     LOG(INFO) << "MKLDNNInnerProductLayer<Dtype>::Backward_cpu: " << this->layer_param_.name();
 #endif
 
-    if( ipBwdData_pd == NULL)
+    if( ipBwdData_pd == NULL || this->reshape)
         InitInnerProductBwd(top, propagate_down, bottom);
     if (propagate_down[0]) {
         // making reorders if needed.
