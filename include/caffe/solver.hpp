@@ -113,6 +113,7 @@ class Solver {
   }
   int iter() { return iter_; }
   void set_iter(int value) { iter_ = value; }
+  void increment_iter() { iter_++; }
 
   // Invoked at specific points during an iteration
   class Callback {

@@ -1,0 +1,19 @@
+net: "@NET@.prototxt"
+display: 0
+# time_per_iter: 1
+base_lr: 0.0002
+momentum: 0.5
+momentum2: 0.999
+weight_decay: 0.0004
+lr_policy: "multistep"
+gamma: 0.5
+stepvalue: 6000
+stepvalue: 10000
+stepvalue: 140000
+stepvalue: 180000
+stepvalue: 220000
+max_iter: 250000
+solver_mode: CPU
+solver_type: ADAM
+device_id: 0
+

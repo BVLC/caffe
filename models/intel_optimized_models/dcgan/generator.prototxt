@@ -1,0 +1,390 @@
+force_backward: true
+input: "feat"
+input_shape {
+  dim: 64
+  dim: 100
+}
+layer {
+  name: "reshape"
+  type: "Reshape"
+  bottom: "feat"
+  top: "reshape_defc5"
+  reshape_param {
+    shape {
+      dim: 64
+      dim: 100
+      dim: 1
+      dim: 1
+    }
+  }
+}
+layer {
+  name: "deconv5"
+  type: "Deconvolution"
+  bottom: "reshape_defc5"
+  top: "deconv5"
+  param {
+    lr_mult: 1
+    decay_mult: 0
+  }
+  param {
+    lr_mult: 0
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 512
+    pad: 0
+    kernel_size: 4
+    stride: 1
+    weight_filler {
+      type: "gaussian"
+      std: 0.02
+    }
+    bias_filler {
+      type: "constant"
+    }
+#    engine: CAFFE
+  }
+}
+
+layer {
+  name: "deconv5_BN"
+  type: "BatchNorm" include { phase: TRAIN}
+  bottom: "deconv5"
+  top: "deconv5_BN"
+  param {
+    lr_mult: 0
+    decay_mult: 0
+  }
+  param {
+    lr_mult: 0
+    decay_mult: 0
+  }
+  param {
+    lr_mult: 0
+    decay_mult: 0
+  }
+  batch_norm_param {
+    use_global_stats: false
+    moving_average_fraction: 0.95
+  }
+}
+layer {
+  name: "deconv5_BN"
+  type: "BatchNorm" include { phase: TEST}
+  bottom: "deconv5"
+  top: "deconv5_BN"
+  param {
+    lr_mult: 0
+    decay_mult: 0
+  }
+  param {
+    lr_mult: 0
+    decay_mult: 0
+  }
+  param {
+    lr_mult: 0
+    decay_mult: 0
+  }
+  batch_norm_param {
+    use_global_stats: true
+    moving_average_fraction: 0.95
+  }
+}
+
+layer {
+  name: "relu_deconv5"
+  type: "ReLU"
+  bottom: "deconv5_BN"
+  top: "deconv5_BN"
+}
+layer {
+  name: "conv5_1"           
+  type: "Deconvolution"
+  bottom: "deconv5_BN"
+  top: "conv5_1"
+  param {
+    lr_mult: 1
+    decay_mult: 0
+  }
+  param {
+    lr_mult: 0
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 256 
+    pad: 1
+    kernel_size: 4
+    stride: 2
+    weight_filler {
+      type: "gaussian"
+      std: 0.02
+    }
+    bias_filler {
+      type: "constant"
+    }
+#    engine: CAFFE
+  }
+}
+layer {
+  name: "deconv5_1_BN"
+  type: "BatchNorm" include { phase: TRAIN}
+  bottom: "conv5_1"
+  top: "deconv5_1_BN"
+  param {
+    lr_mult: 0
+    decay_mult: 0
+  }
+  param {
+    lr_mult: 0
+    decay_mult: 0
+  }
+  param {
+    lr_mult: 0
+    decay_mult: 0
+  }
+  batch_norm_param {
+    use_global_stats: false
+    moving_average_fraction: 0.95
+  }
+}
+layer {
+  name: "deconv5_1_BN"
+  type: "BatchNorm" include { phase: TEST}
+  bottom: "conv5_1"
+  top: "deconv5_1_BN"
+  param {
+    lr_mult: 0
+    decay_mult: 0
+  }
+  param {
+    lr_mult: 0
+    decay_mult: 0
+  }
+  param {
+    lr_mult: 0
+    decay_mult: 0
+  }
+  batch_norm_param {
+    use_global_stats: true
+    moving_average_fraction: 0.95
+  }
+}
+
+layer {
+  name: "relu_conv5_1"
+  type: "ReLU"
+  bottom: "deconv5_1_BN"
+  top: "deconv5_1_BN"
+}
+layer {
+  name: "deconv4"           
+  type: "Deconvolution"
+  bottom: "deconv5_1_BN"
+  top: "deconv4"
+  param {
+    lr_mult: 1
+    decay_mult: 0
+  }
+  param {
+    lr_mult: 0
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 128
+    pad: 1
+    kernel_size: 4
+    stride: 2
+    weight_filler {
+      type: "gaussian"
+      std: 0.02
+    }
+    bias_filler {
+      type: "constant"
+    }
+#    engine: CAFFE
+  }
+}
+layer {
+  name: "deconv4_BN"
+  type: "BatchNorm" include { phase: TRAIN}
+  bottom: "deconv4"
+  top: "deconv4_BN"
+  param {
+    lr_mult: 0
+    decay_mult: 0
+  }
+  param {
+    lr_mult: 0
+    decay_mult: 0
+  }
+  param {
+    lr_mult: 0
+    decay_mult: 0
+  }
+  batch_norm_param {
+    use_global_stats: false
+    moving_average_fraction: 0.95
+  }
+}
+layer {
+  name: "deconv4_BN"
+  type: "BatchNorm" include { phase: TEST}
+  bottom: "deconv4"
+  top: "deconv4_BN"
+  param {
+    lr_mult: 0
+    decay_mult: 0
+  }
+  param {
+    lr_mult: 0
+    decay_mult: 0
+  }
+  param {
+    lr_mult: 0
+    decay_mult: 0
+  }
+  batch_norm_param {
+    use_global_stats: true
+    moving_average_fraction: 0.95
+  }
+}
+
+layer {
+  name: "relu_deconv4"
+  type: "ReLU"
+  bottom: "deconv4_BN"
+  top: "deconv4_BN"
+}
+layer {
+  name: "conv4_1"           
+  type: "Deconvolution"
+  bottom: "deconv4_BN"
+  top: "conv4_1"
+  param {
+    lr_mult: 1
+    decay_mult: 0
+  }
+  param {
+    lr_mult: 0
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 64
+    pad: 1
+    kernel_size: 4
+    stride: 2
+    weight_filler {
+      type: "gaussian"
+      std: 0.02
+    }
+    bias_filler {
+      type: "constant"
+    }
+#    engine: CAFFE
+  }
+}
+
+layer {
+  name: "deconv4_1_BN"
+  type: "BatchNorm" include { phase: TRAIN}
+  bottom: "conv4_1"
+  top: "deconv4_1_BN"
+  param {
+    lr_mult: 0
+    decay_mult: 0
+  }
+  param {
+    lr_mult: 0
+    decay_mult: 0
+  }
+  param {
+    lr_mult: 0
+    decay_mult: 0
+  }
+  batch_norm_param {
+    use_global_stats: false
+    moving_average_fraction: 0.95
+  }
+}
+layer {
+  name: "deconv4_1_BN"
+  type: "BatchNorm" include { phase: TEST}
+  bottom: "conv4_1"
+  top: "deconv4_1_BN"
+  param {
+    lr_mult: 0
+    decay_mult: 0
+  }
+  param {
+    lr_mult: 0
+    decay_mult: 0
+  }
+  param {
+    lr_mult: 0
+    decay_mult: 0
+  }
+  batch_norm_param {
+    use_global_stats: true
+    moving_average_fraction: 0.95
+  }
+}
+
+layer {
+  name: "relu_conv4_1"
+  type: "ReLU"
+  bottom: "deconv4_1_BN"
+  top: "deconv4_1_BN"
+}
+layer {
+  name: "generated"
+  type: "Deconvolution"
+  bottom: "deconv4_1_BN"
+  top: "generated"
+  param {
+    lr_mult: 1
+    decay_mult: 0
+  }
+  param {
+    lr_mult: 0
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 3
+    pad: 1
+    kernel_size: 4
+    stride: 2
+    weight_filler {
+      type: "gaussian"
+      std: 0.02
+    }
+    bias_filler {
+      type: "constant"
+    }
+#    engine: CAFFE
+  }
+}
+
+#layer {
+#  name: "deconv3_relu"
+#  type: "TanH"
+#  bottom: "deconv3"
+#  top: "deconv3_relu"
+#}
+
+#layer {
+#  name: "deconv0_crop"
+#  type: "CropSimple"
+#  bottom: "deconv3"
+#  top: "deconv0_crop"
+#  crop_param {
+#     crop_height: 64
+#     crop_width: 64
+#  }
+#}
+#layer {
+#  name: "generated"
+#  type: "Eltwise"
+#  bottom: "deconv3"
+#  top: "generated"
+#}
