@@ -324,9 +324,9 @@ Open a Git Bash console on Windows and do the following instructions to build bo
   cmake -G "Visual Studio 14 2015 Win64" .
   cmake --build . --config Release
   cd ..
-  git clone https://github.com/ptillet/isaac.git
+  git clone https://github.com/intel/isaac.git
   mkdir -p isaac/build
-  cd build
+  cd isaac/build
   cmake -G "Visual Studio 14 2015 Win64" ..
   cmake --build . --config Release
   ```
