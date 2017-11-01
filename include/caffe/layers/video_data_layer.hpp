@@ -18,6 +18,9 @@
 #include "caffe/layers/base_data_layer.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/db.hpp"
+#ifdef USE_FFMPEG_QSV
+#include "caffe/util/ffmpeg_qsv_utils.hpp"
+#endif
 
 namespace caffe {
 
@@ -47,6 +50,9 @@ class VideoDataLayer : public BasePrefetchingDataLayer<Dtype> {
   int total_frames_;
   int processed_frames_;
   vector<int> top_shape_;
+#ifdef USE_FFMPEG_QSV
+  caffe::qsv::QsvVideoReader qsv_cap_;
+#endif
 };
 
 }  // namespace caffe
