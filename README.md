@@ -314,6 +314,7 @@ We have provided the latest models that are trained from different datasets. To 
 * ViennaCL - put it in the same directory as Caffe's source code.
 * Python 2.7
 * ISAAC - Please see below detail instructions
+* Latest Intel Graphics Driver and OpenCL SDK at https://software.intel.com/en-us/intel-opencl/download.
 
 Open a Git Bash console on Windows and do the following instructions to build both dlfcn-win32 and isaac. Please put both dlfcn-win32 and isaac at the same directory as caffe.
 
