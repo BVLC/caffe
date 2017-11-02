@@ -106,7 +106,7 @@ endif()
 
 # ---[ BLAS
 if(NOT APPLE)
-  set(BLAS "Open" CACHE STRING "Selected BLAS library")
+  set(BLAS "Atlas" CACHE STRING "Selected BLAS library")
   set_property(CACHE BLAS PROPERTY STRINGS "Atlas;Open;MKL")
 
   if(BLAS STREQUAL "Atlas" OR BLAS STREQUAL "atlas")
