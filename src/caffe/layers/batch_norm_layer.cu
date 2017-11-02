@@ -60,12 +60,12 @@ void BatchNormLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 
     // compute and save moving average
     this->blobs_[2]->mutable_cpu_data()[0] *= moving_average_fraction_;
-    this->blobs_[2]->mutable_cpu_data()[0] += 1;
-    caffe_gpu_axpby(mean_.count(), Dtype(1), mean_.gpu_data(),
+    this->blobs_[2]->mutable_cpu_data()[0] += Dtype(num);
+    caffe_gpu_axpby(mean_.count(), Dtype(num), mean_.gpu_data(),
         moving_average_fraction_, this->blobs_[0]->mutable_gpu_data());
     int m = bottom[0]->count()/channels_;
     Dtype bias_correction_factor = m > 1 ? Dtype(m)/(m-1) : 1;
-    caffe_gpu_axpby(variance_.count(), bias_correction_factor,
+    caffe_gpu_axpby(variance_.count(), bias_correction_factor * Dtype(num),
         variance_.gpu_data(), moving_average_fraction_,
         this->blobs_[1]->mutable_gpu_data());
   }
