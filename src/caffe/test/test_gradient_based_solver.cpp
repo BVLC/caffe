@@ -606,7 +606,11 @@ class SGDSolverTest : public GradientBasedSolverTest<TypeParam> {
   }
 };
 
+#ifdef USE_MKLDNN_AS_DEFAULT_ENGINE
+TYPED_TEST_CASE(SGDSolverTest, MKLDNNTestDtypesAndDevices);
+#else
 TYPED_TEST_CASE(SGDSolverTest, TestDtypesAndDevices);
+#endif
 
 TYPED_TEST(SGDSolverTest, TestLeastSquaresUpdate) {
   this->TestLeastSquaresUpdate();
@@ -673,6 +677,7 @@ TYPED_TEST(SGDSolverTest, TestLeastSquaresUpdateWithEverything) {
   }
 }
 
+#ifndef USE_MKLDNN_AS_DEFAULT_ENGINE
 TYPED_TEST(SGDSolverTest, TestLeastSquaresUpdateWithEverythingShare) {
   typedef typename TypeParam::Dtype Dtype;
   const Dtype kLearningRate = 0.01;
@@ -684,6 +689,7 @@ TYPED_TEST(SGDSolverTest, TestLeastSquaresUpdateWithEverythingShare) {
     this->TestLeastSquaresUpdate(kLearningRate, kWeightDecay, kMomentum, i);
   }
 }
+#endif
 
 TYPED_TEST(SGDSolverTest, TestLeastSquaresUpdateWithEverythingAccum) {
   typedef typename TypeParam::Dtype Dtype;
@@ -696,6 +702,7 @@ TYPED_TEST(SGDSolverTest, TestLeastSquaresUpdateWithEverythingAccum) {
       kIterSize);
 }
 
+#ifndef USE_MKLDNN_AS_DEFAULT_ENGINE
 TYPED_TEST(SGDSolverTest, TestLeastSquaresUpdateWithEverythingAccumShare) {
   typedef typename TypeParam::Dtype Dtype;
   const Dtype kLearningRate = 0.01;
@@ -707,6 +714,7 @@ TYPED_TEST(SGDSolverTest, TestLeastSquaresUpdateWithEverythingAccumShare) {
   this->CheckAccumulation(kLearningRate, kWeightDecay, kMomentum, kNumIters,
       kIterSize);
 }
+#endif
 
 TYPED_TEST(SGDSolverTest, TestSnapshot) {
   typedef typename TypeParam::Dtype Dtype;
@@ -719,6 +727,7 @@ TYPED_TEST(SGDSolverTest, TestSnapshot) {
   }
 }
 
+#ifndef USE_MKLDNN_AS_DEFAULT_ENGINE
 TYPED_TEST(SGDSolverTest, TestSnapshotShare) {
   typedef typename TypeParam::Dtype Dtype;
   const Dtype kLearningRate = 0.01;
@@ -730,7 +739,7 @@ TYPED_TEST(SGDSolverTest, TestSnapshotShare) {
     this->TestSnapshot(kLearningRate, kWeightDecay, kMomentum, i);
   }
 }
-
+#endif
 
 template <typename TypeParam>
 class AdaGradSolverTest : public GradientBasedSolverTest<TypeParam> {
@@ -742,7 +751,11 @@ class AdaGradSolverTest : public GradientBasedSolverTest<TypeParam> {
   }
 };
 
+#ifdef USE_MKLDNN_AS_DEFAULT_ENGINE
+TYPED_TEST_CASE(AdaGradSolverTest, MKLDNNTestDtypesAndDevices);
+#else
 TYPED_TEST_CASE(AdaGradSolverTest, TestDtypesAndDevices);
+#endif
 
 TYPED_TEST(AdaGradSolverTest, TestAdaGradLeastSquaresUpdate) {
   this->TestLeastSquaresUpdate();
@@ -772,6 +785,7 @@ TYPED_TEST(AdaGradSolverTest, TestAdaGradLeastSquaresUpdateWithEverything) {
   }
 }
 
+#ifndef USE_MKLDNN_AS_DEFAULT_ENGINE
 TYPED_TEST(AdaGradSolverTest,
       TestAdaGradLeastSquaresUpdateWithEverythingShare) {
   typedef typename TypeParam::Dtype Dtype;
@@ -784,6 +798,7 @@ TYPED_TEST(AdaGradSolverTest,
     this->TestLeastSquaresUpdate(kLearningRate, kWeightDecay, kMomentum, i);
   }
 }
+#endif
 
 TYPED_TEST(AdaGradSolverTest, TestLeastSquaresUpdateWithEverythingAccum) {
   typedef typename TypeParam::Dtype Dtype;
@@ -796,6 +811,7 @@ TYPED_TEST(AdaGradSolverTest, TestLeastSquaresUpdateWithEverythingAccum) {
       kIterSize);
 }
 
+#ifndef USE_MKLDNN_AS_DEFAULT_ENGINE
 TYPED_TEST(AdaGradSolverTest, TestLeastSquaresUpdateWithEverythingAccumShare) {
   typedef typename TypeParam::Dtype Dtype;
   const Dtype kLearningRate = 0.01;
@@ -807,6 +823,7 @@ TYPED_TEST(AdaGradSolverTest, TestLeastSquaresUpdateWithEverythingAccumShare) {
   this->CheckAccumulation(kLearningRate, kWeightDecay, kMomentum, kNumIters,
       kIterSize);
 }
+#endif
 
 TYPED_TEST(AdaGradSolverTest, TestSnapshot) {
   typedef typename TypeParam::Dtype Dtype;
@@ -819,6 +836,7 @@ TYPED_TEST(AdaGradSolverTest, TestSnapshot) {
   }
 }
 
+#ifndef USE_MKLDNN_AS_DEFAULT_ENGINE
 TYPED_TEST(AdaGradSolverTest, TestSnapshotShare) {
   typedef typename TypeParam::Dtype Dtype;
   const Dtype kLearningRate = 0.01;
@@ -830,7 +848,7 @@ TYPED_TEST(AdaGradSolverTest, TestSnapshotShare) {
     this->TestSnapshot(kLearningRate, kWeightDecay, kMomentum, i);
   }
 }
-
+#endif
 
 template <typename TypeParam>
 class NesterovSolverTest : public GradientBasedSolverTest<TypeParam> {
@@ -842,7 +860,12 @@ class NesterovSolverTest : public GradientBasedSolverTest<TypeParam> {
   }
 };
 
+
+#ifdef USE_MKLDNN_AS_DEFAULT_ENGINE
+TYPED_TEST_CASE(NesterovSolverTest, MKLDNNTestDtypesAndDevices);
+#else
 TYPED_TEST_CASE(NesterovSolverTest, TestDtypesAndDevices);
+#endif
 
 TYPED_TEST(NesterovSolverTest, TestNesterovLeastSquaresUpdate) {
   this->TestLeastSquaresUpdate();
@@ -906,6 +929,7 @@ TYPED_TEST(NesterovSolverTest, TestNesterovLeastSquaresUpdateWithEverything) {
   }
 }
 
+#ifndef USE_MKLDNN_AS_DEFAULT_ENGINE
 TYPED_TEST(NesterovSolverTest,
            TestNesterovLeastSquaresUpdateWithEverythingShare) {
   typedef typename TypeParam::Dtype Dtype;
@@ -918,6 +942,7 @@ TYPED_TEST(NesterovSolverTest,
     this->TestLeastSquaresUpdate(kLearningRate, kWeightDecay, kMomentum, i);
   }
 }
+#endif
 
 TYPED_TEST(NesterovSolverTest, TestLeastSquaresUpdateWithEverythingAccum) {
   typedef typename TypeParam::Dtype Dtype;
@@ -930,6 +955,7 @@ TYPED_TEST(NesterovSolverTest, TestLeastSquaresUpdateWithEverythingAccum) {
       kIterSize);
 }
 
+#ifndef USE_MKLDNN_AS_DEFAULT_ENGINE
 TYPED_TEST(NesterovSolverTest, TestLeastSquaresUpdateWithEverythingAccumShare) {
   typedef typename TypeParam::Dtype Dtype;
   const Dtype kLearningRate = 0.01;
@@ -941,6 +967,7 @@ TYPED_TEST(NesterovSolverTest, TestLeastSquaresUpdateWithEverythingAccumShare) {
   this->CheckAccumulation(kLearningRate, kWeightDecay, kMomentum, kNumIters,
       kIterSize);
 }
+#endif
 
 TYPED_TEST(NesterovSolverTest, TestSnapshot) {
   typedef typename TypeParam::Dtype Dtype;
@@ -953,6 +980,7 @@ TYPED_TEST(NesterovSolverTest, TestSnapshot) {
   }
 }
 
+#ifndef USE_MKLDNN_AS_DEFAULT_ENGINE
 TYPED_TEST(NesterovSolverTest, TestSnapshotShare) {
   typedef typename TypeParam::Dtype Dtype;
   const Dtype kLearningRate = 0.01;
@@ -964,6 +992,7 @@ TYPED_TEST(NesterovSolverTest, TestSnapshotShare) {
     this->TestSnapshot(kLearningRate, kWeightDecay, kMomentum, i);
   }
 }
+#endif
 
 template <typename TypeParam>
 class AdaDeltaSolverTest : public GradientBasedSolverTest<TypeParam> {
@@ -975,7 +1004,11 @@ class AdaDeltaSolverTest : public GradientBasedSolverTest<TypeParam> {
   }
 };
 
+#ifdef USE_MKLDNN_AS_DEFAULT_ENGINE
+TYPED_TEST_CASE(AdaDeltaSolverTest, MKLDNNTestDtypesAndDevices);
+#else
 TYPED_TEST_CASE(AdaDeltaSolverTest, TestDtypesAndDevices);
+#endif
 
 TYPED_TEST(AdaDeltaSolverTest, TestAdaDeltaLeastSquaresUpdate) {
   typedef typename TypeParam::Dtype Dtype;
@@ -1035,6 +1068,7 @@ TYPED_TEST(AdaDeltaSolverTest, TestAdaDeltaLeastSquaresUpdateWithEverything) {
   }
 }
 
+#ifndef USE_MKLDNN_AS_DEFAULT_ENGINE
 TYPED_TEST(AdaDeltaSolverTest,
            TestAdaDeltaLeastSquaresUpdateWithEverythingShare) {
   typedef typename TypeParam::Dtype Dtype;
@@ -1047,6 +1081,7 @@ TYPED_TEST(AdaDeltaSolverTest,
     this->TestLeastSquaresUpdate(kLearningRate, kWeightDecay, kMomentum, i);
   }
 }
+#endif
 
 TYPED_TEST(AdaDeltaSolverTest, TestLeastSquaresUpdateWithEverythingAccum) {
   typedef typename TypeParam::Dtype Dtype;
@@ -1059,6 +1094,7 @@ TYPED_TEST(AdaDeltaSolverTest, TestLeastSquaresUpdateWithEverythingAccum) {
       kIterSize);
 }
 
+#ifndef USE_MKLDNN_AS_DEFAULT_ENGINE
 TYPED_TEST(AdaDeltaSolverTest, TestLeastSquaresUpdateWithEverythingAccumShare) {
   typedef typename TypeParam::Dtype Dtype;
   const Dtype kLearningRate = 0.1;
@@ -1070,7 +1106,7 @@ TYPED_TEST(AdaDeltaSolverTest, TestLeastSquaresUpdateWithEverythingAccumShare) {
   this->CheckAccumulation(kLearningRate, kWeightDecay, kMomentum, kNumIters,
       kIterSize);
 }
-
+#endif
 TYPED_TEST(AdaDeltaSolverTest, TestSnapshot) {
   typedef typename TypeParam::Dtype Dtype;
   const Dtype kLearningRate = 0.1;
@@ -1082,6 +1118,7 @@ TYPED_TEST(AdaDeltaSolverTest, TestSnapshot) {
   }
 }
 
+#ifndef USE_MKLDNN_AS_DEFAULT_ENGINE
 TYPED_TEST(AdaDeltaSolverTest, TestSnapshotShare) {
   typedef typename TypeParam::Dtype Dtype;
   const Dtype kLearningRate = 0.1;
@@ -1093,7 +1130,7 @@ TYPED_TEST(AdaDeltaSolverTest, TestSnapshotShare) {
     this->TestSnapshot(kLearningRate, kWeightDecay, kMomentum, i);
   }
 }
-
+#endif
 template <typename TypeParam>
 class AdamSolverTest : public GradientBasedSolverTest<TypeParam> {
   typedef typename TypeParam::Dtype Dtype;
@@ -1109,8 +1146,11 @@ class AdamSolverTest : public GradientBasedSolverTest<TypeParam> {
   }
 };
 
+#ifdef USE_MKLDNN_AS_DEFAULT_ENGINE
+TYPED_TEST_CASE(AdamSolverTest, MKLDNNTestDtypesAndDevices);
+#else
 TYPED_TEST_CASE(AdamSolverTest, TestDtypesAndDevices);
-
+#endif
 TYPED_TEST(AdamSolverTest, TestAdamLeastSquaresUpdate) {
   typedef typename TypeParam::Dtype Dtype;
   const Dtype kLearningRate = 0.01;
@@ -1138,6 +1178,7 @@ TYPED_TEST(AdamSolverTest, TestAdamLeastSquaresUpdateWithEverything) {
   }
 }
 
+#ifndef USE_MKLDNN_AS_DEFAULT_ENGINE
 TYPED_TEST(AdamSolverTest, TestAdamLeastSquaresUpdateWithEverythingShare) {
   typedef typename TypeParam::Dtype Dtype;
   const Dtype kLearningRate = 0.01;
@@ -1149,6 +1190,7 @@ TYPED_TEST(AdamSolverTest, TestAdamLeastSquaresUpdateWithEverythingShare) {
     this->TestLeastSquaresUpdate(kLearningRate, kWeightDecay, kMomentum, i);
   }
 }
+#endif
 
 TYPED_TEST(AdamSolverTest, TestLeastSquaresUpdateWithEverythingAccum) {
   typedef typename TypeParam::Dtype Dtype;
@@ -1161,6 +1203,7 @@ TYPED_TEST(AdamSolverTest, TestLeastSquaresUpdateWithEverythingAccum) {
       kIterSize);
 }
 
+#ifndef USE_MKLDNN_AS_DEFAULT_ENGINE
 TYPED_TEST(AdamSolverTest, TestLeastSquaresUpdateWithEverythingAccumShare) {
   typedef typename TypeParam::Dtype Dtype;
   const Dtype kLearningRate = 0.01;
@@ -1172,6 +1215,7 @@ TYPED_TEST(AdamSolverTest, TestLeastSquaresUpdateWithEverythingAccumShare) {
   this->CheckAccumulation(kLearningRate, kWeightDecay, kMomentum, kNumIters,
       kIterSize);
 }
+#endif
 
 TYPED_TEST(AdamSolverTest, TestSnapshot) {
   typedef typename TypeParam::Dtype Dtype;
@@ -1184,6 +1228,7 @@ TYPED_TEST(AdamSolverTest, TestSnapshot) {
   }
 }
 
+#ifndef USE_MKLDNN_AS_DEFAULT_ENGINE
 TYPED_TEST(AdamSolverTest, TestSnapshotShare) {
   typedef typename TypeParam::Dtype Dtype;
   const Dtype kLearningRate = 0.01;
@@ -1195,7 +1240,7 @@ TYPED_TEST(AdamSolverTest, TestSnapshotShare) {
     this->TestSnapshot(kLearningRate, kWeightDecay, kMomentum, i);
   }
 }
-
+#endif
 template <typename TypeParam>
 class RMSPropSolverTest : public GradientBasedSolverTest<TypeParam> {
   typedef typename TypeParam::Dtype Dtype;
@@ -1209,7 +1254,11 @@ class RMSPropSolverTest : public GradientBasedSolverTest<TypeParam> {
   }
 };
 
+#ifdef USE_MKLDNN_AS_DEFAULT_ENGINE
+TYPED_TEST_CASE(RMSPropSolverTest, MKLDNNTestDtypesAndDevices);
+#else
 TYPED_TEST_CASE(RMSPropSolverTest, TestDtypesAndDevices);
+#endif
 
 TYPED_TEST(RMSPropSolverTest, TestRMSPropLeastSquaresUpdateWithWeightDecay) {
   typedef typename TypeParam::Dtype Dtype;
@@ -1240,6 +1289,7 @@ TYPED_TEST(RMSPropSolverTest, TestRMSPropLeastSquaresUpdateWithEverything) {
   }
 }
 
+#ifndef USE_MKLDNN_AS_DEFAULT_ENGINE
 TYPED_TEST(RMSPropSolverTest,
       TestRMSPropLeastSquaresUpdateWithEverythingShare) {
   typedef typename TypeParam::Dtype Dtype;
@@ -1252,6 +1302,7 @@ TYPED_TEST(RMSPropSolverTest,
     this->TestLeastSquaresUpdate(kLearningRate, kWeightDecay, kMomentum, i);
   }
 }
+#endif
 
 TYPED_TEST(RMSPropSolverTest, TestLeastSquaresUpdateWithEverythingAccum) {
   typedef typename TypeParam::Dtype Dtype;
@@ -1264,6 +1315,7 @@ TYPED_TEST(RMSPropSolverTest, TestLeastSquaresUpdateWithEverythingAccum) {
       kIterSize);
 }
 
+#ifndef USE_MKLDNN_AS_DEFAULT_ENGINE
 TYPED_TEST(RMSPropSolverTest, TestLeastSquaresUpdateWithEverythingAccumShare) {
   typedef typename TypeParam::Dtype Dtype;
   const Dtype kLearningRate = 0.01;
@@ -1275,6 +1327,7 @@ TYPED_TEST(RMSPropSolverTest, TestLeastSquaresUpdateWithEverythingAccumShare) {
   this->CheckAccumulation(kLearningRate, kWeightDecay, kMomentum, kNumIters,
       kIterSize);
 }
+#endif
 
 TYPED_TEST(RMSPropSolverTest, TestSnapshot) {
   typedef typename TypeParam::Dtype Dtype;
@@ -1287,6 +1340,7 @@ TYPED_TEST(RMSPropSolverTest, TestSnapshot) {
   }
 }
 
+#ifndef USE_MKLDNN_AS_DEFAULT_ENGINE
 TYPED_TEST(RMSPropSolverTest, TestSnapshotShare) {
   typedef typename TypeParam::Dtype Dtype;
   const Dtype kLearningRate = 0.01;
@@ -1298,5 +1352,5 @@ TYPED_TEST(RMSPropSolverTest, TestSnapshotShare) {
     this->TestSnapshot(kLearningRate, kWeightDecay, kMomentum, i);
   }
 }
-
+#endif
 }  // namespace caffe

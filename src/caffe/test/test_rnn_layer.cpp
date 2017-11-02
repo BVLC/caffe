@@ -100,6 +100,7 @@ class RNNLayerTest : public MultiDeviceTest<TypeParam> {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
+#ifndef USE_MKLDNN_AS_DEFAULT_ENGINE
 TYPED_TEST_CASE(RNNLayerTest, TestDtypesAndDevices);
 
 TYPED_TEST(RNNLayerTest, TestSetUp) {
@@ -250,5 +251,5 @@ TYPED_TEST(RNNLayerTest, TestGradientNonZeroContBufferSize2WithStaticInput) {
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_, 2);
 }
-
+#endif
 }  // namespace caffe

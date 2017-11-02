@@ -124,8 +124,13 @@ class LSTMLayerTest : public MultiDeviceTest<TypeParam> {
   vector<Blob<Dtype>*> unit_blob_top_vec_;
 };
 
+#ifdef USE_MKLDNN_AS_DEFAULT_ENGINE
+TYPED_TEST_CASE(LSTMLayerTest, MKLDNNTestDtypesAndDevices);
+#else
 TYPED_TEST_CASE(LSTMLayerTest, TestDtypesAndDevices);
+#endif
 
+#ifndef USE_MKLDNN_AS_DEFAULT_ENGINE
 TYPED_TEST(LSTMLayerTest, TestSetUp) {
   typedef typename TypeParam::Dtype Dtype;
   LSTMLayer<Dtype> layer(this->layer_param_);
@@ -135,6 +140,7 @@ TYPED_TEST(LSTMLayerTest, TestSetUp) {
   expected_top_shape[2] = this->num_output_;
   EXPECT_TRUE(this->blob_top_.shape() == expected_top_shape);
 }
+#endif
 
 TYPED_TEST(LSTMLayerTest, TestForward) {
   typedef typename TypeParam::Dtype Dtype;
@@ -268,6 +274,7 @@ TYPED_TEST(LSTMLayerTest, TestLSTMUnitGradientNonZeroCont) {
       this->unit_blob_top_vec_, 1);
 }
 
+#ifndef USE_MKLDNN_AS_DEFAULT_ENGINE
 TYPED_TEST(LSTMLayerTest, TestGradient) {
   typedef typename TypeParam::Dtype Dtype;
   LSTMLayer<Dtype> layer(this->layer_param_);
@@ -321,5 +328,6 @@ TYPED_TEST(LSTMLayerTest, TestGradientNonZeroContBufferSize2WithStaticInput) {
       this->blob_top_vec_, 2);
 }
 
+#endif
 
 }  // namespace caffe
