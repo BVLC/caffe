@@ -116,5 +116,5 @@ To get a list of all options `googletest` provides, simply pass the `--help` fla
 
 - **Run `make lint` to check C++ code.**
 - Wrap lines at 80 chars.
-- Follow [Google C++ style](http://google-styleguide.googlecode.com/svn/trunk/cppguide.xml) and [Google python style](http://google-styleguide.googlecode.com/svn/trunk/pyguide.html) + [PEP 8](http://legacy.python.org/dev/peps/pep-0008/).
+- Follow [Google C++ style](https://google.github.io/styleguide/cppguide.html) and [Google python style](https://google.github.io/styleguide/pyguide.html) + [PEP 8](http://legacy.python.org/dev/peps/pep-0008/).
 - Remember that “a foolish consistency is the hobgoblin of little minds,” so use your best judgement to write the clearest code for your particular case.
