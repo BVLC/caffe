@@ -17,9 +17,11 @@ BaseDataLayer<Dtype>::BaseDataLayer(const LayerParameter& param)
       transform_param_(param.transform_param()) {
 }
 
+// 实现一般数据层构建，并调用DataLayerSetup函数
 template <typename Dtype>
 void BaseDataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
+  // 如果top层size大于1，则包含有标签  
   if (top.size() == 1) {
     output_labels_ = false;
   } else {
@@ -47,12 +49,14 @@ BasePrefetchingDataLayer<Dtype>::BasePrefetchingDataLayer(
 template <typename Dtype>
 void BasePrefetchingDataLayer<Dtype>::LayerSetUp(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
+  // 先调用父类LayerSetUp 
   BaseDataLayer<Dtype>::LayerSetUp(bottom, top);
 
   // Before starting the prefetch thread, we make cpu_data and gpu_data
   // calls so that the prefetch thread does not accidentally make simultaneous
   // cudaMalloc calls when the main thread is running. In some GPUs this
   // seems to cause failures if we do not so.
+  // 线程开启前先分配内存&显存，防止在某些GPU上报错  
   for (int i = 0; i < prefetch_.size(); ++i) {
     prefetch_[i]->data_.mutable_cpu_data();
     if (this->output_labels_) {
@@ -71,6 +75,7 @@ void BasePrefetchingDataLayer<Dtype>::LayerSetUp(
 #endif
   DLOG(INFO) << "Initializing prefetch";
   this->data_transformer_->InitRand();
+  // 开启线程  
   StartInternalThread();
   DLOG(INFO) << "Prefetch initialized.";
 }
@@ -87,6 +92,7 @@ void BasePrefetchingDataLayer<Dtype>::InternalThreadEntry() {
   try {
     while (!must_stop()) {
       Batch<Dtype>* batch = prefetch_free_.pop();
+      // 加载batch，该函数由子类DataLayer实现  
       load_batch(batch);
 #ifndef CPU_ONLY
       if (Caffe::mode() == Caffe::GPU) {
@@ -109,6 +115,7 @@ void BasePrefetchingDataLayer<Dtype>::InternalThreadEntry() {
 #endif
 }
 
+// CPU正向传导 
 template <typename Dtype>
 void BasePrefetchingDataLayer<Dtype>::Forward_cpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
@@ -117,10 +124,12 @@ void BasePrefetchingDataLayer<Dtype>::Forward_cpu(
   }
   prefetch_current_ = prefetch_full_.pop("Waiting for data");
   // Reshape to loaded data.
+  // Reshape成与batch数据同一维度  
   top[0]->ReshapeLike(prefetch_current_->data_);
   top[0]->set_cpu_data(prefetch_current_->data_.mutable_cpu_data());
-  if (this->output_labels_) {
+  if (this->output_labels_) { //如果存在label层，则输出大于一
     // Reshape to loaded labels.
+    // 将batch标签拷贝至top层blob[1]  
     top[1]->ReshapeLike(prefetch_current_->label_);
     top[1]->set_cpu_data(prefetch_current_->label_.mutable_cpu_data());
   }

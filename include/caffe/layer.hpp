@@ -49,8 +49,11 @@ class Layer {
         }
       }
     }
+  // 基类的析构函数一般都为虚析构
+  //这样做是为了当用一个基类的指针删除一个派生类的对象时，派生类的析构函数会被调用。
   virtual ~Layer() {}
 
+  //输入统一都是bottom，输出为top
   /**
    * @brief Implements common layer setup functionality.
    *
@@ -125,7 +128,6 @@ class Layer {
    */
   inline Dtype Forward(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
-
   /**
    * @brief Given the top blob error gradients, compute the bottom blob error
    *        gradients.
@@ -134,6 +136,7 @@ class Layer {
    *     the output blobs, whose diff fields store the gradient of the error
    *     with respect to themselves
    * @param propagate_down
+   * //Backward里面有个propagate_down参数，用来表示该Layer是否反向传播参数
    *     a vector with equal length to bottom, with each index indicating
    *     whether to propagate the error gradients down to the bottom blob at
    *     the corresponding index
@@ -166,6 +169,7 @@ class Layer {
   /**
    * @brief Writes the layer parameter to a protocol buffer
    */
+  //实现了ToProto的接口，将Layer的参数写入到protocol buffer文件中
   virtual void ToProto(LayerParameter* param, bool write_diff = false);
 
   /**
@@ -294,16 +298,19 @@ class Layer {
 
  protected:
   /** The protobuf that stores the layer parameters */
+  // protobuf文件中存储的layer参数
   LayerParameter layer_param_;
   /** The phase: TRAIN or TEST */
   Phase phase_;
   /** The vector that stores the learnable parameters as a set of blobs. */
   vector<shared_ptr<Blob<Dtype> > > blobs_;
   /** Vector indicating whether to compute the diff of each param blob. */
+   // 这个bool表示是否计算各个blob参数的diff，即传播误差
   vector<bool> param_propagate_down_;
 
   /** The vector that indicates whether each top blob has a non-zero weight in
    *  the objective function. */
+  //每一层又有一个loss_值，只不多大多数Layer都是0，只有LossLayer才可能产生非0的loss_
   vector<Dtype> loss_;
 
   /** @brief Using the CPU device, compute the layer output. */

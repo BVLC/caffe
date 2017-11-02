@@ -9,6 +9,33 @@
 
 #include "caffe/layers/base_conv_layer.hpp"
 
+/**
+ *  
+ *           _________Layer_________
+ *           |                     |
+ *  BaseConvolutionLayer      PoolingLayer
+ *      |                          |
+ *ConvolutionLayer           CuDNNPoolingLayer
+ *      |
+ *CuDNNConvolutionLayer
+ *
+ *实际卷积操作使用矩阵相乘，把卷积核和图片拉平为向量，
+ *图片地址，详细介绍卷积转为矩阵相乘的过程
+ *http://images2015.cnblogs.com/blog/686170/201601/686170-20160123232524672-523353998.png 
+ *http://images2015.cnblogs.com/blog/686170/201601/686170-20160123232535187-271920827.png
+ */ 
+
+/*                                out_x * out_y 
+ *      ker_x * ker_y * chan         24 * 24
+ *              5*5*1               _________         24 * 24  
+ *           ____________           |       |       _________
+ *          |            |          |       |       |       |
+ *    20    |  weight    |          | bottom|       |  out  |
+ *   (ker)  |            |    X     |       |   = 20|       |
+ *          |____________|          |       |       |_______|
+ *                                  |_______|
+ */
+
 namespace caffe {
 
 /**
@@ -33,7 +60,7 @@ class ConvolutionLayer : public BaseConvolutionLayer<Dtype> {
   /**
    * @param param provides ConvolutionParameter convolution_param,
    *    with ConvolutionLayer options:
-   *  - num_output. The number of filters.
+   *  - num_output. The number of filters. 滤波器数量
    *  - kernel_size / kernel_h / kernel_w. The filter dimensions, given by
    *  kernel_size for square filters or kernel_h and kernel_w for rectangular
    *  filters.

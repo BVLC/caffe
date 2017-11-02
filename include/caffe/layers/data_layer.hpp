@@ -11,6 +11,19 @@
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/db.hpp"
 
+/**
+ *                       Layer
+ *                         |
+ *                    BaseDataLayer
+ *               __________|_____________
+ *              |                       |
+ * BasePrefetchingDataLayer       MemoryDataLayer
+ *     _________|_______________________
+ *     |             |                 | 
+ * DataLayer   ImageDataLayer   WindowDataLayer
+ * 
+ */
+
 namespace caffe {
 
 template <typename Dtype>
@@ -28,6 +41,7 @@ class DataLayer : public BasePrefetchingDataLayer<Dtype> {
  protected:
   void Next();
   bool Skip();
+   // 加载batch，重载虚函数  
   virtual void load_batch(Batch<Dtype>* batch);
 
   shared_ptr<db::DB> db_;

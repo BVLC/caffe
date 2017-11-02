@@ -1,6 +1,7 @@
 // Fillers are random number generators that fills a blob using the specified
 // algorithm. The expectation is that they are only going to be used during
 // initialization time and will not involve any GPUs.
+//在网络初始化时，根据layer的定义进行初始参数的填充
 
 #ifndef CAFFE_FILLER_HPP
 #define CAFFE_FILLER_HPP

@@ -15,6 +15,7 @@ const float kLOG_THRESHOLD = 1e-20;
  * @brief An interface for Layer%s that take two Blob%s as input -- usually
  *        (1) predictions and (2) ground-truth labels -- and output a
  *        singleton Blob representing the loss.
+ * 输入为两个blob，一个是预测，一个是真实值（ground-truth），输出单个blob
  *
  * LossLayers are typically only capable of backpropagating to their first input
  * -- the predictions.

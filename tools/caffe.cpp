@@ -56,11 +56,12 @@ DEFINE_string(sighup_effect, "snapshot",
              "snapshot, stop or none.");
 
 // A simple registry for caffe commands.
+//定义一个函数指针类型,构造了一个通用的函数
 typedef int (*BrewFunction)();
 typedef std::map<caffe::string, BrewFunction> BrewMap;
 BrewMap g_brew_map;
 
-#define RegisterBrewFunction(func) \
+#define RegisterBrewFunction(func) \ //其中，func可以为：train，test，device_query，time
 namespace { \
 class __Registerer_##func { \
  public: /* NOLINT */ \
@@ -72,8 +73,8 @@ __Registerer_##func g_registerer_##func; \
 }
 
 static BrewFunction GetBrewFunction(const caffe::string& name) {
-  if (g_brew_map.count(name)) {
-    return g_brew_map[name];
+  if (g_brew_map.count(name)) { //判断输入的是不是g_brew_map中train，test，device_query，time中一个
+    return g_brew_map[name];   // 如果是的话，就调用相应的train(),test()，device_query()，time()
   } else {
     LOG(ERROR) << "Available caffe actions:";
     for (BrewMap::iterator it = g_brew_map.begin();
@@ -86,6 +87,7 @@ static BrewFunction GetBrewFunction(const caffe::string& name) {
 }
 
 // Parse GPU ids or use all available devices
+//解析可用GPU，使用所有硬件
 static void get_gpus(vector<int>* gpus) {
   if (FLAGS_gpu == "all") {
     int count = 0;
@@ -134,6 +136,7 @@ vector<string> get_stages_from_flags() {
 // RegisterBrewFunction(action);
 
 // Device Query: show diagnostic information for a GPU device.
+//查询GPU信息  
 int device_query() {
   LOG(INFO) << "Querying GPUs " << FLAGS_gpu;
   vector<int> gpus;
@@ -179,12 +182,17 @@ caffe::SolverAction::Enum GetRequestedAction(
 // Train / Finetune a model.
 int train() {
   CHECK_GT(FLAGS_solver.size(), 0) << "Need a solver definition to train.";
+    // google的glog库，检查--solver、--snapshot和--weight并输出消息；必须有指定solver，snapshot和weight两者指定其一；  
   CHECK(!FLAGS_snapshot.size() || !FLAGS_weights.size())
       << "Give a snapshot to resume training or weights to finetune "
       "but not both.";
   vector<string> stages = get_stages_from_flags();
 
+  // 实例化SolverParameter类，该类保存solver参数和相应的方法（SoverParameter是由google protobuffer
+  // 编译过来的类，具体声明可以见代码文件build/src/caffe/proto/caffe.pb.h）；
   caffe::SolverParameter solver_param;
+  // 将-solver指定solver.prototxt文件内容解析到solver_param中，该函数声明在
+  //include/caffe/util/upgrade_proto.hpp中，实现在src/caffe/util/upgrade_proto.cpp中；
   caffe::ReadSolverParamsFromTextFileOrDie(FLAGS_solver, &solver_param);
 
   solver_param.mutable_train_state()->set_level(FLAGS_level);
@@ -194,6 +202,7 @@ int train() {
 
   // If the gpus flag is not provided, allow the mode and device to be set
   // in the solver prototxt.
+  // 根据命令参数-gpu或者solver.prototxt提供的信息设置GPU；
   if (FLAGS_gpu.size() == 0
       && solver_param.has_solver_mode()
       && solver_param.solver_mode() == caffe::SolverParameter_SolverMode_GPU) {
@@ -204,7 +213,7 @@ int train() {
           FLAGS_gpu = "" + boost::lexical_cast<string>(0);
       }
   }
-
+  // 多GPU下，将GPU编号存入vector容器中（get_gpus()函数通过FLAGS_gpu获取）；
   vector<int> gpus;
   get_gpus(&gpus);
   if (gpus.size() == 0) {
@@ -228,16 +237,18 @@ int train() {
     Caffe::set_mode(Caffe::GPU);
     Caffe::set_solver_count(gpus.size());
   }
-
+ // GetRequestedAction在caffe.cpp中，将‘stop’，‘snapshot’，‘none’转换为标准信号，即解析；
   caffe::SignalHandler signal_handler(
         GetRequestedAction(FLAGS_sigint_effect),
         GetRequestedAction(FLAGS_sighup_effect));
 
+ // 声明boost库中智能指针solver，指向caffe::Solver对象，该对象由CreateSolver创建
   shared_ptr<caffe::Solver<float> >
       solver(caffe::SolverRegistry<float>::CreateSolver(solver_param));
 
   solver->SetActionFunction(signal_handler.GetActionFunction());
 
+  // 从snapshot或caffemodel中恢复train；
   if (FLAGS_snapshot.size()) {
     LOG(INFO) << "Resuming from " << FLAGS_snapshot;
     solver->Restore(FLAGS_snapshot.c_str());
@@ -263,6 +274,7 @@ RegisterBrewFunction(train);
 
 
 // Test: score a model.
+//测试网络模型
 int test() {
   CHECK_GT(FLAGS_model.size(), 0) << "Need a model definition to score.";
   CHECK_GT(FLAGS_weights.size(), 0) << "Need model weights to score.";
@@ -336,6 +348,7 @@ RegisterBrewFunction(test);
 
 
 // Time: benchmark the execution time of a model.
+//测试网络模型的执行时间  
 int time() {
   CHECK_GT(FLAGS_model.size(), 0) << "Need a model definition to time.";
   caffe::Phase phase = get_phase_from_flags(caffe::TRAIN);
@@ -414,20 +427,29 @@ int time() {
       FLAGS_iterations << " ms.";
   }
   total_timer.Stop();
-  LOG(INFO) << "Average Forward pass: " << forward_time / 1000 /
-    FLAGS_iterations << " ms.";
-  LOG(INFO) << "Average Backward pass: " << backward_time / 1000 /
-    FLAGS_iterations << " ms.";
-  LOG(INFO) << "Average Forward-Backward: " << total_timer.MilliSeconds() /
-    FLAGS_iterations << " ms.";
+  // LOG(INFO) << "Average Forward pass: " << forward_time / 1000 /
+  //   FLAGS_iterations << " ms.";
+  // LOG(INFO) << "Average Backward pass: " << backward_time / 1000 /
+  //   FLAGS_iterations << " ms.";
+  // LOG(INFO) << "Average Forward-Backward: " << total_timer.MilliSeconds() /
+  //   FLAGS_iterations << " ms.";
   LOG(INFO) << "Total Time: " << total_timer.MilliSeconds() << " ms.";
   LOG(INFO) << "*** Benchmark ends ***";
   return 0;
 }
 RegisterBrewFunction(time);
 
+/*
+ caffe.cpp 主要流程: main（）函数--->>GetBrewFunction函数--->>train函数--->>Solver()
+*/
 int main(int argc, char** argv) {
   // Print output to stderr (while still logging).
+  //GFLAGS在caffe中主要起到命令行参数解析的作用
+  // int device_query() ：用来查询GPU信息
+  // int train()：训练神经网络
+  // int test() ：测试神经网络
+  // int time()：测试model执行时间
+
   FLAGS_alsologtostderr = 1;
   // Set version
   gflags::SetVersionString(AS_STRING(CAFFE_VERSION));
@@ -445,6 +467,7 @@ int main(int argc, char** argv) {
 #ifdef WITH_PYTHON_LAYER
     try {
 #endif
+      //main()函数中，输入的train，test，device_query，time。 通过GetBrewFunction进入程序。
       return GetBrewFunction(caffe::string(argv[1]))();
 #ifdef WITH_PYTHON_LAYER
     } catch (bp::error_already_set) {
@@ -453,6 +476,7 @@ int main(int argc, char** argv) {
     }
 #endif
   } else {
+    //若argc！=2，其信息中会有“tools/caffe.cpp”中FLAG信息，如：-gpu,-weights,-solver,-snapshot,-model...
     gflags::ShowUsageWithFlagsRestrict(argv[0], "tools/caffe");
   }
 }

@@ -99,6 +99,7 @@ message NetParameter {
 // Update the next available ID when you add a new SolverParameter field.
 //
 // SolverParameter next available ID: 42 (last added: layer_wise_reduce)
+// Solver参数  
 message SolverParameter {
   //////////////////////////////////////////////////////////////////////////////
   // Specifying the train and test networks
@@ -142,11 +143,11 @@ message SolverParameter {
   optional bool test_compute_loss = 19 [default = false];
   // If true, run an initial test pass before the first iteration,
   // ensuring memory availability and printing the starting value of the loss.
-  optional bool test_initialization = 32 [default = true];
-  optional float base_lr = 5; // The base learning rate
+  optional bool test_initialization = 32 [default = true];// 在总的开始前，是否先执行一次测试网络
+  optional float base_lr = 5; // The base learning rate, 基础学习率  
   // the number of iterations between displaying info. If display = 0, no info
   // will be displayed.
-  optional int32 display = 6;
+  optional int32 display = 6;  // 指定迭代多少次显示一次结果信息  
   // Display the loss averaged over the last average_loss iterations
   optional int32 average_loss = 33 [default = 1];
   optional int32 max_iter = 7; // the maximum number of iterations
