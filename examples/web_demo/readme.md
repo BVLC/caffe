@@ -11,7 +11,7 @@ priority: 10
 ## Requirements
 
 The demo server requires Python with some dependencies.
-To make sure you have the dependencies, please run `pip install -r examples/web_demo/requirements.txt`, and also make sure that you've compiled the Python Caffe interface and that it is on your `PYTHONPATH` (see [installation instructions](/installation.html)).
+To make sure you have the dependencies, please run `pip install -r examples/web_demo/requirements.txt`, and also make sure that you've compiled the Python Caffe interface and that it is on your `PYTHONPATH` (see [installation instructions](http://caffe.berkeleyvision.org/installation.html)).
 
 Make sure that you have obtained the Reference CaffeNet Model and the ImageNet Auxiliary Data:
 
