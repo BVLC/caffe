@@ -82,6 +82,8 @@ function detect_cpu
     model_string=`lscpu | grep "Model name" | awk -F ':' '{print $2}'`
     if [[ $model_string == *"72"* ]]; then
         cpu_model="knl"
+    elif [[ $model_string == *"0000"* ]]; then
+        cpu_model="knm"
     elif [[ $model_string == *"8180"* ]]; then
         cpu_model="skx"
     elif [[ $model_string == *"6148"* ]]; then
@@ -137,13 +139,18 @@ function init_mpi_envs
     if [ "$network" == "opa" ]; then
         export I_MPI_FABRICS=tmi
         export I_MPI_TMI_PROVIDER=psm2
-        if [ "$cpu_model" == "knl" ];  then
+        if [ "$cpu_model" == "knl" || "$cpu_model" == "knm" ];  then
             # PSM2 configuration
-            export PSM2_MQ_RNDV_HFI_WINDOW=4194304 #2097152 # to workaround PSM2 bug in IFS 10.2 and 10.3
+            export PSM2_MQ_RNDV_HFI_WINDOW=2097152 # to workaround PSM2 bug in IFS 10.2 and 10.3
             export PSM2_MQ_EAGER_SDMA_SZ=65536
             export PSM2_MQ_RNDV_HFI_THRESH=200000
+            export HFI_NO_CPUAFFINITY=1
+            export I_MPI_DYNAMIC_CONNECTION=0
+            export I_MPI_SCALABLE_OPTIMIZATION=0
+            export I_MPI_PIN_MODE=lib 
+            export I_MPI_PIN_DOMAIN=node
         fi
-
+         
         export PSM2_IDENTIFY=1 # for debug
     elif [ "$network" == "tcp" ]; then
         export I_MPI_FABRICS=tcp
@@ -258,6 +265,14 @@ function set_env_vars
     affinitystr="proclist=[0-5,$((5+numservers+1))-$((maxcores-1))],granularity=thread,explicit"
     export KMP_HW_SUBSET=1t
     export KMP_AFFINITY=$affinitystr
+    if [ "${cpu_model}" == "knl" ] || [ "${cpu_model}" == "knm" ]; then
+        export KMP_BLOCKTIME=10000000
+        export MKL_FAST_MEMORY_LIMIT=0
+        if [ ${numnodes} -eq 1 ]; then
+            affinitystr="compact,1,0,granularity=fine"
+            export KMP_AFFINITY=$affinitystr
+        fi
+    fi
 }
 
 function execute_command
