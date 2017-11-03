@@ -959,7 +959,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "ACTIVATION_FUNCTION(convolved_image, offset, sum + biases_base[biasIndex], biasIndex);",    // NOLINT
 "#else",    // NOLINT
 "int_tp offset = outputZ*output_height*output_width + outputY*output_width + outputX;",    // NOLINT
-"ACTIVATION_FUNCTION(convolved_image, offset, biasIndex);",    // NOLINT
+"ACTIVATION_FUNCTION(convolved_image, offset, sum, biasIndex);",    // NOLINT
 "#endif",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT

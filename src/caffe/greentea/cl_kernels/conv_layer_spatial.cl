@@ -185,7 +185,7 @@ __kernel void DWCONV(
     ACTIVATION_FUNCTION(convolved_image, offset, sum + biases_base[biasIndex], biasIndex);
     #else
     int_tp offset = outputZ*output_height*output_width + outputY*output_width + outputX;
-    ACTIVATION_FUNCTION(convolved_image, offset, biasIndex);
+    ACTIVATION_FUNCTION(convolved_image, offset, sum, biasIndex);
     #endif
   }
 }
