@@ -61,6 +61,20 @@ int LMDB::Count() {
   return stats.ms_entries;
 }
 
+void LMDB::Get(const std::string &key,
+	       size_t &data_size, void *data_val) {
+
+  MDB_val data;
+  MDB_txn *mdb_txn;
+  MDB_CHECK(mdb_txn_begin(mdb_env_, NULL, MDB_RDONLY, &mdb_txn));
+  MDB_val mdb_key;
+  mdb_key.mv_size = key.size();
+  mdb_key.mv_data = const_cast<char*>(key.data());
+  mdb_get(mdb_txn,mdb_dbi_,&mdb_key,&data);
+  data_size = data.mv_size;
+  data_val = data.mv_data;
+}
+  
 void LMDBTransaction::Put(const string& key, const string& value) {
   keys.push_back(key);
   values.push_back(value);

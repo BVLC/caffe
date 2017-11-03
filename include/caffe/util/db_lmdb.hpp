@@ -84,6 +84,8 @@ class LMDB : public DB {
   virtual LMDBCursor* NewCursor();
   virtual LMDBTransaction* NewTransaction();
   virtual int Count();
+  virtual void Get(const std::string &keym,
+		   size_t &data_size, void *data_val);
   
  private:
   MDB_env* mdb_env_;
