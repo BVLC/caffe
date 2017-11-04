@@ -36,6 +36,10 @@ add_custom_command(
     COMMAND pretune_convert ${PRETUNEDBINARY} ${PRETUNED_BINARY_UNZIPS}
     DEPENDS pretune_convert ${PRETUNEDBINARY} ${PRETUNED_BINARY_UNZIPS})
 
+# the data file has large constant expressions which cause the GCC/ICC take a very long time to build
+# use O1 to reduce the compilation time.
+set_source_files_properties(conv_layer_spatial_pretuned_data.cpp PROPERTIES COMPILE_FLAGS -O1)
+
 # --[ Caffe library
 
 # creates 'test_srcs', 'srcs', 'test_cuda', 'cuda' lists

@@ -1003,9 +1003,8 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "// NDRange:  (output_width+pad)/ OUT_BLOCK_WIDTH, (output_height+pad)/OUT_BLOCK_HEIGHT, NUM_FILTERS/OUT_BLOCK_DEPTH",    // NOLINT
 "",    // NOLINT
 "// NOTE: for beignet this reqd_work_group_size does not guarantee that SIMD16 mode will be used, the compiler could choose to use two SIMD8 threads, and if that happens the code will break.",    // NOLINT
-"#ifndef __BEIGNET__",    // NOLINT
+"__attribute__((intel_reqd_sub_group_size(SIMD_SIZE)))",    // NOLINT
 "__attribute__((reqd_work_group_size(1, 1, SIMD_SIZE)))",    // NOLINT
-"#endif",    // NOLINT
 "__kernel void",    // NOLINT
 "convolve_simd(",    // NOLINT
 "ELTWISE_DATA_ARG",    // NOLINT
@@ -1045,12 +1044,12 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "",    // NOLINT
 "int curr_local_y = ( lid / ( TILE_X / 4 ) );",    // NOLINT
 "int curr_local_x = ( lid % ( TILE_X / 4 ) ) * 4;",    // NOLINT
-"int curr_y = or * STRIDEY + INPUT_START_Y + curr_local_y;",    // NOLINT
-"int curr_x = oc * STRIDEX + INPUT_START_X + curr_local_x;",    // NOLINT
+"int curr_y = or * STRIDEY + curr_local_y;",    // NOLINT
+"int curr_x = oc * STRIDEX + curr_local_x;",    // NOLINT
 "#if INPUT_PAD_W != 0 || INPUT_PAD_H != 0",    // NOLINT
 "int saved_y = curr_y;",    // NOLINT
 "#endif",    // NOLINT
-"in_addr = input_batch_offset + INPUT_START_Z * input_height * input_width",    // NOLINT
+"in_addr = input_batch_offset",    // NOLINT
 "+  (curr_y - INPUT_PAD_H) * input_width             // y tile offset",    // NOLINT
 "+   curr_x - INPUT_PAD_W;                        // x tile offset",    // NOLINT
 "union {",    // NOLINT
@@ -1176,7 +1175,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "fm = fm % ALIGNED_NUM_FILTERS;",    // NOLINT
 "",    // NOLINT
 "if ((ALIGNED_NUM_FILTERS == NUM_FILTERS || fm < NUM_FILTERS)) {",    // NOLINT
-"uint_tp out_addr = OUT_BUFF_OFFSET + ( num_in_batch * TOTAL_OUTPUT_DEPTH + fm ) * output_width * output_height;",    // NOLINT
+"uint_tp out_addr = ( num_in_batch * TOTAL_OUTPUT_DEPTH + fm ) * output_width * output_height;",    // NOLINT
 "out_addr += or * output_width + oc;",    // NOLINT
 "// we need this address calculation for biases because we support views and batching",    // NOLINT
 "#if APPLY_BIAS",    // NOLINT
@@ -1282,9 +1281,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "#define TILE_K          KERNEL_WIDTH",    // NOLINT
 "#define TILE_N          32",    // NOLINT
 "",    // NOLINT
-"#ifndef __BEIGNET__",    // NOLINT
 "__attribute__((intel_reqd_sub_group_size(8)))",    // NOLINT
-"#endif",    // NOLINT
 "__kernel void Conv_Interleaved(GEMM_LIKE_KERNEL_ARGS)",    // NOLINT
 "{",    // NOLINT
 "const int group_x = get_group_id(0);",    // NOLINT
@@ -1636,9 +1633,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "#define TILE_K          KERNEL_WIDTH",    // NOLINT
 "#define TILE_N          32",    // NOLINT
 "",    // NOLINT
-"#ifndef __BEIGNET__",    // NOLINT
 "__attribute__((intel_reqd_sub_group_size(8)))",    // NOLINT
-"#endif",    // NOLINT
 "__kernel void Conv_Interleaved(GEMM_LIKE_KERNEL_ARGS)",    // NOLINT
 "{",    // NOLINT
 "const int group_x = get_group_id(0);",    // NOLINT
@@ -2080,9 +2075,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "#define TILE_K          KERNEL_WIDTH",    // NOLINT
 "#define TILE_N          32",    // NOLINT
 "",    // NOLINT
-"#ifndef __BEIGNET__",    // NOLINT
 "__attribute__((intel_reqd_sub_group_size(16)))",    // NOLINT
-"#endif",    // NOLINT
 "__kernel void Conv_Interleaved(GEMM_LIKE_KERNEL_ARGS)",    // NOLINT
 "{",    // NOLINT
 "const int group_x = get_group_id(0);",    // NOLINT
@@ -2124,18 +2117,14 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "// Inner loop loads and FMADs one row (KERNEL_WIDTH) of each input patch",    // NOLINT
 "// and KERNEL_WIDTH/2 rows of interleaved filter.",    // NOLINT
 "int patch_depth = 0;",    // NOLINT
-"#ifndef __BEIGNET__",    // NOLINT
 "__attribute__((opencl_unroll_hint(1)))",    // NOLINT
-"#endif",    // NOLINT
 "do",    // NOLINT
 "{",    // NOLINT
 "int patch_row = 0;",    // NOLINT
 "#if INPUT_PAD_H != 0 || INPUT_PAD_W != 0 || DILATION_X != 1 || DILATION_Y != 1",    // NOLINT
 "curr_y = saved_y;",    // NOLINT
 "#endif",    // NOLINT
-"#ifndef __BEIGNET__",    // NOLINT
 "__attribute__((opencl_unroll_hint(1)))",    // NOLINT
-"#endif",    // NOLINT
 "do",    // NOLINT
 "{",    // NOLINT
 "// Load atile and btile.",    // NOLINT
@@ -2245,9 +2234,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "#define TILE_K          KERNEL_WIDTH",    // NOLINT
 "#define TILE_N          32",    // NOLINT
 "",    // NOLINT
-"#ifndef __BEIGNET__",    // NOLINT
 "__attribute__((intel_reqd_sub_group_size(16)))",    // NOLINT
-"#endif",    // NOLINT
 "__kernel void Conv_Interleaved(GEMM_LIKE_KERNEL_ARGS)",    // NOLINT
 "{",    // NOLINT
 "const int group_x = get_group_id(0);",    // NOLINT

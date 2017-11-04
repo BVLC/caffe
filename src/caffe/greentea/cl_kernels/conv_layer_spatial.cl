@@ -229,9 +229,8 @@ __kernel void DWCONV(
 // NDRange:  (output_width+pad)/ OUT_BLOCK_WIDTH, (output_height+pad)/OUT_BLOCK_HEIGHT, NUM_FILTERS/OUT_BLOCK_DEPTH
 
 // NOTE: for beignet this reqd_work_group_size does not guarantee that SIMD16 mode will be used, the compiler could choose to use two SIMD8 threads, and if that happens the code will break.
-#ifndef __BEIGNET__
+__attribute__((intel_reqd_sub_group_size(SIMD_SIZE)))
 __attribute__((reqd_work_group_size(1, 1, SIMD_SIZE)))
-#endif
 __kernel void
 convolve_simd(
     ELTWISE_DATA_ARG
@@ -271,12 +270,12 @@ convolve_simd(
 
   int curr_local_y = ( lid / ( TILE_X / 4 ) );
   int curr_local_x = ( lid % ( TILE_X / 4 ) ) * 4;
-  int curr_y = or * STRIDEY + INPUT_START_Y + curr_local_y;
-  int curr_x = oc * STRIDEX + INPUT_START_X + curr_local_x;
+  int curr_y = or * STRIDEY + curr_local_y;
+  int curr_x = oc * STRIDEX + curr_local_x;
 #if INPUT_PAD_W != 0 || INPUT_PAD_H != 0
   int saved_y = curr_y;
 #endif
-  in_addr = input_batch_offset + INPUT_START_Z * input_height * input_width
+  in_addr = input_batch_offset
             +  (curr_y - INPUT_PAD_H) * input_width             // y tile offset
             +   curr_x - INPUT_PAD_W;                        // x tile offset
   union {
@@ -402,7 +401,7 @@ convolve_simd(
   fm = fm % ALIGNED_NUM_FILTERS;
 
   if ((ALIGNED_NUM_FILTERS == NUM_FILTERS || fm < NUM_FILTERS)) {
-  uint_tp out_addr = OUT_BUFF_OFFSET + ( num_in_batch * TOTAL_OUTPUT_DEPTH + fm ) * output_width * output_height;
+  uint_tp out_addr = ( num_in_batch * TOTAL_OUTPUT_DEPTH + fm ) * output_width * output_height;
   out_addr += or * output_width + oc;
   // we need this address calculation for biases because we support views and batching
 #if APPLY_BIAS
@@ -522,9 +521,7 @@ typedef struct half0 { half s0; } half0; //never used but makes compiler happy.
 #define TILE_K          KERNEL_WIDTH
 #define TILE_N          32
 
-#ifndef __BEIGNET__
 __attribute__((intel_reqd_sub_group_size(8)))
-#endif
 __kernel void Conv_Interleaved(GEMM_LIKE_KERNEL_ARGS)
 {
     const int group_x = get_group_id(0);
@@ -886,9 +883,7 @@ __kernel void Conv_Interleaved(GEMM_LIKE_KERNEL_ARGS)
 #define TILE_K          KERNEL_WIDTH
 #define TILE_N          32
 
-#ifndef __BEIGNET__
 __attribute__((intel_reqd_sub_group_size(8)))
-#endif
 __kernel void Conv_Interleaved(GEMM_LIKE_KERNEL_ARGS)
 {
     const int group_x = get_group_id(0);
@@ -1394,9 +1389,7 @@ __kernel void Conv_Interleaved(GEMM_LIKE_KERNEL_ARGS)
 #define TILE_K          KERNEL_WIDTH
 #define TILE_N          32
 
-#ifndef __BEIGNET__
 __attribute__((intel_reqd_sub_group_size(16)))
-#endif
 __kernel void Conv_Interleaved(GEMM_LIKE_KERNEL_ARGS)
 {
     const int group_x = get_group_id(0);
@@ -1456,18 +1449,14 @@ __kernel void Conv_Interleaved(GEMM_LIKE_KERNEL_ARGS)
     // Inner loop loads and FMADs one row (KERNEL_WIDTH) of each input patch
     // and KERNEL_WIDTH/2 rows of interleaved filter.
     int patch_depth = 0;
-#ifndef __BEIGNET__
     __attribute__((opencl_unroll_hint(1)))
-#endif
     do
     {
         int patch_row = 0;
 #if INPUT_PAD_H != 0 || INPUT_PAD_W != 0 || DILATION_X != 1 || DILATION_Y != 1
         curr_y = saved_y;
 #endif
-#ifndef __BEIGNET__
         __attribute__((opencl_unroll_hint(1)))
-#endif
         do
         {
             // Load atile and btile.
@@ -1577,9 +1566,7 @@ __kernel void Conv_Interleaved(GEMM_LIKE_KERNEL_ARGS)
 #define TILE_K          KERNEL_WIDTH
 #define TILE_N          32
 
-#ifndef __BEIGNET__
 __attribute__((intel_reqd_sub_group_size(16)))
-#endif
 __kernel void Conv_Interleaved(GEMM_LIKE_KERNEL_ARGS)
 {
     const int group_x = get_group_id(0);
