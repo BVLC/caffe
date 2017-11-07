@@ -80,7 +80,7 @@ void Blob<Dtype>::Reshape(const vector<int>& shape) {
 #endif
   }
   // We restart sync objects only when the changed shape count
-  // is bgger than current capacity
+  // is bigger than current capacity
   if (count_ > capacity_) {
     capacity_ = count_;
     data_.reset(new SyncedMemory(capacity_ * sizeof(Dtype)));
