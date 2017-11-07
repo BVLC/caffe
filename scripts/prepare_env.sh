@@ -62,7 +62,6 @@ function install_deps
 {
     if [ "$os" == "centos" ]; then
         eval $package_installer clean all
-        eval $package_installer upgrade
         eval $package_installer install epel-release
         eval $package_installer groupinstall "Development Tools"
     fi
@@ -89,7 +88,6 @@ function install_deps_multinode
     echo $sudo_passwd | sudo -S -E yum -y clean all
 
     if [ "$os" == "centos" ]; then
-        eval $package_installer upgrade
         eval $package_installer install epel-release
         eval $package_installer clean all
         eval $package_installer groupinstall "Development Tools"
