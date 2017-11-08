@@ -57,7 +57,7 @@ void Blob<Dtype>::Reshape(const int num, const int channels, const int height,
 }
 
 template <typename Dtype>
-void Blob<Dtype>::Reshape(const vector<int>& shape) {
+void Blob<Dtype>::Reshape(const vector<int>& shape, bool reinitialize) {
   CHECK_LE(shape.size(), kMaxBlobAxes);
   count_ = 1;
   shape_.resize(shape.size());
@@ -68,20 +68,24 @@ void Blob<Dtype>::Reshape(const vector<int>& shape) {
   }
   int* shape_data = static_cast<int*>(shape_data_->mutable_cpu_data());
 #endif
+  bool actual_reshaping = false;
   for (int i = 0; i < shape.size(); ++i) {
     CHECK_GE(shape[i], 0);
     if (count_ != 0) {
       CHECK_LE(shape[i], LONG_MAX / count_) << "blob size exceeds LONG_MAX";
     }
     count_ *= shape[i];
-    shape_[i] = shape[i];
+    if (shape_[i] != shape[i]) {
+      actual_reshaping = true;
+      shape_[i] = shape[i];
+    }
 #ifndef CPU_ONLY
     shape_data[i] = shape[i];
 #endif
   }
-  // We restart sync objects only when the changed shape count
-  // is bigger than current capacity
-  if (count_ > capacity_) {
+  // We restart sync objects when there was change of shape
+  // requested count is bigger than current capacity
+  if ( reinitialize && ((actual_reshaping == true) || (count_ > capacity_))) {
     capacity_ = count_;
     data_.reset(new SyncedMemory(capacity_ * sizeof(Dtype)));
     diff_.reset(new SyncedMemory(capacity_ * sizeof(Dtype)));

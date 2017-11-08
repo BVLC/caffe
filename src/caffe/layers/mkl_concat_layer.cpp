@@ -140,7 +140,7 @@ void MKLConcatLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
           bottom_4D_shape.push_back(bottom[i]->channels());
           bottom_4D_shape.push_back(bottom_4D_height);
           bottom_4D_shape.push_back(bottom_4D_width);
-          bottom[i]->Reshape(bottom_4D_shape);
+          bottom[i]->Reshape(bottom_4D_shape, false);
       }      
   }
   if ((num_ == bottom[0]->num()) &&
