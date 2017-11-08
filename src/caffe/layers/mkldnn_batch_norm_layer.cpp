@@ -206,7 +206,7 @@ void MKLDNNBatchNormLayer<Dtype>::InitBatchNorm(const vector<Blob<Dtype>*>& bott
     memory::data_type mpcsn = memory::data_type::f32;
     
     // ---- Initialize memory descriptors -------------
-    shared_ptr<memory::desc> input_md, input_stats_md, output_md, scaleshift_md;
+    shared_ptr<memory::desc> input_md, scaleshift_md;
     shared_ptr<memory::primitive_desc> usr_mpd, prv_mpd;
     shared_ptr<memory::primitive_desc> scaleshift_mpd;
     if (bottom_data_is_prv) {
@@ -219,7 +219,6 @@ void MKLDNNBatchNormLayer<Dtype>::InitBatchNorm(const vector<Blob<Dtype>*>& bott
         input_md.reset(new memory::desc({{n, ic, ih, iw}}, mpcsn, memory::format::nchw));   //MKLDNN batch norm only support 4D memory descriptor!
         usr_mpd.reset(new memory::primitive_desc(*input_md, cpu_engine));
     }
-    output_md = input_md;
     input_stats_md.reset(new memory::desc(*input_md));
     CHECK(input_stats_md->data.ndims > 0 &&
           input_stats_md->data.dims[0] == this->num_);
@@ -444,7 +443,7 @@ void MKLDNNBatchNormLayer<Dtype>::InitBatchNormBwd(
     memory::data_type mpcsn = memory::data_type::f32;
 
     // ---- Initialize memory descriptors -------------
-    shared_ptr<memory::desc> top_diff_md, top_diff_stats_md, top_data_md, output_stats_md;
+    shared_ptr<memory::desc> top_diff_md, top_diff_stats_md;
     shared_ptr<memory::primitive_desc> usr_diff_mpd(NULL), prv_diff_mpd(NULL);
     if (top_diff_is_prv) {
         shared_ptr<MKLDNNMemoryDescriptor<Dtype, true> > mem_descr
@@ -460,14 +459,10 @@ void MKLDNNBatchNormLayer<Dtype>::InitBatchNormBwd(
     CHECK(top_diff_stats_md->data.ndims > 0 &&
           top_diff_stats_md->data.dims[0] == this->num_);
     top_diff_stats_md->data.dims[0] = stats_batch_size_;
-    output_stats_md.reset(new memory::desc(output_memory->get_primitive_desc().desc()));
-    CHECK(output_stats_md->data.ndims > 0 &&
-          output_stats_md->data.dims[0] == this->num_);
-    output_stats_md->data.dims[0] = stats_batch_size_;
 
     // ---- Initialize bnrm primitive descriptor -------------
     batch_normalization_backward::desc BatchNormBwd_desc(prop_kind::backward,
-            *top_diff_stats_md, *output_stats_md, eps_,
+            *top_diff_stats_md, *input_stats_md, eps_,
             flags);
     // ---- Determining engine to use -----------------------
     std::string subengines = this->layer_param_.engine();
