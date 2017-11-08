@@ -41,7 +41,7 @@ function usage
 {
     script_name=$0
     echo "Usage:"
-    echo "   $script_name --topology network_topology [--host_file host_file] [--network opa/tcp] [--netmask tcp_netmask]"
+    echo "   $script_name --topology network_topology [--hostfile host_file] [--network opa/tcp] [--netmask tcp_netmask]"
     echo ""
     echo "   Parameters:"
     echo "     topology: network topology used to benchmark, support alexnet, googlenet, googlenet_v2, resnet_50"
@@ -103,7 +103,7 @@ function run_specific_model
         exec_command="${caffe_bin} --model_file ${model_file} --mode time --iteration ${iterations} --benchmark none"
     else
         solver_file="models/intel_optimized_models/${model}/${cpu_model}/solver_dummydata.prototxt"
-        exec_command="${caffe_bin} --host $host_file --solver $solver_file --network $network --netmask $tcp_netmask --benchmark none"
+        exec_command="${caffe_bin} --hostfile $host_file --solver $solver_file --network $network --netmask $tcp_netmask --benchmark none"
     fi 
 
     # Result file to save detailed run intelcaffe results
@@ -252,7 +252,7 @@ do
             topology="$2"
             shift
             ;;
-        --host_file)
+        --hostfile)
             host_file="$2"
             shift
             ;;
