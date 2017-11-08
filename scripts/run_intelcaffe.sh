@@ -139,7 +139,7 @@ function init_mpi_envs
     if [ "$network" == "opa" ]; then
         export I_MPI_FABRICS=tmi
         export I_MPI_TMI_PROVIDER=psm2
-        if [ "$cpu_model" == "knl" || "$cpu_model" == "knm" ];  then
+        if [ "$cpu_model" == "knl" ] || [ "$cpu_model" == "knm" ];  then
             # PSM2 configuration
             export PSM2_MQ_RNDV_HFI_WINDOW=2097152 # to workaround PSM2 bug in IFS 10.2 and 10.3
             export PSM2_MQ_EAGER_SDMA_SZ=65536
