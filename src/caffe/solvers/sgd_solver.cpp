@@ -336,9 +336,8 @@ void SGDSolver<Dtype>::SGDFusion(int param_id, Dtype rate) {
   Dtype local_decay = weight_decay * net_params_weight_decay[param_id];
 
   //ComputeUpdateValue  initialization
-  const vector<float>& net_params_lr = this->net_->params_lr();
   Dtype momentum = this->param_.momentum();
-  Dtype local_rate = rate * net_params_lr[param_id];
+  Dtype local_rate = rate * GetLocalRate(param_id);
 //#pragma endregion
 
 //#pragma region 2. Common condition judgement
@@ -579,9 +578,8 @@ void sgd_update_gpu(int N, Dtype* g, Dtype* h, Dtype momentum,
 template <typename Dtype>
 void SGDSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
   const vector<Blob<Dtype>*>& net_params = this->net_->learnable_params();
-  const vector<float>& net_params_lr = this->net_->params_lr();
   Dtype momentum = this->param_.momentum();
-  Dtype local_rate = rate * net_params_lr[param_id];
+  Dtype local_rate = rate * GetLocalRate(param_id);
 
   if (this->param_.warmup_iter() > 0 &&
       this->iter_ < this->param_.warmup_iter()) {
@@ -634,6 +632,46 @@ void SGDSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
   default:
     LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();
   }
+}
+
+//
+// LARS (Layer-wise Adaptive Rate Scaling) is implemented by Yang You, Ignor Gitman and Boris Ginsburg in UC Berkeley.
+// please refer to the papers below:
+//     Scaling SGD Batch Size to 32K for ImageNet Training (https://www2.eecs.berkeley.edu/Pubs/TechRpts/2017/EECS-2017-149.html).
+//     Large Batch Training of Convolutional Networks (https://arxiv.org/abs/1708.03888).
+template <typename Dtype>
+Dtype SGDSolver<Dtype>::GetLocalRate(int param_id) const {
+  const vector<float>& net_params_lr = this->net_->params_lr();
+  float local_lr = net_params_lr[param_id];
+
+  if (this->param_.local_lr_auto()) {
+    Blob<Dtype>* param = this->net_->learnable_params()[param_id];
+    const float w_norm = std::sqrt(param->sumsq_data());
+    const float wgrad_norm = std::sqrt(param->sumsq_diff());
+    const float gw_ratio = this->param_.local_gw_ratio();
+    float rate = 1.F;
+
+    float weight_decay = this->param_.weight_decay();
+    if (w_norm > 0.F && wgrad_norm > 0.F) {
+      rate = gw_ratio * w_norm / (wgrad_norm + weight_decay * w_norm);
+    }
+    if (local_lr > 0.F) {
+      local_lr = rate;
+    }
+
+#ifdef DEBUG
+    if (Caffe::root_solver()
+        && this->param_.display()
+        && (this->iter_ % this->param_.display() == 0)) {
+      const int layer_id = this->net_->param_layer_indices(param_id).first;
+      const string& layer_name = this->net_->layer_names()[layer_id];
+      const int blob_id = this->net_->param_layer_indicces(param_id).second;
+      LOG(INFO) << layer_name << "." << blob_id << " lr=" << local_lr
+        << ".\t  w=" << w_norm << "\t  dw=" << wgrad_norm;
+    }
+#endif
+  }
+  return local_lr;
 }
 
 template <typename Dtype>

@@ -415,6 +415,9 @@ message SolverParameter {
   optional string engine = 47 [default = ""];
   optional int32 warmup_iter = 48 [default = 0];
   optional float warmup_start_lr = 49 [default = 0];
+
+  optional bool local_lr_auto = 50 [default = false];
+  optional float local_gw_ratio = 51 [default = 0.001];
 }
 
 // A message that stores the solver snapshots
