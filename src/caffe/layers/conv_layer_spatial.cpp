@@ -1767,7 +1767,7 @@ void ConvolutionLayerSpatial<Dtype>::new_best_kernel(
       //save to .txt file
       string fname = cache_path_.str() + "pretunedkv.txt";
       std::ofstream f(fname.c_str(), ios::app);
-      if (f.tellp() == 0) {
+      if (f.tellp() == static_cast<std::ofstream::streampos>(0)) {
         f << "Version: " << PretunedVersion << std::endl;
       }
       //f << "{ //" << saved.size() << ":  " << key_ << std::endl;
@@ -1780,7 +1780,7 @@ void ConvolutionLayerSpatial<Dtype>::new_best_kernel(
       //save to binary file PreTunedBinary
       fname = cache_path_.str() + "pretunedkv.ptb";
       f.open(fname, ios::app|ios::binary);
-      if (f.tellp() == 0) {
+      if (f.tellp() == static_cast<std::ofstream::streampos>(0)) {
         PretunedMagicNumType magic = PretunedMagicNum;
         PretunedVersionType version = PretunedVersion;
         f.write(static_cast<const char*>(static_cast<const void*>(&magic)), sizeof(PretunedMagicNumType));
