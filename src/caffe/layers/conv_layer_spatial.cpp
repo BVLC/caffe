@@ -67,6 +67,8 @@ void ConvolutionLayerSpatial<Dtype>::LayerSetUp(
       skip_tuning_phase_ = false;
     else
       skip_tuning_phase_ = true;
+  } else {
+    skip_tuning_phase_ = false;
   }
   BaseConvolutionLayer<Dtype>::LayerSetUp(bottom, top);
   tuned_ = 0;
