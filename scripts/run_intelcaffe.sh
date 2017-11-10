@@ -80,10 +80,10 @@ function detect_cpu
 {
     # detect cpu model
     model_string=`lscpu | grep "Model name" | awk -F ':' '{print $2}'`
-    if [[ $model_string == *"72"* ]]; then
-        cpu_model="knl"
-    elif [[ $model_string == *"0000"* ]]; then
+    if [[ $model_string == *"7235"* ]] || [[ $model_string == *"7285"* ]] || [[ $model_string == *"7295"* ]]; then
         cpu_model="knm"
+    elif [[ $model_string == *"72"* ]]; then
+        cpu_model="knl"
     elif [[ $model_string == *"8180"* ]]; then
         cpu_model="skx"
     elif [[ $model_string == *"6148"* ]]; then
