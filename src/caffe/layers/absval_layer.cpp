@@ -42,7 +42,11 @@ void AbsValLayer<Dtype, MItype, MOtype>::Backward_cpu(
 STUB_GPU(AbsValLayer);
 #endif
 
-INSTANTIATE_CLASS_4T(AbsValLayer);
+INSTANTIATE_CLASS_3T(AbsValLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T(AbsValLayer, (double), (double), (double));
+
 REGISTER_LAYER_CLASS(AbsVal);
+REGISTER_LAYER_CLASS_INST(AbsVal, (float), (float), (float));
+REGISTER_LAYER_CLASS_INST(AbsVal, (double), (double), (double));
 
 }  // namespace caffe

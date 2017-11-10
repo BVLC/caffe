@@ -98,7 +98,10 @@ void ConcatLayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob<MOtype>*
 STUB_GPU(ConcatLayer);
 #endif
 
-INSTANTIATE_CLASS_3T(ConcatLayer);
-REGISTER_LAYER_CLASS(Concat);
+INSTANTIATE_CLASS_3T(ConcatLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T(ConcatLayer, (double), (double), (double));
 
+REGISTER_LAYER_CLASS(Concat);
+REGISTER_LAYER_CLASS_INST(Concat, (float), (float), (float));
+REGISTER_LAYER_CLASS_INST(Concat, (double), (double), (double));
 }  // namespace caffe

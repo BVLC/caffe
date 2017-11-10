@@ -202,7 +202,7 @@ string LibDNNPool<Dtype>::generate_fw_kernels(string name,
                                                    bool test_mode) {
   stringstream ss;
 #ifdef USE_GPU_HALF
-  if (std::is_same<Dtype, half_float::half>::value) {
+  if (std::is_same<Dtype, half_fp>::value) {
     ss << "#define DTYPE_MAX HALF_MAX" << std::endl;
     ss << "#define DTYPE_MIN HALF_MIN" << std::endl;
   } else {

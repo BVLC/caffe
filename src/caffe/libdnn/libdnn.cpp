@@ -32,7 +32,7 @@ string LibDNN<Dtype>::generate_header() {
       ss << "#endif" << std::endl;
     }
 
-    if (std::is_same<Dtype, half_float::half>::value) {
+    if (std::is_same<Dtype, half_fp>::value) {
       ss << "#if defined(cl_khr_fp16)" << std::endl;
       ss << "#pragma OPENCL EXTENSION cl_khr_fp16 : enable" << std::endl;
       ss << "#define HALF_SUPPORT_AVAILABLE" << std::endl;
@@ -78,7 +78,7 @@ string LibDNN<Dtype>::generate_header() {
     }
   }
 #ifdef USE_GPU_HALF
-  else if (std::is_same<Dtype, half_float::half>::value) {
+  else if (std::is_same<Dtype, half_fp>::value) {
     ss << "#define Dtype half" << std::endl;
     ss << "#define Dtype1 half" << std::endl;
     // half2, half4, half8, half16
@@ -88,7 +88,7 @@ string LibDNN<Dtype>::generate_header() {
   }
 #endif
 
-  if (std::is_same<Dtype, half_float::half>::value) {
+  if (std::is_same<Dtype, half_fp>::value) {
     ss << "#define KERNEL_ARG_DTYPE float" << std::endl;
   } else {
     ss << "#define KERNEL_ARG_DTYPE Dtype" << std::endl;
@@ -196,20 +196,20 @@ string LibDNN<Dtype>::generate_header() {
       } else {
         ss << "unsigned int intVal;" << std::endl;
       }
-      if (std::is_same<Dtype, half_float::half>::value) {
+      if (std::is_same<Dtype, half_fp>::value) {
         ss << "Dtype floatVal[2];" << std::endl;
       } else {
         ss << "Dtype floatVal[1];" << std::endl;
       }
       ss << "} next, expected, current;" << std::endl;
       ss << "current.floatVal[0] = *source;" << std::endl;
-      if (std::is_same<Dtype, half_float::half>::value)
+      if (std::is_same<Dtype, half_fp>::value)
         ss << "current.floatVal[1] = *(source + 1);" << std::endl;
       ss << "do {" << std::endl;
       ss << "expected.intVal = current.intVal;" << std::endl;
       ss << "next.floatVal[0] = expected.floatVal[0] "
          << atomic_ops[i] << " operand;" << std::endl;
-      if (std::is_same<Dtype, half_float::half>::value) {
+      if (std::is_same<Dtype, half_fp>::value) {
         ss << "next.floatVal[1] = expected.floatVal[1]; " << std::endl;
       }
       ss << "current.intVal = ";

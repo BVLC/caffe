@@ -21,7 +21,7 @@ void TileLayer<Dtype, MItype, MOtype>::Reshape(
   inner_dim_ = bottom[0]->count(axis_);
 
   if (Caffe::mode() == Caffe::GPU && this->device_program_.get() == nullptr) {
-    this->GenerateProgram<Dtype, MItype, MOtype>();
+    this->GenerateProgram();
   }
 }
 

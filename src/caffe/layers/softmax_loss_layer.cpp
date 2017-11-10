@@ -57,7 +57,7 @@ void SoftmaxWithLossLayer<Dtype, MItype, MOtype>::Reshape(
   }
 
   if (Caffe::mode() == Caffe::GPU && this->device_program_.get() == nullptr) {
-    this->GenerateProgram<Dtype, MItype, MOtype>();
+    this->GenerateProgram();
   }
 }
 
@@ -111,7 +111,7 @@ void SoftmaxWithLossLayer<Dtype, MItype, MOtype>::Forward_cpu(
       DCHECK_GE(label_value, 0);
       DCHECK_LT(label_value, prob_.shape(softmax_axis_));
       Dtype min_value = FLT_MIN;
-      if (std::is_same<Dtype, half_float::half>::value) {
+      if (std::is_same<Dtype, half_fp>::value) {
         min_value = HALF_MIN;
       }
       loss -= log(std::max(prob_data[i * dim + label_value * inner_num_ + j],

@@ -188,7 +188,11 @@ void Im2colLayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob<MOtype>*
 STUB_GPU(Im2colLayer);
 #endif
 
-INSTANTIATE_CLASS_3T(Im2colLayer);
+INSTANTIATE_CLASS_3T(Im2colLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T(Im2colLayer, (double), (double), (double));
+
 REGISTER_LAYER_CLASS(Im2col);
+REGISTER_LAYER_CLASS_INST(Im2col, (float), (float), (float));
+REGISTER_LAYER_CLASS_INST(Im2col, (double), (double), (double));
 
 }  // namespace caffe

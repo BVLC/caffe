@@ -91,7 +91,7 @@ void LRNLayer<Dtype, MItype, MOtype>::Reshape(
   }
 
   if (Caffe::mode() == Caffe::GPU && this->device_program_.get() == nullptr) {
-    this->GenerateProgram<Dtype, MItype, MOtype>();
+    this->GenerateProgram();
   }
 }
 

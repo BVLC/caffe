@@ -18,7 +18,7 @@ class LibDNNDeconvolutionLayer
     : public DeconvolutionLayer<Dtype, MItype, MOtype> {
  public:
   explicit LibDNNDeconvolutionLayer(const LayerParameter& param)
-      : DeconvolutionLayer<Dtype>(param) {}
+      : DeconvolutionLayer<Dtype, MItype, MOtype>(param) {}
   virtual void LayerSetUp(const vector<Blob<MItype>*>& bottom,
       const vector<Blob<MOtype>*>& top);
   virtual void Reshape(const vector<Blob<MItype>*>& bottom,

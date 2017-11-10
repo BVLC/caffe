@@ -47,6 +47,9 @@ list(APPEND Caffe_LINKER_LIBS PUBLIC ${GFLAGS_LIBRARIES})
 # ---[ Google-protobuf
 include(cmake/ProtoBuf.cmake)
 
+# ---[ PreBuild code generation
+include(cmake/PreBuild.cmake)
+
 # ---[ HDF5
 if(MSVC)
   # Find HDF5 using it's hdf5-config.cmake file with MSVC

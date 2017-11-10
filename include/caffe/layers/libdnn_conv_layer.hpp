@@ -15,10 +15,10 @@
 namespace caffe {
 
 template<typename Dtype, typename MItype, typename MOtype>
-class LibDNNConvolutionLayer : public ConvolutionLayer<Dtype> {
+class LibDNNConvolutionLayer : public ConvolutionLayer<Dtype, MItype, MOtype> {
  public:
   explicit LibDNNConvolutionLayer(const LayerParameter& param)
-      : ConvolutionLayer<Dtype>(param) {}
+      : ConvolutionLayer<Dtype, MItype, MOtype>(param) {}
   virtual void LayerSetUp(const vector<Blob<MItype>*>& bottom,
       const vector<Blob<MOtype>*>& top);
   virtual void Reshape(const vector<Blob<MItype>*>& bottom,

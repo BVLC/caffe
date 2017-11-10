@@ -24,7 +24,7 @@ class ImageDataLayer
     : public BasePrefetchingDataLayer<Dtype, MItype, MOtype> {
  public:
   explicit ImageDataLayer(const LayerParameter& param)
-      : BasePrefetchingDataLayer<Dtype>(param) {}
+      : BasePrefetchingDataLayer<Dtype, MItype, MOtype>(param) {}
   virtual ~ImageDataLayer();
   virtual void DataLayerSetUp(const vector<Blob<MItype>*>& bottom,
       const vector<Blob<MOtype>*>& top);
@@ -36,7 +36,7 @@ class ImageDataLayer
  protected:
   shared_ptr<Caffe::RNG> prefetch_rng_;
   virtual void ShuffleImages();
-  virtual void load_batch(Batch<Dtype, MItype>* batch);
+  virtual void load_batch(Batch<Dtype>* batch);
 
   vector<pair<string, int_tp> > lines_;
   int_tp lines_id_;

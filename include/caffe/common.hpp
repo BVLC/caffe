@@ -5,11 +5,14 @@
   #include "caffe_config.h"
 #endif
 
+#include <boost/preprocessor/seq/for_each.hpp>
+#include <boost/preprocessor/seq/enum.hpp>
+
 #include <gflags/gflags.h>
 #include <glog/logging.h>
 
 #include "caffe/definitions.hpp"
-
+#include "caffe/macros.hpp"
 
 #ifdef CMAKE_WINDOWS_BUILD
   #include "caffe/export.hpp"
@@ -46,104 +49,10 @@ private:\
   classname(const classname&);\
   classname& operator=(const classname&)
 
-// Instantiate a pointer class
-#define INSTANTIATE_POINTER_CLASS(classname) \
-  char gInstantiationGuard##classname; \
-  template class classname<bool>; \
-  template class classname<char>; \
-  template class classname<int8_t>; \
-  template class classname<uint8_t>; \
-  template class classname<int16_t>; \
-  template class classname<uint16_t>; \
-  template class classname<int32_t>; \
-  template class classname<uint32_t>; \
-  template class classname<int64_t>; \
-  template class classname<uint64_t>; \
-  template class classname<half_float::half>; \
-  template class classname<float>; \
-  template class classname<double>; \
-  template class classname<void>; \
-  template class classname<const bool>; \
-  template class classname<const char>; \
-  template class classname<const int8_t>; \
-  template class classname<const uint8_t>; \
-  template class classname<const int16_t>; \
-  template class classname<const uint16_t>; \
-  template class classname<const int32_t>; \
-  template class classname<const uint32_t>; \
-  template class classname<const int64_t>; \
-  template class classname<const uint64_t>; \
-  template class classname<const half_float::half>; \
-  template class classname<const float>; \
-  template class classname<const double>; \
-  template class classname<const void>;
-
-// Instantiate a class with float and double specifications.
-#define INSTANTIATE_CLASS_1T(classname) \
-  char gInstantiationGuard##classname; \
-  template class classname<float>; \
-  template class classname<double>;
-
-#define INSTANTIATE_CLASS_2T(classname) \
-  char gInstantiationGuard##classname; \
-  template class classname<float, float>; \
-  template class classname<double, double>;
-
-#define INSTANTIATE_CLASS_3T(classname) \
-  char gInstantiationGuard##classname; \
-  template class classname<float, float, float>; \
-  template class classname<double, double, double>;
-
-#define INSTANTIATE_LAYER_GPU_FORWARD(classname) \
-  template void classname<float, float, float>::Forward_gpu( \
-      const vector<Blob<float>*>& bottom, \
-      const vector<Blob<float>*>& top); \
-  template void classname<double, double, double>::Forward_gpu( \
-      const vector<Blob<double>*>& bottom, \
-      const vector<Blob<double>*>& top);
-
-#define INSTANTIATE_LAYER_GPU_BACKWARD(classname) \
-  template void classname<float, float, float>::Backward_gpu( \
-      const vector<Blob<float>*>& top, \
-      const vector<bool>& propagate_down, \
-      const vector<Blob<float>*>& bottom); \
-  template void classname<double, double, double>::Backward_gpu( \
-      const vector<Blob<double>*>& top, \
-      const vector<bool>& propagate_down, \
-      const vector<Blob<double>*>& bottom)
-
-#define INSTANTIATE_LAYER_GPU_FUNCS(classname) \
-  INSTANTIATE_LAYER_GPU_FORWARD(classname); \
-  INSTANTIATE_LAYER_GPU_BACKWARD(classname)
 
 // a simple macro to mark codes that are not implemented, so that when the code
 // is executed we will see a fatal log.
 #define NOT_IMPLEMENTED LOG(FATAL) << "Not Implemented Yet"
-
-#ifdef CPU_ONLY  // CPU-only Caffe.
-// Stub out GPU calls as unavailable.
-#define NO_GPU LOG(FATAL) << "Cannot use GPU in CPU-only Caffe: check mode."
-
-#define STUB_GPU(classname) \
-template <typename Dtype> \
-void classname<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom, \
-    const vector<Blob<Dtype>*>& top) { NO_GPU; } \
-template <typename Dtype> \
-void classname<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top, \
-    const vector<bool>& propagate_down, \
-    const vector<Blob<Dtype>*>& bottom) { NO_GPU; } \
-
-#define STUB_GPU_FORWARD(classname, funcname) \
-template <typename Dtype> \
-void classname<Dtype>::funcname##_##gpu(const vector<Blob<Dtype>*>& bottom, \
-    const vector<Blob<Dtype>*>& top) { NO_GPU; } \
-
-#define STUB_GPU_BACKWARD(classname, funcname) \
-template <typename Dtype> \
-void classname<Dtype>::funcname##_##gpu(const vector<Blob<Dtype>*>& top, \
-    const vector<bool>& propagate_down, \
-    const vector<Blob<Dtype>*>& bottom) { NO_GPU; }
-#endif
 
 // See PR #1236
 namespace cv {class Mat;}

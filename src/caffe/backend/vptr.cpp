@@ -136,12 +136,12 @@ vptr<Dtype, typename non_const_enable_if<Dtype>::type>
 
 template<typename Dtype>
 vptr<Dtype, typename const_enable_if<Dtype>::type>
-  ::vptr(const vptr<half_float::half> &other) {
+  ::vptr(const vptr<half_fp> &other) {
   dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
 }
 template<typename Dtype>
 vptr<Dtype, typename non_const_enable_if<Dtype>::type>
-  ::vptr(const vptr<half_float::half> &other) {
+  ::vptr(const vptr<half_fp> &other) {
   dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
 }
 
@@ -231,7 +231,7 @@ vptr<Dtype, typename const_enable_if<Dtype>::type>
 }
 template<typename Dtype>
 vptr<Dtype, typename const_enable_if<Dtype>::type>
-  ::vptr(const vptr<const half_float::half> &other) {
+  ::vptr(const vptr<const half_fp> &other) {
   dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
 }
 template<typename Dtype>
@@ -577,13 +577,13 @@ vptr<Dtype>& vptr<Dtype, typename non_const_enable_if<Dtype>::type>
 
 template<typename Dtype>
 vptr<Dtype>& vptr<Dtype, typename const_enable_if<Dtype>::type>
-                              ::operator=(const vptr<half_float::half> &other) {
+                              ::operator=(const vptr<half_fp> &other) {
   dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
   return *this;
 }
 template<typename Dtype>
 vptr<Dtype>& vptr<Dtype, typename non_const_enable_if<Dtype>::type>
-                              ::operator=(const vptr<half_float::half> &other) {
+                              ::operator=(const vptr<half_fp> &other) {
   dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
   return *this;
 }
@@ -690,7 +690,7 @@ vptr<Dtype>& vptr<Dtype, typename const_enable_if<Dtype>::type>
 }
 template<typename Dtype>
 vptr<Dtype>& vptr<Dtype, typename const_enable_if<Dtype>::type>
-                        ::operator=(const vptr<const half_float::half> &other) {
+                        ::operator=(const vptr<const half_fp> &other) {
   dev_ptr_ = other.get_dev_ptr()->instance((Dtype*)nullptr);
   return *this;
 }

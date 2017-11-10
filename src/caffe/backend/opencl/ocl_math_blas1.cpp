@@ -7,9 +7,9 @@ namespace caffe {
 
 #ifdef USE_OPENCL
 
-void OclDevice::axpy_half(const uint_tp n, const half_float::half alpha,
-                          vptr<const half_float::half> x,
-                          vptr<half_float::half> y) {
+void OclDevice::axpy_half(const uint_tp n, const half_fp alpha,
+                          vptr<const half_fp> x,
+                          vptr<half_fp> y) {
 #if defined(USE_GPU_HALF)
   uint_tp offX = x.get_ocl_off();
   uint_tp offY = y.get_ocl_off();
@@ -32,7 +32,7 @@ void OclDevice::axpy_half(const uint_tp n, const half_float::half alpha,
   const size_t incY = 1;
 
   OPENCL_CLBLAST_CHECK(
-    clblast::Axpy<half_float::half>(
+    clblast::Axpy<half_fp>(
       n,
       alpha,
       x.get_ocl_mem(), offX, incX,
@@ -172,9 +172,9 @@ void OclDevice::axpy_double(const uint_tp n, const double alpha,
   }
 }
 
-void OclDevice::axpby_half(const uint_tp n, const half_float::half alpha,
-                   vptr<const half_float::half> x,
-                   const half_float::half beta, vptr<half_float::half> y) {
+void OclDevice::axpby_half(const uint_tp n, const half_fp alpha,
+                   vptr<const half_fp> x,
+                   const half_fp beta, vptr<half_fp> y) {
   this->scal_half(n, beta, y);
   this->axpy_half(n, alpha, x, y);
 }
@@ -192,8 +192,8 @@ void OclDevice::axpby_double(const uint_tp n, const double alpha,
 }
 
 
-void OclDevice::scal_half(const uint_tp n, const half_float::half alpha,
-                  vptr<half_float::half> x) {
+void OclDevice::scal_half(const uint_tp n, const half_fp alpha,
+                  vptr<half_fp> x) {
 #ifdef USE_GPU_HALF
   uint_tp offX = x.get_ocl_off();
 
@@ -213,7 +213,7 @@ void OclDevice::scal_half(const uint_tp n, const half_float::half alpha,
   const size_t incx = 1;
 
   OPENCL_CLBLAST_CHECK(
-    clblast::Scal<half_float::half>(
+    clblast::Scal<half_fp>(
       n,
       alpha,
       x.get_ocl_mem(), offX, incx,
@@ -330,9 +330,9 @@ void OclDevice::scal_double(const uint_tp n, const double alpha,
   }
 }
 
-void OclDevice::dot_half(const uint_tp n, vptr<const half_float::half> x,
-                         vptr<const half_float::half> y,
-                         half_float::half* out) {
+void OclDevice::dot_half(const uint_tp n, vptr<const half_fp> x,
+                         vptr<const half_fp> y,
+                         half_fp* out) {
 #ifdef USE_GPU_HALF
   uint_tp offX = x.get_ocl_off();
   uint_tp offY = y.get_ocl_off();
@@ -345,19 +345,19 @@ void OclDevice::dot_half(const uint_tp n, vptr<const half_float::half> x,
 
   cl_int err;
   cl_mem gpuout = clCreateBuffer(ctx.handle().get(), CL_MEM_READ_WRITE,
-      sizeof(half_float::half), NULL, &err);
+      sizeof(half_fp), NULL, &err);
   cl_mem scratch = clCreateBuffer(ctx.handle().get(), CL_MEM_READ_WRITE,
-      n * sizeof(half_float::half), NULL, &err);
+      n * sizeof(half_fp), NULL, &err);
 
   OPENCL_CL_BLAS_CHECK(
       clblasHdot(n, gpuout, 0, x.get_ocl_mem(), offX, 1, y.get_ocl_mem(),
           offY, 1, scratch, 1, &queue, 0, NULL, NULL));
 
 
-  shared_ptr<ocl_dev_ptr<half_float::half> > oclptr_gpuout
-                    = std::make_shared<ocl_dev_ptr<half_float::half> >(gpuout);
-  vptr<half_float::half> vptr_gpuout(oclptr_gpuout);
-  this->memcpy(sizeof(half_float::half), vptr<void>(vptr_gpuout), out);
+  shared_ptr<ocl_dev_ptr<half_fp> > oclptr_gpuout
+                    = std::make_shared<ocl_dev_ptr<half_fp> >(gpuout);
+  vptr<half_fp> vptr_gpuout(oclptr_gpuout);
+  this->memcpy(sizeof(half_fp), vptr<void>(vptr_gpuout), out);
 
   clReleaseMemObject(gpuout);
   clReleaseMemObject(scratch);
@@ -368,24 +368,24 @@ void OclDevice::dot_half(const uint_tp n, vptr<const half_float::half> x,
 
   cl_int err = CL_SUCCESS;
   cl_mem Z = clCreateBuffer(ctx.handle().get(), CL_MEM_READ_WRITE,
-                            sizeof(half_float::half), NULL, &err);
+                            sizeof(half_fp), NULL, &err);
 
   const size_t offZ = 0;
   const size_t incX = 1;
   const size_t incY = 1;
 
   OPENCL_CLBLAST_CHECK(
-    clblast::Dot<half_float::half>(
+    clblast::Dot<half_fp>(
       n,
       Z, offZ,
       x.get_ocl_mem(), offX, incX,
       y.get_ocl_mem(), offY, incY,
       &queue));
 
-  shared_ptr<ocl_dev_ptr<half_float::half> > oclptrZ
-                    = std::make_shared<ocl_dev_ptr<half_float::half> >(Z, offZ);
-  vptr<half_float::half> vptrZ(oclptrZ);
-  this->memcpy(sizeof(half_float::half), vptr<void>(vptrZ), out);
+  shared_ptr<ocl_dev_ptr<half_fp> > oclptrZ
+                    = std::make_shared<ocl_dev_ptr<half_fp> >(Z, offZ);
+  vptr<half_fp> vptrZ(oclptrZ);
+  this->memcpy(sizeof(half_fp), vptr<void>(vptrZ), out);
   clReleaseMemObject(Z);
 
 #else  // default (ViennaCL)
@@ -573,8 +573,8 @@ void OclDevice::dot_double(const uint_tp n, vptr<const double> x,
   }
 }
 
-void OclDevice::asum_half(const uint_tp n, vptr<const half_float::half> x,
-                           half_float::half* y) {
+void OclDevice::asum_half(const uint_tp n, vptr<const half_fp> x,
+                           half_fp* y) {
 #ifdef USE_GPU_HALF
   uint_tp offX = x.get_ocl_off();
 
@@ -586,18 +586,18 @@ void OclDevice::asum_half(const uint_tp n, vptr<const half_float::half> x,
 
   cl_int err;
   cl_mem gpuout = clCreateBuffer(ctx.handle().get(), CL_MEM_READ_WRITE,
-      sizeof(half_float::half), NULL, &err);
+      sizeof(half_fp), NULL, &err);
   cl_mem scratch = clCreateBuffer(ctx.handle().get(), CL_MEM_READ_WRITE,
-      n * sizeof(half_float::half), NULL, &err);
+      n * sizeof(half_fp), NULL, &err);
 
   OPENCL_CL_BLAS_CHECK(
       clblasHasum(n, gpuout, 0, x.get_ocl_mem(), offX, 1,
           scratch, 1, &queue, 0, NULL, NULL));
 
-  shared_ptr<ocl_dev_ptr<half_float::half> > oclptr_gpuout
-                     = std::make_shared<ocl_dev_ptr<half_float::half> >(gpuout);
-  vptr<half_float::half> vptr_gpuout(oclptr_gpuout);
-  this->memcpy(sizeof(half_float::half), vptr<void>(vptr_gpuout), out);
+  shared_ptr<ocl_dev_ptr<half_fp> > oclptr_gpuout
+                     = std::make_shared<ocl_dev_ptr<half_fp> >(gpuout);
+  vptr<half_fp> vptr_gpuout(oclptr_gpuout);
+  this->memcpy(sizeof(half_fp), vptr<void>(vptr_gpuout), out);
 
   clReleaseMemObject(gpuout);
   clReleaseMemObject(scratch);
@@ -608,22 +608,22 @@ void OclDevice::asum_half(const uint_tp n, vptr<const half_float::half> x,
 
   cl_int err = CL_SUCCESS;
   cl_mem Z = clCreateBuffer(ctx.handle().get(), CL_MEM_READ_WRITE,
-    sizeof(half_float::half), NULL, &err);
+    sizeof(half_fp), NULL, &err);
 
   const size_t offZ = 0;
   const size_t incX = 1;
 
   OPENCL_CLBLAST_CHECK(
-    clblast::Asum<half_float::half>(
+    clblast::Asum<half_fp>(
       n,
       Z, offZ,
       x.get_ocl_mem(), offX, incX,
       &queue));
 
-  shared_ptr<ocl_dev_ptr<half_float::half> > oclptrZ
-                    = std::make_shared<ocl_dev_ptr<half_float::half> >(Z, offZ);
-  vptr<half_float::half> vptrZ(oclptrZ);
-  this->memcpy(sizeof(half_float::half), vptr<void>(vptrZ), y);
+  shared_ptr<ocl_dev_ptr<half_fp> > oclptrZ
+                    = std::make_shared<ocl_dev_ptr<half_fp> >(Z, offZ);
+  vptr<half_fp> vptrZ(oclptrZ);
+  this->memcpy(sizeof(half_fp), vptr<void>(vptrZ), y);
 
   clReleaseMemObject(Z);
 
@@ -771,7 +771,7 @@ void OclDevice::asum_double(const uint_tp n, vptr<const double> x, double* y) {
     shared_ptr<ocl_dev_ptr<double> > oclptrZ
                       = std::make_shared<ocl_dev_ptr<double> >(Z, offZ);
     vptr<double> vptrZ(oclptrZ);
-    this->memcpy(sizeof(half_float::half), vptr<void>(vptrZ), y);
+    this->memcpy(sizeof(half_fp), vptr<void>(vptrZ), y);
     clReleaseMemObject(Z);
 
 #else  // default (ViennaCL)
@@ -791,27 +791,27 @@ void OclDevice::asum_double(const uint_tp n, vptr<const double> x, double* y) {
 }
 
 
-void OclDevice::scale_half(const uint_tp n, const half_float::half alpha,
-                           vptr<const half_float::half> x,
-                           vptr<half_float::half> y) {
+void OclDevice::scale_half(const uint_tp n, const half_fp alpha,
+                           vptr<const half_fp> x,
+                           vptr<half_fp> y) {
   uint_tp offX = x.get_ocl_off();
   uint_tp offY = y.get_ocl_off();
 
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(this->id());
 
   if (ctx.devices()[0].type() == CL_DEVICE_TYPE_CPU) {
-    half_float::half* Xptr = reinterpret_cast<half_float::half*>(
+    half_fp* Xptr = reinterpret_cast<half_fp*>(
         clEnqueueMapBuffer(
         ctx.get_queue().handle().get(), x.get_ocl_mem(), true, CL_MAP_READ,
-        sizeof(half_float::half) * offX, sizeof(half_float::half) * n, 0,
+        sizeof(half_fp) * offX, sizeof(half_fp) * n, 0,
         NULL, NULL, NULL));
-    half_float::half* Yptr = reinterpret_cast<half_float::half*>(
+    half_fp* Yptr = reinterpret_cast<half_fp*>(
         clEnqueueMapBuffer(
         ctx.get_queue().handle().get(), y.get_ocl_mem(), true, CL_MAP_WRITE,
-        sizeof(half_float::half) * offY, sizeof(half_float::half) * n, 0,
+        sizeof(half_fp) * offY, sizeof(half_fp) * n, 0,
         NULL, NULL, NULL));
 
-    caffe_cpu_scale<half_float::half>(n, alpha, Xptr, Yptr);
+    caffe_cpu_scale<half_fp>(n, alpha, Xptr, Yptr);
 
     clEnqueueUnmapMemObject(ctx.get_queue().handle().get(), x.get_ocl_mem(),
                             Xptr, 0, NULL, NULL);
@@ -837,13 +837,13 @@ void OclDevice::scale_half(const uint_tp n, const half_float::half alpha,
     const size_t incY = 1;
 
     OPENCL_CLBLAST_CHECK(
-      clblast::Copy<half_float::half>(
+      clblast::Copy<half_fp>(
         n,
         x.get_ocl_mem(), offX, incX,
         y.get_ocl_mem(), offY, incY,
         &queue));
     OPENCL_CLBLAST_CHECK(
-      clblast::Scal<half_float::half>(
+      clblast::Scal<half_fp>(
         n,
         alpha,
         y.get_ocl_mem(), offY, incY,

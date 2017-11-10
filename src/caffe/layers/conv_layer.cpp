@@ -78,6 +78,7 @@ void ConvolutionLayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob<MOt
 STUB_GPU(ConvolutionLayer);
 #endif
 
-INSTANTIATE_CLASS_3T(ConvolutionLayer);
+INSTANTIATE_CLASS_3T(ConvolutionLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T(ConvolutionLayer, (double), (double), (double));
 
 }  // namespace caffe

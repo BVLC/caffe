@@ -85,10 +85,10 @@ bool Device::is_fast_unsafe_math() const {
 }
 
 template<>
-shared_ptr<Blob<half_float::half> > Device::Buffer(uint_tp id) {
+shared_ptr<Blob<half_fp> > Device::Buffer(uint_tp id) {
   if (buff_h_.size() <= id) {
-    shared_ptr<Blob<half_float::half> >
-                                 blob_pointer(new Blob<half_float::half>(this));
+    shared_ptr<Blob<half_fp> >
+                                 blob_pointer(new Blob<half_fp>(this));
     buff_h_.push_back(blob_pointer);
   }
   return buff_h_[id];

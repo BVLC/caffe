@@ -560,7 +560,7 @@ TYPED_TEST(PoolingLayerTest, TestForwardAve) {
   EXPECT_EQ(this->blob_top_->height(), 3);
   EXPECT_EQ(this->blob_top_->width(), 3);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-  Dtype epsilon = std::is_same<Dtype, half_float::half>::value ?
+  Dtype epsilon = std::is_same<Dtype, half_fp>::value ?
                   1e-3 : 1e-5;
   EXPECT_NEAR(this->blob_top_->cpu_data()[0], 8.0 / 9, epsilon);
   EXPECT_NEAR(this->blob_top_->cpu_data()[1], 4.0 / 3, epsilon);

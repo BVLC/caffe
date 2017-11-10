@@ -7168,7 +7168,7 @@ class FloatingPoint {
 
 // Typedefs the instances of the FloatingPoint template class that we
 // care to use.
-typedef FloatingPoint<half_float::half> Half;
+typedef FloatingPoint<half_fp> Half;
 typedef FloatingPoint<float> Float;
 typedef FloatingPoint<double> Double;
 
@@ -19319,7 +19319,7 @@ AssertionResult AssertPred5Helper(const char* pred_text,
 #define EXPECT_NE(expected, actual) \
   EXPECT_PRED_FORMAT2(::testing::internal::CmpHelperNE, expected, actual)
 #define EXPECT_LE(val1, val2) \
-  if (!std::is_same<decltype(val1), half_float::half>::value) \
+  if (!std::is_same<decltype(val1), half_fp>::value) \
     EXPECT_PRED_FORMAT2(::testing::internal::CmpHelperLE, val1, val2); \
   else \
     EXPECT_FLOAT_LE(val1, val2)
@@ -19327,7 +19327,7 @@ AssertionResult AssertPred5Helper(const char* pred_text,
 #define EXPECT_LT(val1, val2) \
   EXPECT_PRED_FORMAT2(::testing::internal::CmpHelperLT, val1, val2)
 #define EXPECT_GE(val1, val2) \
-  if (!std::is_same<decltype(val1), half_float::half>::value) \
+  if (!std::is_same<decltype(val1), half_fp>::value) \
     EXPECT_PRED_FORMAT2(::testing::internal::CmpHelperGE, val1, val2); \
   else \
     EXPECT_FLOAT_GE(val1, val2)

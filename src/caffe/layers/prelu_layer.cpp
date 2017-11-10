@@ -65,7 +65,7 @@ void PReLULayer<Dtype, MItype, MOtype>::Reshape(const vector<Blob<MItype>*>& bot
   }
 
   if (Caffe::mode() == Caffe::GPU && this->device_program_.get() == nullptr) {
-    this->GenerateProgram<Dtype, MItype, MOtype>();
+    this->GenerateProgram();
   }
 }
 

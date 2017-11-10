@@ -79,7 +79,7 @@ TYPED_TEST(EltwiseLayerTest, TestProd) {
   const Dtype* in_data_a = this->blob_bottom_a_->cpu_data();
   const Dtype* in_data_b = this->blob_bottom_b_->cpu_data();
   const Dtype* in_data_c = this->blob_bottom_c_->cpu_data();
-  Dtype delta = std::is_same<Dtype, half_float::half>::value ?
+  Dtype delta = std::is_same<Dtype, half_fp>::value ?
                 1e-2 : 1e-4;
   for (int_tp i = 0; i < count; ++i) {
     EXPECT_NEAR(data[i], in_data_a[i] * in_data_b[i] * in_data_c[i], delta);
@@ -100,7 +100,7 @@ TYPED_TEST(EltwiseLayerTest, TestSum) {
   const Dtype* in_data_a = this->blob_bottom_a_->cpu_data();
   const Dtype* in_data_b = this->blob_bottom_b_->cpu_data();
   const Dtype* in_data_c = this->blob_bottom_c_->cpu_data();
-  Dtype delta = std::is_same<Dtype, half_float::half>::value ?
+  Dtype delta = std::is_same<Dtype, half_fp>::value ?
                 1e-2 : 1e-4;
   for (int_tp i = 0; i < count; ++i) {
     EXPECT_NEAR(data[i], in_data_a[i] + in_data_b[i] + in_data_c[i], delta);
@@ -124,7 +124,7 @@ TYPED_TEST(EltwiseLayerTest, TestSumCoeff) {
   const Dtype* in_data_a = this->blob_bottom_a_->cpu_data();
   const Dtype* in_data_b = this->blob_bottom_b_->cpu_data();
   const Dtype* in_data_c = this->blob_bottom_c_->cpu_data();
-  Dtype delta = std::is_same<Dtype, half_float::half>::value ?
+  Dtype delta = std::is_same<Dtype, half_fp>::value ?
                 1e-2 : 1e-4;
   for (int_tp i = 0; i < count; ++i) {
     EXPECT_NEAR(data[i], in_data_a[i] - 0.5*in_data_b[i] + 2*in_data_c[i],

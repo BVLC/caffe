@@ -6,11 +6,11 @@ namespace caffe {
 #ifdef USE_OPENCL
 
 void OclDevice::gemv_half(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
-                          const uint_tp n, const half_float::half alpha,
-                          vptr<const half_float::half> a,
-                          vptr<const half_float::half> x,
-                          const half_float::half beta,
-                          vptr<half_float::half> y) {
+                          const uint_tp n, const half_fp alpha,
+                          vptr<const half_fp> a,
+                          vptr<const half_fp> x,
+                          const half_fp beta,
+                          vptr<half_fp> y) {
 #if defined(USE_GPU_HALF)
   uint_tp offA = a.get_ocl_off();
   uint_tp offx = x.get_ocl_off();
@@ -41,7 +41,7 @@ void OclDevice::gemv_half(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
   const size_t incy = 1;
 
   OPENCL_CLBLAST_CHECK(
-    clblast::Gemv<half_float::half>(
+    clblast::Gemv<half_fp>(
       layout, a_transpose,
       m, n,
       alpha,

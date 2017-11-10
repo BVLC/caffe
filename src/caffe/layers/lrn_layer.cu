@@ -275,10 +275,10 @@ void LRNLayer<Dtype, MItype, MOtype>::CrossChannelForward_gpu(
 }
 #ifdef USE_GPU_HALF
 template<>
-void LRNLayer<half_float::half, half_float::half, half_float::half>
+void LRNLayer<half_fp, half_fp, half_fp>
                                                       ::CrossChannelForward_gpu(
-    const vector<Blob<half_float::half>*>& bottom,
-    const vector<Blob<half_float::half>*>& top);
+    const vector<Blob<half_fp>*>& bottom,
+    const vector<Blob<half_fp>*>& top);
 #endif  // USE_GPU_HALF
 template<>
 void LRNLayer<float, float, float>::CrossChannelForward_gpu(
@@ -341,11 +341,11 @@ void LRNLayer<Dtype, MItype, MOtype>::CrossChannelBackward_gpu(
 }
 #ifdef USE_GPU_HALF
 template<>
-void LRNLayer<half_float::half, half_float::half, half_float::half>
+void LRNLayer<half_fp, half_fp, half_fp>
                                                      ::CrossChannelBackward_gpu(
-    const vector<Blob<half_float::half>*>& top,
+    const vector<Blob<half_fp>*>& top,
     const vector<bool>& propagate_down,
-    const vector<Blob<half_float::half>*>& bottom);
+    const vector<Blob<half_fp>*>& bottom);
 #endif  // USE_GPU_HALF
 template<>
 void LRNLayer<float, float, float>::CrossChannelBackward_gpu(

@@ -49,12 +49,12 @@ void OclDevice::rng_uniform(const uint_tp n, vptr<uint64_t> r) {
   this->memcpy(sizeof(uint64_t) * n, &random[0], vptr<void>(r));
 }
 
-void OclDevice::rng_uniform_half(const uint_tp n, const half_float::half a,
-                                  const half_float::half b,
-                                  vptr<half_float::half> r) {
-  vector<half_float::half> random(n);  // NOLINT
+void OclDevice::rng_uniform_half(const uint_tp n, const half_fp a,
+                                  const half_fp b,
+                                  vptr<half_fp> r) {
+  vector<half_fp> random(n);  // NOLINT
   caffe_rng_uniform(n, a, b, &random[0]);
-  this->memcpy(sizeof(half_float::half) * n, &random[0], vptr<void>(r));
+  this->memcpy(sizeof(half_fp) * n, &random[0], vptr<void>(r));
 }
 
 void OclDevice::rng_uniform_float(const uint_tp n, const float a,
@@ -71,12 +71,12 @@ void OclDevice::rng_uniform_double(const uint_tp n, const double a,
   this->memcpy(sizeof(double) * n, &random[0], vptr<void>(r));
 }
 
-void OclDevice::rng_gaussian_half(const uint_tp n, const half_float::half mu,
-                                    const half_float::half sigma,
-                                    vptr<half_float::half> r) {
-  vector<half_float::half> random(n);  // NOLINT
+void OclDevice::rng_gaussian_half(const uint_tp n, const half_fp mu,
+                                    const half_fp sigma,
+                                    vptr<half_fp> r) {
+  vector<half_fp> random(n);  // NOLINT
   caffe_rng_gaussian(n, mu, sigma, &random[0]);
-  this->memcpy(sizeof(half_float::half) * n, &random[0], vptr<void>(r));
+  this->memcpy(sizeof(half_fp) * n, &random[0], vptr<void>(r));
 }
 
 void OclDevice::rng_gaussian_float(const uint_tp n, const float mu,
@@ -93,11 +93,11 @@ void OclDevice::rng_gaussian_double(const uint_tp n, const double mu,
   this->memcpy(sizeof(double) * n, &random[0], vptr<void>(r));
 }
 
-void OclDevice::rng_bernoulli_half(const uint_tp n, const half_float::half p,
+void OclDevice::rng_bernoulli_half(const uint_tp n, const half_fp p,
                                     vptr<int> r) {
-  vector<half_float::half> random(n);  // NOLINT
+  vector<half_fp> random(n);  // NOLINT
   caffe_rng_bernoulli(n, p, &random[0]);
-  this->memcpy(sizeof(half_float::half) * n, &random[0], vptr<void>(r));
+  this->memcpy(sizeof(half_fp) * n, &random[0], vptr<void>(r));
 }
 
 void OclDevice::rng_bernoulli_float(const uint_tp n, const float p,
@@ -114,11 +114,11 @@ void OclDevice::rng_bernoulli_double(const uint_tp n, const double p,
   this->memcpy(sizeof(double) * n, &random[0], vptr<void>(r));
 }
 
-void OclDevice::rng_bernoulli_half(const uint_tp n, const half_float::half p,
+void OclDevice::rng_bernoulli_half(const uint_tp n, const half_fp p,
                                     vptr<unsigned int> r) {
-  vector<half_float::half> random(n);  // NOLINT
+  vector<half_fp> random(n);  // NOLINT
   caffe_rng_bernoulli(n, p, &random[0]);
-  this->memcpy(sizeof(half_float::half) * n, &random[0], vptr<void>(r));
+  this->memcpy(sizeof(half_fp) * n, &random[0], vptr<void>(r));
 }
 
 void OclDevice::rng_bernoulli_float(const uint_tp n, const float p,

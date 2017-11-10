@@ -25,11 +25,11 @@ namespace caffe {
 void CudaDevice::gemm_half(const CBLAS_TRANSPOSE trans_a,
                            const CBLAS_TRANSPOSE trans_b,
                            const uint_tp m, const uint_tp n, const uint_tp k,
-                           const half_float::half alpha,
-                           vptr<const half_float::half> a,
-                           vptr<const half_float::half> b,
-                           const half_float::half beta,
-                           vptr<half_float::half> c) {
+                           const half_fp alpha,
+                           vptr<const half_fp> a,
+                           vptr<const half_fp> b,
+                           const half_fp beta,
+                           vptr<half_fp> c) {
   // Note that cublas follows fortran order.
   int_tp lda = (trans_a == CblasNoTrans) ? k : m;
   int_tp ldb = (trans_b == CblasNoTrans) ? n : k;

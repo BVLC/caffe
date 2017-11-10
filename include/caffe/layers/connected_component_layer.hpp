@@ -14,7 +14,7 @@ namespace caffe {
 /**
  * @brief Computes a connected components map from a segmentation map.
  */
-template<typename Dtype>
+template<typename Dtype, typename MItype, typename MOtype>
 class ConnectedComponentLayer : public Layer<Dtype, MItype, MOtype> {
  public:
   explicit ConnectedComponentLayer(const LayerParameter& param)

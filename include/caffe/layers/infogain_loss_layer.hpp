@@ -48,10 +48,12 @@ template<typename Dtype, typename MItype, typename MOtype>
 class InfogainLossLayer : public LossLayer<Dtype, MItype, MOtype> {
  public:
   explicit InfogainLossLayer(const LayerParameter& param)
-      : LossLayer<Dtype>(param), infogain_() {}
-  virtual void LayerSetUp(const vector<Blob<MItype>*>& bottom,
+      : LossLayer<Dtype, MItype, MOtype>(param), infogain_() {}
+  virtual void LayerSetUp(
+      const vector<Blob<MItype>*>& bottom,
       const vector<Blob<MOtype>*>& top);
-  virtual void Reshape(const vector<Blob<MItype>*>& bottom,
+  virtual void Reshape(
+      const vector<Blob<MItype>*>& bottom,
       const vector<Blob<MOtype>*>& top);
 
   // InfogainLossLayer takes 2-3 bottom Blobs; if there are 3 the third should

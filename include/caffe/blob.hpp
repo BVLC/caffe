@@ -10,11 +10,14 @@
 #include "caffe/syncedmem.hpp"
 #include "caffe/backend/vptr.hpp"
 
-const uint_tp kMaxBlobAxes = 32;
+const int_tp kMaxBlobAxes = 32;
 
 namespace caffe {
 
 class Device;
+
+class BlobBase {
+};
 
 /**
  * @brief a wrapper around SyncedMemory holders serving as the basic
@@ -24,7 +27,7 @@ class Device;
  * TODO(dox): more thorough description.
  */
 template<typename Dtype>
-class Blob {
+class Blob : public BlobBase {
  public:
   Blob()
       : data_(),
@@ -40,14 +43,14 @@ class Blob {
         capacity_(0),
         device_(dev) {
   }
-  explicit Blob(const uint_tp num, const uint_tp channels, const uint_tp height,
-                const uint_tp width, Device *device_context =
+  explicit Blob(const int_tp num, const int_tp channels, const int_tp height,
+                const int_tp width, Device *device_context =
                     Caffe::GetDefaultDevice());
-  explicit Blob(const vector<uint_tp>& shape,
+  explicit Blob(const vector<int_tp>& shape,
                 Device *device_context =
                     Caffe::GetDefaultDevice());
-  explicit Blob(const vector<uint_tp>& shape,
-                const vector<uint_tp>& shape_stride,
+  explicit Blob(const vector<int_tp>& shape,
+                const vector<int_tp>& shape_stride,
                 Device *device_context =
                     Caffe::GetDefaultDevice());
 
@@ -67,26 +70,26 @@ class Blob {
    *
    * Reshape returns true if new memory was allocated.
    */
-  bool Reshape(const vector<uint_tp>& shape);
-  bool Reshape(const vector<uint_tp>& shape,
-               const vector<uint_tp>& shape_stride);
+  bool Reshape(const vector<int_tp>& shape);
+  bool Reshape(const vector<int_tp>& shape,
+               const vector<int_tp>& shape_stride);
   bool Reshape(const BlobShape& shape);
   bool Reshape(const BlobShape& shape, const BlobShape& shape_stride);
-  bool Reshape(const uint_tp num, const uint_tp channels, const uint_tp height,
-               const uint_tp width);
+  bool Reshape(const int_tp num, const int_tp channels, const int_tp height,
+               const int_tp width);
   bool ReshapeLike(const Blob& other);
   inline string shape_string() const {
     std::ostringstream stream;
-    for (uint_tp i = 0; i < shape_.size(); ++i) {
+    for (int_tp i = 0; i < shape_.size(); ++i) {
       stream << shape_[i] << " ";
     }
     stream << "(" << count_ << ")";
     return stream.str();
   }
-  inline const vector<uint_tp>& shape() const {
+  inline const vector<int_tp>& shape() const {
     return shape_;
   }
-  inline const vector<uint_tp>& shape_stride() const {
+  inline const vector<int_tp>& shape_stride() const {
     return shape_stride_;
   }
   /**
@@ -97,16 +100,16 @@ class Blob {
    *        "canonicalized" using CanonicalAxisIndex.
    *        Dies on out of range index.
    */
-  inline uint_tp shape(int_tp index) const {
+  inline int_tp shape(int_tp index) const {
     return shape_[CanonicalAxisIndex(index)];
   }
-  inline uint_tp shape_stride(int_tp index) const {
+  inline int_tp shape_stride(int_tp index) const {
     return shape_stride_[CanonicalAxisIndex(index)];
   }
-  inline uint_tp num_axes() const {
+  inline int_tp num_axes() const {
     return shape_.size();
   }
-  inline uint_tp count() const {
+  inline int_tp count() const {
     return count_;
   }
 
@@ -118,27 +121,27 @@ class Blob {
    *
    * @param end_axis The first axis to exclude from the slice.
    */
-  inline uint_tp count(uint_tp start_axis, uint_tp end_axis) const {
+  inline int_tp count(int_tp start_axis, int_tp end_axis) const {
     CHECK_LE(start_axis, end_axis);
     CHECK_GE(start_axis, 0);
     CHECK_GE(end_axis, 0);
     CHECK_LE(start_axis, num_axes());
     CHECK_LE(end_axis, num_axes());
-    uint_tp count = 1;
-    for (uint_tp i = start_axis; i < end_axis; ++i) {
+    int_tp count = 1;
+    for (int_tp i = start_axis; i < end_axis; ++i) {
       count *= shape(i);
     }
     return count;
   }
 
-  inline uint_tp count_stride(uint_tp start_axis, uint_tp end_axis) const {
+  inline int_tp count_stride(int_tp start_axis, int_tp end_axis) const {
     CHECK_LE(start_axis, end_axis);
     CHECK_GE(start_axis, 0);
     CHECK_GE(end_axis, 0);
     CHECK_LE(start_axis, num_axes());
     CHECK_LE(end_axis, num_axes());
-    uint_tp count = 1;
-    for (uint_tp i = start_axis; i < end_axis; ++i) {
+    int_tp count = 1;
+    for (int_tp i = start_axis; i < end_axis; ++i) {
       count *= shape_stride(i);
     }
     return count;
@@ -150,7 +153,7 @@ class Blob {
    *
    * @param start_axis The first axis to include in the slice.
    */
-  inline uint_tp count(uint_tp start_axis) const {
+  inline int_tp count(int_tp start_axis) const {
     return count(start_axis, num_axes());
   }
 
@@ -165,7 +168,7 @@ class Blob {
    *        the second to last if index == -2, etc.
    *        Dies on out of range index.
    */
-  inline uint_tp CanonicalAxisIndex(int_tp axis_index) const {
+  inline int_tp CanonicalAxisIndex(int_tp axis_index) const {
     CHECK_GE(axis_index, -num_axes())
         <<"axis " << axis_index
         << " out of range for " << num_axes()
@@ -180,14 +183,14 @@ class Blob {
   }
 
   /// @brief Deprecated legacy shape accessor num: use shape(0) instead.
-  inline uint_tp num() const {return LegacyShape(0);}
+  inline int_tp num() const {return LegacyShape(0);}
   /// @brief Deprecated legacy shape accessor channels: use shape(1) instead.
-  inline uint_tp channels() const {return LegacyShape(1);}
+  inline int_tp channels() const {return LegacyShape(1);}
   /// @brief Deprecated legacy shape accessor height: use shape(2) instead.
-  inline uint_tp height() const {return LegacyShape(2);}
+  inline int_tp height() const {return LegacyShape(2);}
   /// @brief Deprecated legacy shape accessor width: use shape(3) instead.
-  inline uint_tp width() const {return LegacyShape(3);}
-  inline uint_tp LegacyShape(uint_tp index) const {
+  inline int_tp width() const {return LegacyShape(3);}
+  inline int_tp LegacyShape(int_tp index) const {
     CHECK_LE(num_axes(), 4)
     << "Cannot use legacy accessors on Blobs with > 4 axes.";
     CHECK_LT(index, 4);
@@ -200,8 +203,8 @@ class Blob {
     }
     return shape(index);
   }
-  inline uint_tp offset(const uint_tp n, const uint_tp c = 0,
-                       const uint_tp h = 0, const uint_tp w = 0) const {
+  inline int_tp offset(const int_tp n, const int_tp c = 0,
+                       const int_tp h = 0, const int_tp w = 0) const {
     CHECK_GE(n, 0);
     CHECK_LE(n, num());
     CHECK_GE(channels(), 0);
@@ -213,10 +216,10 @@ class Blob {
     return ((n * channels() + c) * height() + h) * width() + w;
   }
 
-  inline uint_tp offset(const vector<uint_tp>& indices) const {
+  inline int_tp offset(const vector<int_tp>& indices) const {
     CHECK_LE(indices.size(), num_axes());
-    uint_tp offset = 0;
-    for (uint_tp i = 0; i < num_axes(); ++i) {
+    int_tp offset = 0;
+    for (int_tp i = 0; i < num_axes(); ++i) {
       offset *= shape(i);
       if (indices.size() > i) {
         CHECK_GE(indices[i], 0);
@@ -238,21 +241,21 @@ class Blob {
   void CopyFrom(const Blob<Dtype>& source, bool copy_diff = false,
       bool reshape = false);
 
-  inline Dtype data_at(const uint_tp n, const uint_tp c, const uint_tp h,
-      const uint_tp w) const {
+  inline Dtype data_at(const int_tp n, const int_tp c, const int_tp h,
+      const int_tp w) const {
     return cpu_data()[offset(n, c, h, w)];
   }
 
-  inline Dtype diff_at(const uint_tp n, const uint_tp c, const uint_tp h,
-      const uint_tp w) const {
+  inline Dtype diff_at(const int_tp n, const int_tp c, const int_tp h,
+      const int_tp w) const {
     return cpu_diff()[offset(n, c, h, w)];
   }
 
-  inline Dtype data_at(const vector<uint_tp>& index) const {
+  inline Dtype data_at(const vector<int_tp>& index) const {
     return cpu_data()[offset(index)];
   }
 
-  inline Dtype diff_at(const vector<uint_tp>& index) const {
+  inline Dtype diff_at(const vector<int_tp>& index) const {
     return cpu_diff()[offset(index)];
   }
 
@@ -268,7 +271,7 @@ class Blob {
 
   const Dtype* cpu_data() const;
   void set_cpu_data(Dtype* data);
-  vptr<const uint_tp> gpu_shape() const;
+  vptr<const int_tp> gpu_shape() const;
   vptr<const Dtype> gpu_data() const;
   void set_gpu_data(vptr<Dtype> data);
   const Dtype* cpu_diff() const;
@@ -326,32 +329,15 @@ class Blob {
   shared_ptr<SyncedMemory> diff_;
   shared_ptr<SyncedMemory> shape_data_;
   shared_ptr<SyncedMemory> shape_stride_data_;
-  vector<uint_tp> shape_;
-  vector<uint_tp> shape_stride_;
-  vector<uint_tp> offset_shape_;
-  uint_tp count_;
-  uint_tp capacity_;
+  vector<int_tp> shape_;
+  vector<int_tp> shape_stride_;
+  vector<int_tp> offset_shape_;
+  int_tp count_;
+  int_tp capacity_;
   Device *device_;
 
   DISABLE_COPY_AND_ASSIGN(Blob);
 };  // class Blob
-
-typedef variant<
-    Blob<bool>,
-    Blob<char>,
-    Blob<int8_t>,
-    Blob<int16_t>,
-    Blob<int32_t>,
-    Blob<int64_t>,
-    Blob<uint8_t>,
-    Blob<uint16_t>,
-    Blob<uint32_t>,
-    Blob<uint64_t>,
-    Blob<half_float::half>,
-    Blob<float>,
-    Blob<double>,
-    Blob<void> >
-      BlobVariants;
 
 }  // namespace caffe
 

@@ -142,7 +142,7 @@ TYPED_TEST(LSTMLayerTest, TestForward) {
   const int bottom_count = this->blob_bottom_.count();
   const int top_count = this->blob_top_.count();
   const Dtype kEpsilon = 1e-5
-    * std::is_same<Dtype, half_float::half>::value ? 100 : 1;
+    * std::is_same<Dtype, half_fp>::value ? 100 : 1;
   for (int t = 0; t < kNumTimesteps; ++t) {
     caffe_cpu_copy(bottom_count, bottom_copy.cpu_data() + t * bottom_count,
                this->blob_bottom_.mutable_cpu_data());

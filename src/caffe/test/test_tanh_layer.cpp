@@ -57,7 +57,7 @@ class TanHLayerTest : public MultiDeviceTest<TypeParam> {
     const Dtype* top_data = this->blob_top_->cpu_data();
     Dtype min_precision = 1e-5;
     Dtype precision_factor = 1e-4;
-    if (std::is_same<Dtype, half_float::half>::value) {
+    if (std::is_same<Dtype, half_fp>::value) {
       min_precision = 100. * min_precision;
       precision_factor = 100. * precision_factor;
     }

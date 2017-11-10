@@ -16,8 +16,9 @@
 #include <tuple>
 #include <utility>  // pair
 #include <vector>
-
 #include <boost/variant.hpp>
+
+#include "caffe/util/half_fp.hpp"
 
 #ifdef USE_INDEX_64
 // Types used for parameters, offset computations and so on
@@ -47,7 +48,7 @@
 
 namespace caffe {
 
-// Common functions and classes from std that Caffe often uses.
+// Common functions and classes from std and boost that Caffe often uses.
 using std::fstream;
 using std::ios;
 using std::isnan;

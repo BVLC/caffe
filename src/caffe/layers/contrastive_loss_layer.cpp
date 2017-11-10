@@ -8,6 +8,7 @@ namespace caffe {
 
 template<typename Dtype, typename MItype, typename MOtype>
 void ContrastiveLossLayer<Dtype, MItype, MOtype>::LayerSetUp(
+  const vector<Blob<MItype>*>& bottom,
   const vector<Blob<MOtype>*>& top) {
   LossLayer<Dtype, MItype, MOtype>::LayerSetUp(bottom, top);
   CHECK_EQ(bottom[0]->channels(), bottom[1]->channels());
@@ -114,7 +115,11 @@ void ContrastiveLossLayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob
 STUB_GPU(ContrastiveLossLayer);
 #endif
 
-INSTANTIATE_CLASS_3T(ContrastiveLossLayer);
+INSTANTIATE_CLASS_3T(ContrastiveLossLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T(ContrastiveLossLayer, (double), (double), (double));
+
 REGISTER_LAYER_CLASS(ContrastiveLoss);
+REGISTER_LAYER_CLASS_INST(ContrastiveLoss, (float), (float), (float));
+REGISTER_LAYER_CLASS_INST(ContrastiveLoss, (double), (double), (double));
 
 }  // namespace caffe

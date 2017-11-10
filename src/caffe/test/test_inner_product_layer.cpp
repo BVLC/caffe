@@ -167,7 +167,7 @@ TYPED_TEST(InnerProductLayerTest, TestForwardVGGFC6) {
     int_tp n = layer->blobs()[0]->shape(0);
     int_tp k = layer->blobs()[0]->shape(1);
 
-    if (!std::is_same<Dtype, half_float::half>::value || i <= 2) {
+    if (!std::is_same<Dtype, half_fp>::value || i <= 2) {
       caffe_cpu_gemm(CblasNoTrans, CblasTrans, m, n, k,
                      (Dtype)1., a, b, (Dtype)0., c);
 
@@ -238,7 +238,7 @@ TYPED_TEST(InnerProductLayerTest, TestForwardVGGFC6_AddEdge) {
     int_tp n = layer->blobs()[0]->shape(0);
     int_tp k = layer->blobs()[0]->shape(1);
 
-    if (!std::is_same<Dtype, half_float::half>::value || i <= 2) {
+    if (!std::is_same<Dtype, half_fp>::value || i <= 2) {
       caffe_cpu_gemm(CblasNoTrans, CblasTrans, m, n, k, (Dtype)1.,
                      a, b, (Dtype)0., c);
 

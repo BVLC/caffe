@@ -10,6 +10,7 @@ namespace caffe {
 
 template<typename Dtype, typename MItype, typename MOtype>
 void InfogainLossLayer<Dtype, MItype, MOtype>::LayerSetUp(
+    const vector<Blob<MItype>*>& bottom,
     const vector<Blob<MOtype>*>& top) {
   LossLayer<Dtype, MItype, MOtype>::LayerSetUp(bottom, top);
   // internal softmax layer
@@ -19,7 +20,8 @@ void InfogainLossLayer<Dtype, MItype, MOtype>::LayerSetUp(
   softmax_layer_param.set_type("Softmax");
   softmax_layer_param.clear_loss_weight();
   softmax_layer_param.add_loss_weight(1);
-  softmax_layer_ = LayerRegistry<Dtype>::CreateLayer(softmax_layer_param);
+  softmax_layer_ =
+      LayerRegistry<Dtype, MItype, MOtype>::CreateLayer(softmax_layer_param);
   softmax_bottom_vec_.clear();
   softmax_bottom_vec_.push_back(bottom[0]);
   softmax_top_vec_.clear();
@@ -49,6 +51,7 @@ void InfogainLossLayer<Dtype, MItype, MOtype>::LayerSetUp(
 
 template<typename Dtype, typename MItype, typename MOtype>
 void InfogainLossLayer<Dtype, MItype, MOtype>::Reshape(
+    const vector<Blob<MItype>*>& bottom,
     const vector<Blob<MOtype>*>& top) {
   LossLayer<Dtype, MItype, MOtype>::Reshape(bottom, top);
   softmax_layer_->Reshape(softmax_bottom_vec_, softmax_top_vec_);
@@ -218,6 +221,11 @@ void InfogainLossLayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob<MO
   }
 }
 
-INSTANTIATE_CLASS_3T(InfogainLossLayer);
+INSTANTIATE_CLASS_3T(InfogainLossLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T(InfogainLossLayer, (double), (double), (double));
+
 REGISTER_LAYER_CLASS(InfogainLoss);
+REGISTER_LAYER_CLASS_INST(InfogainLoss, (float), (float), (float));
+REGISTER_LAYER_CLASS_INST(InfogainLoss, (double), (double), (double));
+
 }  // namespace caffe

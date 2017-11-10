@@ -45,12 +45,13 @@ void EltwiseLayer<Dtype, MItype, MOtype>::Reshape(
   }
 
   if (Caffe::mode() == Caffe::GPU && this->device_program_.get() == nullptr) {
-    this->GenerateProgram<Dtype, MItype, MOtype>();
+    this->GenerateProgram();
   }
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
 void EltwiseLayer<Dtype, MItype, MOtype>::Forward_cpu(
+    const vector<Blob<MItype>*>& bottom,
     const vector<Blob<MOtype>*>& top) {
   int_tp* mask = NULL;
   const Dtype* bottom_data_a = NULL;
@@ -58,7 +59,7 @@ void EltwiseLayer<Dtype, MItype, MOtype>::Forward_cpu(
   const int_tp count = top[0]->count();
   Dtype* top_data = top[0]->mutable_cpu_data();
   Dtype maxVal = FLT_MAX;
-  if (std::is_same<Dtype, half_float::half>::value)
+  if (std::is_same<Dtype, half_fp>::value)
     maxVal = HALF_MAX;
   switch (op_) {
   case EltwiseParameter_EltwiseOp_PROD:
@@ -165,7 +166,11 @@ void EltwiseLayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob<MOtype>
 STUB_GPU(EltwiseLayer);
 #endif
 
-INSTANTIATE_CLASS_3T(EltwiseLayer);
+INSTANTIATE_CLASS_3T(EltwiseLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T(EltwiseLayer, (double), (double), (double));
+
 REGISTER_LAYER_CLASS(Eltwise);
+REGISTER_LAYER_CLASS_INST(Eltwise, (float), (float), (float));
+REGISTER_LAYER_CLASS_INST(Eltwise, (double), (double), (double));
 
 }  // namespace caffe

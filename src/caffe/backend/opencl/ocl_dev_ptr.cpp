@@ -204,19 +204,19 @@ ocl_dev_ptr<Dtype, typename non_const_enable_if<Dtype>::type>
 
 template<typename Dtype>
 ocl_dev_ptr<Dtype, typename const_enable_if<Dtype>::type>
-                         ::ocl_dev_ptr(const dev_ptr<half_float::half> &other) {
-  const ocl_dev_ptr<half_float::half>& cast_other =
-      dynamic_cast<const ocl_dev_ptr<half_float::half>&>(other);
+                         ::ocl_dev_ptr(const dev_ptr<half_fp> &other) {
+  const ocl_dev_ptr<half_fp>& cast_other =
+      dynamic_cast<const ocl_dev_ptr<half_fp>&>(other);
   ocl_mem_ = cast_other.get_ocl_mem();
-  off_ = compute_off<Dtype, half_float::half>(cast_other);
+  off_ = compute_off<Dtype, half_fp>(cast_other);
 }
 template<typename Dtype>
 ocl_dev_ptr<Dtype, typename non_const_enable_if<Dtype>::type>
-                         ::ocl_dev_ptr(const dev_ptr<half_float::half> &other) {
-  const ocl_dev_ptr<half_float::half>& cast_other =
-      dynamic_cast<const ocl_dev_ptr<half_float::half>&>(other);
+                         ::ocl_dev_ptr(const dev_ptr<half_fp> &other) {
+  const ocl_dev_ptr<half_fp>& cast_other =
+      dynamic_cast<const ocl_dev_ptr<half_fp>&>(other);
   ocl_mem_ = cast_other.get_ocl_mem();
-  off_ = compute_off<Dtype, half_float::half>(cast_other);
+  off_ = compute_off<Dtype, half_fp>(cast_other);
 }
 
 template<typename Dtype>
@@ -354,11 +354,11 @@ ocl_dev_ptr<Dtype, typename const_enable_if<Dtype>::type>
 
 template<typename Dtype>
 ocl_dev_ptr<Dtype, typename const_enable_if<Dtype>::type>
-                   ::ocl_dev_ptr(const dev_ptr<const half_float::half> &other) {
-  const ocl_dev_ptr<const half_float::half>& cast_other =
-      dynamic_cast<const ocl_dev_ptr<const half_float::half>&>(other);
+                   ::ocl_dev_ptr(const dev_ptr<const half_fp> &other) {
+  const ocl_dev_ptr<const half_fp>& cast_other =
+      dynamic_cast<const ocl_dev_ptr<const half_fp>&>(other);
   ocl_mem_ = cast_other.get_ocl_mem();
-  off_ = compute_off<Dtype, const half_float::half>(cast_other);
+  off_ = compute_off<Dtype, const half_fp>(cast_other);
 }
 
 template<typename Dtype>
@@ -450,10 +450,10 @@ shared_ptr<dev_ptr<uint64_t> > ocl_dev_ptr<Dtype,
 }
 
 template<typename Dtype>
-shared_ptr<dev_ptr<half_float::half> > ocl_dev_ptr<Dtype,
+shared_ptr<dev_ptr<half_fp> > ocl_dev_ptr<Dtype,
   typename non_const_enable_if<Dtype>::type>::instance(
-      half_float::half* dummy) {
-  return std::make_shared<ocl_dev_ptr<half_float::half> >(*this);
+      half_fp* dummy) {
+  return std::make_shared<ocl_dev_ptr<half_fp> >(*this);
 }
 
 template<typename Dtype>
@@ -586,16 +586,16 @@ shared_ptr<dev_ptr<const uint64_t> > ocl_dev_ptr<Dtype,
 }
 
 template<typename Dtype>
-shared_ptr<dev_ptr<const half_float::half> > ocl_dev_ptr<Dtype,
+shared_ptr<dev_ptr<const half_fp> > ocl_dev_ptr<Dtype,
   typename const_enable_if<Dtype>::type>::instance(
-      const half_float::half* dummy) {
-  return std::make_shared<ocl_dev_ptr<const half_float::half> >(*this);
+      const half_fp* dummy) {
+  return std::make_shared<ocl_dev_ptr<const half_fp> >(*this);
 }
 template<typename Dtype>
-shared_ptr<dev_ptr<const half_float::half> > ocl_dev_ptr<Dtype,
+shared_ptr<dev_ptr<const half_fp> > ocl_dev_ptr<Dtype,
   typename non_const_enable_if<Dtype>::type>::instance(
-      const half_float::half* dummy) {
-  return std::make_shared<ocl_dev_ptr<const half_float::half> >(*this);
+      const half_fp* dummy) {
+  return std::make_shared<ocl_dev_ptr<const half_fp> >(*this);
 }
 
 template<typename Dtype>

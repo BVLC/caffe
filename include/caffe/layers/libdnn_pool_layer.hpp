@@ -17,7 +17,7 @@ template<typename Dtype, typename MItype, typename MOtype>
 class LibDNNPoolingLayer : public PoolingLayer<Dtype, MItype, MOtype> {
  public:
   explicit LibDNNPoolingLayer(const LayerParameter& param)
-      : PoolingLayer<Dtype>(param) {}
+      : PoolingLayer<Dtype, MItype, MOtype>(param) {}
   virtual void LayerSetUp(const vector<Blob<MItype>*>& bottom,
       const vector<Blob<MOtype>*>& top);
   virtual void Reshape(const vector<Blob<MItype>*>& bottom,

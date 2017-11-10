@@ -35,8 +35,8 @@ void Device::set(const uint_tp n, const Dtype alpha, vptr<Dtype> x) {
 }
 
 template<>
-void Device::set(const uint_tp n, const half_float::half alpha,
-                 vptr<half_float::half> x);
+void Device::set(const uint_tp n, const half_fp alpha,
+                 vptr<half_fp> x);
 template<>
 void Device::set(const uint_tp n, const float alpha, vptr<float> x);
 template<>
@@ -60,8 +60,8 @@ void Device::add_scalar(const uint_tp n, const Dtype alpha, vptr<Dtype> x) {
 }
 
 template<>
-void Device::add_scalar(const uint_tp n, const half_float::half alpha,
-                vptr<half_float::half> x);
+void Device::add_scalar(const uint_tp n, const half_fp alpha,
+                vptr<half_fp> x);
 template<>
 void Device::add_scalar(const uint_tp n, const float alpha, vptr<float> x);
 template<>
@@ -85,8 +85,8 @@ void Device::scal(const uint_tp n, const Dtype alpha, vptr<Dtype> x) {
 }
 
 template<>
-void Device::scal(const uint_tp n, const half_float::half alpha,
-                  vptr<half_float::half> x);
+void Device::scal(const uint_tp n, const half_fp alpha,
+                  vptr<half_fp> x);
 template<>
 void Device::scal(const uint_tp n, const float alpha, vptr<float> x);
 template<>
@@ -112,8 +112,8 @@ void Device::add(const uint_tp n, vptr<const Dtype> a,
 }
 
 template<>
-void Device::add(const uint_tp n, vptr<const half_float::half> a,
-                 vptr<const half_float::half> b, vptr<half_float::half> y);
+void Device::add(const uint_tp n, vptr<const half_fp> a,
+                 vptr<const half_fp> b, vptr<half_fp> y);
 template<>
 void Device::add(const uint_tp n, vptr<const float> a, vptr<const float> b,
                  vptr<float> y);
@@ -141,8 +141,8 @@ void Device::sub(const uint_tp n, vptr<const Dtype> a, vptr<const Dtype> b,
 }
 
 template<>
-void Device::sub(const uint_tp n, vptr<const half_float::half> a,
-                 vptr<const half_float::half> b, vptr<half_float::half> y);
+void Device::sub(const uint_tp n, vptr<const half_fp> a,
+                 vptr<const half_fp> b, vptr<half_fp> y);
 template<>
 void Device::sub(const uint_tp n, vptr<const float> a, vptr<const float> b,
                  vptr<float> y);
@@ -170,8 +170,8 @@ void Device::mul(const uint_tp n, vptr<const Dtype> a, vptr<const Dtype> b,
 }
 
 template<>
-void Device::mul(const uint_tp n, vptr<const half_float::half> a,
-                 vptr<const half_float::half> b, vptr<half_float::half> y);
+void Device::mul(const uint_tp n, vptr<const half_fp> a,
+                 vptr<const half_fp> b, vptr<half_fp> y);
 template<>
 void Device::mul(const uint_tp n, vptr<const float> a, vptr<const float> b,
                  vptr<float> y);
@@ -199,8 +199,8 @@ void Device::div(const uint_tp n, vptr<const Dtype> a, vptr<const Dtype> b,
 }
 
 template<>
-void Device::div(const uint_tp n, vptr<const half_float::half> a,
-                 vptr<const half_float::half> b, vptr<half_float::half> y);
+void Device::div(const uint_tp n, vptr<const half_fp> a,
+                 vptr<const half_fp> b, vptr<half_fp> y);
 template<>
 void Device::div(const uint_tp n, vptr<const float> a, vptr<const float> b,
                  vptr<float> y);
@@ -226,8 +226,8 @@ void Device::abs(const uint_tp n, vptr<const Dtype> a, vptr<Dtype> y) {
 }
 
 template<>
-void Device::abs(const uint_tp n, vptr<const half_float::half> a,
-                 vptr<half_float::half> y);
+void Device::abs(const uint_tp n, vptr<const half_fp> a,
+                 vptr<half_fp> y);
 template<>
 void Device::abs(const uint_tp n, vptr<const float> a, vptr<float> y);
 template<>
@@ -251,8 +251,8 @@ void Device::exp(const uint_tp n, vptr<const Dtype> a, vptr<Dtype> y) {
 }
 
 template<>
-void Device::exp(const uint_tp n, vptr<const half_float::half> a,
-                 vptr<half_float::half> y);
+void Device::exp(const uint_tp n, vptr<const half_fp> a,
+                 vptr<half_fp> y);
 template<>
 void Device::exp(const uint_tp n, vptr<const float> a, vptr<float> y);
 template<>
@@ -276,8 +276,8 @@ void Device::log(const uint_tp n, vptr<const Dtype> a, vptr<Dtype> y) {
 }
 
 template<>
-void Device::log(const uint_tp n, vptr<const half_float::half> a,
-                 vptr<half_float::half> y);
+void Device::log(const uint_tp n, vptr<const half_fp> a,
+                 vptr<half_fp> y);
 template<>
 void Device::log(const uint_tp n, vptr<const float> a, vptr<float> y);
 template<>
@@ -303,8 +303,8 @@ void Device::powx(const uint_tp n, vptr<const Dtype> a, const Dtype b,
 }
 
 template<>
-void Device::powx(const uint_tp n, vptr<const half_float::half> a,
-                  const half_float::half b, vptr<half_float::half> y);
+void Device::powx(const uint_tp n, vptr<const half_fp> a,
+                  const half_fp b, vptr<half_fp> y);
 template<>
 void Device::powx(const uint_tp n, vptr<const float> a, const float b,
                   vptr<float> y);
@@ -330,8 +330,8 @@ void Device::sqrt(const uint_tp n, vptr<const Dtype> a, vptr<Dtype> y) {
 }
 
 template<>
-void Device::sqrt(const uint_tp n, vptr<const half_float::half> a,
-                  vptr<half_float::half> y);
+void Device::sqrt(const uint_tp n, vptr<const half_fp> a,
+                  vptr<half_fp> y);
 template<>
 void Device::sqrt(const uint_tp n, vptr<const float> a, vptr<float> y);
 template<>
@@ -355,8 +355,8 @@ void Device::sign(const uint_tp n, vptr<const Dtype> x, vptr<Dtype> y) {
 }
 
 template<>
-void Device::sign(const uint_tp n, vptr<const half_float::half> x,
-                  vptr<half_float::half> y);
+void Device::sign(const uint_tp n, vptr<const half_fp> x,
+                  vptr<half_fp> y);
 template<>
 void Device::sign(const uint_tp n, vptr<const float> x, vptr<float> y);
 template<>
@@ -380,8 +380,8 @@ void Device::sgnbit(const uint_tp n, vptr<const Dtype> x, vptr<Dtype> y) {
 }
 
 template<>
-void Device::sgnbit(const uint_tp n, vptr<const half_float::half> x,
-                    vptr<half_float::half> y);
+void Device::sgnbit(const uint_tp n, vptr<const half_fp> x,
+                    vptr<half_fp> y);
 template<>
 void Device::sgnbit(const uint_tp n, vptr<const float> x, vptr<float> y);
 template<>
@@ -552,7 +552,7 @@ string create_source(Device* dev,
 }
 
 template<>
-string create_source<half_float::half>(Device* dev,
+string create_source<half_fp>(Device* dev,
     shared_ptr<DeviceProgram> program);
 template<>
 string create_source<float>(Device* dev,
@@ -585,7 +585,7 @@ void Device::CreateMathProgram() {
   }
 
 #ifdef USE_GPU_HALF
-  ss << create_source<half_float::half>(this, this->math_program_);
+  ss << create_source<half_fp>(this, this->math_program_);
 #endif
 
 #ifdef USE_GPU_SINGLE

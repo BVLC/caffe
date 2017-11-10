@@ -82,7 +82,7 @@ TYPED_TEST(ContrastiveLossLayerTest, TestForward) {
     }
   }
   loss /= static_cast<Dtype>(num) * Dtype(2);
-  Dtype delta = 1e-5 * std::is_same<Dtype, half_float::half>::value ? 100 : 1;
+  Dtype delta = 1e-5 * std::is_same<Dtype, half_fp>::value ? 100 : 1;
   EXPECT_NEAR(this->blob_top_loss_->cpu_data()[0], loss, delta);
 }
 
@@ -125,7 +125,7 @@ TYPED_TEST(ContrastiveLossLayerTest, TestForwardLegacy) {
     }
   }
   loss /= static_cast<Dtype>(num) * Dtype(2);
-  Dtype delta = 1e-5 * std::is_same<Dtype, half_float::half>::value ? 100 : 1;
+  Dtype delta = 1e-5 * std::is_same<Dtype, half_fp>::value ? 100 : 1;
   EXPECT_NEAR(this->blob_top_loss_->cpu_data()[0], loss, delta);
 }
 

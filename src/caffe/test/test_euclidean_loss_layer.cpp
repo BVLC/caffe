@@ -54,7 +54,7 @@ class EuclideanLossLayerTest : public MultiDeviceTest<TypeParam> {
     layer_weight_2.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     const Dtype loss_weight_2 =
         layer_weight_2.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-    const Dtype kErrorMargin = std::is_same<Dtype, half_float::half>::value ?
+    const Dtype kErrorMargin = std::is_same<Dtype, half_fp>::value ?
                                1e-3 : 1e-5;
     EXPECT_NEAR(loss_weight_1 * kLossWeight, loss_weight_2,
                 kErrorMargin * fabs(loss_weight_2));

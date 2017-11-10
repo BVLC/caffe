@@ -135,7 +135,7 @@ TYPED_TEST_CASE(GPUMathFunctionsTest, TestDtypes);
 TYPED_TEST(GPUMathFunctionsTest, TestAsum) {
   int_tp n = this->blob_bottom_->count();
   TypeParam precision = 0.01;
-  if (std::is_same<TypeParam, half_float::half>::value) {
+  if (std::is_same<TypeParam, half_fp>::value) {
     n = 512;
     precision = 0.1;
   }

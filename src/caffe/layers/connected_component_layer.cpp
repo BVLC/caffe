@@ -93,8 +93,12 @@ void ConnectedComponentLayer<Dtype, MItype, MOtype>::Backward_cpu(
   return;
 }
 
-INSTANTIATE_CLASS_3T(ConnectedComponentLayer);
+INSTANTIATE_CLASS_3T(ConnectedComponentLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T(ConnectedComponentLayer, (double), (double), (double));
+
 REGISTER_LAYER_CLASS(ConnectedComponent);
+REGISTER_LAYER_CLASS_INST(ConnectedComponent, (float), (float), (float));
+REGISTER_LAYER_CLASS_INST(ConnectedComponent, (double), (double), (double));
 
 }  // namespace caffe
 #endif  // USE_OPENCV

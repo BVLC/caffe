@@ -21,7 +21,7 @@ template<typename Dtype, typename MItype, typename MOtype>
 void BaseDataLayer<Dtype, MItype, MOtype>::LayerSetUp(const vector<Blob<MItype>*>& bottom,
       const vector<Blob<MOtype>*>& top) {
   if (top.size() == 1) {
-    output_labels_ = false;b
+    output_labels_ = false;
   } else {
     output_labels_ = true;
   }
@@ -47,6 +47,7 @@ BasePrefetchingDataLayer<Dtype, MItype, MOtype>::BasePrefetchingDataLayer(
 
 template<typename Dtype, typename MItype, typename MOtype>
 void BasePrefetchingDataLayer<Dtype, MItype, MOtype>::LayerSetUp(
+    const vector<Blob<MItype>*>& bottom,
     const vector<Blob<MOtype>*>& top) {
   BaseDataLayer<Dtype, MItype, MOtype>::LayerSetUp(bottom, top);
 
@@ -126,6 +127,7 @@ void BasePrefetchingDataLayer<Dtype, MItype, MOtype>::InternalThreadEntry() {
 
 template<typename Dtype, typename MItype, typename MOtype>
 void BasePrefetchingDataLayer<Dtype, MItype, MOtype>::Forward_cpu(
+    const vector<Blob<MItype>*>& bottom,
     const vector<Blob<MOtype>*>& top) {
   if (prefetch_current_) {
     prefetch_free_.push(prefetch_current_);
@@ -145,7 +147,7 @@ void BasePrefetchingDataLayer<Dtype, MItype, MOtype>::Forward_cpu(
 STUB_GPU_FORWARD(BasePrefetchingDataLayer, Forward);
 #endif
 
-INSTANTIATE_CLASS_3T(BaseDataLayer);
-INSTANTIATE_CLASS_3T(BasePrefetchingDataLayer);
+INSTANTIATE_CLASS_3T(BaseDataLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T(BaseDataLayer, (double), (double), (double));
 
 }  // namespace caffe

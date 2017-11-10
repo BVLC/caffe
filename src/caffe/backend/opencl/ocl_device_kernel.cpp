@@ -99,7 +99,7 @@ void OclDeviceKernel::set_arg(uint_tp idx, const uint64_t *arg) {
                  safe_sizeof<uint64_t>(), arg);
   this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
 }
-void OclDeviceKernel::set_arg(uint_tp idx, const half_float::half *arg) {
+void OclDeviceKernel::set_arg(uint_tp idx, const half_fp *arg) {
   float converted_arg = static_cast<float>(*arg);
   clSetKernelArg(this->ocl_kernel_.handle().get(), this->arg_idx_,
                  safe_sizeof<float>(), &converted_arg);
@@ -153,7 +153,7 @@ void OclDeviceKernel::set_arg(uint_tp idx, vptr<uint32_t> *arg) {
 void OclDeviceKernel::set_arg(uint_tp idx, vptr<uint64_t> *arg) {
   set_arg_helper(idx, arg->get_ocl_mem(), arg->get_ocl_off());
 }
-void OclDeviceKernel::set_arg(uint_tp idx, vptr<half_float::half> *arg) {
+void OclDeviceKernel::set_arg(uint_tp idx, vptr<half_fp> *arg) {
   set_arg_helper(idx, arg->get_ocl_mem(), arg->get_ocl_off());
 }
 void OclDeviceKernel::set_arg(uint_tp idx, vptr<float> *arg) {
@@ -190,7 +190,7 @@ void OclDeviceKernel::set_arg(uint_tp idx, vptr<const uint32_t> *arg) {
 void OclDeviceKernel::set_arg(uint_tp idx, vptr<const uint64_t> *arg) {
   set_arg_helper(idx, arg->get_ocl_mem(), arg->get_ocl_off());
 }
-void OclDeviceKernel::set_arg(uint_tp idx, vptr<const half_float::half> *arg) {
+void OclDeviceKernel::set_arg(uint_tp idx, vptr<const half_fp> *arg) {
   set_arg_helper(idx, arg->get_ocl_mem(), arg->get_ocl_off());
 }
 void OclDeviceKernel::set_arg(uint_tp idx, vptr<const float> *arg) {

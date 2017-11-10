@@ -83,23 +83,9 @@ template<typename Dtype, typename MItype, typename MOtype>
 class LayerRegisterer {
  public:
   LayerRegisterer(const string& type,
-              shared_ptr<Layer<Dtype, MItype, MOtype> > (*creator)(const LayerParameter&));
+   shared_ptr<Layer<Dtype, MItype, MOtype> > (*creator)(const LayerParameter&));
 };
 
-#define REGISTER_LAYER_CREATOR(type, creator)                                  \
-  static LayerRegisterer<half_float::half> g_creator_h_##type(#type, creator<half_float::half>);       \
-  static LayerRegisterer<float> g_creator_f_##type(#type, creator<float>);     \
-  static LayerRegisterer<double> g_creator_d_##type(#type, creator<double>)
-
-#define REGISTER_LAYER_CLASS(type)                                             \
-  template<typename Dtype, typename MItype, typename MOtype>  \
-  shared_ptr<Layer<Dtype, MItype, MOtype> >                        \
-                Creator_##type##Layer(const LayerParameter& param)             \
-  {                                                                            \
-    return shared_ptr<Layer<Dtype, MItype, MOtype> >               \
-             (new type##Layer<Dtype, MItype, MOtype>(param));           \
-  }                                                                            \
-  REGISTER_LAYER_CREATOR(type, Creator_##type##Layer)
 
 }  // namespace caffe
 

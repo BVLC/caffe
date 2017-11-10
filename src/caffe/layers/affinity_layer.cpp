@@ -132,7 +132,11 @@ void AffinityLayer<Dtype, MItype, MOtype>::Backward_cpu(
   }
 }
 
-INSTANTIATE_CLASS_3T(AffinityLayer);
+INSTANTIATE_CLASS_3T(AffinityLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T(AffinityLayer, (double), (double), (double));
+
 REGISTER_LAYER_CLASS(Affinity);
+REGISTER_LAYER_CLASS_INST(Affinity, (float), (float), (float));
+REGISTER_LAYER_CLASS_INST(Affinity, (double), (double), (double));
 
 }  // namespace caffe

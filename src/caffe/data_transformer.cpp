@@ -551,6 +551,6 @@ int_tp DataTransformer<Dtype>::Rand(int_tp n) {
   return ((*rng)() % n);
 }
 
-INSTANTIATE_CLASS_1T(DataTransformer);
+INSTANTIATE_CLASS_1T(DataTransformer, (half_fp)(float)(double));
 
 }  // namespace caffe

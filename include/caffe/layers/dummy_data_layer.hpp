@@ -15,8 +15,8 @@ namespace caffe {
  *
  * TODO(dox): thorough documentation for Forward and proto params.
  */
-template<typename Dtype, typename MIType, typename MOType>
-class DummyDataLayer : public Layer<Dtype, MIType, MOType> {
+template<typename Dtype, typename MItype, typename MOtype>
+class DummyDataLayer : public Layer<Dtype, MItype, MOtype> {
  public:
   explicit DummyDataLayer(const LayerParameter& param)
       : Layer<Dtype, MItype, MOtype>(param) {}

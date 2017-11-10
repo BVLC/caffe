@@ -26,7 +26,7 @@ class GradientChecker {
                   const Dtype kink_range = -1)
       : stepsize_(stepsize), threshold_(threshold), seed_(seed), kink_(kink),
         kink_range_(kink_range) {
-    if (std::is_same<Dtype, half_float::half>::value) {
+    if (std::is_same<Dtype, half_fp>::value) {
       threshold_ = 100 * threshold;
       stepsize_ = stepsize;
     }

@@ -1,6 +1,6 @@
 #include <algorithm>
 #include <vector>
-#include "caffe/greentea/greentea.hpp"
+
 #ifdef USE_LIBDNN
 
 #include "caffe/layers/libdnn_conv_layer.hpp"
@@ -9,6 +9,7 @@ namespace caffe {
 
 template<typename Dtype, typename MItype, typename MOtype>
 void LibDNNConvolutionLayer<Dtype, MItype, MOtype>::LayerSetUp(
+    const vector<Blob<MItype>*>& bottom,
     const vector<Blob<MOtype>*>& top) {
   ConvolutionLayer<Dtype, MItype, MOtype>::LayerSetUp(bottom, top);
   this->use_colbuffer_ = false;
@@ -19,6 +20,7 @@ void LibDNNConvolutionLayer<Dtype, MItype, MOtype>::LayerSetUp(
 
 template<typename Dtype, typename MItype, typename MOtype>
 void LibDNNConvolutionLayer<Dtype, MItype, MOtype>::Reshape(
+    const vector<Blob<MItype>*>& bottom,
     const vector<Blob<MOtype>*>& top) {
 
   this->use_colbuffer_ = false;
@@ -94,17 +96,18 @@ LibDNNConvolutionLayer<Dtype, MItype, MOtype>::~LibDNNConvolutionLayer() {
 
 template<typename Dtype, typename MItype, typename MOtype>
 void LibDNNConvolutionLayer<Dtype, MItype, MOtype>::Forward_gpu(
+    const vector<Blob<MItype>*>& bottom,
     const vector<Blob<MOtype>*>& top) {
 
-  const Dtype* weight = this->blobs_[0]->gpu_data();
-  const Dtype* bias = nullptr;
+  vptr<const Dtype> weight = this->blobs_[0]->gpu_data();
+  vptr<const Dtype> bias = nullptr;
   if (this->bias_term_) {
      bias = this->blobs_[1]->gpu_data();
   }
 
   for (int_tp i = 0; i < bottom.size(); ++i) {
-    const Dtype* bottom_data = bottom[i]->gpu_data();
-    Dtype* top_data = top[i]->mutable_gpu_data();
+    vptr<const Dtype> bottom_data = bottom[i]->gpu_data();
+    vptr<Dtype> top_data = top[i]->mutable_gpu_data();
     libdnn_.get()->Forward(bottom_data, weight, bias,
                            top_data, bottom[i]->shape()[0]);
   }
@@ -116,20 +119,20 @@ void LibDNNConvolutionLayer<Dtype, MItype, MOtype>::Backward_gpu(
     const vector<bool>& propagate_down,
     const vector<Blob<MItype>*>& bottom) {
 
-  const Dtype* weight = this->blobs_[0]->gpu_data();
-  const Dtype* bias = nullptr;
-  Dtype* weight_diff = this->blobs_[0]->mutable_gpu_diff();
-  Dtype* bias_diff = nullptr;
+  vptr<const Dtype> weight = this->blobs_[0]->gpu_data();
+  vptr<const Dtype> bias = nullptr;
+  vptr<Dtype> weight_diff = this->blobs_[0]->mutable_gpu_diff();
+  vptr<Dtype> bias_diff = nullptr;
   if (this->bias_term_) {
      bias = this->blobs_[1]->gpu_data();
      bias_diff = this->blobs_[1]->mutable_gpu_diff();
   }
 
   for (int_tp i = 0; i < top.size(); ++i) {
-    const Dtype* top_data = top[i]->gpu_data();
-    const Dtype* top_diff = top[i]->gpu_diff();
-    const Dtype* bottom_data = bottom[i]->gpu_data();
-    Dtype* bottom_diff = bottom[i]->mutable_gpu_diff();
+    vptr<const Dtype> top_data = top[i]->gpu_data();
+    vptr<const Dtype> top_diff = top[i]->gpu_diff();
+    vptr<const Dtype> bottom_data = bottom[i]->gpu_data();
+    vptr<Dtype> bottom_diff = bottom[i]->mutable_gpu_diff();
     libdnn_.get()->Backward(propagate_down[i], propagate_down[i] ||
                             (this->param_propagate_down_[0] ||
                              this->param_propagate_down_[1]),
@@ -137,18 +140,19 @@ void LibDNNConvolutionLayer<Dtype, MItype, MOtype>::Backward_gpu(
                             weight, weight_diff,
                             bias, bias_diff,
                             bottom_data, bottom_diff,
-                          bottom[i]->shape()[0]);
+                            bottom[i]->shape()[0]);
   }
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void LibDNNConvolutionLayer<Dtype, MItype, MOtype>::Tune(Dtype* top_data, Dtype* top_diff,
-          Dtype* bottom_data, Dtype* bottom_diff,
+void LibDNNConvolutionLayer<Dtype, MItype, MOtype>::Tune(
+          vptr<Dtype> top_data, vptr<Dtype> top_diff,
+          vptr<Dtype> bottom_data, vptr<Dtype> bottom_diff,
           int_tp batch_size) {
-  Dtype* weight_data = this->blobs_[0]->mutable_gpu_data();
-  Dtype* weight_diff = this->blobs_[0]->mutable_gpu_diff();
-  Dtype* bias_data = nullptr;
-  Dtype* bias_diff = nullptr;
+  vptr<Dtype> weight_data = this->blobs_[0]->mutable_gpu_data();
+  vptr<Dtype> weight_diff = this->blobs_[0]->mutable_gpu_diff();
+  vptr<Dtype> bias_data = nullptr;
+  vptr<Dtype> bias_diff = nullptr;
   if (this->bias_term_) {
      bias_data = this->blobs_[1]->mutable_gpu_data();
      bias_diff = this->blobs_[1]->mutable_gpu_diff();
@@ -162,8 +166,12 @@ void LibDNNConvolutionLayer<Dtype, MItype, MOtype>::Tune(Dtype* top_data, Dtype*
 }
 
 
-INSTANTIATE_CLASS_3T(LibDNNConvolutionLayer);
+INSTANTIATE_CLASS_3T(LibDNNConvolutionLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T(LibDNNConvolutionLayer, (double), (double), (double));
 
+REGISTER_LAYER_CLASS(LibDNNConvolution);
+REGISTER_LAYER_CLASS_INST(LibDNNConvolution, (float), (float), (float));
+REGISTER_LAYER_CLASS_INST(LibDNNConvolution, (double), (double), (double));
 
 }   // namespace caffe
 #endif  // USE_LIBDNN

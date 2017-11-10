@@ -66,11 +66,11 @@ void adam_update_gpu(Device* dev, DeviceProgram* dev_prog, uint_tp n,
 }
 
 #ifdef USE_GPU_HALF
-template void adam_update_gpu<half_float::half>(Device* dev,
-              DeviceProgram* dev_prog, uint_tp n, vptr<half_float::half> g,
-              vptr<half_float::half> m, vptr<half_float::half> v,
-              half_float::half beta1, half_float::half beta2,
-              half_float::half eps_hat, half_float::half corrected_local_rate);
+template void adam_update_gpu<half_fp>(Device* dev,
+              DeviceProgram* dev_prog, uint_tp n, vptr<half_fp> g,
+              vptr<half_fp> m, vptr<half_fp> v,
+              half_fp beta1, half_fp beta2,
+              half_fp eps_hat, half_fp corrected_local_rate);
 #endif  // USE_GPU_HALF
 #ifdef USE_GPU_SINGLE
 template void adam_update_gpu<float>(Device*,
