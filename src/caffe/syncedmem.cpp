@@ -366,6 +366,17 @@ void SyncedMemory::set_cpu_data(void* data) {
   check_device();
   CHECK(data);
   if (cpu_ptr_ && own_cpu_data_) {
+#ifdef USE_GREENTEA
+    if (own_zero_copy_data_) {
+      own_zero_copy_data_ = false;
+      if (own_gpu_data_) {
+        CHECK_EQ(CL_SUCCESS, clReleaseMemObject(cl_gpu_mem_))
+            << "OpenCL memory corruption";
+        cl_gpu_mem_ = NULL;
+        gpu_ptr_ = NULL;
+      }
+    }
+#endif
     CaffeFreeHost(cpu_ptr_, device_);
   }
   cpu_ptr_ = data;
@@ -403,6 +414,10 @@ void SyncedMemory::set_gpu_data(void* data) {
     if (own_gpu_data_) {
       CHECK_EQ(CL_SUCCESS, clReleaseMemObject(cl_gpu_mem_))
           << "OpenCL memory corruption";
+      cl_gpu_mem_ = NULL;
+    }
+    if (own_zero_copy_data_) {
+      own_zero_copy_data_ = false;
     }
     gpu_ptr_ = data;
     head_ = HEAD_AT_GPU;
@@ -462,9 +477,9 @@ void SyncedMemory::async_gpu_push() {
                                  size_, nullptr, &err);
     CHECK_EQ(0, err) << "OpenCL buffer allocation of size "
                   << size_ << " failed.";
-      own_gpu_data_ = true;
-      device_->IncreaseMemoryUsage(size_);
-      gpu_ptr_ = reinterpret_cast<void*>(cl_gpu_mem_);
+    own_gpu_data_ = true;
+    device_->IncreaseMemoryUsage(size_);
+    gpu_ptr_ = reinterpret_cast<void*>(cl_gpu_mem_);
   }
   greentea_gpu_memcpy(size_, cpu_ptr_, (cl_mem) gpu_ptr_, 0, &ctx);
   ctx.get_queue().finish();
