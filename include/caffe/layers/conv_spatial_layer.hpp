@@ -483,17 +483,17 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
   virtual cl_int convolve(const vector<Blob<Dtype>*>& bottom,
                           const vector<Blob<Dtype>*>& top, int_tp index,
                           int_tp numImages,
-                          kernelConfig* config);
+                          std::shared_ptr<kernelConfig>& config);
   virtual float timed_convolve(const vector<Blob<Dtype>*>& bottom,
                                const vector<Blob<Dtype>*>& top, int_tp index,
                                int_tp numImages,
-                               kernelConfig* config);
+                               std::shared_ptr<kernelConfig>& config);
   virtual bool verify_result(const vector<Blob<Dtype>*>& bottom,
                              const vector<Blob<Dtype>*>& top, int_tp index,
                              int_tp numImages, const Blob<Dtype> &verify_blob,
-                             kernelConfig* config);
+                             std::shared_ptr<kernelConfig>& config);
   virtual bool tune_local_size(const vector<Blob<Dtype>*>& bottom,
-                               const vector<Blob<Dtype>*>& top, kernelConfig*);
+                               const vector<Blob<Dtype>*>& top, std::shared_ptr<kernelConfig>&);
   virtual void swizzleWeights(const vector<Blob<Dtype>*>& bottom,
                               const vector<Blob<Dtype>*>& top,
                               int_tp swizzle_factor,
@@ -509,8 +509,8 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
                                      size_t* localSizes, size_t* globalSizes);
   void load_cached_kernels(const vector<Blob<Dtype>*>& bottom,
                            const vector<Blob<Dtype>*>& top);
-  bool need_swizzle(const kernelConfig *prev,
-                    const kernelConfig *cur);
+  bool need_swizzle(const std::shared_ptr<kernelConfig>& prev,
+                    const std::shared_ptr<kernelConfig>& cur);
   // There are 3 tuning phases
   // 1. From a cache record.
   // 2. From a pretuned key value map.
@@ -520,8 +520,8 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
     TUNE_FROM_PRETUNE,
     TUNE_FROM_RUNTIME
   };
-  void new_best_kernel(const kernelConfig *prevKernelConfig,
-                       kernelConfig *bestConfig,
+  void new_best_kernel(const std::shared_ptr<kernelConfig>& prevKernelConfig,
+                       std::shared_ptr<kernelConfig>& bestConfig,
                        TunePhase tPhase);
   void setBufferKernelArg(const vector<Blob<Dtype>*>& bottom,
                           const vector<Blob<Dtype>*>& top,
@@ -539,7 +539,7 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
   void startTuning(const vector<Blob<Dtype>*>& bottom,
                    const vector<Blob<Dtype>*>& top,
                    TunePhase tPhase,
-                   const kernelConfig *prevConfig = NULL);
+                   const std::shared_ptr<kernelConfig>& prevConfig = nullptr);
 
   bool IsFused() const {
     return (this->layer_param_.convolution_param().fuse_type()
@@ -632,8 +632,8 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
 
   int_tp kernel_index_;
 
-  vector<kernelConfig*> kernelQueue;
-  kernelConfig* bestKernelConfig;
+  vector<std::shared_ptr<kernelConfig> > kernelQueue;
+  std::shared_ptr<kernelConfig> bestKernelConfig;
 
   // parameters for fused eltwise layer.
   EltwiseParameter_EltwiseOp op_;

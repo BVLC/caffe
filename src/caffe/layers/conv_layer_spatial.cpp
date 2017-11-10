@@ -610,7 +610,7 @@ bool ConvolutionLayerSpatial<Dtype>::create_basic_kernel(
   calculate_global_size(1, workItemOutput, localSize, globalSize);
 
   kernelQueue.push_back(
-      new kernelConfig(kernel_name_, options,
+      std::make_shared<kernelConfig>(kernel_name_, options,
                        globalSize, localSize, workItemOutput,
                        false, false, true, ConvType::BASIC));
 
@@ -631,7 +631,7 @@ void ConvolutionLayerSpatial<Dtype>::buildKernels(void) {
   auto it = kernelQueue.begin();
   for (; it != kernelQueue.end(); ) {
     stringstream optionsString;
-    kernelConfig *config = *it;
+    auto config = *it;
     if (config->built)
       continue;
     // ignore current kernel if not in tuning phase and the
@@ -641,7 +641,6 @@ void ConvolutionLayerSpatial<Dtype>::buildKernels(void) {
         pretuned_vset.size() > 300 &&
         !config->in_best_kernels &&
         best_kernel_num != 0) {
-      delete config;
       it = kernelQueue.erase(it);
       continue;
     }
@@ -665,7 +664,6 @@ void ConvolutionLayerSpatial<Dtype>::buildKernels(void) {
       config->built = true;
     } catch (std::exception& e) {
       dbgPrint(std::cout << config->kernelName << std::endl);
-      delete config;
       it = kernelQueue.erase(it);
     }
   }
@@ -727,7 +725,7 @@ template<typename Dtype>
 cl_int ConvolutionLayerSpatial<Dtype>::convolve(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top,
     int_tp index,
-    int_tp numImages, kernelConfig* config) {
+    int_tp numImages, std::shared_ptr<kernelConfig>& config) {
   CHECK_EQ((std::is_same<Dtype, double>::value), false);
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(this->device_->id());
   viennacl::ocl::program &program = ctx.get_program(config->kernelName);
@@ -1086,7 +1084,7 @@ template<typename Dtype>
 float ConvolutionLayerSpatial<Dtype>::timed_convolve(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top,
     int_tp index,
-    int_tp numImages, kernelConfig* config) {
+    int_tp numImages, std::shared_ptr<kernelConfig>& config) {
   // warm up.
   CHECK_EQ((std::is_same<Dtype, double>::value), false);
   bool saved_tuned = tuned_;
@@ -1141,7 +1139,7 @@ bool ConvolutionLayerSpatial<Dtype>::verify_result(
     int_tp index,
     int_tp numImages,
     const Blob<Dtype> &verify_blob,
-    kernelConfig* config) {
+    std::shared_ptr<kernelConfig>& config) {
 
   uint_tp verificationFail = 0;
 
@@ -1306,7 +1304,7 @@ bool ConvolutionLayerSpatial<Dtype>::create_gemm_like_conv_kernel(
   string options = optionsString.str();
 
   kernelQueue.push_back(
-      new kernelConfig(kernel_name_, options,
+      std::make_shared<kernelConfig>(kernel_name_, options,
                        global_size, local_size, workItemOutput,
                        false, true, false, ConvType::GEMM_LIKE));
   return true;
@@ -1401,7 +1399,7 @@ bool ConvolutionLayerSpatial<Dtype>::create_winograd_conv_kernel(
   // FIXME batch size should not be a macro.
   string options = optionsString.str();
   kernelQueue.push_back(
-      new kernelConfig(kernel_name_, options,
+      std::make_shared<kernelConfig>(kernel_name_, options,
                        global_size, local_size, workItemOutput,
                        false, true, false, ConvType::WINOGRAD));
   return true;
@@ -1477,7 +1475,7 @@ bool ConvolutionLayerSpatial<Dtype>::create_dw_conv_kernel(
   calculate_global_size(1, workItemOutput, localSize, globalSize);
 
   kernelQueue.push_back(
-      new kernelConfig(kernel_name_, options,
+      std::make_shared<kernelConfig>(kernel_name_, options,
                        globalSize, localSize, workItemOutput,
                        false, false, true, ConvType::DWCONV));
 
@@ -1611,7 +1609,7 @@ bool ConvolutionLayerSpatial<Dtype>::setup_IDLF(
   optionsString << " -DINPUT_PAD_W=" << pad_w_ << " -DINPUT_PAD_H=" << pad_h_;
   string options = optionsString.str();
   kernelQueue.push_back(
-      new kernelConfig(kernel_name_, options,
+      std::make_shared<kernelConfig>(kernel_name_, options,
                        global_size, local_size, workItemOutput,
                        false, true, false, ConvType::IDLF));
   return true;
@@ -1621,7 +1619,7 @@ template<typename Dtype>
 bool ConvolutionLayerSpatial<Dtype>::tune_local_size(
     const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top,
-    kernelConfig* config) {
+    std::shared_ptr<kernelConfig>& config) {
   if (config->use_null_local || !config->autoTune)
     return true;
 
@@ -1729,8 +1727,8 @@ bool ConvolutionLayerSpatial<Dtype>::create_convolution_kernel(
 
 template<typename Dtype>
 void ConvolutionLayerSpatial<Dtype>::new_best_kernel(
-                                 const kernelConfig *prevKernelConfig,
-                                 kernelConfig *bestConfig,
+                                 const std::shared_ptr<kernelConfig>& prevKernelConfig,
+                                 std::shared_ptr<kernelConfig>& bestConfig,
                                  TunePhase tPhase) {
   bestKernelConfig = bestConfig;
   dbgPrint(std::cout << "Best kernel: " << bestConfig->kernelName << std::endl);
@@ -1815,7 +1813,7 @@ void ConvolutionLayerSpatial<Dtype>::startTuning(
     const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top,
     TunePhase tPhase,
-    const kernelConfig *prevConfig) {
+    const std::shared_ptr<kernelConfig>& prevConfig) {
   
   buildKernels();
 
@@ -1952,8 +1950,6 @@ void ConvolutionLayerSpatial<Dtype>::startTuning(
         viennacl::ocl::current_context().delete_program(
             kernelQueue[x]->kernelName);
       }
-      if (x != kernel_index_)
-        delete kernelQueue[x];
     }
     kernelQueue.clear();
   }
@@ -2070,8 +2066,8 @@ void ConvolutionLayerSpatial<Dtype>::Backward_gpu(
 
 template<typename Dtype>
 bool ConvolutionLayerSpatial<Dtype>::need_swizzle(
-       const kernelConfig *prev,
-       const kernelConfig *cur) {
+       const std::shared_ptr<kernelConfig>& prev,
+       const std::shared_ptr<kernelConfig>& cur) {
   // For IDLF kernel or GEMM_LIKE kernel if kernel type changed
   // we need to do swizzle again.
   if ((!prev  || 
@@ -2100,8 +2096,8 @@ void ConvolutionLayerSpatial<Dtype>::load_cached_kernels(
 
   std::string previous_key = key_;
   generate_key();
-  kernelConfig *prev_kernel_config = NULL;
-  kernelConfig kernel_config;
+  std::shared_ptr<kernelConfig> prev_kernel_config = nullptr;
+  std::shared_ptr<kernelConfig> kernel_config;
   if (tuned_) {
     if (key_.compare(previous_key) == 0) {
       // The same layer, many kernel key should be the same
@@ -2111,10 +2107,9 @@ void ConvolutionLayerSpatial<Dtype>::load_cached_kernels(
       return;
     }
     tuned_ = false;
-    kernel_config = *bestKernelConfig;
-    prev_kernel_config = &kernel_config;
-    delete bestKernelConfig;
-    bestKernelConfig = NULL;
+    kernel_config = bestKernelConfig;
+    prev_kernel_config = kernel_config;
+    bestKernelConfig = nullptr;
   }
 
   // Find cached kernel configuration
@@ -2145,7 +2140,7 @@ void ConvolutionLayerSpatial<Dtype>::load_cached_kernels(
     }
   }
 
-  bool eaxctMatch = false;
+  bool exactMatch = false;
   {
     std::lock_guard<std::mutex>  lock(pretuned_mutex_);
     if (pretuned_kv.find(pretuned_key_) != pretuned_kv.end() ||
@@ -2173,7 +2168,7 @@ void ConvolutionLayerSpatial<Dtype>::load_cached_kernels(
                                     it1->second.block_w, it1->second.block_h, it1->second.block_d);
         }
       } else {
-        eaxctMatch = true;
+        exactMatch = true;
         v = it->second;
         if (!create_convolution_kernel(bottom, top,
                                   static_cast<ConvType>(v.kernel_type),
@@ -2186,7 +2181,7 @@ void ConvolutionLayerSpatial<Dtype>::load_cached_kernels(
   }
   if (kernelQueue.size() > 0)
     startTuning(bottom, top,
-                eaxctMatch ? TUNE_FROM_PRETUNE : TUNE_FROM_RUNTIME,
+                exactMatch ? TUNE_FROM_PRETUNE : TUNE_FROM_RUNTIME,
                 prev_kernel_config);
 }
 
