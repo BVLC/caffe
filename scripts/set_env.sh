@@ -18,7 +18,7 @@ tcp_netmask=""
 
 # specify number of MLSL ep servers in command
 num_mlsl_servers=-1
-
+numservers=0
 
 function init_mpi_envs
 {
@@ -104,15 +104,21 @@ function clear_envs
 
 function set_mlsl_vars
 {
+    if [ ${numnodes} -eq 1 ]; then
+        return
+    fi
+
+    if [ -z $MLSL_ROOT ]; then
+        # use built-in mlsl if nothing is specified in ini
+        mlslvars_sh=`find external/mlsl/ -name mlslvars.sh`
+        source $mlslvars_sh
+    fi
+
     if [ ${num_mlsl_servers} -eq -1 ]; then
-        if [ ${numnodes} -eq 1 ]; then
-            numservers=0
+        if [ "${cpu_model}" == "bdw" ] || [ "${cpu_model}" == "skx" ]; then
+            numservers=2
         else
-            if [ "${cpu_model}" == "bdw" ] || [ "${cpu_model}" == "skx" ]; then
-                numservers=2
-            else
-                numservers=4
-            fi
+            numservers=4
         fi
     else
         numservers=$((num_mlsl_servers))

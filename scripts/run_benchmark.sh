@@ -46,7 +46,7 @@ function usage
     echo "   Parameters:"
     echo "     topology: network topology used to benchmark, support alexnet, googlenet, googlenet_v2, resnet_50"
     echo "               , by specifying it as 'all', we run all supported topologies."
-    echo "     host_file: host_file needed in multinodes mode, should contain list of nodes ips or hostnames"
+    echo "     hostfile: host_file needed in multinodes mode, should contain list of nodes ips or hostnames"
     echo "     network: opa(default), tcp, used in multinodes mode to specify the network type"
     echo "     netmask: only used if network is tcp, set as the net work card name within your network"
     echo ""
@@ -112,7 +112,7 @@ function run_specific_model
     else
         result_log_file="result-unknown-${model}-`date +%Y%m%d%H%M%S`.log"
     fi
-    $exec_command > $result_log_file 2>&1
+    $exec_command 2>&1 | tee  $result_log_file
     obtain_intelcaffe_log $result_log_file
     calculate_images_per_second $intelcaffe_log_file 
 }

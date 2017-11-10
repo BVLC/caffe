@@ -310,6 +310,18 @@ function run_caffe
     execute_command "$xeonbin" $result_dir
 }
 
+function test_ssh_connection
+{
+    host_file_=$1
+    if [ "$host_file_" != "" ]; then
+        host_list=( `cat $host_file_ | sort | uniq ` )
+        for host in ${host_list[@]}
+        do
+            hostname=`ssh $host "hostname"`
+            ssh $hostname "ls"
+        done
+    fi
+}
 
 if [ $# -le 1 ]; then
     usage
@@ -473,6 +485,9 @@ if [[ $host_file != "" ]]; then
 fi
 echo "    Number of nodes: $numnodes"
 
+# test connection between nodes via ssh
+test_ssh_connection $host_file
+
 detect_cpu
 
 set_numa_node
@@ -487,14 +502,6 @@ if [ "$host_file" != "" ]; then
   env_params+=" --hostfile $host_file"
 fi  
 source ${script_dir}/set_env.sh $env_params
-
-# test connection between nodes via ssh
-host_list=( `cat $host_file | sort | uniq ` )
-for host in ${host_list[@]}
-do
-    hostname=`ssh $host "hostname"`
-    ssh $hostname "ls"
-done
 
 
 if [ "${benchmark_mode}" != "none" ]; then
