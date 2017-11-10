@@ -1,0 +1,47 @@
+net: "models/intel_optimized_models/multinode/alexnet_bn_64nodes/train_val2.prototxt"
+
+test_iter:      196        # 196 =50000/256 # 1562 = 50000/32
+test_interval:  40         #1250   
+test_initialization: false
+
+display:   10
+ 
+max_iter:  4000 	# 100 epochs 
+
+#base_lr:  2             # B=1024
+#base_lr:  10            # B=8K
+base_lr:   32           # B=32K
+
+#min_lr:  0.005
+
+local_lr_auto:  true
+local_gw_ratio: 0.001
+
+warmup_start_lr: 1
+warmup_iter: 400      # 10 epochs
+
+lr_policy: "poly"
+power: 2.
+
+momentum: 0.9
+weight_decay: 0.0005
+
+snapshot: 500000
+snapshot_prefix: "models/intel_optimized_models/multinode/alexnet_bn_64nodes/alexnet_bn_64nodes"
+#snapshot_after_train: false
+
+solver_mode: CPU
+
+# Train dataset size = 1,281,167
+# Test dataset size  =    50,000
+
+# batch 64  --> epoch = 20,000
+# batch 96  --> epoch = 15,000
+# batch 128 --> epoch = 10,000 
+# batch 256 --> epoch =  5,000  
+# batch 512 --> epoch =  2,500  
+# batch 1024--> epoch =  1,250
+# batch 2048--> epoch =    625
+# batch 4096--> epoch =    312
+# batch 8192--> epoch =    156
+# batch 16384--> epoch =    78
