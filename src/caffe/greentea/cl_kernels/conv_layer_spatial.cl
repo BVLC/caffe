@@ -2002,7 +2002,7 @@ winograd_4x4(
 
   }
 #if IS_LARGE_INPUT
-  coordW = (int2)(0, fm % ALIGNED_NUM_FILTERS+TOTAL_NUM_FILTERS);
+  coordW = (int2)(0, fm % ALIGNED_NUM_FILTERS+ALIGNED_NUM_FILTERS);
 //#pragma unroll
   for(int_tp kd = 0; kd < HALF_INPUT_DEPTH; kd++)
   {
@@ -2073,9 +2073,10 @@ winograd_4x4(
 
   }
 #endif
+  fm = fm % ALIGNED_NUM_FILTERS;
 
-  if ((ALIGNED_NUM_FILTERS == TOTAL_NUM_FILTERS || fm < TOTAL_NUM_FILTERS)) {
-    uint_tp out_addr = fm * output_width * output_height;
+  if ((ALIGNED_NUM_FILTERS == NUM_FILTERS || fm < NUM_FILTERS)) {
+    uint_tp out_addr = ( num_in_batch * TOTAL_OUTPUT_DEPTH + fm ) * output_width * output_height;
     out_addr += or * output_width + oc;
 #if APPLY_BIAS
     fm = fm % ALIGNED_NUM_FILTERS;

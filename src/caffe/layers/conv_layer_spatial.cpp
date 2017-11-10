@@ -866,7 +866,7 @@ cl_int ConvolutionLayerSpatial<Dtype>::convolve(
     OCL_CHECK(err);
     size_t global_size[3] = {ALIGN((size_t)(this->output_w_ + output_block_w - 1)/output_block_w, 1),
                            ALIGN((size_t)(this->output_h_ + output_block_h - 1)/output_block_h, 1),
-                           (size_t) config->global_work_size[2]
+                           (size_t) this->num_ * ALIGN(M_, config->workItem_output[2])
                            };
 
     /* Compute the pre-transformed output. */
@@ -1315,7 +1315,6 @@ bool ConvolutionLayerSpatial<Dtype>::create_winograd_conv_kernel(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top,
     int_tp blockWidth,
     int_tp blockHeight, int_tp simd_size) {
-
   if (std::is_same<Dtype, double>::value || this->group_ != 1 ||
       this->stride_w_ != 1 || this->stride_h_ != 1 ||
       this->dilation_w_ != 1 || this->dilation_h_ != 1 ||
@@ -1394,7 +1393,6 @@ bool ConvolutionLayerSpatial<Dtype>::create_winograd_conv_kernel(
                 << " -DTILE_X=" << tile_x
                 << " -DTILE_Y=" << tile_y
                 << " -DALIGNED_NUM_FILTERS=" << ALIGN(M_, simd_size)
-                << " -DTOTAL_NUM_FILTERS=" << (num_batches * ALIGN(num_output_maps, simd_size))
                 << " -DINPUT_PAD_W=" << pad_w_ << " -DINPUT_PAD_H=" << pad_h_;
   // FIXME batch size should not be a macro.
   string options = optionsString.str();
@@ -1966,10 +1964,8 @@ void ConvolutionLayerSpatial<Dtype>::setup_convolution(
     if (create_convolution_kernel(bottom, top, ConvType::DWCONV, 1, 1, 1)
         && this->group_ > 8)
       return;
-#if 0
-    // WINOGRAD doesn't support varying batch size, so disable it for now
+    // Create WINOGRAD kernels.
     create_convolution_kernel(bottom, top, ConvType::WINOGRAD, 4, 4, 8);
-#endif
     //Create GEMM like kernels.
     create_convolution_kernel(bottom, top, ConvType::GEMM_LIKE, 1, 8, 32);
     create_convolution_kernel(bottom, top, ConvType::GEMM_LIKE, 2, 8, 32);

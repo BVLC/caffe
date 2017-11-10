@@ -2652,7 +2652,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "",    // NOLINT
 "}",    // NOLINT
 "#if IS_LARGE_INPUT",    // NOLINT
-"coordW = (int2)(0, fm % ALIGNED_NUM_FILTERS+TOTAL_NUM_FILTERS);",    // NOLINT
+"coordW = (int2)(0, fm % ALIGNED_NUM_FILTERS+ALIGNED_NUM_FILTERS);",    // NOLINT
 "//#pragma unroll",    // NOLINT
 "for(int_tp kd = 0; kd < HALF_INPUT_DEPTH; kd++)",    // NOLINT
 "{",    // NOLINT
@@ -2723,9 +2723,10 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "",    // NOLINT
 "}",    // NOLINT
 "#endif",    // NOLINT
+"fm = fm % ALIGNED_NUM_FILTERS;",    // NOLINT
 "",    // NOLINT
-"if ((ALIGNED_NUM_FILTERS == TOTAL_NUM_FILTERS || fm < TOTAL_NUM_FILTERS)) {",    // NOLINT
-"uint_tp out_addr = fm * output_width * output_height;",    // NOLINT
+"if ((ALIGNED_NUM_FILTERS == NUM_FILTERS || fm < NUM_FILTERS)) {",    // NOLINT
+"uint_tp out_addr = ( num_in_batch * TOTAL_OUTPUT_DEPTH + fm ) * output_width * output_height;",    // NOLINT
 "out_addr += or * output_width + oc;",    // NOLINT
 "#if APPLY_BIAS",    // NOLINT
 "fm = fm % ALIGNED_NUM_FILTERS;",    // NOLINT
