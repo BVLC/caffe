@@ -8,8 +8,8 @@ void Device::copy(const uint_tp n, vptr<const Dtype> x, vptr<Dtype> y) {
 }
 
 template<>
-void Device::copy(const uint_tp n, vptr<const half_float::half> x,
-                  vptr<half_float::half> y);
+void Device::copy(const uint_tp n, vptr<const half_fp> x,
+                  vptr<half_fp> y);
 template<>
 void Device::copy(const uint_tp n, vptr<const float> x, vptr<float> y);
 template<>
@@ -42,8 +42,8 @@ void Device::copy(const uint_tp n, const Dtype* x, vptr<Dtype> y) {
 template<>
 void Device::copy(const uint_tp n, const char* x, vptr<char> y);
 template<>
-void Device::copy(const uint_tp n, const half_float::half* x,
-                  vptr<half_float::half> y);
+void Device::copy(const uint_tp n, const half_fp* x,
+                  vptr<half_fp> y);
 template<>
 void Device::copy(const uint_tp n, const float* x, vptr<float> y);
 template<>
@@ -74,8 +74,8 @@ void Device::copy(const uint_tp n, vptr<const Dtype> x, Dtype* y) {
 }
 
 template<>
-void Device::copy(const uint_tp n, vptr<const half_float::half> x,
-                  half_float::half* y);
+void Device::copy(const uint_tp n, vptr<const half_fp> x,
+                  half_fp* y);
 template<>
 void Device::copy(const uint_tp n, vptr<const float> x, float* y);
 template<>
@@ -103,9 +103,9 @@ void Device::copy(const uint_tp n, vptr<const void> x, void* y);
 template<>
 void Device::gemm(const CBLAS_TRANSPOSE trans_a, const CBLAS_TRANSPOSE trans_b,
                   const uint_tp m, const uint_tp n, const uint_tp k,
-                  const half_float::half alpha, vptr<const half_float::half> a,
-                  vptr<const half_float::half> b,
-                  const half_float::half beta, vptr<half_float::half> c) {
+                  const half_fp alpha, vptr<const half_fp> a,
+                  vptr<const half_fp> b,
+                  const half_fp beta, vptr<half_fp> c) {
   this->gemm_half(trans_a, trans_b, m, n, k, alpha, a, b, beta, c);
 }
 
@@ -127,10 +127,10 @@ void Device::gemm(const CBLAS_TRANSPOSE trans_a, const CBLAS_TRANSPOSE trans_b,
 
 template<>
 void Device::gemv(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
-                  const uint_tp n, const half_float::half alpha,
-                  vptr<const half_float::half> a,
-                  vptr<const half_float::half> x, const half_float::half beta,
-                  vptr<half_float::half> y) {
+                  const uint_tp n, const half_fp alpha,
+                  vptr<const half_fp> a,
+                  vptr<const half_fp> x, const half_fp beta,
+                  vptr<half_fp> y) {
   this->gemv_half(trans_a, m, n, alpha, a, x, beta, y);
 }
 
@@ -153,8 +153,8 @@ void Device::gemv(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
 }
 
 template<>
-void Device::axpy(const uint_tp n, const half_float::half alpha,
-                  vptr<const half_float::half> x, vptr<half_float::half> y) {
+void Device::axpy(const uint_tp n, const half_fp alpha,
+                  vptr<const half_fp> x, vptr<half_fp> y) {
   this->axpy_half(n, alpha, x, y);
 }
 
@@ -171,9 +171,9 @@ void Device::axpy(const uint_tp n, const double alpha,
 }
 
 template<>
-void Device::axpby(const uint_tp n, const half_float::half alpha,
-                   vptr<const half_float::half> x,
-                   const half_float::half beta, vptr<half_float::half> y) {
+void Device::axpby(const uint_tp n, const half_fp alpha,
+                   vptr<const half_fp> x,
+                   const half_fp beta, vptr<half_fp> y) {
   this->axpby_half(n, alpha, x, beta, y);
 }
 
@@ -191,8 +191,8 @@ void Device::axpby(const uint_tp n, const double alpha,
 }
 
 template<>
-void Device::rng_uniform(const uint_tp n, const half_float::half a,
-                      const half_float::half b, vptr<half_float::half> r) {
+void Device::rng_uniform(const uint_tp n, const half_fp a,
+                      const half_fp b, vptr<half_fp> r) {
   this->rng_uniform_half(n, a, b, r);
 }
 
@@ -209,8 +209,8 @@ void Device::rng_uniform(const uint_tp n, const double a,
 }
 
 template<>
-void Device::rng_gaussian(const uint_tp n, const half_float::half mu,
-                  const half_float::half sigma, vptr<half_float::half> r) {
+void Device::rng_gaussian(const uint_tp n, const half_fp mu,
+                  const half_fp sigma, vptr<half_fp> r) {
   this->rng_gaussian_half(n, mu, sigma, r);
 }
 
@@ -227,7 +227,7 @@ void Device::rng_gaussian(const uint_tp n, const double mu,
 }
 
 template<>
-void Device::rng_bernoulli(const uint_tp n, const half_float::half p,
+void Device::rng_bernoulli(const uint_tp n, const half_fp p,
                            vptr<int> r) {
   this->rng_bernoulli_half(n, p, r);
 }
@@ -243,7 +243,7 @@ void Device::rng_bernoulli(const uint_tp n, const double p, vptr<int> r) {
 }
 
 template<>
-void Device::rng_bernoulli(const uint_tp n, const half_float::half p,
+void Device::rng_bernoulli(const uint_tp n, const half_fp p,
                            vptr<unsigned int> r) {
   this->rng_bernoulli_half(n, p, r);
 }
@@ -261,8 +261,8 @@ void Device::rng_bernoulli(const uint_tp n, const double p,
 }
 
 template<>
-void Device::dot(const uint_tp n, vptr<const half_float::half> x,
-                    vptr<const half_float::half> y, half_float::half *out) {
+void Device::dot(const uint_tp n, vptr<const half_fp> x,
+                    vptr<const half_fp> y, half_fp *out) {
   this->dot_half(n, x, y, out);
 }
 
@@ -279,8 +279,8 @@ void Device::dot(const uint_tp n, vptr<const double> x, vptr<const double> y,
 }
 
 template<>
-void Device::asum(const uint_tp n, vptr<const half_float::half> x,
-                       half_float::half* y) {
+void Device::asum(const uint_tp n, vptr<const half_fp> x,
+                       half_fp* y) {
   this->asum_half(n, x, y);
 }
 
@@ -295,8 +295,8 @@ void Device::asum(const uint_tp n, vptr<const double> x, double* y) {
 }
 
 template<>
-void Device::scal(const uint_tp n, const half_float::half alpha,
-                       vptr<half_float::half> x) {
+void Device::scal(const uint_tp n, const half_fp alpha,
+                       vptr<half_fp> x) {
   this->scal_half(n, alpha, x);
 }
 
@@ -312,8 +312,8 @@ void Device::scal(const uint_tp n, const double alpha, vptr<double> x) {
 }
 
 template<>
-void Device::scale(const uint_tp n, const half_float::half alpha,
-                   vptr<const half_float::half> x, vptr<half_float::half> y) {
+void Device::scale(const uint_tp n, const half_fp alpha,
+                   vptr<const half_fp> x, vptr<half_fp> y) {
   this->scale_half(n, alpha, x, y);
 }
 

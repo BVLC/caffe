@@ -2211,7 +2211,7 @@ bool LibDNNConvSpatial<Dtype>::verify_result(
   else if (config->tested)
     return false;
 
-  if (std::is_same<Dtype, half_float::half>::value)
+  if (std::is_same<Dtype, half_fp>::value)
     return true;
 
   greentea_memset(LibDNN<Dtype>::dev_ptr_->id(),
@@ -2523,7 +2523,7 @@ void LibDNNConvSpatial<Dtype>::setup_convolution(
       create_convolution_kernel(bottom, top, 5, 1, 8, 32);
       create_convolution_kernel(bottom, top, 5, 2, 8, 32);
       if ((this->kernel_shape_[1] < 4 ||
-           (std::is_same<Dtype, half_float::half>::value))
+           (std::is_same<Dtype, half_fp>::value))
           && this->M_FW_ % 32 == 0)
         create_convolution_kernel(bottom, top, 5, 1, 16, 32);
     }

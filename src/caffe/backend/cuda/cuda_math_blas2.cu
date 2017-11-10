@@ -23,11 +23,11 @@ namespace caffe {
 #ifdef USE_CUDA
 
 void CudaDevice::gemv_half(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
-                           const uint_tp n, const half_float::half alpha,
-                           vptr<const half_float::half> a,
-                           vptr<const half_float::half> x,
-                           const half_float::half beta,
-                           vptr<half_float::half> y) {
+                           const uint_tp n, const half_fp alpha,
+                           vptr<const half_fp> a,
+                           vptr<const half_fp> x,
+                           const half_fp beta,
+                           vptr<half_fp> y) {
 #ifdef USE_GPU_HALF
   NOT_IMPLEMENTED;  // TODO
 #else  // USE_GPU_HALF

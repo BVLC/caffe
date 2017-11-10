@@ -12,6 +12,7 @@
 #include "caffe/common.hpp"
 #include "caffe/definitions.hpp"
 #include "caffe/layer_factory.hpp"
+#include "caffe/quantizer.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/math_functions.hpp"
 
@@ -26,8 +27,11 @@
  */
 namespace boost { class mutex; }
 
-
 namespace caffe {
+
+class LayerBase {
+
+};
 
 /**
  * @brief An interface for the units of computation which can be composed into a
@@ -40,7 +44,7 @@ namespace caffe {
  * their output Blobs.
  */
 template<typename Dtype, typename MItype, typename MOtype>
-class Layer {
+class Layer : public LayerBase {
  public:
   /**
    * You should not implement your own constructor. Any set up code should go
@@ -362,6 +366,10 @@ class Layer {
   /** Device context */
   Device *device_;
 
+  /** Quantizers */
+  shared_ptr<Quantizer<MItype, Dtype> > in_quant;
+  shared_ptr<Quantizer<Dtype, MOtype> > out_quant;
+
   /** Device program */
   shared_ptr<DeviceProgram> device_program_;
 
@@ -402,8 +410,8 @@ class Layer {
    * and top Blobs provided as input match the expected numbers specified by
    * the {ExactNum,Min,Max}{Bottom,Top}Blobs() functions.
    */
-  virtual void CheckBlobCounts(const vector<Blob<MOtype>*>& bottom,
-                               const vector<Blob<MItype>*>& top) {
+  virtual void CheckBlobCounts(const vector<Blob<MItype>*>& bottom,
+                               const vector<Blob<MOtype>*>& top) {
     if (ExactNumBottomBlobs() >= 0) {
       CHECK_EQ(ExactNumBottomBlobs(), bottom.size())<< type()
           << " Layer takes " << ExactNumBottomBlobs()
@@ -451,11 +459,11 @@ class Layer {
       CHECK_EQ(top.size(), num_loss_weights) << "loss_weight must be "
       "unspecified or specified once per top blob.";
       for (int_tp top_id = 0; top_id < top.size(); ++top_id) {
-        const Dtype loss_weight = layer_param_.loss_weight(top_id);
+        const MOtype loss_weight = layer_param_.loss_weight(top_id);
         if (loss_weight == Dtype(0)) {continue;}
         this->set_loss(top_id, loss_weight);
         const int_tp count = top[top_id]->count();
-        Dtype* loss_multiplier = top[top_id]->mutable_cpu_diff();
+        MOtype* loss_multiplier = top[top_id]->mutable_cpu_diff();
         caffe_set(count, loss_weight, loss_multiplier);
       }
     }
@@ -482,8 +490,8 @@ inline Dtype Layer<Dtype, MItype, MOtype>::Forward(
           continue;
         }
         const int_tp count = top[top_id]->count();
-        const Dtype* data = top[top_id]->cpu_data();
-        const Dtype* loss_weights = top[top_id]->cpu_diff();
+        const MOtype* data = top[top_id]->cpu_data();
+        const MOtype* loss_weights = top[top_id]->cpu_diff();
         loss += caffe_cpu_dot(count, data, loss_weights);
       }
       break;
@@ -538,14 +546,6 @@ void Layer<Dtype, MItype, MOtype>::ToProto(
     blobs_[i]->ToProto(param->add_blobs(), write_diff);
   }
 }
-
-#define INSTANTIATE_LAYER_VARIANTS() \
-    typedef variant< \
-
-        > LayerVariants;
-
-INSTANTIATE_LAYER_VARIANTS()
-
 
 }  // namespace caffe
 

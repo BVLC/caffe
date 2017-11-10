@@ -226,7 +226,7 @@ void PoolingLayer<Dtype, MItype, MOtype>::Reshape(
   }
 
   if (Caffe::mode() == Caffe::GPU && this->device_program_.get() == nullptr) {
-    this->GenerateProgram<Dtype, MItype, MOtype>();
+    this->GenerateProgram();
   }
 }
 
@@ -256,7 +256,7 @@ void PoolingLayer<Dtype, MItype, MOtype>::Forward_cpu(
   // loop to save time, although this results in more code.
 
   Dtype maxVal = FLT_MAX;
-  if (std::is_same<Dtype, half_float::half>::value) {
+  if (std::is_same<Dtype, half_fp>::value) {
     maxVal = HALF_MAX;
   }
   switch (this->layer_param_.pooling_param().pool()) {

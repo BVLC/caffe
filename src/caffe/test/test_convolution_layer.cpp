@@ -252,7 +252,7 @@ TYPED_TEST(ConvolutionLayerTest, TestSimpleConvolution) {
       this->MakeReferenceTop(this->blob_top_));
   top_data = this->blob_top_->cpu_data();
   ref_top_data = this->ref_blob_top_->cpu_data();
-  const Dtype delta = std::is_same<Dtype, half_float::half>::value ?
+  const Dtype delta = std::is_same<Dtype, half_fp>::value ?
                 1e-1 : 1e-4;
   for (int_tp i = 0; i < this->blob_top_->count(); ++i) {
     EXPECT_NEAR(top_data[i], ref_top_data[i], delta);
@@ -298,7 +298,7 @@ TYPED_TEST(ConvolutionLayerTest, TestDilatedConvolution) {
              this->MakeReferenceTop(this->blob_top_));
   top_data = this->blob_top_->cpu_data();
   ref_top_data = this->ref_blob_top_->cpu_data();
-  const Dtype delta = std::is_same<Dtype, half_float::half>::value ?
+  const Dtype delta = std::is_same<Dtype, half_fp>::value ?
                 1e-2 : 1e-4;
   for (int_tp i = 0; i < this->blob_top_->count(); ++i) {
     EXPECT_NEAR(top_data[i], ref_top_data[i], delta);
@@ -336,7 +336,7 @@ TYPED_TEST(ConvolutionLayerTest, Test0DConvolution) {
   const int_tp num = this->blob_top_->count(3);
   const int_tp dim = this->blob_top_->shape(3);
   const int_tp bottom_dim = this->blob_bottom_->shape(3);
-  const Dtype delta = std::is_same<Dtype, half_float::half>::value ?
+  const Dtype delta = std::is_same<Dtype, half_fp>::value ?
                 1e-2 : 1e-4;
   for (int_tp n = 0; n < num; ++n) {
     for (int_tp d = 0; d < dim; ++d) {
@@ -387,7 +387,7 @@ TYPED_TEST(ConvolutionLayerTest, TestSimple3DConvolution) {
       this->MakeReferenceTop(this->blob_top_));
   top_data = this->blob_top_->cpu_data();
   ref_top_data = this->ref_blob_top_->cpu_data();
-  const Dtype delta = std::is_same<Dtype, half_float::half>::value ?
+  const Dtype delta = std::is_same<Dtype, half_fp>::value ?
                 5e-1 : 1e-4;
   for (int_tp i = 0; i < this->blob_top_->count(); ++i) {
     EXPECT_NEAR(top_data[i], ref_top_data[i], delta);
@@ -436,7 +436,7 @@ TYPED_TEST(ConvolutionLayerTest, TestDilated3DConvolution) {
              this->MakeReferenceTop(this->blob_top_));
   top_data = this->blob_top_->cpu_data();
   ref_top_data = this->ref_blob_top_->cpu_data();
-  const Dtype delta = std::is_same<Dtype, half_float::half>::value ?
+  const Dtype delta = std::is_same<Dtype, half_fp>::value ?
                 5e-1 : 1e-4;
   for (int_tp i = 0; i < this->blob_top_->count(); ++i) {
     EXPECT_NEAR(top_data[i], ref_top_data[i], delta);
@@ -472,7 +472,7 @@ TYPED_TEST(ConvolutionLayerTest, Test1x1Convolution) {
       this->MakeReferenceTop(this->blob_top_));
   top_data = this->blob_top_->cpu_data();
   ref_top_data = this->ref_blob_top_->cpu_data();
-  const Dtype delta = std::is_same<Dtype, half_float::half>::value ?
+  const Dtype delta = std::is_same<Dtype, half_fp>::value ?
                 5e-1 : 1e-4;
   for (int_tp i = 0; i < this->blob_top_->count(); ++i) {
     EXPECT_NEAR(top_data[i], ref_top_data[i], delta);
@@ -502,7 +502,7 @@ TYPED_TEST(ConvolutionLayerTest, TestSimpleConvolutionGroup) {
       this->MakeReferenceTop(this->blob_top_));
   top_data = this->blob_top_->cpu_data();
   ref_top_data = this->ref_blob_top_->cpu_data();
-  const Dtype delta = std::is_same<Dtype, half_float::half>::value ?
+  const Dtype delta = std::is_same<Dtype, half_fp>::value ?
                 5e-2 : 1e-4;
   for (int_tp i = 0; i < this->blob_top_->count(); ++i) {
     EXPECT_NEAR(top_data[i], ref_top_data[i], delta);
@@ -597,7 +597,7 @@ TYPED_TEST(ConvolutionLayerTest, TestSobelConvolution) {
   // Test equivalence of full and separable filters.
   const Dtype* top_data = this->blob_top_->cpu_data();
   const Dtype* sep_top_data = this->blob_top_2_->cpu_data();
-  const Dtype delta = std::is_same<Dtype, half_float::half>::value ?
+  const Dtype delta = std::is_same<Dtype, half_fp>::value ?
                 1e-2 : 1e-4;
   for (int_tp i = 0; i < this->blob_top_->count(); ++i) {
     EXPECT_NEAR(top_data[i], sep_top_data[i], delta);
@@ -935,7 +935,7 @@ TYPED_TEST(CuDNNConvolutionLayerTest, TestSimpleConvolutionCuDNN) {
         this->MakeReferenceTop(this->blob_top_));
     top_data = this->blob_top_->cpu_data();
     ref_top_data = this->ref_blob_top_->cpu_data();
-    const Dtype delta = std::is_same<Dtype, half_float::half>::value ?
+    const Dtype delta = std::is_same<Dtype, half_fp>::value ?
                   1e-2 : 1e-4;
     for (int_tp i = 0; i < this->blob_top_->count(); ++i) {
       EXPECT_NEAR(top_data[i], ref_top_data[i], delta);
@@ -973,7 +973,7 @@ TYPED_TEST(CuDNNConvolutionLayerTest, TestSimpleConvolutionGroupCuDNN) {
         this->MakeReferenceTop(this->blob_top_));
     top_data = this->blob_top_->cpu_data();
     ref_top_data = this->ref_blob_top_->cpu_data();
-    const Dtype delta = std::is_same<Dtype, half_float::half>::value ?
+    const Dtype delta = std::is_same<Dtype, half_fp>::value ?
                   1e-2 : 1e-4;
     for (int_tp i = 0; i < this->blob_top_->count(); ++i) {
       EXPECT_NEAR(top_data[i], ref_top_data[i], delta);
@@ -1069,7 +1069,7 @@ TYPED_TEST(CuDNNConvolutionLayerTest, TestSobelConvolutionCuDNN) {
     // Test equivalence of full and separable filters.
     const TypeParam* top_data = this->blob_top_->cpu_data();
     const TypeParam* sep_top_data = this->blob_top_2_->cpu_data();
-    const Dtype delta = std::is_same<Dtype, half_float::half>::value ?
+    const Dtype delta = std::is_same<Dtype, half_fp>::value ?
                   1e-2 : 1e-4;
     for (int_tp i = 0; i < this->blob_top_->count(); ++i) {
       EXPECT_NEAR(top_data[i], sep_top_data[i], delta);

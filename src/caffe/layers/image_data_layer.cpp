@@ -172,8 +172,12 @@ void ImageDataLayer<Dtype, MItype, MOtype>::load_batch(Batch<Dtype>* batch) {
   DLOG(INFO) << "Transform time: " << trans_time / 1000 << " ms.";
 }
 
-INSTANTIATE_CLASS_3T(ImageDataLayer);
+INSTANTIATE_CLASS_3T(ImageDataLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T(ImageDataLayer, (double), (double), (double));
+
 REGISTER_LAYER_CLASS(ImageData);
+REGISTER_LAYER_CLASS_INST(ImageData, (float), (float), (float));
+REGISTER_LAYER_CLASS_INST(ImageData, (double), (double), (double));
 
 }  // namespace caffe
 #endif  // USE_OPENCV

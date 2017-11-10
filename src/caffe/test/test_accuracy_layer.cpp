@@ -119,7 +119,7 @@ TYPED_TEST(AccuracyLayerTest, TestForwardCPU) {
   int_tp num_correct_labels = 0;
   for (int_tp i = 0; i < 100; ++i) {
     max_value = -FLT_MAX;
-    if (std::is_same<TypeParam, half_float::half>::value)
+    if (std::is_same<TypeParam, half_fp>::value)
       max_value = -HALF_MAX;
     max_id = 0;
     for (int_tp j = 0; j < 10; ++j) {
@@ -132,7 +132,7 @@ TYPED_TEST(AccuracyLayerTest, TestForwardCPU) {
       ++num_correct_labels;
     }
   }
-  const TypeParam delta = std::is_same<TypeParam, half_float::half>::value ?
+  const TypeParam delta = std::is_same<TypeParam, half_fp>::value ?
                       1e-2 : 1e-4;
   EXPECT_NEAR(this->blob_top_->data_at(0, 0, 0, 0),
               num_correct_labels / 100.0, delta);
@@ -159,7 +159,7 @@ TYPED_TEST(AccuracyLayerTest, TestForwardWithSpatialAxes) {
     for (int_tp h = 0; h < this->blob_bottom_data_->height(); ++h) {
       for (int_tp w = 0; w < this->blob_bottom_data_->width(); ++w) {
         max_value = -FLT_MAX;
-        if (std::is_same<TypeParam, half_float::half>::value)
+        if (std::is_same<TypeParam, half_fp>::value)
           max_value = -HALF_MAX;
         max_id = 0;
         for (int_tp c = 0; c < this->blob_bottom_data_->channels(); ++c) {
@@ -180,7 +180,7 @@ TYPED_TEST(AccuracyLayerTest, TestForwardWithSpatialAxes) {
       }
     }
   }
-  const TypeParam delta = std::is_same<TypeParam, half_float::half>::value ?
+  const TypeParam delta = std::is_same<TypeParam, half_fp>::value ?
                       1e-2 : 1e-4;
   EXPECT_NEAR(this->blob_top_->data_at(0, 0, 0, 0),
               num_correct_labels / TypeParam(num_labels), delta);
@@ -208,7 +208,7 @@ TYPED_TEST(AccuracyLayerTest, TestForwardIgnoreLabel) {
     }
     ++count;
     max_value = -FLT_MAX;
-    if (std::is_same<TypeParam, half_float::half>::value)
+    if (std::is_same<TypeParam, half_fp>::value)
       max_value = -HALF_MAX;
     max_id = 0;
     for (int_tp j = 0; j < 10; ++j) {
@@ -222,7 +222,7 @@ TYPED_TEST(AccuracyLayerTest, TestForwardIgnoreLabel) {
     }
   }
   EXPECT_EQ(count, 97);  // We set 3 out of 100 labels to kIgnoreLabelValue.
-  const TypeParam delta = std::is_same<TypeParam, half_float::half>::value ?
+  const TypeParam delta = std::is_same<TypeParam, half_fp>::value ?
                       1e-2 : 1e-4;
   EXPECT_NEAR(this->blob_top_->data_at(0, 0, 0, 0),
               num_correct_labels / TypeParam(count), delta);
@@ -255,7 +255,7 @@ TYPED_TEST(AccuracyLayerTest, TestForwardCPUTopK) {
     }
   }
 
-  const TypeParam delta = std::is_same<TypeParam, half_float::half>::value ?
+  const TypeParam delta = std::is_same<TypeParam, half_fp>::value ?
                       1e-2 : 1e-4;
   EXPECT_NEAR(this->blob_top_->data_at(0, 0, 0, 0),
               num_correct_labels / 100.0, delta);
@@ -275,7 +275,7 @@ TYPED_TEST(AccuracyLayerTest, TestForwardCPUPerClass) {
   vector<int_tp> num_per_class(num_class, 0);
   for (int_tp i = 0; i < 100; ++i) {
     max_value = -FLT_MAX;
-    if (std::is_same<TypeParam, half_float::half>::value)
+    if (std::is_same<TypeParam, half_fp>::value)
       max_value = -HALF_MAX;
     max_id = 0;
     for (int_tp j = 0; j < 10; ++j) {
@@ -290,7 +290,7 @@ TYPED_TEST(AccuracyLayerTest, TestForwardCPUPerClass) {
       ++correct_per_class[max_id];
     }
   }
-  const TypeParam delta = std::is_same<TypeParam, half_float::half>::value ?
+  const TypeParam delta = std::is_same<TypeParam, half_fp>::value ?
                       1e-2 : 1e-4;
   EXPECT_NEAR(this->blob_top_->data_at(0, 0, 0, 0),
               num_correct_labels / 100.0, delta);
@@ -328,7 +328,7 @@ TYPED_TEST(AccuracyLayerTest, TestForwardCPUPerClassWithIgnoreLabel) {
     }
     ++count;
     max_value = -FLT_MAX;
-    if (std::is_same<TypeParam, half_float::half>::value)
+    if (std::is_same<TypeParam, half_fp>::value)
       max_value = -HALF_MAX;
     max_id = 0;
     for (int_tp j = 0; j < 10; ++j) {
@@ -344,7 +344,7 @@ TYPED_TEST(AccuracyLayerTest, TestForwardCPUPerClassWithIgnoreLabel) {
     }
   }
   EXPECT_EQ(count, 97);
-  const TypeParam delta = std::is_same<TypeParam, half_float::half>::value ?
+  const TypeParam delta = std::is_same<TypeParam, half_fp>::value ?
                       1e-2 : 1e-4;
   EXPECT_NEAR(this->blob_top_->data_at(0, 0, 0, 0),
               num_correct_labels / TypeParam(count), delta);

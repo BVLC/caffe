@@ -63,7 +63,7 @@ void EmbedLayer<Dtype, MItype, MOtype>::Reshape(
   }
 
   if (Caffe::mode() == Caffe::GPU && this->device_program_.get() == nullptr) {
-    this->GenerateProgram<Dtype, MItype, MOtype>();
+    this->GenerateProgram();
   }
 }
 
@@ -121,7 +121,11 @@ void EmbedLayer<Dtype, MItype, MOtype>::Backward_cpu(
 STUB_GPU(EmbedLayer);
 #endif
 
-INSTANTIATE_CLASS_3T(EmbedLayer);
+INSTANTIATE_CLASS_3T(EmbedLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T(EmbedLayer, (double), (double), (double));
+
 REGISTER_LAYER_CLASS(Embed);
+REGISTER_LAYER_CLASS_INST(Embed, (float), (float), (float));
+REGISTER_LAYER_CLASS_INST(Embed, (double), (double), (double));
 
 }  // namespace caffe

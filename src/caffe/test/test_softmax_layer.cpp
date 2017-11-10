@@ -62,7 +62,7 @@ TYPED_TEST(SoftmaxLayerTest, TestForward) {
           scale += exp(this->blob_bottom_->data_at(i, j, k, l));
         }
 
-        const Dtype delta = std::is_same<Dtype, half_float::half>::value ?
+        const Dtype delta = std::is_same<Dtype, half_fp>::value ?
                       1e-2 : 1e-4;
         for (int_tp j = 0; j < this->blob_bottom_->channels(); ++j) {
           EXPECT_GE(Dtype(this->blob_top_->data_at(i, j, k, l) + delta),

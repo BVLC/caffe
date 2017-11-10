@@ -870,7 +870,7 @@ bool ConvolutionLayerSpatial<Dtype>::verify_result(
   const Dtype *verify_data = verify_blob.cpu_data();
   const Dtype *data = top[index]->cpu_data();
   Dtype err_factor = 1;
-  if (std::is_same<Dtype, half_float::half>::value)
+  if (std::is_same<Dtype, half_fp>::value)
     err_factor = 8;
 
   for (int_tp n = 0; n < numImages; ++n) {

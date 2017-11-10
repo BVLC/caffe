@@ -68,7 +68,7 @@ void BiasLayer<Dtype, MItype, MOtype>::Reshape(const vector<Blob<MItype>*>& bott
   }
 
   if (Caffe::mode() == Caffe::GPU && this->device_program_.get() == nullptr) {
-    this->GenerateProgram<Dtype, MItype, MOtype>();
+    this->GenerateProgram();
   }
 }
 
@@ -119,7 +119,11 @@ void BiasLayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob<MOtype>*>&
 STUB_GPU(BiasLayer);
 #endif
 
-INSTANTIATE_CLASS_3T(BiasLayer);
+INSTANTIATE_CLASS_3T(BiasLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T(BiasLayer, (double), (double), (double));
+
 REGISTER_LAYER_CLASS(Bias);
+REGISTER_LAYER_CLASS_INST(Bias, (float), (float), (float));
+REGISTER_LAYER_CLASS_INST(Bias, (double), (double), (double));
 
 }  // namespace caffe

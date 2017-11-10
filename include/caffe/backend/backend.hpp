@@ -6,7 +6,7 @@
 
 #include "caffe/common.hpp"
 #include "caffe/definitions.hpp"
-#include "3rdparty/half/half.hpp"
+#include "caffe/util/half_fp.hpp"
 
 namespace caffe {
 
@@ -44,7 +44,7 @@ struct const_enable_if
                    std::is_same<Dtype, const uint16_t>::value ||
                    std::is_same<Dtype, const uint32_t>::value ||
                    std::is_same<Dtype, const uint64_t>::value ||
-                   std::is_same<Dtype, const half_float::half>::value ||
+                   std::is_same<Dtype, const half_fp>::value ||
                    std::is_same<Dtype, const float>::value ||
                    std::is_same<Dtype, const double>::value ||
                    std::is_same<Dtype, const void>::value>
@@ -62,7 +62,7 @@ struct non_const_enable_if
                    std::is_same<Dtype, uint16_t>::value ||
                    std::is_same<Dtype, uint32_t>::value ||
                    std::is_same<Dtype, uint64_t>::value ||
-                   std::is_same<Dtype, half_float::half>::value ||
+                   std::is_same<Dtype, half_fp>::value ||
                    std::is_same<Dtype, float>::value ||
                    std::is_same<Dtype, double>::value ||
                    std::is_same<Dtype, void>::value>
@@ -81,7 +81,7 @@ struct const_is_same {
       std::is_same<Dtype, const uint16_t>::value ||
       std::is_same<Dtype, const uint32_t>::value ||
       std::is_same<Dtype, const uint64_t>::value ||
-      std::is_same<Dtype, const half_float::half>::value ||
+      std::is_same<Dtype, const half_fp>::value ||
       std::is_same<Dtype, const float>::value ||
       std::is_same<Dtype, const double>::value ||
       std::is_same<Dtype, const void>::value;
@@ -100,7 +100,7 @@ struct non_const_is_same {
       std::is_same<Dtype, uint16_t>::value ||
       std::is_same<Dtype, uint32_t>::value ||
       std::is_same<Dtype, uint64_t>::value ||
-      std::is_same<Dtype, half_float::half>::value ||
+      std::is_same<Dtype, half_fp>::value ||
       std::is_same<Dtype, float>::value ||
       std::is_same<Dtype, double>::value ||
       std::is_same<Dtype, void>::value;

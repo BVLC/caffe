@@ -80,7 +80,7 @@ class NeuronLayerTest : public MultiDeviceTest<TypeParam> {
       }
     }
     const Dtype std_error = sqrt(dropout_ratio * (1 - dropout_ratio) / count) *
-                            std::is_same<Dtype, half_float::half>::value ?
+                            std::is_same<Dtype, half_fp>::value ?
                             10 : 1;
     // Fail if the number dropped was more than 1.96 * std_error away from the
     // expected number -- requires 95% confidence that the dropout layer is not
@@ -98,7 +98,7 @@ class NeuronLayerTest : public MultiDeviceTest<TypeParam> {
     layer.SetUp(blob_bottom_vec_, blob_top_vec_);
     layer.Forward(blob_bottom_vec_, blob_top_vec_);
     Dtype kDelta;
-    if (!std::is_same<Dtype, half_float::half>::value)
+    if (!std::is_same<Dtype, half_fp>::value)
       kDelta = 2e-2;
     else
       kDelta = 10;
@@ -160,7 +160,7 @@ class NeuronLayerTest : public MultiDeviceTest<TypeParam> {
     layer.SetUp(blob_bottom_vec_, blob_top_vec_);
     layer.Forward(blob_bottom_vec_, blob_top_vec_);
     Dtype kDelta;
-    if (!std::is_same<Dtype, half_float::half>::value)
+    if (!std::is_same<Dtype, half_fp>::value)
       kDelta = 2e-3;
     else
       kDelta = 2e-1;
@@ -279,7 +279,7 @@ TYPED_TEST(NeuronLayerTest, TestELU) {
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   Dtype kDelta;
-  if (!std::is_same<Dtype, half_float::half>::value)
+  if (!std::is_same<Dtype, half_fp>::value)
     kDelta = 2e-4;
   else
     kDelta = 2e-2;
@@ -342,7 +342,7 @@ TYPED_TEST(NeuronLayerTest, TestSigmoid) {
   const Dtype* bottom_data = this->blob_bottom_->cpu_data();
   const Dtype* top_data = this->blob_top_->cpu_data();
   Dtype kDelta;
-  if (!std::is_same<Dtype, half_float::half>::value)
+  if (!std::is_same<Dtype, half_fp>::value)
     kDelta = 2e-3;
   else
     kDelta = 2e-1;

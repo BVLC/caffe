@@ -110,7 +110,11 @@ void DummyDataLayer<Dtype, MItype, MOtype>::Forward_cpu(
   }
 }
 
-INSTANTIATE_CLASS_T4(DummyDataLayer);
+INSTANTIATE_CLASS_3T(DummyDataLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T(DummyDataLayer, (double), (double), (double));
+
 REGISTER_LAYER_CLASS(DummyData);
+REGISTER_LAYER_CLASS_INST(DummyData, (float), (float), (float));
+REGISTER_LAYER_CLASS_INST(DummyData, (double), (double), (double));
 
 }  // namespace caffe

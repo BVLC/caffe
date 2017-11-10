@@ -12,7 +12,7 @@ void ELULayer<Dtype, MItype, MOtype>::Reshape(
   NeuronLayer<Dtype, MItype, MOtype>::Reshape(bottom, top);
 
   if (Caffe::mode() == Caffe::GPU && this->device_program_.get() == nullptr) {
-    this->GenerateProgram<Dtype, MItype, MOtype>();
+    this->GenerateProgram();
   }
 }
 
@@ -54,7 +54,11 @@ void ELULayer<Dtype, MItype, MOtype>::Backward_cpu(
 STUB_GPU(ELULayer);
 #endif
 
-INSTANTIATE_CLASS_3T(ELULayer);
+INSTANTIATE_CLASS_3T(ELULayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T(ELULayer, (double), (double), (double));
+
 REGISTER_LAYER_CLASS(ELU);
+REGISTER_LAYER_CLASS_INST(ELU, (float), (float), (float));
+REGISTER_LAYER_CLASS_INST(ELU, (double), (double), (double));
 
 }  // namespace caffe

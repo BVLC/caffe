@@ -1,9 +1,15 @@
+# generate macro headers
+caffe_prebuild_macros_py(${macro_gen_folder})
+
+add_library(macros STATIC ${macro_gen_folder}/macros.hpp)
+caffe_default_properties(macros)
+set_target_properties(macros PROPERTIES LINKER_LANGUAGE CXX)
+
 # generate protobuf sources
 file(GLOB proto_files proto/*.proto)
 caffe_protobuf_generate_cpp_py(${proto_gen_folder} proto_srcs proto_hdrs proto_python ${proto_files})
 
 # include python files either to force generation
-
 add_library(caffeproto STATIC ${proto_hdrs} ${proto_srcs} ${proto_python})
 caffe_default_properties(caffeproto)
 #target_link_libraries(caffeproto PUBLIC ${PROTOBUF_LIBRARIES})

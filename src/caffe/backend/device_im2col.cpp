@@ -412,7 +412,7 @@ string create_source(Device* dev,
 }
 
 template<>
-string create_source<half_float::half>(Device* dev,
+string create_source<half_fp>(Device* dev,
     shared_ptr<DeviceProgram> program);
 template<>
 string create_source<float>(Device* dev,
@@ -428,7 +428,7 @@ void Device::CreateIm2ColProgram() {
   ss << this->im2col_program_->setup();
 
 #ifdef USE_GPU_HALF
-  ss << create_source<half_float::half>(this, this->math_program_);
+  ss << create_source<half_fp>(this, this->math_program_);
 #endif
 
 #ifdef USE_GPU_SINGLE
@@ -578,39 +578,39 @@ void Device::col2im_nd(vptr<const Dtype> data_col,
 
 #ifdef USE_GPU_HALF
 template<>
-void Device::im2col(vptr<const half_float::half> data_im, const int_tp channels,
+void Device::im2col(vptr<const half_fp> data_im, const int_tp channels,
                     const int_tp height, const int_tp width,
                     const int_tp kernel_h, const int_tp kernel_w,
                     const int_tp pad_h, const int_tp pad_w,
                     const int_tp stride_h, const int_tp stride_w,
                     const int_tp dilation_h, const int_tp dilation_w,
-                    vptr<half_float::half> data_col);
+                    vptr<half_fp> data_col);
 template<>
-void Device::col2im(vptr<const half_float::half> data_col,
+void Device::col2im(vptr<const half_fp> data_col,
                     const int_tp channels, const int_tp height,
                     const int_tp width, const int_tp kernel_h,
                     const int_tp kernel_w, const int_tp pad_h,
                     const int_tp pad_w, const int_tp stride_h,
                     const int_tp stride_w, const int_tp dilation_h,
-                    const int_tp dilation_w, vptr<half_float::half> data_im);
+                    const int_tp dilation_w, vptr<half_fp> data_im);
 template<>
-void Device::im2col_nd(vptr<const half_float::half> data_im,
+void Device::im2col_nd(vptr<const half_fp> data_im,
                        const int_tp num_spatial_axes,
                        const int_tp num_kernels, vptr<const int_tp> im_shape,
                        vptr<const int_tp> col_shape,
                        vptr<const int_tp> kernel_shape,
                        vptr<const int_tp> pad, vptr<const int_tp> stride,
                        vptr<const int_tp> dilation,
-                       vptr<half_float::half> data_col);
+                       vptr<half_fp> data_col);
 template<>
-void Device::col2im_nd(vptr<const half_float::half> data_col,
+void Device::col2im_nd(vptr<const half_fp> data_col,
                        const int_tp num_spatial_axes,
                        const int_tp im_size, vptr<const int_tp> im_shape,
                        vptr<const int_tp> col_shape,
                        vptr<const int_tp> kernel_shape,
                        vptr<const int_tp> pad, vptr<const int_tp> stride,
                        vptr<const int_tp> dilation,
-                       vptr<half_float::half> data_im);
+                       vptr<half_fp> data_im);
 #endif  // USE_GPU_HALF
 
 

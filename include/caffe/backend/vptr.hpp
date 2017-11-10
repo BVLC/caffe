@@ -5,7 +5,7 @@
 #include "caffe/backend/backend.hpp"
 #include "caffe/backend/dev_ptr.hpp"
 #include "caffe/backend/opencl/caffe_opencl.hpp"
-#include "3rdparty/half/half.hpp"
+#include "caffe/util/half_fp.hpp"
 
 namespace caffe {
 
@@ -29,7 +29,7 @@ class vptr<Dtype, typename const_enable_if<Dtype>::type> {
   vptr(const vptr<uint16_t> &other);
   vptr(const vptr<uint32_t> &other);
   vptr(const vptr<uint64_t> &other);
-  vptr(const vptr<half_float::half> &other);
+  vptr(const vptr<half_fp> &other);
   vptr(const vptr<float> &other);
   vptr(const vptr<double> &other);
   vptr(const vptr<void> &other);
@@ -44,7 +44,7 @@ class vptr<Dtype, typename const_enable_if<Dtype>::type> {
   vptr(const vptr<const uint16_t> &other);
   vptr(const vptr<const uint32_t> &other);
   vptr(const vptr<const uint64_t> &other);
-  vptr(const vptr<const half_float::half> &other);
+  vptr(const vptr<const half_fp> &other);
   vptr(const vptr<const float> &other);
   vptr(const vptr<const double> &other);
   vptr(const vptr<const void> &other);
@@ -74,7 +74,7 @@ class vptr<Dtype, typename const_enable_if<Dtype>::type> {
   vptr<Dtype>& operator=(const vptr<uint16_t> &other);
   vptr<Dtype>& operator=(const vptr<uint32_t> &other);
   vptr<Dtype>& operator=(const vptr<uint64_t> &other);
-  vptr<Dtype>& operator=(const vptr<half_float::half> &other);
+  vptr<Dtype>& operator=(const vptr<half_fp> &other);
   vptr<Dtype>& operator=(const vptr<float> &other);
   vptr<Dtype>& operator=(const vptr<double> &other);
   vptr<Dtype>& operator=(const vptr<void> &other);
@@ -89,7 +89,7 @@ class vptr<Dtype, typename const_enable_if<Dtype>::type> {
   vptr<Dtype>& operator=(const vptr<const uint16_t> &other);
   vptr<Dtype>& operator=(const vptr<const uint32_t> &other);
   vptr<Dtype>& operator=(const vptr<const uint64_t> &other);
-  vptr<Dtype>& operator=(const vptr<const half_float::half> &other);
+  vptr<Dtype>& operator=(const vptr<const half_fp> &other);
   vptr<Dtype>& operator=(const vptr<const float> &other);
   vptr<Dtype>& operator=(const vptr<const double> &other);
   vptr<Dtype>& operator=(const vptr<const void> &other);
@@ -122,7 +122,7 @@ class vptr<Dtype, typename non_const_enable_if<Dtype>::type> {
   vptr(const vptr<uint16_t> &other);
   vptr(const vptr<uint32_t> &other);
   vptr(const vptr<uint64_t> &other);
-  vptr(const vptr<half_float::half> &other);
+  vptr(const vptr<half_fp> &other);
   vptr(const vptr<float> &other);
   vptr(const vptr<double> &other);
   vptr(const vptr<void> &other);
@@ -152,7 +152,7 @@ class vptr<Dtype, typename non_const_enable_if<Dtype>::type> {
   vptr<Dtype>& operator=(const vptr<uint16_t> &other);
   vptr<Dtype>& operator=(const vptr<uint32_t> &other);
   vptr<Dtype>& operator=(const vptr<uint64_t> &other);
-  vptr<Dtype>& operator=(const vptr<half_float::half> &other);
+  vptr<Dtype>& operator=(const vptr<half_fp> &other);
   vptr<Dtype>& operator=(const vptr<float> &other);
   vptr<Dtype>& operator=(const vptr<double> &other);
   vptr<Dtype>& operator=(const vptr<void> &other);

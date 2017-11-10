@@ -3,7 +3,7 @@
 
 #include "caffe/backend/cuda/caffe_cuda.hpp"
 #include "caffe/backend/dev_ptr.hpp"
-#include "3rdparty/half/half.hpp"
+#include "caffe/util/half_fp.hpp"
 
 namespace caffe {
 
@@ -29,7 +29,7 @@ class cuda_dev_ptr<Dtype, typename const_enable_if<Dtype>::type>
   cuda_dev_ptr(const dev_ptr<uint16_t> &other);
   cuda_dev_ptr(const dev_ptr<uint32_t> &other);
   cuda_dev_ptr(const dev_ptr<uint64_t> &other);
-  cuda_dev_ptr(const dev_ptr<half_float::half> &other);
+  cuda_dev_ptr(const dev_ptr<half_fp> &other);
   cuda_dev_ptr(const dev_ptr<float> &other);
   cuda_dev_ptr(const dev_ptr<double> &other);
   cuda_dev_ptr(const dev_ptr<void> &other);
@@ -44,7 +44,7 @@ class cuda_dev_ptr<Dtype, typename const_enable_if<Dtype>::type>
   cuda_dev_ptr(const dev_ptr<const uint16_t> &other);
   cuda_dev_ptr(const dev_ptr<const uint32_t> &other);
   cuda_dev_ptr(const dev_ptr<const uint64_t> &other);
-  cuda_dev_ptr(const dev_ptr<const half_float::half> &other);
+  cuda_dev_ptr(const dev_ptr<const half_fp> &other);
   cuda_dev_ptr(const dev_ptr<const float> &other);
   cuda_dev_ptr(const dev_ptr<const double> &other);
   cuda_dev_ptr(const dev_ptr<const void> &other);
@@ -59,8 +59,8 @@ class cuda_dev_ptr<Dtype, typename const_enable_if<Dtype>::type>
   virtual shared_ptr<dev_ptr<uint16_t> > instance(uint16_t* dummy);
   virtual shared_ptr<dev_ptr<uint32_t> > instance(uint32_t* dummy);
   virtual shared_ptr<dev_ptr<uint64_t> > instance(uint64_t* dummy);
-  virtual shared_ptr<dev_ptr<half_float::half> >
-                                              instance(half_float::half* dummy);
+  virtual shared_ptr<dev_ptr<half_fp> >
+                                              instance(half_fp* dummy);
   virtual shared_ptr<dev_ptr<float> > instance(float* dummy);
   virtual shared_ptr<dev_ptr<double> > instance(double* dummy);
   virtual shared_ptr<dev_ptr<void> > instance(void* dummy);
@@ -94,7 +94,7 @@ public:
   cuda_dev_ptr(const dev_ptr<uint16_t> &other);
   cuda_dev_ptr(const dev_ptr<uint32_t> &other);
   cuda_dev_ptr(const dev_ptr<uint64_t> &other);
-  cuda_dev_ptr(const dev_ptr<half_float::half> &other);
+  cuda_dev_ptr(const dev_ptr<half_fp> &other);
   cuda_dev_ptr(const dev_ptr<float> &other);
   cuda_dev_ptr(const dev_ptr<double> &other);
   cuda_dev_ptr(const dev_ptr<void> &other);
@@ -109,8 +109,8 @@ public:
   virtual shared_ptr<dev_ptr<uint16_t> > instance(uint16_t* dummy);
   virtual shared_ptr<dev_ptr<uint32_t> > instance(uint32_t* dummy);
   virtual shared_ptr<dev_ptr<uint64_t> > instance(uint64_t* dummy);
-  virtual shared_ptr<dev_ptr<half_float::half> >
-                                              instance(half_float::half* dummy);
+  virtual shared_ptr<dev_ptr<half_fp> >
+                                              instance(half_fp* dummy);
   virtual shared_ptr<dev_ptr<float> > instance(float* dummy);
   virtual shared_ptr<dev_ptr<double> > instance(double* dummy);
   virtual shared_ptr<dev_ptr<void> > instance(void* dummy);
@@ -132,8 +132,8 @@ public:
                                     instance(const uint32_t* dummy);
   virtual shared_ptr<dev_ptr<const uint64_t> >
                                     instance(const uint64_t* dummy);
-  virtual shared_ptr<dev_ptr<const half_float::half> >
-                                    instance(const half_float::half* dummy);
+  virtual shared_ptr<dev_ptr<const half_fp> >
+                                    instance(const half_fp* dummy);
   virtual shared_ptr<dev_ptr<const float> > instance(const float* dummy);
   virtual shared_ptr<dev_ptr<const double> > instance(const double* dummy);
   virtual shared_ptr<dev_ptr<const void> > instance(const void* dummy);

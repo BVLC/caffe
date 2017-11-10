@@ -11,26 +11,26 @@ namespace caffe {
 
 #ifdef USE_GPU_HALF
 template<>
-void caffe_add_scalar(const int_tp n, const half_float::half alpha,
-                      half_float::half* Y) {
+void caffe_add_scalar(const int_tp n, const half_fp alpha,
+                      half_fp* Y) {
   for (int_tp i = 0; i < n; ++i) {
     Y[i] += alpha;
   }
 }
 
 template<>
-void caffe_cpu_gemm<half_float::half>(const CBLAS_TRANSPOSE trans_a,
+void caffe_cpu_gemm<half_fp>(const CBLAS_TRANSPOSE trans_a,
                           const CBLAS_TRANSPOSE trans_b, const int_tp m,
                           const int_tp n, const int_tp k,
-                          const half_float::half alpha,
-                          const half_float::half* a, const half_float::half* b,
-                          const half_float::half beta,
-                          half_float::half* c) {
+                          const half_fp alpha,
+                          const half_fp* a, const half_fp* b,
+                          const half_fp beta,
+                          half_fp* c) {
   int_tp inc_a = (trans_a == CblasNoTrans) ? 1 : m;
   int_tp inc_b = (trans_b == CblasNoTrans) ? n : 1;
   for (int_tp m = 0; m < m; m++) {
     for (int_tp n = 0; n < n; n++) {
-      half_float::half acc = 0;
+      half_fp acc = 0;
       int_tp b_index = trans_b == CblasNoTrans ?
                        n : k * n;
       int_tp a_index = trans_a == CblasNoTrans ?
@@ -49,16 +49,16 @@ void caffe_cpu_gemm<half_float::half>(const CBLAS_TRANSPOSE trans_a,
 }
 
 template<>
-void caffe_cpu_gemv<half_float::half>(const CBLAS_TRANSPOSE trans_a,
-                   const int_tp m, const int_tp n, const half_float::half alpha,
-                   const half_float::half* a, const half_float::half* X,
-                   const half_float::half beta, half_float::half* Y) {
+void caffe_cpu_gemv<half_fp>(const CBLAS_TRANSPOSE trans_a,
+                   const int_tp m, const int_tp n, const half_fp alpha,
+                   const half_fp* a, const half_fp* X,
+                   const half_fp beta, half_fp* Y) {
   int_tp a_inc = (trans_a == CblasNoTrans) ? 1 : n;
   int_tp y_cnt = (trans_a == CblasNoTrans) ? m : n;
   int_tp x_cnt = (trans_a == CblasNoTrans) ? n : m;
   for (int_tp m = 0; m < y_cnt; m++) {
     int_tp a_index = (trans_a == CblasNoTrans) ? m * n : m;
-    half_float::half acc = 0;
+    half_fp acc = 0;
     for (int_tp n = 0; n < x_cnt; n++) {
       acc += a[a_index] * X[n];
       a_index += a_inc;
@@ -71,156 +71,156 @@ void caffe_cpu_gemv<half_float::half>(const CBLAS_TRANSPOSE trans_a,
 }
 
 template<>
-void caffe_axpy<half_float::half>(const int_tp n, const half_float::half alpha,
-                                  const half_float::half* X,
-                                  half_float::half* Y) {
+void caffe_axpy<half_fp>(const int_tp n, const half_fp alpha,
+                                  const half_fp* X,
+                                  half_fp* Y) {
   for (int_tp n = 0; n < n; n++) {
     Y[n] += alpha * X[n];
   }
 }
 
 template<>
-void caffe_scal<half_float::half>(const int_tp n, const half_float::half alpha,
-                                  half_float::half *X) {
+void caffe_scal<half_fp>(const int_tp n, const half_fp alpha,
+                                  half_fp *X) {
   for (int_tp n = 0; n < n; n++)
     X[n] *= alpha;
 }
 
 template<>
-void caffe_cpu_axpby<half_float::half>(const int_tp n,
-                        const half_float::half alpha, const half_float::half* X,
-                        const half_float::half beta, half_float::half* Y) {
+void caffe_cpu_axpby<half_fp>(const int_tp n,
+                        const half_fp alpha, const half_fp* X,
+                        const half_fp beta, half_fp* Y) {
   cblas_haxpby(n, alpha, X, 1, beta, Y, 1);
 }
 
-void vhAdd(const int_tp n, const half_float::half* a, const half_float::half* b,
-                     half_float::half* Y) {
+void vhAdd(const int_tp n, const half_fp* a, const half_fp* b,
+                     half_fp* Y) {
   for (int i = 0; i < n; i++) {
     Y[i] = a[i] + b[i];
   }
 }
 
 template<>
-void caffe_add<half_float::half>(const int_tp n, const half_float::half* a,
-                               const half_float::half* b, half_float::half* Y) {
+void caffe_add<half_fp>(const int_tp n, const half_fp* a,
+                               const half_fp* b, half_fp* Y) {
   vhAdd(n, a, b, Y);
 }
 
-void vhSub(const int_tp n, const half_float::half* a, const half_float::half* b,
-           half_float::half* Y) {
+void vhSub(const int_tp n, const half_fp* a, const half_fp* b,
+           half_fp* Y) {
   for (int i = 0; i < n; i++) {
     Y[i] = a[i] - b[i];
   }
 }
 
 template<>
-void caffe_sub<half_float::half>(const int_tp n, const half_float::half* a,
-                               const half_float::half* b, half_float::half* Y) {
+void caffe_sub<half_fp>(const int_tp n, const half_fp* a,
+                               const half_fp* b, half_fp* Y) {
   vhSub(n, a, b, Y);
 }
 
-void vhMul(const int_tp n, const half_float::half* a, const half_float::half* b,
-           half_float::half* Y) {
+void vhMul(const int_tp n, const half_fp* a, const half_fp* b,
+           half_fp* Y) {
   for (int i = 0; i < n; i++) {
     Y[i] = a[i] * b[i];
   }
 }
 
 template<>
-void caffe_mul<half_float::half>(const int_tp n, const half_float::half* a,
-                               const half_float::half* b, half_float::half* Y) {
+void caffe_mul<half_fp>(const int_tp n, const half_fp* a,
+                               const half_fp* b, half_fp* Y) {
   vhMul(n, a, b, Y);
 }
 
-void vhDiv(const int_tp n, const half_float::half* a, const half_float::half* b,
-           half_float::half* Y) {
+void vhDiv(const int_tp n, const half_fp* a, const half_fp* b,
+           half_fp* Y) {
   for (int i = 0; i < n; i++) {
     Y[i] = a[i] / b[i];
   }
 }
 
 template<>
-void caffe_div<half_float::half>(const int_tp n, const half_float::half* a,
-                               const half_float::half* b, half_float::half* Y) {
+void caffe_div<half_fp>(const int_tp n, const half_fp* a,
+                               const half_fp* b, half_fp* Y) {
   vhDiv(n, a, b, Y);
 }
 
-void vhPowx(const int_tp n, const half_float::half*a, const half_float::half b,
-            half_float::half* Y) {
+void vhPowx(const int_tp n, const half_fp*a, const half_fp b,
+            half_fp* Y) {
   for (int i = 0; i < n; i++) {
     Y[i] = pow(a[i], b);
   }
 }
 
 template<>
-void caffe_powx<half_float::half>(const int_tp n, const half_float::half* a,
-                                const half_float::half b, half_float::half* Y) {
+void caffe_powx<half_fp>(const int_tp n, const half_fp* a,
+                                const half_fp b, half_fp* Y) {
   vhPowx(n, a, b, Y);
 }
 
-void vhSqr(const int_tp n, const half_float::half *a, half_float::half* Y) {
+void vhSqr(const int_tp n, const half_fp *a, half_fp* Y) {
   for (int i = 0; i < n; i++) {
     Y[i] = sqrt(a[i]);
   }
 }
 
 template<>
-void caffe_sqr<half_float::half>(const int_tp n, const half_float::half* a,
-                                 half_float::half* Y) {
+void caffe_sqr<half_fp>(const int_tp n, const half_fp* a,
+                                 half_fp* Y) {
   vhSqr(n, a, Y);
 }
 
-void vhExp(const int_tp n, const half_float::half* a, half_float::half* Y) {
+void vhExp(const int_tp n, const half_fp* a, half_fp* Y) {
   for (int i = 0; i < n; i++) {
     Y[i] = exp(a[i]);
   }
 }
 
 template<>
-void caffe_exp<half_float::half>(const int_tp n, const half_float::half* a,
-                                 half_float::half* Y) {
+void caffe_exp<half_fp>(const int_tp n, const half_fp* a,
+                                 half_fp* Y) {
   vhExp(n, a, Y);
 }
 
-void vhLn(const int_tp n, const half_float::half* a, half_float::half* Y) {
+void vhLn(const int_tp n, const half_fp* a, half_fp* Y) {
   for (int i = 0; i < n; i++) {
     Y[i] = log(a[i]);
   }
 }
 
 template<>
-void caffe_log<half_float::half>(const int_tp n, const half_float::half* a,
-                                 half_float::half* Y) {
+void caffe_log<half_fp>(const int_tp n, const half_fp* a,
+                                 half_fp* Y) {
   vhLn(n, a, Y);
 }
 
-void vhAbs(const int_tp n, const half_float::half *a, half_float::half* Y) {
+void vhAbs(const int_tp n, const half_fp *a, half_fp* Y) {
   for (int i = 0; i < n; i++) {
     Y[i] = fabs(a[i]);
   }
 }
 
 template<>
-void caffe_abs<half_float::half>(const int_tp n, const half_float::half* a,
-                                 half_float::half* Y) {
+void caffe_abs<half_fp>(const int_tp n, const half_fp* a,
+                                 half_fp* Y) {
   vhAbs(n, a, Y);
 }
 
-void vsHqrt(const int_tp n, const half_float::half* a, half_float::half* Y) {
+void vsHqrt(const int_tp n, const half_fp* a, half_fp* Y) {
   for (int_tp i = 0; i < n; i++) {
     Y[i] = sqrt(a[i]);
   }
 }
 template <>
-void caffe_sqrt<half_float::half>(const int_tp n, const half_float::half* a,
-                                  half_float::half* Y) {
+void caffe_sqrt<half_fp>(const int_tp n, const half_fp* a,
+                                  half_fp* Y) {
   vsHqrt(n, a, Y);
 }
 
 template<>
-void caffe_rng_uniform<half_float::half>(const int_tp n,
-                             const half_float::half a, const half_float::half b,
-                             half_float::half* r) {
+void caffe_rng_uniform<half_fp>(const int_tp n,
+                             const half_fp a, const half_fp b,
+                             half_fp* r) {
   CHECK_GE(n, 0);
   CHECK(r);
   CHECK_LE(a, b);
@@ -236,9 +236,9 @@ void caffe_rng_uniform<half_float::half>(const int_tp n,
 }
 
 template<>
-void caffe_rng_gaussian<half_float::half>(const int_tp n,
-                         const half_float::half a, const half_float::half sigma,
-                         half_float::half* r) {
+void caffe_rng_gaussian<half_fp>(const int_tp n,
+                         const half_fp a, const half_fp sigma,
+                         half_fp* r) {
   CHECK_GE(n, 0);
   CHECK(r);
   CHECK_GT(sigma, 0);
@@ -254,8 +254,8 @@ void caffe_rng_gaussian<half_float::half>(const int_tp n,
 }
 
 template<>
-void caffe_rng_bernoulli<half_float::half, unsigned int>(const int_tp n,
-                                    const half_float::half p, unsigned int* r) {
+void caffe_rng_bernoulli<half_fp, unsigned int>(const int_tp n,
+                                    const half_fp p, unsigned int* r) {
   // FIXME
   CHECK_GE(n, 0);
   CHECK(r);
@@ -271,8 +271,8 @@ void caffe_rng_bernoulli<half_float::half, unsigned int>(const int_tp n,
   }
 }
 template<>
-void caffe_rng_bernoulli<half_float::half, int>(const int_tp n,
-                                             const half_float::half p, int* r) {
+void caffe_rng_bernoulli<half_fp, int>(const int_tp n,
+                                             const half_fp p, int* r) {
   // FIXME
   CHECK_GE(n, 0);
   CHECK(r);
@@ -289,28 +289,28 @@ void caffe_rng_bernoulli<half_float::half, int>(const int_tp n,
 }
 
 template<>
-void caffe_cpu_scale<half_float::half>(const int_tp n,
-                        const half_float::half alpha, const half_float::half *X,
-                        half_float::half* Y) {
+void caffe_cpu_scale<half_fp>(const int_tp n,
+                        const half_fp alpha, const half_fp *X,
+                        half_fp* Y) {
   for (int_tp i = 0; i < n; i++)
     Y[i] = X[i];
   caffe_scal(n, alpha, Y);
 }
 
 template<>
-half_float::half caffe_cpu_strided_dot<half_float::half>(const int_tp n,
-                                const half_float::half* X, const int_tp incx,
-                                const half_float::half* Y, const int_tp incy) {
-  half_float::half sum = 0;
+half_fp caffe_cpu_strided_dot<half_fp>(const int_tp n,
+                                const half_fp* X, const int_tp incx,
+                                const half_fp* Y, const int_tp incy) {
+  half_fp sum = 0;
   for (int_tp i = 0; i < n; i++)
     sum += X[i * incx] * Y[i * incy];
   return sum;
 }
 
 template<>
-half_float::half caffe_cpu_asum<half_float::half>(const int_tp n,
-                                                  const half_float::half* X) {
-  half_float::half sum = 0;
+half_fp caffe_cpu_asum<half_fp>(const int_tp n,
+                                                  const half_fp* X) {
+  half_fp sum = 0;
   for (int_tp i = 0; i < n; i++)
     sum += fabs(X[i]);
   return sum;
@@ -386,8 +386,8 @@ template void caffe_set<int64_t>(const int_tp n, int64_t alpha, int64_t* Y);
 template void caffe_set<uint64_t>(const int_tp n, const uint64_t alpha,
                                   uint64_t* Y);
 #ifdef USE_GPU_HALF
-template void caffe_set<half_float::half>(const int_tp n,
-                             const half_float::half alpha, half_float::half* Y);
+template void caffe_set<half_fp>(const int_tp n,
+                             const half_fp alpha, half_fp* Y);
 #endif
 template void caffe_set<float>(const int_tp n, const float alpha, float* Y);
 template void caffe_set<double>(const int_tp n, const double alpha, double* Y);
@@ -418,8 +418,8 @@ template void caffe_cpu_copy<int_tp>(const int_tp n, const int_tp* X,
 template void caffe_cpu_copy<uint_tp>(const int_tp n, const uint_tp* X,
 uint_tp* Y);
 #ifdef USE_GPU_HALF
-template void caffe_cpu_copy<half_float::half>(const int_tp n,
-                                const half_float::half* X, half_float::half* Y);
+template void caffe_cpu_copy<half_fp>(const int_tp n,
+                                const half_fp* X, half_fp* Y);
 #endif
 template void caffe_cpu_copy<float>(const int_tp n, const float* X, float* Y);
 template void caffe_cpu_copy<double>(const int_tp n, const double* X,
@@ -446,8 +446,8 @@ void caffe_copy(const int_tp n, const Dtype* X, Dtype* Y) {
 template void caffe_copy<int_tp>(const int_tp n, const int_tp* X, int_tp* Y);
 template void caffe_copy<uint_tp>(const int_tp n, const uint_tp* X,
 uint_tp* Y);
-template void caffe_copy<half_float::half>(const int_tp n,
-                                const half_float::half* X, half_float::half* Y);
+template void caffe_copy<half_fp>(const int_tp n,
+                                const half_fp* X, half_fp* Y);
 template void caffe_copy<float>(const int_tp n, const float* X, float* Y);
 template void caffe_copy<double>(const int_tp n, const double* X, double* Y);
 
@@ -733,8 +733,8 @@ Dtype caffe_cpu_dot(const int_tp n, const Dtype* X, const Dtype* Y) {
 
 #ifdef USE_GPU_HALF
 template
-half_float::half caffe_cpu_dot<half_float::half>(const int_tp n,
-                          const half_float::half* X, const half_float::half* Y);
+half_fp caffe_cpu_dot<half_fp>(const int_tp n,
+                          const half_fp* X, const half_fp* Y);
 #endif
 
 template

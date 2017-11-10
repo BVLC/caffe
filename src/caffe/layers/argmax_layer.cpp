@@ -98,7 +98,11 @@ void ArgMaxLayer<Dtype, MItype, MOtype>::Forward_cpu(
   }
 }
 
-INSTANTIATE_CLASS_3T(ArgMaxLayer);
+INSTANTIATE_CLASS_3T(ArgMaxLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T(ArgMaxLayer, (double), (double), (double));
+
 REGISTER_LAYER_CLASS(ArgMax);
+REGISTER_LAYER_CLASS_INST(ArgMax, (float), (float), (float));
+REGISTER_LAYER_CLASS_INST(ArgMax, (double), (double), (double));
 
 }  // namespace caffe

@@ -38,7 +38,7 @@ void LSTMUnitLayer<Dtype, MItype, MOtype>::Reshape(
   X_acts_.ReshapeLike(*bottom[1]);
 
   if (Caffe::mode() == Caffe::GPU && this->device_program_.get() == nullptr) {
-    this->GenerateProgram<Dtype, MItype, MOtype>();
+    this->GenerateProgram();
   }
 }
 

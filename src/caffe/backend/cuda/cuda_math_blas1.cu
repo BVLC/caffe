@@ -23,9 +23,9 @@ namespace caffe {
 #ifdef USE_CUDA
 
 void CudaDevice::axpy_half(const uint_tp n,
-                       const half_float::half alpha,
-                       vptr<const half_float::half> x,
-                       vptr<half_float::half> y) {
+                       const half_fp alpha,
+                       vptr<const half_fp> x,
+                       vptr<half_fp> y) {
 #ifdef USE_GPU_HALF
   NOT_IMPLEMENTED;  // TODO
 #else  // USE_GPU_HALF
@@ -45,10 +45,10 @@ void CudaDevice::axpy_double(const uint_tp n, const double alpha,
                            x.get_cuda_ptr(), 1, y.get_cuda_ptr(), 1));
 }
 
-void CudaDevice::axpby_half(const uint_tp n, const half_float::half alpha,
-                            vptr<const half_float::half> x,
-                            const half_float::half beta,
-                            vptr<half_float::half> y) {
+void CudaDevice::axpby_half(const uint_tp n, const half_fp alpha,
+                            vptr<const half_fp> x,
+                            const half_fp beta,
+                            vptr<half_fp> y) {
   this->scal_half(n, beta, y);
   this->axpy_half(n, alpha, x, y);
 }
@@ -67,8 +67,8 @@ void CudaDevice::axpby_double(const uint_tp n, const double alpha,
   this->axpy_double(n, alpha, x, y);
 }
 
-void CudaDevice::scal_half(const uint_tp n, const half_float::half alpha,
-                           vptr<half_float::half> x) {
+void CudaDevice::scal_half(const uint_tp n, const half_fp alpha,
+                           vptr<half_fp> x) {
 #ifdef USE_GPU_HALF
   NOT_IMPLEMENTED;  // TODO
 #else  // USE_GPU_HALF
@@ -89,9 +89,9 @@ void CudaDevice::scal_double(const uint_tp n, const double alpha,
 }
 
 template <>
-void CudaDevice::scal_str<half_float::half>(const int_tp n,
-                                            const half_float::half alpha,
-                                            vptr<half_float::half> x,
+void CudaDevice::scal_str<half_fp>(const int_tp n,
+                                            const half_fp alpha,
+                                            vptr<half_fp> x,
                                             cudaStream_t str) {
 #ifdef USE_GPU_HALF
   NOT_IMPLEMENTED;  // TODO
@@ -122,9 +122,9 @@ void CudaDevice::scal_str<double>(const int_tp n, const double alpha,
   CUBLAS_CHECK(cublasSetStream(Caffe::cublas_handle(), initial_stream));
 }
 
-void CudaDevice::dot_half(const uint_tp n, vptr<const half_float::half> x,
-                          vptr<const half_float::half> y,
-                          half_float::half* out) {
+void CudaDevice::dot_half(const uint_tp n, vptr<const half_fp> x,
+                          vptr<const half_fp> y,
+                          half_fp* out) {
 #ifdef USE_GPU_HALF
   NOT_IMPLEMENTED;  // TODO
 #else  // USE_GPU_HALF
@@ -144,8 +144,8 @@ void CudaDevice::dot_double(const uint_tp n, vptr<const double> x,
                           y.get_cuda_ptr(), 1, out));
 }
 
-void CudaDevice::asum_half(const uint_tp n, vptr<const half_float::half> x,
-                           half_float::half *y) {
+void CudaDevice::asum_half(const uint_tp n, vptr<const half_fp> x,
+                           half_fp *y) {
 #ifdef USE_GPU_HALF
   NOT_IMPLEMENTED;  // TODO
 #else  // USE_GPU_HALF
@@ -163,9 +163,9 @@ void CudaDevice::asum_double(const uint_tp n, vptr<const double> x, double* y) {
                            1, y));
 }
 
-void CudaDevice::scale_half(const uint_tp n, const half_float::half alpha,
-                            vptr<const half_float::half> x,
-                            vptr<half_float::half> y) {
+void CudaDevice::scale_half(const uint_tp n, const half_fp alpha,
+                            vptr<const half_fp> x,
+                            vptr<half_fp> y) {
 #ifdef USE_GPU_HALF
   NOT_IMPLEMENTED;  // TODO
 #else  // USE_GPU_HALF

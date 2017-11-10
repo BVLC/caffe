@@ -26,7 +26,7 @@ class CudaDeviceKernel : public DeviceKernel {
   virtual void set_arg(uint_tp idx, const uint16_t *arg);
   virtual void set_arg(uint_tp idx, const uint32_t *arg);
   virtual void set_arg(uint_tp idx, const uint64_t *arg);
-  virtual void set_arg(uint_tp idx, const half_float::half *arg);
+  virtual void set_arg(uint_tp idx, const half_fp *arg);
   virtual void set_arg(uint_tp idx, const float *arg);
   virtual void set_arg(uint_tp idx, const double *arg);
 
@@ -39,7 +39,7 @@ class CudaDeviceKernel : public DeviceKernel {
   virtual void set_arg(uint_tp idx, vptr<uint16_t> *arg);
   virtual void set_arg(uint_tp idx, vptr<uint32_t> *arg);
   virtual void set_arg(uint_tp idx, vptr<uint64_t> *arg);
-  virtual void set_arg(uint_tp idx, vptr<half_float::half> *arg);
+  virtual void set_arg(uint_tp idx, vptr<half_fp> *arg);
   virtual void set_arg(uint_tp idx, vptr<float> *arg);
   virtual void set_arg(uint_tp idx, vptr<double> *arg);
   virtual void set_arg(uint_tp idx, vptr<void> *arg);
@@ -53,7 +53,7 @@ class CudaDeviceKernel : public DeviceKernel {
   virtual void set_arg(uint_tp idx, vptr<const uint16_t> *arg);
   virtual void set_arg(uint_tp idx, vptr<const uint32_t> *arg);
   virtual void set_arg(uint_tp idx, vptr<const uint64_t> *arg);
-  virtual void set_arg(uint_tp idx, vptr<const half_float::half> *arg);
+  virtual void set_arg(uint_tp idx, vptr<const half_fp> *arg);
   virtual void set_arg(uint_tp idx, vptr<const float> *arg);
   virtual void set_arg(uint_tp idx, vptr<const double> *arg);
   virtual void set_arg(uint_tp idx, vptr<const void> *arg);

@@ -32,7 +32,7 @@ void DeviceKernel::add_arg(const uint32_t *arg) {
 void DeviceKernel::add_arg(const uint64_t *arg) {
   this->set_arg(arg_idx_, arg);
 }
-void DeviceKernel::add_arg(const half_float::half *arg) {
+void DeviceKernel::add_arg(const half_fp *arg) {
   this->set_arg(arg_idx_, arg);
 }
 void DeviceKernel::add_arg(const float *arg) {
@@ -69,7 +69,7 @@ void DeviceKernel::add_arg(vptr<uint32_t> *arg) {
 void DeviceKernel::add_arg(vptr<uint64_t> *arg) {
   this->set_arg(arg_idx_, arg);
 }
-void DeviceKernel::add_arg(vptr<half_float::half> *arg) {
+void DeviceKernel::add_arg(vptr<half_fp> *arg) {
   this->set_arg(arg_idx_, arg);
 }
 void DeviceKernel::add_arg(vptr<float> *arg) {
@@ -109,7 +109,7 @@ void DeviceKernel::add_arg(vptr<const uint32_t> *arg) {
 void DeviceKernel::add_arg(vptr<const uint64_t> *arg) {
   this->set_arg(arg_idx_, arg);
 }
-void DeviceKernel::add_arg(vptr<const half_float::half> *arg) {
+void DeviceKernel::add_arg(vptr<const half_fp> *arg) {
   this->set_arg(arg_idx_, arg);
 }
 void DeviceKernel::add_arg(vptr<const float> *arg) {

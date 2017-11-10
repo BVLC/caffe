@@ -53,14 +53,12 @@ void InnerProductLayer<Dtype, MItype, MOtype>::LayerSetUp(const vector<Blob<MIty
     }
   }  // parameter initialization
   this->param_propagate_down_.resize(this->blobs_.size(), true);
-  copied_weight_data_ = NULL;
-
-  test_only_ = this->phase_ == TEST;
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void InnerProductLayer<Dtype, MItype, MOtype>::Reshape(const vector<Blob<MItype>*>& bottom,
-                                       const vector<Blob<MOtype>*>& top) {
+void InnerProductLayer<Dtype, MItype, MOtype>::Reshape(
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
   // Figure out the dimensions
   const int_tp axis = bottom[0]->CanonicalAxisIndex(
       this->layer_param_.inner_product_param().axis());
@@ -148,7 +146,11 @@ void InnerProductLayer<Dtype, MItype, MOtype>::Backward_cpu(
 STUB_GPU(InnerProductLayer);
 #endif
 
-INSTANTIATE_CLASS_3T(InnerProductLayer);
+INSTANTIATE_CLASS_3T(InnerProductLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T(InnerProductLayer, (double), (double), (double));
+
 REGISTER_LAYER_CLASS(InnerProduct);
+REGISTER_LAYER_CLASS_INST(InnerProduct, (float), (float), (float));
+REGISTER_LAYER_CLASS_INST(InnerProduct, (double), (double), (double));
 
 }  // namespace caffe

@@ -58,7 +58,7 @@ template<typename Dtype, typename MItype, typename MOtype>
 class HingeLossLayer : public LossLayer<Dtype, MItype, MOtype> {
  public:
   explicit HingeLossLayer(const LayerParameter& param)
-      : LossLayer<Dtype>(param) {}
+      : LossLayer<Dtype, MItype, MOtype>(param) {}
 
   virtual inline const char* type() const { return "HingeLoss"; }
 

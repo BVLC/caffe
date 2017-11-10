@@ -12,7 +12,7 @@ void ReLULayer<Dtype, MItype, MOtype>::Reshape(
   NeuronLayer<Dtype, MItype, MOtype>::Reshape(bottom, top);
 
   if (Caffe::mode() == Caffe::GPU && this->device_program_.get() == nullptr) {
-    this->GenerateProgram<Dtype, MItype, MOtype>();
+    this->GenerateProgram();
   }
 }
 

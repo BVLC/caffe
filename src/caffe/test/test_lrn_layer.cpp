@@ -39,7 +39,7 @@ class LRNLayerTest : public MultiDeviceTest<TypeParam> {
     filler.Fill(this->blob_bottom_);
     blob_bottom_vec_.push_back(blob_bottom_);
     blob_top_vec_.push_back(blob_top_);
-    if (std::is_same<Dtype, half_float::half>::value)
+    if (std::is_same<Dtype, half_fp>::value)
       epsilon_ = 5e-2;
   }
   virtual ~LRNLayerTest() { delete blob_bottom_; delete blob_top_; }

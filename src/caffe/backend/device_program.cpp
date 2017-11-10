@@ -1,5 +1,5 @@
 #include "caffe/backend/device_program.hpp"
-#include "3rdparty/half/half.hpp"
+#include "caffe/util/half_fp.hpp"
 #include "caffe/util/hash.hpp"
 #include "caffe/backend/device.hpp"
 
@@ -30,7 +30,7 @@ string DeviceProgram::atomic_add(string source, string operand) {
 }
 
 template<>
-string DeviceProgram::atomic_add<half_float::half>(string source,
+string DeviceProgram::atomic_add<half_fp>(string source,
                                                    string operand);
 template<>
 string DeviceProgram::atomic_add<float>(string source, string operand);
@@ -52,7 +52,7 @@ string DeviceProgram::define_type<bool>(string name);
 template<>
 string DeviceProgram::define_type<char>(string name);
 template<>
-string DeviceProgram::define_type<half_float::half>(string name);
+string DeviceProgram::define_type<half_fp>(string name);
 template<>
 string DeviceProgram::define_type<float>(string name);
 template<>
@@ -97,7 +97,7 @@ KernelArg DeviceProgram::create_kernel_arg<char>(
 }
 
 template<>
-KernelArg DeviceProgram::create_kernel_arg<half_float::half>(
+KernelArg DeviceProgram::create_kernel_arg<half_fp>(
     string name, uint64_t flags) {
   string type = this->kernel_arg_type_half(flags);
   return std::make_tuple(type, name, flags);

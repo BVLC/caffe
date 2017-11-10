@@ -18,7 +18,7 @@ void BatchReindexLayer<Dtype, MItype, MOtype>::Reshape(
   top[0]->Reshape(newshape);
 
   if (Caffe::mode() == Caffe::GPU && this->device_program_.get() == nullptr) {
-    this->GenerateProgram<Dtype, MItype, MOtype>();
+    this->GenerateProgram();
   }
 }
 
@@ -79,7 +79,10 @@ void BatchReindexLayer<Dtype, MItype, MOtype>::Backward_cpu(
 STUB_GPU(BatchReindexLayer);
 #endif
 
-INSTANTIATE_CLASS_1T(BatchReindexLayer);
-REGISTER_LAYER_CLASS(BatchReindex);
+INSTANTIATE_CLASS_3T(BatchReindexLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T(BatchReindexLayer, (double), (double), (double));
 
+REGISTER_LAYER_CLASS(BatchReindex);
+REGISTER_LAYER_CLASS_INST(BatchReindex, (float), (float), (float));
+REGISTER_LAYER_CLASS_INST(BatchReindex, (double), (double), (double));
 }  // namespace caffe

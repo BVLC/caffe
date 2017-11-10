@@ -57,10 +57,10 @@ void nesterov_update_gpu(Device* dev, DeviceProgram* dev_prog, uint_tp n,
 }
 
 #ifdef USE_GPU_HALF
-template void nesterov_update_gpu<half_float::half>(Device* dev,
-              DeviceProgram* dev_prog, uint_tp n, vptr<half_float::half> g,
-              vptr<half_float::half> h, half_float::half momentum,
-              half_float::half local_rate);
+template void nesterov_update_gpu<half_fp>(Device* dev,
+              DeviceProgram* dev_prog, uint_tp n, vptr<half_fp> g,
+              vptr<half_fp> h, half_fp momentum,
+              half_fp local_rate);
 #endif  // USE_GPU_HALF
 #ifdef USE_GPU_SINGLE
 template void nesterov_update_gpu<float>(Device* dev,

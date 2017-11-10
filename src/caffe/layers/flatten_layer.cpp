@@ -38,7 +38,11 @@ void FlattenLayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob<MOtype>
   bottom[0]->ShareDiff(*top[0]);
 }
 
-INSTANTIATE_CLASS_3T(FlattenLayer);
+INSTANTIATE_CLASS_3T(FlattenLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T(FlattenLayer, (double), (double), (double));
+
 REGISTER_LAYER_CLASS(Flatten);
+REGISTER_LAYER_CLASS_INST(Flatten, (float), (float), (float));
+REGISTER_LAYER_CLASS_INST(Flatten, (double), (double), (double));
 
 }  // namespace caffe

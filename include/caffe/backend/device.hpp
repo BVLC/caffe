@@ -213,10 +213,10 @@ class Device {
   virtual void gemm_half
                 (const CBLAS_TRANSPOSE trans_a, const CBLAS_TRANSPOSE trans_b,
                  const uint_tp m, const uint_tp n, const uint_tp k,
-                 const half_float::half alpha, vptr<const half_float::half> a,
-                 vptr<const half_float::half> b,
-                 const half_float::half beta,
-                 vptr<half_float::half> c);
+                 const half_fp alpha, vptr<const half_fp> a,
+                 vptr<const half_fp> b,
+                 const half_fp beta,
+                 vptr<half_fp> c);
 
   virtual void gemm_float
                 (const CBLAS_TRANSPOSE trans_a, const CBLAS_TRANSPOSE trans_b,
@@ -234,10 +234,10 @@ class Device {
 
   virtual void gemv_half
                 (const CBLAS_TRANSPOSE trans_a, const uint_tp m,
-                 const uint_tp n, const half_float::half alpha,
-                 vptr<const half_float::half> a,
-                 vptr<const half_float::half> x, const half_float::half beta,
-                 vptr<half_float::half> y);
+                 const uint_tp n, const half_fp alpha,
+                 vptr<const half_fp> a,
+                 vptr<const half_fp> x, const half_fp beta,
+                 vptr<half_fp> y);
 
   virtual void gemv_float
                 (const CBLAS_TRANSPOSE trans_a, const uint_tp m,
@@ -254,9 +254,9 @@ class Device {
                  vptr<double> y);
 
   virtual void axpy_half(const uint_tp n,
-                         const half_float::half alpha,
-                         vptr<const half_float::half> x,
-                         vptr<half_float::half> y);
+                         const half_fp alpha,
+                         vptr<const half_fp> x,
+                         vptr<half_fp> y);
 
   virtual void axpy_float(const uint_tp n, const float alpha,
                           vptr<const float> x, vptr<float> y);
@@ -264,9 +264,9 @@ class Device {
   virtual void axpy_double(const uint_tp n, const double alpha,
                           vptr<const double> x, vptr<double> y);
 
-  virtual void axpby_half(const uint_tp n, const half_float::half alpha,
-                     vptr<const half_float::half> x,
-                     const half_float::half beta, vptr<half_float::half> y);
+  virtual void axpby_half(const uint_tp n, const half_fp alpha,
+                     vptr<const half_fp> x,
+                     const half_fp beta, vptr<half_fp> y);
 
   virtual void axpby_float(const uint_tp n, const float alpha,
                    vptr<const float> x, const float beta, vptr<float> y);
@@ -274,8 +274,8 @@ class Device {
   virtual void axpby_double(const uint_tp n, const double alpha,
                    vptr<const double> x, const double beta, vptr<double> y);
 
-  virtual void rng_uniform_half(const uint_tp n, const half_float::half a,
-                        const half_float::half b, vptr<half_float::half> r);
+  virtual void rng_uniform_half(const uint_tp n, const half_fp a,
+                        const half_fp b, vptr<half_fp> r);
 
   virtual void rng_uniform_float(const uint_tp n, const float a, const float b,
                                  vptr<float> r);
@@ -283,8 +283,8 @@ class Device {
   virtual void rng_uniform_double(const uint_tp n, const double a,
                                   const double b, vptr<double> r);
 
-  virtual void rng_gaussian_half(const uint_tp n, const half_float::half mu,
-                    const half_float::half sigma, vptr<half_float::half> r);
+  virtual void rng_gaussian_half(const uint_tp n, const half_fp mu,
+                    const half_fp sigma, vptr<half_fp> r);
 
   virtual void rng_gaussian_float(const uint_tp n, const float mu,
                                   const float sigma, vptr<float> r);
@@ -292,7 +292,7 @@ class Device {
   virtual void rng_gaussian_double(const uint_tp n, const double mu,
                                    const double sigma, vptr<double> r);
 
-  virtual void rng_bernoulli_half(const uint_tp n, const half_float::half p,
+  virtual void rng_bernoulli_half(const uint_tp n, const half_fp p,
                                   vptr<int> r);
 
   virtual void rng_bernoulli_float(const uint_tp n, const float p,
@@ -301,7 +301,7 @@ class Device {
   virtual void rng_bernoulli_double(const uint_tp n, const double p,
                                     vptr<int> r);
 
-  virtual void rng_bernoulli_half(const uint_tp n, const half_float::half p,
+  virtual void rng_bernoulli_half(const uint_tp n, const half_fp p,
                                   vptr<unsigned int> r);
 
   virtual void rng_bernoulli_float(const uint_tp n, const float p,
@@ -310,8 +310,8 @@ class Device {
   virtual void rng_bernoulli_double(const uint_tp n, const double p,
                                     vptr<unsigned int> r);
 
-  virtual void dot_half(const uint_tp n, vptr<const half_float::half> x,
-                     vptr<const half_float::half> y, half_float::half *out);
+  virtual void dot_half(const uint_tp n, vptr<const half_fp> x,
+                     vptr<const half_fp> y, half_fp *out);
 
   virtual void dot_float(const uint_tp n, vptr<const float> x,
                          vptr<const float> y, float *out);
@@ -319,16 +319,16 @@ class Device {
   virtual void dot_double(const uint_tp n, vptr<const double> x,
                           vptr<const double> y, double *out);
 
-  virtual void asum_half(const uint_tp n, vptr<const half_float::half> x,
-                         half_float::half* y);
+  virtual void asum_half(const uint_tp n, vptr<const half_fp> x,
+                         half_fp* y);
 
   virtual void asum_float(const uint_tp n, vptr<const float> x, float* y);
 
   virtual void asum_double(const uint_tp n, vptr<const double> x,
                            double* y);
 
-  virtual void scal_half(const uint_tp n, const half_float::half alpha,
-                         vptr<half_float::half> x);
+  virtual void scal_half(const uint_tp n, const half_fp alpha,
+                         vptr<half_fp> x);
 
   virtual void scal_float(const uint_tp n, const float alpha,
                          vptr<float> x);
@@ -336,9 +336,9 @@ class Device {
   virtual void scal_double(const uint_tp n, const double alpha,
                          vptr<double> x);
 
-  virtual void scale_half(const uint_tp n, const half_float::half alpha,
-                          vptr<const half_float::half> x,
-                          vptr<half_float::half> y);
+  virtual void scale_half(const uint_tp n, const half_fp alpha,
+                          vptr<const half_fp> x,
+                          vptr<half_fp> y);
 
   virtual void scale_float(const uint_tp n, const float alpha,
                            vptr<const float> x, vptr<float> y);
@@ -355,7 +355,7 @@ class Device {
   Backend backend_;
   uint_tp memory_usage_;
   uint_tp peak_memory_usage_;
-  vector<shared_ptr<Blob<half_float::half> > > buff_h_;
+  vector<shared_ptr<Blob<half_fp> > > buff_h_;
   vector<shared_ptr<Blob<float> > > buff_f_;
   vector<shared_ptr<Blob<double> > > buff_d_;
   bool host_unified_;

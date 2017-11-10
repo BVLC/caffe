@@ -32,7 +32,7 @@ void DropoutLayer<Dtype, MItype, MOtype>::Reshape(
   rand_vec_.Reshape(bottom[0]->shape());
 
   if (Caffe::mode() == Caffe::GPU && this->device_program_.get() == nullptr) {
-    this->GenerateProgram<Dtype, MItype, MOtype>();
+    this->GenerateProgram();
   }
 }
 
@@ -80,7 +80,11 @@ void DropoutLayer<Dtype, MItype, MOtype>::Backward_cpu(
 STUB_GPU(DropoutLayer);
 #endif
 
-INSTANTIATE_CLASS_3T(DropoutLayer);
+INSTANTIATE_CLASS_3T(DropoutLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T(DropoutLayer, (double), (double), (double));
+
 REGISTER_LAYER_CLASS(Dropout);
+REGISTER_LAYER_CLASS_INST(Dropout, (float), (float), (float));
+REGISTER_LAYER_CLASS_INST(Dropout, (double), (double), (double));
 
 }  // namespace caffe

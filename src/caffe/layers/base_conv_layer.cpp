@@ -375,7 +375,7 @@ void BaseConvolutionLayer<Dtype, MItype, MOtype>::forward_gpu_gemm(
     col_buff = col_buffer()->gpu_data();
   }
   for (int_tp g = 0; g < group_; ++g) {
-    this->device_->gemm<Dtype>(
+    this->device_->template gemm<Dtype>(
         CblasNoTrans, CblasNoTrans, conv_out_channels_ / group_,
         conv_out_spatial_dim_, kernel_dim_, (Dtype) 1.,
         weights + weight_offset_ * g,
@@ -389,7 +389,7 @@ void BaseConvolutionLayer<Dtype, MItype, MOtype>::forward_gpu_bias(
                                                    vptr<Dtype> output,
                                                    const uint_tp output_off,
                                                    vptr<const Dtype> bias) {
-  this->device_->gemm<Dtype>(CblasNoTrans, CblasNoTrans, num_output_,
+  this->device_->template gemm<Dtype>(CblasNoTrans, CblasNoTrans, num_output_,
                         out_spatial_dim_, 1, (Dtype) 1., bias,
                         bias_multiplier_.gpu_data(), (Dtype) 1.,
                         output + output_off);
@@ -407,7 +407,7 @@ void BaseConvolutionLayer<Dtype, MItype, MOtype>::backward_gpu_gemm(
     col_buff = input;
   }
   for (int_tp g = 0; g < group_; ++g) {
-    this->device_->gemm<Dtype>(
+    this->device_->template gemm<Dtype>(
         CblasTrans, CblasNoTrans, kernel_dim_, conv_out_spatial_dim_,
         conv_out_channels_ / group_, (Dtype) 1., weights + weight_offset_ * g,
         output + output_off + output_offset_ * g, (Dtype) 0.,
@@ -431,7 +431,7 @@ void BaseConvolutionLayer<Dtype, MItype, MOtype>::weight_gpu_gemm(
     col_buff = col_buffer()->gpu_data();
   }
   for (int_tp g = 0; g < group_; ++g) {
-    this->device_->gemm<Dtype>(
+    this->device_->template gemm<Dtype>(
         CblasNoTrans, CblasTrans, conv_out_channels_ / group_, kernel_dim_,
         conv_out_spatial_dim_, (Dtype) 1.,
         output + output_off + output_offset_ * g,
@@ -445,9 +445,9 @@ void BaseConvolutionLayer<Dtype, MItype, MOtype>::backward_gpu_bias(
                                                     vptr<Dtype> bias,
                                                     vptr<const Dtype> input,
                                                     const uint_tp input_off) {
-  this->device_->gemv<Dtype>(CblasNoTrans, num_output_, out_spatial_dim_, 1.,
-                        input + input_off, bias_multiplier_.gpu_data(), 1.,
-                        bias);
+  this->device_->template gemv<Dtype>(CblasNoTrans, num_output_,
+                 out_spatial_dim_, 1., input + input_off,
+                 bias_multiplier_.gpu_data(), 1., bias);
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
@@ -459,6 +459,7 @@ shared_ptr<Blob<Dtype> >
 
 #endif  // !CPU_ONLY
 
-INSTANTIATE_CLASS_3T(BaseConvolutionLayer);
+INSTANTIATE_CLASS_3T(BaseConvolutionLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T(BaseConvolutionLayer, (double), (double), (double));
 
 }  // namespace caffe

@@ -166,16 +166,16 @@ cuda_dev_ptr<Dtype, typename non_const_enable_if<Dtype>::type>
 
 template<typename Dtype>
 cuda_dev_ptr<Dtype, typename const_enable_if<Dtype>::type>
-                         ::cuda_dev_ptr(const dev_ptr<half_float::half> &other) {
-  const cuda_dev_ptr<half_float::half>& cast_other =
-      dynamic_cast<const cuda_dev_ptr<half_float::half>&>(other);
+                         ::cuda_dev_ptr(const dev_ptr<half_fp> &other) {
+  const cuda_dev_ptr<half_fp>& cast_other =
+      dynamic_cast<const cuda_dev_ptr<half_fp>&>(other);
   raw_ptr_ = static_cast<Dtype*>(other.get());
 }
 template<typename Dtype>
 cuda_dev_ptr<Dtype, typename non_const_enable_if<Dtype>::type>
-                         ::cuda_dev_ptr(const dev_ptr<half_float::half> &other) {
-  const cuda_dev_ptr<half_float::half>& cast_other =
-      dynamic_cast<const cuda_dev_ptr<half_float::half>&>(other);
+                         ::cuda_dev_ptr(const dev_ptr<half_fp> &other) {
+  const cuda_dev_ptr<half_fp>& cast_other =
+      dynamic_cast<const cuda_dev_ptr<half_fp>&>(other);
   raw_ptr_ = static_cast<Dtype*>(other.get());
 }
 
@@ -299,9 +299,9 @@ cuda_dev_ptr<Dtype, typename const_enable_if<Dtype>::type>
 
 template<typename Dtype>
 cuda_dev_ptr<Dtype, typename const_enable_if<Dtype>::type>
-                   ::cuda_dev_ptr(const dev_ptr<const half_float::half> &other) {
-  const cuda_dev_ptr<const half_float::half>& cast_other =
-      dynamic_cast<const cuda_dev_ptr<const half_float::half>&>(other);
+                   ::cuda_dev_ptr(const dev_ptr<const half_fp> &other) {
+  const cuda_dev_ptr<const half_fp>& cast_other =
+      dynamic_cast<const cuda_dev_ptr<const half_fp>&>(other);
   raw_ptr_ = static_cast<Dtype*>(other.get());
 }
 
@@ -391,10 +391,10 @@ shared_ptr<dev_ptr<uint64_t> > cuda_dev_ptr<Dtype,
 }
 
 template<typename Dtype>
-shared_ptr<dev_ptr<half_float::half> > cuda_dev_ptr<Dtype,
+shared_ptr<dev_ptr<half_fp> > cuda_dev_ptr<Dtype,
   typename non_const_enable_if<Dtype>::type>::instance(
-      half_float::half* dummy) {
-  return std::make_shared<cuda_dev_ptr<half_float::half> >(*this);
+      half_fp* dummy) {
+  return std::make_shared<cuda_dev_ptr<half_fp> >(*this);
 }
 
 template<typename Dtype>
@@ -527,16 +527,16 @@ shared_ptr<dev_ptr<const uint64_t> > cuda_dev_ptr<Dtype,
 }
 
 template<typename Dtype>
-shared_ptr<dev_ptr<const half_float::half> > cuda_dev_ptr<Dtype,
+shared_ptr<dev_ptr<const half_fp> > cuda_dev_ptr<Dtype,
   typename const_enable_if<Dtype>::type>::instance(
-      const half_float::half* dummy) {
-  return std::make_shared<cuda_dev_ptr<const half_float::half> >(*this);
+      const half_fp* dummy) {
+  return std::make_shared<cuda_dev_ptr<const half_fp> >(*this);
 }
 template<typename Dtype>
-shared_ptr<dev_ptr<const half_float::half> > cuda_dev_ptr<Dtype,
+shared_ptr<dev_ptr<const half_fp> > cuda_dev_ptr<Dtype,
   typename non_const_enable_if<Dtype>::type>::instance(
-      const half_float::half* dummy) {
-  return std::make_shared<cuda_dev_ptr<const half_float::half> >(*this);
+      const half_fp* dummy) {
+  return std::make_shared<cuda_dev_ptr<const half_fp> >(*this);
 }
 
 template<typename Dtype>

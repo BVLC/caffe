@@ -7,8 +7,8 @@ namespace caffe {
 
 template<typename Dtype, typename MItype, typename MOtype>
 void EuclideanLossLayer<Dtype, MItype, MOtype>::Forward_gpu(
-                                           const vector<Blob<MItype>*>& bottom,
-                                           const vector<Blob<MOtype>*>& top) {
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
   int_tp count = bottom[0]->count();
   Dtype dot;
 
@@ -28,7 +28,8 @@ void EuclideanLossLayer<Dtype, MItype, MOtype>::Forward_gpu(
 
 template<typename Dtype, typename MItype, typename MOtype>
 void EuclideanLossLayer<Dtype, MItype, MOtype>::Backward_gpu(
-    const vector<Blob<MOtype>*>& top, const vector<bool>& propagate_down,
+    const vector<Blob<MOtype>*>& top,
+    const vector<bool>& propagate_down,
     const vector<Blob<MItype>*>& bottom) {
   for (int_tp i = 0; i < 2; ++i) {
     if (propagate_down[i]) {
@@ -44,6 +45,7 @@ void EuclideanLossLayer<Dtype, MItype, MOtype>::Backward_gpu(
   }
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(EuclideanLossLayer);
+INSTANTIATE_LAYER_GPU_FUNCS(EuclideanLossLayer, (float), (float), (float));
+INSTANTIATE_LAYER_GPU_FUNCS(EuclideanLossLayer, (double), (double), (double));
 
 }  // namespace caffe

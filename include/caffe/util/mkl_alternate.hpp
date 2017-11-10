@@ -16,7 +16,7 @@ extern "C" {
 #endif  // USE_ACCELERATE
 
 #include <math.h>
-#include "3rdparty/half/half.hpp"
+#include "caffe/util/half_fp.hpp"
 
 // Functions that caffe uses but are not present if MKL is not linked.
 
@@ -88,10 +88,10 @@ DEFINE_VSL_BINARY_FUNC(Div, Y[i] = a[i] / b[i])
 // in standard blas. We will simply use a two-step (inefficient, of course) way
 // to mimic that.
 #ifdef USE_GPU_HALF
-inline void cblas_haxpby(const int_tp n, const half_float::half alpha,
-                         const half_float::half* X,
-                         const int_tp incX, const half_float::half beta,
-                         half_float::half* Y,
+inline void cblas_haxpby(const int_tp n, const half_fp alpha,
+                         const half_fp* X,
+                         const int_tp incX, const half_fp beta,
+                         half_fp* Y,
                          const int_tp incY) {
   for (int_tp i = 0; i < n; ++i)
     Y[i * incY] *= beta;

@@ -19,7 +19,7 @@ size_t safe_sizeof() {
 
 template<> size_t safe_sizeof<char>();
 template<> size_t safe_sizeof<bool>();
-template<> size_t safe_sizeof<half_float::half>();
+template<> size_t safe_sizeof<half_fp>();
 template<> size_t safe_sizeof<float>();
 template<> size_t safe_sizeof<double>();
 template<> size_t safe_sizeof<int8_t>();
@@ -33,7 +33,7 @@ template<> size_t safe_sizeof<uint64_t>();
 
 template<> size_t safe_sizeof<const char>();
 template<> size_t safe_sizeof<const bool>();
-template<> size_t safe_sizeof<const half_float::half>();
+template<> size_t safe_sizeof<const half_fp>();
 template<> size_t safe_sizeof<const float>();
 template<> size_t safe_sizeof<const double>();
 template<> size_t safe_sizeof<const int8_t>();
@@ -55,7 +55,7 @@ string safe_type_name<bool>() {
   return "bool";
 }
 template<>
-string safe_type_name<half_float::half>() {
+string safe_type_name<half_fp>() {
   return "half";
 }
 template<>

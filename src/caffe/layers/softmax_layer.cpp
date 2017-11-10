@@ -29,7 +29,7 @@ void SoftmaxLayer<Dtype, MItype, MOtype>::Reshape(const vector<Blob<MItype>*>& b
   scale_.Reshape(scale_dims);
 
   if (Caffe::mode() == Caffe::GPU && this->device_program_.get() == nullptr) {
-    this->GenerateProgram<Dtype, MItype, MOtype>();
+    this->GenerateProgram();
   }
 }
 

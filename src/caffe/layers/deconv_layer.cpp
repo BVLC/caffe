@@ -41,8 +41,10 @@ void DeconvolutionLayer<Dtype, MItype, MOtype>::Forward_cpu(const vector<Blob<MI
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void DeconvolutionLayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob<MOtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<MItype>*>& bottom) {
+void DeconvolutionLayer<Dtype, MItype, MOtype>::Backward_cpu(
+     const vector<Blob<MOtype>*>& top,
+     const vector<bool>& propagate_down,
+     const vector<Blob<MItype>*>& bottom) {
   const Dtype* weight = this->blobs_[0]->cpu_data();
   Dtype* weight_diff = this->blobs_[0]->mutable_cpu_diff();
   for (int_tp i = 0; i < top.size(); ++i) {
@@ -79,6 +81,11 @@ void DeconvolutionLayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob<M
 STUB_GPU(DeconvolutionLayer);
 #endif
 
-INSTANTIATE_CLASS_3T(DeconvolutionLayer);
+INSTANTIATE_CLASS_3T(DeconvolutionLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T(DeconvolutionLayer, (double), (double), (double));
+
+REGISTER_LAYER_CLASS(Deconvolution);
+REGISTER_LAYER_CLASS_INST(Deconvolution, (float), (float), (float));
+REGISTER_LAYER_CLASS_INST(Deconvolution, (double), (double), (double));
 
 }  // namespace caffe

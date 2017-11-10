@@ -80,7 +80,7 @@ void CudaDeviceKernel::set_arg(uint_tp idx, const uint64_t *arg) {
   cuda_args_.insert(cuda_args_.begin() + idx, (void*) arg);
   this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
 }
-void CudaDeviceKernel::set_arg(uint_tp idx, const half_float::half *arg) {
+void CudaDeviceKernel::set_arg(uint_tp idx, const half_fp *arg) {
   cuda_args_.insert(cuda_args_.begin() + idx, (void*) arg);
   this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
 }
@@ -129,7 +129,7 @@ void CudaDeviceKernel::set_arg(uint_tp idx, vptr<uint64_t> *arg) {
   cuda_args_.insert(cuda_args_.begin() + idx, arg->get_cuda_ptr_ptr());
   this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
 }
-void CudaDeviceKernel::set_arg(uint_tp idx, vptr<half_float::half> *arg) {
+void CudaDeviceKernel::set_arg(uint_tp idx, vptr<half_fp> *arg) {
   cuda_args_.insert(cuda_args_.begin() + idx, arg->get_cuda_ptr_ptr());
   this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
 }
@@ -182,7 +182,7 @@ void CudaDeviceKernel::set_arg(uint_tp idx, vptr<const uint64_t> *arg) {
   cuda_args_.insert(cuda_args_.begin() + idx, arg->get_cuda_ptr_ptr());
   this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
 }
-void CudaDeviceKernel::set_arg(uint_tp idx, vptr<const half_float::half> *arg) {
+void CudaDeviceKernel::set_arg(uint_tp idx, vptr<const half_fp> *arg) {
   cuda_args_.insert(cuda_args_.begin() + idx, arg->get_cuda_ptr_ptr());
   this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
 }
