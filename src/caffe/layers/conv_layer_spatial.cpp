@@ -2001,6 +2001,20 @@ void ConvolutionLayerSpatial<Dtype>::Forward_gpu(
     const vector<Blob<Dtype>*>& top) {
   if (this->num_ == 0)
     return;
+
+  // When working as the test net for a training instance,
+  // The weights may be changed, thus we have to regenerate
+  // the weights.
+  if (weight != this->blobs_[0]->gpu_data() ||
+      !this->blobs_[0]->data().unique()) {
+    weight = this->blobs_[0]->gpu_data();
+    weight_cpu = static_cast<const Dtype*>(this->blobs_[0]->cpu_data());
+    swizzled_weights_ = NULL;
+  }
+
+  if (this->bias_term_)
+    bias_ = this->blobs_[1]->gpu_data();
+
   int bottom_size = bottom.size();
   if (IsFusedWithEltwise() || IsFusedWithPReLU())
     bottom_size = 1;

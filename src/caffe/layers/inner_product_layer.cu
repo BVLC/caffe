@@ -825,7 +825,8 @@ void InnerProductLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
           !std::is_same<Dtype, double>::value &&
           this->device_->CheckCapability("cl_intel_subgroups")) {
         if (!test_only_ ||
-            copied_weight_data_ != this->blobs_[0]->data().get()) {
+            copied_weight_data_ != this->blobs_[0]->data().get()
+            || !this->blobs_[0]->data().unique()) {
           int height = !transpose_ ? N_ : K_;
           int width = !transpose_ ? K_ : N_;
           if (weight_image_) {
