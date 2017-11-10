@@ -22,6 +22,11 @@ tcp_netmask=""
 # specify number of MLSL ep servers in command
 num_mlsl_servers=-1
 
+debug="off"
+
+# time/train/resume_train
+mode="train"
+
 # parameters for caffe time
 iteration=0
 model_file=""
@@ -37,15 +42,16 @@ engine="MKLDNN"
 numanode=0
 
 result_dir=""
-debug="off"
 mpibench_bin="IMB-MPI1"
 mpibench_param="allreduce"
+
+script_dir=$(dirname $0)
 
 function usage
 {
     script_name=$0
     echo "Usage:"
-    echo "  $script_name [--host host_file] [--solver solver_file]"
+    echo "  $script_name [--hostfile host_file] [--solver solver_file]"
     echo "               [--network opa/tcp] [--netmask tcp_netmask] [--debug on/off]"
     echo "               [--mode train/resume_train/time/none] [--benchmark all/qperf/mpi/none]"
     echo "               [--iteration iter] [--model_file deploy.prototxt]"
@@ -129,152 +135,6 @@ function check_dependency
 }
 
 
-function init_mpi_envs
-{
-    if [ ${numnodes} -eq 1 ]; then
-        return
-    fi
-
-    # IMPI configuration
-    if [ "$network" == "opa" ]; then
-        export I_MPI_FABRICS=tmi
-        export I_MPI_TMI_PROVIDER=psm2
-        if [ "$cpu_model" == "knl" ] || [ "$cpu_model" == "knm" ];  then
-            # PSM2 configuration
-            export PSM2_MQ_RNDV_HFI_WINDOW=2097152 # to workaround PSM2 bug in IFS 10.2 and 10.3
-            export PSM2_MQ_EAGER_SDMA_SZ=65536
-            export PSM2_MQ_RNDV_HFI_THRESH=200000
-            export HFI_NO_CPUAFFINITY=1
-            export I_MPI_DYNAMIC_CONNECTION=0
-            export I_MPI_SCALABLE_OPTIMIZATION=0
-            export I_MPI_PIN_MODE=lib 
-            export I_MPI_PIN_DOMAIN=node
-        fi
-         
-        export PSM2_IDENTIFY=1 # for debug
-    elif [ "$network" == "tcp" ]; then
-        export I_MPI_FABRICS=tcp
-        export I_MPI_TCP_NETMASK=$tcp_netmask
-    else
-        echo "Invalid network: $network"
-        exit 1
-    fi
-
-    export I_MPI_FALLBACK=0
-    export I_MPI_DEBUG=6
-}
-
-
-function clear_shm
-{
-    clear_command="rm -rf /dev/shm/*"
-    check_shm_command="df -h | grep shm"
-
-    # TODO: check if 40G is the minimum shm size?
-    min_shm_size=40
-    shm_unit="G"
-
-    for node in "${nodenames[@]}"
-    do
-        ssh ${node} "$clear_command"
-        shm_line=`ssh ${node} "$check_shm_command"`
-        shm_string=`echo $shm_line | awk -F ' ' '{print $(NF-2)}'`
-        unit="${shm_string:(-1)}"
-        shm_size=${shm_string::-1}
-        if [ "$unit" == "$shm_unit" ] && [ $shm_size -ge ${min_shm_size} ]; then
-            continue
-        else
-            echo "Warning: /dev/shm free size = ${shm_size}${unit}, on node: ${node}."
-            echo "       Better to larger than ${min_shm_size}${shm_unit}."
-            echo "       Please clean or enlarge the partition."
-        fi
-    done
-}
-
-function kill_zombie_processes
-{
-    kill_command="for process in ep_server caffe mpiexec.hydra; do for i in \$(ps -e | grep -w \$process | awk -F ' ' '{print \$1}'); do kill -9 \$i; echo \"\$process \$i killed.\"; done done"
-    for node in "${nodenames[@]}"
-    do
-        ssh ${node} "$kill_command"
-    done
-}
-
-function clear_envs
-{
-    clear_shm
-    kill_zombie_processes
-}
-
-function set_mlsl_vars
-{
-    if [ ${num_mlsl_servers} -eq -1 ]; then
-        if [ ${numnodes} -eq 1 ]; then
-            numservers=0
-        else
-            if [ "${cpu_model}" == "bdw" ] || [ "${cpu_model}" == "skx" ]; then
-                numservers=2
-            else
-                numservers=4
-            fi
-        fi
-    else
-        numservers=$((num_mlsl_servers))
-    fi
-
-    echo "MLSL_NUM_SERVERS: $numservers"
-    export MLSL_NUM_SERVERS=${numservers}
-
-    if [ ${numservers} -gt 0 ]; then
-        if [ "${cpu_model}" == "bdw" ] || [ "${cpu_model}" == "skx" ]; then
-            listep=6,7,8,9
-        else
-            listep=6,7,8,9,10,11,12,13
-        fi
-        export MLSL_SERVER_AFFINITY="${listep}"
-        echo "MLSL_SERVER_AFFINITY: ${listep}"
-    fi
-
-    # MLSL configuration
-    if [ "$debug" == "on" ]; then
-        export MLSL_LOG_LEVEL=3
-    else
-        export MLSL_LOG_LEVEL=0
-    fi
-}
-
-function set_env_vars
-{
-    set_mlsl_vars
-    init_mpi_envs
-
-    ppncpu=1
-    threadspercore=1
-
-    cores=`lscpu | grep "Core(s) per socket:" | awk '{print $4}'`
-    sockets=`lscpu | grep "Socket(s)" | awk  '{print $2}'`
-    maxcores=$((cores*sockets))
-
-    numthreads=$(((maxcores-numservers)*threadspercore))
-    numthreads_per_proc=$((numthreads/ppncpu))
-
-    export OMP_NUM_THREADS=${numthreads_per_proc}
-
-    # OMP configuration
-    # threadspercore=1
-    affinitystr="proclist=[0-5,$((5+numservers+1))-$((maxcores-1))],granularity=thread,explicit"
-    export KMP_HW_SUBSET=1t
-    export KMP_AFFINITY=$affinitystr
-    if [ "${cpu_model}" == "knl" ] || [ "${cpu_model}" == "knm" ]; then
-        export KMP_BLOCKTIME=10000000
-        export MKL_FAST_MEMORY_LIMIT=0
-        if [ ${numnodes} -eq 1 ]; then
-            affinitystr="compact,1,0,granularity=fine"
-            export KMP_AFFINITY=$affinitystr
-        fi
-    fi
-}
-
 function execute_command
 {
     local xeonbin_=$1
@@ -300,8 +160,6 @@ function execute_command
         done
     fi
     log_file=$result_dir_/outputCluster-${cpu_model}-${numnodes}.txt
-
-    clear_envs
 
     sensors_bin="sensors"
     check_dependency $sensors_bin
@@ -375,6 +233,9 @@ function run_mpi_bench
     fi
 
     xeonbin="$mpibench_bin $mpibench_param"
+    if [ "$mpibench_bin" == "IMB-MPI1" ] || [ "$mpibench_bin" == "IMB-NBC" ]; then
+        xeonbin+=" -msglog 29 -iter 10 -iter_policy off"
+    fi
 
     mpibench_bin_bname=`basename $mpibench_bin`
 
@@ -428,7 +289,6 @@ function run_benchmark
         fi
 
         if [ "$benchmark_mode" == "all" ] || [ "$benchmark_mode" == "mpi" ]; then
-            set_env_vars
             run_mpi_bench
         fi
     fi
@@ -447,7 +307,6 @@ function run_caffe
         fi
     fi
 
-    set_env_vars
     execute_command "$xeonbin" $result_dir
 }
 
@@ -467,7 +326,7 @@ do
             solver_file="$2"
             shift
             ;;
-        --host)
+        --hostfile)
             host_file="$2"
             shift
             ;;
@@ -622,6 +481,21 @@ if [ ! -d $result_dir ]; then
     echo "Create result directory: $result_dir"
     mkdir -p $result_dir
 fi
+
+env_params="--debug $debug --network $network --netmask $tcp_netmask --num_mlsl_servers $num_mlsl_servers"
+if [ "$host_file" != "" ]; then
+  env_params+=" --hostfile $host_file"
+fi  
+source ${script_dir}/set_env.sh $env_params
+
+# test connection between nodes via ssh
+host_list=( `cat $host_file | sort | uniq ` )
+for host in ${host_list[@]}
+do
+    hostname=`ssh $host "hostname"`
+    ssh $hostname "ls"
+done
+
 
 if [ "${benchmark_mode}" != "none" ]; then
     run_benchmark
