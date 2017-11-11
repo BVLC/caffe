@@ -151,7 +151,6 @@ void ConvolutionLayerSpatial<Dtype>::LayerSetUp(
 template<typename Dtype>
 void ConvolutionLayerSpatial<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
                                              const vector<Blob<Dtype>*>& top) {
-
   if (IsFusedWithPReLU()) {
     if (this->layer_param_.convolution_param().prelu_param().channel_shared()) {
       ConvolutionParameter *conv_fuse_param = this->layer_param_.mutable_convolution_param();
@@ -178,6 +177,12 @@ void ConvolutionLayerSpatial<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   } else {
     BaseConvolutionLayer<Dtype>::Reshape(bottom, top);
   }
+
+  if (this->device_->backend() != caffe::BACKEND_OpenCL ||
+      std::is_same<Dtype, double>::value ||
+      Caffe::mode() != Caffe::GPU)
+    return;
+
   height_ = bottom[0]->shape(this->channel_axis_ + 1);
   width_ = bottom[0]->shape(this->channel_axis_ + 2);
   const int_tp kernel_extent_h = dilation_h_ * (kernel_h_ - 1) + 1;
@@ -213,7 +218,6 @@ void ConvolutionLayerSpatial<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   top_data = top[0]->mutable_gpu_data();
   bottom_index_ = 0;
   generate_key();
-
   load_cached_kernels(bottom, top);
 }
 
@@ -315,6 +319,11 @@ std::string ConvolutionLayerSpatial<Dtype>::generate_specific_key(
   keyBuilder << "_" << blockWidth
              << "_" << blockHeight
              << "_" << blockDepth;
+
+  if (std::is_same<Dtype, float>::value)
+    keyBuilder << "_float";
+  else
+    keyBuilder << "_half";
   return keyBuilder.str();
 }
 
@@ -397,7 +406,6 @@ void ConvolutionLayerSpatial<Dtype>::swizzleWeights(
       swizzled_weights_ != NULL &&
       this->phase_ == TEST)
     return;
-
   swizzled_weights_ = swizzled_weights_blob_.mutable_gpu_data();
 
   if (!interleave) {
