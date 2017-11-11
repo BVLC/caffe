@@ -8,6 +8,7 @@
 #include "caffe/proto/caffe.pb.h"
 
 #include "caffe/layers/neuron_layer.hpp"
+#include "caffe/layers/sigmoid_layer.hpp"
 
 namespace caffe {
 
@@ -28,7 +29,12 @@ class SwishLayer : public NeuronLayer<Dtype> {
    *     the value @f$ \beta @f$ in the @f$ y = x \sigma (\beta x) @f$.
    */
   explicit SwishLayer(const LayerParameter& param)
-      : NeuronLayer<Dtype>(param) {}
+      : NeuronLayer<Dtype>(param),
+        sigmoid_layer_(new SigmoidLayer<Dtype>(param)),
+        sigmoid_input_(new Blob<Dtype>()),
+        sigmoid_output_(new Blob<Dtype>()) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
@@ -73,7 +79,16 @@ class SwishLayer : public NeuronLayer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
-  Blob<Dtype> sigmoid_beta_x_;
+  /// The internal SigmoidLayer
+  shared_ptr<SigmoidLayer<Dtype> > sigmoid_layer_;
+  /// sigmoid_input_ stores the input of the SigmoidLayer.
+  shared_ptr<Blob<Dtype> > sigmoid_input_;
+  /// sigmoid_output_ stores the output of the SigmoidLayer.
+  shared_ptr<Blob<Dtype> > sigmoid_output_;
+  /// bottom vector holder to call the underlying SigmoidLayer::Forward
+  vector<Blob<Dtype>*> sigmoid_bottom_vec_;
+  /// top vector holder to call the underlying SigmoidLayer::Forward
+  vector<Blob<Dtype>*> sigmoid_top_vec_;
 };
 
 }  // namespace caffe
