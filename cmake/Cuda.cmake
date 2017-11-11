@@ -4,7 +4,11 @@ endif()
 
 # Known NVIDIA GPU achitectures Caffe can be compiled for.
 # This list will be used for CUDA_ARCH_NAME = All option
-set(Caffe_known_gpu_archs "20 21(20) 30 35 50 60 61")
+if(WIN32)
+  set(Caffe_known_gpu_archs "30 35 50 60 61")
+else()
+  set(Caffe_known_gpu_archs "20 21(20) 30 35 50 60 61")
+endif()
 
 ################################################################################################
 # A function for automatic detection of GPUs installed  (if autodetection is enabled)
@@ -173,19 +177,21 @@ function(detect_cuDNN)
   set(CUDNN_ROOT "" CACHE PATH "CUDNN root folder")
 
   find_path(CUDNN_INCLUDE cudnn.h
-            PATHS ${CUDNN_ROOT} $ENV{CUDNN_ROOT} ${CUDA_TOOLKIT_INCLUDE}
+    PATHS ${CUDNN_ROOT} $ENV{CUDNN_ROOT} "${CUDNN_ROOT}/include" ${CUDA_TOOLKIT_INCLUDE}
             DOC "Path to cuDNN include directory." )
 
   # dynamic libs have different suffix in mac and linux
   if(APPLE)
     set(CUDNN_LIB_NAME "libcudnn.dylib")
+  elseif(WIN32)
+    set(CUDNN_LIB_NAME "cudnn.lib")
   else()
     set(CUDNN_LIB_NAME "libcudnn.so")
   endif()
 
   get_filename_component(__libpath_hist ${CUDA_CUDART_LIBRARY} PATH)
   find_library(CUDNN_LIBRARY NAMES ${CUDNN_LIB_NAME}
-   PATHS ${CUDNN_ROOT} $ENV{CUDNN_ROOT} ${CUDNN_INCLUDE} ${__libpath_hist} ${__libpath_hist}/../lib
+    PATHS ${CUDNN_ROOT} $ENV{CUDNN_ROOT} "${CUDNN_ROOT}/lib/x64" ${CUDNN_INCLUDE} ${__libpath_hist} ${__libpath_hist}/../lib
    DOC "Path to cuDNN library.")
   
   if(CUDNN_INCLUDE AND CUDNN_LIBRARY)
