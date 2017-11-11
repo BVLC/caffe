@@ -12,15 +12,21 @@
 namespace caffe {
 
 /**
- * @brief Swish non-linearity @f$ y = x\cdot\sigma(x) @f$.
+ * @brief Swish non-linearity @f$ y = x \sigma (\beta x) @f$.
  *        A novel activation function that tends to work better than ReLU [1].
  *
- * [1] Prajit Ramachandran, Barret Zoph, Quoc V. Le. "Swish: a Self-Gated
- *     Activation Function". arXiv preprint arXiv:1710.05941 (2017).
+ * [1] Prajit Ramachandran, Barret Zoph, Quoc V. Le. "Searching for
+ *     Activation Functions". arXiv preprint arXiv:1710.05941v2 (2017).
  */
 template <typename Dtype>
 class SwishLayer : public NeuronLayer<Dtype> {
  public:
+  /**
+   * @param param provides SwishParameter swish_param,
+   *     with SwishLayer options:
+   *   - beta (\b optional, default 1).
+   *     the value @f$ \beta @f$ in the @f$ y = x \sigma (\beta x) @f$.
+   */
   explicit SwishLayer(const LayerParameter& param)
       : NeuronLayer<Dtype>(param) {}
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
@@ -36,7 +42,7 @@ class SwishLayer : public NeuronLayer<Dtype> {
    * @param top output Blob vector (length 1)
    *   -# @f$ (N \times C \times H \times W) @f$
    *      the computed outputs @f$
-   *        y = x\cdot\sigma(x)
+   *        y = x \sigma (\beta x)
    *      @f$.
    */
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -58,7 +64,8 @@ class SwishLayer : public NeuronLayer<Dtype> {
    *      the inputs @f$ x @f$; Backward fills their diff with
    *      gradients @f$
    *        \frac{\partial E}{\partial x}
-   *            = \frac{\partial E}{\partial y}(y + \sigma(x)(1 - y))
+   *            = \frac{\partial E}{\partial y}(\beta y +
+   *              \sigma (\beta x)(1 - \beta y))
    *      @f$ if propagate_down[0]
    */
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
@@ -66,7 +73,7 @@ class SwishLayer : public NeuronLayer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
-  Blob<Dtype> sigmoid_x_;
+  Blob<Dtype> sigmoid_beta_x_;
 };
 
 }  // namespace caffe
