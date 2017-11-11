@@ -410,6 +410,8 @@ message LayerParameter {
   optional SmoothL1LossParameter smooth_l1_loss_param = 8266712;
   optional ProposalParameter proposal_param = 8266713;
   optional LocalConvolutionParameter local_conv_param = 8266714;
+  optional FlipParameter flip_param = 8266715;
+  optional NormalizeParameter normalize_param = 8266716;
 }
 
 // Message that stores parameters used to apply transformation
@@ -1487,3 +1489,12 @@ message ProposalParameter {
   optional float score_thresh = 9 [default = 0.0];
 }
 
+message FlipParameter {
+  optional bool flip_width = 1 [default = true];
+  optional bool flip_height = 2 [default = false];
+}
+
+message NormalizeParameter {
+  optional string normalize_type = 1 [default = "L2"];
+  optional bool rescale = 2 [default = false];
+}

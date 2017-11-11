@@ -1,6 +1,7 @@
 #include <memory>
 #include <shared_mutex>
 #include <stdexcept>
+#include <array>
 
 #ifndef CPU_ONLY
 #include <deepir/cuda_buddy_pool.hpp>
