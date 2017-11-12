@@ -395,6 +395,7 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
   static void InitPretunedKey(void);
 
   struct kernelConfig {
+    PretunedKey key;
     string kernelName;
     string options;
     float executionTime;
@@ -402,7 +403,6 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
     size_t global_work_size[3];
     int_tp workItem_output[3];
     bool verified;
-    bool autoTune;
     bool tested;
     bool swizzle_weights;
     bool use_null_local;
@@ -413,11 +413,16 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
     kernelConfig() {
       kernelType = ConvType::BASIC;
     }
-    kernelConfig(string name, string opt,
-                 size_t* global_size, size_t* local_size,
+    kernelConfig(PretunedKey &kernel_key,
+                 string name,
+                 string opt,
+                 size_t* global_size,
+                 size_t* local_size,
                  int_tp* workItem,
-                 bool tune, bool swizzle, bool null_local,
+                 bool swizzle,
+                 bool null_local,
                  ConvType type = ConvType::BASIC) {
+      key = kernel_key;
       kernelName = name;
       options = opt;
       built = false;
@@ -426,7 +431,6 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
         global_work_size[x] = global_size[x];
         workItem_output[x] = workItem[x];
       }
-      autoTune = tune;
       swizzle_weights = swizzle;
       use_null_local = null_local;
       verified = false;
@@ -492,8 +496,6 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
                              const vector<Blob<Dtype>*>& top, int_tp index,
                              int_tp numImages, const Blob<Dtype> &verify_blob,
                              std::shared_ptr<kernelConfig>& config);
-  virtual bool tune_local_size(const vector<Blob<Dtype>*>& bottom,
-                               const vector<Blob<Dtype>*>& top, std::shared_ptr<kernelConfig>&);
   virtual void swizzleWeights(const vector<Blob<Dtype>*>& bottom,
                               const vector<Blob<Dtype>*>& top,
                               int_tp swizzle_factor,
@@ -617,10 +619,6 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
   bool tuned_;
   bool dwconv_;
 
-  std::string old_key_;
-  std::string key_;
-  std::string key_text_;
-  std::string kernel_name_;
   std::stringstream cache_path_;
   PretunedKey pretuned_key_;
 
@@ -630,10 +628,10 @@ class ConvolutionLayerSpatial : public BaseConvolutionLayer<Dtype> {
   Blob<Dtype> swizzled_weights_blob_;
   Blob<Dtype> bias_multiplier_;
 
-  int_tp kernel_index_;
 
   vector<std::shared_ptr<kernelConfig> > kernelQueue;
   std::shared_ptr<kernelConfig> bestKernelConfig;
+  int_tp kernel_index_;
 
   // parameters for fused eltwise layer.
   EltwiseParameter_EltwiseOp op_;

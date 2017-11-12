@@ -178,11 +178,6 @@ void ConvolutionLayerSpatial<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     BaseConvolutionLayer<Dtype>::Reshape(bottom, top);
   }
 
-  if (this->device_->backend() != caffe::BACKEND_OpenCL ||
-      std::is_same<Dtype, double>::value ||
-      Caffe::mode() != Caffe::GPU)
-    return;
-
   height_ = bottom[0]->shape(this->channel_axis_ + 1);
   width_ = bottom[0]->shape(this->channel_axis_ + 2);
   const int_tp kernel_extent_h = dilation_h_ * (kernel_h_ - 1) + 1;
@@ -214,11 +209,16 @@ void ConvolutionLayerSpatial<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     caffe_set(N_, Dtype(1), bias_multiplier_.mutable_cpu_data());
   }
 
+  if (this->device_->backend() != caffe::BACKEND_OpenCL ||
+      std::is_same<Dtype, double>::value ||
+      Caffe::mode() != Caffe::GPU)
+    return;
+
   bottom_data = bottom[0]->gpu_data();
   top_data = top[0]->mutable_gpu_data();
   bottom_index_ = 0;
   generate_key();
-  load_cached_kernels(bottom, top);
+  //load_cached_kernels(bottom, top);
 }
 
 template<typename Dtype>
@@ -299,8 +299,6 @@ void ConvolutionLayerSpatial<Dtype>::generate_key() {
                     output_w_, output_h_,
                     this->num_, M_,
                     this->layer_param_.convolution_param().fuse_type());
-
-  key_ = pretuned_key_.key_str();
 }
 
 template<typename Dtype>
@@ -593,8 +591,8 @@ bool ConvolutionLayerSpatial<Dtype>::create_basic_kernel(
   workItemOutput[1] = 1;
   workItemOutput[2] = 1;
 
-  kernel_name_ = "BASIC_";
-  kernel_name_ += kernelUKey.c_str();
+  std::string kernel_name = "BASIC_";
+  kernel_name += kernelUKey.c_str();
 
   // Build list of options and defines
   optionsString.str("");
@@ -611,7 +609,7 @@ bool ConvolutionLayerSpatial<Dtype>::create_basic_kernel(
                 << workItemOutput[1] << " -D ZPAR=" << workItemOutput[2]
                 << " -D " << kernelDef.c_str()
                 << " -DTOTAL_OUTPUT_DEPTH=" << this->num_output_
-                << " -D CFMultiNoPadding=" << kernel_name_;
+                << " -D CFMultiNoPadding=" << kernel_name;
 
   string options = optionsString.str();
 
@@ -620,9 +618,9 @@ bool ConvolutionLayerSpatial<Dtype>::create_basic_kernel(
   calculate_global_size(1, workItemOutput, localSize, globalSize);
 
   kernelQueue.push_back(
-      std::make_shared<kernelConfig>(kernel_name_, options,
+      std::make_shared<kernelConfig>(pretuned_key_, kernel_name, options,
                        globalSize, localSize, workItemOutput,
-                       false, false, true, ConvType::BASIC));
+                       false, true, ConvType::BASIC));
 
   return true;
 }
@@ -1162,7 +1160,7 @@ bool ConvolutionLayerSpatial<Dtype>::verify_result(
                   0xff,
                   (cl_mem)top[index]->mutable_gpu_data(),
                   0);
-  //config->executionTime = timed_convolve(bottom, top, index, numImages, config);
+  config->executionTime = timed_convolve(bottom, top, index, numImages, config);
   // Currently we can't do verification when conv is fused because the results
   // won't match the results of forward_gpu_gemm. Need more work to fix it.
   // FP16 verification may fail due to the natrue accuracy lost between FP16 and FP32.
@@ -1267,12 +1265,12 @@ bool ConvolutionLayerSpatial<Dtype>::create_gemm_like_conv_kernel(
   int_tp globalWorkSizeDX = blockN;
   int_tp globalWorkSizeDY = blockM;
 
-  kernel_name_ = "U_GEMM_LIKE_CONV_";
-  kernel_name_ += kernelUKey.c_str();
+  std::string kernel_name = "U_GEMM_LIKE_CONV_";
+  kernel_name += kernelUKey.c_str();
   if (blockK == 8)
-    kernel_name_ += "_SIMD8";
+    kernel_name += "_SIMD8";
   else
-    kernel_name_ += "_SIMD16";
+    kernel_name += "_SIMD16";
   std::stringstream kernelDef;
   kernelDef << "GEMM_LIKE_CONV_" << blockN << "_" << blockM;
   if (blockK == 16)
@@ -1281,7 +1279,7 @@ bool ConvolutionLayerSpatial<Dtype>::create_gemm_like_conv_kernel(
   // Build list of options and defines
   optionsString.str("");
   optionsString << "-cl-fast-relaxed-math " << " -D " << kernelDef.str()
-                << " -D Conv_Interleaved=" << kernel_name_.c_str();
+                << " -D Conv_Interleaved=" << kernel_name.c_str();
 
   optionsString <<
         " -cl-mad-enable" <<
@@ -1314,9 +1312,9 @@ bool ConvolutionLayerSpatial<Dtype>::create_gemm_like_conv_kernel(
   string options = optionsString.str();
 
   kernelQueue.push_back(
-      std::make_shared<kernelConfig>(kernel_name_, options,
+      std::make_shared<kernelConfig>(pretuned_key_, kernel_name, options,
                        global_size, local_size, workItemOutput,
-                       false, true, false, ConvType::GEMM_LIKE));
+                       true, false, ConvType::GEMM_LIKE));
   return true;
 }
 
@@ -1366,11 +1364,11 @@ bool ConvolutionLayerSpatial<Dtype>::create_winograd_conv_kernel(
   int_tp output_block_height = blockHeight;
   int_tp num_batches = this->num_;
 
-  kernel_name_ = "WINOGRAD_";
+  std::string kernel_name = "WINOGRAD_";
   std::string data_transform_name = "_data_transform_4x4";
-  kernel_name_ += kernelUKey;
+  kernel_name += kernelUKey;
 
-  kernel_name_ += "_SIMD8";
+  kernel_name += "_SIMD8";
 
   bool is_large_input = 0;
   if(this->channels_ >256)
@@ -1381,7 +1379,7 @@ bool ConvolutionLayerSpatial<Dtype>::create_winograd_conv_kernel(
   optionsString << "-cl-fast-relaxed-math "
                 << " -D WINOGRAD"
                 << " -D winograd_4x4="
-                << kernel_name_ << " -D data_transform_4x4=" << kernel_name_+data_transform_name;
+                << kernel_name << " -D data_transform_4x4=" << kernel_name+data_transform_name;
 
   size_t global_size[3] = { 0, 0,
                 (size_t) num_batches * ALIGN(num_output_maps, simd_size) };
@@ -1409,9 +1407,9 @@ bool ConvolutionLayerSpatial<Dtype>::create_winograd_conv_kernel(
   // FIXME batch size should not be a macro.
   string options = optionsString.str();
   kernelQueue.push_back(
-      std::make_shared<kernelConfig>(kernel_name_, options,
+      std::make_shared<kernelConfig>(pretuned_key_, kernel_name, options,
                        global_size, local_size, workItemOutput,
-                       false, true, false, ConvType::WINOGRAD));
+                       true, false, ConvType::WINOGRAD));
   return true;
 }
 
@@ -1458,8 +1456,8 @@ bool ConvolutionLayerSpatial<Dtype>::create_dw_conv_kernel(
   workItemOutput[1] = 1;
   workItemOutput[2] = 1;
 
-  kernel_name_ = "DWCONV_";
-  kernel_name_ += kernelUKey.c_str();
+  std::string kernel_name = "DWCONV_";
+  kernel_name += kernelUKey.c_str();
 
   // Build list of options and defines
   optionsString.str("");
@@ -1477,7 +1475,7 @@ bool ConvolutionLayerSpatial<Dtype>::create_dw_conv_kernel(
                 << " -D OUTPUT_Z=" << this->num_output_*this->num_
                 << " -D CHANNELS=" << this->num_output_
                 << " -D " << kernelDef.c_str() << " -D DWCONV="
-                << kernel_name_;
+                << kernel_name;
 
   string options = optionsString.str();
   size_t localSize[3] = { 1, 1, 1 };
@@ -1485,9 +1483,9 @@ bool ConvolutionLayerSpatial<Dtype>::create_dw_conv_kernel(
   calculate_global_size(1, workItemOutput, localSize, globalSize);
 
   kernelQueue.push_back(
-      std::make_shared<kernelConfig>(kernel_name_, options,
+      std::make_shared<kernelConfig>(pretuned_key_, kernel_name, options,
                        globalSize, localSize, workItemOutput,
-                       false, false, true, ConvType::DWCONV));
+                       false, true, ConvType::DWCONV));
 
   return true;
 }
@@ -1578,19 +1576,19 @@ bool ConvolutionLayerSpatial<Dtype>::setup_IDLF(
   const int_tp num_output_maps = M_;
   int_tp num_batches = this->num_;
 
-  kernel_name_ = "IDLF_";
-  kernel_name_ += kernelUKey.c_str();
+  std::string kernel_name = "IDLF_";
+  kernel_name += kernelUKey.c_str();
 
   if (simd_size == 16)
-    kernel_name_ += "_SIMD16";
+    kernel_name += "_SIMD16";
   else
-    kernel_name_ += "_SIMD8";
+    kernel_name += "_SIMD8";
 
   // Build list of options and defines
   optionsString.str("");
   optionsString << "-cl-fast-relaxed-math " << " -D IDLF"
                 << " -D convolve_simd="
-                << kernel_name_;
+                << kernel_name;
 
   size_t global_size[3] = { 0, 0,
                 (size_t) num_batches * ALIGN(num_output_maps, simd_size) };
@@ -1619,95 +1617,9 @@ bool ConvolutionLayerSpatial<Dtype>::setup_IDLF(
   optionsString << " -DINPUT_PAD_W=" << pad_w_ << " -DINPUT_PAD_H=" << pad_h_;
   string options = optionsString.str();
   kernelQueue.push_back(
-      std::make_shared<kernelConfig>(kernel_name_, options,
+      std::make_shared<kernelConfig>(pretuned_key_, kernel_name, options,
                        global_size, local_size, workItemOutput,
-                       false, true, false, ConvType::IDLF));
-  return true;
-}
-
-template<typename Dtype>
-bool ConvolutionLayerSpatial<Dtype>::tune_local_size(
-    const vector<Blob<Dtype>*>& bottom,
-    const vector<Blob<Dtype>*>& top,
-    std::shared_ptr<kernelConfig>& config) {
-  if (config->use_null_local || !config->autoTune)
-    return true;
-
-  float fastestTime = 999999990000000000000000000.0f;
-  uint_tp multiplier = 4;
-  uint_tp localSize[3] = { 1, 1, 1 };
-
-  int_tp skip = 0;
-  Timer timer;
-  timer.initted();
-  bool allFailed = true;
-  for (int_tp z = 0; z <= 16; z++) {
-    for (int_tp y = 0; y <= 16; y++) {
-      for (int_tp x = 1; x <= 16; x++) {
-        timer.Start();
-        skip = 0;
-
-        if (config->autoTune) {
-          config->local_work_size[0] =
-              (multiplier * x == 0) ? 1 : multiplier * x;
-          config->local_work_size[1] =
-              (multiplier * y == 0) ? 1 : multiplier * y;
-          config->local_work_size[2] =
-              (multiplier * z == 0) ? 1 : multiplier * z;
-
-          calculate_global_size(1, config->workItem_output,
-                                config->local_work_size,
-                                config->global_work_size);
-        }
-        if (config->workItem_output[2] *
-            config->global_work_size[2] != M_)
-          break;
-
-        if (config->swizzle_weights)
-          z = 32;
-
-        int_tp err = 0;
-        err = convolve(bottom, top, 0, 1, config);
-
-        if (err != CL_SUCCESS)
-          skip = 1;
-
-        if (skip) {
-          timer.Stop();
-          break;
-        }
-        timer.Stop();
-        allFailed = false;
-        float elapsedTime = timer.MilliSeconds();
-
-        if (elapsedTime < fastestTime) {
-          fastestTime = elapsedTime;
-          localSize[0] = config->local_work_size[0];
-          localSize[1] = config->local_work_size[1];
-          localSize[2] = config->local_work_size[2];
-        }
-      }
-    }
-  }
-  if (allFailed) {
-    // 1,1,1 is never a good local size and no need to test at all.
-    dbgPrint(std::cout << "Can't find good local size for "
-                       << config->kernelName << std::endl);
-    return false;
-  }
-
-  dbgPrint(std::cout << "Best local size[" << localSize[0] << "][" <<
-      localSize[1] << "]["<< localSize[2] << "]: " << fastestTime <<
-      " Kernel_h: " << kernel_h_ << " kernel_w_: " << kernel_w_ <<
-      " stride_w: " << stride_w_ << " pad_w_: " << pad_w_ << std::endl);
-
-  if (config->autoTune) {
-    for (int_tp li = 0; li < 3; li++)
-      config->local_work_size[li] = localSize[li];
-
-    calculate_global_size(1, config->workItem_output, config->local_work_size,
-                          config->global_work_size);
-  }
+                       true, false, ConvType::IDLF));
   return true;
 }
 
@@ -1802,7 +1714,7 @@ void ConvolutionLayerSpatial<Dtype>::new_best_kernel(
     }
 
     string outputFile;
-    outputFile = cache_path_.str() + key_;
+    outputFile = cache_path_.str() + pretuned_key_.key_str();
     std::ifstream cachedKernel(outputFile.c_str());
     if (!cachedKernel) {
       std::ofstream outputKernel;
@@ -1850,16 +1762,9 @@ void ConvolutionLayerSpatial<Dtype>::startTuning(
       }
     }
   }
-
   for (int_tp x = 0; x < kernelQueue.size(); x++) {
-    if (tune_local_size(bottom, top, kernelQueue[x])) {
-      kernelQueue[x]->executionTime = timed_convolve(bottom, top, bottom_index_,
+    kernelQueue[x]->executionTime = timed_convolve(bottom, top, bottom_index_,
                                                    this->num_, kernelQueue[x]);
-    } else {
-      // skip those kernels without a good local size.
-      kernelQueue[x]->verified = false;
-      kernelQueue[x]->tested = true;
-    }
 #ifdef TEST_ALL_KERNELS
     if (kernelQueue[x]->tested == false) {
       bool verified = skip_tuning_phase_ ? true :
@@ -2118,12 +2023,10 @@ void ConvolutionLayerSpatial<Dtype>::load_cached_kernels(
     const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
 
-  std::string previous_key = key_;
-  generate_key();
-  std::shared_ptr<kernelConfig> prev_kernel_config = nullptr;
-  std::shared_ptr<kernelConfig> kernel_config;
+  std::shared_ptr<kernelConfig> prev_kernel_config = bestKernelConfig;
   if (tuned_) {
-    if (key_.compare(previous_key) == 0) {
+    if (prev_kernel_config &&
+        prev_kernel_config->key == pretuned_key_) {
       // The same layer, many kernel key should be the same
       // Only the batch size, image size could be different.
       // As all kernels could support varying batch/image size now.
@@ -2131,15 +2034,13 @@ void ConvolutionLayerSpatial<Dtype>::load_cached_kernels(
       return;
     }
     tuned_ = false;
-    kernel_config = bestKernelConfig;
-    prev_kernel_config = kernel_config;
     bestKernelConfig = nullptr;
   }
 
   // Find cached kernel configuration
   if (cache_path_.str() != "") {
     string cacheFile;
-    cacheFile = cache_path_.str() + key_;
+    cacheFile = cache_path_.str() + pretuned_key_.key_str();
     std::ifstream cachedKernel(cacheFile.c_str());
     if (cachedKernel) {
       int_tp x, y, z, type;
