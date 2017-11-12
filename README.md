@@ -1,3 +1,7 @@
+# Caffe with Ristretto
+
+This is the latest caffe with Ristretto merged. (https://github.com/pmgysel/caffe)
+
 # Caffe
 
 [![Build Status](https://travis-ci.org/BVLC/caffe.svg?branch=master)](https://travis-ci.org/BVLC/caffe)
