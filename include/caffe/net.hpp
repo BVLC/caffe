@@ -326,6 +326,9 @@ class Net {
   /// @brief return whether NetState state meets NetStateRule rule
   static bool StateMeetsRule(const NetState& state, const NetStateRule& rule,
       const string& layer_name);
+  inline const map<string,int>& blob_names_index() const {
+    return blob_names_index_;
+  }
 
  protected:
   // Helpers for Init.

@@ -69,7 +69,7 @@ public:
         , bwd_top_diff(), bwd_bottom_diff()
         , BatchNormFwd_pd(), BatchNormBwd_pd()
         , scaleshift_memory(), bwd_scaleshift_diff_memory()
-        , output_memory(), bwd_bottom_diff_memory(), inplace_buffer_memory()
+        , output_memory(), bwd_bottom_diff_memory()
         , input_primitive(), bwd_top_diff_primitive()
         {
           PERFORMANCE_EVENT_ID_RESET(perf_id_fw_);
@@ -95,12 +95,10 @@ private:
     void InitBatchNormBwd(const vector<Blob<Dtype>*>& top,
             const vector<bool>& propagate_down,
             const vector<Blob<Dtype>*>& bottom);
-    void InitBatchNormFwdPrimitive(int stats_batch_idx, bool inplace);
-    void InitBatchNormBwdPrimitive(int stats_batch_idx, bool inplace);
+    void InitBatchNormFwdPrimitive(int stats_batch_idx);
+    void InitBatchNormBwdPrimitive(int stats_batch_idx);
     template <bool diff> shared_ptr<memory> GetStatsBatchMemory(
       shared_ptr<MKLDNNMemoryDescriptor<Dtype, diff> > mkldnn_data, int idx);
-    template <bool diff> shared_ptr<memory> GetStatsBatchMemoryInplace(
-      shared_ptr<MKLDNNMemoryDescriptor<Dtype, diff> > mkldnn_data, int idx, shared_ptr<memory > buffer_memory);
     void InitStatsBatchVars(int batch_size);
     shared_ptr<MKLDNNData<Dtype> > fwd_top_data, fwd_bottom_data;
     shared_ptr<MKLDNNDiff<Dtype> > bwd_top_diff, bwd_bottom_diff;
@@ -112,8 +110,8 @@ private:
 
     shared_ptr<memory> scaleshift_memory, bwd_scaleshift_diff_memory;
     shared_ptr<memory> output_memory, bwd_bottom_diff_memory;
-    shared_ptr<memory> inplace_buffer_memory;
-    vector<shared_ptr<memory> > input_stats, output_stats, top_diff_stats, bottom_diff_stats, input_inplace_buffer;
+
+    vector<shared_ptr<memory> > input_stats, output_stats, top_diff_stats, bottom_diff_stats;
 
     shared_ptr<primitive> input_primitive, bwd_top_diff_primitive;
 
@@ -124,6 +122,7 @@ private:
     int stats_batch_size_;
     shared_ptr<Blob<Dtype> > scaleshift_blob_;
     shared_ptr<Blob<Dtype> > scaleshift_acc_;
+    Blob<Dtype> inplace_buffer;
 
     PERFORMANCE_EVENT_ID_DECL(perf_id_fw_);
     PERFORMANCE_EVENT_ID_DECL(perf_id_bw_);
@@ -224,7 +223,7 @@ private:
                     , bwdd_top_diff_primitive, bwdd_weights_data_primitive
                     , bwdw_top_diff_primitive, bwdw_bottom_data_primitive;
     int32_t w_, h_;
-    
+
     /* In case of (iter_size > 1) we need additional buffers */
     shared_ptr<MKLDNNDiff<Dtype> > bwdw_weights_diff_iter, bwdw_bias_diff_iter;
     shared_ptr<memory> bwdw_weights_diff_memory_iter, bwdw_bias_diff_memory_iter;
@@ -322,13 +321,14 @@ protected:
                                 ,const vector<Blob<Dtype>*>& bottom);
     virtual void Backward_gpu(const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down
                                 ,const vector<Blob<Dtype>*>& bottom);
+    virtual void compute_output_shape(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
 
 private:
     void InitPoolingFwd(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
     void InitPoolingBwd(const vector<Blob<Dtype>*>& bottom
                         , const vector<bool>& propagate_down
                         , const vector<Blob<Dtype>*>& top);
-  
+
     shared_ptr<MKLDNNData<Dtype>> fwd_bottom_data, fwd_top_data;
     shared_ptr<MKLDNNDiff<Dtype>> bwd_top_diff, bwd_bottom_diff;
     shared_ptr<pooling_forward::primitive_desc> poolingFwd_pd;
@@ -408,7 +408,7 @@ public:
             : MKLDNNLayer<Dtype>(), Layer<Dtype>(param),
             concatFwd_pd(), fwd_output_memory(),
             bwd_reorder_input_memory(), bwd_reorder_output_memory(),
-            fwd_top_data(), fwd_bottom_data(), split_channels() {
+            fwd_top_data(), fwd_bottom_data(), split_dims() {
               PERFORMANCE_EVENT_ID_RESET(perf_id_fw_);
               PERFORMANCE_EVENT_ID_RESET(perf_id_bw_);
     }
@@ -440,7 +440,7 @@ private:
     shared_ptr<MKLDNNDiff<Dtype> > bwd_top_diff;
     vector<shared_ptr<MKLDNNDiff<Dtype> > > bwd_bottom_diff;
     vector<MKLDNNPrimitive<Dtype> > reorders;
-    vector<int> split_channels;
+    vector<int> split_dims;
 
     int32_t num_, width_, height_, channels_, num_concats_;
     int concat_dimension;

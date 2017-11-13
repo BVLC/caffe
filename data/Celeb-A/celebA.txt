@@ -1,0 +1,10 @@
+/Celeb-A_Cropped/000001.jpg 1
+/Celeb-A_Cropped/000002.jpg 1
+/Celeb-A_Cropped/000003.jpg 1
+/Celeb-A_Cropped/000004.jpg 1
+/Celeb-A_Cropped/000005.jpg 1
+/Celeb-A_Cropped/000006.jpg 1
+/Celeb-A_Cropped/000007.jpg 1
+/Celeb-A_Cropped/000008.jpg 1
+/Celeb-A_Cropped/000009.jpg 1
+/Celeb-A_Cropped/000010.jpg 1

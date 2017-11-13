@@ -140,7 +140,13 @@ void MKLDNNPoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom
         CHECK_LT(pad_t_, kernel_h_);
         CHECK_LT(pad_l_, kernel_w_);
     }
+    compute_output_shape(bottom, top);
+}
 
+template <typename Dtype>
+void MKLDNNPoolingLayer<Dtype>::compute_output_shape(const vector<Blob<Dtype>*>& bottom
+                                        ,const vector<Blob<Dtype>*>& top)
+{
     height_out_ = static_cast<int>(ceil(static_cast<float>(
         bottom[0]->height() + pad_t_ + pad_b_ - kernel_h_) / stride_h_)) + 1;
     width_out_ = static_cast<int>(ceil(static_cast<float>(
@@ -178,10 +184,16 @@ void MKLDNNPoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom
 {
     VLOG(1) << "MKLDNNPoolingLayer<Dtype>::Reshape: "  << this->layer_param_.name();
 
-    num_ = bottom[0]->num();
-    channels_ = bottom[0]->channels();
-    height_ = bottom[0]->height();
-    width_ = bottom[0]->width();
+    this->reshape = (this->width_ == bottom[0]->width() &&
+                     this->height_ == bottom[0]->height() &&
+                     this->channels_ == bottom[0]->channels() &&
+                     this->num_ == bottom[0]->num()) ? false : true;
+    this->num_ = bottom[0]->num();
+    this->channels_ = bottom[0]->channels();
+    this->height_ = bottom[0]->height();
+    this->width_ = bottom[0]->width();
+
+    compute_output_shape(bottom, top);
 
     CHECK_EQ(4, bottom[0]->num_axes()) << "Input must have 4 axes, "
         << "corresponding to (num, channels, height, width)";
@@ -282,6 +294,7 @@ void MKLDNNPoolingLayer<Dtype>::InitPoolingFwd(const vector<Blob<Dtype>*>& botto
       subengines = "MKLDNN:CPU";
     EngineParser ep(subengines);
     unsigned subEngineIndex = 0;
+    poolingFwd_pd = NULL;
     for(; subEngineIndex < ep.getNumberOfSubEngines(); subEngineIndex++) {
       try {
         poolingFwd_pd.reset(new pooling_forward::primitive_desc(poolingFwd_desc,
@@ -349,7 +362,7 @@ void MKLDNNPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom
     LOG(INFO) << "MKLDNNPoolingLayer<Dtype>::Forward_cpu: " << this->layer_param_.name();
 #endif
 
-    if (NULL == poolingFwd_pd)
+    if (NULL == poolingFwd_pd || this->reshape)
         InitPoolingFwd(bottom, top);
     // making reorders if needed.
     fwd_bottom_data->sync_before_read();
@@ -452,6 +465,7 @@ void MKLDNNPoolingLayer<Dtype>::InitPoolingBwd(const vector<Blob<Dtype>*>& top
       subengines = "MKLDNN:CPU";
     EngineParser ep(subengines);
     unsigned subEngineIndex = 0;
+    poolingBwd_pd = NULL;
     for(; subEngineIndex < ep.getNumberOfSubEngines(); subEngineIndex++) {
       try {
         poolingBwd_pd.reset(new pooling_backward::primitive_desc(poolingBwd_desc,
@@ -512,7 +526,7 @@ void MKLDNNPoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top
     if (!propagate_down[0]) {
         return;
     }
-    if (NULL == poolingBwd_pd)
+    if (NULL == poolingBwd_pd || this->reshape)
         InitPoolingBwd(top, propagate_down, bottom);
 
     bwd_top_diff->sync_before_read();

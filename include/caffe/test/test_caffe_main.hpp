@@ -91,6 +91,7 @@ class CPUDeviceTest : public MultiDeviceTest<CPUDevice<Dtype> > {
 
 typedef ::testing::Types<CPUDevice<float>,
                          CPUDevice<double> > TestDtypesAndDevices;
+typedef ::testing::Types<CPUDevice<float>> MKLDNNTestDtypesAndDevices;
 
 #else
 

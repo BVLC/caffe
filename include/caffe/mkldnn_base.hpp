@@ -196,6 +196,8 @@ class MKLDNNLayer {
 public:
     explicit MKLDNNLayer() {}
     virtual ~MKLDNNLayer() {}
+protected:
+    bool reshape;
 };
 
 // =====  MKLDNNPrimitive =======================================

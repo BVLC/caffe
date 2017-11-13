@@ -295,8 +295,7 @@ void axpy_axpby_copy_axpy<float>(size_t count, const float decay, float* net_par
 #endif  
   for (size_t i = 0; i < count; ++i) {
     history_data[i] = rate * (decay * net_params_data[i] + net_params_diff[i]) + momentum * history_data[i];
-    net_params_diff[i] = history_data[i];
-    net_params_data[i] = update_param * net_params_diff[i] + net_params_data[i];
+    net_params_data[i] = update_param * history_data[i] + net_params_data[i];
   }
 }
 
@@ -311,8 +310,7 @@ void axpy_axpby_copy_axpy<double>(size_t count, const double decay, double* net_
 #endif  
   for (size_t i = 0; i < count; ++i) {
     history_data[i] = rate * (decay * net_params_data[i] + net_params_diff[i]) + momentum * history_data[i];
-    net_params_diff[i] = history_data[i];
-    net_params_data[i] = update_param * net_params_diff[i] + net_params_data[i];
+    net_params_data[i] = update_param * history_data[i] + net_params_data[i];
   }
 }
 //End: For L2 Regularize_ComputeUpdateValue_Update_Fusion
@@ -655,6 +653,9 @@ void SGDSolver<Dtype>::SnapshotSolverState(const string& model_filename) {
 template <typename Dtype>
 void SGDSolver<Dtype>::SnapshotSolverStateToBinaryProto(
     const string& model_filename) {
+#ifdef USE_MLSL
+  if (mn::is_root()) {
+#endif
   SolverState state;
   state.set_iter(this->iter_);
   state.set_learned_net(model_filename);
@@ -668,9 +669,6 @@ void SGDSolver<Dtype>::SnapshotSolverStateToBinaryProto(
     history_[i]->ToProto(history_blob);
   }
   string snapshot_filename = Solver<Dtype>::SnapshotFilename(".solverstate");
-#ifdef USE_MLSL
-  if (mn::is_root()) {
-#endif
   LOG(INFO)
     << "Snapshotting solver state to binary proto file " << snapshot_filename;
   WriteProtoToBinaryFile(state, snapshot_filename.c_str());
@@ -682,6 +680,9 @@ void SGDSolver<Dtype>::SnapshotSolverStateToBinaryProto(
 template <typename Dtype>
 void SGDSolver<Dtype>::SnapshotSolverStateToHDF5(
     const string& model_filename) {
+#ifdef USE_MLSL
+  if (mn::is_root()) {
+#endif
   string snapshot_filename =
       Solver<Dtype>::SnapshotFilename(".solverstate.h5");
   LOG(INFO) << "Snapshotting solver state to HDF5 file " << snapshot_filename;
@@ -705,6 +706,9 @@ void SGDSolver<Dtype>::SnapshotSolverStateToHDF5(
   }
   H5Gclose(history_hid);
   H5Fclose(file_hid);
+#ifdef USE_MLSL
+  }
+#endif
 }
 
 template <typename Dtype>

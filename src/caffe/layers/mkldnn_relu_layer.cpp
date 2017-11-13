@@ -60,6 +60,10 @@ void MKLDNNReLULayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom
 
     NeuronLayer<Dtype>::Reshape(bottom, top);
 
+    this->reshape = (this->width_ == bottom[0]->width() &&
+                     this->height_ == bottom[0]->height() &&
+                     this->channels_ == bottom[0]->channels() &&
+                     this->num_ == bottom[0]->num()) ? false : true;
     this->width_ = bottom[0]->width();
     this->height_ = bottom[0]->height();
     this->num_ = bottom[0]->num();
@@ -110,6 +114,7 @@ void MKLDNNReLULayer<Dtype>::InitReLUFwd(const vector<Blob<Dtype>*>& bottom, con
       subengines = "MKLDNN:CPU";
     EngineParser ep(subengines);
     unsigned subEngineIndex = 0;
+    reluFwd_pd = NULL;
     for(; subEngineIndex < ep.getNumberOfSubEngines(); subEngineIndex++) {
       try {
         reluFwd_pd.reset(new relu_forward::primitive_desc(eltwise_reluFwd_desc,
@@ -153,7 +158,7 @@ void MKLDNNReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom
 #endif
 
     bool inplace = (bottom[0] == top[0]);
-    if( reluFwd_pd == NULL)
+    if( reluFwd_pd == NULL || this->reshape)
         InitReLUFwd(bottom, top);
 
     if(this->layer_param_.relu_param().fuse()) {
@@ -191,13 +196,13 @@ void MKLDNNReLULayer<Dtype>::InitReLUBwd(const vector<Blob<Dtype>*>& top
     memory::data_type mpcsn = memory::data_type::f32;
 
     // ---- Initialize memory descriptors -------------
-    shared_ptr<memory::desc> bottom_diff_md;
-    shared_ptr<memory::desc> top_diff_md;
-    shared_ptr<memory::desc> top_data_md;
-    
-    shared_ptr<memory::primitive_desc> usr_diff_mpd;
-    shared_ptr<memory::primitive_desc> prv_diff_mpd;
-    
+    shared_ptr<memory::desc> bottom_diff_md = NULL;
+    shared_ptr<memory::desc> top_diff_md = NULL;
+    shared_ptr<memory::desc> top_data_md = NULL;
+
+    shared_ptr<memory::primitive_desc> usr_diff_mpd = NULL;
+    shared_ptr<memory::primitive_desc> prv_diff_mpd = NULL;
+
     if (top_diff_is_prv) {
       shared_ptr<MKLDNNMemoryDescriptor<Dtype, /* is_diff */ true> > mem_descr
         = get_mkldnn_prv_descriptor<Dtype, /* is_diff */ true>(top[0]);
@@ -263,6 +268,7 @@ void MKLDNNReLULayer<Dtype>::InitReLUBwd(const vector<Blob<Dtype>*>& top
       subengines = "MKLDNN:CPU";
     EngineParser ep(subengines);
     unsigned subEngineIndex = 0;
+    reluBwd_pd = NULL;
     for(; subEngineIndex < ep.getNumberOfSubEngines(); subEngineIndex++) {
       try {
         reluBwd_pd.reset(new relu_backward::primitive_desc(eltwise_reluBwd_desc,
@@ -308,7 +314,7 @@ void MKLDNNReLULayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top
     if (!propagate_down[0]) {
         return;
     }
-    if (reluBwd_pd == NULL) {
+    if (reluBwd_pd == NULL || this->reshape) {
         InitReLUBwd(top, propagate_down, bottom);
     }
 

@@ -4,10 +4,11 @@ function usage
 {
     script_name=$0
     echo "Usage:"
-    echo "  $script_name [--host host_file]"
+    echo "  $script_name [--host host_file] [--compiler icc/gcc]"
     echo ""
     echo "  Parameters:"
     echo "    host: host file includes list of nodes. Only used when you want to install dependencies for multinode"
+    echo "    compiler: specify compiler to build intel caffe. default compiler is icc."
 }
 
 function check_os
@@ -35,8 +36,9 @@ function is_sudoer
     echo $sudo_passwd | sudo -S -E -v >/dev/null
     if [ $? -eq 1 ]; then
         echo "User $(whoami) is not sudoer, and cannot install dependencies."
-	exit 1
+        return 1
     fi
+    return 0
 }
 
 # centos: yum; ubuntu: apt-get
@@ -54,22 +56,12 @@ if [ "$os" == "centos" ]; then
 fi
 
 package_installer="$install_command -y "
-username=`whoami`
-if [ "$username" != "root" ];
-then
-    read -s -p "Enter password for $username: " sudo_passwd
-    is_sudoer
-    package_installer="echo $sudo_passwd | sudo -S -E $install_command -y "
-fi
-
 
 
 function install_deps
 {
-    echo "Install dependencies..."
     if [ "$os" == "centos" ]; then
         eval $package_installer clean all
-        eval $package_installer upgrade
         eval $package_installer install epel-release
         eval $package_installer groupinstall "Development Tools"
     fi
@@ -96,7 +88,6 @@ function install_deps_multinode
     echo $sudo_passwd | sudo -S -E yum -y clean all
 
     if [ "$os" == "centos" ]; then
-        eval $package_installer upgrade
         eval $package_installer install epel-release
         eval $package_installer clean all
         eval $package_installer groupinstall "Development Tools"
@@ -126,7 +117,7 @@ function install_deps_multinode
     ansible all -m shell -a "systemctl stop firewalld.service"
 }
 
-function build_caffe
+function build_caffe_gcc
 {
     is_multinode_=$1
 
@@ -136,7 +127,7 @@ function build_caffe
     if [ $is_multinode_ -eq 1 ]; then
         echo "USE_MLSL := 1" >> Makefile.config
         echo "CAFFE_PER_LAYER_TIMINGS := 1" >> Makefile.config
-	
+
         mlslvars_sh=`find external/mlsl/ -name mlslvars.sh`
         if [ -f $mlslvars_sh ]; then
             source $mlslvars_sh
@@ -146,14 +137,62 @@ function build_caffe
     make -j 8
 }
 
-function sync_caffe_dir
+root_dir=$(cd $(dirname $(dirname $0)); pwd)
+boost_root=${root_dir}
+
+function download_build_boost
 {
-  caffe_dir=`pwd`
-  caffe_parent_dir=`dirname $caffe_dir`
-  ansible ourcluster -m synchronize -a "src=$caffe_dir dest=$caffe_parent_dir"
+    # download boost
+    pushd ${root_dir}
+
+    boost_lib=boost_1_64_0
+    boost_zip_file=${boost_lib}.tar.bz2
+    # clean 
+    if [ -f $boost_zip_file ]; then
+        rm $boost_zip_file
+    fi
+
+    echo "Download boost library..."
+    wget -c -t 0 https://dl.bintray.com/boostorg/release/1.64.0/source/${boost_zip_file}
+    echo "Unzip..."
+    tar -jxf ${boost_zip_file}
+    pushd ${boost_lib}
+
+    # build boost
+    echo "Build boost library..."
+    boost_root=${root_dir}/${boost_lib}/install
+    ./bootstrap.sh
+    ./b2 install --prefix=$boost_root
+
+    popd
+    popd
+}
+
+function build_caffe_icc
+{
+    is_multinode_=$1
+    cmake_params="-DCPU_ONLY=1 -DBOOST_ROOT=$boost_root"
+    if [ $is_multinode_ -eq 1 ]; then
+        cmake_params+=" -DUSE_MLSL=1 -DCAFFE_PER_LAYER_TIMINGS=1"
+    fi
+
+    echo "Build Intel Caffe..."
+    mkdir build
+    cd build
+
+    CC=icc CXX=icpc cmake .. $cmake_params
+    CC=icc CXX=icpc make all -j 8
 }
 
 
+function sync_caffe_dir
+{
+    caffe_dir=`pwd`
+    caffe_parent_dir=`dirname $caffe_dir`
+    ansible ourcluster -m synchronize -a "src=$caffe_dir dest=$caffe_parent_dir"
+}
+
+compiler="icc"
 host_file=""
 while [[ $# -gt 1 ]]
 do
@@ -161,6 +200,10 @@ do
     case $key in
         --host)
             host_file="$2"
+            shift
+            ;;
+        --compiler)
+            compiler="$2"
             shift
             ;;
         --help)
@@ -176,23 +219,61 @@ do
     shift
 done
 
+# install dependencies
+username=`whoami`
+if [ "$username" != "root" ];
+then
+    read -s -p "Enter password for $username: " sudo_passwd
+    package_installer="echo $sudo_passwd | sudo -S -E $install_command -y "
+    is_sudoer
+fi
 
 if [ $? -eq 0 ]; then
-    if [ "$host_file" == "" ]; then
-        install_deps
-    else
-        install_deps_multinode $host_file
-    fi
+    echo "Install dependencies..."
+if [ "$host_file" == "" ]; then
+    install_deps
+else
+    install_deps_multinode $host_file
 fi
+fi
+
+# build
+
+# check compiler
+cplus_compiler=""
+if [ "$compiler" == "icc" ]; then
+    cplus_compiler="icpc"
+elif [ $compiler == "gcc" ]; then
+    cplus_compiler="g++"
+else
+    echo "Invalid compiler: $compiler. Exit."
+    exit 1  
+fi
+
+for bin in $compiler $cplus_compiler
+do
+    check_dependency $bin
+    if [ $? -ne 0 ]; then
+        echo "Canot find compiler: $bin."
+        exit 1
+    fi
+done
 
 is_multinode=0
 if [ "$host_file" != "" ]; then
     is_multinode=1
 fi
-build_caffe $is_multinode
+
+echo "Build caffe by $compiler..."
+if [ "$compiler" == "icc" ]; then
+    download_build_boost
+    build_caffe_icc $is_multinode
+else
+    build_caffe_gcc $is_multinode
+fi
 
 if [ $is_multinode -eq 1 ]; then
-  sync_caffe_dir
+    sync_caffe_dir
 fi
 
 echo "Done."

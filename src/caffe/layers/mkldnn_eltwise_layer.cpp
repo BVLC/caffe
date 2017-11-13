@@ -78,6 +78,10 @@ template <typename Dtype>
 void MKLDNNEltwiseLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top)
 {
     VLOG(1) << "MKLDNNEltwiseLayer<Dtype>::Reshape: " << this->layer_param_.name();
+    this->reshape = (this->width_ == bottom[0]->width() &&
+                     this->height_ == bottom[0]->height() &&
+                     this->channels_ == bottom[0]->channels() &&
+                     this->num_ == bottom[0]->num()) ? false : true;
 
     this->width_ = bottom[0]->width();
     this->height_ = bottom[0]->height();
@@ -215,8 +219,8 @@ template <typename Dtype>
 void MKLDNNEltwiseLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top)
 {
     VLOG(1) << "MKLDNNEltwiseLayer<Dtype>::Forward_cpu: " << this->layer_param_.name();
-    
-    if(eltwiseFwd_pd == NULL)
+
+    if(eltwiseFwd_pd == NULL || this->reshape)
         InitEltwiseFwd(bottom, top);
     for (auto i = 0; i < num_bottoms_; i++)
     {

@@ -87,10 +87,14 @@ void MKLDNNLRNLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom
     // TODO: k_ is not used now in mkldnn
     k_ = this->layer_param_.lrn_param().k();
 
-    width_ = bottom[0]->width();
-    height_ = bottom[0]->height();
-    num_ = bottom[0]->num();
-    channels_ = bottom[0]->channels();
+    this->reshape = (this->width_ == bottom[0]->width() &&
+                     this->height_ == bottom[0]->height() &&
+                     this->channels_ == bottom[0]->channels() &&
+                     this->num_ == bottom[0]->num()) ? false : true;
+    this->width_ = bottom[0]->width();
+    this->height_ = bottom[0]->height();
+    this->num_ = bottom[0]->num();
+    this->channels_ = bottom[0]->channels();
 
     CHECK_EQ(4, bottom[0]->num_axes())
             << "Input must have 4 axes, corresponding to (num, channels, height, width)";
@@ -161,6 +165,7 @@ void MKLDNNLRNLayer<Dtype>::InitLRNFwd(const vector<Blob<Dtype>*>& bottom, const
       subengines = "MKLDNN:CPU";
     EngineParser ep(subengines);
     unsigned subEngineIndex = 0;
+    lrnFwd_pd = NULL;
     for(; subEngineIndex < ep.getNumberOfSubEngines(); subEngineIndex++) {
       try {
         lrnFwd_pd.reset(new lrn_forward::primitive_desc(lrnFwd_desc,
@@ -213,7 +218,7 @@ void MKLDNNLRNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom
                                         ,const vector<Blob<Dtype>*>& top)
 {
     VLOG(1) << "MKLDNNLRNLayer<Dtype>::Forward_cpu: " << this->layer_param_.name();
-    if( lrnFwd_pd == NULL)
+    if( lrnFwd_pd == NULL || this->reshape)
         InitLRNFwd(bottom, top);
     // making reorders if needed.
     fwd_bottom_data->sync_before_read();
@@ -315,6 +320,7 @@ void MKLDNNLRNLayer<Dtype>::InitLRNBwd(const vector<Blob<Dtype>*>& top
       subengines = "MKLDNN:CPU";
     EngineParser ep(subengines);
     unsigned subEngineIndex = 0;
+    lrnBwd_pd = NULL;
     for(; subEngineIndex < ep.getNumberOfSubEngines(); subEngineIndex++) {
       try {
         lrnBwd_pd.reset(new lrn_backward::primitive_desc(lrnBwd_desc,
@@ -364,7 +370,7 @@ void MKLDNNLRNLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top
     if (!propagate_down[0]) {
         return;
     }
-    if( lrnBwd_pd == NULL)
+    if( lrnBwd_pd == NULL || this->reshape)
         InitLRNBwd(top, propagate_down, bottom);
     bwd_top_diff->sync_before_read();
     bwd_bottom_diff->sync_before_write();

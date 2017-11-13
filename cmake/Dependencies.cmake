@@ -96,6 +96,10 @@ endif()
 
 # ---[ MLSL
 if(USE_MLSL)
+  if (NOT CPU_ONLY)
+    message(FATAL_ERROR "Multi-node is not supported if CPU_ONLY is disabled. Please set CPU_ONLY=1 if USE_MLSL=1.")
+  endif()
+
   #--find mlsl in external/mkl
   set(script_cmd "./external/mlsl/prepare_mlsl.sh" )
   execute_process(COMMAND ${script_cmd}

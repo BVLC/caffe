@@ -1,0 +1,17 @@
+
+layer {
+  name: "data"
+  type: "ImageData"
+  top: "data"
+  top: "label"
+  transform_param {
+    mirror: true
+    mean_value: 104
+    mean_value: 117
+    mean_value: 123
+  }
+  image_data_param {
+    source: "data/Celeb-A/celebA.txt"
+    batch_size: 64
+  }
+}

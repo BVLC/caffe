@@ -80,7 +80,9 @@ function calculate_numnodes
 function detect_cpu
 {
     model_string=`lscpu | grep "Model name" | awk -F ':' '{print $2}'`
-    if [[ $model_string == *"72"* ]]; then
+    if [[ $model_string == *"7235"* ]] || [[ $model_string == *"7285"* ]] || [[ $model_string == *"7295"* ]]; then
+        cpu_model="knm"
+    elif [[ $model_string == *"72"* ]]; then
         cpu_model="knl"
     elif [[ $model_string == *"8180"* ]]; then
         cpu_model="skx"
@@ -147,12 +149,20 @@ function obtain_average_fwd_bwd_time
 
     if [ $numnodes -eq 1 ]; then
         average_time_line=`cat $result_file | grep "Average Forward-Backward"`
+        if [ "$average_time_line" = "" ]; then
+            echo "running intelcaffe failed, please check logs under: $result_file"
+            exit 1
+        fi
         average_time=`echo $average_time_line | awk -F ' ' '{print $(NF-1)}'`
     else
-        start_iteration=1000
+        start_iteration=100
         iteration_num=100
         total_time=0
         deltaTimeList=`cat $result_file | grep "DELTA TIME" | tail -n "+${start_iteration}" | head -n ${iteration_num} | awk '{print $(NF-1)}'`
+        if [ "$deltaTimeList" = "" ]; then
+            echo "running intelcaffe failed, please check logs under: $result_file"
+            exit 1
+        fi
         
         for delta_time in ${deltaTimeList}
         do
