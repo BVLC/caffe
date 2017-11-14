@@ -281,6 +281,9 @@ void MKLDNNConcatLayer<Dtype>::InitConcatFwd(const vector<Blob<Dtype>*>& bottom,
 
   std::vector<memory::primitive_desc> srcs_mpd;
   std::vector<primitive::at> srcs;
+  fwd_bottom_data.clear();
+  fwd_input_primitives_.clear();
+  fwd_input_primitives_at_.clear();
   for (auto i = 0; i < num_concats_; i++) {
     fwd_bottom_data.push_back(boost::shared_ptr<MKLDNNData<Dtype> >());
 
@@ -385,6 +388,9 @@ void MKLDNNConcatLayer<Dtype>::InitConcatBwd(const vector<Blob<Dtype>*>& top,
 
   bwd_reorder_input_memory = bwd_top_diff->create_input(false);
 
+  bwd_bottom_diff.clear();
+  reorders.clear();
+  bwd_reorder_output_memory.clear();
   for (auto i = 0; i < num_concats_; i++) {
     bwd_bottom_diff.push_back(boost::shared_ptr<MKLDNNDiff<Dtype> >());
     reorders.push_back(MKLDNNPrimitive<Dtype>());
