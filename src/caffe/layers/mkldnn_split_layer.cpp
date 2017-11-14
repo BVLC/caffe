@@ -143,6 +143,9 @@ void MKLDNNSplitLayer<Dtype>::InitSplitBwd(const vector<Blob<Dtype>*>& bottom,
   // Gather diff descriptors of top difs (inputs for BW)
   std::vector<memory::primitive_desc> prv_diff_srcs_mpd;
   boost::shared_ptr<memory::primitive_desc> mpd_ptr;
+  bwd_top_diffs_.clear();
+  bwd_top_diff_primitives_.clear();
+  bwd_top_diffs_primitives_at_.clear();
   for (int i = 0; i < top.size(); ++i) {
     // If diff is in private layout then copy descriptor from it
     memory::format diff_src_mfmt = mfmt_nchw;
