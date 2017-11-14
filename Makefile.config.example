@@ -76,6 +76,8 @@ USE_MKLDNN_AS_DEFAULT_ENGINE := 1
 # already. 
 # BOOST_ROOT := 
 
+# Use remove batch norm optimization to boost inferrence
+DISABLE_BN_FOLDING := 0
 # Intel(r) Machine Learning Scaling Library (uncomment to build
 # with MLSL for multi-node training)
 # USE_MLSL :=1

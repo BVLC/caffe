@@ -2997,7 +2997,7 @@ class CompileNetTest : public ::testing::Test {
        double_net_string);
   }
 };
-
+#ifndef DISABLE_BN_FOLDING
 TEST_F(CompileNetTest, TestRemoveBatchNorm1) {
   const string& input_proto = 
       "name: 'TestNetwork' "
@@ -3222,6 +3222,8 @@ TEST_F(CompileNetTest, TestRemoveBatchNorm4) {
       "} ";
   this->RunCompilerNetTest(input_proto, output_proto);
 }
+#endif
+
 #ifdef MKL2017_SUPPORTED
 // If BatchNorm of engine MKL2017
 // produce blob consumed by

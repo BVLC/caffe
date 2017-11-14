@@ -479,6 +479,11 @@ ifeq ($(WITH_PYTHON_LAYER), 1)
 	LIBRARIES += $(PYTHON_LIBRARIES)
 endif
 
+# Remove batch norm feature support
+ifeq ($(DISABLE_BN_FOLDING), 1)
+	COMMON_FLAGS += -DDISABLE_BN_FOLDING
+endif
+
 # Performance monitoring
 ifeq ($(PERFORMANCE_MONITORING), 1)
 	CXXFLAGS += -DPERFORMANCE_MONITORING
