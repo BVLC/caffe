@@ -214,11 +214,7 @@ void ConvolutionLayerSpatial<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       Caffe::mode() != Caffe::GPU)
     return;
 
-  bottom_data = bottom[0]->gpu_data();
-  top_data = top[0]->mutable_gpu_data();
-  bottom_index_ = 0;
   generate_key();
-  //load_cached_kernels(bottom, top);
 }
 
 template<typename Dtype>
@@ -1911,6 +1907,29 @@ void ConvolutionLayerSpatial<Dtype>::Forward_gpu(
   if (this->num_ == 0)
     return;
 
+  if (!this->device_->CheckCapability("cl_intel_subgroups")) {
+    const Dtype* weight = this->blobs_[0]->gpu_data();
+    for (int_tp i = 0; i < bottom.size(); ++i) {
+      const Dtype* bottom_data = bottom[i]->gpu_data();
+      Dtype* top_data = top[i]->mutable_gpu_data();
+      // Multi queue execution, all previous work needs to be done first
+      this->device_->FinishQueues();
+      for (int_tp n = 0; n < this->num_; ++n) {
+        // Multi queue execution, go through work queues
+        this->device_->SwitchQueue(n);
+        this->forward_gpu_gemm(bottom_data, n * this->bottom_dim_, weight,
+            top_data, n * this->top_dim_);
+        if (this->bias_term_) {
+          const Dtype* bias = this->blobs_[1]->gpu_data();
+          this->forward_gpu_bias(top_data, n * this->top_dim_, bias);
+        }
+      }
+      // Multi queue execution, finish all queues
+      this->device_->FinishQueues();
+    }
+    return;
+  }
+
   // When working as the test net for a training instance,
   // The weights may be changed, thus we have to regenerate
   // the weights.
@@ -2018,6 +2037,9 @@ template<typename Dtype>
 void ConvolutionLayerSpatial<Dtype>::load_cached_kernels(
     const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
+
+  if (!this->device_->CheckCapability("cl_intel_subgroups"))
+    return;
 
   std::shared_ptr<kernelConfig> prev_kernel_config = bestKernelConfig;
   if (tuned_) {
