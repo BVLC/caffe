@@ -351,6 +351,8 @@ class DataTransformer {
  protected:
   GenRandNumbers rand_num_;
 
+  void Transform(const Datum& datum, Dtype* transformed_data);
+
   // Transform and return the transformation information.
   template<typename AnnotationHandler = EmptyType>
   void Transform(const Datum& datum, Dtype* transformed_data,
