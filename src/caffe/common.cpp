@@ -87,9 +87,10 @@ Caffe::Caffe()
   // keep the program running as one might just want to run CPU code).
   if (cublasCreate(&cublas_handle_) != CUBLAS_STATUS_SUCCESS) {
     LOG(ERROR) << "Cannot create Cublas handle. Cublas won't be available.";
+    cublas_handle_ = NULL;
+  } else {
+    CUBLAS_CHECK(cublasSetStream(cublas_handle_, cudaStreamPerThread));
   }
-  CUBLAS_CHECK(cublasSetStream(cublas_handle_, cudaStreamPerThread));
-
 }
 
 Caffe::~Caffe() {
