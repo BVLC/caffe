@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.7)
+cmake_minimum_required(VERSION 3.9)
 if(POLICY CMP0046)
   cmake_policy(SET CMP0046 NEW)
 endif()
@@ -10,6 +10,15 @@ endif()
 project(Caffe C CXX)
 
 set(CMAKE_CXX_STANDARD 14)
+
+cmake_policy(SET CMP0069 NEW)
+include(CheckIPOSupported)
+check_ipo_supported(RESULT result OUTPUT output)
+if(result)
+  set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+else()
+  message(WARNING "IPO is not supported: ${output}")
+endif()
 
 IF (WIN32)
   SET(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
