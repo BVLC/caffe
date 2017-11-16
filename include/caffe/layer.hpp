@@ -229,6 +229,8 @@ protected:
   /** @brief Using the CPU device, compute the layer output. */
   virtual void Forward_cpu(const vector<Blob<Dtype> *> &bottom,
                            const vector<Blob<Dtype> *> &top) = 0;
+  virtual void Forward_cpu_const(const vector<Blob<Dtype> *> &bottom,
+                           const vector<Blob<Dtype> *> &top) const {}
   /**
    * @brief Using the GPU device, compute the layer output.
    *        Fall back to Forward_cpu() if unavailable.
