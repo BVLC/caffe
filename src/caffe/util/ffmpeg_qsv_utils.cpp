@@ -393,77 +393,8 @@ bool QsvVideoReader::decodeFrame() {
 
             frame_number++;
             valid = true;
-#ifdef USE_VPP_QSV
-            if (!filter_ctx.initiallized) {
-                ret = init_filter(&filter_ctx, filter_ctx.dec_ctx, av_asprintf("vpp_qsv=w=%d:h=%d", filter_ctx.dec_ctx->width, filter_ctx.dec_ctx->height));
-                if (ret < 0) {
-                    av_frame_free(&decode_frame);
-                    return false;
-                }
-            }
-            av_log(NULL, AV_LOG_INFO, "Pushing decoded frame to filters\n");
-            /* push the decoded frame into the filtergraph */
-            ret = av_buffersrc_add_frame_flags(filter_ctx.buffersrc_ctx, decode_frame, 0);
-            if (ret < 0) {
-                av_log(NULL, AV_LOG_ERROR, "Error while feeding the filtergraph\n");
-                av_frame_free(&decode_frame);
-                return false;
-            }
-            av_log(NULL, AV_LOG_INFO, "Pulling filtered frame from filters\n");
-            AVFrame *small_frame = av_frame_alloc();
-            ret = av_buffersink_get_frame(filter_ctx.buffersink_ctx,
-                    small_frame);
-            if (ret < 0) {
-                av_log(NULL, AV_LOG_ERROR, "Pulling filtered frame from filters has error\n");
-                /* if no more frames for output - returns AVERROR(EAGAIN)
-                 * if flushed and no more frames for output - returns AVERROR_EOF
-                 * rewrite retcode to 0 to show it as normal procedure completion
-                 */
-                if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
-                    ret = 0;
-                } else {
-                    av_frame_free(&decode_frame);
-                    av_frame_free(&small_frame);
-                    return false;
-                }
-            }
-            AVFrame *copy_frame = av_frame_alloc();
-            copy_frame->format = AV_PIX_FMT_NONE;
-            ret = av_hwframe_transfer_data(copy_frame, small_frame, 0);
-            if (ret < 0) {
-                av_log(NULL, AV_LOG_ERROR, "Failed to transfer data to "
-                       "output frame: %d.\n", ret);
-                av_frame_free(&decode_frame);
-                av_frame_free(&small_frame);
-                av_frame_free(&copy_frame);
-                return false;
-            }
-            ret = av_frame_copy_props(copy_frame, small_frame);
-            if (ret < 0) {
-                av_log(NULL, AV_LOG_ERROR, "Failed to copy props to "
-                       "output frame: %d.\n", ret);
-                av_frame_free(&decode_frame);
-                av_frame_free(&small_frame);
-                av_frame_free(&copy_frame);
-                return false;
-            }
-            av_frame_unref(small_frame);
-            av_frame_move_ref(small_frame, copy_frame);
-            if (small_frame->format != -1) {
-                init_swscontext((enum AVPixelFormat)small_frame->format);
-                sws_scale(
-                    img_convert_ctx,
-                    small_frame->data,
-                    small_frame->linesize,
-                    0, out_height == 0 ? filter_ctx.dec_ctx->height : out_height,
-                    rgb_picture.data,
-                    rgb_picture.linesize
-                    );
-            }
-            av_frame_free(&copy_frame);
-            av_frame_free(&small_frame);
-#else
-              if (decode_frame->data[3]) {
+
+            if (decode_frame->data[3]) {
                   mfxFrameSurface1* surface = (mfxFrameSurface1*)decode_frame->data[3];
                 if (!mss_pipeline.isInitialized()) {
                     AVHWDeviceContext *device_ctx = (AVHWDeviceContext*)g_device->data;
@@ -502,8 +433,7 @@ bool QsvVideoReader::decodeFrame() {
                 } else {
                     printf("MSS pipeline init failed!!\n");
                 }
-              }
-#endif
+            }
         }
         else
         {
@@ -531,110 +461,6 @@ double QsvVideoReader::dts_to_sec(int64_t dts) {
 int64_t QsvVideoReader::dts_to_frame_number(int64_t dts) {
     double sec = dts_to_sec(dts);
     return (int64_t)(get_fps() * sec + 0.5);
-}
-
-int QsvVideoReader::init_filter(FilteringContext* fctx, AVCodecContext *dec_ctx, const char *filter_spec)
-{
-    char args[512];
-    int ret = 0;
-    AVFilter *buffersrc = NULL;
-    AVFilter *buffersink = NULL;
-    AVFilterContext *buffersrc_ctx = NULL;
-    AVFilterContext *buffersink_ctx = NULL;
-    AVFilterInOut *outputs = avfilter_inout_alloc();
-    AVFilterInOut *inputs  = avfilter_inout_alloc();
-    AVFilterGraph *filter_graph = avfilter_graph_alloc();
-    
-    frame.width = dec_ctx->coded_width;
-    frame.height = dec_ctx->coded_height;
-    frame.cn = 3;
-    frame.step = 0;
-    frame.data = NULL;
-    
-    if (!outputs || !inputs || !filter_graph) {
-        ret = AVERROR(ENOMEM);
-        goto end;
-    }
-
-    if (dec_ctx->codec_type == AVMEDIA_TYPE_VIDEO) {
-        buffersrc = avfilter_get_by_name("buffer");
-        buffersink = avfilter_get_by_name("buffersink");
-        if (!buffersrc || !buffersink) {
-            av_log(NULL, AV_LOG_ERROR, "filtering source or sink element not found\n");
-            ret = AVERROR_UNKNOWN;
-            goto end;
-        }
-
-        snprintf(args, sizeof(args),
-                "video_size=%dx%d:pix_fmt=%d:time_base=%d/%d:pixel_aspect=%d/%d"
-                ":frame_rate=%d/%d",
-                dec_ctx->width, dec_ctx->height, dec_ctx->pix_fmt,
-                dec_ctx->time_base.num, dec_ctx->time_base.den,
-                dec_ctx->sample_aspect_ratio.num,
-                dec_ctx->sample_aspect_ratio.den,
-                dec_ctx->framerate.num, dec_ctx->framerate.den);
-
-        ret = avfilter_graph_create_filter(&buffersrc_ctx, buffersrc, "in",
-                args, NULL, filter_graph);
-        if (ret < 0) {
-            av_log(NULL, AV_LOG_ERROR, "Cannot create buffer source\n");
-            goto end;
-        }
-
-        if (dec_ctx->hw_frames_ctx) {
-            AVBufferSrcParameters *par = av_buffersrc_parameters_alloc();
-            par->hw_frames_ctx = dec_ctx->hw_frames_ctx;
-            ret = av_buffersrc_parameters_set(buffersrc_ctx, par);
-            av_freep(&par);
-            if (ret < 0)
-                goto end;
-        }
-
-        ret = avfilter_graph_create_filter(&buffersink_ctx, buffersink, "out",
-                NULL, NULL, filter_graph);
-        if (ret < 0) {
-            av_log(NULL, AV_LOG_ERROR, "Cannot create buffer sink\n");
-            goto end;
-        }
-    } else {
-        ret = AVERROR_UNKNOWN;
-        goto end;
-    }
-
-    /* Endpoints for the filter graph. */
-    outputs->name       = av_strdup("in");
-    outputs->filter_ctx = buffersrc_ctx;
-    outputs->pad_idx    = 0;
-    outputs->next       = NULL;
-
-    inputs->name       = av_strdup("out");
-    inputs->filter_ctx = buffersink_ctx;
-    inputs->pad_idx    = 0;
-    inputs->next       = NULL;
-
-    if (!outputs->name || !inputs->name) {
-        ret = AVERROR(ENOMEM);
-        goto end;
-    }
-
-    if ((ret = avfilter_graph_parse_ptr(filter_graph, filter_spec,
-                    &inputs, &outputs, NULL)) < 0)
-        goto end;
-
-    if ((ret = avfilter_graph_config(filter_graph, NULL)) < 0)
-        goto end;
-
-    /* Fill FilteringContext */
-    fctx->buffersrc_ctx = buffersrc_ctx;
-    fctx->buffersink_ctx = buffersink_ctx;
-    fctx->filter_graph = filter_graph;
-    fctx->initiallized = 1;
-
-end:
-    avfilter_inout_free(&inputs);
-    avfilter_inout_free(&outputs);
-
-    return ret;
 }
 
 bool QsvVideoReader::init_swscontext(enum AVPixelFormat dec_pix_fmts) {

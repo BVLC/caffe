@@ -13,52 +13,48 @@
 
 namespace caffe { namespace mss {
 
-enum {
-    MFX_FOURCC_VP8_NV12    = MFX_MAKEFOURCC('V','P','8','N'),
-    MFX_FOURCC_VP8_MBDATA  = MFX_MAKEFOURCC('V','P','8','M'),
-    MFX_FOURCC_VP8_SEGMAP  = MFX_MAKEFOURCC('V','P','8','S'),
-};
-
-struct vaapiMemId
+struct vaapiContext
 {
-    VASurfaceID* m_surface;
-    VAImage      m_image;
-    unsigned int m_fourcc;
-    mfxU8*       m_sys_buffer;
-    mfxU8*       m_va_buffer;
+    VASurfaceID* m_va_surface_id;
+    unsigned int m_va_fourcc;
+    VAImage m_va_image;
 };
 
 class SurfaceAllocator : public mfxFrameAllocator
 {
 public:
-	SurfaceAllocator();
+    SurfaceAllocator();
     virtual ~SurfaceAllocator();
 
     mfxStatus init(VADisplay *dpy);
     mfxStatus close();
 
-    virtual mfxStatus vaapiAllocFrames(mfxFrameAllocRequest *request, mfxFrameAllocResponse *response);
-    virtual mfxStatus vaapiLockFrame(mfxMemId mid, mfxFrameData *ptr);
-    virtual mfxStatus vaapiUnlockFrame(mfxMemId mid, mfxFrameData *ptr);
-    virtual mfxStatus vaapiGetFrameHDL(mfxMemId mid, mfxHDL *handle);
-    virtual mfxStatus vaapiFreeFrames(mfxFrameAllocResponse *response);
+    virtual mfxStatus vaapiAllocFrames(mfxFrameAllocRequest *allocRequest, mfxFrameAllocResponse *allocResponse);
+    virtual mfxStatus vaapiLockFrame(mfxMemId context, mfxFrameData *frameBuff);
+    virtual mfxStatus vaapiUnlockFrame(mfxMemId context, mfxFrameData *frameBuff);
+    virtual mfxStatus vaapiGetFrameHDL(mfxMemId context, mfxHDL *handle);
+    virtual mfxStatus vaapiFreeFrames(mfxFrameAllocResponse *allocResponse);
 
 private:
-    static mfxStatus MFX_CDECL  mfxAllocImpl(mfxHDL pthis, mfxFrameAllocRequest *request, mfxFrameAllocResponse *response);
+    static mfxStatus MFX_CDECL  mfxAllocImpl(mfxHDL pthis, mfxFrameAllocRequest *allocRequest, mfxFrameAllocResponse *allocResponse);
     static mfxStatus MFX_CDECL  mfxLockImpl(mfxHDL pthis, mfxMemId mid, mfxFrameData *ptr);
     static mfxStatus MFX_CDECL  mfxUnlockImpl(mfxHDL pthis, mfxMemId mid, mfxFrameData *ptr);
     static mfxStatus MFX_CDECL  mfxGetFrameHDLImpl(mfxHDL pthis, mfxMemId mid, mfxHDL *handle);
-    static mfxStatus MFX_CDECL  mfxFreeImpl(mfxHDL pthis, mfxFrameAllocResponse *response);
+    static mfxStatus MFX_CDECL  mfxFreeImpl(mfxHDL pthis, mfxFrameAllocResponse *allocResponse);
 
-    unsigned int convertToMfxFourcc(mfxU32 fourcc);
     mfxStatus convertToMfxStatus(VAStatus vaSts);
     unsigned int convertToVAFormat(mfxU32 fourcc);
-    mfxStatus checkRequestType(mfxFrameAllocRequest *request);
-    mfxStatus releaseResponse(mfxFrameAllocResponse *response);
-    mfxStatus allocImpl(mfxFrameAllocRequest *request, mfxFrameAllocResponse *response);
+    mfxStatus checkRequestType(mfxFrameAllocRequest *allocRequest);
+    mfxStatus releaseResponse(mfxFrameAllocResponse *allocResponse);
+    mfxStatus allocImpl(mfxFrameAllocRequest *allocRequest, mfxFrameAllocResponse *allocResponse);
+
+    void mapNV12Buffer(mfxFrameData *frameBuff, unsigned char* mapBuff, VAImage *image);
+    void mapYV12Buffer(mfxFrameData *frameBuff, unsigned char* mapBuff, VAImage *image);
+    void mapYUY12Buffer(mfxFrameData *frameBuff, unsigned char* mapBuff, VAImage *image);
+    void mapRGB4Buffer(mfxFrameData *frameBuff, unsigned char* mapBuff, VAImage *image);
 private:
-    std::list<mfxFrameAllocResponse> m_responses;
-    VADisplay m_dpy;
+    std::list<mfxFrameAllocResponse> m_surface_pool;
+    VADisplay m_va_display;
 };
 
 } // namespace mss
