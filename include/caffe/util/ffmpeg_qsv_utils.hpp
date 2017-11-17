@@ -65,7 +65,7 @@ private:
     bool decodeFrame();
     double dts_to_sec(int64_t dts);
     int64_t dts_to_frame_number(int64_t dts);
-    int init_filter(FilteringContext* fctx, AVCodecContext *dec_ctx, const char *filter_spec);
+    //int init_filter(FilteringContext* fctx, AVCodecContext *dec_ctx, const char *filter_spec);
     bool init_swscontext(enum AVPixelFormat dec_pix_fmts);
 private:
     AVFormatContext * ic;
