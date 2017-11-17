@@ -6,15 +6,6 @@
 namespace caffe {
 
 template <typename Dtype>
-__global__ void DropoutForward(const int n, const Dtype* in,
-    const unsigned int* mask, const unsigned int threshold, const float scale,
-    Dtype* out) {
-  CUDA_KERNEL_LOOP(index, n) {
-    out[index] = in[index] * (mask[index] > threshold) * scale;
-  }
-}
-
-template <typename Dtype>
 void DropoutLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->gpu_data();
