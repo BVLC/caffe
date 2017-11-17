@@ -8,8 +8,8 @@ momentum: 0.9
 weight_decay: 0.0005
 base_lr: 0.06
 lr_policy: "poly"
-power: 2
-max_iter: 80000 # 60 epoch
+power: 0.5
+max_iter: 40000 # 60 epoch
 display: 40
 snapshot: 10000
 solver_mode: CPU
