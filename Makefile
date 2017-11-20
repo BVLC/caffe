@@ -71,11 +71,13 @@ endif
 
 	RETURN_STRING=$(shell ./external/mlsl/prepare_mlsl.sh)
 	MLSL_ROOT=$(firstword $(RETURN_STRING))
-	MLSL_LDFLAGS=$(lastword $(RETURN_STRING))	
+	MLSL_LDFLAGS=$(lastword $(RETURN_STRING))
 	COMMON_FLAGS += -DUSE_MLSL=1
 	LIBRARIES += mlsl
 	INCLUDE_DIRS += $(MLSL_ROOT)/intel64/include
 	LIBRARY_DIRS += $(MLSL_ROOT)/intel64/lib
+	IGNORE := $(shell bash -c "source $(MLSL_ROOT)/intel64/bin/mlslvars.sh; env | sed 's/=/:=/' | sed 's/^/export /' > make_mlsl_env")
+	include make_mlsl_env
 
 ifeq ($(CAFFE_PER_LAYER_TIMINGS), 1)
 	COMMON_FLAGS += -DCAFFE_PER_LAYER_TIMINGS
