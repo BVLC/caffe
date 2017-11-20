@@ -226,6 +226,9 @@ protected:
    *  the objective function. */
   vector<Dtype> loss_;
 
+  virtual void Reshape_const(const vector<Blob<Dtype> *> &bottom,
+                       const vector<Blob<Dtype> *> &top) const {}
+
   /** @brief Using the CPU device, compute the layer output. */
   virtual void Forward_cpu(const vector<Blob<Dtype> *> &bottom,
                            const vector<Blob<Dtype> *> &top) = 0;

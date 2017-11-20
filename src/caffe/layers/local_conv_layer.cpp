@@ -17,7 +17,7 @@ vector<int> LocalConvolutionLayer<Dtype>::compute_output_shape() const {
   vector<int> output_shape;
   for (int i = 0; i < this->num_spatial_axes_; ++i) {
     // i + 1 to skip channel axis
-    const int *input_dim = this->conv_input_shape_.cpu_data();
+    const int *input_dim = this->conv_input_shape_ptr_->cpu_data();
     const int kernel_extent = dilation_data[i] * (kernel_shape_data[i] - 1) + 1;
     const int output_dim =
         (input_dim[i + 1] + 2 * pad_data[i] - kernel_extent) / stride_data[i] +
@@ -32,8 +32,8 @@ void LocalConvolutionLayer<Dtype>::init_local_offset() {
   int h, w, offset_h, offset_w, symmetry_offset_h, symmetry_offset_w;
   Blob<int> &idx_to_off = this->loc_idx_to_offset_;
   int *idx_to_off_data = idx_to_off.mutable_cpu_data();
-  int loc_h = this->conv_input_shape_.cpu_data()[1];
-  int loc_w = this->conv_input_shape_.cpu_data()[2];
+  int loc_h = this->conv_input_shape_ptr_->cpu_data()[1];
+  int loc_w = this->conv_input_shape_ptr_->cpu_data()[2];
   for (h = 0; h < this->local_region_num_h_ / 2; ++h) {
     offset_h = h * this->local_region_step_h_;
     symmetry_offset_h = this->bottom_height_ - (offset_h + loc_h);
@@ -139,44 +139,6 @@ void LocalConvolutionLayer<Dtype>::crop_loc_patch_cpu(
   }
 }
 
-/*
-template <typename Dtype>
-void LocalConvolutionLayer<Dtype>::realign_bottom_diff_cpu(const Dtype
-*loc_bottom_diff_buffer, Dtype *bottom_diff)
-{
-        const Blob<int> *idx_to_off_blob = &this->loc_idx_to_offset_;
-        const int *idx_to_off_data = idx_to_off_blob->cpu_data();
-
-        const Dtype *src_data = loc_bottom_diff_buffer;
-        Dtype *dst_data = bottom_diff;
-
-        int loc_height = this->conv_input_shape_.cpu_data()[1], loc_width =
-this->conv_input_shape_.cpu_data()[2]; int bottom_width = this->bottom_width_;
-        int src_spatial_dim = loc_height * loc_width;
-        int src_step = this->conv_in_channels_ * src_spatial_dim;
-        int dst_channel_step = this->bottom_height_ * this->bottom_width_;
-        int channels = this->channels_;
-        int loc_num_w = this->local_region_num_w_, loc_num_h =
-this->local_region_num_h_; for (int n = 0; n < channels; n++){ for (int lh = 0;
-lh < loc_num_h; lh++){ for (int lw = 0; lw < loc_num_w; lw++){ int loc_off_h =
-idx_to_off_data[idx_to_off_blob->offset(lh, lw, 0, 0)]; int loc_off_w =
-idx_to_off_data[idx_to_off_blob->offset(lh, lw, 1, 0)];
-
-                                int loc_num = lh * loc_num_w + lw;
-                                int src_offset = loc_num * src_step + n *
-src_spatial_dim; for (int h = 0; h < loc_height; h++){ for (int w = 0; w <
-loc_width; w++){ int dst_idx = (loc_off_h + h) * bottom_width + loc_off_w + w;
-                                                int src_idx = src_offset + h *
-loc_width + w; dst_data[dst_idx] += src_data[src_idx];
-                                        }
-                                }
-
-                        }
-                }
-                dst_data += dst_channel_step;
-        }
-}
-*/
 template <typename Dtype>
 void LocalConvolutionLayer<Dtype>::LayerSetUp(
     const vector<Blob<Dtype> *> &bottom, const vector<Blob<Dtype> *> &top) {
@@ -370,8 +332,8 @@ void LocalConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype> *> &bottom,
   }
   // local region height and width
   vector<int> conv_input_dim_blob_shape(1, this->num_spatial_axes_ + 1);
-  this->conv_input_shape_.Reshape(conv_input_dim_blob_shape);
-  int *conv_input_shape_data = this->conv_input_shape_.mutable_cpu_data();
+  this->conv_input_shape_ptr_.reset(new Blob<int>(conv_input_dim_blob_shape));
+  int *conv_input_shape_data = this->conv_input_shape_ptr_->mutable_cpu_data();
 
   conv_input_shape_data[0] = this->channels_;
   conv_input_shape_data[1] =
@@ -380,7 +342,8 @@ void LocalConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype> *> &bottom,
       static_cast<int>(bottom_width_ * local_region_ratio_w_);
 
   // Shape the tops.
-  this->bottom_shape_ = &bottom[0]->shape();
+  //this->bottom_shape_ = &bottom[0]->shape();
+  this->bottom_shape_.reset(const_cast<std::vector<int>*>(&bottom[0]->shape()));
   auto output_shape = compute_output_shape();
   this->top_height_ = output_shape[0] * this->local_region_num_h_;
   this->top_width_ = output_shape[1] * this->local_region_num_w_;
@@ -389,7 +352,7 @@ void LocalConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype> *> &bottom,
     top[top_id]->Reshape(num, this->num_output_, this->top_height_,
                          this->top_width_);
   }
-  this->conv_out_spatial_dim_ = output_shape[0] * output_shape[1];
+  this->conv_out_spatial_dim_ptr_.reset(new int(output_shape[0] * output_shape[1]));
 
   this->kernel_dim_ = this->channels_ * this->kernel_shape_.cpu_data()[0] *
                       this->kernel_shape_.cpu_data()[1] / this->group_;
@@ -398,14 +361,14 @@ void LocalConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype> *> &bottom,
   // overly large memory usage. In the special case of 1x1 convolution
   // it goes lazily unused to save memory.
 
-  this->col_buffer_.Reshape(1, this->kernel_dim_ * this->group_,
-                            output_shape[0], output_shape[1]);
+  this->col_buffer_ptr_.reset(new Blob<Dtype>(1, this->kernel_dim_ * this->group_,
+                            output_shape[0], output_shape[1]));
   // Set up the all ones "bias multiplier" for adding biases by BLAS
   if (this->bias_term_) {
     vector<int> bias_multiplier_shape(1, output_shape[0] * output_shape[1]);
-    this->bias_multiplier_.Reshape(bias_multiplier_shape);
-    caffe_set(this->bias_multiplier_.count(), Dtype(1),
-              this->bias_multiplier_.mutable_cpu_data());
+    this->bias_multiplier_ptr_.reset(new Blob<Dtype>(bias_multiplier_shape));
+    caffe_set(this->bias_multiplier_ptr_->count(), Dtype(1),
+              this->bias_multiplier_ptr_->mutable_cpu_data());
   }
 
   // create map of local region index to local region offset, the local regions'
@@ -449,8 +412,8 @@ void LocalConvolutionLayer<Dtype>::Forward_cpu(
               loc_bottom_data + loc_bottom_buffer_.offset(loc_num);
           Dtype *loc_top = loc_top_data + loc_top_buffer_.offset(loc_num);
           crop_loc_patch_cpu(single_bottom_data, bottom_w, bottom_h, bottom_c,
-                             this->conv_input_shape_.cpu_data()[2],
-                             this->conv_input_shape_.cpu_data()[1],
+                             this->conv_input_shape_ptr_->cpu_data()[2],
+                             this->conv_input_shape_ptr_->cpu_data()[1],
                              idx_to_off_data[idx_to_off->offset(lh, lw, 1, 0)],
                              idx_to_off_data[idx_to_off->offset(lh, lw, 0, 0)],
                              loc_bottom);

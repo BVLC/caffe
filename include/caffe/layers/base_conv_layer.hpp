@@ -30,11 +30,14 @@ class BaseConvolutionLayer : public Layer<Dtype> {
   virtual inline bool EqualNumBottomTopBlobs() const { return true; }
 
  protected:
+  virtual void Reshape_const(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) const override;
+
   // Helper functions that abstract away the column buffer and gemm arguments.
   // The last argument in forward_cpu_gemm is so that we can skip the im2col if
   // we just called weight_cpu_gemm with the same input.
   void forward_cpu_gemm(const Dtype* input, const Dtype* weights,
-      Dtype* output, bool skip_im2col = false);
+      Dtype* output, bool skip_im2col = false) const;
   void forward_cpu_bias(Dtype* output, const Dtype* bias) const;
 
 #ifndef CPU_ONLY
@@ -57,10 +60,9 @@ class BaseConvolutionLayer : public Layer<Dtype> {
   /// @brief The spatial dimensions of the dilation.
   Blob<int> dilation_;
   /// @brief The spatial dimensions of the convolution input.
-  Blob<int> conv_input_shape_;
+  mutable ::boost::thread_specific_ptr<Blob<int>> conv_input_shape_ptr_;
   /// @brief The spatial dimensions of the output.
- // ::boost::thread_specific_ptr<vector<int>> output_shape_;
-  const vector<int>* bottom_shape_;
+  mutable ::boost::thread_specific_ptr<vector<int>> bottom_shape_{[](auto p){}};
 
   int num_spatial_axes_;
   int channel_axis_;
@@ -76,25 +78,25 @@ class BaseConvolutionLayer : public Layer<Dtype> {
   inline void conv_im2col_cpu(const Dtype* data, Dtype* col_buff) const {
     if (!force_nd_im2col_ && num_spatial_axes_ == 2) {
       im2col_cpu(data, channels_,
-          conv_input_shape_.cpu_data()[1], conv_input_shape_.cpu_data()[2],
+          conv_input_shape_ptr_->cpu_data()[1], conv_input_shape_ptr_->cpu_data()[2],
           kernel_shape_.cpu_data()[0], kernel_shape_.cpu_data()[1],
           pad_.cpu_data()[0], pad_.cpu_data()[1],
           stride_.cpu_data()[0], stride_.cpu_data()[1],
           dilation_.cpu_data()[0], dilation_.cpu_data()[1], col_buff);
     } else {
-      im2col_nd_cpu(data, num_spatial_axes_, conv_input_shape_.cpu_data(),
-          col_buffer_.shape().data(), kernel_shape_.cpu_data(),
+      im2col_nd_cpu(data, num_spatial_axes_, conv_input_shape_ptr_->cpu_data(),
+          col_buffer_ptr_->shape().data(), kernel_shape_.cpu_data(),
           pad_.cpu_data(), stride_.cpu_data(), dilation_.cpu_data(), col_buff);
     }
   }
 
  protected:
   int conv_out_channels_;
-  int conv_out_spatial_dim_;
+  mutable ::boost::thread_specific_ptr<int> conv_out_spatial_dim_ptr_;
   int kernel_dim_;
 
-  Blob<Dtype> col_buffer_;
-  Blob<Dtype> bias_multiplier_;
+  mutable ::boost::thread_specific_ptr<Blob<Dtype>> col_buffer_ptr_;
+  mutable ::boost::thread_specific_ptr<Blob<Dtype>> bias_multiplier_ptr_;
 };
 
 }  // namespace caffe
