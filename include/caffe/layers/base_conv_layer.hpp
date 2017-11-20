@@ -37,17 +37,9 @@ class BaseConvolutionLayer : public Layer<Dtype> {
   void forward_cpu_bias(Dtype* output, const Dtype* bias);
   void backward_cpu_gemm(const Dtype* input, const Dtype* weights,
       Dtype* output);
-  void weight_cpu_gemm(const Dtype* input, const Dtype* output, Dtype*
-      weights);
 
 #ifndef CPU_ONLY
-  void forward_gpu_gemm(const Dtype* col_input, const Dtype* weights,
-      Dtype* output, bool skip_im2col = false);
   void forward_gpu_bias(Dtype* output, const Dtype* bias);
-  void backward_gpu_gemm(const Dtype* input, const Dtype* weights,
-      Dtype* col_output);
-  void weight_gpu_gemm(const Dtype* col_input, const Dtype* output, Dtype*
-      weights);
 #endif
 
   /// @brief The spatial dimensions of the input.
