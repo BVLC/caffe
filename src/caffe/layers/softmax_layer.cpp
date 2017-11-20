@@ -9,23 +9,34 @@ namespace caffe {
 template <typename Dtype>
 void SoftmaxLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  softmax_axis_ =
-      bottom[0]->CanonicalAxisIndex(this->layer_param_.softmax_param().axis());
   top[0]->ReshapeLike(*bottom[0]);
-  vector<int> mult_dims(1, bottom[0]->shape(softmax_axis_));
-  sum_multiplier_.Reshape(mult_dims);
-  Dtype* multiplier_data = sum_multiplier_.mutable_cpu_data();
-  caffe_set(sum_multiplier_.count(), Dtype(1), multiplier_data);
-  outer_num_ = bottom[0]->count(0, softmax_axis_);
-  inner_num_ = bottom[0]->count(softmax_axis_ + 1);
-  vector<int> scale_dims = bottom[0]->shape();
-  scale_dims[softmax_axis_] = 1;
-  scale_.Reshape(scale_dims);
 }
 
 template <typename Dtype>
 void SoftmaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
+  Forward_cpu_const(bottom,top);
+}
+
+template <typename Dtype>
+void SoftmaxLayer<Dtype>::Forward_cpu_const(const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) const {
+
+  auto softmax_axis_ =
+    bottom[0]->CanonicalAxisIndex(this->layer_param_.softmax_param().axis());
+  vector<int> mult_dims(1, bottom[0]->shape(softmax_axis_));
+  Blob<Dtype>  sum_multiplier_;
+  sum_multiplier_.Reshape(mult_dims);
+  Dtype* multiplier_data = sum_multiplier_.mutable_cpu_data();
+  caffe_set(sum_multiplier_.count(), Dtype(1), multiplier_data);
+  int outer_num_ = bottom[0]->count(0, softmax_axis_);
+  int inner_num_ = bottom[0]->count(softmax_axis_ + 1);
+  vector<int> scale_dims = bottom[0]->shape();
+  scale_dims[softmax_axis_] = 1;
+  Blob<Dtype> scale_;
+  scale_.Reshape(scale_dims);
+
+
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = top[0]->mutable_cpu_data();
   Dtype* scale_data = scale_.mutable_cpu_data();

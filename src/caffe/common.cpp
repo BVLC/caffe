@@ -25,6 +25,7 @@ Caffe& Caffe::Get() {
 }
 
 // random seeding
+/*
 int64_t cluster_seedgen(void) {
   int64_t s, seed, pid;
   FILE* f = fopen("/dev/urandom", "rb");
@@ -43,6 +44,7 @@ int64_t cluster_seedgen(void) {
   seed = std::abs(((s * 181) * ((pid - 83) * 359)) % 104729);
   return seed;
 }
+*/
 
 
 #ifdef CPU_ONLY  // CPU-only Caffe.

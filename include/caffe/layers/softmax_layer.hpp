@@ -29,16 +29,18 @@ class SoftmaxLayer : public Layer<Dtype> {
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
+  virtual void Forward_cpu_const(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) const;
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
-  int outer_num_;
-  int inner_num_;
-  int softmax_axis_;
+ // int outer_num_;
+//  int inner_num_;
+//  int softmax_axis_;
   /// sum_multiplier is used to carry out sum using BLAS
-  Blob<Dtype> sum_multiplier_;
+//  Blob<Dtype> sum_multiplier_;
   /// scale is an intermediate Blob to hold temporary results.
-  Blob<Dtype> scale_;
+//  mutable Blob<Dtype> scale_;
 };
 
 }  // namespace caffe
