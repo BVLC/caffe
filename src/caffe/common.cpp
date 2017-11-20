@@ -1,4 +1,3 @@
-//#include <boost/thread.hpp>
 #include <memory>
 #include <glog/logging.h>
 #include <cmath>
@@ -9,7 +8,6 @@
 #endif
 
 #include "caffe/common.hpp"
-//#include "caffe/util/rng.hpp"
 
 namespace caffe {
 
@@ -23,29 +21,6 @@ Caffe& Caffe::Get() {
   }
   return *(thread_instance_.get());
 }
-
-// random seeding
-/*
-int64_t cluster_seedgen(void) {
-  int64_t s, seed, pid;
-  FILE* f = fopen("/dev/urandom", "rb");
-  if (f && fread(&seed, 1, sizeof(seed), f) == sizeof(seed)) {
-    fclose(f);
-    return seed;
-  }
-
-  LOG(INFO) << "System entropy source not available, "
-              "using fallback algorithm to generate seed instead.";
-  if (f)
-    fclose(f);
-
-  pid = getpid();
-  s = time(NULL);
-  seed = std::abs(((s * 181) * ((pid - 83) * 359)) % 104729);
-  return seed;
-}
-*/
-
 
 #ifdef CPU_ONLY  // CPU-only Caffe.
 
