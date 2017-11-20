@@ -2,6 +2,7 @@
 #define CAFFE_BASE_CONVOLUTION_LAYER_HPP_
 
 #include <vector>
+#include <boost/thread/tss.hpp>
 
 #include "caffe/blob.hpp"
 #include "caffe/layer.hpp"
@@ -41,11 +42,11 @@ class BaseConvolutionLayer : public Layer<Dtype> {
 #endif
 
   /// @brief The spatial dimensions of the input.
-  inline int input_shape(int i) {
+  inline int input_shape(int i) const {
     return (*bottom_shape_)[channel_axis_ + i];
   }
   // Compute height_out_ and width_out_ from other parameters.
-  virtual void compute_output_shape() = 0;
+  virtual vector<int> compute_output_shape() const = 0;
 
   /// @brief The spatial dimensions of a filter kernel.
   Blob<int> kernel_shape_;
@@ -57,22 +58,14 @@ class BaseConvolutionLayer : public Layer<Dtype> {
   Blob<int> dilation_;
   /// @brief The spatial dimensions of the convolution input.
   Blob<int> conv_input_shape_;
-  /// @brief The spatial dimensions of the col_buffer.
-  vector<int> col_buffer_shape_;
   /// @brief The spatial dimensions of the output.
-  vector<int> output_shape_;
+ // ::boost::thread_specific_ptr<vector<int>> output_shape_;
   const vector<int>* bottom_shape_;
 
   int num_spatial_axes_;
-  int bottom_dim_;
-  int top_dim_;
-
   int channel_axis_;
-  int num_;
   int channels_;
   int group_;
-  int out_spatial_dim_;
-  int weight_offset_;
   int num_output_;
   bool bias_term_;
   bool is_1x1_;
@@ -82,7 +75,7 @@ class BaseConvolutionLayer : public Layer<Dtype> {
   // wrap im2col/col2im so we don't have to remember the (long) argument lists
   inline void conv_im2col_cpu(const Dtype* data, Dtype* col_buff) const {
     if (!force_nd_im2col_ && num_spatial_axes_ == 2) {
-      im2col_cpu(data, conv_in_channels_,
+      im2col_cpu(data, channels_,
           conv_input_shape_.cpu_data()[1], conv_input_shape_.cpu_data()[2],
           kernel_shape_.cpu_data()[0], kernel_shape_.cpu_data()[1],
           pad_.cpu_data()[0], pad_.cpu_data()[1],
@@ -90,18 +83,15 @@ class BaseConvolutionLayer : public Layer<Dtype> {
           dilation_.cpu_data()[0], dilation_.cpu_data()[1], col_buff);
     } else {
       im2col_nd_cpu(data, num_spatial_axes_, conv_input_shape_.cpu_data(),
-          col_buffer_shape_.data(), kernel_shape_.cpu_data(),
+          col_buffer_.shape().data(), kernel_shape_.cpu_data(),
           pad_.cpu_data(), stride_.cpu_data(), dilation_.cpu_data(), col_buff);
     }
   }
 
  protected:
   int conv_out_channels_;
-  int conv_in_channels_;
   int conv_out_spatial_dim_;
   int kernel_dim_;
-  int col_offset_;
-  int output_offset_;
 
   Blob<Dtype> col_buffer_;
   Blob<Dtype> bias_multiplier_;

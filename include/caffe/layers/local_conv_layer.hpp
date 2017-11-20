@@ -1,5 +1,4 @@
-#ifndef CAFFE_LOCAL_CONV_LAYER_HPP_
-#define CAFFE_LOCAL_CONV_LAYER_HPP_
+#pragma once
 
 #include <string>
 #include <utility>
@@ -35,14 +34,14 @@ protected:
 	virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 		const vector<Blob<Dtype>*>& top);
 	virtual inline bool reverse_dimensions() { return false; }
-	virtual void compute_output_shape();
+	virtual vector<int> compute_output_shape() const;
 	void init_local_offset();
 	void crop_loc_patch_cpu(const Dtype *src, int src_w, int src_h, int src_c, int crop_width, int crop_height, int w_off, int h_off, Dtype *local_patch_data);
 	void crop_loc_patch_gpu(const Dtype *src, int src_w, int src_h, int src_c, int crop_width, int crop_height, int w_off, int h_off, Dtype *local_patch_data);
 	void realign_loc_conv_result_cpu(const Dtype *local_conv_data, Dtype *dst_data);
 	void realign_loc_conv_result_gpu(const Dtype *local_conv_data, Dtype *dst_data);
-	void realign_bottom_diff_cpu(const Dtype *loc_bottom_diff_buffer, Dtype *bottom_diff);
-	void realign_bottom_diff_gpu(const Dtype *loc_bottom_diff_buffer, Dtype *bottom_diff);
+	//void realign_bottom_diff_cpu(const Dtype *loc_bottom_diff_buffer, Dtype *bottom_diff);
+	//void realign_bottom_diff_gpu(const Dtype *loc_bottom_diff_buffer, Dtype *bottom_diff);
 
 	float local_region_ratio_w_, local_region_ratio_h_;
 	int local_region_num_w_, local_region_num_h_;
@@ -58,4 +57,3 @@ private:
 };
 
 }//namespace caffe
-#endif

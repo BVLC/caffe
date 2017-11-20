@@ -11,7 +11,7 @@ set(Caffe_COMPILE_OPTIONS "")
   SET(Boost_COMPILER "-vc141")
   SET(BOOST_LIBRARYDIR C:/local/boost_1_65_1/lib64-msvc-14.1)
   #endif()
-find_package(Boost REQUIRED COMPONENTS system filesystem)
+find_package(Boost REQUIRED COMPONENTS system filesystem thread)
 list(APPEND Caffe_INCLUDE_DIRS PRIVATE ${Boost_INCLUDE_DIRS})
 list(APPEND Caffe_LINKER_LIBS PRIVATE ${Boost_LIBRARIES})
 

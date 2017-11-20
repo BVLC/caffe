@@ -71,7 +71,7 @@ class ConvolutionLayer : public BaseConvolutionLayer<Dtype> {
       const vector<Blob<Dtype>*>& top);
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
-  virtual void compute_output_shape();
+  virtual vector<int> compute_output_shape() const;
 };
 
 }  // namespace caffe
