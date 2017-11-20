@@ -7,7 +7,7 @@
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
 
-#include "caffe/layers/base_conv_layer.hpp"
+#include "caffe/layers/base_deconv_layer.hpp"
 
 namespace caffe {
 
@@ -26,10 +26,10 @@ namespace caffe {
  *   stride results in upsampling rather than downsampling).
  */
 template <typename Dtype>
-class DeconvolutionLayer : public BaseConvolutionLayer<Dtype> {
+class DeconvolutionLayer : public BaseDeconvolutionLayer<Dtype> {
  public:
   explicit DeconvolutionLayer(const LayerParameter& param)
-      : BaseConvolutionLayer<Dtype>(param) {}
+      : BaseDeconvolutionLayer<Dtype>(param) {}
 
   virtual inline const char* type() const { return "Deconvolution"; }
 

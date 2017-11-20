@@ -375,8 +375,6 @@ void LocalConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   this->col_buffer_.Reshape(1, this->kernel_dim_ * this->group_, this->output_shape_[0], this->output_shape_[1]);
   this->bottom_dim_ = bottom[0]->count(this->channel_axis_);
   this->top_dim_ = top[0]->count(this->channel_axis_);
-  this->num_kernels_im2col_ = this->conv_in_channels_ * this->conv_out_spatial_dim_;
-  this->num_kernels_col2im_ = this->bottom_dim_;
   // Set up the all ones "bias multiplier" for adding biases by BLAS
   this->out_spatial_dim_ = this->conv_out_spatial_dim_;
   if (this->bias_term_) {    

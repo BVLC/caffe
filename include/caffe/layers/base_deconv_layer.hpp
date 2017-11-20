@@ -1,5 +1,4 @@
-#ifndef CAFFE_BASE_CONVOLUTION_LAYER_HPP_
-#define CAFFE_BASE_CONVOLUTION_LAYER_HPP_
+#pragma once 
 
 #include <vector>
 
@@ -15,9 +14,9 @@ namespace caffe {
  *        ConvolutionLayer and DeconvolutionLayer.
  */
 template <typename Dtype>
-class BaseConvolutionLayer : public Layer<Dtype> {
+class BaseDeconvolutionLayer : public Layer<Dtype> {
  public:
-  explicit BaseConvolutionLayer(const LayerParameter& param)
+  explicit BaseDeconvolutionLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
@@ -34,16 +33,21 @@ class BaseConvolutionLayer : public Layer<Dtype> {
   // we just called weight_cpu_gemm with the same input.
   void forward_cpu_gemm(const Dtype* input, const Dtype* weights,
       Dtype* output, bool skip_im2col = false);
-  void forward_cpu_bias(Dtype* output, const Dtype* bias) const;
+  void forward_cpu_bias(Dtype* output, const Dtype* bias);
+  void backward_cpu_gemm(const Dtype* input, const Dtype* weights,
+      Dtype* output);
 
 #ifndef CPU_ONLY
-  void forward_gpu_bias(Dtype* output, const Dtype* bias) const;
+  void forward_gpu_bias(Dtype* output, const Dtype* bias);
 #endif
 
   /// @brief The spatial dimensions of the input.
   inline int input_shape(int i) {
     return (*bottom_shape_)[channel_axis_ + i];
   }
+  // reverse_dimensions should return true iff we are implementing deconv, so
+  // that conv helpers know which dimensions are which.
+  virtual bool reverse_dimensions() = 0;
   // Compute height_out_ and width_out_ from other parameters.
   virtual void compute_output_shape() = 0;
 
@@ -80,7 +84,7 @@ class BaseConvolutionLayer : public Layer<Dtype> {
 
  private:
   // wrap im2col/col2im so we don't have to remember the (long) argument lists
-  inline void conv_im2col_cpu(const Dtype* data, Dtype* col_buff) const {
+  inline void conv_im2col_cpu(const Dtype* data, Dtype* col_buff) {
     if (!force_nd_im2col_ && num_spatial_axes_ == 2) {
       im2col_cpu(data, conv_in_channels_,
           conv_input_shape_.cpu_data()[1], conv_input_shape_.cpu_data()[2],
@@ -94,8 +98,23 @@ class BaseConvolutionLayer : public Layer<Dtype> {
           pad_.cpu_data(), stride_.cpu_data(), dilation_.cpu_data(), col_buff);
     }
   }
-
+  inline void conv_col2im_cpu(const Dtype* col_buff, Dtype* data) {
+    if (!force_nd_im2col_ && num_spatial_axes_ == 2) {
+      col2im_cpu(col_buff, conv_in_channels_,
+          conv_input_shape_.cpu_data()[1], conv_input_shape_.cpu_data()[2],
+          kernel_shape_.cpu_data()[0], kernel_shape_.cpu_data()[1],
+          pad_.cpu_data()[0], pad_.cpu_data()[1],
+          stride_.cpu_data()[0], stride_.cpu_data()[1],
+          dilation_.cpu_data()[0], dilation_.cpu_data()[1], data);
+    } else {
+      col2im_nd_cpu(col_buff, num_spatial_axes_, conv_input_shape_.cpu_data(),
+          col_buffer_shape_.data(), kernel_shape_.cpu_data(),
+          pad_.cpu_data(), stride_.cpu_data(), dilation_.cpu_data(), data);
+    }
+  }
  protected:
+  int num_kernels_im2col_;
+  int num_kernels_col2im_;
   int conv_out_channels_;
   int conv_in_channels_;
   int conv_out_spatial_dim_;
@@ -109,4 +128,3 @@ class BaseConvolutionLayer : public Layer<Dtype> {
 
 }  // namespace caffe
 
-#endif  // CAFFE_BASE_CONVOLUTION_LAYER_HPP_
