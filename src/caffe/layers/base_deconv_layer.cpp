@@ -299,7 +299,7 @@ void BaseDeconvolutionLayer<Dtype>::forward_gpu_bias(Dtype* output,
 }
 
 template <typename Dtype>
-void BaseConvolutionLayer<Dtype>::backward_gpu_gemm(const Dtype* output,
+void BaseDeconvolutionLayer<Dtype>::backward_gpu_gemm(const Dtype* output,
     const Dtype* weights, Dtype* input) {
   Dtype* col_buff = col_buffer_.mutable_gpu_data();
   if (is_1x1_) {

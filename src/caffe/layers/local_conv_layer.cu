@@ -52,7 +52,7 @@ __global__ void realign_loc_conv_result_kernel2(int count, const Dtype *local_co
 {
 	int loc_spatial_dim = loc_out_h * loc_out_w;
 	int dst_spatial_dim = dst_h * dst_w;
-	int loc_num = loc_num_h * loc_num_w;
+//	int loc_num = loc_num_h * loc_num_w;
 	int loc_out_step = loc_spatial_dim * num_out;
 	CUDA_KERNEL_LOOP(index, count){
 		int loc_count = index / loc_out_step;

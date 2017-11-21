@@ -87,6 +87,15 @@ void SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = top[0]->mutable_gpu_data();
+  auto softmax_axis_ =
+    bottom[0]->CanonicalAxisIndex(this->layer_param_.softmax_param().axis());
+  vector<int> scale_dims = bottom[0]->shape();
+  scale_dims[softmax_axis_] = 1;
+  Blob<Dtype> scale_;
+  scale_.Reshape(scale_dims);
+
+  int outer_num_ = bottom[0]->count(0, softmax_axis_);
+  int inner_num_ = bottom[0]->count(softmax_axis_ + 1);
   Dtype* scale_data = scale_.mutable_gpu_data();
   int count = bottom[0]->count();
   int channels = top[0]->shape(softmax_axis_);
