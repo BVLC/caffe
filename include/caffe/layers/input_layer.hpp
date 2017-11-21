@@ -26,6 +26,9 @@ class InputLayer : public Layer<Dtype> {
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {}
 
+  virtual void Reshape_const(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) const override {}
+
   virtual inline const char* type() const { return "Input"; }
   virtual inline int ExactNumBottomBlobs() const { return 0; }
   virtual inline int MinTopBlobs() const { return 1; }
@@ -37,6 +40,8 @@ class InputLayer : public Layer<Dtype> {
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {}
 
+  virtual void Forward_cpu_const(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) const override {}
  private:
   std::vector<int> heights_;
   std::vector<int> widths_;

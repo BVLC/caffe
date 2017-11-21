@@ -338,6 +338,89 @@ int Net<Dtype>::AppendBottom(const NetParameter &param, const int layer_id,
   return blob_id;
 }
 
+template <typename Dtype>
+std::map<std::string, std::shared_ptr<Blob<Dtype>>> Net<Dtype>::ForwardConst(
+    std::map<std::string, std::shared_ptr<Blob<Dtype>>> &input_blobs,
+    const std::set<std::string> &output_blob_names) {
+
+
+  /*
+  static size_t cnt;
+  if(cnt!=0)
+    cudaProfilerStart();
+    */
+
+  int end = -1;
+
+  std::map<int, std::vector<std::shared_ptr<Blob<Dtype>>>> bottom_blobs;
+  std::map<int, std::vector<std::shared_ptr<Blob<Dtype>>>> top_blobs;
+  std::map<std::string, std::shared_ptr<Blob<Dtype>>> output_blobs;
+
+  for (int i = 0; i < layers_.size(); ++i) {
+    for (auto const &blob_name : bottom_blob_names_[i]) {
+      auto it = input_blobs.find(blob_name);
+      if (it == input_blobs.end()) {
+        auto &blob_pointer = input_blobs[blob_name];
+        blob_pointer.reset(new Blob<Dtype>());
+        bottom_blobs[i].emplace_back(blob_pointer);
+      } else {
+        bottom_blobs[i].emplace_back(it->second);
+      }
+    }
+
+    for (auto const &blob_name : top_blob_names_[i]) {
+      auto it = input_blobs.find(blob_name);
+      if (it == input_blobs.end()) {
+        auto &blob_pointer = input_blobs[blob_name];
+        blob_pointer.reset(new Blob<Dtype>());
+        top_blobs[i].emplace_back(blob_pointer);
+      } else {
+        top_blobs[i].emplace_back(it->second);
+      }
+
+      bool is_output_blob =
+          (output_blob_names.find(blob_name) != output_blob_names.end());
+
+      if (is_output_blob) {
+        end = i;
+        output_blobs[blob_name] = input_blobs[blob_name];
+      }
+    }
+  }
+  input_blobs.clear();
+
+  CHECK_GE(end, 0);
+
+
+  for (int i = 0; i <= end; ++i) {
+    layers_[i]->Forward_const(bottom_blobs[i], top_blobs[i]);
+
+    bottom_blobs.erase(i);
+    top_blobs.erase(i);
+  }
+
+  /*
+  if(cnt!=0)
+    cudaProfilerStop();
+  cnt++;
+  {
+    cudaProfilerStop();
+    size_t cur_free_byte;
+    size_t cur_total_byte;
+    CUDA_CHECK(cudaMemGetInfo(&cur_free_byte, &cur_total_byte));
+      std::cout << "cur_free_byte="
+                << (cur_free_byte) / 1024 / 1024 << std::endl;
+    if (cur_free_byte < free_byte) {
+      std::cout << "use more memory aaaaaaaaaaa ="
+                << (free_byte - cur_free_byte) / 1024 / 1024 << std::endl;
+    } else {
+      std::cout << "use less memory ="
+                << (cur_free_byte - free_byte) / 1024 / 1024 << std::endl;
+    }
+  }
+  */
+  return output_blobs;
+}
 
 template <typename Dtype>
 std::map<std::string, std::shared_ptr<Blob<Dtype>>> Net<Dtype>::ParallelForwardTo(

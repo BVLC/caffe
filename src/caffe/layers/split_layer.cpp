@@ -8,7 +8,13 @@ namespace caffe {
 template <typename Dtype>
 void SplitLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  count_ = bottom[0]->count();
+  Reshape_const(bottom,top);
+}
+
+template <typename Dtype>
+void SplitLayer<Dtype>::Reshape_const(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) const {
+  int count = bottom[0]->count();
   for (int i = 0; i < top.size(); ++i) {
     // Do not allow in-place computation in the SplitLayer.  Instead, share data
     // by reference in the forward pass, and keep separate diff allocations in
@@ -18,7 +24,7 @@ void SplitLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     CHECK_NE(top[i], bottom[0]) << this->type() << " Layer does not "
         "allow in-place computation.";
     top[i]->ReshapeLike(*bottom[0]);
-    CHECK_EQ(count_, top[i]->count());
+    CHECK_EQ(count, top[i]->count());
   }
 }
 

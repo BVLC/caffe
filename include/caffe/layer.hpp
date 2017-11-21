@@ -117,8 +117,13 @@ public:
   inline Dtype Forward(const vector<Blob<Dtype> *> &bottom,
                        const vector<Blob<Dtype> *> &top);
 
+  inline Dtype Forward_const(const vector<Blob<Dtype> *> &bottom,
+                       const vector<Blob<Dtype> *> &top) const;
+
   inline Dtype Forward(const vector<std::shared_ptr<Blob<Dtype>>> &bottom,
                        const vector<std::shared_ptr<Blob<Dtype>>> &top);
+  inline Dtype Forward_const(const vector<std::shared_ptr<Blob<Dtype>>> &bottom,
+                       const vector<std::shared_ptr<Blob<Dtype>>> &top) const;
   /**
    * @brief Returns the vector of learnable parameter blobs.
    */
@@ -227,13 +232,18 @@ protected:
   vector<Dtype> loss_;
 
   virtual void Reshape_const(const vector<Blob<Dtype> *> &bottom,
-                       const vector<Blob<Dtype> *> &top) const {}
+                       const vector<Blob<Dtype> *> &top) const {
+    LOG(FATAL) <<__func__<< " no implemented for "<<type();
+  }
 
   /** @brief Using the CPU device, compute the layer output. */
   virtual void Forward_cpu(const vector<Blob<Dtype> *> &bottom,
                            const vector<Blob<Dtype> *> &top) = 0;
   virtual void Forward_cpu_const(const vector<Blob<Dtype> *> &bottom,
-                           const vector<Blob<Dtype> *> &top) const {}
+                           const vector<Blob<Dtype> *> &top) const {
+  
+    LOG(FATAL) <<__func__<< " no implemented for "<<type();
+  }
   /**
    * @brief Using the GPU device, compute the layer output.
    *        Fall back to Forward_cpu() if unavailable.
@@ -299,7 +309,6 @@ template <typename Dtype>
 inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype> *> &bottom,
                                    const vector<Blob<Dtype> *> &top) {
 
-  Dtype loss = 0;
   Reshape(bottom, top);
 
   switch (Caffe::mode()) {
@@ -312,7 +321,26 @@ inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype> *> &bottom,
   default:
     LOG(FATAL) << "Unknown caffe mode.";
   }
-  return loss;
+  return {};
+}
+
+// Forward and backward wrappers. You should implement the cpu and
+// gpu specific implementations instead, and should not change these
+// functions.
+template <typename Dtype>
+inline Dtype Layer<Dtype>::Forward_const(const vector<Blob<Dtype> *> &bottom,
+                                   const vector<Blob<Dtype> *> &top) const {
+
+  Reshape_const(bottom, top);
+
+  switch (Caffe::mode()) {
+  case Caffe::CPU:
+    Forward_cpu_const(bottom, top);
+    break;
+  default:
+    LOG(FATAL) << "Unknown caffe mode.";
+  }
+  return {};
 }
 
 // Forward and backward wrappers. You should implement the cpu and
@@ -336,6 +364,24 @@ Layer<Dtype>::Forward(const vector<std::shared_ptr<Blob<Dtype>>> &bottom,
   return Forward(bottom_, top_);
 }
 
+
+template <typename Dtype>
+inline Dtype
+Layer<Dtype>::Forward_const(const vector<std::shared_ptr<Blob<Dtype>>> &bottom,
+                      const vector<std::shared_ptr<Blob<Dtype>>> &top) const {
+
+  vector<Blob<Dtype> *> bottom_;
+  vector<Blob<Dtype> *> top_;
+  for (auto const &ptr : bottom) {
+    bottom_.push_back(ptr.get());
+  }
+
+  for (auto const &ptr : top) {
+    top_.push_back(ptr.get());
+  }
+
+  return Forward_const(bottom_, top_);
+}
 
 
 } // namespace caffe

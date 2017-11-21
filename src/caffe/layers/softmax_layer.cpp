@@ -7,9 +7,15 @@
 namespace caffe {
 
 template <typename Dtype>
+void SoftmaxLayer<Dtype>::Reshape_const(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) const {
+  top[0]->ReshapeLike(*bottom[0]);
+}
+
+template <typename Dtype>
 void SoftmaxLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  top[0]->ReshapeLike(*bottom[0]);
+  Reshape_const(bottom,top);
 }
 
 template <typename Dtype>

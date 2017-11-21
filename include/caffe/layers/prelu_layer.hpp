@@ -39,6 +39,9 @@ class PReLULayer : public NeuronLayer<Dtype> {
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
+  virtual void Reshape_const(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) const override;
+
   virtual inline const char* type() const { return "PReLU"; }
 
  protected:

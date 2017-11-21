@@ -78,33 +78,40 @@ void PoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void PoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
+  Reshape_const(bottom,top);
+}
+
+template <typename Dtype>
+void PoolingLayer<Dtype>::Reshape_const(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) const {
   CHECK_EQ(4, bottom[0]->num_axes()) << "Input must have 4 axes, "
       << "corresponding to (num, channels, height, width)";
-  channels_ = bottom[0]->channels();
-  height_ = bottom[0]->height();
-  width_ = bottom[0]->width();
+
+  int kernel_h=kernel_h_;
+  int kernel_w=kernel_w_;
   if (global_pooling_) {
-    kernel_h_ = bottom[0]->height();
-    kernel_w_ = bottom[0]->width();
+    kernel_h = bottom[0]->height();
+    kernel_w = bottom[0]->width();
   }
-  pooled_height_ = static_cast<int>(ceil(static_cast<float>(
-      height_ + 2 * pad_h_ - kernel_h_) / stride_h_)) + 1;
-  pooled_width_ = static_cast<int>(ceil(static_cast<float>(
-      width_ + 2 * pad_w_ - kernel_w_) / stride_w_)) + 1;
+
+  int pooled_height = static_cast<int>(ceil(static_cast<float>(
+      bottom[0]->height() + 2 * pad_h_ - kernel_h) / stride_h_)) + 1;
+  int pooled_width = static_cast<int>(ceil(static_cast<float>(
+      bottom[0]->width() + 2 * pad_w_ - kernel_w) / stride_w_)) + 1;
   if (pad_h_ || pad_w_) {
     // If we have padding, ensure that the last pooling starts strictly
     // inside the image (instead of at the padding); otherwise clip the last.
-    if ((pooled_height_ - 1) * stride_h_ >= height_ + pad_h_) {
-      --pooled_height_;
+    if ((pooled_height - 1) * stride_h_ >= bottom[0]->height() + pad_h_) {
+      --pooled_height;
     }
-    if ((pooled_width_ - 1) * stride_w_ >= width_ + pad_w_) {
-      --pooled_width_;
+    if ((pooled_width - 1) * stride_w_ >= bottom[0]->width() + pad_w_) {
+      --pooled_width;
     }
-    CHECK_LT((pooled_height_ - 1) * stride_h_, height_ + pad_h_);
-    CHECK_LT((pooled_width_ - 1) * stride_w_, width_ + pad_w_);
+    CHECK_LT((pooled_height - 1) * stride_h_, bottom[0]->height() + pad_h_);
+    CHECK_LT((pooled_width - 1) * stride_w_, bottom[0]->width() + pad_w_);
   }
-  top[0]->Reshape(bottom[0]->num(), channels_, pooled_height_,
-      pooled_width_);
+  top[0]->Reshape(bottom[0]->num(), bottom[0]->channels(), pooled_height,
+      pooled_width);
   if (top.size() > 1) {
     top[1]->ReshapeLike(*top[0]);
   }
@@ -120,6 +127,17 @@ void PoolingLayer<Dtype>::Forward_cpu_const(const vector<Blob<Dtype>*>& bottom,
   const int top_count = top[0]->count();
   // We'll output the mask to top[1] if it's of size >1.
   const bool use_top_mask = top.size() > 1;
+
+  int kernel_h=kernel_h_;
+  int kernel_w=kernel_w_;
+  if (global_pooling_) {
+    kernel_h = bottom[0]->height();
+    kernel_w = bottom[0]->width();
+  }
+
+  int pooled_height = top[0]->height();
+  int pooled_width =  top[0]->width();
+
   Dtype* top_mask = NULL;
   // Different pooling methods. We explicitly do the switch outside the for
   // loop to save time, although this results in more code.
@@ -133,19 +151,19 @@ void PoolingLayer<Dtype>::Forward_cpu_const(const vector<Blob<Dtype>*>& bottom,
     caffe_set(top_count, Dtype(-FLT_MAX), top_data);
     // The main loop
     for (int n = 0; n < bottom[0]->num(); ++n) {
-      for (int c = 0; c < channels_; ++c) {
-        for (int ph = 0; ph < pooled_height_; ++ph) {
-          for (int pw = 0; pw < pooled_width_; ++pw) {
+      for (int c = 0; c < bottom[0]->channels(); ++c) {
+        for (int ph = 0; ph < pooled_height; ++ph) {
+          for (int pw = 0; pw < pooled_width; ++pw) {
             int hstart = ph * stride_h_ - pad_h_;
             int wstart = pw * stride_w_ - pad_w_;
-            int hend = min(hstart + kernel_h_, height_);
-            int wend = min(wstart + kernel_w_, width_);
+            int hend = min(hstart + kernel_h, bottom[0]->height());
+            int wend = min(wstart + kernel_w, bottom[0]->width());
             hstart = max(hstart, 0);
             wstart = max(wstart, 0);
-            const int pool_index = ph * pooled_width_ + pw;
+            const int pool_index = ph * pooled_width + pw;
             for (int h = hstart; h < hend; ++h) {
               for (int w = wstart; w < wend; ++w) {
-                const int index = h * width_ + w;
+                const int index = h * bottom[0]->width() + w;
                 if (bottom_data[index] > top_data[pool_index]) {
                   top_data[pool_index] = bottom_data[index];
                 }
@@ -165,25 +183,25 @@ void PoolingLayer<Dtype>::Forward_cpu_const(const vector<Blob<Dtype>*>& bottom,
     }
     // The main loop
     for (int n = 0; n < bottom[0]->num(); ++n) {
-      for (int c = 0; c < channels_; ++c) {
-        for (int ph = 0; ph < pooled_height_; ++ph) {
-          for (int pw = 0; pw < pooled_width_; ++pw) {
+      for (int c = 0; c < bottom[0]->channels(); ++c) {
+        for (int ph = 0; ph < pooled_height; ++ph) {
+          for (int pw = 0; pw < pooled_width; ++pw) {
             int hstart = ph * stride_h_ - pad_h_;
             int wstart = pw * stride_w_ - pad_w_;
-            int hend = min(hstart + kernel_h_, height_ + pad_h_);
-            int wend = min(wstart + kernel_w_, width_ + pad_w_);
+            int hend = min(hstart + kernel_h, bottom[0]->height() + pad_h_);
+            int wend = min(wstart + kernel_w, bottom[0]->width() + pad_w_);
             int pool_size = (hend - hstart) * (wend - wstart);
             hstart = max(hstart, 0);
             wstart = max(wstart, 0);
-            hend = min(hend, height_);
-            wend = min(wend, width_);
+            hend = min(hend, bottom[0]->height());
+            wend = min(wend, bottom[0]->width());
             for (int h = hstart; h < hend; ++h) {
               for (int w = wstart; w < wend; ++w) {
-                top_data[ph * pooled_width_ + pw] +=
-                    bottom_data[h * width_ + w];
+                top_data[ph * pooled_width + pw] +=
+                    bottom_data[h * bottom[0]->width() + w];
               }
             }
-            top_data[ph * pooled_width_ + pw] /= pool_size;
+            top_data[ph * pooled_width + pw] /= pool_size;
           }
         }
         // compute offset

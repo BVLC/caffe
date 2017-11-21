@@ -46,11 +46,17 @@ void PReLULayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-void PReLULayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
-    const vector<Blob<Dtype>*>& top) {
+void PReLULayer<Dtype>::Reshape_const(const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) const {
   CHECK_GE(bottom[0]->num_axes(), 2)
       << "Number of axes of bottom blob must be >=2.";
   top[0]->ReshapeLike(*bottom[0]);
+}
+
+template <typename Dtype>
+void PReLULayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) {
+  Reshape_const(bottom,top);
 }
 
 template <typename Dtype>
