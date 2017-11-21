@@ -2093,7 +2093,7 @@ void ConvolutionLayerSpatial<Dtype>::load_cached_kernels(
       if (it == pretuned_kv.end()) {
         auto it0 = pretuned_kv.lower_bound(pretuned_key_);
         std::set<PretunedValue> tuning_set;
-        for(int i = 0; it0 != pretuned_kv.end() && i < 3; ++i, --it0) {
+        for(int i = 0; it0 != pretuned_kv.end() && i < 12; ++i, --it0) {
           if (tuning_set.find(it0->second) != tuning_set.end()) {
             tuning_set.insert(it0->second);
             create_convolution_kernel(bottom, top,
@@ -2102,7 +2102,7 @@ void ConvolutionLayerSpatial<Dtype>::load_cached_kernels(
           }
         }
         auto it1 = pretuned_kv.upper_bound(pretuned_key_);
-        for(int i = 0; it1 != pretuned_kv.end() && i < 3; ++i, ++it1) {
+        for(int i = 0; it1 != pretuned_kv.end() && i < 12; ++i, ++it1) {
           if (tuning_set.find(it1->second) != tuning_set.end())
             continue;
           tuning_set.insert(it1->second);
