@@ -665,7 +665,7 @@ Dtype SGDSolver<Dtype>::GetLocalRate(int param_id) const {
         && (this->iter_ % this->param_.display() == 0)) {
       const int layer_id = this->net_->param_layer_indices(param_id).first;
       const string& layer_name = this->net_->layer_names()[layer_id];
-      const int blob_id = this->net_->param_layer_indicces(param_id).second;
+      const int blob_id = this->net_->param_layer_indices(param_id).second;
       LOG(INFO) << layer_name << "." << blob_id << " lr=" << local_lr
         << ".\t  w=" << w_norm << "\t  dw=" << wgrad_norm;
     }
