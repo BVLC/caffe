@@ -39,6 +39,8 @@ class BaseDeconvolutionLayer : public Layer<Dtype> {
 
 #ifndef CPU_ONLY
   void forward_gpu_bias(Dtype* output, const Dtype* bias);
+  void backward_gpu_gemm(const Dtype* input, const Dtype* weights,
+Dtype* col_output);
 #endif
 
   /// @brief The spatial dimensions of the input.
