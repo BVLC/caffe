@@ -134,6 +134,9 @@ void AccuracyLayer<Dtype>::Forward_gpu(
       }
     }
   }
+  // Set gpu_diff of bottom[0] back to zeros to avoid propagating down any
+  // gradient from the accuracy layer during training.
+  caffe_gpu_set(bottom[0]->count(), Dtype(0), bottom[0]->mutable_gpu_diff());
 }
 
 
