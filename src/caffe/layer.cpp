@@ -38,6 +38,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/thread.hpp>
 #include "caffe/layer.hpp"
 
+#ifdef ENABLE_WEIGHT_GRAD_COMPRESSION
+#include "dl_compression.h"
+#endif
+
 namespace caffe {
 
 template <typename Dtype>
@@ -102,9 +106,20 @@ void Layer<Dtype>::MultinodeSetUp(const vector<Blob<Dtype>*>& bottom,
     for (int k = 2; k < shape.size(); k++) {
       hw *= shape[k];
     }
+#ifdef ENABLE_WEIGHT_GRAD_COMPRESSION
+    const MnParamGradCompressParameter &grad_comp_param = layer_param().mn_grad_compress_param();
+    if (dl_comp_check_running_environ() && 
+        i < grad_comp_param.param_grad_compress_enable_size() &&
+        grad_comp_param.param_grad_compress_enable(i)) {
+      reg_info.add_parameter_set<Dtype>(ic * oc * model_parts, hw, false, MLSL::CompressionType::CT_QUANTIZATION);
+    } else {
+#endif
     // Note that MLSL expects the entire weights from a model group.
     // So we should multiply by model_parts here.
     reg_info.add_parameter_set<Dtype>(ic * oc * model_parts, hw);
+#ifdef ENABLE_WEIGHT_GRAD_COMPRESSION
+    }
+#endif
   }
   this->layerOp = mn::train::add_operation(reg_info, this->GetDistribution());
 }

@@ -398,6 +398,10 @@ namespace caffe {
         get_session().commit();
       }
 
+      inline void set_quantization_param(MLSL::QuantParams *qparams) {
+        MLSL::Environment::GetEnv().SetQuantizationParams(qparams);
+      }
+
       namespace stats {
         inline void stop() {
           get_session().get_stats()->Stop();
@@ -474,10 +478,10 @@ namespace caffe {
       }
       template <typename Dtype>
       void add_parameter_set(int kernelCount, int kernelSize,
-        bool distributedUpdate = false)
+        bool distributedUpdate = false, MLSL::CompressionType compressType = MLSL::CompressionType::CT_NONE)
       {
         opRegInfo_->AddParameterSet(kernelCount, kernelSize, detail::dtype<Dtype>(),
-           distributedUpdate);
+           distributedUpdate, compressType);
       }
     private:
       MLSL::OperationRegInfo *opRegInfo_{ nullptr };

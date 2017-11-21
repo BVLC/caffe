@@ -47,6 +47,7 @@ caffe_option(PERFORMANCE_MONITORING "Build Caffe with PERFORMANCE_MONITORING " O
  
 # ---[ Dependencies
 include(cmake/MKLDNN.cmake)
+include(cmake/DLCP.cmake)
 include(cmake/Dependencies.cmake)
 
 # ---[ Flags
