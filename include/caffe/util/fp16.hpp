@@ -9,8 +9,8 @@ using half_float::half;
 	#define HALF_MAX	65503
 	#define HALF_MIN	0.00061036
 #else
-	#define HALF_MAX	0x1.ffcp15f
-	#define HALF_MIN	0x1.0p-14f
+	#define HALF_MAX	0x1.ffcp15
+	#define HALF_MIN	0x1.0p-14
 #endif
 
 #include <boost/shared_ptr.hpp>
