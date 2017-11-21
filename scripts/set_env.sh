@@ -18,6 +18,7 @@ tcp_netmask=""
 
 # specify number of MLSL ep servers in command
 num_mlsl_servers=-1
+
 numservers=0
 
 function init_mpi_envs
