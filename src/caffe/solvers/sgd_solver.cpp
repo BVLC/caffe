@@ -379,7 +379,7 @@ void SGDSolver<Dtype>::SGDFusion(int param_id, Dtype rate) {
   if (local_decay) {
     if (regularization_type == "L2") {
       // add weight decay
-      if (net_params[param_id]->prv_data()
+      if (net_params[param_id]->prv_data() && net_params[param_id]->prv_diff()
         && (net_params[param_id]->prv_data_count()
         == net_params[param_id]->count())) {
           CHECK_EQ(true,
@@ -507,7 +507,7 @@ void SGDSolver<Dtype>::Regularize(int param_id) {
     if (local_decay) {
       if (regularization_type == "L2") {
         // add weight decay
-        if (net_params[param_id]->prv_data()
+        if (net_params[param_id]->prv_data() && net_params[param_id]->prv_diff()
              && (net_params[param_id]->prv_data_count()
                  == net_params[param_id]->count())) {
           CHECK_EQ(true,
