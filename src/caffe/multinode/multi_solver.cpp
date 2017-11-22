@@ -47,6 +47,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace caffe {
 
 #ifdef CAFFE_PER_LAYER_TIMINGS
+
 #define LAYER_TIMING_START() do { \
   root_solver_->timer.Start(); \
 }while(0)
@@ -54,10 +55,43 @@ namespace caffe {
 #define LAYER_TIMING_STOP(name, index) do { \
   root_solver_->name##_time_per_layer[index] += root_solver_->timer.MicroSeconds(); \
 }while(0)
-#else
-#define LAYER_TIMING_START()
 
+#ifdef FW_OVERLAP_OPT
+#define LAYER_WAIT_TIMING_START() do { \
+  root_solver_->wait_timer.Start(); \
+}while(0)
+
+#define LAYER_WAIT_TIMING_STOP(layer_index) do { \
+  root_solver_->waitcomm_time_per_layer[layer_index] += root_solver_->wait_timer.MicroSeconds(); \
+}while(0)
+
+#define LAYER_REMOVE_UPDATE_TIME(layer_i, layer_k) do { \
+  root_solver_->waitcomm_time_per_layer[layer_i] -= root_solver_->update_time_per_layer[layer_k]; \
+} while (0)
+#endif
+
+#define ITER_TIMING_START() do { \
+  root_solver_->timer.Start(); \
+}while(0)
+
+#define ITER_TIMING_STOP(name) do { \
+  root_solver_->name##_time_per_iter += root_solver_->timer.MicroSeconds(); \
+}while(0)
+
+#else
+
+#define LAYER_TIMING_START()
 #define LAYER_TIMING_STOP(name,index)
+
+#ifdef FW_OVERLAP_OPT
+#define LAYER_WAIT_TIMING_START()
+#define LAYER_WAIT_TIMING_STOP(index)
+#define LAYER_REMOVE_UPDATE_TIME(layer_i, layer_k)
+#endif
+
+#define ITER_TIMING_START()
+#define ITER_TIMING_STOP(name, index)
+
 #endif
 
 template <typename Dtype>
@@ -68,21 +102,31 @@ inline bool MultiSolver<Dtype>::IsSkipWaitGradient(int layer_id) {
 
   if (!layer_need_backward[layer_id] || ((layers[layer_id]->layerOp != nullptr)
         && !layers[layer_id]->layerOp->HasParameterSets())) {
-      DLOG(INFO) << "ForwardBackwardImpl: no need for apply_updates for layer # "
-        << layer_id << ", skip on_delwt_wait, apply_updates, on_wtinc_ready";
-      return true;
+    DLOG(INFO) << "ForwardBackwardImpl: no need for apply_updates for layer # "
+      << layer_id << ", skip on_delwt_wait, apply_updates, on_wtinc_ready";
+    return true;
   }
   return false;
 }
 
 template <typename Dtype>
-inline void MultiSolver<Dtype>::WaitAndUpdateGradient(int layer_id) {
+inline bool MultiSolver<Dtype>::WaitGradient(int layer_id) {
+#ifndef FW_OVERLAP_OPT
   LAYER_TIMING_START();
+#endif
   for (int j = 0; j < callbacks_.size(); ++j) {
     callbacks_[j]->on_delwt_wait(layer_id);
   }
+#ifndef FW_OVERLAP_OPT
   LAYER_TIMING_STOP(waitcomm, layer_id);
+  return true;
+#else
+  return layer_finished_flags_[layer_id];
+#endif
+}
 
+template <typename Dtype>
+inline void MultiSolver<Dtype>::UpdateGradient(int layer_id) {
 #ifdef FW_OVERLAP_OPT
   if (layer_finished_flags_[layer_id]) {
 #endif
@@ -106,24 +150,29 @@ Dtype MultiSolver<Dtype>::ForwardBackwardImpl(bool first, bool last) {
   for (int i = 0; i < layers.size(); ++i) {
 #ifdef FW_OVERLAP_OPT
     if (first) {
+      LAYER_WAIT_TIMING_START();
       while (layer_finished_flags_[i] == false) {
-        if (IsSkipWaitGradient(i))
-         break;
-        WaitAndUpdateGradient(i);
-        if (layer_finished_flags_[i])
+        if (IsSkipWaitGradient(i) || WaitGradient(i))
           break;
-
+        
         // wait and update gradient for next layers
         for (int k=i+1; k<layers.size(); k++) {
           if (layer_finished_flags_[k] || IsSkipWaitGradient(k)) {
             layer_finished_flags_[k] = true;
             continue;
           }
-          WaitAndUpdateGradient(k);
-          if (layer_finished_flags_[k])
+          if (WaitGradient(k)) {
+            UpdateGradient(k);
+            // The update time for layer k must be removed from waitcomm time
+            // for layer i
+            LAYER_REMOVE_UPDATE_TIME(i, k);
             break;
+          }
         }
       }
+      LAYER_WAIT_TIMING_STOP(i);
+      UpdateGradient(i);
+      // set flag to false after updating gradient
       layer_finished_flags_[i] = false;
     }
 #endif
@@ -135,14 +184,17 @@ Dtype MultiSolver<Dtype>::ForwardBackwardImpl(bool first, bool last) {
 
   // Clear parameter diffs after communication is finished (that is, after 
   // calling WaitGradientComm)
-  if (first)
+  if (first) {
+    ITER_TIMING_START();
     root_solver_->net()->ClearParamDiffs();
+    ITER_TIMING_STOP(cleardiffs);
+  }
 
   for (int i = layers.size() - 1; i >= 0; --i) {
     if (!layer_need_backward[i]) {
       continue;
     }
-    
+
     LAYER_TIMING_START();
     net.BackwardFromTo(i, i);
     LAYER_TIMING_STOP(backward, i);
@@ -157,39 +209,37 @@ Dtype MultiSolver<Dtype>::ForwardBackwardImpl(bool first, bool last) {
     }
   }
 
+
 #ifdef FW_OVERLAP_OPT
   int iter = root_solver_->iter();
   int max_iter = root_solver_->param().max_iter();
   bool test = (root_solver_->param().test_interval()
-          && ((iter + 1) % root_solver_->param().test_interval() == 0));
-  if (last && (test || (iter == max_iter - 1))) {
-    int finished_count = 0;
-    while (finished_count < layers.size()) {
+      && ((iter + 1) % root_solver_->param().test_interval() == 0));
+  bool last_iter_wait_flag = last && (test || (iter == max_iter - 1));
 #else
-  if (last) {
+  bool last_iter_wait_flag = last;
 #endif
-      for (int i = 0; i < layers.size(); ++i) {
-#ifdef FW_OVERLAP_OPT
-        if (layer_finished_flags_[i])
-          continue;
-#endif
-        if (IsSkipWaitGradient(i)) {
-#ifdef FW_OVERLAP_OPT
-          finished_count++;
-          layer_finished_flags_[i] = true;
-#endif
-          continue;
-        }
 
-        WaitAndUpdateGradient(i);
+  if (last_iter_wait_flag) {
+    for (int i = 0; i < layers.size(); ++i) {
+      if (IsSkipWaitGradient(i))
+        continue;
+
 #ifdef FW_OVERLAP_OPT
-        if (layer_finished_flags_[i])
-          finished_count++;
+      LAYER_WAIT_TIMING_START();
+      while (
 #endif
-      }
+        WaitGradient(i)
 #ifdef FW_OVERLAP_OPT
+          == false)
+#endif
+      ;
+
+#ifdef FW_OVERLAP_OPT
+      LAYER_WAIT_TIMING_STOP(i);
+      UpdateGradient(i);
+#endif
     }
-#endif
   }
 
   DLOG(WARNING) << "iter " << root_solver_->iter() << ", loss " << loss;
@@ -201,7 +251,7 @@ Dtype MultiSolver<Dtype>::ForwardBackward() {
   Dtype loss = 0;
   for (int i = 0; i < iter_size; ++i) {
     loss += ForwardBackwardImpl(
-      (i == 0), (i + 1 == iter_size));
+        (i == 0), (i + 1 == iter_size));
   }
   return loss / iter_size;
 }
