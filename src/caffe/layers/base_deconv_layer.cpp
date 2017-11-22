@@ -298,6 +298,23 @@ void BaseDeconvolutionLayer<Dtype>::forward_gpu_bias(Dtype* output,
       (Dtype)1., output);
 }
 
+template <typename Dtype>
+void BaseDeconvolutionLayer<Dtype>::backward_gpu_gemm(const Dtype* output,
+    const Dtype* weights, Dtype* input) {
+  Dtype* col_buff = col_buffer_.mutable_gpu_data();
+  if (is_1x1_) {
+    col_buff = input;
+  }
+  for (int g = 0; g < group_; ++g) {
+    caffe_gpu_gemm<Dtype>(CblasTrans, CblasNoTrans, kernel_dim_,
+        conv_out_spatial_dim_, conv_out_channels_ / group_,
+        (Dtype)1., weights + weight_offset_ * g, output + output_offset_ * g,
+        (Dtype)0., col_buff + col_offset_ * g);
+  }
+  if (!is_1x1_) {
+    conv_col2im_gpu(col_buff, input);
+  }
+}
 
 #endif  // !CPU_ONLY
 

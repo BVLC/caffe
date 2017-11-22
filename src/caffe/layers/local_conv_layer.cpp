@@ -270,7 +270,7 @@ void LocalConvolutionLayer<Dtype>::LayerSetUp(
   CHECK_EQ(this->num_output_ % this->group_, 0)
       << "Number of output should be multiples of group.";
 
-  this->conv_out_channels_ = this->num_output_;
+  //his->conv_out_channels_ = this->num_output_;
   // this->conv_in_channels_ = this->channels_;
   this->L_ = this->local_region_num_w_ *
              this->local_region_num_h_; // number of local regions
@@ -288,7 +288,7 @@ void LocalConvolutionLayer<Dtype>::LayerSetUp(
     // Initialize and fill the weights:
     // output channels x input channels per-group x kernel height x kernel width
     this->blobs_[0].reset(new Blob<Dtype>(
-        this->L_, this->conv_out_channels_ * this->channels_ / this->group_,
+        this->L_, this->num_output_ * this->channels_ / this->group_,
         kernel_shape_data[0], kernel_shape_data[1]));
     shared_ptr<Filler<Dtype>> weight_filler(
         GetFiller<Dtype>(loc_conv_param.weight_filler()));
@@ -379,7 +379,7 @@ void LocalConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype> *> &bottom,
   loc_bottom_buffer_.Reshape(this->L_, conv_input_shape_data[0],
                              conv_input_shape_data[1],
                              conv_input_shape_data[2]);
-  loc_top_buffer_.Reshape(this->L_, this->conv_out_channels_, output_shape[0],
+  loc_top_buffer_.Reshape(this->L_, this->num_output_ , output_shape[0],
                           output_shape[1]);
 }
 

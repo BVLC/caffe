@@ -121,12 +121,11 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   CHECK_EQ(channels_ % group_, 0);
   CHECK_EQ(num_output_ % group_, 0)
       << "Number of output should be multiples of group.";
-  conv_out_channels_ = num_output_;
   // Handle the parameters: weights and biases.
   // - blobs_[0] holds the filter weights
   // - blobs_[1] holds the biases (optional)
   vector<int> weight_shape(2);
-  weight_shape[0] = conv_out_channels_;
+  weight_shape[0] = num_output_;
   weight_shape[1] = channels_ / group_;
   for (int i = 0; i < num_spatial_axes_; ++i) {
     weight_shape.push_back(kernel_shape_data[i]);
@@ -229,16 +228,16 @@ template <typename Dtype>
 void BaseConvolutionLayer<Dtype>::forward_cpu_gemm(const Dtype* input,
     const Dtype* weights, Dtype* output, bool skip_im2col) const {
   const Dtype* col_buff = input;
-  int weight_offset = conv_out_channels_ * kernel_dim_ / group_;
+  int weight_offset = num_output_ * kernel_dim_ / group_;
   if (!is_1x1_) {
     if (!skip_im2col) {
       conv_im2col_cpu(input, col_buffer_ptr_->mutable_cpu_data());
     }
     col_buff = col_buffer_ptr_->cpu_data();
   }
-  int output_offset = conv_out_channels_ * (*conv_out_spatial_dim_ptr_) / group_;
+  int output_offset = num_output_* (*conv_out_spatial_dim_ptr_) / group_;
   for (int g = 0; g < group_; ++g) {
-    caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, conv_out_channels_ /
+    caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans,  num_output_/
         group_, *conv_out_spatial_dim_ptr_, kernel_dim_,
         (Dtype)1., weights + weight_offset * g, col_buff + kernel_dim_ * (*conv_out_spatial_dim_ptr_) * g,
         (Dtype)0., output + output_offset * g);
@@ -260,10 +259,30 @@ template <typename Dtype>
 void BaseConvolutionLayer<Dtype>::forward_gpu_bias(Dtype* output,
     const Dtype* bias) const {
   caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num_output_,
-      out_spatial_dim_, 1, (Dtype)1., bias, bias_multiplier_ptr_->gpu_data(),
+      *conv_out_spatial_dim_ptr_, 1, (Dtype)1., bias, bias_multiplier_ptr_->gpu_data(),
       (Dtype)1., output);
 }
 
+
+template <typename Dtype>
+void BaseConvolutionLayer<Dtype>::forward_gpu_gemm(const Dtype* input,
+    const Dtype* weights, Dtype* output, bool skip_im2col) {
+  const Dtype* col_buff = input;
+  if (!is_1x1_) {
+    if (!skip_im2col) {
+      conv_im2col_gpu(input, col_buffer_ptr_->mutable_gpu_data());
+    }
+    col_buff = col_buffer_ptr_->gpu_data();
+  }
+  int weight_offset = num_output_ * kernel_dim_ / group_;
+  int output_offset = num_output_* (*conv_out_spatial_dim_ptr_) / group_;
+  for (int g = 0; g < group_; ++g) {
+    caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans,  num_output_/
+        group_, *conv_out_spatial_dim_ptr_, kernel_dim_,
+        (Dtype)1., weights + weight_offset * g, col_buff + kernel_dim_ * (*conv_out_spatial_dim_ptr_) * g,
+        (Dtype)0., output + output_offset * g);
+  }
+}
 
 #endif  // !CPU_ONLY
 

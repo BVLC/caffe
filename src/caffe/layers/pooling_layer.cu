@@ -13,7 +13,7 @@ __global__ void MaxPoolForward(const int nthreads,
     const int height, const int width, const int pooled_height,
     const int pooled_width, const int kernel_h, const int kernel_w,
     const int stride_h, const int stride_w, const int pad_h, const int pad_w,
-    Dtype* const top_data, int* mask, Dtype* top_mask) {
+    Dtype* const top_data) {
   CUDA_KERNEL_LOOP(index, nthreads) {
     const int pw = index % pooled_width;
     const int ph = (index / pooled_width) % pooled_height;
@@ -38,11 +38,7 @@ __global__ void MaxPoolForward(const int nthreads,
       }
     }
     top_data[index] = maxval;
-    if (mask) {
-      mask[index] = maxidx;
-    } else {
-      top_mask[index] = maxidx;
-    }
+
   }
 }
 
@@ -160,37 +156,32 @@ void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = top[0]->mutable_gpu_data();
   int count = top[0]->count();
-  // We'll output the mask to top[1] if it's of size >1.
-  const bool use_top_mask = top.size() > 1;
-  int* mask = NULL;
-  Dtype* top_mask = NULL;
+  int pooled_height = top[0]->height();
+  int pooled_width =  top[0]->width();
+  int height = bottom[0]->height();
+  int width = bottom[0]->width();
+  int channels = bottom[0]->channels();
   switch (this->layer_param_.pooling_param().pool()) {
   case PoolingParameter_PoolMethod_MAX:
-    if (use_top_mask) {
-      top_mask = top[1]->mutable_gpu_data();
-    } else {
-      mask = max_idx_.mutable_gpu_data();
-    }
     // NOLINT_NEXT_LINE(whitespace/operators)
     MaxPoolForward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
-        count, bottom_data, bottom[0]->num(), channels_,
-        height_, width_, pooled_height_, pooled_width_, kernel_h_,
-        kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_, top_data,
-        mask, top_mask);
+        count, bottom_data, bottom[0]->num(), channels,
+        height, width, pooled_height, pooled_width, kernel_h_,
+        kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_, top_data);
     break;
   case PoolingParameter_PoolMethod_AVE:
     // NOLINT_NEXT_LINE(whitespace/operators)
     AvePoolForward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
-        count, bottom_data, bottom[0]->num(), channels_,
-        height_, width_, pooled_height_, pooled_width_, kernel_h_,
+        count, bottom_data, bottom[0]->num(), channels,
+        height, width, pooled_height, pooled_width, kernel_h_,
         kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_, top_data);
     break;
   case PoolingParameter_PoolMethod_STOCHASTIC:
       // NOLINT_NEXT_LINE(whitespace/operators)
       StoPoolForwardTest<Dtype><<<CAFFE_GET_BLOCKS(count),
                                   CAFFE_CUDA_NUM_THREADS>>>(
-          count, bottom_data, bottom[0]->num(), channels_,
-          height_, width_, pooled_height_, pooled_width_, kernel_h_,
+          count, bottom_data, bottom[0]->num(), channels,
+          height, width, pooled_height, pooled_width, kernel_h_,
           kernel_w_, stride_h_, stride_w_, top_data);
     break;
   default:

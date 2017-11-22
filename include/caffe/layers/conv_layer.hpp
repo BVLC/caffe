@@ -75,6 +75,7 @@ class ConvolutionLayer : public BaseConvolutionLayer<Dtype> {
       const vector<Blob<Dtype>*>& top);
   virtual vector<int> compute_output_shape() const;
 
+  /*
 #ifndef CPU_ONLY
   void forward_gpu_gemm(const Dtype* col_input, const Dtype* weights,
       Dtype* output, bool skip_im2col = false);
@@ -82,6 +83,7 @@ class ConvolutionLayer : public BaseConvolutionLayer<Dtype> {
   void weight_gpu_gemm(const Dtype* col_input, const Dtype* output, Dtype*
       weights);
 #endif
+*/
 };
 
 }  // namespace caffe
