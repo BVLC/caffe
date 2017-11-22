@@ -6,7 +6,7 @@ benchmark_mode="none"
 numnodes=1
 
 
-# time/train/resume_train
+# time/train
 mode="train"
 
 # it's assigned by detect_cpu
@@ -23,9 +23,6 @@ tcp_netmask=""
 num_mlsl_servers=-1
 
 debug="off"
-
-# time/train/resume_train
-mode="train"
 
 # parameters for caffe time
 iteration=0
@@ -53,7 +50,7 @@ function usage
     echo "Usage:"
     echo "  $script_name [--hostfile host_file] [--solver solver_file]"
     echo "               [--network opa/tcp] [--netmask tcp_netmask] [--debug on/off]"
-    echo "               [--mode train/resume_train/time/none] [--benchmark all/qperf/mpi/none]"
+    echo "               [--mode train/time/none] [--benchmark all/qperf/mpi/none]"
     echo "               [--iteration iter] [--model_file deploy.prototxt]"
     echo "               [--snapshot snapshot.caffemodel]"
     echo "               [--num_mlsl_servers num_mlsl_servers]"
@@ -63,16 +60,16 @@ function usage
     echo ""
     echo "  Parameters:"
     echo "    host: host file includes list of nodes. Only used when you're running multinodes mode"
-    echo "    solver: need to be specified a solver file if mode is train/resume_train"
+    echo "    solver: need to be specified a solver file if mode is train"
     echo "    network: opa(default), tcp"
     echo "    netmask: only used if network is tcp"
     echo "    debug: off(default). MLSL debug information is outputed if it's on"
-    echo "    mode: train(default), resume_train, time, none(not to run caffe test)"
+    echo "    mode: train(default), time, none(not to run caffe test)"
     echo "    benchmark: none(disabled by default). Includes qperf, all-reduce performance"
     echo "      Dependency: user needs to install qperf, Intel MPI library (including IMB-MPI1);"
     echo "                  and add them in system path."
     echo "    iteration and model_file: only used if mode is time (caffe time)"
-    echo "    snapshot: only used if mode is resume_train"
+    echo "    snapshot: it's specified if train is resumed"
     echo "    num_mlsl_servers: number of MLSL ep servers"
     echo "    output_folder: output folder for storing results"
     echo "    mpibench_bin: IMB-MPI1 (default). relative path of binary of mpi benchmark."
@@ -168,7 +165,7 @@ function execute_command
         sensor_log_file=$result_dir_/sensors-${cpu_model}-${numnodes}-start.log
         $sensors_bin >$sensor_log_file
     fi
-    
+
     if [ ${numnodes} -eq 1 ]; then
         time GLOG_minloglevel=0 $exec_command 2>&1 | tee ${log_file}
     else
@@ -302,7 +299,7 @@ function run_caffe
         xeonbin="$caffe_bin time --iterations $iteration --model $model_file  -engine=$engine"
     else
         xeonbin="$caffe_bin train --solver $solver_file -engine=$engine"
-        if [ ${mode} == "resume_train" ]; then
+        if [ "${snapshot}" != "" ]; then
             xeonbin+=" --snapshot=${snapshot}"
         fi
     fi
@@ -321,6 +318,49 @@ function test_ssh_connection
             ssh $hostname "ls"
         done
     fi
+}
+
+function get_model_fname
+{
+    solver_file_=$1
+    model_file_=$(grep -w "net:" $solver_file_ | head -n 1 | awk -F ':' '{print $2}' | sed 's/\"//g')
+    echo "$(echo $model_file_)"
+}
+
+function check_lmdb_files
+{
+    model_file_=$1
+    
+    lmdb_dirs=(ilsvrc12_train_lmdb ilsvrc12_val_lmdb) 
+    is_missing_lmdb=0
+    for lmdb_dir in "${lmdb_dirs[@]}"
+    do
+        data_source_dir=$(grep -w "$lmdb_dir" $model_file_ | head -n 1 | awk -F ' ' '{print $(NF)}' | sed 's/\"//g')
+        echo "LMDB data source: $data_source_dir"
+        if [ ! -d $data_source_dir ]; then
+            echo "Error: LMDB data source doesn't exist ($data_source_dir)."
+            let is_missing_lmdb=1
+        fi
+    done
+
+    if [ $is_missing_lmdb -eq 1 ]; then
+        echo ""
+        echo "Please follow the steps to create imagenet LMDB:"
+        echo "    1. Please download images from image-net.org website."
+        echo "    2. Execute script to download auxiliary data for training:"
+        echo "           ./data/ilsvrc12/get_ilsvrc_aux.sh"
+        echo "    3. update parameters in examples/imagenet/create_imagenet.sh"
+        echo "           TRAIN_DATA_ROOT and VALUE_DATA_ROOT: path of training and validation images from image-net.org"
+        echo "           RESIZE=true/false: resize to 256x256 if true"
+        echo "           ENCODE=true/false: LMDB is compressed if true"
+        echo "    4. Execute script to create lmdb for imagenet"
+        echo "           ./examples/imagenet/create_imagenet.sh"
+        echo ""
+        echo "See details in Intel Caffe github wiki:"
+        echo "    https://github.com/intel/caffe/wiki/How-to-create-Imagenet-LMDB"
+
+        exit -1
+    fi 
 }
 
 if [ $# -le 1 ]; then
@@ -421,7 +461,7 @@ echo "        -1: selected automatically according to CPU model."
 echo "            BDW/SKX: 2, KNL: 4"
 
 
-if [ "$mode" == "train" ] || [ "$mode" == "resume_train" ]; then
+if [ "$mode" == "train" ]; then
     if [ "$solver_file" == "" ]; then
         echo "Error: solver file is NOT specified."
         exit 1
@@ -433,17 +473,14 @@ if [ "$mode" == "train" ] || [ "$mode" == "resume_train" ]; then
 
     echo "    Solver file: $solver_file"
 
-    if [ "$mode" == "resume_train" ]; then
-        if [ "$snapshot" == "" ]; then
-            echo "Error: snapshot is NOT specified."
-            exit 1
-        fi
+    if [ "$snapshot" != "" ]; then
         if [ ! -f $snapshot ]; then
             echo "Error: snapshot file does NOT exist."
             exit 1
         fi
         echo "    Snapshot for resuming train: $snapshot"
     fi
+    model_file=$(get_model_fname $solver_file)
 fi
 
 if [ "$mode" == "time" ]; then
@@ -463,6 +500,14 @@ if [ "$mode" == "time" ]; then
     echo "    Iteration for running caffe time: $iteration"
     echo "    Model file for running caffe time: $model_file"
 fi
+
+# check source data exists
+grep "backend" $model_file | grep -i "LMDB"  >/dev/null
+if [ $? -eq 0 ]; then
+    check_lmdb_files $model_file
+fi
+
+exit 0
 
 echo "    Network: $network"
 if [ "$network" == "tcp" ]; then
@@ -499,10 +544,9 @@ fi
 
 env_params="--debug $debug --network $network --netmask $tcp_netmask --num_mlsl_servers $num_mlsl_servers"
 if [ "$host_file" != "" ]; then
-  env_params+=" --hostfile $host_file"
+    env_params+=" --hostfile $host_file"
 fi  
 source ${script_dir}/set_env.sh $env_params
-
 
 if [ "${benchmark_mode}" != "none" ]; then
     run_benchmark
