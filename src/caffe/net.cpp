@@ -266,7 +266,8 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
         !layer_param.type().compare("HDF5Data")   ||
         !layer_param.type().compare("MemoryData") ||
         !layer_param.type().compare("Input") ||
-        !layer_param.type().compare("WindowData")) {
+        !layer_param.type().compare("WindowData") ||
+        !layer_param.type().compare("AnnotatedData")) {
 
         // FIXME: retrieve batch_size from top[0]->shape[0] when MLSL stuff will be moved from LayerSetUp
         //int batch_size = top_vecs_[layer_id][0]->shape(0);
@@ -284,6 +285,8 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
             batch_size = layer_param.memory_data_param().batch_size();
         else if (!layer_param.type().compare("WindowData"))
             batch_size = layer_param.window_data_param().batch_size();
+        else if (!layer_param.type().compare("AnnotatedData"))
+            batch_size = layer_param.data_param().batch_size();
         else if (!layer_param.type().compare("Input")
             && layer_param.input_param().shape(0).dim().size())
             batch_size = layer_param.input_param().shape(0).dim(0);
