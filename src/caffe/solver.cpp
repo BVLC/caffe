@@ -795,9 +795,18 @@ void Solver<Dtype>::TestDetection(const int test_net_id) {
     return;
   }
   if (param_.test_compute_loss()) {
-    loss /= param_.test_iter(test_net_id);
-    LOG(INFO) << "Test loss: " << loss;
+#ifdef USE_MLSL
+      mn::allreduce(&loss, 1);
+      loss /= (param_.test_iter(test_net_id) * mn::get_group_size());
+      if (mn::get_node_id() == 0) {
+          LOG(INFO) << "Test loss: " << loss;
+      }
+#else /* !USE_MLSL */
+      loss /= param_.test_iter(test_net_id);
+      LOG(INFO) << "Test loss: " << loss;
+#endif /* USE_MLSL */
   }
+
   for (int i = 0; i < all_true_pos.size(); ++i) {
     if (all_true_pos.find(i) == all_true_pos.end()) {
       LOG(FATAL) << "Missing output_blob true_pos: " << i;
