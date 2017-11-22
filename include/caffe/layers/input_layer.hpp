@@ -42,6 +42,8 @@ class InputLayer : public Layer<Dtype> {
 
   virtual void Forward_cpu_const(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) const override {}
+  virtual void Forward_gpu_const(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) const override {}
  private:
   std::vector<int> heights_;
   std::vector<int> widths_;

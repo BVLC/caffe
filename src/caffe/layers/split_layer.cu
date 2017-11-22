@@ -8,11 +8,17 @@ namespace caffe {
 template <typename Dtype>
 void SplitLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
+  Forward_gpu_const(bottom,top);
+}
+
+template <typename Dtype>
+void SplitLayer<Dtype>::Forward_gpu_const(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) const {
   for (int i = 0; i < top.size(); ++i) {
     top[i]->ShareData(*bottom[0]);
   }
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(SplitLayer);
+INSTANTIATE_LAYER_GPU_FUNCS_CONST(SplitLayer);
 
 }  // namespace caffe

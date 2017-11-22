@@ -23,9 +23,11 @@ template <typename Dtype>
 void CuDNNSoftmaxLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   SoftmaxLayer<Dtype>::Reshape(bottom, top);
-  int N = this->outer_num_;
-  int K = bottom[0]->shape(this->softmax_axis_);
-  int H = this->inner_num_;
+  auto softmax_axis_ =
+    bottom[0]->CanonicalAxisIndex(this->layer_param_.softmax_param().axis());
+  int N = bottom[0]->count(0, softmax_axis_);
+  int K = bottom[0]->shape(softmax_axis_);
+  int H = bottom[0]->count(softmax_axis_ + 1);
   int W = 1;
   cudnn::setTensor4dDesc<Dtype>(&bottom_desc_, N, K, H, W);
   cudnn::setTensor4dDesc<Dtype>(&top_desc_, N, K, H, W);

@@ -53,8 +53,20 @@ private:\
       const std::vector<Blob<double>*>& bottom, \
       const std::vector<Blob<double>*>& top);
 
+#define INSTANTIATE_LAYER_GPU_FORWARD_CONST(classname) \
+  template void classname<float>::Forward_gpu_const( \
+      const std::vector<Blob<float>*>& bottom, \
+      const std::vector<Blob<float>*>& top) const; \
+  template void classname<double>::Forward_gpu_const( \
+      const std::vector<Blob<double>*>& bottom, \
+      const std::vector<Blob<double>*>& top) const;
+
 #define INSTANTIATE_LAYER_GPU_FUNCS(classname) \
   INSTANTIATE_LAYER_GPU_FORWARD(classname); 
+
+#define INSTANTIATE_LAYER_GPU_FUNCS_CONST(classname) \
+  INSTANTIATE_LAYER_GPU_FORWARD(classname); \
+  INSTANTIATE_LAYER_GPU_FORWARD_CONST(classname); \
 
 // A simple macro to mark codes that are not implemented, so that when the code
 // is executed we will see a fatal log.

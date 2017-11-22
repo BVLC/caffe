@@ -7,6 +7,12 @@ namespace caffe {
 template <typename Dtype>
 void ConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
+  Forward_gpu_const(bottom,top);
+}
+
+template <typename Dtype>
+void ConvolutionLayer<Dtype>::Forward_gpu_const(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) const {
   const Dtype* weight = this->blobs_[0]->gpu_data();
   int bottom_dim = bottom[0]->count(this->channel_axis_);
   int top_dim = top[0]->count(this->channel_axis_);
@@ -25,6 +31,6 @@ void ConvolutionLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   }
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(ConvolutionLayer);
+INSTANTIATE_LAYER_GPU_FUNCS_CONST(ConvolutionLayer);
 
 }  // namespace caffe
