@@ -846,6 +846,7 @@ message LossParameter {
   optional bool normalize = 2;
   // pre-fixed normalizer
   optional float pre_fixed_normalizer = 4 [default = 1];
+  optional float label_smoothing = 5 [default = 0.0];
 }
 
 // Messages that store parameters used by individual layer types follow, in
