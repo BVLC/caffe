@@ -846,7 +846,17 @@ void Solver<Dtype>::TestDetection(const int test_net_id) {
                 param_.ap_version(), &prec, &rec, &(APs[label]));
       mAP += APs[label];
     }
+#ifdef USE_MLSL
+    Dtype allnodes_mAP = static_cast<Dtype>(mAP);
+    mn::allreduce(&allnodes_mAP, 1);
+    mAP = allnodes_mAP;
+    Dtype allnodes_num_pos = static_cast<Dtype>(num_pos.size());
+    mn::allreduce(&allnodes_num_pos, 1);
+    if (mn::get_node_id() == 0)
+        mAP /= allnodes_num_pos;
+#else /* USE_MLSL */
     mAP /= num_pos.size();
+#endif
     const int output_blob_index = test_net->output_blob_indices()[i];
     const string& output_name = test_net->blob_names()[output_blob_index];
     LOG(INFO) << "    Test net output #" << i << ": " << output_name << " = "
