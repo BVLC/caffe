@@ -237,8 +237,8 @@ Dtype MultiSolver<Dtype>::ForwardBackwardImpl(bool first, bool last) {
 
 #ifdef FW_OVERLAP_OPT
       LAYER_WAIT_TIMING_STOP(i);
-      UpdateGradient(i);
 #endif
+      UpdateGradient(i);
     }
   }
 
