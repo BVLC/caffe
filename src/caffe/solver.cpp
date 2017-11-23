@@ -399,6 +399,7 @@ void Solver<Dtype>::InitTimers() {
   this->forward_time_per_layer.resize(layer_count, 0.0);
   this->backward_time_per_layer.resize(layer_count, 0.0);
   this->update_time_per_layer.resize(layer_count, 0.0);
+  this->cleardiffs_time_per_iter = 0.0;
 #ifdef USE_MLSL
   this->startcomm_time_per_layer.resize(layer_count, 0.0);
   this->waitcomm_time_per_layer.resize(layer_count, 0.0);
@@ -406,6 +407,7 @@ void Solver<Dtype>::InitTimers() {
   this->forward_time_per_layer_total.resize(layer_count, 0.0);
   this->backward_time_per_layer_total.resize(layer_count, 0.0);
   this->update_time_per_layer_total.resize(layer_count, 0.0);
+  this->cleardiffs_time_per_iter_total = 0.0;
 #ifdef USE_MLSL
   this->startcomm_time_per_layer_total.resize(layer_count, 0.0);
   this->waitcomm_time_per_layer_total.resize(layer_count, 0.0);
@@ -431,6 +433,7 @@ void Solver<Dtype>::ResetTimers() {
                  this->update_time_per_layer.begin(),
                  this->update_time_per_layer_total.begin(),
                  std::plus<double>());
+  this->cleardiffs_time_per_iter_total += this->cleardiffs_time_per_iter;
 #ifdef USE_MLSL
   std::transform(this->startcomm_time_per_layer_total.begin(),
                  this->startcomm_time_per_layer_total.end(),
@@ -451,6 +454,7 @@ void Solver<Dtype>::ResetTimers() {
           this->backward_time_per_layer.end(), 0.0);
   std::fill(this->update_time_per_layer.begin(),
           this->update_time_per_layer.end(), 0.0);
+  this->cleardiffs_time_per_iter = 0.0;
 #ifdef USE_MLSL
   std::fill(this->startcomm_time_per_layer.begin(),
           this->startcomm_time_per_layer.end(), 0.0);
@@ -475,6 +479,8 @@ void Solver<Dtype>::PrintTimers(bool printTotal) {
         backward_time_per_layer_total : backward_time_per_layer;
     std::vector<double>& update_timers = printTotal ?
         update_time_per_layer_total : update_time_per_layer;
+    double cleardiffs_timer = printTotal ?
+        cleardiffs_time_per_iter_total : cleardiffs_time_per_iter;
 #ifdef USE_MLSL
     std::vector<double>& startcomm_timers = printTotal ?
         startcomm_time_per_layer_total : startcomm_time_per_layer;
@@ -516,6 +522,10 @@ void Solver<Dtype>::PrintTimers(bool printTotal) {
     }
     LOG(WARNING) << std::endl;
 
+    double cleardiffs_time = cleardiffs_timer / 1000.0;
+    LOG(WARNING) << prefix << "CLEAR PARAMETER DIFFS TIME: " << cleardiffs_time << " ms";
+    LOG(WARNING) << std::endl;
+
 #ifdef USE_MLSL
     double startcomm_time = std::accumulate(startcomm_timers.begin(),
             startcomm_timers.end(), 0.0) / 1000.0;
@@ -540,11 +550,11 @@ void Solver<Dtype>::PrintTimers(bool printTotal) {
     LOG(WARNING) << std::endl;
 
     LOG(WARNING) << prefix << "TIME (Computation + Communication): " << (forward_time +
-        backward_time + update_time + startcomm_time + waitcomm_time) / 1000.0
+        backward_time + update_time + cleardiffs_time + startcomm_time + waitcomm_time) / 1000.0
         << " sec";
 #else
     LOG(WARNING) << prefix << "TIME (Computation): " << (forward_time +
-        backward_time + update_time) / 1000.0 << " sec";
+        backward_time + update_time + cleardiffs_time) / 1000.0 << " sec";
 #endif
 
     LOG(WARNING) << "####################################################";

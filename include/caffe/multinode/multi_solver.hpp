@@ -112,7 +112,8 @@ class MultiSolver {
  private:
   virtual Dtype ForwardBackwardImpl(bool first, bool last);
   bool IsSkipWaitGradient(int layer_id);
-  void WaitAndUpdateGradient(int layer_id);
+  bool WaitGradient(int layer_id);
+  void UpdateGradient(int layer_id);
 
  protected:
   boost::shared_ptr<Solver<Dtype>> root_solver_;
