@@ -8,6 +8,9 @@ debug="off"
 # it's assigned by detect_cpu
 cpu_model="skx"
 
+# number of OpenMP threads
+num_omp_threads=0
+
 nodenames=""
 # a list of nodes
 host_file=""
@@ -157,9 +160,21 @@ function set_openmp_envs
     # OMP configuration
     # For multinodes 
     if [ ${numnodes} -gt 1 ]; then
+        reserved_cores=0
+        if [ ${num_omp_threads} -ne 0 ]; then
+            if [ $numthreads_per_proc -lt $num_omp_threads ]; then
+                echo "Too large number of OpenMP thread: $num_omp_threads"
+                echo "    should be less than or equal to $numthreads_per_proc"
+                exit 1
+            fi
+            let reserved_cores=numthreads_per_proc-num_omp_threads
+            echo "Reserve number of cores: $reserved_cores"
+            let numthreads_per_proc=${num_omp_threads}
+        fi
+
         export OMP_NUM_THREADS=${numthreads_per_proc}
         export KMP_HW_SUBSET=1t
-        affinitystr="proclist=[0-5,$((5+numservers+1))-$((maxcores-1))],granularity=thread,explicit"
+        affinitystr="proclist=[0-5,$((5+numservers+reserved_cores+1))-$((maxcores-1))],granularity=thread,explicit"
     else
         # For single node only set for KNM
         if [ "${cpu_model}" == "knm" ]; then 
@@ -170,6 +185,8 @@ function set_openmp_envs
         fi
     fi
     export KMP_AFFINITY=$affinitystr
+
+    echo "Number of OpenMP threads: ${numthreads_per_proc}"
 }
 
 function set_env_vars
@@ -205,6 +222,14 @@ do
             num_mlsl_servers=$2
             shift
             ;;
+        --cpu)
+            cpu_model=$2
+            shift
+            ;;
+        --num_omp_threads)
+            num_omp_threads=$2
+            shift
+            ;;
         *)
             echo "Unknown option: $key"
             usage
@@ -222,8 +247,10 @@ if [[ $host_file != "" ]]; then
         echo "Error: empty host file! Exit."
         exit 0
     fi
-    numnodes=${#nodenames[@]}
+else
+    nodenames=(`hostname`)
 fi
+numnodes=${#nodenames[@]}
 echo "    Number of nodes: $numnodes"
 
 clear_envs

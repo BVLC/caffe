@@ -32,6 +32,12 @@ snapshot=""
 # parameters for training
 solver_file=""
 
+# weights for finetuning
+weight_file=""
+
+# number of OpenMP threads
+num_omp_threads=0
+
 # specify engine for running caffe
 engine="MKLDNN"
 
@@ -49,6 +55,7 @@ function usage
     script_name=$0
     echo "Usage:"
     echo "  $script_name [--hostfile host_file] [--solver solver_file]"
+    echo "               [--weights weight_file] [--num_omp_threads num_omp_threads]"
     echo "               [--network opa/tcp] [--netmask tcp_netmask] [--debug on/off]"
     echo "               [--mode train/time/none] [--benchmark all/qperf/mpi/none]"
     echo "               [--iteration iter] [--model_file deploy.prototxt]"
@@ -59,8 +66,10 @@ function usage
     echo "               [--mpibench_param mpibench_param]"
     echo ""
     echo "  Parameters:"
-    echo "    host: host file includes list of nodes. Only used when you're running multinodes mode"
+    echo "    hostfile: host file includes list of nodes. Only used if you're running with multinode"
     echo "    solver: need to be specified a solver file if mode is train"
+    echo "    weight_file: weight file for finetuning"
+    echo "    num_omp_threads: number of OpenMP threads"
     echo "    network: opa(default), tcp"
     echo "    netmask: only used if network is tcp"
     echo "    debug: off(default). MLSL debug information is outputed if it's on"
@@ -229,9 +238,11 @@ function run_mpi_bench
         return
     fi
 
+    mpi_iter=10
+    max_msglog=29
     xeonbin="$mpibench_bin $mpibench_param"
     if [ "$mpibench_bin" == "IMB-MPI1" ] || [ "$mpibench_bin" == "IMB-NBC" ]; then
-        xeonbin+=" -msglog 29 -iter 10 -iter_policy off"
+        xeonbin+=" -msglog $max_msglog -iter $mpi_iter -iter_policy off"
     fi
 
     mpibench_bin_bname=`basename $mpibench_bin`
@@ -302,6 +313,9 @@ function run_caffe
         if [ "${snapshot}" != "" ]; then
             xeonbin+=" --snapshot=${snapshot}"
         fi
+        if [ "${weight_file}" != "" ]; then
+            xeonbin+=" --weights ${weight_file}"
+        fi
     fi
 
     execute_command "$xeonbin" $result_dir
@@ -315,7 +329,9 @@ function test_ssh_connection
         for host in ${host_list[@]}
         do
             hostname=`ssh $host "hostname"`
-            ssh $hostname "ls"
+            # prompt user to input password and no password should be
+            # needed in the following commands
+            ssh $hostname "ls" >/dev/null
         done
     fi
 }
@@ -330,7 +346,7 @@ function get_model_fname
 function check_lmdb_files
 {
     model_file_=$1
-    
+
     lmdb_dirs=(ilsvrc12_train_lmdb ilsvrc12_val_lmdb) 
     is_missing_lmdb=0
     for lmdb_dir in "${lmdb_dirs[@]}"
@@ -414,6 +430,14 @@ do
             snapshot=$2
             shift
             ;;
+        --weights)
+            weight_file=$2
+            shift
+            ;;
+        --num_omp_threads)
+            num_omp_threads=$2
+            shift
+            ;;
         --engine)
             engine=$2
             shift
@@ -443,6 +467,8 @@ do
     shift
 done
 
+detect_cpu
+
 echo ""
 echo "CPUs with optimal settings:"
 for ((i=0; i<${#cpu_list[@]}; i++))
@@ -451,6 +477,7 @@ do
 done
 echo ""
 echo "Settings:"
+echo "    CPU: $cpu_model"
 echo "    Host file: $host_file"
 echo "    Running mode: $mode"
 echo "    Benchmark: $benchmark_mode"
@@ -502,12 +529,12 @@ if [ "$mode" == "time" ]; then
 fi
 
 # check source data exists
-grep "backend" $model_file | grep -i "LMDB"  >/dev/null
-if [ $? -eq 0 ]; then
-    check_lmdb_files $model_file
+if [ "$model_file" != "" ]; then
+    grep "backend" $model_file | grep -i "LMDB"  >/dev/null
+    if [ $? -eq 0 ]; then
+        check_lmdb_files $model_file
+    fi
 fi
-
-exit 0
 
 echo "    Network: $network"
 if [ "$network" == "tcp" ]; then
@@ -533,8 +560,6 @@ echo "    Number of nodes: $numnodes"
 # test connection between nodes via ssh
 test_ssh_connection $host_file
 
-detect_cpu
-
 set_numa_node
 
 if [ ! -d $result_dir ]; then
@@ -542,10 +567,17 @@ if [ ! -d $result_dir ]; then
     mkdir -p $result_dir
 fi
 
-env_params="--debug $debug --network $network --netmask $tcp_netmask --num_mlsl_servers $num_mlsl_servers"
+env_params="--cpu $cpu_model --debug $debug --network $network --num_mlsl_servers $num_mlsl_servers"
+if [ "$network" == "tcp" ]; then
+    env_params+=" --netmask $tcp_netmask"
+fi
 if [ "$host_file" != "" ]; then
     env_params+=" --hostfile $host_file"
-fi  
+fi
+if [ ${num_omp_threads} -ne 0 ]; then
+    env_params+=" --num_omp_threads ${num_omp_threads}"
+fi
+
 source ${script_dir}/set_env.sh $env_params
 
 if [ "${benchmark_mode}" != "none" ]; then
