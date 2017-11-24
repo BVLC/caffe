@@ -85,12 +85,12 @@ namespace caffe {
 
 #ifdef FW_OVERLAP_OPT
 #define LAYER_WAIT_TIMING_START()
-#define LAYER_WAIT_TIMING_STOP(index)
+#define LAYER_WAIT_TIMING_STOP(layer_index)
 #define LAYER_REMOVE_UPDATE_TIME(layer_i, layer_k)
 #endif
 
 #define ITER_TIMING_START()
-#define ITER_TIMING_STOP(name, index)
+#define ITER_TIMING_STOP(name)
 
 #endif
 
@@ -152,8 +152,19 @@ Dtype MultiSolver<Dtype>::ForwardBackwardImpl(bool first, bool last) {
     if (first) {
       LAYER_WAIT_TIMING_START();
       while (layer_finished_flags_[i] == false) {
-        if (IsSkipWaitGradient(i) || WaitGradient(i))
+        if (IsSkipWaitGradient(i))
+           break;
+
+        if (WaitGradient(i)) {
+          // The function call cannot be moved out of while loop. Otherwise,
+          // at first iteration, additional UpdateGradient will be called,
+          // even if no gradient is synced.
+          UpdateGradient(i);
+          // The update time for layer i must be removed from waitcomm time
+          // for layer i
+          LAYER_REMOVE_UPDATE_TIME(i, i);
           break;
+        }
         
         // wait and update gradient for next layers
         for (int k=i+1; k<layers.size(); k++) {
@@ -170,8 +181,8 @@ Dtype MultiSolver<Dtype>::ForwardBackwardImpl(bool first, bool last) {
           }
         }
       }
+
       LAYER_WAIT_TIMING_STOP(i);
-      UpdateGradient(i);
       // set flag to false after updating gradient
       layer_finished_flags_[i] = false;
     }
