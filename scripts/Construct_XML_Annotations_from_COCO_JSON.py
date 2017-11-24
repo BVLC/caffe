@@ -31,8 +31,6 @@ parser.add_argument('-s', '--split',
 parser.add_argument('-l', '--label',
                     help="Generate a new labels.txt including this label. Repeatable",
                     action='append', type=str)
-parser.add_argument('-o', '--output',
-                    help="Output a (train.txt and minival.txt) or (val.txt)", type=bool)
 parser.add_argument(
     '-p', '--copy', help="Copy files don't move them.", action="store_true")
 args = parser.parse_args()
@@ -87,6 +85,7 @@ with open(INPUT_JSON_BASE_DIR + CONTAINER + '_' + TYPEPREFIX + str(YEAR) + '.jso
             # In case we get a spare empty string at the end
             if not labelid == "":
                 label_ids.append(int(labelid))
+print(label_ids, "xxx")
 new_set = []
 for annotation in jsonfile['annotations']:
     if annotation['category_id'] in label_ids:
@@ -94,16 +93,22 @@ for annotation in jsonfile['annotations']:
 if len(new_set) == 0:
     print("Perhaps you entered a label incorrectly, since there are no results which match.")
     exit(0)
+print(len(new_set), "xxx")
 df = pd.DataFrame(data=new_set)
 df = df.sort_values(['image_id', 'category_id'])
 grouped = df.groupby(['image_id'])
+
 if not path.isdir(OUTPUT_XML_BASE_DIR + TYPEPREFIX):
     mkdir(OUTPUT_XML_BASE_DIR + TYPEPREFIX)
-image_names = []
-xmls = []
+IMAGE_NAMES = []
+ANN_DIR = '%sAnnotations/%s%d/' % (ROOT_COCO, TYPEPREFIX, YEAR)
+if not path.isdir(ANN_DIR):
+    mkdir(ANN_DIR)
 for image in grouped:
     imagename = "%012d" % (image[0])
-    image_names.append(imagename)
+    IMAGE_NAMES.append(imagename)
+    if path.isfile(ANN_DIR + imagename + ".xml"):
+        continue  # Don't overwrite, unless we force it to
     image_file = imread(PATH_TO_IMAGES + imagename + '.jpg')
     E = objectify.ElementMaker(annotate=False)
     img_annotation = E.annotation(
@@ -137,10 +142,11 @@ for image in grouped:
             ),
         )
         img_annotation.append(objectNode)
-
     xml_pretty = etree.tostring(img_annotation, pretty_print=True)
-    xmls.append(xml_pretty)
+    with open(ANN_DIR + imagename + ".xml", 'wb') as ann_file:
+        ann_file.write(xml_pretty)
 
+print("finished with xmls, now moving or copying")
 if TYPEPREFIX == 'train':
     if TRAIN_SPLIT and TRAIN_SPLIT < 1.0:
         TRAIN_DIR = 'Images/train_minusminival%d/' % (YEAR)
@@ -159,44 +165,54 @@ if TYPEPREFIX == 'train':
             mkdir(MINIVAL_FULL_DIR)
             mkdir(MINIVAL_FULL_ANN_DIR)
         SELECTED_FOR_MINIVAL = []
-        while len(SELECTED_FOR_MINIVAL) < (1.0 - TRAIN_SPLIT) * len(image_names):
-            RANDOM_IDX = np.random.randint(0, high=len(image_names), size=1)
+        while len(SELECTED_FOR_MINIVAL) < (1.0 - TRAIN_SPLIT) * len(IMAGE_NAMES):
+            RANDOM_IDX = np.random.randint(0, high=len(IMAGE_NAMES), size=1)
             while RANDOM_IDX in SELECTED_FOR_MINIVAL:
                 RANDOM_IDX = np.random.randint(
-                    0, high=len(image_names), size=1)
+                    0, high=len(IMAGE_NAMES), size=1)
             SELECTED_FOR_MINIVAL.append(int(RANDOM_IDX))
         SELECTED_FOR_TRAIN = sorted(
-            list(set(list(range(len(image_names)))).difference(SELECTED_FOR_MINIVAL)))
+            list(set(list(range(len(IMAGE_NAMES)))).difference(SELECTED_FOR_MINIVAL)))
         with open('train.txt', 'w') as train_file:
             for idx in SELECTED_FOR_TRAIN:
                 if COPY_FILES:
                     copyfile(
-                        PATH_TO_IMAGES + image_names[idx] + ".jpg",
-                        TRAIN_FULL_DIR + image_names[idx] + ".jpg")
+                        PATH_TO_IMAGES + IMAGE_NAMES[idx] + ".jpg",
+                        TRAIN_FULL_DIR + IMAGE_NAMES[idx] + ".jpg")
+                    copyfile(
+                        ANN_DIR + IMAGE_NAMES[idx] + ".xml",
+                        TRAIN_FULL_ANN_DIR + IMAGE_NAMES[idx] + ".xml")
                 else:
                     move(
-                        PATH_TO_IMAGES + image_names[idx] + ".jpg",
-                        TRAIN_FULL_DIR + image_names[idx] + ".jpg")
-                with open(TRAIN_FULL_ANN_DIR + image_names[idx] + ".xml", mode="wb") as xml_for_image:
-                    xml_for_image.write(xmls[idx])
+                        PATH_TO_IMAGES + IMAGE_NAMES[idx] + ".jpg",
+                        TRAIN_FULL_DIR + IMAGE_NAMES[idx] + ".jpg")
+                    move(
+                        ANN_DIR + IMAGE_NAMES[idx] + ".xml",
+                        TRAIN_FULL_ANN_DIR + IMAGE_NAMES[idx] + ".xml")
                 train_file.write(
-                    "/" + TRAIN_DIR + image_names[idx] + ".jpg /" + TRAIN_ANN_DIR + image_names[idx] + ".xml\n")
+                    "/" + TRAIN_DIR + IMAGE_NAMES[idx] + ".jpg /" + TRAIN_ANN_DIR + IMAGE_NAMES[idx] + ".xml\n")
         with open('minival.txt', 'w')as minival_file:
             for idx in SELECTED_FOR_MINIVAL:
                 if COPY_FILES:
                     copyfile(
-                        PATH_TO_IMAGES + image_names[idx] + ".jpg",
-                        MINIVAL_FULL_DIR + image_names[idx] + ".jpg"
+                        PATH_TO_IMAGES + IMAGE_NAMES[idx] + ".jpg",
+                        MINIVAL_FULL_DIR + IMAGE_NAMES[idx] + ".jpg"
+                    )
+                    copyfile(
+                        ANN_DIR + IMAGE_NAMES[idx] + ".xml",
+                        MINIVAL_FULL_ANN_DIR + IMAGE_NAMES[idx] + ".xml"
                     )
                 else:
                     move(
-                        PATH_TO_IMAGES + image_names[idx] + ".jpg",
-                        MINIVAL_FULL_DIR + image_names[idx] + ".jpg"
+                        PATH_TO_IMAGES + IMAGE_NAMES[idx] + ".jpg",
+                        MINIVAL_FULL_DIR + IMAGE_NAMES[idx] + ".jpg"
                     )
-                with open(MINIVAL_FULL_ANN_DIR + image_names[idx] + ".xml", mode="wb") as xml_for_minival_image:
-                    xml_for_minival_image.write(xmls[idx])
+                    move(
+                        ANN_DIR + IMAGE_NAMES[idx] + ".xml",
+                        MINIVAL_FULL_ANN_DIR + IMAGE_NAMES[idx] + ".xml"
+                    )
                 minival_file.write(
-                    "/" + MINIVAL_DIR + image_names[idx] + ".jpg /" + MINIVAL_ANN_DIR + image_names[idx] + ".xml\n")
+                    "/" + MINIVAL_DIR + IMAGE_NAMES[idx] + ".jpg /" + MINIVAL_ANN_DIR + IMAGE_NAMES[idx] + ".xml\n")
     else:
         with open('train.txt', 'w') as train_file:
             IMG_RELATIVE = '/Images/train%d/' % (YEAR)
@@ -204,11 +220,9 @@ if TYPEPREFIX == 'train':
             TRAIN_FULL_ANN_DIR = "%s%s" % (ROOT_COCO, TRAIN_ANN_DIR)
             if not path.isdir(TRAIN_FULL_ANN_DIR):
                 mkdir(TRAIN_FULL_ANN_DIR)
-            for i in range(len(image_names)):
-                with open(TRAIN_FULL_ANN_DIR + image_names[i] + ".xml", 'wb') as train_xml_file:
-                    train_xml_file.write(xmls[i])
+            for i in range(len(IMAGE_NAMES)):
                 train_file.write(
-                    IMG_RELATIVE + image_names[i] + ".jpg /" + TRAIN_ANN_DIR + image_names[i] + ".xml\n")
+                    IMG_RELATIVE + IMAGE_NAMES[i] + ".jpg /" + TRAIN_ANN_DIR + IMAGE_NAMES[i] + ".xml\n")
 else:
     with open('val.txt', 'w') as val_file:
         IMG_RELATIVE = '/Images/val%d/' % (YEAR)
@@ -216,11 +230,9 @@ else:
         VALL_FULL_ANN_DIR = '%s%s' % (ROOT_COCO, VAL_ANN_DIR)
         if not path.isdir(VAL_ANN_DIR):
             mkdir(VAL_ANN_DIR)
-        for i in range(len(image_names)):
-            with open(VAL_FULL_ANN_DIR + image_names[i] + ".xml", 'wb') as val_xml:
-                val_xml.write(xmls[i])
+        for i in range(len(IMAGE_NAMES)):
             val_file.write(
-                IMG_RELATIVE + image_names[i] + ".jpg /" + VAL_ANN_DIR + image_names[i] + ".xml\n")
+                IMG_RELATIVE + IMAGE_NAMES[i] + ".jpg /" + VAL_ANN_DIR + IMAGE_NAMES[i] + ".xml\n")
 
 """
 Example of Pascal VOC 2009 annotation XML
