@@ -72,6 +72,7 @@ set(python_version "2" CACHE STRING "Specify which Python version to use")
 caffe_option(BUILD_matlab "Build Matlab wrapper" OFF)
 caffe_option(BUILD_docs   "Build documentation" ON IF UNIX OR APPLE)
 caffe_option(BUILD_python_layer "Build the Caffe Python layer" ON)
+caffe_option(BUILD_examples "Build the Caffe examples" ON)
 caffe_option(USE_OPENCV "Build with OpenCV support" ON)
 caffe_option(USE_LEVELDB "Build with levelDB" ON)
 caffe_option(USE_LMDB "Build with lmdb" ON)
@@ -129,7 +130,7 @@ if(DISABLE_DEVICE_HOST_UNIFIED_MEMORY)
 endif()
 
 if(UNIX OR APPLE)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wall -std=c++11 -DCMAKE_BUILD")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wall -std=c++17 -DCMAKE_BUILD")
 endif()
 
 if(DISABLE_DOUBLE_SUPPORT)
@@ -143,7 +144,7 @@ endif()
 caffe_set_caffe_link()
 
 if(USE_libstdcpp)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++ -std=c++11")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++ -std=c++17")
   message("-- Warning: forcing libstdc++ (controlled by USE_libstdcpp option in cmake)")
 endif()
 
@@ -191,7 +192,11 @@ endif()
 add_subdirectory(src/gtest)
 add_subdirectory(src/caffe)
 add_subdirectory(tools)
-add_subdirectory(examples)
+
+if(BUILD_examples)
+  add_subdirectory(examples)
+endif()
+
 # This code is taken from https://github.com/sh1r0/caffe-android-lib
 add_subdirectory(android)
 add_subdirectory(python)
