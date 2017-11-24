@@ -282,47 +282,36 @@ if(BUILD_python)
     # Find the matching boost python implementation
     set(version ${PYTHONLIBS_VERSION_STRING})
 
+    # List possible suffixes
     STRING( REGEX REPLACE "[^0-9]" "" boost_py_version ${version} )
-    find_package(Boost 1.46 COMPONENTS "python-py${boost_py_version}")
-    set(Boost_PYTHON_FOUND ${Boost_PYTHON-PY${boost_py_version}_FOUND})
-
-    while(NOT "${version}" STREQUAL "" AND NOT Boost_PYTHON_FOUND)
-      STRING( REGEX REPLACE "([0-9.]+).[0-9]+" "\\1" version ${version} )
-
-      STRING( REGEX REPLACE "[^0-9]" "" boost_py_version ${version} )
-      find_package(Boost 1.46 COMPONENTS "python-py${boost_py_version}")
-      set(Boost_PYTHON_FOUND ${Boost_PYTHON-PY${boost_py_version}_FOUND})
+    while(NOT "${version}" STREQUAL "")
+      set(suffixes ${suffixes}
+                   "-py${boost_py_version}"
+                   "py${boost_py_version}"
+                   "-${boost_py_version}"
+                   "${boost_py_version}"
+      )
 
       STRING( REGEX MATCHALL "([0-9.]+).[0-9]+" has_more_version ${version} )
       if("${has_more_version}" STREQUAL "")
         break()
       endif()
+
+      STRING( REGEX REPLACE "([0-9.]+).[0-9]+" "\\1" version ${version} )
+      STRING( REGEX REPLACE "[^0-9]" "" boost_py_version ${version} )
     endwhile()
 
-     if(NOT Boost_PYTHON_FOUND)
-        set(version Pythonlibs_version_string)
+    # Traverse all suffixes and check for boost python library
+    foreach(suffix ${suffixes})
+      find_package(Boost 1.46 COMPONENTS "python${suffix}")
+      STRING( TOUPPER ${suffix} upper_suffix)
+      set(Boost_PYTHON_FOUND ${Boost_PYTHON${upper_suffix}_FOUND})
 
-        STRING( REGEX REPLACE "[^0-9]" "" boost_py_version ${version} )
-        find_package(Boost 1.46 COMPONENTS "python${boost_py_version}")
-        set(Boost_PYTHON_FOUND ${Boost_PYTHON${boost_py_version}_FOUND})
+      if(Boost_PYTHON_FOUND)
+        break()
+      endif()
+    endforeach()
 
-        while(NOT "${version}" STREQUAL "" AND NOT Boost_PYTHON_FOUND)
-          STRING( REGEX REPLACE "([0-9.]+).[0-9]+" "\\\\1" version ${version} )
-
-          STRING( REGEX REPLACE "[^0-9]" "" boost_py_version ${version} )
-          find_package(Boost 1.46 COMPONENTS "python${boost_py_version}")
-          set(Boost_PYTHON_FOUND ${Boost_PYTHON${boost_py_version}_FOUND})
-
-          STRING( REGEX MATCHALL "([0-9.]+).[0-9]+" has_more_version ${version} )
-          if("${has_more_version}" STREQUAL "")
-            break()
-          endif()
-        endwhile()
-    endif()
-    if(NOT Boost_PYTHON_FOUND)
-      find_package(Boost 1.46 COMPONENTS python3)
-      set(Boost_PYTHON_FOUND ${Boost_PYTHON3_FOUND})
-    endif()
     if(NOT Boost_PYTHON_FOUND)
       find_package(Boost 1.46 COMPONENTS python)
     endif()
