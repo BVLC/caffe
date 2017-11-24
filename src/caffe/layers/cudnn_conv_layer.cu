@@ -178,17 +178,6 @@ void CuDNNConvolutionLayer<Dtype>::Forward_gpu_const(
   int top_dim = top[0]->count(this->channel_axis_);
   int top_offset = top_dim / this->group_;
 
-  /*
-  // reduce over all workspace sizes to get a maximum to allocate / reallocate
-  size_t total_workspace_fwd = 0;
-
-  for (size_t i = 0; i < bottom.size(); i++) {
-    total_workspace_fwd =
-        std::max(total_workspace_fwd, workspace_fwd_sizes_[i]);
-  }
-  // get max over all operations
-  size_t max_workspace = total_workspace_fwd;
-  */
 
   for (int i = 0; i < bottom.size(); ++i) {
     const Dtype *bottom_data = bottom[i]->gpu_data();
