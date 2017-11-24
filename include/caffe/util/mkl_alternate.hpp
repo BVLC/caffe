@@ -82,9 +82,12 @@ DEFINE_VSL_BINARY_FUNC(Sub, y[i] = a[i] - b[i]);
 DEFINE_VSL_BINARY_FUNC(Mul, y[i] = a[i] * b[i]);
 DEFINE_VSL_BINARY_FUNC(Div, y[i] = a[i] / b[i]);
 
+#ifndef USE_OpenBLAS
 // In addition, MKL comes with an additional function axpby that is not present
 // in standard blas. We will simply use a two-step (inefficient, of course) way
 // to mimic that.
+
+// OpenBLAS already defines these functions.
 inline void cblas_saxpby(const int_tp N, const float alpha, const float* X,
                          const int_tp incX, const float beta, float* Y,
                          const int_tp incY) {
@@ -97,6 +100,7 @@ inline void cblas_daxpby(const int_tp N, const double alpha, const double* X,
   cblas_dscal(N, beta, Y, incY);
   cblas_daxpy(N, alpha, X, incX, Y, incY);
 }
+#endif  // USE_OpenBLAS
 
 #endif  // USE_MKL
 
