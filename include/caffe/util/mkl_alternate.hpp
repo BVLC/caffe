@@ -82,7 +82,12 @@ DEFINE_VSL_BINARY_FUNC(Sub, y[i] = a[i] - b[i]);
 DEFINE_VSL_BINARY_FUNC(Mul, y[i] = a[i] * b[i]);
 DEFINE_VSL_BINARY_FUNC(Div, y[i] = a[i] / b[i]);
 
-#ifndef USE_OpenBLAS
+// For some systems, even with USE_OpenBLAS enabled,
+// we may include the non-openblas cblas.h which doesn't
+// have cblas_saxpby/cblas_daxpby so we use both
+// OPENBLAS_VERSION and USE_OpenBLAS to determine whether
+// enable the two following inline functions.
+#if !defined(OPENBLAS_VERSION) || !defined(USE_OpenBLAS)
 // In addition, MKL comes with an additional function axpby that is not present
 // in standard blas. We will simply use a two-step (inefficient, of course) way
 // to mimic that.
