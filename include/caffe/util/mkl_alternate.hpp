@@ -11,11 +11,7 @@
 #include <Accelerate/Accelerate.h>
 #else
 extern "C" {
-#ifdef USE_OpenBLAS
-#include <openblas/cblas.h>
-#else
 #include <cblas.h>
-#endif
 }
 #endif  // USE_ACCELERATE
 
