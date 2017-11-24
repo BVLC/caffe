@@ -10,6 +10,9 @@ foreach(source_file ${examples_srcs})
 
   add_executable(${name} ${source_file})
   target_link_libraries(${name} ${Caffe_LINK})
+  if(HAVE_PYTHON)
+    target_link_libraries(${name} ${PYTHON_LIBRARIES})
+  endif()
   set_target_properties(${name} PROPERTIES LINK_FLAGS "-pie")
   caffe_default_properties(${name})
 
