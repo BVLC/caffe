@@ -8,7 +8,6 @@
 #include "caffe/data_transformer.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/util/math_functions.hpp"
-//#include "caffe/util/rng.hpp"
 
 namespace caffe {
 
@@ -518,29 +517,6 @@ vector<int> DataTransformer<Dtype>::InferBlobShape(
   return shape;
 }
 #endif  // USE_OPENCV
-
-/*
-template <typename Dtype>
-void DataTransformer<Dtype>::InitRand() {
-  const bool needs_rand = param_.mirror() ||
-      (phase_ == TRAIN && param_.crop_size());
-  if (needs_rand) {
-    const unsigned int rng_seed = caffe_rng_rand();
-    rng_.reset(new Caffe::RNG(rng_seed));
-  } else {
-    rng_.reset();
-  }
-}
-
-template <typename Dtype>
-int DataTransformer<Dtype>::Rand(int n) {
-  CHECK(rng_);
-  CHECK_GT(n, 0);
-  caffe::rng_t* rng =
-      static_cast<caffe::rng_t*>(rng_->generator());
-  return ((*rng)() % n);
-}
-*/
 
 INSTANTIATE_CLASS(DataTransformer);
 

@@ -108,37 +108,9 @@ class Caffe {
 
   enum Brew { CPU, GPU };
 
-  // This random number generator facade hides boost and CUDA rng
-  // implementation from one another (for cross-platform compatibility).
-  /*
-  class RNG {
-   public:
-    RNG();
-    explicit RNG(unsigned int seed);
-    explicit RNG(const RNG&);
-    RNG& operator=(const RNG&);
-    void* generator();
-   private:
-    class Generator;
-    shared_ptr<Generator> generator_;
-  };
-
-  // Getters for boost rng, curand, and cublas handles
-  inline static RNG& rng_stream() {
-    if (!Get().random_generator_) {
-      Get().random_generator_.reset(new RNG());
-    }
-    return *(Get().random_generator_);
-  }
-  */
 #ifndef CPU_ONLY
   inline static cublasHandle_t cublas_handle() { return Get().cublas_handle_; }
 
-  /*
-  inline static curandGenerator_t curand_generator() {
-    return Get().curand_generator_;
-  }
-  */
 #endif
 
   // Returns the mode: running on CPU or GPU.
@@ -173,9 +145,7 @@ class Caffe {
  protected:
 #ifndef CPU_ONLY
   cublasHandle_t cublas_handle_;
-  //curandGenerator_t curand_generator_;
 #endif
- // shared_ptr<RNG> random_generator_;
 
   Brew mode_;
   int device_id_;

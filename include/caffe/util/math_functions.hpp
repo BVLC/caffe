@@ -199,27 +199,6 @@ void caffe_gpu_powx(const int n, const Dtype* a, const Dtype b, Dtype* y);
 template <typename Dtype>
 void caffe_gpu_sqrt(const int n, const Dtype* a, Dtype* y);
 
-/*
-// caffe_gpu_rng_uniform with two arguments generates integers in the range
-// [0, UINT_MAX].
-void caffe_gpu_rng_uniform(const int n, unsigned int* r);
-
-// caffe_gpu_rng_uniform with four arguments generates floats in the range
-// (a, b] (strictly greater than a, less than or equal to b) due to the
-// specification of curandGenerateUniform.  With a = 0, b = 1, just calls
-// curandGenerateUniform; with other limits will shift and scale the outputs
-// appropriately after calling curandGenerateUniform.
-template <typename Dtype>
-void caffe_gpu_rng_uniform(const int n, const Dtype a, const Dtype b, Dtype* r);
-
-template <typename Dtype>
-void caffe_gpu_rng_gaussian(const int n, const Dtype mu, const Dtype sigma,
-                            Dtype* r);
-
-template <typename Dtype>
-void caffe_gpu_rng_bernoulli(const int n, const Dtype p, int* r);
-*/
-
 template <typename Dtype>
 void caffe_gpu_dot(const int n, const Dtype* x, const Dtype* y, Dtype* out);
 
