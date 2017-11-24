@@ -1,6 +1,7 @@
 #ifndef CAFFE_CUDNN_CONV_LAYER_HPP_
 #define CAFFE_CUDNN_CONV_LAYER_HPP_
 
+#include <boost/thread/tss.hpp>
 #include <vector>
 
 #include "caffe/blob.hpp"
@@ -25,42 +26,83 @@ namespace caffe {
  * input and filter regimes the CUDNN engine is faster than the CAFFE engine,
  * but for fully-convolutional models and large inputs the CAFFE engine can be
  * faster as long as it fits in memory.
-*/
+ */
 template <typename Dtype>
 class CuDNNConvolutionLayer : public ConvolutionLayer<Dtype> {
- public:
-  explicit CuDNNConvolutionLayer(const LayerParameter& param)
+public:
+  explicit CuDNNConvolutionLayer(const LayerParameter &param)
       : ConvolutionLayer<Dtype>(param), handles_setup_(false) {}
-  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
-  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
+  virtual void LayerSetUp(const vector<Blob<Dtype> *> &bottom,
+                          const vector<Blob<Dtype> *> &top);
+  virtual void Reshape(const vector<Blob<Dtype> *> &bottom,
+                       const vector<Blob<Dtype> *> &top);
+  virtual void Reshape_const(const vector<Blob<Dtype> *> &bottom,
+                             const vector<Blob<Dtype> *> &top) const override;
   virtual ~CuDNNConvolutionLayer();
 
- protected:
-  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
+protected:
+  virtual void Forward_gpu(const vector<Blob<Dtype> *> &bottom,
+                           const vector<Blob<Dtype> *> &top);
+
+  virtual void
+  Forward_gpu_const(const vector<Blob<Dtype> *> &bottom,
+                    const vector<Blob<Dtype> *> &top) const override;
 
   bool handles_setup_;
-  cudnnHandle_t* handle_;
-  cudaStream_t*  stream_;
 
-  // algorithms for forward and backwards convolutions
-  cudnnConvolutionFwdAlgo_t *fwd_algo_;
+  mutable ::boost::thread_specific_ptr<vector<cudnnHandle_t>> handle_ptr_{
+      [](vector<cudnnHandle_t> *handles) {
+        for (int i = 0; i < handles->size(); i++) {
+	  cudnnDestroy((*handles)[i]);
+        }
+      }};
 
-  vector<cudnnTensorDescriptor_t> bottom_descs_, top_descs_;
-  cudnnTensorDescriptor_t    bias_desc_;
-  cudnnFilterDescriptor_t      filter_desc_;
-  vector<cudnnConvolutionDescriptor_t> conv_descs_;
-  int bottom_offset_, top_offset_, bias_offset_;
+  mutable ::boost::thread_specific_ptr<vector<cudaStream_t>> stream_ptr_{
+      [](vector<cudaStream_t> *streams) {
+        for (int i = 0; i < streams->size(); i++) {
+	  cudaStreamDestroy((*streams)[i]);
+        }
+      }};
 
-  size_t *workspace_fwd_sizes_;
-  size_t workspaceSizeInBytes;  // size of underlying storage
-  void *workspaceData;  // underlying storage
-  void **workspace;  // aliases into workspaceData
+  mutable ::boost::thread_specific_ptr<vector<cudnnTensorDescriptor_t>>
+      bottom_descs_ptr_{[](vector<cudnnTensorDescriptor_t> *descs) {
+        for (int i = 0; i < descs->size(); i++) {
+          cudnnDestroyTensorDescriptor((*descs)[i]);
+        }
+      }};
+
+  mutable ::boost::thread_specific_ptr<vector<cudnnTensorDescriptor_t>>
+      top_descs_ptr_{[](vector<cudnnTensorDescriptor_t> *descs) {
+        for (int i = 0; i < descs->size(); i++) {
+          cudnnDestroyTensorDescriptor((*descs)[i]);
+        }
+      }};
+
+  mutable ::boost::thread_specific_ptr<cudnnTensorDescriptor_t> bias_desc_ptr_{
+      [](cudnnTensorDescriptor_t *desc) {
+        cudnnDestroyTensorDescriptor(*desc);
+      }};
+
+  mutable ::boost::thread_specific_ptr<cudnnFilterDescriptor_t> filter_desc_ptr_{
+      [](cudnnFilterDescriptor_t *desc) {
+        cudnnDestroyFilterDescriptor(*desc);
+      }};
+
+
+  mutable ::boost::thread_specific_ptr<vector<cudnnConvolutionDescriptor_t>>
+      conv_descs_ptr_{[](vector<cudnnConvolutionDescriptor_t> *descs) {
+        for (int i = 0; i < descs->size(); i++) {
+          cudnnDestroyConvolutionDescriptor((*descs)[i]);
+        }
+      }};
+
+  int bias_offset_;
+
+  mutable ::boost::thread_specific_ptr<void> workspaceData{
+      [](void *ptr) { SyncedMemory::gpu_free(ptr); }};
 };
 #endif
 
-}  // namespace caffe
+} // namespace caffe
 
-#endif  // CAFFE_CUDNN_CONV_LAYER_HPP_
+#endif // CAFFE_CUDNN_CONV_LAYER_HPP_
