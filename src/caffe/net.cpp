@@ -8,12 +8,11 @@
 #include <utility>
 #include <vector>
 
-
 #include "caffe/common.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/net.hpp"
-#include "caffe/syncedmem.hpp"
 #include "caffe/proto/caffe.pb.h"
+#include "caffe/syncedmem.hpp"
 #include "caffe/util/insert_splits.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/upgrade_proto.hpp"
@@ -50,7 +49,6 @@ template <typename Dtype> void Net<Dtype>::Init(const NetParameter &in_param) {
   std::cout << "init free_byte=" << (free_byte) / 1024 / 1024 << std::endl;
   */
 
-
   // Set phase from the state.
   phase_ = in_param.state().phase();
   // Filter layers based on their include/exclude rules and
@@ -71,7 +69,7 @@ template <typename Dtype> void Net<Dtype>::Init(const NetParameter &in_param) {
   top_blob_names_.resize(param.layer_size());
   bottom_id_vecs_.resize(param.layer_size());
   bottom_blob_names_.resize(param.layer_size());
-  //param_id_vecs_.resize(param.layer_size());
+  // param_id_vecs_.resize(param.layer_size());
   top_id_vecs_.resize(param.layer_size());
 
   for (int layer_id = 0; layer_id < param.layer_size(); ++layer_id) {
@@ -92,8 +90,8 @@ template <typename Dtype> void Net<Dtype>::Init(const NetParameter &in_param) {
     // Figure out this layer's input and output
     for (int bottom_id = 0; bottom_id < layer_param.bottom_size();
          ++bottom_id) {
-      AppendBottom(param, layer_id, bottom_id,
-	  &available_blobs, &blob_name_to_idx);
+      AppendBottom(param, layer_id, bottom_id, &available_blobs,
+                   &blob_name_to_idx);
     }
     int num_top = layer_param.top_size();
 
@@ -132,7 +130,6 @@ template <typename Dtype> void Net<Dtype>::Init(const NetParameter &in_param) {
     const int num_param_blobs = layers_[layer_id]->blobs().size();
     CHECK_LE(param_size, num_param_blobs)
         << "Too many params specified for layer " << layer_param.name();
-
   }
 
   /*
@@ -212,30 +209,27 @@ bool Net<Dtype>::StateMeetsRule(const NetState &state, const NetStateRule &rule,
   if (rule.has_phase()) {
     if (rule.phase() != state.phase()) {
 
-      LOG(INFO)
-          << "The NetState phase (" << state.phase()
-          << ") differed from the phase (" << rule.phase()
-          << ") specified by a rule in layer " << layer_name;
+      LOG(INFO) << "The NetState phase (" << state.phase()
+                << ") differed from the phase (" << rule.phase()
+                << ") specified by a rule in layer " << layer_name;
       return false;
     }
   }
   // Check whether the rule is broken due to min level.
   if (rule.has_min_level()) {
     if (state.level() < rule.min_level()) {
-      LOG(INFO)
-          << "The NetState level (" << state.level()
-          << ") is above the min_level (" << rule.min_level()
-          << ") specified by a rule in layer " << layer_name;
+      LOG(INFO) << "The NetState level (" << state.level()
+                << ") is above the min_level (" << rule.min_level()
+                << ") specified by a rule in layer " << layer_name;
       return false;
     }
   }
   // Check whether the rule is broken due to max level.
   if (rule.has_max_level()) {
     if (state.level() > rule.max_level()) {
-      LOG(INFO)
-          << "The NetState level (" << state.level()
-          << ") is above the max_level (" << rule.max_level()
-          << ") specified by a rule in layer " << layer_name;
+      LOG(INFO) << "The NetState level (" << state.level()
+                << ") is above the max_level (" << rule.max_level()
+                << ") specified by a rule in layer " << layer_name;
       return false;
     }
   }
@@ -250,9 +244,8 @@ bool Net<Dtype>::StateMeetsRule(const NetState &state, const NetStateRule &rule,
       }
     }
     if (!has_stage) {
-      LOG(INFO)
-          << "The NetState did not contain stage '" << rule.stage(i)
-          << "' specified by a rule in layer " << layer_name;
+      LOG(INFO) << "The NetState did not contain stage '" << rule.stage(i)
+                << "' specified by a rule in layer " << layer_name;
       return false;
     }
   }
@@ -267,9 +260,8 @@ bool Net<Dtype>::StateMeetsRule(const NetState &state, const NetStateRule &rule,
       }
     }
     if (has_stage) {
-      LOG(INFO)
-          << "The NetState contained a not_stage '" << rule.not_stage(i)
-          << "' specified by a rule in layer " << layer_name;
+      LOG(INFO) << "The NetState contained a not_stage '" << rule.not_stage(i)
+                << "' specified by a rule in layer " << layer_name;
       return false;
     }
   }
@@ -341,14 +333,7 @@ int Net<Dtype>::AppendBottom(const NetParameter &param, const int layer_id,
 template <typename Dtype>
 std::map<std::string, std::shared_ptr<Blob<Dtype>>> Net<Dtype>::ForwardConst(
     std::map<std::string, std::shared_ptr<Blob<Dtype>>> &input_blobs,
-    const std::set<std::string> &output_blob_names) {
-
-
-  /*
-  static size_t cnt;
-  if(cnt!=0)
-    cudaProfilerStart();
-    */
+    const std::set<std::string> &output_blob_names, bool use_gpu) {
 
   int end = -1;
 
@@ -391,42 +376,52 @@ std::map<std::string, std::shared_ptr<Blob<Dtype>>> Net<Dtype>::ForwardConst(
 
   CHECK_GE(end, 0);
 
+  if (use_gpu) {
+    Caffe::set_mode(caffe::Caffe::GPU);
+  }
+  auto mode = Caffe::mode();
 
   for (int i = 0; i <= end; ++i) {
-    layers_[i]->Forward_const(bottom_blobs[i], top_blobs[i]);
+    vector<Blob<Dtype> *> bottom;
+    vector<Blob<Dtype> *> top;
+    for (auto const &ptr : bottom_blobs[i]) {
+      bottom.push_back(ptr.get());
+    }
+
+    for (auto const &ptr : top_blobs[i]) {
+      top.push_back(ptr.get());
+    }
+
+    layers_[i]->Reshape_const(bottom, top);
+
+    switch (mode) {
+
+    case Caffe::CPU:
+      //	printf("net_cpu_const begin,i=%d\n",i);
+      layers_[i]->Forward_cpu_const(bottom, top);
+      //	printf("net_cpu_const end,i=%d\n",i);
+      break;
+    case Caffe::GPU:
+      //	printf("net_gpu_const begin,i=%d\n",i);
+      layers_[i]->Forward_gpu_const(bottom, top);
+      //	printf("net_gpu_const end,i=%d\n",i);
+      break;
+    default:
+      LOG(FATAL) << "Unknown caffe mode.";
+    }
 
     bottom_blobs.erase(i);
     top_blobs.erase(i);
   }
 
-  /*
-  if(cnt!=0)
-    cudaProfilerStop();
-  cnt++;
-  {
-    cudaProfilerStop();
-    size_t cur_free_byte;
-    size_t cur_total_byte;
-    CUDA_CHECK(cudaMemGetInfo(&cur_free_byte, &cur_total_byte));
-      std::cout << "cur_free_byte="
-                << (cur_free_byte) / 1024 / 1024 << std::endl;
-    if (cur_free_byte < free_byte) {
-      std::cout << "use more memory aaaaaaaaaaa ="
-                << (free_byte - cur_free_byte) / 1024 / 1024 << std::endl;
-    } else {
-      std::cout << "use less memory ="
-                << (cur_free_byte - free_byte) / 1024 / 1024 << std::endl;
-    }
-  }
-  */
   return output_blobs;
 }
 
 template <typename Dtype>
-std::map<std::string, std::shared_ptr<Blob<Dtype>>> Net<Dtype>::ParallelForwardTo(
+std::map<std::string, std::shared_ptr<Blob<Dtype>>>
+Net<Dtype>::ParallelForwardTo(
     std::map<std::string, std::shared_ptr<Blob<Dtype>>> &input_blobs,
     const std::set<std::string> &output_blob_names) {
-
 
   /*
   static size_t cnt;
@@ -474,7 +469,6 @@ std::map<std::string, std::shared_ptr<Blob<Dtype>>> Net<Dtype>::ParallelForwardT
   input_blobs.clear();
 
   CHECK_GE(end, 0);
-
 
   for (int i = 0; i <= end; ++i) {
     layers_[i]->Forward(bottom_blobs[i], top_blobs[i]);
