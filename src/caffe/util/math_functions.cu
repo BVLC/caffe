@@ -184,14 +184,6 @@ template void caffe_gpu_set<int>(const int N, const int alpha, int* Y);
 template void caffe_gpu_set<float>(const int N, const float alpha, float* Y);
 template void caffe_gpu_set<double>(const int N, const double alpha, double* Y);
 
-void caffe_gpu_memset(const size_t N, const int alpha, void* X) {
-#ifndef CPU_ONLY
-  //CUDA_CHECK(cudaMemsetAsync(X, alpha, N, 0));  // NOLINT(caffe/alt_fn)
-  CUDA_CHECK(cudaMemset(X, alpha, N));  // NOLINT(caffe/alt_fn)
-#else
-  NO_GPU;
-#endif
-}
 
 template <typename Dtype>
 __global__ void add_scalar_kernel(const int n, const Dtype alpha, Dtype* y) {

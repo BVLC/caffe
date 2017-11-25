@@ -159,8 +159,6 @@ void caffe_gpu_memcpy(const size_t N, const void *X, void *Y);
 template <typename Dtype>
 void caffe_gpu_set(const int N, const Dtype alpha, Dtype *X);
 
-void caffe_gpu_memset(const size_t N, const int alpha, void* X);
-
 template <typename Dtype>
 void caffe_gpu_add_scalar(const int N, const Dtype alpha, Dtype *X);
 
