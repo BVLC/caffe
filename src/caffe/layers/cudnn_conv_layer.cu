@@ -33,6 +33,7 @@ void CuDNNConvolutionLayer<Dtype>::Forward_gpu_const(
 
   int num = bottom[0]->count(0, this->channel_axis_);
 
+
   // Initialize algorithm arrays
   vector<cudnnConvolutionFwdAlgo_t> fwd_algo_(bottom.size(), {});
   vector<size_t> workspace_fwd_sizes_(bottom.size(), {});
@@ -85,9 +86,10 @@ void CuDNNConvolutionLayer<Dtype>::Forward_gpu_const(
     }
 
     for (int g = 0; g < this->group_; g++) {
-      CUDA_CHECK(cudaStreamCreate(&(*stream_ptr_)[g]));
       CUDNN_CHECK(cudnnCreate(&(*handle_ptr_)[g]));
-      CUDNN_CHECK(cudnnSetStream((*handle_ptr_)[g], (*stream_ptr_)[g]));
+      CUDNN_CHECK(cudnnSetStream((*handle_ptr_)[g],cudaStreamPerThread));
+      //     CUDA_CHECK(cudaStreamCreate(&(*stream_ptr_)[g]));
+      //CUDNN_CHECK(cudnnSetStream((*handle_ptr_)[g], (*stream_ptr_)[g]));
     }
 
   }
@@ -145,16 +147,14 @@ void CuDNNConvolutionLayer<Dtype>::Forward_gpu_const(
   // this is the total amount of storage needed over all groups + streams
   //  if (total_max_workspace > workspaceSizeInBytes) {
   DLOG(INFO) << "Reallocating workspace storage: " << total_max_workspace;
-  //  workspaceSizeInBytes = total_max_workspace;
 
   // free the existing workspace and allocate a new (larger) one
-
-//  this->workspaceData.reset(SyncedMemory::gpu_malloc(total_max_workspace));
+  this->workspaceData.reset(SyncedMemory::gpu_malloc(total_max_workspace));
   if (!this->workspaceData.get()) {
     // force zero memory path
     for (int i = 0; i < bottom.size(); i++) {
       workspace_fwd_sizes_[i] = 0;
-      fwd_algo_[i] = CUDNN_CONVOLUTION_FWD_ALGO_IMPLICIT_GEMM;
+      fwd_algo_[i] = (cudnnConvolutionFwdAlgo_t)0;
     }
 
   }
