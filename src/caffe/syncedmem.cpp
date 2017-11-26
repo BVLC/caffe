@@ -199,6 +199,7 @@ inline void SyncedMemory::to_gpu() {
   switch (head_) {
   case UNINITIALIZED:
     gpu_ptr_ = gpu_malloc(size_);
+    //TODO 去除memset
     CUDA_CHECK(cudaMemsetAsync(gpu_ptr_, 0, size_, cudaStreamPerThread));
     head_ = HEAD_AT_GPU;
     own_gpu_data_ = true;
@@ -313,11 +314,6 @@ void *SyncedMemory::gpu_malloc(size_t size) {
     CUDA_CHECK(cudaMalloc(&ptr, size));
   }
 
-  /*
-  if(ptr) {
-    CUDA_CHECK(cudaMemsetAsync(ptr, 0, size, cudaStreamPerThread));
-  }
-  */
   //  std::cout<<std::this_thread::get_id()<<" malloc "<<(size_t)ptr<<std::endl;
   return ptr;
 }
