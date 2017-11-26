@@ -75,47 +75,6 @@ __global__ void AvePoolForward(const int nthreads,
   }
 }
 
-template <typename Dtype>
-__global__ void StoPoolForwardTrain(const int nthreads,
-    const Dtype* const bottom_data,
-    const int num, const int channels, const int height,
-    const int width, const int pooled_height, const int pooled_width,
-    const int kernel_h, const int kernel_w, const int stride_h,
-    const int stride_w, Dtype* const rand_idx, Dtype* const top_data) {
-  CUDA_KERNEL_LOOP(index, nthreads) {
-    const int pw = index % pooled_width;
-    const int ph = (index / pooled_width) % pooled_height;
-    const int c = (index / pooled_width / pooled_height) % channels;
-    const int n = index / pooled_width / pooled_height / channels;
-    const int hstart = ph * stride_h;
-    const int hend = min(hstart + kernel_h, height);
-    const int wstart = pw * stride_w;
-    const int wend = min(wstart + kernel_w, width);
-    Dtype cumsum = 0.;
-    const Dtype* const bottom_slice =
-        bottom_data + (n * channels + c) * height * width;
-    // First pass: get sum
-    for (int h = hstart; h < hend; ++h) {
-      for (int w = wstart; w < wend; ++w) {
-        cumsum += bottom_slice[h * width + w];
-      }
-    }
-    const float thres = rand_idx[index] * cumsum;
-    // Second pass: get value, and set index.
-    cumsum = 0;
-    for (int h = hstart; h < hend; ++h) {
-      for (int w = wstart; w < wend; ++w) {
-        cumsum += bottom_slice[h * width + w];
-        if (cumsum >= thres) {
-          rand_idx[index] = ((n * channels + c) * height + h) * width + w;
-          top_data[index] = bottom_slice[h * width + w];
-          return;
-        }
-      }
-    }
-  }
-}
-
 
 template <typename Dtype>
 __global__ void StoPoolForwardTest(const int nthreads,
