@@ -1,7 +1,8 @@
 #include <memory>
 #include <shared_mutex>
 #include <stdexcept>
-#include <array>
+#include <map>
+#include <thread>
 
 #ifndef CPU_ONLY
 #include <deepir/cuda_buddy_pool.hpp>
@@ -13,43 +14,69 @@
 #include "caffe/util/math_functions.hpp"
 
 #ifndef CPU_ONLY
-static constexpr size_t device_max_num = 32;
 static constexpr size_t pinned_memory_max_size = 128;
 
-static std::array<std::unique_ptr<deepir::cuda_buddy_pool>, device_max_num>
-    device_gpu_pools;
-
+static size_t gpu_pool_size=0;
+static thread_local std::map<int,std::shared_ptr<deepir::cuda_buddy_pool>> thread_gpu_pools;
+static std::map<int,std::vector<std::shared_ptr<deepir::cuda_buddy_pool>>> device_pools;
 static std::shared_timed_mutex gpu_pool_mutex;
+
+static std::unique_ptr<deepir::cuda_buddy_pool> host_pool;
+static std::shared_timed_mutex cpu_pool_mutex;
+
 #endif
 
 namespace caffe {
 
 #ifndef CPU_ONLY
 void set_gpu_memory_pool(size_t memory_bytes) {
+
+  gpu_pool_size=memory_bytes/std::thread::hardware_concurrency();
+}
+
+void set_cpu_memory_pool(size_t memory_bytes) {
   uint8_t max_level = 27;
   size_t num = memory_bytes / ((size_t)1 << max_level);
   if (num == 0) {
     num++;
   }
 
-  auto device_id = Caffe::GetDevice();
-  CHECK(device_id >= 0 && device_id < device_max_num);
-  std::lock_guard<std::shared_timed_mutex> lock(gpu_pool_mutex);
-  if (!device_gpu_pools[device_id]) {
-    device_gpu_pools[device_id] = std::make_unique<deepir::cuda_buddy_pool>(
-        num, max_level, deepir::cuda_buddy_pool::alloc_location::device);
-  } else {
-    throw std::runtime_error(std::string("caffe has gpu allocator on device ") +
-                             std::to_string(device_id));
-  }
+  std::lock_guard<std::shared_timed_mutex> lock(cpu_pool_mutex);
+  host_pool= std::make_unique<deepir::cuda_buddy_pool>(
+      num, max_level, deepir::cuda_buddy_pool::alloc_location::host);
 }
 
+
+static inline deepir::cuda_buddy_pool *get_cpu_memory_pool() {
+  std::shared_lock<std::shared_timed_mutex> lock(cpu_pool_mutex);
+  return host_pool.get();
+}
+
+
 static inline deepir::cuda_buddy_pool *get_gpu_memory_pool() {
+  if(gpu_pool_size==0) {
+    return nullptr;
+  }
+
   auto device_id = Caffe::GetDevice();
-  CHECK(device_id >= 0 && device_id < device_max_num);
-  std::shared_lock<std::shared_timed_mutex> lock(gpu_pool_mutex);
-  return device_gpu_pools[device_id] ? device_gpu_pools[device_id].get()
-                                     : nullptr;
+  assert(device_id>=0);
+
+  auto &pool=thread_gpu_pools[device_id];
+  if(pool.get()) {
+    return pool.get();
+  }
+
+  constexpr uint8_t max_level = 27;
+  size_t num =  gpu_pool_size/ ((size_t)1 << max_level);
+  if (num == 0) {
+    num++;
+  }
+  pool= std::make_shared<deepir::cuda_buddy_pool>(
+      num, max_level, deepir::cuda_buddy_pool::alloc_location::device);
+
+  std::lock_guard<std::shared_timed_mutex> lock(gpu_pool_mutex);
+  device_pools[device_id].push_back(pool);
+  return pool.get();
 }
 #endif
 
@@ -61,6 +88,15 @@ static inline deepir::cuda_buddy_pool *get_gpu_memory_pool() {
 static inline void CaffeMallocHost(void **ptr, size_t size, bool *use_cuda) {
 #ifndef CPU_ONLY
   if (Caffe::mode() == Caffe::GPU && size <= pinned_memory_max_size) {
+    auto pool = get_cpu_memory_pool();
+    if (pool) {
+      *ptr = pool->alloc_with_lock(size);
+      if(*ptr) {
+	//puts("malloc cubud cpu");
+	*use_cuda = true;
+	return;
+      }
+    }
     if (cudaMallocHost(ptr, size) == cudaSuccess) {
       *use_cuda = true;
       return;
@@ -79,6 +115,11 @@ static inline void CaffeMallocHost(void **ptr, size_t size, bool *use_cuda) {
 static inline void CaffeFreeHost(void *ptr, size_t size, bool use_cuda) {
 #ifndef CPU_ONLY
   if (use_cuda) {
+    auto pool = get_cpu_memory_pool();
+    if(pool && pool->free_with_lock(ptr)) {
+    //  	puts("free cubud cpu");
+      return;
+    }
     CUDA_CHECK(cudaFreeHost(ptr));
     return;
   }
@@ -258,6 +299,9 @@ void SyncedMemory::check_device() {
 
 #ifndef CPU_ONLY
 void *SyncedMemory::gpu_malloc(size_t size) {
+  if(size==0) {
+    return nullptr;
+  }
   void *ptr = nullptr;
 
   auto pool = get_gpu_memory_pool();
@@ -268,6 +312,13 @@ void *SyncedMemory::gpu_malloc(size_t size) {
   if (!ptr) {
     CUDA_CHECK(cudaMalloc(&ptr, size));
   }
+
+  /*
+  if(ptr) {
+    CUDA_CHECK(cudaMemsetAsync(ptr, 0, size, cudaStreamPerThread));
+  }
+  */
+  //  std::cout<<std::this_thread::get_id()<<" malloc "<<(size_t)ptr<<std::endl;
   return ptr;
 }
 
@@ -275,11 +326,23 @@ void SyncedMemory::gpu_free(void *data) {
   if (!data) {
     return;
   }
+  //std::cout<<std::this_thread::get_id()<<"  free "<<(size_t)data<<std::endl;
   auto pool = get_gpu_memory_pool();
-  CUDA_CHECK(cudaStreamSynchronize(cudaStreamPerThread));
-  if (!pool || !pool->free_with_lock(data)) {
-    CUDA_CHECK(cudaFree(data));
+  if (pool &&pool->free(data)) {
+    return;
   }
+
+  //在caffe實例銷毀的時候由其它線程觸發刪除
+   puts("gpu_free global");
+  auto device_id = Caffe::GetDevice();
+  CUDA_CHECK(cudaDeviceSynchronize());
+  std::shared_lock<std::shared_timed_mutex> lock(gpu_pool_mutex);
+  for(auto &pool:device_pools[device_id]) {
+    if(pool->free_with_lock(data)) {
+      return;
+    }
+  }
+  CUDA_CHECK(cudaFree(data));
 }
 #endif
 
