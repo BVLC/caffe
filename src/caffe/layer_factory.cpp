@@ -99,9 +99,11 @@ shared_ptr<Layer<Dtype> > GetPoolingLayer(const LayerParameter& param) {
     // Until there is a workaround in Caffe (index management) or
     // cuDNN, use Caffe layer to max pooling, or don't use in place
     // layers after max pooling layers
+    /*
     if (param.pooling_param().pool() == PoolingParameter_PoolMethod_MAX) {
+	  std::cout<<__func__<<" "<<__LINE__<<std::endl;
         return shared_ptr<Layer<Dtype> >(new PoolingLayer<Dtype>(param));
-    } else {
+    } else*/ {
         return shared_ptr<Layer<Dtype> >(new CuDNNPoolingLayer<Dtype>(param));
     }
 #endif
