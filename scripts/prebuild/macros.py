@@ -1,30 +1,12 @@
 import sys
+from prebuild_common import variant_types, pointer_variant_types, variant_enable_flags, proto_types
+
 
 path = ''
 if (len(sys.argv) > 1):
     path = sys.argv[1]
 
 header = open(path + '/macros.hpp', 'w')
-
-variant_types  = ['bool', 'char', 'int8_t', 'int16_t', 'int32_t', 'int64_t',
-                  'uint8_t', 'uint16_t', 'uint32_t', 'uint64_t', 'half_fp',
-                  'float', 'double']
-
-pointer_variant_types = variant_types + ['void']
-
-variant_enable_flags = dict()
-
-variant_enable_flags['int8_t'] = 'USE_GPU_INT_QUANT_8'
-variant_enable_flags['int16_t'] = 'USE_GPU_INT_QUANT_16'
-variant_enable_flags['int32_t'] = 'USE_GPU_INT_QUANT_32'
-variant_enable_flags['int64_t'] = 'USE_GPU_INT_QUANT_64'
-variant_enable_flags['uint8_t'] = 'USE_GPU_INT_QUANT_8'
-variant_enable_flags['uint16_t'] = 'USE_GPU_INT_QUANT_16'
-variant_enable_flags['uint32_t'] = 'USE_GPU_INT_QUANT_32'
-variant_enable_flags['uint64_t'] = 'USE_GPU_INT_QUANT_64'
-variant_enable_flags['half_fp'] = 'USE_GPU_HALF'
-variant_enable_flags['float'] = 'USE_GPU_SINGLE'
-variant_enable_flags['double'] = 'USE_GPU_DOUBLE'
 
 header.write('// Automatically generated file, DO NOT EDIT!\n')
 header.write('#include <boost/preprocessor/seq/for_each.hpp>\n')
@@ -46,7 +28,22 @@ for i in range(0, len(variant_types)):
         header.write('\n')
     else:
         header.write('\\\n')
-    
+        
+header.write('#define PROTO_TYPES\\\n')
+for i in range(0, len(proto_types.keys())):
+    header.write('  (' + proto_types.keys()[i] + ')')
+    if (i == len(proto_types.keys()) - 1):
+        header.write('\n')
+    else:
+        header.write('\\\n')
+             
+header.write('#define POINTER_VARIANT_TYPES\\\n')
+for i in range(0, len(pointer_variant_types)):
+    header.write('  (' + pointer_variant_types[i] + ')')
+    if (i == len(pointer_variant_types) - 1):
+        header.write('\n')
+    else:
+        header.write('\\\n')
 
 # 1 template class instantiation
 for var_type_1 in variant_types:
@@ -65,6 +62,9 @@ for var_type_1 in variant_types:
             header.write(' && ')
     header.write('#define INSTANTIATE_CLASS_' + var_type_1 + '(CLASSNAME)\\\n')
     header.write('  template class CLASSNAME<' + var_type_1 + '>;\n')
+    header.write('#define REGISTER_SOLVER_CREATOR_' + var_type_1 + '(TYPE, CREATOR)\\\n')
+    header.write('  static SolverRegisterer<' + var_type_1 + '> ')
+    header.write('g_creator_' + var_type_1 + '_##TYPE(#TYPE, CREATOR<'+ var_type_1 + '>);\n')
     if len(flags) > 0:
         header.write('#else\n')
         header.write('#define INSTANTIATE_CLASS_' + var_type_1 + '(CLASSNAME)\n')
@@ -225,6 +225,24 @@ header.write('  PP_DEFER(BOOST_PP_CAT(REGISTER_LAYER_CREATOR_, T1T2T3))(BOOST_PP
 
 header.write('#define REGISTER_LAYER_CREATOR(TYPE, CREATOR, T1, T2, T3)\\\n')
 header.write('  PP_EXPAND(BOOST_PP_SEQ_FOR_EACH(REGISTER_LAYER_CREATOR_HELPER, (TYPE)(CREATOR), CART_SET_JOIN_US_3T(T1, T2, T3)))\n')
+
+# 1 template solver register / creator
+header.write('#define REGISTER_SOLVER_CLASS_INST_HELPER(R, TYPE, T1)\\\n')
+header.write('  BOOST_PP_CAT(REGISTER_SOLVER_CREATOR_, T1)(TYPE, Creator_##TYPE##Solver)\n')
+
+header.write('#define REGISTER_SOLVER_CLASS(TYPE)\\\n')
+header.write('  template<typename Dtype>\\\n')
+header.write('  Solver<Dtype>* Creator_##TYPE##Solver(const SolverParameter& param, Device* dev)\\\n')
+header.write('  { return new TYPE##Solver<Dtype>(param, dev); }\n')
+
+header.write('#define REGISTER_SOLVER_CLASS_INST(TYPE, T1)\\\n')
+header.write('  BOOST_PP_SEQ_FOR_EACH(REGISTER_SOLVER_CLASS_INST_HELPER, TYPE, T1)\n')
+
+header.write('#define REGISTER_SOLVER_CREATOR_HELPER(R, TYPE_CREATOR, T1)\\\n')
+header.write('  PP_DEFER(BOOST_PP_CAT(REGISTER_SOLVER_CREATOR_, T1))(BOOST_PP_SEQ_ELEM(0, TYPE_CREATOR), BOOST_PP_SEQ_ELEM(1, TYPE_CREATOR))\n')
+
+header.write('#define REGISTER_SOLVER_CREATOR(TYPE, CREATOR, T1)\\\n')
+header.write('  PP_EXPAND(BOOST_PP_SEQ_FOR_EACH(REGISTER_SOLVER_CREATOR_HELPER, (TYPE)(CREATOR), T1))\n')
 
 # Stub GPU
 header.write('#ifdef CPU_ONLY  // CPU-only Caffe.\n')

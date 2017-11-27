@@ -79,7 +79,11 @@ void LogLayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob<MOtype>*>& 
 STUB_GPU(LogLayer);
 #endif
 
-INSTANTIATE_CLASS_3T(LogLayer);
+INSTANTIATE_CLASS_3T(LogLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T(LogLayer, (double), (double), (double));
+
 REGISTER_LAYER_CLASS(Log);
+REGISTER_LAYER_CLASS_INST(Log, (float), (float), (float));
+REGISTER_LAYER_CLASS_INST(Log, (double), (double), (double));
 
 }  // namespace caffe

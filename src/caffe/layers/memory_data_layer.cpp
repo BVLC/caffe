@@ -165,7 +165,11 @@ void MemoryDataLayer<Dtype, MItype, MOtype>::Forward_cpu(const vector<Blob<MItyp
   }
 }
 
-INSTANTIATE_CLASS_3T(MemoryDataLayer);
+INSTANTIATE_CLASS_3T(MemoryDataLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T(MemoryDataLayer, (double), (double), (double));
+
 REGISTER_LAYER_CLASS(MemoryData);
+REGISTER_LAYER_CLASS_INST(MemoryData, (float), (float), (float));
+REGISTER_LAYER_CLASS_INST(MemoryData, (double), (double), (double));
 
 }  // namespace caffe

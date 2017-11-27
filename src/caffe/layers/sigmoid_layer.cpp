@@ -25,11 +25,11 @@ template<typename Dtype, typename MItype, typename MOtype>
 void SigmoidLayer<Dtype, MItype, MOtype>::Forward_cpu(
                                         const vector<Blob<MItype>*>& bottom,
                                         const vector<Blob<MOtype>*>& top) {
-  vptr<const Dtype> bottom_data = bottom[0]->cpu_data();
-  vptr<Dtype> top_data = top[0]->mutable_cpu_data();
+  const Dtype* bottom_data = bottom[0]->cpu_data();
+  Dtype* top_data = top[0]->mutable_cpu_data();
   const int_tp count = bottom[0]->count();
   for (int_tp i = 0; i < count; ++i) {
-    top_data[i] = sigmoid(bottom_data[i]);
+    top_data[i] = sigmoid<Dtype, MItype, MOtype>(bottom_data[i]);
   }
 }
 
@@ -39,9 +39,9 @@ void SigmoidLayer<Dtype, MItype, MOtype>::Backward_cpu(
                                         const vector<bool>& propagate_down,
                                         const vector<Blob<MItype>*>& bottom) {
   if (propagate_down[0]) {
-    vptr<const Dtype> top_data = top[0]->cpu_data();
-    vptr<const Dtype> top_diff = top[0]->cpu_diff();
-    vptr<Dtype> bottom_diff = bottom[0]->mutable_cpu_diff();
+    const Dtype* top_data = top[0]->cpu_data();
+    const Dtype* top_diff = top[0]->cpu_diff();
+    Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
     const int_tp count = bottom[0]->count();
     for (int_tp i = 0; i < count; ++i) {
       const Dtype sigmoid_x = top_data[i];
@@ -54,7 +54,10 @@ void SigmoidLayer<Dtype, MItype, MOtype>::Backward_cpu(
 STUB_GPU(SigmoidLayer);
 #endif
 
-INSTANTIATE_CLASS_3T(SigmoidLayer);
+INSTANTIATE_CLASS_3T(SigmoidLayer,
+                     (float), (float), (float));
+INSTANTIATE_CLASS_3T(SigmoidLayer,
+                     (double), (double), (double));
 
 
 }  // namespace caffe

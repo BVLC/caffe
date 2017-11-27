@@ -10,10 +10,7 @@ enum DataType {
 	INT16_QUANTIZED = 4;
 	INT32_QUANTIZED = 5;
 	INT64_QUANTIZED = 6;
-	INT8_PACKED_BINARY = 7;
-	INT16_PACKED_BINARY = 8;
-	INT32_PACKED_BINARY = 9;
-	INT64_PACKED_BINARY = 10;
+	PACKED_BINARY = 7;
 }
 
 // Specifies the shape (dimensions) of a Blob.
@@ -79,6 +76,15 @@ message FillerParameter {
   optional VarianceNorm variance_norm = 8 [default = FAN_IN];
 }
 
+message QuantizerParameter {
+  optional int64 index = 1 [default = -1];
+  optional DataType input_data_type = 2 [default = FLOAT];
+  optional DataType output_data_type = 3 [default = FLOAT];
+  
+    // Parameters for device abstraction
+  optional int64 device = 4 [default = -1];
+}
+
 message NetParameter {
   optional DataType data_type = 42 [default = FLOAT];
   optional string name = 1; // consider giving the network a name
@@ -103,6 +109,9 @@ message NetParameter {
   // Print debugging information about results while running Net::Forward,
   // Net::Backward, and Net::Update.
   optional bool debug_info = 7 [default = false];
+  
+  // Network quantizers
+  repeated QuantizerParameter quantizer = 90;
 
   // The layers that make up the net.  Each of their configurations, including
   // connectivity and behavior, is specified as a LayerParameter.
@@ -325,7 +334,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 147 (last added: recurrent_param)
+// LayerParameter next available layer-specific ID: 150 (last added: recurrent_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -338,6 +347,8 @@ message LayerParameter {
 
   // The train / test phase for computation.
   optional Phase phase = 10;
+  
+  optional int64 quantizer_index = 149 [default = 0];
 
   // The amount of weight to assign each top blob in the objective.
   // Each layer assigns a default value, usually of either 0 or 1,
@@ -369,8 +380,9 @@ message LayerParameter {
   repeated NetStateRule include = 8;
   repeated NetStateRule exclude = 9;
   
-  // Parameters for Greentea
+  // Parameters for device abstraction
   optional int64 device = 95 [default = -1];
+  
   // Parameters for Splitnet
   optional int64 buffer = 96 [default = -1];
 

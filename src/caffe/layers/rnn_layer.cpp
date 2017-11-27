@@ -230,7 +230,11 @@ void RNNLayer<Dtype, MItype, MOtype>::FillUnrolledNet(NetParameter* net_param) c
   net_param->add_layer()->CopyFrom(output_concat_layer);
 }
 
-INSTANTIATE_CLASS_3T(RNNLayer);
+INSTANTIATE_CLASS_3T(RNNLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T(RNNLayer, (double), (double), (double));
+
 REGISTER_LAYER_CLASS(RNN);
+REGISTER_LAYER_CLASS_INST(RNN, (float), (float), (float));
+REGISTER_LAYER_CLASS_INST(RNN, (double), (double), (double));
 
 }  // namespace caffe

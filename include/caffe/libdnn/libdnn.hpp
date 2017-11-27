@@ -66,7 +66,7 @@ typedef enum {
 } libdnnPoolingBackwardAlgo_t;
 
 
-template<typename Dtype>
+template<typename Dtype, typename MItype, typename MOtype>
 class LibDNN {
  protected:
   explicit LibDNN();
@@ -152,25 +152,25 @@ struct LibDNNConvConfig {
       memory_allocator = nullptr;
 };
 
-template<typename Dtype>
-class LibDNNConv : public LibDNN<Dtype> {
+template<typename Dtype, typename MItype, typename MOtype>
+class LibDNNConv : public LibDNN<Dtype, MItype, MOtype> {
  public:
   explicit LibDNNConv();
   explicit LibDNNConv(LibDNNConvConfig config);
-  void Forward(const Dtype* bottom_data, const Dtype* weight,
-               const Dtype* bias,
-               Dtype* top_data, int_tp batch_size);
+  void Forward(vptr<const MItype> bottom_data, vptr<const Dtype> weight,
+               vptr<const Dtype> bias,
+               vptr<MOtype> top_data, int_tp batch_size);
   void Backward(bool prop_down_data, bool prop_down_weights,
-                const Dtype* top_data, const Dtype* top_diff,
-                const Dtype* weight, Dtype* weight_diff,
-                const Dtype* bias, Dtype* bias_diff,
-                const Dtype* bottom_data, Dtype* bottom_diff,
+                vptr<const MOtype> top_data, vptr<const MOtype> top_diff,
+                vptr<const Dtype> weight, vptr<Dtype> weight_diff,
+                vptr<const Dtype> bias, vptr<Dtype> bias_diff,
+                vptr<const MItype> bottom_data, vptr<MItype> bottom_diff,
                 int_tp batch_size);
 
-  void Tune(Dtype* top_data, Dtype* top_diff,
-            Dtype* weight, Dtype* weight_diff,
-            Dtype* bias, Dtype* bias_diff,
-            Dtype* bottom_data, Dtype* bottom_diff,
+  void Tune(vptr<MOtype> top_data, vptr<MOtype> top_diff,
+            vptr<Dtype> weight, vptr<Dtype> weight_diff,
+            vptr<Dtype> bias, vptr<Dtype> bias_diff,
+            vptr<MItype> bottom_data, vptr<MItype> bottom_diff,
             int_tp batch_size);
 
   const LibDNNConvConfig get_config();
@@ -270,24 +270,24 @@ struct LibDNNDeconvConfig {
       memory_allocator = nullptr;
 };
 
-template<typename Dtype>
-class LibDNNDeconv : public LibDNNConv<Dtype> {
+template<typename Dtype, typename MItype, typename MOtype>
+class LibDNNDeconv : public LibDNNConv<Dtype, MItype, MOtype> {
  public:
   explicit LibDNNDeconv(LibDNNDeconvConfig config);
-  void Forward(const Dtype* bottom_data, const Dtype* weight,
-               const Dtype* bias,
-               Dtype* top_data, int_tp batch_size);
+  void Forward(vptr<const MItype> bottom_data, vptr<const Dtype> weight,
+               vptr<const Dtype> bias,
+               vptr<MOtype> top_data, int_tp batch_size);
   void Backward(bool prop_down_data, bool prop_down_weights,
-                const Dtype* top_data, const Dtype* top_diff,
-                const Dtype* weight, Dtype* weight_diff,
-                const Dtype* bias, Dtype* bias_diff,
-                const Dtype* bottom_data, Dtype* bottom_diff,
+                vptr<const MOtype> top_data, vptr<const MOtype> top_diff,
+                vptr<const Dtype> weight, vptr<Dtype> weight_diff,
+                vptr<const Dtype> bias, vptr<Dtype> bias_diff,
+                vptr<const MItype> bottom_data, vptr<MItype> bottom_diff,
                 int_tp batch_size);
 
-  void Tune(Dtype* top_data, Dtype* top_diff,
-            Dtype* weight, Dtype* weight_diff,
-            Dtype* bias, Dtype* bias_diff,
-            Dtype* bottom_data, Dtype* bottom_diff,
+  void Tune(vptr<MOtype> top_data, vptr<MOtype> top_diff,
+            vptr<Dtype> weight, vptr<Dtype> weight_diff,
+            vptr<Dtype> bias, vptr<Dtype> bias_diff,
+            vptr<MItype> bottom_data, vptr<MItype> bottom_diff,
             int_tp batch_size);
 
   const LibDNNDeconvConfig get_config();
@@ -314,27 +314,27 @@ class LibDNNDeconv : public LibDNNConv<Dtype> {
 };
 
 #ifdef USE_OPENCL
-template<typename Dtype>
-class LibDNNConvSpatial : public LibDNNConv<Dtype> {
+template<typename Dtype, typename MItype, typename MOtype>
+class LibDNNConvSpatial : public LibDNNConv<Dtype, MItype, MOtype> {
  public:
   explicit LibDNNConvSpatial(LibDNNConvConfig config);
-  void Forward(const Dtype* bottom_data, const Dtype* weight,
-               const Dtype* bias,
-               Dtype* top_data, int_tp batch_size);
-  void ForwardBenchmark(const Dtype* bottom_data, const Dtype* weight,
-               const Dtype* bias,
-               Dtype* top_data, int_tp batch_size);
+  void Forward(vptr<const MItype> bottom_data, vptr<const Dtype> weight,
+               vptr<const Dtype> bias,
+               vptr<MOtype> top_data, int_tp batch_size);
+  void ForwardBenchmark(vptr<const MItype> bottom_data, vptr<const Dtype> weight,
+               vptr<const Dtype> bias,
+               vptr<MOtype> top_data, int_tp batch_size);
   void Backward(bool prop_down_data, bool prop_down_weights,
-                const Dtype* top_data, const Dtype* top_diff,
-                const Dtype* weight, Dtype* weight_diff,
-                const Dtype* bias, Dtype* bias_diff,
-                const Dtype* bottom_data, Dtype* bottom_diff,
+                vptr<const MOtype> top_data, const vptr<MOtype> top_diff,
+                vptr<const Dtype> weight, Dtype* weight_diff,
+                vptr<const Dtype> bias, vptr<Dtype> bias_diff,
+                vptr<const MItype> bottom_data, vptr<MItype> bottom_diff,
                 int_tp batch_size);
 
-  void Tune(Dtype* top_data, Dtype* top_diff,
-            const Dtype* weight, Dtype* weight_diff,
-            const Dtype* bias, Dtype* bias_diff,
-            const Dtype* bottom_data, Dtype* bottom_diff,
+  void Tune(vptr<MOtype> top_data, vptr<MOtype> top_diff,
+            vptr<const Dtype> weight, Dtype* weight_diff,
+            vptr<const Dtype> bias, vptr<Dtype> bias_diff,
+            vptr<const MItype> bottom_data, vptr<MItype> bottom_diff,
             int_tp batch_size);
 
  protected:
@@ -385,7 +385,7 @@ class LibDNNConvSpatial : public LibDNNConv<Dtype> {
   viennacl::ocl::program compile_fw_kernel();
   void calculate_verify_data(const Dtype* bottom,
                              const Dtype* w,
-                             const Dtype* bias,
+                             vptr<const Dtype> bias,
                              Dtype* verify_data);
 
   virtual void setup_convolution(const Dtype *bottom,
@@ -451,18 +451,18 @@ class LibDNNConvSpatial : public LibDNNConv<Dtype> {
                           const Dtype *top);
   std::map<std::tuple<cl_mem, size_t, size_t>, cl_mem> subBufferMap;
   vector<cl_mem> tmpSubBuffers;
-  const Dtype* bottom_data_;
-  Dtype* top_data_;
-  Dtype* col_data_;
-  const Dtype* weight_;
+  vptr<const MItype> bottom_data_;
+  vptr<MOtype> top_data_;
+  vptr<Dtype> col_data_;
+  vptr<const Dtype> weight_;
   uint64_t prev_weight_seq_id_;
-  Dtype* swizzled_weights;
+  vptr<Dtype> swizzled_weights;
   int_tp weight_offset;
   int_tp col_offset;
   int_tp top_offset;
   int_tp output_h_, output_w_;
   int_tp padded_height_, padded_width_;
-  const Dtype* bias_;
+  vptr<const Dtype> bias_;
   int_tp bias_offset_;
   int_tp bottom_index_;
 
@@ -516,7 +516,7 @@ class LibDNNConvSpatial : public LibDNNConv<Dtype> {
   string options_;
 
   LibDNNConvConfig config_;
-  shared_ptr<LibDNNConv<Dtype> > libdnn_conv_;
+  shared_ptr<LibDNNConv<Dtype, MItype, MOtype> > libdnn_conv_;
 };
 #endif
 
@@ -545,18 +545,18 @@ struct LibDNNPoolConfig {
       memory_allocator = nullptr;
 };
 
-template<typename Dtype>
-class LibDNNPool : public LibDNN<Dtype> {
+template<typename Dtype, typename MItype, typename MOtype>
+class LibDNNPool : public LibDNN<Dtype, MItype, MOtype> {
  public:
   explicit LibDNNPool(LibDNNPoolConfig config);
-  void Forward(const Dtype* bottom_data, Dtype* top_data,
+  void Forward(vptr<const MItype> bottom_data, vptr<MOtype> top_data,
                int_tp channels, int_tp batch_size,
-               bool test_mode, int_tp* mask,
-               Dtype* top_mask, Dtype* rand_idx);
-  void Backward(const Dtype* top_diff, Dtype* bottom_diff,
+               bool test_mode, vptr<int_tp> mask,
+               vptr<MOtype> top_mask, vptr<Dtype> rand_idx);
+  void Backward(vptr<const MOtype> top_diff, vptr<MItype> bottom_diff,
                 int_tp channels, int_tp batch_size,
-                const int_tp* mask, const Dtype* top_mask,
-                const Dtype* rand_idx);
+                vptr<const int_tp> mask, vptr<const MOtype> top_mask,
+                vptr<const Dtype> rand_idx);
 
   const LibDNNPoolConfig get_config();
 

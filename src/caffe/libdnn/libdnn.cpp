@@ -3,19 +3,19 @@
 #include "caffe/common.hpp"
 #ifdef USE_LIBDNN
 #include "caffe/backend/device.hpp"
-#include "caffe/greentea/libdnn.hpp"
+#include "caffe/libdnn/libdnn.hpp"
 #include "caffe/util/benchmark.hpp"
 
 // #define LIBDNN_DEBUG 1
 
 namespace caffe {
 
-template<typename Dtype>
-LibDNN<Dtype>::LibDNN() {
+template<typename Dtype, typename MItype, typename MOtype>
+LibDNN<Dtype, MItype, MOtype>::LibDNN() {
 }
 
-template<typename Dtype>
-string LibDNN<Dtype>::generate_header() {
+template<typename Dtype, typename MItype, typename MOtype>
+string LibDNN<Dtype, MItype, MOtype>::generate_header() {
   stringstream ss;
 
   if (dev_ptr_->backend() == BACKEND_OPENCL) {
@@ -77,7 +77,7 @@ string LibDNN<Dtype>::generate_header() {
       ss << "#define Dtype" << i << " float" << i << std::endl;
     }
   }
-#ifdef USE_GPU_HALF
+#ifdef USE_HALF
   else if (std::is_same<Dtype, half_fp>::value) {
     ss << "#define Dtype half" << std::endl;
     ss << "#define Dtype1 half" << std::endl;
@@ -243,8 +243,8 @@ string LibDNN<Dtype>::generate_header() {
 }
 
 
-template<typename Dtype>
-bool LibDNN<Dtype>::CompileKernels() {
+template<typename Dtype, typename MItype, typename MOtype>
+bool LibDNN<Dtype, MItype, MOtype>::CompileKernels() {
   string code_ext = "";
 
   if (dev_ptr_->backend() == BACKEND_OPENCL) {
@@ -275,8 +275,8 @@ bool LibDNN<Dtype>::CompileKernels() {
 }
 
 #ifdef USE_OPENCL
-template<typename Dtype>
-viennacl::ocl::program LibDNN<Dtype>::CompileKernelsOpenCL(
+template<typename Dtype, typename MItype, typename MOtype>
+viennacl::ocl::program LibDNN<Dtype, MItype, MOtype>::CompileKernelsOpenCL(
     viennacl::ocl::context *ctx) {
 
   string build_opts = "";
@@ -360,8 +360,9 @@ nvrtcProgram LibDNN<Dtype>::CompileKernelsCuda() {
 }
 #endif  // USE_CUDA
 
-template<typename Dtype>
-void LibDNN<Dtype>::AllocateMemory(void** ptr, uint_tp size, int_tp flags) {
+template<typename Dtype, typename MItype, typename MOtype>
+void LibDNN<Dtype, MItype, MOtype>::AllocateMemory(
+    void** ptr, uint_tp size, int_tp flags) {
   if (dev_ptr_->backend() == BACKEND_OPENCL) {
 #ifdef USE_OPENCL
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(dev_ptr_->id());
@@ -376,9 +377,9 @@ void LibDNN<Dtype>::AllocateMemory(void** ptr, uint_tp size, int_tp flags) {
   }
 }
 
-template<typename Dtype>
-void LibDNN<Dtype>::SetMemory(Dtype* memory, int_tp count, int_tp offset,
-                              Dtype value) {
+template<typename Dtype, typename MItype, typename MOtype>
+void LibDNN<Dtype, MItype, MOtype>::SetMemory(
+    Dtype* memory, int_tp count, int_tp offset, Dtype value) {
   if (dev_ptr_->backend() == BACKEND_OPENCL) {
 #ifdef USE_OPENCL
     viennacl::ocl::kernel &kernel = ocl_program_.get_kernel("fill_memory");

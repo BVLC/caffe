@@ -15,7 +15,7 @@ template<typename Dtype, typename MItype, typename MOtype>
 class MalisLossLayer : public LossLayer<Dtype, MItype, MOtype> {
  public:
   explicit MalisLossLayer(const LayerParameter& param)
-      : LossLayer<Dtype>(param) {}
+      : LossLayer<Dtype, MItype, MOtype>(param) {}
   virtual void LayerSetUp(const vector<Blob<MItype>*>& bottom,
       const vector<Blob<MOtype>*>& top);
   virtual void Reshape(const vector<Blob<MItype>*>& bottom,

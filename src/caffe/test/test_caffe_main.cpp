@@ -36,7 +36,7 @@ bool caffe::isSupported<double>(void) {
   return caffe::Caffe::GetDefaultDevice()->backend() != caffe::BACKEND_OPENCL ||
          caffe::Caffe::GetDefaultDevice()->CheckCapability("cl_khr_fp64");
 }
-#ifdef USE_GPU_HALF
+#ifdef USE_HALF
 template <>
 bool caffe::isSupported<half>(void) {
   return caffe::Caffe::GetDefaultDevice()->backend() != caffe::BACKEND_OPENCL ||

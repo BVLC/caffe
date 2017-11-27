@@ -273,13 +273,13 @@ void LRNLayer<Dtype, MItype, MOtype>::CrossChannelForward_gpu(
     kernel->Execute(group, local);
   }
 }
-#ifdef USE_GPU_HALF
+#ifdef USE_HALF
 template<>
 void LRNLayer<half_fp, half_fp, half_fp>
                                                       ::CrossChannelForward_gpu(
     const vector<Blob<half_fp>*>& bottom,
     const vector<Blob<half_fp>*>& top);
-#endif  // USE_GPU_HALF
+#endif  // USE_HALF
 template<>
 void LRNLayer<float, float, float>::CrossChannelForward_gpu(
     const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top);
@@ -339,14 +339,14 @@ void LRNLayer<Dtype, MItype, MOtype>::CrossChannelBackward_gpu(
   this->device_->get_threads(&work_size, &group, &local, kernel.get(), true);
   kernel->Execute(group, local);
 }
-#ifdef USE_GPU_HALF
+#ifdef USE_HALF
 template<>
 void LRNLayer<half_fp, half_fp, half_fp>
                                                      ::CrossChannelBackward_gpu(
     const vector<Blob<half_fp>*>& top,
     const vector<bool>& propagate_down,
     const vector<Blob<half_fp>*>& bottom);
-#endif  // USE_GPU_HALF
+#endif  // USE_HALF
 template<>
 void LRNLayer<float, float, float>::CrossChannelBackward_gpu(
     const vector<Blob<float>*>& top, const vector<bool>& propagate_down,

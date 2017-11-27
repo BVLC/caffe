@@ -5,6 +5,7 @@
 #include "caffe_config.h"
 #endif
 
+#include <mutex>
 #include <string>
 #include <vector>
 #include "caffe/blob.hpp"
@@ -12,6 +13,8 @@
 #include "caffe/backend/device_program.hpp"
 #include "caffe/backend/device_kernel.hpp"
 #include "caffe/backend/vptr.hpp"
+#include "caffe/util/type_utils.hpp"
+
 
 namespace caffe {
 
@@ -24,7 +27,8 @@ class Device {
   uint_tp list_id() const;
 
   template<typename Dtype>
-  shared_ptr<Blob<Dtype> > Buffer(uint_tp id);
+  shared_ptr<Blob<Dtype> > Buffer(vector<int_tp> shape, int_tp* lock_id);
+  void unlock_buffer(int_tp* lock_id);
 
   uint_tp memory_usage();
   uint_tp peak_memory_usage();
@@ -355,9 +359,9 @@ class Device {
   Backend backend_;
   uint_tp memory_usage_;
   uint_tp peak_memory_usage_;
-  vector<shared_ptr<Blob<half_fp> > > buff_h_;
-  vector<shared_ptr<Blob<float> > > buff_f_;
-  vector<shared_ptr<Blob<double> > > buff_d_;
+  vector<shared_ptr<Blob<char> > > buffers_;
+  std::mutex buffer_vec_mutex_;
+  vector<shared_ptr<std::mutex> > buffer_mutex_;
   bool host_unified_;
   bool fast_unsafe_math_;
   string name_;

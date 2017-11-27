@@ -7,8 +7,9 @@
 namespace caffe {
 
 template<typename Dtype, typename MItype, typename MOtype>
-void SoftmaxLayer<Dtype, MItype, MOtype>::Reshape(const vector<Blob<MItype>*>& bottom,
-      const vector<Blob<MOtype>*>& top) {
+void SoftmaxLayer<Dtype, MItype, MOtype>::Reshape(
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
   softmax_axis_ =
       bottom[0]->CanonicalAxisIndex(this->layer_param_.softmax_param().axis());
   top[0]->ReshapeLike(*bottom[0]);
@@ -19,13 +20,7 @@ void SoftmaxLayer<Dtype, MItype, MOtype>::Reshape(const vector<Blob<MItype>*>& b
   outer_num_ = bottom[0]->count(0, softmax_axis_);
   inner_num_ = bottom[0]->count(softmax_axis_ + 1);
   vector<int_tp> scale_dims = bottom[0]->shape();
-#ifdef USE_OPENCL
-  use_slm_ = (bottom[0]->shape(softmax_axis_) * inner_num_
-              + inner_num_ * 17) <= 8192;
-  scale_dims[softmax_axis_] = use_slm_ ? 1 : 17;
-#else
   scale_dims[softmax_axis_] = 1;
-#endif
   scale_.Reshape(scale_dims);
 
   if (Caffe::mode() == Caffe::GPU && this->device_program_.get() == nullptr) {
@@ -34,7 +29,8 @@ void SoftmaxLayer<Dtype, MItype, MOtype>::Reshape(const vector<Blob<MItype>*>& b
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void SoftmaxLayer<Dtype, MItype, MOtype>::Forward_cpu(const vector<Blob<MItype>*>& bottom,
+void SoftmaxLayer<Dtype, MItype, MOtype>::Forward_cpu(
+    const vector<Blob<MItype>*>& bottom,
     const vector<Blob<MOtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = top[0]->mutable_cpu_data();
@@ -102,6 +98,11 @@ void SoftmaxLayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob<MOtype>
 STUB_GPU(SoftmaxLayer);
 #endif
 
-INSTANTIATE_CLASS_3T(SoftmaxLayer);
+INSTANTIATE_CLASS_3T(SoftmaxLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T(SoftmaxLayer, (double), (double), (double));
+
+REGISTER_LAYER_CLASS(Softmax);
+REGISTER_LAYER_CLASS_INST(Softmax, (float), (float), (float));
+REGISTER_LAYER_CLASS_INST(Softmax, (double), (double), (double));
 
 }  // namespace caffe

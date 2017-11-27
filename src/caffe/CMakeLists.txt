@@ -1,9 +1,16 @@
 # generate macro headers
 caffe_prebuild_macros_py(${macro_gen_folder})
+caffe_prebuild_layer_creator_py(${layer_creator_gen_folder})
+caffe_prebuild_blob_creator_py(${blob_creator_gen_folder})
+caffe_prebuild_quantizer_creator_py(${quantizer_creator_gen_folder})
 
-add_library(macros STATIC ${macro_gen_folder}/macros.hpp)
-caffe_default_properties(macros)
-set_target_properties(macros PROPERTIES LINKER_LANGUAGE CXX)
+add_library(pre_build STATIC ${macro_gen_folder}/macros.hpp
+							 ${layer_creator_gen_folder}/layer_creator.hpp
+							 ${blob_creator_gen_folder}/blob_creator.hpp
+							 ${quantizer_creator_gen_folder}/quantizer_creator.hpp)
+							 
+caffe_default_properties(pre_build)
+set_target_properties(pre_build PROPERTIES LINKER_LANGUAGE CXX)
 
 # generate protobuf sources
 file(GLOB proto_files proto/*.proto)

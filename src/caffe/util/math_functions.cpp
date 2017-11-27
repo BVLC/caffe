@@ -9,7 +9,7 @@
 
 namespace caffe {
 
-#ifdef USE_GPU_HALF
+#ifdef USE_HALF
 template<>
 void caffe_add_scalar(const int_tp n, const half_fp alpha,
                       half_fp* Y) {
@@ -385,7 +385,7 @@ template void caffe_set<uint32_t>(const int_tp n, const uint32_t alpha,
 template void caffe_set<int64_t>(const int_tp n, int64_t alpha, int64_t* Y);
 template void caffe_set<uint64_t>(const int_tp n, const uint64_t alpha,
                                   uint64_t* Y);
-#ifdef USE_GPU_HALF
+#ifdef USE_HALF
 template void caffe_set<half_fp>(const int_tp n,
                              const half_fp alpha, half_fp* Y);
 #endif
@@ -417,7 +417,7 @@ template void caffe_cpu_copy<int_tp>(const int_tp n, const int_tp* X,
                                      int_tp* Y);
 template void caffe_cpu_copy<uint_tp>(const int_tp n, const uint_tp* X,
 uint_tp* Y);
-#ifdef USE_GPU_HALF
+#ifdef USE_HALF
 template void caffe_cpu_copy<half_fp>(const int_tp n,
                                 const half_fp* X, half_fp* Y);
 #endif
@@ -731,7 +731,7 @@ Dtype caffe_cpu_dot(const int_tp n, const Dtype* X, const Dtype* Y) {
   return caffe_cpu_strided_dot(n, X, 1, Y, 1);
 }
 
-#ifdef USE_GPU_HALF
+#ifdef USE_HALF
 template
 half_fp caffe_cpu_dot<half_fp>(const int_tp n,
                           const half_fp* X, const half_fp* Y);

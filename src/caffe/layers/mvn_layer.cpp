@@ -128,7 +128,11 @@ void MVNLayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob<MOtype>*>& 
 STUB_GPU(MVNLayer);
 #endif
 
-INSTANTIATE_CLASS_3T(MVNLayer);
+INSTANTIATE_CLASS_3T(MVNLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T(MVNLayer, (double), (double), (double));
+
 REGISTER_LAYER_CLASS(MVN);
+REGISTER_LAYER_CLASS_INST(MVN, (float), (float), (float));
+REGISTER_LAYER_CLASS_INST(MVN, (double), (double), (double));
 
 }  // namespace caffe

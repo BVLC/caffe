@@ -28,11 +28,11 @@ void CudaDevice::gemv_half(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
                            vptr<const half_fp> x,
                            const half_fp beta,
                            vptr<half_fp> y) {
-#ifdef USE_GPU_HALF
+#ifdef USE_HALF
   NOT_IMPLEMENTED;  // TODO
-#else  // USE_GPU_HALF
+#else  // USE_HALF
   NOT_IMPLEMENTED;
-#endif  // USE_GPU_HALF
+#endif  // USE_HALF
 }
 
 void CudaDevice::gemv_float(const CBLAS_TRANSPOSE trans_a, const uint_tp m,

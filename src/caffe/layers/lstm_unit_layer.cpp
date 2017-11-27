@@ -14,7 +14,7 @@ inline Dtype sigmoid(Dtype X) {
 
 template<typename Dtype, typename MItype, typename MOtype>
 inline Dtype tanh(Dtype X) {
-  return 2. * sigmoid(2. * X) - 1.;
+  return 2. * sigmoid<Dtype, MItype, MOtype>(2. * X) - 1.;
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
@@ -51,24 +51,24 @@ void LSTMUnitLayer<Dtype, MItype, MOtype>::Forward_cpu(
   const Dtype* C_prev = bottom[0]->cpu_data();
   const Dtype* X = bottom[1]->cpu_data();
   const Dtype* cont = bottom[2]->cpu_data();
-  Dtype* c = top[0]->mutable_cpu_data();
+  Dtype* C = top[0]->mutable_cpu_data();
   Dtype* H = top[1]->mutable_cpu_data();
   for (int n = 0; n < num; ++n) {
     for (int d = 0; d < hidden_dim_; ++d) {
-      const Dtype i = sigmoid(X[d]);
+      const Dtype i = sigmoid<Dtype, MItype, MOtype>(X[d]);
       const Dtype f = (*cont == 0) ? 0 :
-          (*cont * sigmoid(X[1 * hidden_dim_ + d]));
-      const Dtype o = sigmoid(X[2 * hidden_dim_ + d]);
-      const Dtype g = tanh(X[3 * hidden_dim_ + d]);
+          (*cont * sigmoid<Dtype, MItype, MOtype>(X[1 * hidden_dim_ + d]));
+      const Dtype o = sigmoid<Dtype, MItype, MOtype>(X[2 * hidden_dim_ + d]);
+      const Dtype g = tanh<Dtype, MItype, MOtype>(X[3 * hidden_dim_ + d]);
       const Dtype c_prev = C_prev[d];
       const Dtype c = f * c_prev + i * g;
-      c[d] = c;
-      const Dtype tanh_c = tanh(c);
+      C[d] = c;
+      const Dtype tanh_c = tanh<Dtype, MItype, MOtype>(c);
       H[d] = o * tanh_c;
     }
     C_prev += hidden_dim_;
     X += x_dim;
-    c += hidden_dim_;
+    C += hidden_dim_;
     H += hidden_dim_;
     ++cont;
   }
@@ -87,7 +87,7 @@ void LSTMUnitLayer<Dtype, MItype, MOtype>::Backward_cpu(
   const Dtype* C_prev = bottom[0]->cpu_data();
   const Dtype* X = bottom[1]->cpu_data();
   const Dtype* cont = bottom[2]->cpu_data();
-  const Dtype* c = top[0]->cpu_data();
+  const Dtype* C = top[0]->cpu_data();
   const Dtype* H = top[1]->cpu_data();
   const Dtype* C_diff = top[0]->cpu_diff();
   const Dtype* H_diff = top[1]->cpu_diff();
@@ -95,14 +95,14 @@ void LSTMUnitLayer<Dtype, MItype, MOtype>::Backward_cpu(
   Dtype* X_diff = bottom[1]->mutable_cpu_diff();
   for (int n = 0; n < num; ++n) {
     for (int d = 0; d < hidden_dim_; ++d) {
-      const Dtype i = sigmoid(X[d]);
+      const Dtype i = sigmoid<Dtype, MItype, MOtype>(X[d]);
       const Dtype f = (*cont == 0) ? 0 :
-          (*cont * sigmoid(X[1 * hidden_dim_ + d]));
-      const Dtype o = sigmoid(X[2 * hidden_dim_ + d]);
-      const Dtype g = tanh(X[3 * hidden_dim_ + d]);
+          (*cont * sigmoid<Dtype, MItype, MOtype>(X[1 * hidden_dim_ + d]));
+      const Dtype o = sigmoid<Dtype, MItype, MOtype>(X[2 * hidden_dim_ + d]);
+      const Dtype g = tanh<Dtype, MItype, MOtype>(X[3 * hidden_dim_ + d]);
       const Dtype c_prev = C_prev[d];
-      const Dtype c = c[d];
-      const Dtype tanh_c = tanh(c);
+      const Dtype c = C[d];
+      const Dtype tanh_c = tanh<Dtype, MItype, MOtype>(c);
       Dtype* c_prev_diff = C_prev_diff + d;
       Dtype* i_diff = X_diff + d;
       Dtype* f_diff = X_diff + 1 * hidden_dim_ + d;
@@ -118,7 +118,7 @@ void LSTMUnitLayer<Dtype, MItype, MOtype>::Backward_cpu(
     }
     C_prev += hidden_dim_;
     X += x_dim;
-    c += hidden_dim_;
+    C += hidden_dim_;
     H += hidden_dim_;
     C_diff += hidden_dim_;
     H_diff += hidden_dim_;
@@ -132,7 +132,11 @@ void LSTMUnitLayer<Dtype, MItype, MOtype>::Backward_cpu(
 STUB_GPU(LSTMUnitLayer);
 #endif
 
-INSTANTIATE_CLASS_3T(LSTMUnitLayer);
+INSTANTIATE_CLASS_3T(LSTMUnitLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T(LSTMUnitLayer, (double), (double), (double));
+
 REGISTER_LAYER_CLASS(LSTMUnit);
+REGISTER_LAYER_CLASS_INST(LSTMUnit, (float), (float), (float));
+REGISTER_LAYER_CLASS_INST(LSTMUnit, (double), (double), (double));
 
 }  // namespace caffe

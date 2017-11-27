@@ -122,7 +122,11 @@ void SliceLayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob<MOtype>*>
 STUB_GPU(SliceLayer);
 #endif
 
-INSTANTIATE_CLASS_3T(SliceLayer);
+INSTANTIATE_CLASS_3T(SliceLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T(SliceLayer, (double), (double), (double));
+
 REGISTER_LAYER_CLASS(Slice);
+REGISTER_LAYER_CLASS_INST(Slice, (float), (float), (float));
+REGISTER_LAYER_CLASS_INST(Slice, (double), (double), (double));
 
 }  // namespace caffe

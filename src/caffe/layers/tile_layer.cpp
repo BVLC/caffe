@@ -62,7 +62,11 @@ void TileLayer<Dtype, MItype, MOtype>::Backward_cpu(
 STUB_GPU(TileLayer);
 #endif
 
-INSTANTIATE_CLASS_3T(TileLayer);
+INSTANTIATE_CLASS_3T(TileLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T(TileLayer, (double), (double), (double));
+
 REGISTER_LAYER_CLASS(Tile);
+REGISTER_LAYER_CLASS_INST(Tile, (float), (float), (float));
+REGISTER_LAYER_CLASS_INST(Tile, (double), (double), (double));
 
 }  // namespace caffe

@@ -2,6 +2,7 @@
 #include "caffe/util/half_fp.hpp"
 #include "caffe/util/hash.hpp"
 #include "caffe/backend/device.hpp"
+#include "caffe/util/type_utils.hpp"
 
 
 namespace caffe {

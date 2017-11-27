@@ -14,7 +14,8 @@ void SoftmaxWithLossLayer<Dtype, MItype, MOtype>::LayerSetUp(
   LossLayer<Dtype, MItype, MOtype>::LayerSetUp(bottom, top);
   LayerParameter softmax_param(this->layer_param_);
   softmax_param.set_type("Softmax");
-  softmax_layer_ = LayerRegistry<Dtype>::CreateLayer(softmax_param);
+  softmax_layer_ =
+      LayerRegistry<Dtype, MItype, MOtype>::CreateLayer(softmax_param);
   softmax_bottom_vec_.clear();
   softmax_bottom_vec_.push_back(bottom[0]);
   softmax_top_vec_.clear();
@@ -165,7 +166,11 @@ void SoftmaxWithLossLayer<Dtype, MItype, MOtype>::Backward_cpu(
 STUB_GPU(SoftmaxWithLossLayer);
 #endif
 
-INSTANTIATE_CLASS_3T(SoftmaxWithLossLayer);
+INSTANTIATE_CLASS_3T(SoftmaxWithLossLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T(SoftmaxWithLossLayer, (double), (double), (double));
+
 REGISTER_LAYER_CLASS(SoftmaxWithLoss);
+REGISTER_LAYER_CLASS_INST(SoftmaxWithLoss, (float), (float), (float));
+REGISTER_LAYER_CLASS_INST(SoftmaxWithLoss, (double), (double), (double));
 
 }  // namespace caffe

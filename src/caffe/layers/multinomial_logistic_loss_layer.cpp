@@ -9,6 +9,7 @@ namespace caffe {
 
 template<typename Dtype, typename MItype, typename MOtype>
 void MultinomialLogisticLossLayer<Dtype, MItype, MOtype>::Reshape(
+    const vector<Blob<MItype>*>& bottom,
     const vector<Blob<MOtype>*>& top) {
   LossLayer<Dtype, MItype, MOtype>::Reshape(bottom, top);
   CHECK_EQ(bottom[1]->channels(), 1);
@@ -18,6 +19,7 @@ void MultinomialLogisticLossLayer<Dtype, MItype, MOtype>::Reshape(
 
 template<typename Dtype, typename MItype, typename MOtype>
 void MultinomialLogisticLossLayer<Dtype, MItype, MOtype>::Forward_cpu(
+    const vector<Blob<MItype>*>& bottom,
     const vector<Blob<MOtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
   const Dtype* bottom_label = bottom[1]->cpu_data();
@@ -58,7 +60,15 @@ void MultinomialLogisticLossLayer<Dtype, MItype, MOtype>::Backward_cpu(
   }
 }
 
-INSTANTIATE_CLASS_3T(MultinomialLogisticLossLayer);
+INSTANTIATE_CLASS_3T(MultinomialLogisticLossLayer,
+                     (float), (float), (float));
+INSTANTIATE_CLASS_3T(MultinomialLogisticLossLayer,
+                     (double), (double), (double));
+
 REGISTER_LAYER_CLASS(MultinomialLogisticLoss);
+REGISTER_LAYER_CLASS_INST(MultinomialLogisticLoss,
+                          (float), (float), (float));
+REGISTER_LAYER_CLASS_INST(MultinomialLogisticLoss,
+                          (double), (double), (double));
 
 }  // namespace caffe

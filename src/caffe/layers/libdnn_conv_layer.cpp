@@ -84,7 +84,8 @@ void LibDNNConvolutionLayer<Dtype, MItype, MOtype>::Reshape(
       config.bwalgo = LIBDNN_CONVOLUTION_BW_ALGO_IM2COL;
     }
 
-    LibDNNConv<Dtype>* libdnn = new LibDNNConv<Dtype>(config);
+    LibDNNConv<Dtype, MItype, MOtype>* libdnn =
+        new LibDNNConv<Dtype, MItype, MOtype>(config);
 
     libdnn_.reset(libdnn);
   }
@@ -100,14 +101,14 @@ void LibDNNConvolutionLayer<Dtype, MItype, MOtype>::Forward_gpu(
     const vector<Blob<MOtype>*>& top) {
 
   vptr<const Dtype> weight = this->blobs_[0]->gpu_data();
-  vptr<const Dtype> bias = nullptr;
+  vptr<const Dtype> bias;
   if (this->bias_term_) {
      bias = this->blobs_[1]->gpu_data();
   }
 
   for (int_tp i = 0; i < bottom.size(); ++i) {
-    vptr<const Dtype> bottom_data = bottom[i]->gpu_data();
-    vptr<Dtype> top_data = top[i]->mutable_gpu_data();
+    vptr<const MItype> bottom_data = bottom[i]->gpu_data();
+    vptr<MOtype> top_data = top[i]->mutable_gpu_data();
     libdnn_.get()->Forward(bottom_data, weight, bias,
                            top_data, bottom[i]->shape()[0]);
   }
@@ -120,9 +121,9 @@ void LibDNNConvolutionLayer<Dtype, MItype, MOtype>::Backward_gpu(
     const vector<Blob<MItype>*>& bottom) {
 
   vptr<const Dtype> weight = this->blobs_[0]->gpu_data();
-  vptr<const Dtype> bias = nullptr;
+  vptr<const Dtype> bias;
   vptr<Dtype> weight_diff = this->blobs_[0]->mutable_gpu_diff();
-  vptr<Dtype> bias_diff = nullptr;
+  vptr<Dtype> bias_diff;
   if (this->bias_term_) {
      bias = this->blobs_[1]->gpu_data();
      bias_diff = this->blobs_[1]->mutable_gpu_diff();
@@ -151,8 +152,8 @@ void LibDNNConvolutionLayer<Dtype, MItype, MOtype>::Tune(
           int_tp batch_size) {
   vptr<Dtype> weight_data = this->blobs_[0]->mutable_gpu_data();
   vptr<Dtype> weight_diff = this->blobs_[0]->mutable_gpu_diff();
-  vptr<Dtype> bias_data = nullptr;
-  vptr<Dtype> bias_diff = nullptr;
+  vptr<Dtype> bias_data;
+  vptr<Dtype> bias_diff;
   if (this->bias_term_) {
      bias_data = this->blobs_[1]->mutable_gpu_data();
      bias_diff = this->blobs_[1]->mutable_gpu_diff();
@@ -168,10 +169,6 @@ void LibDNNConvolutionLayer<Dtype, MItype, MOtype>::Tune(
 
 INSTANTIATE_CLASS_3T(LibDNNConvolutionLayer, (float), (float), (float));
 INSTANTIATE_CLASS_3T(LibDNNConvolutionLayer, (double), (double), (double));
-
-REGISTER_LAYER_CLASS(LibDNNConvolution);
-REGISTER_LAYER_CLASS_INST(LibDNNConvolution, (float), (float), (float));
-REGISTER_LAYER_CLASS_INST(LibDNNConvolution, (double), (double), (double));
 
 }   // namespace caffe
 #endif  // USE_LIBDNN

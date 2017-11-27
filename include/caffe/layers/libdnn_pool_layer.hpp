@@ -10,6 +10,7 @@
 
 #include "caffe/layers/pooling_layer.hpp"
 
+#include "caffe/libdnn/libdnn.hpp"
 
 namespace caffe {
 
@@ -26,15 +27,17 @@ class LibDNNPoolingLayer : public PoolingLayer<Dtype, MItype, MOtype> {
 
 
  protected:
-  virtual void Forward_gpu(const vector<Blob<MItype>*>& bottom,
+  virtual void Forward_gpu(
+      const vector<Blob<MItype>*>& bottom,
       const vector<Blob<MOtype>*>& top);
-  virtual void Backward_gpu(const vector<Blob<MOtype>*>& top,
+  virtual void Backward_gpu(
+      const vector<Blob<MOtype>*>& top,
       const vector<bool>& propagate_down,
       const vector<Blob<MItype>*>& bottom);
 
 
  private:
-  shared_ptr<LibDNNPool<Dtype> > libdnn_;
+  shared_ptr<LibDNNPool<Dtype, MItype, MOtype> > libdnn_;
 };
 
 }  // namespace caffe

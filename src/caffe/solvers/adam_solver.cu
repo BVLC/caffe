@@ -65,26 +65,26 @@ void adam_update_gpu(Device* dev, DeviceProgram* dev_prog, uint_tp n,
   kernel->Execute(group, local);
 }
 
-#ifdef USE_GPU_HALF
+#ifdef USE_HALF
 template void adam_update_gpu<half_fp>(Device* dev,
               DeviceProgram* dev_prog, uint_tp n, vptr<half_fp> g,
               vptr<half_fp> m, vptr<half_fp> v,
               half_fp beta1, half_fp beta2,
               half_fp eps_hat, half_fp corrected_local_rate);
-#endif  // USE_GPU_HALF
-#ifdef USE_GPU_SINGLE
+#endif  // USE_HALF
+#ifdef USE_SINGLE
 template void adam_update_gpu<float>(Device*,
               DeviceProgram* dev_prog, uint_tp n, vptr<float> g,
               vptr<float> m, vptr<float> v,
               float beta1, float beta2,
               float eps_hat, float corrected_local_rate);
-#endif  // USE_GPU_SINGLE
-#ifdef USE_GPU_DOUBLE
+#endif  // USE_SINGLE
+#ifdef USE_DOUBLE
 template void adam_update_gpu<double>(Device* dev,
               DeviceProgram* dev_prog, uint_tp n, vptr<double> g,
               vptr<double> m, vptr<double> v,
               double beta1, double beta2,
               double eps_hat, double corrected_local_rate);
-#endif  // USE_GPU_DOUBLE
+#endif  // USE_DOUBLE
 
 }  // namespace caffe

@@ -84,34 +84,6 @@ bool Device::is_fast_unsafe_math() const {
   return fast_unsafe_math_;
 }
 
-template<>
-shared_ptr<Blob<half_fp> > Device::Buffer(uint_tp id) {
-  if (buff_h_.size() <= id) {
-    shared_ptr<Blob<half_fp> >
-                                 blob_pointer(new Blob<half_fp>(this));
-    buff_h_.push_back(blob_pointer);
-  }
-  return buff_h_[id];
-}
-
-template<>
-shared_ptr<Blob<float> > Device::Buffer(uint_tp id) {
-  if (buff_f_.size() <= id) {
-    shared_ptr<Blob<float> > blob_pointer(new Blob<float>(this));
-    buff_f_.push_back(blob_pointer);
-  }
-  return buff_f_[id];
-}
-
-template<>
-shared_ptr<Blob<double> > Device::Buffer(uint_tp id) {
-  if (buff_d_.size() <= id) {
-    shared_ptr<Blob<double> > blob_pointer(new Blob<double>(this));
-    buff_d_.push_back(blob_pointer);
-  }
-  return buff_d_[id];
-}
-
 uint_tp Device::current_queue_id() {
   return current_queue_id_;
 }
@@ -137,6 +109,83 @@ void Device::decrease_memory_usage(uint_tp bytes) {
 
 void Device::reset_peak_memory_usage() {
   peak_memory_usage_ = memory_usage_;
+}
+
+template<typename Dtype>
+shared_ptr<Blob<Dtype> > Device::Buffer(vector<int_tp> shape, int_tp* lock_id) {
+  CHECK(lock_id);
+  shared_ptr<Blob<Dtype> > blob = std::make_shared<Blob<Dtype> >(this);
+  vector<int_tp> buffer_shape;
+  for(size_t i = 0; i < shape.size(); ++i) {
+    buffer_shape.push_back(safe_sizeof<Dtype>() * shape[i]);
+  }
+
+  // Ensure the thread safety of this function
+  buffer_vec_mutex_.lock();
+  size_t buffer_id = -1;
+  for (size_t i = 0; i < buffers_.size(); ++i) {
+    if (buffer_mutex_[i]->try_lock()) {
+      buffer_id = i;
+      break;
+    }
+  }
+
+  // No buffers available, create a new one
+  if (buffer_id == -1) {
+    buffer_id = buffers_.size();
+    buffers_.push_back(std::make_shared<Blob<char> >(this));
+    buffer_mutex_.push_back(std::make_shared<std::mutex>());
+    buffer_mutex_[buffer_id]->lock();
+  }
+
+  buffer_vec_mutex_.unlock();
+
+  Blob<char>* buffer = buffers_[buffer_id].get();
+
+  // Ensure the buffer is big enough for the request
+  buffer->Reshape(buffer_shape);
+  // Share data between returned Blob object and internal device buffer
+  blob->ShareDataBase(buffer);
+  blob->ShareDiffBase(buffer);
+
+  if (not (lock_id == nullptr)) {
+    *lock_id = buffer_id;
+  }
+
+  return blob;
+}
+
+template shared_ptr<Blob<half_fp> > Device::Buffer(vector<int_tp> shape,
+                                                   int_tp* lock_id);
+template shared_ptr<Blob<float> > Device::Buffer(vector<int_tp> shape,
+                                                   int_tp* lock_id);
+template shared_ptr<Blob<double> > Device::Buffer(vector<int_tp> shape,
+                                                   int_tp* lock_id);
+template shared_ptr<Blob<char> > Device::Buffer(vector<int_tp> shape,
+                                                   int_tp* lock_id);
+template shared_ptr<Blob<int8_t> > Device::Buffer(vector<int_tp> shape,
+                                                   int_tp* lock_id);
+template shared_ptr<Blob<int16_t> > Device::Buffer(vector<int_tp> shape,
+                                                   int_tp* lock_id);
+template shared_ptr<Blob<int32_t> > Device::Buffer(vector<int_tp> shape,
+                                                   int_tp* lock_id);
+template shared_ptr<Blob<int64_t> > Device::Buffer(vector<int_tp> shape,
+                                                   int_tp* lock_id);
+template shared_ptr<Blob<uint8_t> > Device::Buffer(vector<int_tp> shape,
+                                                   int_tp* lock_id);
+template shared_ptr<Blob<uint16_t> > Device::Buffer(vector<int_tp> shape,
+                                                   int_tp* lock_id);
+template shared_ptr<Blob<uint32_t> > Device::Buffer(vector<int_tp> shape,
+                                                   int_tp* lock_id);
+template shared_ptr<Blob<uint64_t> > Device::Buffer(vector<int_tp> shape,
+                                                   int_tp* lock_id);
+
+
+void Device::unlock_buffer(int_tp* lock_id) {
+  if (*lock_id < buffer_mutex_.size()) {
+    buffer_mutex_[*lock_id]->unlock();
+  }
+  *lock_id = -1;
 }
 
 

@@ -271,6 +271,7 @@ STUB_GPU_FORWARD(LRNLayer, CrossChannelForward);
 STUB_GPU_BACKWARD(LRNLayer, CrossChannelBackward);
 #endif
 
-INSTANTIATE_CLASS_3T(LRNLayer);
+INSTANTIATE_CLASS_3T(LRNLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T(LRNLayer, (double), (double), (double));
 
 }  // namespace caffe

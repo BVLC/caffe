@@ -1,4 +1,4 @@
-#ifdef USE_GPU_HALF
+#ifdef USE_HALF
 #ifdef WITH_PYTHON_LAYER
 #include "boost/python.hpp"
 namespace bp = boost::python;

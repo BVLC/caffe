@@ -41,7 +41,7 @@ class MultiDeviceTest : public ::testing::Test {
   virtual ~MultiDeviceTest() { RemoveCaffeTempDir(); }
 };
 
-#ifdef USE_GPU_HALF
+#ifdef USE_HALF
 typedef ::testing::Types<half, float, double> TestDtypes;
 #else
 typedef ::testing::Types<float, double> TestDtypes;
@@ -77,7 +77,7 @@ template <typename Dtype>
 class GPUDeviceTest : public MultiDeviceTest<GPUDevice<Dtype> > {
 };
 
-#ifdef USE_GPU_HALF
+#ifdef USE_HALF
 typedef ::testing::Types<CPUDevice<half>, CPUDevice<float>, CPUDevice<double>,
                          GPUDevice<half>, GPUDevice<float>, GPUDevice<double> >
                          TestDtypesAndDevices;
@@ -123,7 +123,7 @@ bool isSupported<GPUDevice<double> >(void);
 
 template <>
 bool isSupported<CPUDevice<double> >(void);
-#ifdef USE_GPU_HALF
+#ifdef USE_HALF
 template <>
 bool isSupported<half>(void);
 

@@ -8,6 +8,7 @@
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
 
+#include "caffe/libdnn/libdnn.hpp"
 #include "caffe/layers/deconv_layer.hpp"
 
 
@@ -24,8 +25,8 @@ class LibDNNDeconvolutionLayer
   virtual void Reshape(const vector<Blob<MItype>*>& bottom,
       const vector<Blob<MOtype>*>& top);
   virtual ~LibDNNDeconvolutionLayer();
-  virtual void Tune(Dtype* top_data, Dtype* top_diff,
-                    Dtype* bottom_data, Dtype* bottom_diff,
+  virtual void Tune(vptr<MOtype> top_data, vptr<MOtype> top_diff,
+                    vptr<MItype> bottom_data, vptr<MItype> bottom_diff,
                     int_tp batch_size);
 
  protected:
@@ -37,7 +38,7 @@ class LibDNNDeconvolutionLayer
 
 
  private:
-  shared_ptr<LibDNNDeconv<Dtype> > libdnn_;
+  shared_ptr<LibDNNDeconv<Dtype, MItype, MOtype> > libdnn_;
 };
 
 }  // namespace caffe

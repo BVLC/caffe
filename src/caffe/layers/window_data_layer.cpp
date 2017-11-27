@@ -28,12 +28,14 @@
 namespace caffe {
 
 template<typename Dtype, typename MItype, typename MOtype>
-WindowDataLayer<Dtype, MItype, MOtype>::~WindowDataLayer<Dtype, MItype, MOtype>() {
+WindowDataLayer<Dtype, MItype, MOtype>::
+  ~WindowDataLayer<Dtype, MItype, MOtype>() {
   this->StopInternalThread();
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void WindowDataLayer<Dtype, MItype, MOtype>::DataLayerSetUp(const vector<Blob<MItype>*>& bottom,
+void WindowDataLayer<Dtype, MItype, MOtype>::DataLayerSetUp(
+      const vector<Blob<MItype>*>& bottom,
       const vector<Blob<MOtype>*>& top) {
   // LayerSetUp runs through the window_file and creates two structures
   // that hold windows: one for foreground (object) windows and one
@@ -225,7 +227,7 @@ uint_tp WindowDataLayer<Dtype, MItype, MOtype>::PrefetchRand() {
 
 // This function is called on prefetch thread
 template<typename Dtype, typename MItype, typename MOtype>
-void WindowDataLayer<Dtype, MItype, MOtype>::load_batch(Batch<Dtype>* batch) {
+void WindowDataLayer<Dtype, MItype, MOtype>::load_batch(Batch<MOtype>* batch) {
   // At each iteration, sample n windows where n*p are foreground (object)
   // windows and n*(1-p) are background (non-object) windows
   CPUTimer batch_timer;
@@ -472,8 +474,12 @@ void WindowDataLayer<Dtype, MItype, MOtype>::load_batch(Batch<Dtype>* batch) {
   DLOG(INFO) << "Transform time: " << trans_time / 1000 << " ms.";
 }
 
-INSTANTIATE_CLASS_3T(WindowDataLayer);
+INSTANTIATE_CLASS_3T(WindowDataLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T(WindowDataLayer, (double), (double), (double));
+
 REGISTER_LAYER_CLASS(WindowData);
+REGISTER_LAYER_CLASS_INST(WindowData, (float), (float), (float));
+REGISTER_LAYER_CLASS_INST(WindowData, (double), (double), (double));
 
 }  // namespace caffe
 #endif  // USE_OPENCV

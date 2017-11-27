@@ -1,4 +1,5 @@
 #include "caffe/backend/device.hpp"
+#include "caffe/util/type_utils.hpp"
 
 namespace caffe {
 

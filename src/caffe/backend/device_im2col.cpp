@@ -427,15 +427,15 @@ void Device::CreateIm2ColProgram() {
 
   ss << this->im2col_program_->setup();
 
-#ifdef USE_GPU_HALF
+#ifdef USE_HALF
   ss << create_source<half_fp>(this, this->math_program_);
 #endif
 
-#ifdef USE_GPU_SINGLE
+#ifdef USE_SINGLE
   ss << create_source<float>(this, this->math_program_);
 #endif
 
-#ifdef USE_GPU_DOUBLE
+#ifdef USE_DOUBLE
   ss << create_source<double>(this, this->math_program_);
 #endif
 
@@ -576,7 +576,7 @@ void Device::col2im_nd(vptr<const Dtype> data_col,
   kernel->Execute(group, local);
 }
 
-#ifdef USE_GPU_HALF
+#ifdef USE_HALF
 template<>
 void Device::im2col(vptr<const half_fp> data_im, const int_tp channels,
                     const int_tp height, const int_tp width,
@@ -611,10 +611,10 @@ void Device::col2im_nd(vptr<const half_fp> data_col,
                        vptr<const int_tp> pad, vptr<const int_tp> stride,
                        vptr<const int_tp> dilation,
                        vptr<half_fp> data_im);
-#endif  // USE_GPU_HALF
+#endif  // USE_HALF
 
 
-#ifdef USE_GPU_SINGLE
+#ifdef USE_SINGLE
 template<>
 void Device::im2col(vptr<const float> data_im, const int_tp channels,
                     const int_tp height, const int_tp width,
@@ -647,10 +647,10 @@ void Device::col2im_nd(vptr<const float> data_col,
                        vptr<const int_tp> kernel_shape,
                        vptr<const int_tp> pad, vptr<const int_tp> stride,
                        vptr<const int_tp> dilation, vptr<float> data_im);
-#endif  // USE_GPU_SINGLE
+#endif  // USE_SINGLE
 
 
-#ifdef USE_GPU_DOUBLE
+#ifdef USE_DOUBLE
 template<>
 void Device::im2col(vptr<const double> data_im, const int_tp channels,
                     const int_tp height, const int_tp width,
@@ -683,6 +683,6 @@ void Device::col2im_nd(vptr<const double> data_col,
                        vptr<const int_tp> kernel_shape,
                        vptr<const int_tp> pad, vptr<const int_tp> stride,
                        vptr<const int_tp> dilation, vptr<double> data_im);
-#endif  // USE_GPU_DOUBLE
+#endif  // USE_DOUBLE
 
 }  // namespace caffe

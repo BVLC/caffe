@@ -26,10 +26,11 @@ class WindowDataLayer
     : public BasePrefetchingDataLayer<Dtype, MItype, MOtype> {
  public:
   explicit WindowDataLayer(const LayerParameter& param)
-      : BasePrefetchingDataLayer<Dtype>(param) {}
+      : BasePrefetchingDataLayer<Dtype, MItype, MOtype>(param) {}
   virtual ~WindowDataLayer();
-  virtual void DataLayerSetUp(const vector<Blob<MOtype>*>& bottom,
-      const vector<Blob<MItype>*>& top);
+  virtual void DataLayerSetUp(
+      const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
 
   virtual inline const char* type() const { return "WindowData"; }
   virtual inline int_tp ExactNumBottomBlobs() const { return 0; }
@@ -37,7 +38,7 @@ class WindowDataLayer
 
  protected:
   virtual uint_tp PrefetchRand();
-  virtual void load_batch(Batch<Dtype, MItype>* batch);
+  virtual void load_batch(Batch<MOtype>* batch);
 
   shared_ptr<Caffe::RNG> prefetch_rng_;
   vector<pair<string, vector<int_tp> > > image_database_;
@@ -45,7 +46,7 @@ class WindowDataLayer
   vector<vector<float> > fg_windows_;
   vector<vector<float> > bg_windows_;
   Blob<MItype> data_mean_;
-  vector<Dtype, MItype> mean_values_;
+  vector<MItype> mean_values_;
   bool has_mean_file_;
   bool has_mean_values_;
   bool cache_images_;

@@ -22,7 +22,11 @@ void SilenceLayer<Dtype, MItype, MOtype>::Backward_cpu(
 STUB_GPU(SilenceLayer);
 #endif
 
-INSTANTIATE_CLASS_3T(SilenceLayer);
+INSTANTIATE_CLASS_3T(SilenceLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T(SilenceLayer, (double), (double), (double));
+
 REGISTER_LAYER_CLASS(Silence);
+REGISTER_LAYER_CLASS_INST(Silence, (float), (float), (float));
+REGISTER_LAYER_CLASS_INST(Silence, (double), (double), (double));
 
 }  // namespace caffe
