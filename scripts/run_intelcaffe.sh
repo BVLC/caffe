@@ -386,7 +386,7 @@ fi
 
 root_dir=$(cd $(dirname $(dirname $0)); pwd)
 result_dir=${root_dir}/"result-`date +%Y%m%d%H%M%S`"
-while [[ $# -gt 1 ]]
+while [[ $# -ge 1 ]]
 do
     key="$1"
     case $key in

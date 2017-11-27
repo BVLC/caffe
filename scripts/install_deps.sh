@@ -156,7 +156,7 @@ function install_deps_multinode
 }
 
 host_file=""
-while [[ $# -gt 1 ]]
+while [[ $# -ge 1 ]]
 do
     key="$1"
     case $key in

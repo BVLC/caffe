@@ -244,7 +244,7 @@ if [[ $# -le 1 ]]; then
     exit 0
 fi
 
-while [[ $# -gt 1 ]]
+while [[ $# -ge 1 ]]
 do
     key="$1"
     case $key in 

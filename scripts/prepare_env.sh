@@ -14,7 +14,7 @@ function usage
 
 compiler="icc"
 host_file=""
-while [[ $# -gt 1 ]]
+while [[ $# -ge 1 ]]
 do
     key="$1"
     case $key in

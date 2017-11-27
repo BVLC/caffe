@@ -198,7 +198,7 @@ function set_env_vars
     set_openmp_envs
 }
 
-while [[ $# -gt 1 ]]
+while [[ $# -ge 1 ]]
 do
     key="$1"
     case $key in

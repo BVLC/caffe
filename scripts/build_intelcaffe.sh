@@ -4,14 +4,17 @@ function usage
 {
     script_name=$0
     echo "Usage:"
-    echo "  $script_name [--multinode] [--compiler icc/gcc] [--rebuild]"
+    echo "  $script_name [--multinode] [--compiler icc/gcc] [--rebuild] [--boost_root boost_install_dir]"
     echo ""
     echo "  Parameters:"
-    echo "    multinode: specify it to build caffe for multinode. build for single node"
-    echo "               by default."
-    echo "    compiler:  specify compiler to build intel caffe. default compiler is icc."
-    echo "    rebuild:   make clean/remove build directory before building caffe if the "
-    echo "               option is specified. not to make clean by default."
+    echo "    multinode:  specify it to build caffe for multinode. build for single node"
+    echo "                by default."
+    echo "    compiler:   specify compiler to build intel caffe. default compiler is icc."
+    echo "    rebuild:    make clean/remove build directory before building caffe if the "
+    echo "                option is specified. not to make clean by default."
+    echo "    boost_root: specify directory for boost root (installation directory). if "
+    echo "                it's not specified (by default), script will download boost in "
+    echo "                directory of caffe source and build it."
 }
 
 function check_dependency
@@ -47,9 +50,6 @@ function build_caffe_gcc
 
     make -j 8
 }
-
-root_dir=$(cd $(dirname $(dirname $0)); pwd)
-boost_root=${root_dir}
 
 function download_build_boost
 {
@@ -95,6 +95,7 @@ function build_caffe_icc
     mkdir $build_dir
     cd $build_dir
 
+    echo "Parameters: $cmake_params"
     CC=icc CXX=icpc cmake .. $cmake_params
     CC=icc CXX=icpc make all -j 8
 }
@@ -103,13 +104,22 @@ function sync_caffe_dir
 {
   caffe_dir=`pwd`
   caffe_parent_dir=`dirname $caffe_dir`
-  ansible ourcluster -m synchronize -a "src=$caffe_dir dest=$caffe_parent_dir"
+  which ansible >/dev/null
+  if [ $? -eq 0 ]; then
+      ansible ourcluster -m synchronize -a "src=$caffe_dir dest=$caffe_parent_dir"
+  else
+      echo "Warning: no ansible command for synchronizing caffe directory in nodes"
+  fi
 }
 
+
+root_dir=$(cd $(dirname $(dirname $0)); pwd)
+
+boost_root=""
 is_rebuild=0
 compiler="icc"
 is_multinode=0
-while [[ $# -gt 1 ]]
+while [[ $# -ge 1 ]]
 do
     key="$1"
     case $key in
@@ -123,6 +133,10 @@ do
             compiler="$2"
             shift
             ;;
+        --boost_root)
+            boost_root="$2"
+            shift
+            ;;    
         --help)
             usage
             exit 0
@@ -158,7 +172,9 @@ done
 
 echo "Build Intel Caffe by $compiler..."
 if [ "$compiler" == "icc" ]; then
-    download_build_boost
+    if [ "$boost_root" == "" ]; then
+        download_build_boost
+    fi
     build_caffe_icc $is_multinode
 else
     build_caffe_gcc $is_multinode
