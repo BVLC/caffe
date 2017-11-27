@@ -288,6 +288,10 @@ class Net {
   /// @brief Helper for displaying debug info in Update.
   void UpdateDebugInfo(const int_tp param_id);
 
+  void InitializeQuantizers(NetParameter net_param);
+
+  shared_ptr<QuantizerBase> GetQuantizer(size_t index, DataType in,
+                                         DataType out);
   /// @brief The network name
   string name_;
   /// @brief The phase: TRAIN or TEST
@@ -299,6 +303,8 @@ class Net {
   vector<bool> layer_need_backward_;
   /// @brief the blobs storing intermediate results between the layer.
   vector<shared_ptr<BlobBase> > blobs_;
+  vector<shared_ptr<QuantizerBase> > quantizers_;
+  map<tuple<size_t, DataType, DataType>, size_t> quantizer_map_;
   vector<string> blob_names_;
   map<string, int_tp> blob_names_index_;
   vector<bool> blob_need_backward_;
@@ -342,7 +348,7 @@ class Net {
   vector<float> params_weight_decay_;
   vector<bool> has_params_decay_;
   /// The bytes of memory used by this net
-  uint_tp memory_used_;
+  size_t memory_used_;
   /// Whether to compute and display debug info for the net.
   bool debug_info_;
 

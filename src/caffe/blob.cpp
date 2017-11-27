@@ -7,6 +7,8 @@
 #include "caffe/common.hpp"
 #include "caffe/syncedmem.hpp"
 #include "caffe/util/math_functions.hpp"
+#include "caffe/util/type_utils.hpp"
+#include "caffe/quantizer.hpp"
 
 namespace caffe {
 
@@ -28,7 +30,7 @@ bool Blob<Dtype>::Reshape(const vector<int_tp>& shape) {
 
 template<typename Dtype>
 bool Blob<Dtype>::Reshape(const vector<int_tp>& shape,
-                                 const vector<int_tp>& shape_stride) {
+                          const vector<int_tp>& shape_stride) {
   CHECK_LE(shape.size(), kMaxBlobAxes);
   count_ = 1;
   shape_.resize(shape.size());
@@ -90,17 +92,24 @@ bool Blob<Dtype>::ReshapeLike(const Blob<Dtype>& other) {
 template<typename Dtype>
 Blob<Dtype>::Blob(const int_tp num, const int_tp channels,
                   const int_tp height, const int_tp width,
-                  Device *device_context)
+                  Device *dev) {
     // capacity_ must be initialized before calling Reshape
-    : capacity_(0), device_(device_context) {
-  Reshape(num, channels, height, width);
+   capacity_ = 0;
+   device_ = dev;
+   Reshape(num, channels, height, width);
 }
 
 template<typename Dtype>
-Blob<Dtype>::Blob(const vector<int_tp>& shape, Device *device_context)
+Blob<Dtype>::Blob(const vector<int_tp>& shape, Device *dev) {
     // capacity_ must be initialized before calling Reshape
-    : capacity_(0), device_(device_context) {
+  capacity_ = 0;
+  device_ = dev;
   Reshape(shape);
+}
+
+template<typename Dtype>
+int_tp Blob<Dtype>::bytes() const {
+  return safe_sizeof<Dtype>() * count_;
 }
 
 template <typename Dtype>
@@ -119,7 +128,7 @@ template<typename Dtype>
 void Blob<Dtype>::set_cpu_data(Dtype* data) {
   CHECK(data);
   // Make sure CPU and GPU sizes remain equal
-  size_t size = count_ * sizeof(Dtype);
+  size_t size = count_ * safe_sizeof<Dtype>();
   if (data_->size() != size) {
     data_.reset(new SyncedMemory(size, device_));
     diff_.reset(new SyncedMemory(size, device_));
@@ -192,6 +201,21 @@ void Blob<Dtype>::ShareDiff(const Blob& other) {
   diff_ = other.diff();
 }
 
+
+void BlobBase::ShareDataBase(const BlobBase* other) {
+  CHECK_EQ(bytes(), other->bytes());
+  data_ = other->data();
+}
+
+void BlobBase::ShareDiffBase(const BlobBase* other) {
+  CHECK_EQ(bytes(), other->bytes());
+  diff_ = other->diff();
+}
+
+shared_ptr<QuantizerBase> BlobBase::net_quant() {
+  return net_quant_;
+}
+
 // The "update" method is used for parameter blobs in a Net, which are stored
 // as Blob<float> or Blob<double> -- hence we do not define it for
 // Blob<int_tp> or Blob<int_tp>.
@@ -238,11 +262,6 @@ template<> int_tp Blob<int_tp>::asum_data() const {
 template<> uint_tp Blob<uint_tp>::asum_data() const {
   NOT_IMPLEMENTED;
   return 0;
-}
-
-template<typename Dtype>
-Device *Blob<Dtype>::get_device() {
-  return device_;
 }
 
 template<typename Dtype>
@@ -470,8 +489,7 @@ void Blob<Dtype>::scale_diff(Dtype scale_factor) {
     }
   }
 
-template<typename Dtype>
-bool Blob<Dtype>::ShapeEquals(const BlobProto& other) {
+bool BlobBase::ShapeEquals(const BlobProto& other) {
   if (other.has_num() || other.has_channels() || other.has_height()
       || other.has_width()) {
     // Using deprecated 4D Blob dimensions --
@@ -635,6 +653,91 @@ void Blob<float>::ToProto(BlobProto* proto, bool write_diff) const {
     for (int_tp i = 0; i < count_; ++i) {
       proto->add_diff(diff_vec[i]);
     }
+  }
+}
+
+template<typename Dtype>
+DataType Blob<Dtype>::data_type() {
+  return proto_data_type<Dtype>();
+}
+
+template<typename Dtype>
+void Blob<Dtype>::asum_data(void* out) const {
+  Dtype val = asum_data();
+  this->net_quant_->Backward_cpu(1, static_cast<void*>(&val), out);
+}
+template<typename Dtype>
+void Blob<Dtype>::asum_diff(void* out) const {
+  Dtype val = asum_diff();
+  this->net_quant_->Backward_cpu(1, static_cast<void*>(&val), out);
+}
+template<typename Dtype>
+void Blob<Dtype>::sumsq_data(void* out) const {
+  Dtype val = sumsq_data();
+  this->net_quant_->Backward_cpu(1, static_cast<void*>(&val), out);
+}
+template<typename Dtype>
+void Blob<Dtype>::sumsq_diff(void* out) const {
+  Dtype val = sumsq_data();
+  this->net_quant_->Backward_cpu(1, static_cast<void*>(&val), out);
+}
+
+template<typename Dtype>
+void Blob<Dtype>::cpu_data(void* out) const {
+  CHECK(data_->mutable_cpu_data());
+  this->net_quant_->Backward_cpu(count(), data_->mutable_cpu_data(), out);
+}
+template<typename Dtype>
+void Blob<Dtype>::cpu_diff(void* out) const {
+  CHECK(diff_->mutable_cpu_data());
+  this->net_quant_->Backward_cpu(count(), diff_->mutable_cpu_data(), out);
+}
+
+template<typename Dtype>
+void Blob<Dtype>::gpu_data(vptr<void> out) const {
+  this->net_quant_->Backward_gpu(count(), data_->mutable_gpu_data(), out);
+}
+
+template<typename Dtype>
+void Blob<Dtype>::gpu_diff(vptr<void> out) const {
+  this->net_quant_->Backward_gpu(count(), diff_->mutable_gpu_data(), out);
+}
+
+template<typename Dtype>
+void Blob<Dtype>::set_cpu_data(const void* in) const {
+  CHECK(data_->cpu_data());
+  this->net_quant_->Forward_cpu(count(), in, data_->mutable_cpu_data());
+}
+template<typename Dtype>
+void Blob<Dtype>::set_cpu_diff(const void* in) const {
+  CHECK(diff_->cpu_data());
+  this->net_quant_->Forward_cpu(count(), in, diff_->mutable_cpu_data());
+}
+template<typename Dtype>
+void Blob<Dtype>::set_gpu_data(vptr<const void> in) const {
+  this->net_quant_->Forward_gpu(count(), in, data_->mutable_gpu_data());
+}
+template<typename Dtype>
+void Blob<Dtype>::set_gpu_diff(vptr<const void> in) const {
+  this->net_quant_->Forward_gpu(count(), in, diff_->mutable_gpu_data());
+}
+
+
+template<typename Dtype>
+void Blob<Dtype>::Clear() {
+  switch (Caffe::mode()) {
+  case Caffe::CPU:
+    caffe_set(count(), static_cast<Dtype>(0),
+              mutable_cpu_diff());
+    break;
+  case Caffe::GPU:
+#ifndef CPU_ONLY
+    device_->set<Dtype>(count(), static_cast<Dtype>(0),
+                        mutable_gpu_diff());
+#else
+      NO_GPU;
+#endif
+    break;
   }
 }
 

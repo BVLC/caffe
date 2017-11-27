@@ -25,8 +25,8 @@ class LibDNNConvolutionLayer : public ConvolutionLayer<Dtype, MItype, MOtype> {
       const vector<Blob<MOtype>*>& top);
   virtual ~LibDNNConvolutionLayer();
 
-  virtual void Tune(Dtype* top_data, Dtype* top_diff,
-                    Dtype* bottom_data, Dtype* bottom_diff,
+  virtual void Tune(vptr<Dtype> top_data, vptr<Dtype> top_diff,
+                    vptr<Dtype> bottom_data, vptr<Dtype> bottom_diff,
                     int_tp batch_size);
 
  protected:
@@ -38,7 +38,7 @@ class LibDNNConvolutionLayer : public ConvolutionLayer<Dtype, MItype, MOtype> {
 
 
  private:
-  shared_ptr<LibDNNConv<Dtype> > libdnn_;
+  shared_ptr<LibDNNConv<Dtype, MItype, MOtype> > libdnn_;
 };
 
 }  // namespace caffe

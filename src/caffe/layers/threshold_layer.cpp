@@ -39,7 +39,11 @@ void ThresholdLayer<Dtype, MItype, MOtype>::Forward_cpu(
 STUB_GPU_FORWARD(ThresholdLayer, Forward);
 #endif
 
-INSTANTIATE_CLASS_3T(ThresholdLayer);
+INSTANTIATE_CLASS_3T(ThresholdLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T(ThresholdLayer, (double), (double), (double));
+
 REGISTER_LAYER_CLASS(Threshold);
+REGISTER_LAYER_CLASS_INST(Threshold, (float), (float), (float));
+REGISTER_LAYER_CLASS_INST(Threshold, (double), (double), (double));
 
 }  // namespace caffe

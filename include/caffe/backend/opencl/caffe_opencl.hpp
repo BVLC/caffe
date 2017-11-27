@@ -7,7 +7,6 @@
 
 #include <vector>
 
-// Define ViennaCL/GreenTea flags
 #ifdef USE_OPENCL
 
 #ifndef VIENNACL_WITH_OPENCL

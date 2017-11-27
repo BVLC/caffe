@@ -10,7 +10,7 @@ namespace caffe {
 void OclDevice::axpy_half(const uint_tp n, const half_fp alpha,
                           vptr<const half_fp> x,
                           vptr<half_fp> y) {
-#if defined(USE_GPU_HALF)
+#if defined(USE_HALF)
   uint_tp offX = x.get_ocl_off();
   uint_tp offY = y.get_ocl_off();
 
@@ -42,9 +42,9 @@ void OclDevice::axpy_half(const uint_tp n, const half_fp alpha,
 #else  // default (ViennaCL)
   NOT_IMPLEMENTED;
 #endif  // clBLAS, CLBlast, or default (ViennaCL)
-#else  // USE_GPU_HALF
+#else  // USE_HALF
   NOT_IMPLEMENTED;
-#endif  // USE_GPU_HALF
+#endif  // USE_HALF
 }
 
 void OclDevice::axpy_float(const uint_tp n, const float alpha,
@@ -194,7 +194,7 @@ void OclDevice::axpby_double(const uint_tp n, const double alpha,
 
 void OclDevice::scal_half(const uint_tp n, const half_fp alpha,
                   vptr<half_fp> x) {
-#ifdef USE_GPU_HALF
+#ifdef USE_HALF
   uint_tp offX = x.get_ocl_off();
 
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(this->id());
@@ -222,7 +222,7 @@ void OclDevice::scal_half(const uint_tp n, const half_fp alpha,
 #else  // default (ViennaCL)
   NOT_IMPLEMENTED;
 #endif  // clBLAS, CLBlast, or default (ViennaCL)
-#else  // USE_GPU_HALF
+#else  // USE_HALF
   NOT_IMPLEMENTED;
 #endif
 }
@@ -333,7 +333,7 @@ void OclDevice::scal_double(const uint_tp n, const double alpha,
 void OclDevice::dot_half(const uint_tp n, vptr<const half_fp> x,
                          vptr<const half_fp> y,
                          half_fp* out) {
-#ifdef USE_GPU_HALF
+#ifdef USE_HALF
   uint_tp offX = x.get_ocl_off();
   uint_tp offY = y.get_ocl_off();
 
@@ -391,9 +391,9 @@ void OclDevice::dot_half(const uint_tp n, vptr<const half_fp> x,
 #else  // default (ViennaCL)
   NOT_IMPLEMENTED;
 #endif  // clBLAS, CLBlast, or default (ViennaCL)
-#else  // USE_GPU_HALF
+#else  // USE_HALF
   NOT_IMPLEMENTED;
-#endif  // USE_GPU_HALF
+#endif  // USE_HALF
 }
 
 void OclDevice::dot_float(const uint_tp n, vptr<const float> x,
@@ -575,7 +575,7 @@ void OclDevice::dot_double(const uint_tp n, vptr<const double> x,
 
 void OclDevice::asum_half(const uint_tp n, vptr<const half_fp> x,
                            half_fp* y) {
-#ifdef USE_GPU_HALF
+#ifdef USE_HALF
   uint_tp offX = x.get_ocl_off();
 
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(this->id());
@@ -630,9 +630,9 @@ void OclDevice::asum_half(const uint_tp n, vptr<const half_fp> x,
 #else  // default (ViennaCL)
   NOT_IMPLEMENTED;
 #endif  // clBLAS, CLBlast, or default (ViennaCL)
-#else  // USE_GPU_HALF
+#else  // USE_HALF
   NOT_IMPLEMENTED;
-#endif  // USE_GPU_HALF
+#endif  // USE_HALF
 }
 
 void OclDevice::asum_float(const uint_tp n, vptr<const float> x, float* y) {

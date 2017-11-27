@@ -136,7 +136,7 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
     }
   }
 }
-#ifdef USE_GPU_HALF
+#ifdef USE_HALF
 template void caffe_conv(const Blob<half>* in,
     ConvolutionParameter* conv_param,
     const vector<shared_ptr<Blob<half> > >& weights,

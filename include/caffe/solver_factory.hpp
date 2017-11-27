@@ -53,7 +53,7 @@ class Solver;
 template <typename Dtype>
 class SolverRegistry {
  public:
-  typedef Solver<Dtype>* (*Creator)(const SolverParameter&);
+  typedef Solver<Dtype>* (*Creator)(const SolverParameter&, Device* dev);
   typedef std::map<string, Creator> CreatorRegistry;
 
   static CreatorRegistry& Registry();
@@ -62,7 +62,7 @@ class SolverRegistry {
   static void AddCreator(const string& type, Creator creator);
 
   // Get a solver using a SolverParameter.
-  static Solver<Dtype>* CreateSolver(const SolverParameter& param);
+  static Solver<Dtype>* CreateSolver(const SolverParameter& param, Device* dev);
 
   static vector<string> SolverTypeList();
 
@@ -78,21 +78,9 @@ template <typename Dtype>
 class SolverRegisterer {
  public:
   SolverRegisterer(const string& type,
-                   Solver<Dtype>* (*creator)(const SolverParameter&));
+                   Solver<Dtype>* (*creator)(const SolverParameter&,
+                   Device* dev));
 };
-
-#define REGISTER_SOLVER_CREATOR(type, creator)                                 \
-  static SolverRegisterer<float> g_creator_f_##type(#type, creator<float>);    \
-  static SolverRegisterer<double> g_creator_d_##type(#type, creator<double>)   \
-
-#define REGISTER_SOLVER_CLASS(type)                                            \
-  template <typename Dtype>                                                    \
-  Solver<Dtype>* Creator_##type##Solver(                                       \
-      const SolverParameter& param)                                            \
-  {                                                                            \
-    return new type##Solver<Dtype>(param);                                     \
-  }                                                                            \
-  REGISTER_SOLVER_CREATOR(type, Creator_##type##Solver)
 
 }  // namespace caffe
 

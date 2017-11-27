@@ -7,8 +7,8 @@ namespace caffe {
 
 template<typename Dtype, typename MItype, typename MOtype>
 void ReLULayer<Dtype, MItype, MOtype>::Reshape(
-      const vector<Blob<MItype>*>& bottom,
-      const vector<Blob<MOtype>*>& top) {
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
   NeuronLayer<Dtype, MItype, MOtype>::Reshape(bottom, top);
 
   if (Caffe::mode() == Caffe::GPU && this->device_program_.get() == nullptr) {
@@ -18,8 +18,8 @@ void ReLULayer<Dtype, MItype, MOtype>::Reshape(
 
 template<typename Dtype, typename MItype, typename MOtype>
 void ReLULayer<Dtype, MItype, MOtype>::Forward_cpu(
-                                     const vector<Blob<MItype>*>& bottom,
-                                     const vector<Blob<MOtype>*>& top) {
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = top[0]->mutable_cpu_data();
   const int_tp count = bottom[0]->count();
@@ -32,9 +32,9 @@ void ReLULayer<Dtype, MItype, MOtype>::Forward_cpu(
 
 template<typename Dtype, typename MItype, typename MOtype>
 void ReLULayer<Dtype, MItype, MOtype>::Backward_cpu(
-                                     const vector<Blob<MOtype>*>& top,
-                                     const vector<bool>& propagate_down,
-                                     const vector<Blob<MItype>*>& bottom) {
+    const vector<Blob<MOtype>*>& top,
+    const vector<bool>& propagate_down,
+    const vector<Blob<MItype>*>& bottom) {
   if (propagate_down[0]) {
     const Dtype* bottom_data = bottom[0]->cpu_data();
     const Dtype* top_diff = top[0]->cpu_diff();
@@ -53,6 +53,10 @@ void ReLULayer<Dtype, MItype, MOtype>::Backward_cpu(
 STUB_GPU(ReLULayer);
 #endif
 
-INSTANTIATE_CLASS_3T(ReLULayer);
+INSTANTIATE_CLASS_3T(ReLULayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T(ReLULayer, (double), (double), (double));
 
+REGISTER_LAYER_CLASS(ReLU);
+REGISTER_LAYER_CLASS_INST(ReLU, (float), (float), (float));
+REGISTER_LAYER_CLASS_INST(ReLU, (double), (double), (double));
 }  // namespace caffe

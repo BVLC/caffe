@@ -6,13 +6,15 @@
 namespace caffe {
 
 template<typename Dtype, typename MItype, typename MOtype>
-void ReductionLayer<Dtype, MItype, MOtype>::LayerSetUp(const vector<Blob<MItype>*>& bottom,
+void ReductionLayer<Dtype, MItype, MOtype>::LayerSetUp(
+      const vector<Blob<MItype>*>& bottom,
       const vector<Blob<MOtype>*>& top) {
   op_ = this->layer_param_.reduction_param().operation();
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void ReductionLayer<Dtype, MItype, MOtype>::Reshape(const vector<Blob<MItype>*>& bottom,
+void ReductionLayer<Dtype, MItype, MOtype>::Reshape(
+      const vector<Blob<MItype>*>& bottom,
       const vector<Blob<MOtype>*>& top) {
   axis_ = bottom[0]->CanonicalAxisIndex(
       this->layer_param_.reduction_param().axis());
@@ -40,6 +42,7 @@ void ReductionLayer<Dtype, MItype, MOtype>::Reshape(const vector<Blob<MItype>*>&
 
 template<typename Dtype, typename MItype, typename MOtype>
 void ReductionLayer<Dtype, MItype, MOtype>::Forward_cpu(
+    const vector<Blob<MItype>*>& bottom,
     const vector<Blob<MOtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
   const Dtype* mult_data = NULL;
@@ -123,7 +126,11 @@ void ReductionLayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob<MOtyp
 STUB_GPU(ReductionLayer);
 #endif
 
-INSTANTIATE_CLASS_3T(ReductionLayer);
+INSTANTIATE_CLASS_3T(ReductionLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T(ReductionLayer, (double), (double), (double));
+
 REGISTER_LAYER_CLASS(Reduction);
+REGISTER_LAYER_CLASS_INST(Reduction, (float), (float), (float));
+REGISTER_LAYER_CLASS_INST(Reduction, (double), (double), (double));
 
 }  // namespace caffe

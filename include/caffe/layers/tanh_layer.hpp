@@ -27,7 +27,11 @@ class TanHLayer : public NeuronLayer<Dtype, MItype, MOtype> {
 
   virtual inline const char* type() const { return "TanH"; }
 
+  virtual void Reshape(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
+
  protected:
+
   /**
    * @param bottom input Blob vector (length 1)
    *   -# @f$ (n \times c \times H \times W) @f$

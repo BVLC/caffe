@@ -16,7 +16,8 @@ void TanHLayer<Dtype, MItype, MOtype>::Reshape(
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void TanHLayer<Dtype, MItype, MOtype>::Forward_cpu(const vector<Blob<MItype>*>& bottom,
+void TanHLayer<Dtype, MItype, MOtype>::Forward_cpu(
+    const vector<Blob<MItype>*>& bottom,
     const vector<Blob<MOtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = top[0]->mutable_cpu_data();
@@ -27,7 +28,8 @@ void TanHLayer<Dtype, MItype, MOtype>::Forward_cpu(const vector<Blob<MItype>*>& 
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void TanHLayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob<MOtype>*>& top,
+void TanHLayer<Dtype, MItype, MOtype>::Backward_cpu(
+    const vector<Blob<MOtype>*>& top,
     const vector<bool>& propagate_down,
     const vector<Blob<MItype>*>& bottom) {
   if (propagate_down[0]) {
@@ -47,6 +49,11 @@ void TanHLayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob<MOtype>*>&
 STUB_GPU(TanHLayer);
 #endif
 
-INSTANTIATE_CLASS_3T(TanHLayer);
+INSTANTIATE_CLASS_3T(TanHLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T(TanHLayer, (double), (double), (double));
+
+REGISTER_LAYER_CLASS(TanH);
+REGISTER_LAYER_CLASS_INST(TanH, (float), (float), (float));
+REGISTER_LAYER_CLASS_INST(TanH, (double), (double), (double));
 
 }  // namespace caffe

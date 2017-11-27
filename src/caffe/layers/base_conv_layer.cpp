@@ -249,14 +249,6 @@ void BaseConvolutionLayer<Dtype, MItype, MOtype>::Reshape(
   }
 
   col_buffer_.Reshape(col_buffer_shape_);
-  if (Caffe::mode() == Caffe::Brew::GPU && use_colbuffer_) {
-    // Shared column buffer per device-queue across all layers on that device
-    for (int_tp i = 0; i < this->device_->num_queues(); ++i) {
-      shared_ptr<Blob<Dtype> > buffer = this->device_
-          ->template Buffer<Dtype>(i);
-      buffer->Reshape(col_buffer_shape_);
-    }
-  }
 
   bottom_dim_ = bottom[0]->count(channel_axis_);
   top_dim_ = top[0]->count(channel_axis_);
@@ -382,6 +374,7 @@ void BaseConvolutionLayer<Dtype, MItype, MOtype>::forward_gpu_gemm(
         col_buff + (is_1x1_ ? input_off : 0) + col_offset_ * g, (Dtype) 0.,
         output + output_off + output_offset_ * g);
   }
+  unlock_col_buffer();
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
@@ -416,6 +409,7 @@ void BaseConvolutionLayer<Dtype, MItype, MOtype>::backward_gpu_gemm(
   if (!is_1x1_) {
     conv_col2im_gpu(col_buff, input + input_off);
   }
+  unlock_col_buffer();
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
@@ -438,6 +432,7 @@ void BaseConvolutionLayer<Dtype, MItype, MOtype>::weight_gpu_gemm(
         col_buff + (is_1x1_ ? input_off : 0) + col_offset_ * g, (Dtype) 1.,
         weights + weight_offset_ * g);
   }
+  unlock_col_buffer();
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
@@ -453,9 +448,21 @@ void BaseConvolutionLayer<Dtype, MItype, MOtype>::backward_gpu_bias(
 template<typename Dtype, typename MItype, typename MOtype>
 shared_ptr<Blob<Dtype> >
           BaseConvolutionLayer<Dtype, MItype, MOtype>::col_buffer() {
-  return this->device_->template Buffer<Dtype>(
-      this->device_->current_queue_id());
+  if (col_buffer_lock_id_ == -1) {
+    shared_col_buffer_ = this->device_->template Buffer<Dtype>(
+                                       col_buffer_shape_, &col_buffer_lock_id_);
+  }
+  return shared_col_buffer_;
 }
+
+template<typename Dtype, typename MItype, typename MOtype>
+void BaseConvolutionLayer<Dtype, MItype, MOtype>::unlock_col_buffer() {
+  if (not (col_buffer_lock_id_ == -1)) {
+    shared_col_buffer_ = nullptr;
+    this->device_->unlock_buffer(&col_buffer_lock_id_);
+  }
+}
+
 
 #endif  // !CPU_ONLY
 

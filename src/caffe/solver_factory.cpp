@@ -23,13 +23,13 @@ void SolverRegistry<Dtype>::AddCreator(const string& type, Creator creator) {
 // Get a solver using a SolverParameter.
 template <typename Dtype>
 Solver<Dtype>* SolverRegistry<Dtype>::CreateSolver(
-    const SolverParameter& param) {
+    const SolverParameter& param, Device* dev) {
   const string& type = param.type();
   CreatorRegistry& registry = Registry();
   CHECK_EQ(registry.count(type), 1)
       << "Unknown solver type: " << type
       << " (known types: " << SolverTypeListString() << ")";
-  return registry[type](param);
+  return registry[type](param, dev);
 }
 
 template <typename Dtype>
@@ -64,11 +64,12 @@ string SolverRegistry<Dtype>::SolverTypeListString() {
 
 template <typename Dtype>
 SolverRegisterer<Dtype>::SolverRegisterer(
-    const string& type, Solver<Dtype>* (*creator)(const SolverParameter&)) {
+    const string& type, Solver<Dtype>* (*creator)(const SolverParameter&,
+        Device* dev)) {
   SolverRegistry<Dtype>::AddCreator(type, creator);
 }
 
-INSTANTIATE_CLASS(SolverRegistry);
-INSTANTIATE_CLASS(SolverRegisterer);
+INSTANTIATE_CLASS_1T(SolverRegistry, (half_fp)(float)(double));
+INSTANTIATE_CLASS_1T(SolverRegisterer, (half_fp)(float)(double));
 
 }  // namespace caffe

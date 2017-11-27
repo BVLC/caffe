@@ -4,6 +4,7 @@
 #include "caffe/common.hpp"
 #include "caffe/backend/device.hpp"
 #include "caffe/backend/opencl/caffe_opencl.hpp"
+#include "caffe/util/type_utils.hpp"
 
 namespace caffe {
 

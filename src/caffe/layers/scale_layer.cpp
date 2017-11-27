@@ -52,7 +52,8 @@ void ScaleLayer<Dtype, MItype, MOtype>::LayerSetUp(const vector<Blob<MItype>*>& 
       bias_param->set_num_axes(param.num_axes());
     }
     bias_param->mutable_filler()->CopyFrom(param.bias_filler());
-    bias_layer_ = LayerRegistry<Dtype>::CreateLayer(layer_param);
+    bias_layer_ =
+        LayerRegistry<Dtype, MItype, MOtype>::CreateLayer(layer_param);
     bias_bottom_vec_.resize(1);
     bias_bottom_vec_[0] = bottom[0];
     bias_layer_->SetUp(bias_bottom_vec_, top);
@@ -228,7 +229,11 @@ void ScaleLayer<Dtype, MItype, MOtype>::Backward_cpu(
 STUB_GPU(ScaleLayer);
 #endif
 
-INSTANTIATE_CLASS_3T(ScaleLayer);
+INSTANTIATE_CLASS_3T(ScaleLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T(ScaleLayer, (double), (double), (double));
+
 REGISTER_LAYER_CLASS(Scale);
+REGISTER_LAYER_CLASS_INST(Scale, (float), (float), (float));
+REGISTER_LAYER_CLASS_INST(Scale, (double), (double), (double));
 
 }  // namespace caffe

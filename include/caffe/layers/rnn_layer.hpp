@@ -30,7 +30,7 @@ template<typename Dtype, typename MItype, typename MOtype>
 class RNNLayer : public RecurrentLayer<Dtype, MItype, MOtype> {
  public:
   explicit RNNLayer(const LayerParameter& param)
-      : RecurrentLayer<Dtype>(param) {}
+      : RecurrentLayer<Dtype, MItype, MOtype>(param) {}
 
   virtual inline const char* type() const { return "RNN"; }
 

@@ -244,14 +244,23 @@ Dtype Solver<Dtype>::Step(int_tp iters) {
           << param_.display() << " iters), loss = " << smoothed_loss_;
       iteration_timer_.Start();
       iterations_last_ = iter_;
-      const vector<Blob<Dtype>*>& result = net_->output_blobs();
+      const vector<BlobBase*>& result = net_->output_blobs();
       int_tp score_index = 0;
       for (int_tp j = 0; j < result.size(); ++j) {
-        const Dtype* result_vec = result[j]->cpu_data();
+        int_tp buffer_id = -1;
+        const Dtype* result_vec = nullptr;
+        if (result[j]->data_type() == proto_data_type<Dtype>()) {
+          result_vec = static_cast<Blob<Dtype>*>(result[j])->cpu_data();
+        } else {
+          Dtype* temp_result_vec = this->device_->template Buffer<Dtype>(
+            result[j]->shape(), &buffer_id)->mutable_cpu_data();
+          result[j]->cpu_data(temp_result_vec);
+          result_vec = temp_result_vec;
+        }
         const string& output_name =
-        net_->blob_names()[net_->output_blob_indices()[j]];
+            net_->blob_names()[net_->output_blob_indices()[j]];
         const Dtype loss_weight =
-        net_->blob_loss_weights()[net_->output_blob_indices()[j]];
+            net_->blob_loss_weights()[net_->output_blob_indices()[j]];
         for (int_tp k = 0; k < result[j]->count(); ++k) {
           ostringstream loss_msg_stream;
           if (loss_weight) {
@@ -262,6 +271,7 @@ Dtype Solver<Dtype>::Step(int_tp iters) {
               << score_index++ << ": " << output_name << " = "
               << result_vec[k] << loss_msg_stream.str();
         }
+        this->device_->unlock_buffer(&buffer_id);
       }
     }
     for (int_tp i = 0; i < callbacks_.size(); ++i) {
@@ -378,26 +388,46 @@ void Solver<Dtype>::Test(const int_tp test_net_id) {
     }
 
     Dtype iter_loss;
-    const vector<Blob<Dtype>*>& result =
+    const vector<BlobBase*>& result =
         test_net->Forward(&iter_loss);
     if (param_.test_compute_loss()) {
       loss += iter_loss;
     }
     if (i == 0) {
       for (int_tp j = 0; j < result.size(); ++j) {
-        const Dtype* result_vec = result[j]->cpu_data();
+        int_tp buffer_id = -1;
+        const Dtype* result_vec = nullptr;
+        if (result[j]->data_type() == proto_data_type<Dtype>()) {
+          result_vec = static_cast<Blob<Dtype>*>(result[j])->cpu_data();
+        } else {
+          Dtype* temp_result_vec = this->device_->template Buffer<Dtype>(
+            result[j]->shape(), &buffer_id)->mutable_cpu_data();
+          result[j]->cpu_data(temp_result_vec);
+          result_vec = temp_result_vec;
+        }
         for (int_tp k = 0; k < result[j]->count(); ++k) {
           test_score.push_back(result_vec[k]);
           test_score_output_id.push_back(j);
         }
+        this->device_->unlock_buffer(&buffer_id);
       }
     } else {
       int_tp idx = 0;
       for (int_tp j = 0; j < result.size(); ++j) {
-        const Dtype* result_vec = result[j]->cpu_data();
+        int_tp buffer_id = -1;
+        const Dtype* result_vec = nullptr;
+        if (result[j]->data_type() == proto_data_type<Dtype>()) {
+          result_vec = static_cast<Blob<Dtype>*>(result[j])->cpu_data();
+        } else {
+          Dtype* temp_result_vec = this->device_->template Buffer<Dtype>(
+            result[j]->shape(), &buffer_id)->mutable_cpu_data();
+          result[j]->cpu_data(temp_result_vec);
+          result_vec = temp_result_vec;
+        }
         for (int_tp k = 0; k < result[j]->count(); ++k) {
           test_score[idx++] += result_vec[k];
         }
+        this->device_->unlock_buffer(&buffer_id);
       }
     }
   }
@@ -510,7 +540,7 @@ void Solver<Dtype>::UpdateSmoothedLoss(Dtype loss, int_tp start_iter,
   }
 }
 
-INSTANTIATE_CLASS(Solver);
+INSTANTIATE_CLASS_1T(Solver, (half_fp)(float)(double));
 
 }  // namespace caffe
 

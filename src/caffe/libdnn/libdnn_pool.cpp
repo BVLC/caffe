@@ -201,7 +201,7 @@ template<typename Dtype>
 string LibDNNPool<Dtype>::generate_fw_kernels(string name,
                                                    bool test_mode) {
   stringstream ss;
-#ifdef USE_GPU_HALF
+#ifdef USE_HALF
   if (std::is_same<Dtype, half_fp>::value) {
     ss << "#define DTYPE_MAX HALF_MAX" << std::endl;
     ss << "#define DTYPE_MIN HALF_MIN" << std::endl;
@@ -209,7 +209,7 @@ string LibDNNPool<Dtype>::generate_fw_kernels(string name,
 #endif
     ss << "#define DTYPE_MAX FLT_MAX" << std::endl;
     ss << "#define DTYPE_MIN FLT_MIN" << std::endl;
-#ifdef USE_GPU_HALF
+#ifdef USE_HALF
   }
 #endif
 

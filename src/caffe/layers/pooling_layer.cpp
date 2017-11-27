@@ -446,6 +446,11 @@ void PoolingLayer<Dtype, MItype, MOtype>::Backward_cpu(
 STUB_GPU(PoolingLayer);
 #endif
 
-INSTANTIATE_CLASS_3T(PoolingLayer);
+INSTANTIATE_CLASS_3T(PoolingLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T(PoolingLayer, (double), (double), (double));
+
+REGISTER_LAYER_CLASS(Pooling);
+REGISTER_LAYER_CLASS_INST(Pooling, (float), (float), (float));
+REGISTER_LAYER_CLASS_INST(Pooling, (double), (double), (double));
 
 }    // namespace caffe

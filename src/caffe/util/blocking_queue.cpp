@@ -84,7 +84,7 @@ uint_tp BlockingQueue<T>::size() const {
   boost::mutex::scoped_lock lock(sync_->mutex_);
   return queue_.size();
 }
-#ifdef USE_GPU_HALF
+#ifdef USE_HALF
 template class BlockingQueue<Batch<half>*>;
 #endif
 template class BlockingQueue<Batch<float>*>;

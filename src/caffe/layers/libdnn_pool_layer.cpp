@@ -1,6 +1,6 @@
 #include <algorithm>
 #include <vector>
-#include "caffe/greentea/greentea.hpp"
+
 #ifdef USE_LIBDNN
 
 #include "caffe/layers/libdnn_pool_layer.hpp"
@@ -9,6 +9,7 @@ namespace caffe {
 
 template<typename Dtype, typename MItype, typename MOtype>
 void LibDNNPoolingLayer<Dtype, MItype, MOtype>::LayerSetUp(
+    const vector<Blob<MItype>*>& bottom,
     const vector<Blob<MOtype>*>& top) {
   PoolingLayer<Dtype, MItype, MOtype>::LayerSetUp(bottom, top);
 
@@ -17,6 +18,7 @@ void LibDNNPoolingLayer<Dtype, MItype, MOtype>::LayerSetUp(
 
 template<typename Dtype, typename MItype, typename MOtype>
 void LibDNNPoolingLayer<Dtype, MItype, MOtype>::Reshape(
+    const vector<Blob<MItype>*>& bottom,
     const vector<Blob<MOtype>*>& top) {
 
   PoolingLayer<Dtype, MItype, MOtype>::Reshape(bottom, top);
@@ -91,7 +93,8 @@ void LibDNNPoolingLayer<Dtype, MItype, MOtype>::Reshape(
       config.bwalgo = LIBDNN_POOLING_BW_ALGO_DIRECT;
     }
 
-    LibDNNPool<Dtype>* libdnn = new LibDNNPool<Dtype>(config);
+    LibDNNPool<Dtype, MItype, MOtype>* libdnn =
+        new LibDNNPool<Dtype, MItype, MOtype>(config);
 
     libdnn_.reset(libdnn);
   }
@@ -103,19 +106,20 @@ LibDNNPoolingLayer<Dtype, MItype, MOtype>::~LibDNNPoolingLayer() {
 
 template<typename Dtype, typename MItype, typename MOtype>
 void LibDNNPoolingLayer<Dtype, MItype, MOtype>::Forward_gpu(
+    const vector<Blob<MItype>*>& bottom,
     const vector<Blob<MOtype>*>& top) {
 
   const bool use_top_mask = top.size() > 1;
 
-  const Dtype* bottom_data = bottom[0]->gpu_data();
-  Dtype* top_data = top[0]->mutable_gpu_data();
+  vptr<const MItype> bottom_data = bottom[0]->gpu_data();
+  vptr<MOtype> top_data = top[0]->mutable_gpu_data();
   int_tp count = top[0]->count();
 
   bool test_mode = this->phase_ == caffe::TEST;
 
-  int_tp* mask = nullptr;
-  Dtype* top_mask = nullptr;
-  Dtype* rand_idx = nullptr;
+  vptr<int_tp> mask;
+  vptr<MOtype> top_mask;
+  vptr<Dtype> rand_idx;
 
 
   switch (this->layer_param_.pooling_param().pool()) {
@@ -128,18 +132,8 @@ void LibDNNPoolingLayer<Dtype, MItype, MOtype>::Forward_gpu(
       break;
     case PoolingParameter_PoolMethod_STOCHASTIC:
       if (!test_mode) {
-        if (this->device_->backend() == BACKEND_CUDA) {
-#ifdef USE_CUDA
-          caffe_gpu_rng_uniform(count, Dtype(0), Dtype(1),
+          this->device_->template rng_uniform<Dtype>(count, Dtype(0), Dtype(1),
             this->rand_idx_.mutable_gpu_data());
-#endif  // USE_CUDA
-        } else {
-#ifdef USE_OPENCL
-          greentea_gpu_rng_uniform(this->device_->id(), count,
-            Dtype(0), Dtype(1),
-            (cl_mem)(this->rand_idx_.mutable_gpu_data()), 0);
-#endif  // USE_OPENCL
-        }
         rand_idx = this->rand_idx_.mutable_gpu_data();
       }
       break;
@@ -161,13 +155,13 @@ void LibDNNPoolingLayer<Dtype, MItype, MOtype>::Backward_gpu(
 
   const bool use_top_mask = top.size() > 1;
 
-  const Dtype* top_diff = top[0]->gpu_diff();
-  Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
+  vptr<const MOtype> top_diff = top[0]->gpu_diff();
+  vptr<MItype> bottom_diff = bottom[0]->mutable_gpu_diff();
   const int_tp count = bottom[0]->count();
 
-  const int_tp* mask = nullptr;
-  const Dtype* top_mask = nullptr;
-  const Dtype* rand_idx = nullptr;
+  vptr<const int_tp> mask;
+  vptr<const MOtype> top_mask;
+  vptr<const Dtype> rand_idx;
 
 
   switch (this->layer_param_.pooling_param().pool()) {
@@ -183,16 +177,7 @@ void LibDNNPoolingLayer<Dtype, MItype, MOtype>::Backward_gpu(
       break;
   }
 
-  if (this->device_->backend() == BACKEND_CUDA) {
-#ifdef USE_CUDA
-    this->device_->set(count, Dtype(0.), bottom_diff);
-#endif  // USE_CUDA
-  } else {
-#ifdef USE_OPENCL
-    greentea_gpu_set(this->device_->id(), count, Dtype(0.),
-        (cl_mem) bottom_diff, 0);
-#endif  // USE_OPENCL
-  }
+  this->device_->set(count, Dtype(0.), bottom_diff);
 
   libdnn_.get()->Backward(top_diff,
                           bottom_diff,
@@ -202,8 +187,8 @@ void LibDNNPoolingLayer<Dtype, MItype, MOtype>::Backward_gpu(
 }
 
 
-INSTANTIATE_CLASS_3T(LibDNNPoolingLayer);
-
+INSTANTIATE_CLASS_3T(LibDNNPoolingLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T(LibDNNPoolingLayer, (double), (double), (double));
 
 }   // namespace caffe
 #endif  // USE_LIBDNN

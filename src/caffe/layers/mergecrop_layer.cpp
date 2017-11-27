@@ -92,7 +92,11 @@ void MergeCropLayer<Dtype, MItype, MOtype>::Backward_cpu(
 STUB_GPU(MergeCropLayer);
 #endif
 
-INSTANTIATE_CLASS_3T(MergeCropLayer);
+INSTANTIATE_CLASS_3T(MergeCropLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T(MergeCropLayer, (double), (double), (double));
+
 REGISTER_LAYER_CLASS(MergeCrop);
+REGISTER_LAYER_CLASS_INST(MergeCrop, (float), (float), (float));
+REGISTER_LAYER_CLASS_INST(MergeCrop, (double), (double), (double));
 
 }  // namespace caffe

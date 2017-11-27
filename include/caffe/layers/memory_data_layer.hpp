@@ -20,7 +20,7 @@ template<typename Dtype, typename MItype, typename MOtype>
 class MemoryDataLayer : public BaseDataLayer<Dtype, MItype, MOtype> {
  public:
   explicit MemoryDataLayer(const LayerParameter& param)
-      : BaseDataLayer<Dtype>(param), has_new_data_(false) {}
+      : BaseDataLayer<Dtype, MItype, MOtype>(param), has_new_data_(false) {}
   virtual void DataLayerSetUp(const vector<Blob<MItype>*>& bottom,
       const vector<Blob<MOtype>*>& top);
 

@@ -26,11 +26,6 @@ const uint64_t KERNEL_ARG_GLOBAL_MEM    =            1ULL <<   1;
 const uint64_t KERNEL_ARG_LOCAL_MEM     =            1ULL <<   2;
 const uint64_t KERNEL_ARG_MEM_OFFSET    =            1ULL <<   3;
 
-template<typename T>
-size_t safe_sizeof();
-
-template<typename T>
-string safe_type_name();
 
 template<typename Dtype>
 struct const_enable_if

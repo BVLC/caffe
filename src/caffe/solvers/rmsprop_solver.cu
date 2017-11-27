@@ -60,23 +60,23 @@ void rmsprop_update_gpu(Device* dev, DeviceProgram* dev_prog, uint_tp n,
   kernel->Execute(group, local);
 }
 
-#ifdef USE_GPU_HALF
+#ifdef USE_HALF
 template void rmsprop_update_gpu<half_fp>(Device* dev,
               DeviceProgram* dev_prog, uint_tp n, vptr<half_fp> g,
               vptr<half_fp> h, half_fp rms_decay,
               half_fp delta, half_fp local_rate);
-#endif  // USE_GPU_HALF
-#ifdef USE_GPU_SINGLE
+#endif  // USE_HALF
+#ifdef USE_SINGLE
 template void rmsprop_update_gpu<float>(Device* dev,
               DeviceProgram* dev_prog, uint_tp n, vptr<float> g,
               vptr<float> h, float rms_decay, float delta,
               float local_rate);
-#endif  // USE_GPU_HALF
-#ifdef USE_GPU_DOUBLE
+#endif  // USE_HALF
+#ifdef USE_DOUBLE
 template void rmsprop_update_gpu<double>(Device* dev,
               DeviceProgram* dev_prog, uint_tp n, vptr<double> g,
               vptr<double> h, double rms_decay, double delta,
               double local_rate);
-#endif  // USE_GPU_DOUBLE
+#endif  // USE_DOUBLE
 
 }  // namespace caffe

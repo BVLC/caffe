@@ -1,6 +1,7 @@
 #include "caffe/common.hpp"
 #include "caffe/backend/backend.hpp"
 #include "caffe/backend/opencl/ocl_dev_ptr.hpp"
+#include "caffe/util/type_utils.hpp"
 
 namespace caffe {
 

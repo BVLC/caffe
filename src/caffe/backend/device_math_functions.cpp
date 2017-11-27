@@ -1,5 +1,6 @@
 #include "caffe/backend/device_program.hpp"
 #include "caffe/backend/device.hpp"
+#include "caffe/util/type_utils.hpp"
 
 namespace caffe {
 
@@ -584,15 +585,15 @@ void Device::CreateMathProgram() {
     ss << "}" << std::endl;
   }
 
-#ifdef USE_GPU_HALF
+#ifdef USE_HALF
   ss << create_source<half_fp>(this, this->math_program_);
 #endif
 
-#ifdef USE_GPU_SINGLE
+#ifdef USE_SINGLE
   ss << create_source<float>(this, this->math_program_);
 #endif
 
-#ifdef USE_GPU_DOUBLE
+#ifdef USE_DOUBLE
   ss << create_source<double>(this, this->math_program_);
 #endif
 

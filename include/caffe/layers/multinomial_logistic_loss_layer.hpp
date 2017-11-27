@@ -45,7 +45,7 @@ class MultinomialLogisticLossLayer
     : public LossLayer<Dtype, MItype, MOtype> {
  public:
   explicit MultinomialLogisticLossLayer(const LayerParameter& param)
-      : LossLayer<Dtype>(param) {}
+      : LossLayer<Dtype, MItype, MOtype>(param) {}
   virtual void Reshape(const vector<Blob<MItype>*>& bottom,
       const vector<Blob<MOtype>*>& top);
 

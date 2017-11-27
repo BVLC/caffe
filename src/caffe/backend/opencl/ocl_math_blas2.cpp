@@ -11,7 +11,7 @@ void OclDevice::gemv_half(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
                           vptr<const half_fp> x,
                           const half_fp beta,
                           vptr<half_fp> y) {
-#if defined(USE_GPU_HALF)
+#if defined(USE_HALF)
   uint_tp offA = a.get_ocl_off();
   uint_tp offx = x.get_ocl_off();
   uint_tp offy = y.get_ocl_off();
@@ -54,9 +54,9 @@ void OclDevice::gemv_half(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
 #else  // default (ViennaCL)
     NOT_IMPLEMENTED;
 #endif  // clBLAS, CLBlast, or default (ViennaCL)
-#else  // USE_GPU_HALF
+#else  // USE_HALF
   NOT_IMPLEMENTED;
-#endif // USE_GPU_HALF
+#endif // USE_HALF
 }
 
 void OclDevice::gemv_float(const CBLAS_TRANSPOSE trans_a, const uint_tp m,

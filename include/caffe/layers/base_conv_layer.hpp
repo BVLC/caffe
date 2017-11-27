@@ -18,7 +18,7 @@ template<typename Dtype, typename MItype, typename MOtype>
 class BaseConvolutionLayer : public Layer<Dtype, MItype, MOtype> {
  public:
   explicit BaseConvolutionLayer(const LayerParameter& param)
-      : Layer<Dtype, MItype, MOtype>(param) {
+      : Layer<Dtype, MItype, MOtype>(param), col_buffer_lock_id_(-1) {
   }
   virtual void LayerSetUp(const vector<Blob<MItype>*>& bottom,
                           const vector<Blob<MOtype>*>& top);
@@ -63,6 +63,7 @@ class BaseConvolutionLayer : public Layer<Dtype, MItype, MOtype> {
                          const uint_tp input_off);
 
   shared_ptr<Blob<Dtype> > col_buffer();
+  void unlock_col_buffer();
 #endif
 
   /// @brief The spatial dimensions of the input.
@@ -184,6 +185,8 @@ class BaseConvolutionLayer : public Layer<Dtype, MItype, MOtype> {
   bool use_skernel_;
 
   Blob<Dtype> col_buffer_;
+  shared_ptr<Blob<Dtype> > shared_col_buffer_;
+  int_tp col_buffer_lock_id_;
   Blob<Dtype> bias_multiplier_;
 };
 

@@ -65,7 +65,7 @@ Dtype SGDSolver<Dtype>::GetLearningRate() {
 template<typename Dtype>
 void SGDSolver<Dtype>::PreSolve() {
   // Initialize the history
-  const vector<Blob<Dtype>*>& net_params = this->net_->learnable_params();
+  const vector<BlobBase*>& net_params = this->net_->learnable_params();
   history_.clear();
   update_.clear();
   temp_.clear();
@@ -85,12 +85,27 @@ void SGDSolver<Dtype>::PreSolve() {
 
 template<typename Dtype>
 void SGDSolver<Dtype>::ClipGradients() {
+  int_tp buffer_id = -1;
+  Blob<Dtype>* net_param = nullptr;
+
   const Dtype clip_gradients = this->param_.clip_gradients();
   if (clip_gradients < 0) { return; }
-  const vector<Blob<Dtype>*>& net_params = this->net_->learnable_params();
+  const vector<BlobBase*>& net_params = this->net_->learnable_params();
   Dtype sumsq_diff = 0;
   for (uint_tp i = 0; i < net_params.size(); ++i) {
-    sumsq_diff += net_params[i]->sumsq_diff();
+    if (net_params[i]->data_type() == proto_data_type<Dtype>()) {
+      net_param = static_cast<Blob<Dtype>*>(net_params[i]);
+    } else {
+      net_param = this->device_->template Buffer<Dtype>(
+        net_params[i]->shape(), &buffer_id).get();
+      Dtype* cpu_diff = this->device_->template Buffer<Dtype>(
+        net_params[i]->shape(), &buffer_id)->mutable_cpu_diff();
+      net_params[i]->cpu_diff(cpu_diff);
+    }
+    sumsq_diff += net_param->sumsq_diff();
+    if (net_params[i]->data_type() != proto_data_type<Dtype>()) {
+      this->device_->unlock_buffer(&buffer_id);
+    }
   }
   const Dtype l2norm_diff = std::sqrt(sumsq_diff);
   if (l2norm_diff > clip_gradients) {
@@ -99,7 +114,19 @@ void SGDSolver<Dtype>::ClipGradients() {
     << l2norm_diff << " > " << clip_gradients << ") "
     << "by scale factor " << scale_factor;
     for (uint_tp i = 0; i < net_params.size(); ++i) {
-      net_params[i]->scale_diff(scale_factor);
+      if (net_params[i]->data_type() == proto_data_type<Dtype>()) {
+        net_param = static_cast<Blob<Dtype>*>(net_params[i]);
+      } else {
+        net_param = this->device_->template Buffer<Dtype>(
+          net_params[i]->shape(), &buffer_id).get();
+        Dtype* cpu_diff = this->device_->template Buffer<Dtype>(
+          net_params[i]->shape(), &buffer_id)->mutable_cpu_diff();
+        net_params[i]->cpu_diff(cpu_diff);
+      }
+      net_param->scale_diff(scale_factor);
+      if (net_params[i]->data_type() != proto_data_type<Dtype>()) {
+        this->device_->unlock_buffer(&buffer_id);
+      }
     }
   }
 }
@@ -127,19 +154,48 @@ void SGDSolver<Dtype>::Normalize(int param_id) {
     return;
   }
   // Scale gradient to counterbalance accumulation.
-  const vector<Blob<Dtype>*>& net_params = this->net_->learnable_params();
+  const vector<BlobBase*>& net_params = this->net_->learnable_params();
   const Dtype accum_normalization = Dtype(1.) / this->param_.iter_size();
   switch (Caffe::mode()) {
     case Caffe::CPU: {
+      int_tp buffer_id = -1;
+      Dtype* cpu_diff = nullptr;
+      if (net_params[param_id]->data_type() == proto_data_type<Dtype>()) {
+        cpu_diff = static_cast<Blob<Dtype>*>(net_params[param_id])
+            ->mutable_cpu_diff();
+      } else {
+        cpu_diff = this->device_->template Buffer<Dtype>(
+          net_params[param_id]->shape(), &buffer_id)->mutable_cpu_diff();
+        net_params[param_id]->cpu_diff(cpu_diff);
+      }
+
       caffe_scal(net_params[param_id]->count(), accum_normalization,
-                 net_params[param_id]->mutable_cpu_diff());
+                 cpu_diff);
+
+      if (net_params[param_id]->data_type() != proto_data_type<Dtype>()) {
+        net_params[param_id]->set_cpu_diff(cpu_diff);
+        this->device_->unlock_buffer(&buffer_id);
+      }
       break;
     }
     case Caffe::GPU: {
 #ifndef CPU_ONLY
+      int_tp buffer_id = -1;
+      vptr<Dtype> gpu_diff;
+      if (net_params[param_id]->data_type() == proto_data_type<Dtype>()) {
+        gpu_diff = static_cast<Blob<Dtype>*>(net_params[param_id])
+            ->mutable_gpu_diff();
+      } else {
+        gpu_diff = this->device_->template Buffer<Dtype>(
+          net_params[param_id]->shape(), &buffer_id)->mutable_gpu_diff();
+        net_params[param_id]->gpu_diff(gpu_diff);
+      }
       this->device_->template scal<Dtype>(net_params[param_id]->count(),
-                                 accum_normalization,
-                                 net_params[param_id]->mutable_gpu_diff());
+                                 accum_normalization, gpu_diff);
+      if (net_params[param_id]->data_type() != proto_data_type<Dtype>()) {
+        net_params[param_id]->set_gpu_diff(gpu_diff);
+        this->device_->unlock_buffer(&buffer_id);
+      }
 #else
       NO_GPU;
 #endif
@@ -152,7 +208,7 @@ void SGDSolver<Dtype>::Normalize(int param_id) {
 
 template<typename Dtype>
 void SGDSolver<Dtype>::Regularize(int param_id) {
-  const vector<Blob<Dtype>*>& net_params = this->net_->learnable_params();
+  const vector<BlobBase*>& net_params = this->net_->learnable_params();
   const vector<float>& net_params_weight_decay =
       this->net_->params_weight_decay();
   Dtype weight_decay = this->param_.weight_decay();
@@ -161,20 +217,42 @@ void SGDSolver<Dtype>::Regularize(int param_id) {
   switch (Caffe::mode()) {
     case Caffe::CPU: {
       if (local_decay) {
+        int_tp buffer_id = -1;
+        const Dtype* cpu_data = nullptr;
+        Dtype* cpu_diff = nullptr;
+        if (net_params[param_id]->data_type() == proto_data_type<Dtype>()) {
+          cpu_data = static_cast<Blob<Dtype>*>(net_params[param_id])
+                  ->cpu_data();
+          cpu_diff = static_cast<Blob<Dtype>*>(net_params[param_id])
+                  ->mutable_cpu_diff();
+        } else {
+          Blob<Dtype>* buff = this->device_->template Buffer<Dtype>(
+            net_params[param_id]->shape(), &buffer_id).get();
+          Dtype* temp_cpu_data = buff->mutable_cpu_data();
+          cpu_diff = buff->mutable_cpu_diff();
+          net_params[param_id]->cpu_data(temp_cpu_data);
+          net_params[param_id]->cpu_diff(cpu_diff);
+          cpu_data = temp_cpu_data;
+        }
+
         if (regularization_type == "L2") {
           // add weight decay
           caffe_axpy(net_params[param_id]->count(), local_decay,
-                     net_params[param_id]->cpu_data(),
-                     net_params[param_id]->mutable_cpu_diff());
+                     cpu_data,
+                     cpu_diff);
         } else if (regularization_type == "L1") {
           caffe_cpu_sign(net_params[param_id]->count(),
-                         net_params[param_id]->cpu_data(),
+                         cpu_data,
                          temp_[param_id]->mutable_cpu_data());
           caffe_axpy(net_params[param_id]->count(), local_decay,
                      temp_[param_id]->cpu_data(),
-                     net_params[param_id]->mutable_cpu_diff());
+                     cpu_diff);
         } else {
           LOG(FATAL)<< "Unknown regularization type: " << regularization_type;
+        }
+        if (net_params[param_id]->data_type() != proto_data_type<Dtype>()) {
+          net_params[param_id]->set_cpu_diff(cpu_diff);
+          this->device_->unlock_buffer(&buffer_id);
         }
       }
       break;
@@ -182,23 +260,40 @@ void SGDSolver<Dtype>::Regularize(int param_id) {
     case Caffe::GPU: {
 #ifndef CPU_ONLY
       if (local_decay) {
+        int_tp buffer_id = -1;
+        vptr<const Dtype> gpu_data;
+        vptr<Dtype> gpu_diff;
+        if (net_params[param_id]->data_type() == proto_data_type<Dtype>()) {
+          gpu_data = static_cast<Blob<Dtype>*>(net_params[param_id])
+                  ->gpu_data();
+          gpu_diff = static_cast<Blob<Dtype>*>(net_params[param_id])
+                  ->mutable_gpu_diff();
+        } else {
+          Blob<Dtype>* buff = this->device_->template Buffer<Dtype>(
+            net_params[param_id]->shape(), &buffer_id).get();
+          vptr<Dtype> temp_gpu_data = buff->mutable_gpu_data();
+          gpu_diff = buff->mutable_gpu_diff();
+          net_params[param_id]->gpu_data(temp_gpu_data);
+          net_params[param_id]->gpu_diff(gpu_diff);
+          gpu_data = temp_gpu_data;
+        }
+
         if (regularization_type == "L2") {
           // add weight decay
-          this->device_->axpy<Dtype>(net_params[param_id]->count(),
-              local_decay,
-              net_params[param_id]->gpu_data(),
-              net_params[param_id]->mutable_gpu_diff());
+          this->device_->template axpy<Dtype>(net_params[param_id]->count(),
+              local_decay, gpu_data, gpu_diff);
         } else if (regularization_type == "L1") {
-          this->device_->sign<Dtype>(net_params[param_id]->count(),
-              net_params[param_id]->gpu_data(),
-              temp_[param_id]->mutable_gpu_data());
-          this->device_->axpy<Dtype>(net_params[param_id]->count(),
-              local_decay,
-              temp_[param_id]->gpu_data(),
-              net_params[param_id]->mutable_gpu_diff());
+          this->device_->template sign<Dtype>(net_params[param_id]->count(),
+              gpu_data, temp_[param_id]->mutable_gpu_data());
+          this->device_->template axpy<Dtype>(net_params[param_id]->count(),
+              local_decay, temp_[param_id]->gpu_data(), gpu_diff);
         } else {
           LOG(FATAL)<< "Unknown regularization type: "
               << regularization_type;
+        }
+        if (net_params[param_id]->data_type() != proto_data_type<Dtype>()) {
+          net_params[param_id]->set_gpu_diff(gpu_diff);
+          this->device_->unlock_buffer(&buffer_id);
         }
       }
 #else
@@ -221,28 +316,57 @@ void sgd_update_gpu(Device* dev, DeviceProgram* dev_prog,
 
 template <typename Dtype>
 void SGDSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
-  const vector<Blob<Dtype>*>& net_params = this->net_->learnable_params();
+  const vector<BlobBase*>& net_params = this->net_->learnable_params();
   const vector<float>& net_params_lr = this->net_->params_lr();
   Dtype momentum = this->param_.momentum();
   Dtype local_rate = rate * net_params_lr[param_id];
   // Compute the update to history, then copy it to the parameter diff.
   switch (Caffe::mode()) {
     case Caffe::CPU: {
-      caffe_cpu_axpby(net_params[param_id]->count(), local_rate,
-                      net_params[param_id]->cpu_diff(), momentum,
-                      history_[param_id]->mutable_cpu_data());
+      int_tp buffer_id = -1;
+      Dtype* cpu_diff = nullptr;
+      if (net_params[param_id]->data_type() == proto_data_type<Dtype>()) {
+        cpu_diff = static_cast<Blob<Dtype>*>(net_params[param_id])
+            ->mutable_cpu_diff();
+      } else {
+        cpu_diff = this->device_->template Buffer<Dtype>(
+          net_params[param_id]->shape(), &buffer_id)->mutable_cpu_diff();
+        net_params[param_id]->cpu_diff(cpu_diff);
+      }
+
+      caffe_cpu_axpby(net_params[param_id]->count(), local_rate, cpu_diff,
+                      momentum, history_[param_id]->mutable_cpu_data());
       caffe_cpu_copy(net_params[param_id]->count(),
-                     history_[param_id]->cpu_data(),
-                 net_params[param_id]->mutable_cpu_diff());
+                     history_[param_id]->cpu_data(), cpu_diff);
+
+      if (net_params[param_id]->data_type() != proto_data_type<Dtype>()) {
+        net_params[param_id]->set_cpu_diff(cpu_diff);
+        this->device_->unlock_buffer(&buffer_id);
+      }
       break;
     }
     case Caffe::GPU: {
 #ifndef CPU_ONLY
-    sgd_update_gpu(this->device_, this->device_program_.get(),
-                   net_params[param_id]->count(),
-                   net_params[param_id]->mutable_gpu_diff(),
-                   history_[param_id]->mutable_gpu_data(),
-                   momentum, local_rate);
+      int_tp buffer_id = -1;
+      vptr<Dtype> gpu_diff;
+      if (net_params[param_id]->data_type() == proto_data_type<Dtype>()) {
+        gpu_diff = static_cast<Blob<Dtype>*>(net_params[param_id])
+            ->mutable_gpu_diff();
+      } else {
+        gpu_diff = this->device_->template Buffer<Dtype>(
+          net_params[param_id]->shape(), &buffer_id)->mutable_gpu_diff();
+        net_params[param_id]->gpu_diff(gpu_diff);
+      }
+
+      sgd_update_gpu(this->device_, this->device_program_.get(),
+                     net_params[param_id]->count(), gpu_diff,
+                     history_[param_id]->mutable_gpu_data(),
+                     momentum, local_rate);
+
+      if (net_params[param_id]->data_type() != proto_data_type<Dtype>()) {
+        net_params[param_id]->set_gpu_diff(gpu_diff);
+        this->device_->unlock_buffer(&buffer_id);
+      }
 #else
       NO_GPU;
 #endif
@@ -370,7 +494,8 @@ void SGDSolver<Dtype>::RestoreSolverStateFromHDF5(const string& state_file) {
 #endif  // USE_HDF5
 }
 
-INSTANTIATE_CLASS_1T(SGDSolver);
+INSTANTIATE_CLASS_1T(SGDSolver, (half_fp)(float)(double));
 REGISTER_SOLVER_CLASS(SGD);
+REGISTER_SOLVER_CLASS_INST(SGD, (half_fp)(float)(double));
 
 }  // namespace caffe

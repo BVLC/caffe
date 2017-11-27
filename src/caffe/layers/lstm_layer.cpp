@@ -243,7 +243,11 @@ void LSTMLayer<Dtype, MItype, MOtype>::FillUnrolledNet(
   net_param->add_layer()->CopyFrom(output_concat_layer);
 }
 
-INSTANTIATE_CLASS_3T(LSTMLayer);
+INSTANTIATE_CLASS_3T(LSTMLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T(LSTMLayer, (double), (double), (double));
+
 REGISTER_LAYER_CLASS(LSTM);
+REGISTER_LAYER_CLASS_INST(LSTM, (float), (float), (float));
+REGISTER_LAYER_CLASS_INST(LSTM, (double), (double), (double));
 
 }  // namespace caffe
