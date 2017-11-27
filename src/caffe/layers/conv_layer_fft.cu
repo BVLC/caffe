@@ -519,6 +519,51 @@ void ConvolutionLayerFFT<double>::Backward_gpu(
   NOT_IMPLEMENTED;
 }
 
+// half instantiation
+template<>
+void ConvolutionLayerFFT<half>::fft_gpu_setup() {
+  NOT_IMPLEMENTED;
+}
+
+template<>
+void ConvolutionLayerFFT<half>::fft_gpu_clean() {
+  NOT_IMPLEMENTED;
+}
+
+template<>
+void ConvolutionLayerFFT<half>::Forward_gpu_fft(
+    const vector<Blob<half>*>& bottom, const vector<Blob<half>*>& top) {
+  NOT_IMPLEMENTED;
+}
+template<>
+void ConvolutionLayerFFT<half>::Forward_gpu_fft_task(
+    const half *bottom_data, int bottom_data_offset, half* top_data,
+    int top_data_offset, int n, int ch_gr, int out_gr) {
+  NOT_IMPLEMENTED;
+}
+template<>
+void ConvolutionLayerFFT<half>::fft_gpu_compute_weights() {
+  NOT_IMPLEMENTED;
+}
+template<> void ConvolutionLayerFFT<half>::Backward_gpu_fft_task(
+    const vector<Blob<half>*>& bottom, const vector<Blob<half>*>& top,
+    const half* weight, int i, int n, int ch_gr, int out_gr) {
+  NOT_IMPLEMENTED;
+}
+template <>
+void ConvolutionLayerFFT<half>::Forward_gpu(
+         const vector<Blob<half>*>& bottom,
+         const vector<Blob<half>*>& top) {
+  NOT_IMPLEMENTED;
+}
+template <>
+void ConvolutionLayerFFT<half>::Backward_gpu(
+         const vector<Blob<half>*>& top,
+         const vector<bool>& propagate_down,
+         const vector<Blob<half>*>& bottom) {
+  NOT_IMPLEMENTED;
+}
+
 INSTANTIATE_LAYER_GPU_FUNCS(ConvolutionLayerFFT);
 
 }  // namespace caffe
