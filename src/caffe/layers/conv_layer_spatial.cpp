@@ -1007,9 +1007,10 @@ cl_int ConvolutionLayerSpatial<Dtype>::convolve(
       kernel.arg(argIdx++, (uint16_t)output_h_);
 
       size_t globalSize[3];
-      globalSize[0] = output_w_;
-      globalSize[1] = output_h_;
-      globalSize[2] = this->num_output_*this->num_;
+
+      globalSize[0] = this->num_output_*this->num_;
+      globalSize[1] = output_w_;
+      globalSize[2] = output_h_;
       err = clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
                                    kernel.handle().get(), 3,
                                    NULL,

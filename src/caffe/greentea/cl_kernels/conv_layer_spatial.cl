@@ -149,9 +149,9 @@ __kernel void DWCONV(
     const ushort output_width,
     const ushort output_height) {
 
-  const int_tp outputX = get_global_id(0);
-  const int_tp outputY = get_global_id(1);
-  const int_tp outputZ = get_global_id(2);
+  const int_tp outputX = get_global_id(1);
+  const int_tp outputY = get_global_id(2);
+  const int_tp outputZ = get_global_id(0);
   if(outputX < output_width && outputY < output_height)
   {
     Dtype sum = 0.;

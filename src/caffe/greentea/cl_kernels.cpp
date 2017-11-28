@@ -923,9 +923,9 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "const ushort output_width,",    // NOLINT
 "const ushort output_height) {",    // NOLINT
 "",    // NOLINT
-"const int_tp outputX = get_global_id(0);",    // NOLINT
-"const int_tp outputY = get_global_id(1);",    // NOLINT
-"const int_tp outputZ = get_global_id(2);",    // NOLINT
+"const int_tp outputX = get_global_id(1);",    // NOLINT
+"const int_tp outputY = get_global_id(2);",    // NOLINT
+"const int_tp outputZ = get_global_id(0);",    // NOLINT
 "if(outputX < output_width && outputY < output_height)",    // NOLINT
 "{",    // NOLINT
 "Dtype sum = 0.;",    // NOLINT
