@@ -69,13 +69,6 @@ class SmoothL1LossLayer : public LossLayer<Dtype> {
   virtual inline int MinBottomBlobs() const { return 2; }
   virtual inline int MaxBottomBlobs() const { return 4; }
 
-  /**
-   * Unlike most loss layers, in the SmoothL1LossLayer we can backpropagate
-   * to both inputs -- override to return true and always allow force_backward.
-   */
-  virtual inline bool AllowForceBackward(const int bottom_index) const {
-    return true;
-  }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
