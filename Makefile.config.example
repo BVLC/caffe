@@ -33,6 +33,7 @@ CUDA_DIR := /usr/local/cuda
 # CUDA architecture setting: going with all of them.
 # For CUDA < 6.0, comment the *_50 through *_61 lines for compatibility.
 # For CUDA < 8.0, comment the *_60 and *_61 lines for compatibility.
+# For CUDA >= 9.0, comment the *_20 and *_21 lines for compatibility.
 CUDA_ARCH := -gencode arch=compute_20,code=sm_20 \
 		-gencode arch=compute_20,code=sm_21 \
 		-gencode arch=compute_30,code=sm_30 \
