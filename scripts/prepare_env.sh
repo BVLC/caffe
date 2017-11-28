@@ -51,7 +51,7 @@ $script_dir/install_deps.sh $params
 echo "Build caffe..."
 params="--compiler $compiler --rebuild "
 if [ "$host_file" != "" ] && [ -f $host_file ]; then
-    params+=" --multinode"
+    params+=" --multinode --layer_timing"
 fi
 $script_dir/build_intelcaffe.sh $params
 

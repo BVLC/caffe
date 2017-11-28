@@ -4,17 +4,20 @@ function usage
 {
     script_name=$0
     echo "Usage:"
-    echo "  $script_name [--multinode] [--compiler icc/gcc] [--rebuild] [--boost_root boost_install_dir]"
+    echo "  $script_name [--multinode] [--compiler icc/gcc] [--rebuild] "
+    echo "               [--boost_root boost_install_dir] [--layer_timing]"
     echo ""
     echo "  Parameters:"
-    echo "    multinode:  specify it to build caffe for multinode. build for single node"
-    echo "                by default."
-    echo "    compiler:   specify compiler to build intel caffe. default compiler is icc."
-    echo "    rebuild:    make clean/remove build directory before building caffe if the "
-    echo "                option is specified. not to make clean by default."
-    echo "    boost_root: specify directory for boost root (installation directory). if "
-    echo "                it's not specified (by default), script will download boost in "
-    echo "                directory of caffe source and build it."
+    echo "    multinode:    specify it to build caffe for multinode. build for single"
+    echo "                  node by default."
+    echo "    compiler:     specify compiler to build intel caffe. default is icc."
+    echo "    rebuild:      make clean/remove build directory before building caffe if"
+    echo "                  the option is specified. not to make clean by default."
+    echo "    boost_root:   specify directory for boost root (installation directory)."
+    echo "                  if it's not specified (by default), script will download"
+    echo "                  boost in directory of caffe source and build it."
+    echo "    layer_timing: build caffe for multinode with CAFFE_PER_LAYER_TIMINGS flag."
+    echo "                  by default, the flag is NOT included for build."
 }
 
 function check_dependency
@@ -36,7 +39,9 @@ function build_caffe_gcc
 
     if [ $is_multinode_ -eq 1 ]; then
         echo "USE_MLSL := 1" >> Makefile.config
-        echo "CAFFE_PER_LAYER_TIMINGS := 1" >> Makefile.config
+        if [ $is_layer_timing -eq 1 ]; then
+            echo "CAFFE_PER_LAYER_TIMINGS := 1" >> Makefile.config
+        fi
 
         mlslvars_sh=`find external/mlsl/ -name mlslvars.sh`
         if [ -f $mlslvars_sh ]; then
@@ -84,7 +89,10 @@ function build_caffe_icc
     is_multinode_=$1
     cmake_params="-DCPU_ONLY=1 -DBOOST_ROOT=$boost_root"
     if [ $is_multinode_ -eq 1 ]; then
-        cmake_params+=" -DUSE_MLSL=1 -DCAFFE_PER_LAYER_TIMINGS=1"
+        cmake_params+=" -DUSE_MLSL=1"
+        if [ $is_layer_timing -eq 1 ]; then
+            cmake_params+=" -DCAFFE_PER_LAYER_TIMINGS=1"
+        fi
     fi
 
     build_dir=$root_dir/build
@@ -115,6 +123,7 @@ function sync_caffe_dir
 
 root_dir=$(cd $(dirname $(dirname $0)); pwd)
 
+is_layer_timing=0
 boost_root=""
 is_rebuild=0
 compiler="icc"
@@ -136,7 +145,10 @@ do
         --boost_root)
             boost_root="$2"
             shift
-            ;;    
+            ;;
+        --layer_timing)
+            is_layer_timing=1
+            ;;
         --help)
             usage
             exit 0
@@ -175,6 +187,11 @@ if [ "$compiler" == "icc" ]; then
     if [ "$boost_root" == "" ]; then
         download_build_boost
     fi
+
+    if [[ "$boost_root" != /* ]]; then
+        boost_root=$(cd $boost_root; pwd)
+    fi
+
     build_caffe_icc $is_multinode
 else
     build_caffe_gcc $is_multinode

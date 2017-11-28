@@ -338,12 +338,12 @@ void Solver<Dtype>::Step(int iters) {
               << result_vec[k] << loss_msg_stream.str();
         }
       }
+    }
 
 #ifdef CAFFE_PER_LAYER_TIMINGS
-      PrintTimers(false);
-      ResetTimers();
+    PrintTimers(false);
+    ResetTimers();
 #endif
-    }
 
     iter_timer.Start();
 

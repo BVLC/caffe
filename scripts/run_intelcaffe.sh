@@ -458,6 +458,9 @@ do
             mpibench_param=$2
             shift
             ;;
+        --help)
+            usage
+            ;;
         *)
             echo "Unknown option: $key"
             usage
