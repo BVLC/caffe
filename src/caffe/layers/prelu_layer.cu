@@ -20,11 +20,11 @@ __global__ void PReLUForward(const int n, const int channels, const int dim,
 template <typename Dtype>
 void PReLULayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
-  Forward_gpu_const(bottom,top);
+  Forward_const_gpu(bottom,top);
 }
 
 template <typename Dtype>
-void PReLULayer<Dtype>::Forward_gpu_const(const vector<Blob<Dtype>*>& bottom,
+void PReLULayer<Dtype>::Forward_const_gpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) const {
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = top[0]->mutable_gpu_data();

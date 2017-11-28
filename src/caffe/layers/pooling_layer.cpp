@@ -226,6 +226,7 @@ void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 
 #ifdef CPU_ONLY
 STUB_GPU(PoolingLayer);
+STUB_GPU_FORWARD_CONST(PoolingLayer,Forward_const);
 #endif
 
 INSTANTIATE_CLASS(PoolingLayer);

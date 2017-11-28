@@ -36,7 +36,7 @@ class SoftmaxLayer : public Layer<Dtype> {
       const vector<Blob<Dtype>*>& top) const override;
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
-  virtual void Forward_gpu_const(const vector<Blob<Dtype>*>& bottom,
+  virtual void Forward_const_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) const override;
 
 };

@@ -51,6 +51,7 @@ void ConvolutionLayer<Dtype>::Forward_cpu_const(const vector<Blob<Dtype>*>& bott
 
 #ifdef CPU_ONLY
 STUB_GPU(ConvolutionLayer);
+STUB_GPU_FORWARD_CONST(ConvolutionLayer,Forward_const);
 #endif
 
 INSTANTIATE_CLASS(ConvolutionLayer);

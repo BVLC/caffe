@@ -79,6 +79,7 @@ void SoftmaxLayer<Dtype>::Forward_cpu_const(const vector<Blob<Dtype>*>& bottom,
 
 #ifdef CPU_ONLY
 STUB_GPU(SoftmaxLayer);
+STUB_GPU_FORWARD_CONST(SoftmaxLayer,Forward_const);
 #endif
 
 INSTANTIATE_CLASS(SoftmaxLayer);

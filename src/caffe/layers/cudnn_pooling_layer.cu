@@ -8,11 +8,11 @@ namespace caffe {
 template <typename Dtype>
 void CuDNNPoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype> *> &bottom,
                                            const vector<Blob<Dtype> *> &top) {
-  Forward_gpu_const(bottom, top);
+  Forward_const_gpu(bottom, top);
 }
 
 template <typename Dtype>
-void CuDNNPoolingLayer<Dtype>::Forward_gpu_const(
+void CuDNNPoolingLayer<Dtype>::Forward_const_gpu(
     const vector<Blob<Dtype> *> &bottom,
     const vector<Blob<Dtype> *> &top) const {
 

@@ -45,6 +45,7 @@ void SplitLayer<Dtype>::Forward_cpu_const(const vector<Blob<Dtype>*>& bottom,
 
 #ifdef CPU_ONLY
 STUB_GPU(SplitLayer);
+STUB_GPU_FORWARD_CONST(SplitLayer,Forward_const);
 #endif
 
 INSTANTIATE_CLASS(SplitLayer);

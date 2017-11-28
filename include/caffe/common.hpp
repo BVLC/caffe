@@ -60,10 +60,10 @@ private:                                                                       \
       const std::vector<Blob<double> *> &top);
 
 #define INSTANTIATE_LAYER_GPU_FORWARD_CONST(classname)                         \
-  template void classname<float>::Forward_gpu_const(                           \
+  template void classname<float>::Forward_const_gpu(                           \
       const std::vector<Blob<float> *> &bottom,                                \
       const std::vector<Blob<float> *> &top) const;                            \
-  template void classname<double>::Forward_gpu_const(                          \
+  template void classname<double>::Forward_const_gpu(                          \
       const std::vector<Blob<double> *> &bottom,                               \
       const std::vector<Blob<double> *> &top) const;
 

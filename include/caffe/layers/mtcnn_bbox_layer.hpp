@@ -46,8 +46,8 @@ class MTCNNBBoxLayer : public Layer<Dtype> {
       const vector<Blob<Dtype>*>& top);
       */
 
- static constexpr int stride_ {2};
-static  constexpr int cellsize_{12};
+  static constexpr int stride_ {2};
+  static  constexpr int cellsize_{12};
   Dtype threshold_;
 };
 

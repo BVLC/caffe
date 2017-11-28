@@ -249,7 +249,7 @@ public:
    * @brief Using the GPU device, compute the layer output.
    *        Fall back to Forward_cpu() if unavailable.
    */
-  virtual void Forward_gpu_const(const vector<Blob<Dtype> *> &bottom,
+  virtual void Forward_const_gpu(const vector<Blob<Dtype> *> &bottom,
                            const vector<Blob<Dtype> *> &top) const {
     LOG(FATAL) <<__func__<< " no implemented for "<<type();
   }
@@ -348,7 +348,7 @@ inline Dtype Layer<Dtype>::Forward_const(const vector<Blob<Dtype> *> &bottom,
     Forward_cpu_const(bottom, top);
     break;
   case Caffe::GPU:
-    Forward_gpu_const(bottom, top);
+    Forward_const_gpu(bottom, top);
     break;
   default:
     LOG(FATAL) << "Unknown caffe mode.";

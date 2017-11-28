@@ -85,11 +85,11 @@ __global__ void kernel_channel_dot(const int num, const int channels,
 template <typename Dtype>
 void SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
-  Forward_gpu_const(bottom,top);
+  Forward_const_gpu(bottom,top);
 }
 
 template <typename Dtype>
-void SoftmaxLayer<Dtype>::Forward_gpu_const(const vector<Blob<Dtype>*>& bottom,
+void SoftmaxLayer<Dtype>::Forward_const_gpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) const {
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = top[0]->mutable_gpu_data();

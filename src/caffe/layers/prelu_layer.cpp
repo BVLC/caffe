@@ -87,6 +87,7 @@ void PReLULayer<Dtype>::Forward_cpu_const(const vector<Blob<Dtype>*>& bottom,
 
 #ifdef CPU_ONLY
 STUB_GPU(PReLULayer);
+STUB_GPU_FORWARD_CONST(PReLULayer,Forward_const);
 #endif
 
 INSTANTIATE_CLASS(PReLULayer);

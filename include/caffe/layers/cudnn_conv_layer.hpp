@@ -45,7 +45,7 @@ protected:
                            const vector<Blob<Dtype> *> &top);
 
   virtual void
-  Forward_gpu_const(const vector<Blob<Dtype> *> &bottom,
+  Forward_const_gpu(const vector<Blob<Dtype> *> &bottom,
                     const vector<Blob<Dtype> *> &top) const override;
 
   bool handles_setup_;
