@@ -8,15 +8,21 @@
 #include <climits>
 #include <cmath>
 #include <fstream>  // NOLINT(readability/streams)
-#include <iostream>  // NOLINT(readability/streams)
+#include <iostream> // NOLINT(readability/streams)
 #include <map>
 #include <set>
 #include <sstream>
 #include <string>
-#include <utility>  // pair
+#include <utility> // pair
 #include <vector>
 
 #include "caffe/util/device_alternate.hpp"
+
+namespace deepir {
+namespace allocator {
+class buddy_pool;
+}
+} // namespace deepir
 
 // Convert macro to string
 #define STRINGIFY(m) #m
@@ -34,46 +40,48 @@ namespace gflags = google;
 */
 
 // Disable the copy and assignment operator for a class.
-#define DISABLE_COPY_AND_ASSIGN(classname) \
-private:\
-  classname(const classname&);\
-  classname& operator=(const classname&)
+#define DISABLE_COPY_AND_ASSIGN(classname)                                     \
+private:                                                                       \
+  classname(const classname &);                                                \
+  classname &operator=(const classname &)
 
 // Instantiate a class with float and double specifications.
-#define INSTANTIATE_CLASS(classname) \
-  char gInstantiationGuard##classname; \
-  template class classname<float>; \
+#define INSTANTIATE_CLASS(classname)                                           \
+  char gInstantiationGuard##classname;                                         \
+  template class classname<float>;                                             \
   template class classname<double>
 
-#define INSTANTIATE_LAYER_GPU_FORWARD(classname) \
-  template void classname<float>::Forward_gpu( \
-      const std::vector<Blob<float>*>& bottom, \
-      const std::vector<Blob<float>*>& top); \
-  template void classname<double>::Forward_gpu( \
-      const std::vector<Blob<double>*>& bottom, \
-      const std::vector<Blob<double>*>& top);
+#define INSTANTIATE_LAYER_GPU_FORWARD(classname)                               \
+  template void classname<float>::Forward_gpu(                                 \
+      const std::vector<Blob<float> *> &bottom,                                \
+      const std::vector<Blob<float> *> &top);                                  \
+  template void classname<double>::Forward_gpu(                                \
+      const std::vector<Blob<double> *> &bottom,                               \
+      const std::vector<Blob<double> *> &top);
 
-#define INSTANTIATE_LAYER_GPU_FORWARD_CONST(classname) \
-  template void classname<float>::Forward_gpu_const( \
-      const std::vector<Blob<float>*>& bottom, \
-      const std::vector<Blob<float>*>& top) const; \
-  template void classname<double>::Forward_gpu_const( \
-      const std::vector<Blob<double>*>& bottom, \
-      const std::vector<Blob<double>*>& top) const;
+#define INSTANTIATE_LAYER_GPU_FORWARD_CONST(classname)                         \
+  template void classname<float>::Forward_gpu_const(                           \
+      const std::vector<Blob<float> *> &bottom,                                \
+      const std::vector<Blob<float> *> &top) const;                            \
+  template void classname<double>::Forward_gpu_const(                          \
+      const std::vector<Blob<double> *> &bottom,                               \
+      const std::vector<Blob<double> *> &top) const;
 
-#define INSTANTIATE_LAYER_GPU_FUNCS(classname) \
-  INSTANTIATE_LAYER_GPU_FORWARD(classname); 
+#define INSTANTIATE_LAYER_GPU_FUNCS(classname)                                 \
+  INSTANTIATE_LAYER_GPU_FORWARD(classname);
 
-#define INSTANTIATE_LAYER_GPU_FUNCS_CONST(classname) \
-  INSTANTIATE_LAYER_GPU_FORWARD(classname); \
-  INSTANTIATE_LAYER_GPU_FORWARD_CONST(classname); \
+#define INSTANTIATE_LAYER_GPU_FUNCS_CONST(classname)                           \
+  INSTANTIATE_LAYER_GPU_FORWARD(classname);                                    \
+  INSTANTIATE_LAYER_GPU_FORWARD_CONST(classname);
 
 // A simple macro to mark codes that are not implemented, so that when the code
 // is executed we will see a fatal log.
 #define NOT_IMPLEMENTED LOG(FATAL) << "Not Implemented Yet"
 
 // See PR #1236
-namespace cv { class Mat; }
+namespace cv {
+class Mat;
+}
 
 namespace caffe {
 
@@ -82,8 +90,8 @@ using std::shared_ptr;
 // Common functions and classes from std that caffe often uses.
 using std::fstream;
 using std::ios;
-using std::isnan;
 using std::isinf;
+using std::isnan;
 using std::iterator;
 using std::make_pair;
 using std::map;
@@ -96,20 +104,26 @@ using std::vector;
 
 // A global initialization function that you should call in your main function.
 // Currently it initializes google flags and google logging.
-void GlobalInit(int* pargc, char*** pargv);
+void GlobalInit(int *pargc, char ***pargv);
 
 // A singleton class to hold common caffe stuff, such as the handler that
 // caffe is going to use for cublas, curand, etc.
 class Caffe {
- public:
+public:
   ~Caffe();
 
-  static Caffe& Get();
+  static Caffe &Get();
 
   enum Brew { CPU, GPU };
 
 #ifndef CPU_ONLY
   inline static cublasHandle_t cublas_handle() { return Get().cublas_handle_; }
+  inline static deepir::allocator::buddy_pool *host_pool() {
+    return Get().host_pool_.get();
+  }
+  inline static deepir::allocator::buddy_pool *device_pool() {
+    return Get().device_pool_.get();
+  }
 
 #endif
 
@@ -127,13 +141,11 @@ class Caffe {
     }
   }
   // Sets the random seed of both boost and curand
-  //static void set_random_seed(const unsigned int seed);
+  // static void set_random_seed(const unsigned int seed);
   // Sets the device. Since we have cublas and curand stuff, set device also
   // requires us to reset those values.
   static void SetDevice(const int device_id);
-  static int GetDevice() {
-    return Get().device_id_;
-  }
+  static int GetDevice() { return Get().device_id_; }
   // Prints the current GPU status.
   static void DeviceQuery();
   // Check if specified device is available
@@ -142,21 +154,23 @@ class Caffe {
   // return the ordinal of the first available device.
   static int FindDevice(const int start_id = 0);
 
- protected:
+protected:
 #ifndef CPU_ONLY
   cublasHandle_t cublas_handle_;
+  std::unique_ptr<deepir::allocator::buddy_pool> host_pool_;
+  std::unique_ptr<deepir::allocator::buddy_pool> device_pool_;
 #endif
 
   Brew mode_;
   int device_id_;
 
- private:
+private:
   // The private constructor to avoid duplicate instantiation.
   Caffe();
 
   DISABLE_COPY_AND_ASSIGN(Caffe);
 };
 
-}  // namespace caffe
+} // namespace caffe
 
-#endif  // CAFFE_COMMON_HPP_
+#endif // CAFFE_COMMON_HPP_

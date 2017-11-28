@@ -33,7 +33,6 @@ void CuDNNConvolutionLayer<Dtype>::Forward_gpu_const(
 
   int num = bottom[0]->count(0, this->channel_axis_);
 
-
   // Initialize algorithm arrays
   vector<cudnnConvolutionFwdAlgo_t> fwd_algo_(bottom.size(), {});
   vector<size_t> workspace_fwd_sizes_(bottom.size(), {});
@@ -48,7 +47,6 @@ void CuDNNConvolutionLayer<Dtype>::Forward_gpu_const(
 
   // Specify workspace limit for kernels directly until we have a
   // planning strategy and a rewrite of Caffe's GPU memory mangagement
-  size_t workspace_limit_bytes = 8 * 1024 * 1024;
 
   if (!bottom_descs_ptr_.get()) {
     bottom_descs_ptr_.reset(new vector<cudnnTensorDescriptor_t>);
@@ -81,9 +79,11 @@ void CuDNNConvolutionLayer<Dtype>::Forward_gpu_const(
   if (!handle_ptr_.get()) {
     handle_ptr_.reset(new vector<cudnnHandle_t>(this->group_, {}));
 
+    /*
     if (!stream_ptr_.get()) {
       stream_ptr_.reset(new vector<cudaStream_t>(this->group_, {}));
     }
+    */
 
     for (int g = 0; g < this->group_; g++) {
       CUDNN_CHECK(cudnnCreate(&(*handle_ptr_)[g]));
@@ -117,12 +117,11 @@ void CuDNNConvolutionLayer<Dtype>::Forward_gpu_const(
     cudnn::setConvolutionDesc<Dtype>(&(*conv_descs_ptr_)[i],
                                      (*bottom_descs_ptr_)[i], *filter_desc_ptr_,
                                      pad_h, pad_w, stride_h, stride_w);
-
     // choose forward and backward algorithms + workspace(s)
     CUDNN_CHECK(cudnnGetConvolutionForwardAlgorithm(
         (*handle_ptr_)[0], (*bottom_descs_ptr_)[i], *filter_desc_ptr_,
         (*conv_descs_ptr_)[i], (*top_descs_ptr_)[i],
-        CUDNN_CONVOLUTION_FWD_SPECIFY_WORKSPACE_LIMIT, workspace_limit_bytes,
+        CUDNN_CONVOLUTION_FWD_PREFER_FASTEST, 0,
         &fwd_algo_[i]));
 
     CUDNN_CHECK(cudnnGetConvolutionForwardWorkspaceSize(
@@ -144,9 +143,6 @@ void CuDNNConvolutionLayer<Dtype>::Forward_gpu_const(
   // ensure all groups have enough workspace
   size_t total_max_workspace = max_workspace * (this->group_);
 
-  // this is the total amount of storage needed over all groups + streams
-  //  if (total_max_workspace > workspaceSizeInBytes) {
-  DLOG(INFO) << "Reallocating workspace storage: " << total_max_workspace;
 
   // free the existing workspace and allocate a new (larger) one
   this->workspaceData.reset(SyncedMemory::gpu_malloc(total_max_workspace));

@@ -7,6 +7,8 @@
 #include <process.h>
 #endif
 
+#include <deepir/allocator/buddy_pool.hpp>
+
 #include "caffe/common.hpp"
 
 namespace caffe {
@@ -68,6 +70,9 @@ Caffe::Caffe()
   } else {
     CUBLAS_CHECK(cublasSetStream(cublas_handle_, cudaStreamPerThread));
   }
+
+  host_pool_=std::make_unique<deepir::allocator::buddy_pool>(deepir::allocator::buddy_pool::alloc_location::host);
+  device_pool_=std::make_unique<deepir::allocator::buddy_pool>(deepir::allocator::buddy_pool::alloc_location::device);
 }
 
 Caffe::~Caffe() {

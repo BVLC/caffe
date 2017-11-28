@@ -219,7 +219,7 @@ public:
     return true;
   }
 
-protected:
+public:
   /** The protobuf that stores the layer parameters */
   LayerParameter layer_param_;
   /** The phase: TRAIN or TEST */
