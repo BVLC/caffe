@@ -137,6 +137,7 @@ __kernel void CFMultiNoPadding(
 #endif
 
 #ifdef DWCONV
+__attribute__((intel_reqd_sub_group_size(SIMD_SIZE)))
 __kernel void DWCONV(
     ELTWISE_DATA_ARG
     NEGATIVE_SLOPE_ARG
@@ -149,22 +150,32 @@ __kernel void DWCONV(
     const ushort output_width,
     const ushort output_height) {
 
-  const int_tp outputX = get_global_id(1);
-  const int_tp outputY = get_global_id(2);
-  const int_tp outputZ = get_global_id(0);
+  const int_tp outputX = get_global_id(0);
+  const int_tp outputY = get_global_id(1);
+  const int_tp outputZ = get_global_id(2);
+  
+  const int_tp org_y = outputY * STRIDE_H - PAD_H;
+  const int_tp org_x = outputX * STRIDE_W - PAD_W;
+  const int_tp currentKernelOffset = KERNEL_SIZE*(outputZ%CHANNELS);
+  const int_tp biasIndex=outputZ%CHANNELS;
+  const int_tp local_image_offset = org_y*input_width + org_x;
+  const int_tp imageSize = input_width*input_height;
+
+  __global Dtype* image_dataPtrFloat = (image_data + (imageSize*outputZ + local_image_offset));
+  __global Dtype* kernel_dataPtrFloat = (kernel_data + (currentKernelOffset));
+  const int_tp sub_id = get_sub_group_local_id();
+
+  Dtype local_kernel_data = 0.;
+  Dtype local_bias_data = 0.;
+  if (sub_id < KERNEL_SIZE)
+    local_kernel_data = kernel_dataPtrFloat[sub_id];
+  if (sub_id == 0)
+    local_bias_data = biases_base[biasIndex];
+  
+  // #define BLOCK_IN(n,i) sub_group_broadcast(kernel_data, (n))
   if(outputX < output_width && outputY < output_height)
   {
     Dtype sum = 0.;
-
-    const int_tp org_y = outputY * STRIDE_H - PAD_H;
-    const int_tp org_x = outputX * STRIDE_W - PAD_W;
-    const int_tp currentKernelOffset = KERNELSIZE*(outputZ%CHANNELS);
-    const int_tp biasIndex=outputZ%CHANNELS;
-    const int_tp local_image_offset = org_y*input_width + org_x;
-    const int_tp imageSize = input_width*input_height;
-
-    __global Dtype* image_dataPtrFloat = (image_data + (imageSize*outputZ + local_image_offset));
-    __global Dtype* kernel_dataPtrFloat = (kernel_data + (currentKernelOffset));
 
     for(int_tp y = 0; y < KERNEL_H; y++)
     {
@@ -174,15 +185,13 @@ __kernel void DWCONV(
         {
           continue;
         }
-        sum += image_dataPtrFloat[x * DILATION_X] * kernel_dataPtrFloat[x];
+        sum += image_dataPtrFloat[x * DILATION_X] * sub_group_broadcast(local_kernel_data, (x+y*KERNEL_W));
       }
       image_dataPtrFloat += input_width * DILATION_Y;
-      kernel_dataPtrFloat += KERNEL_W;
     }
-
     #if APPLY_BIAS
     int_tp offset = outputZ*output_height*output_width + outputY*output_width + outputX;
-    ACTIVATION_FUNCTION(convolved_image, offset, sum + biases_base[biasIndex], biasIndex);
+    ACTIVATION_FUNCTION(convolved_image, offset, sum + sub_group_broadcast(local_bias_data, 0), biasIndex);
     #else
     int_tp offset = outputZ*output_height*output_width + outputY*output_width + outputX;
     ACTIVATION_FUNCTION(convolved_image, offset, sum, biasIndex);
