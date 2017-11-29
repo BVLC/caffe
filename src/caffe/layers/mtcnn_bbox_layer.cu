@@ -9,7 +9,33 @@
 
 namespace caffe {
 
-// CUDA kernele for forward
+template <typename Dtype>
+__global__ void filter_by_threshold(const Dtype *prob, const int prob_cnt,
+                                    const Dtype threshold, int *out,
+                                    int *out_size) {
+  //     __shared__ int local_idx[CAFFE_CUDA_NUM_THREADS];
+
+  auto x = blockIdx.x * blockDim.x + threadIdx.x;
+  if (x < prob_cnt) {
+    if (prob[x] > threshold) {
+      int old_size = atomicAdd(out_size, 1);
+      out[old_size] = x;
+
+      //  local_idx[threadIdx.x]=x;
+    } else {
+      // local_idx[threadIdx.x]=-1;
+    }
+
+    /*
+    __syncthreads() ;
+
+    if(threadIdx.x==0) {
+
+    }
+    */
+  }
+}
+
 template <typename Dtype>
 __global__ void generateBBox(const Dtype scale, const int height,
                              const int width, const int index_cnt,
@@ -51,21 +77,23 @@ void MTCNNBBoxLayer<Dtype>::Forward_const_gpu(
   std::unique_ptr<Blob<int>> indices_ptr;
   indices_ptr.reset(new Blob<int>(shape[2] * shape[3], 1, 1, 1));
 
-  auto begin = thrust::device_ptr<int>(indices_ptr->mutable_gpu_data());
-  auto end =
-      thrust::copy_if(thrust::make_counting_iterator(0),
-                      thrust::make_counting_iterator(shape[2] * shape[3]),
-                      thrust::device_ptr<Dtype>(const_cast<Dtype *>(prob)),
-                      begin, thrust::placeholders::_1 > threshold_);
+  std::unique_ptr<Blob<int>> index_cnt_ptr;
+  index_cnt_ptr.reset(new Blob<int>(1, 1, 1, 1));
 
-  auto cnt = end - begin;
+  index_cnt_ptr->mutable_cpu_data()[0] = 0;
+
+  filter_by_threshold<Dtype>
+      <<<CAFFE_GET_BLOCKS(shape[2] * shape[3]), CAFFE_CUDA_NUM_THREADS>>>(
+          prob, shape[2] * shape[3], threshold_,
+          indices_ptr->mutable_gpu_data(), index_cnt_ptr->mutable_gpu_data());
+
+  auto cnt = indices_ptr->mutable_cpu_data()[0];
 
   if (cnt == 0) {
     return;
   }
 
   top[0]->Reshape(1, 1, cnt, 9);
-  auto top_data = top[0]->mutable_cpu_data();
 
   generateBBox<Dtype><<<CAFFE_GET_BLOCKS(cnt), CAFFE_CUDA_NUM_THREADS>>>(
       scale, shape[2], shape[3], (int)cnt, indices_ptr->gpu_data(), bbox_reg,
