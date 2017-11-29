@@ -876,6 +876,7 @@ void Solver<Dtype>::TestDetection(const int test_net_id) {
 
 template <typename Dtype>
 void Solver<Dtype>::Snapshot() {
+  LOG(INFO)<<"Snapshot begin";
   CHECK(Caffe::root_solver());
 
 #ifdef USE_MLSL
@@ -902,6 +903,7 @@ void Solver<Dtype>::Snapshot() {
     callbacks_[i]->on_after_snapshot();
   }
 #endif
+  LOG(INFO)<<"Snapshot end";
 }
 
 template <typename Dtype>
