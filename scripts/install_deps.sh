@@ -1,5 +1,16 @@
 #!/bin/bash
 
+os="centos"
+
+sudo_passwd=""
+
+# centos: yum; ubuntu: apt-get
+install_command=""
+
+command_prefix=""
+
+root_dir=$(cd $(dirname $(dirname $0)); pwd)
+
 function usage
 {
     script_name=$0
@@ -10,7 +21,6 @@ function usage
     echo "    host: host file includes list of nodes. Only used when you want to install dependencies for multinode"
 }
 
-os="centos"
 function check_os
 {
     echo "Check OS and the version..."
@@ -44,9 +54,6 @@ function check_dependency
     return 0
 }
 
-
-sudo_passwd=""
-
 function is_sudoer
 {
     echo $sudo_passwd | sudo -S -E -v >/dev/null
@@ -56,23 +63,16 @@ function is_sudoer
     fi
 }
 
-# centos: yum; ubuntu: apt-get
-install_command=""
-
-check_os
-if [ "$os" == "centos" ]; then
-    install_command="yum"
-elif [ "$os" == "ubuntu" ]; then
-    install_command="apt-get"
-fi
-check_dependency $install_command
-if [ $? -ne 0 ]; then
-    echo "Please check if $os and $install_command is installed correctly."
-    exit 1
-fi
-
-package_installer="$install_command -y "
-
+function install_python_deps
+{
+    eval $command_prefix pip install --upgrade pip
+    pushd $root_dir/python >/dev/null
+    for req in $(cat requirements.txt) pydot;
+    do
+        eval $command_prefix pip install $req
+    done
+    popd >/dev/null
+}
 function install_deps
 {
     echo "Install dependencies..."
@@ -90,13 +90,25 @@ function install_deps
         eval $package_installer install pkg-config libprotobuf-dev libleveldb-dev libsnappy-dev libhdf5-serial-dev protobuf-compiler
         eval $package_installer install --no-install-recommends libboost-all-dev
         eval $package_installer install libgflags-dev libgoogle-glog-dev liblmdb-dev
-        eval $package_installer install python-pip
         eval $package_installer install python-dev
         eval $package_installer install python-numpy python-scipy
         eval $package_installer install libopencv-dev
     fi
 
-    eval $package_installer install cmake wget bc numactl
+    eval $package_installer install cmake wget bc numactl python-pip
+    install_python_deps
+}
+
+function install_python_deps_multinode
+{
+    ansible all -m shell -a "$command_prefix pip install --upgrade pip"
+    pushd $root_dir/python >/dev/null
+    for req in $(cat requirements.txt) pydot;
+    do
+        ansible all -m shell -a "$command_prefix pip install $req"
+    done
+    popd >/dev/null
+
 }
 
 function install_deps_multinode
@@ -145,14 +157,14 @@ function install_deps_multinode
         ansible all -m shell -a "$package_installer install pkg-config libprotobuf-dev libleveldb-dev libsnappy-dev libhdf5-serial-dev protobuf-compiler"
         ansible all -m shell -a "$package_installer install --no-install-recommends libboost-all-dev"
         ansible all -m shell -a "$package_installer install libgflags-dev libgoogle-glog-dev liblmdb-dev"
-        ansible all -m shell -a "$package_installer install python-pip"
         ansible all -m shell -a "$package_installer install python-dev"
         ansible all -m shell -a "$package_installer install python-numpy python-scipy"
         ansible all -m shell -a "$package_installer install libopencv-dev"
     fi
 
-    ansible all -m shell -a "$package_installer install mc cpuinfo htop tmux screen iftop iperf vim wget bc numactl cmake"
+    ansible all -m shell -a "$package_installer install mc cpuinfo htop tmux screen iftop iperf vim wget bc numactl cmake python-pip"
     ansible all -m shell -a "systemctl stop firewalld.service"
+    install_python_deps_multinode
 }
 
 host_file=""
@@ -177,11 +189,28 @@ do
     shift
 done
 
+
+check_os
+if [ "$os" == "centos" ]; then
+    install_command="yum"
+elif [ "$os" == "ubuntu" ]; then
+    install_command="apt-get"
+fi
+
+check_dependency $install_command
+if [ $? -ne 0 ]; then
+    echo "Please check if $os and $install_command is installed correctly."
+    exit 1
+fi
+
+package_installer="$install_command -y "
+
 # install dependencies
 username=`whoami`
 if [ "$username" != "root" ]; then
     read -s -p "Enter password for $username: " sudo_passwd
-    package_installer="echo $sudo_passwd | sudo -S -E $install_command -y "
+    command_prefix="echo $sudo_passwd | sudo -S -E " 
+    package_installer="$command_prefix $install_command -y "
     is_sudoer
 fi
 

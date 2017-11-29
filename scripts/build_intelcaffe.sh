@@ -59,7 +59,7 @@ function build_caffe_gcc
 function download_build_boost
 {
     # download boost
-    pushd ${root_dir}
+    pushd ${root_dir} >/dev/null
 
     boost_lib=boost_1_64_0
     boost_zip_file=${boost_lib}.tar.bz2
@@ -72,7 +72,7 @@ function download_build_boost
     wget -c -t 0 https://dl.bintray.com/boostorg/release/1.64.0/source/${boost_zip_file}
     echo "Unzip..."
     tar -jxf ${boost_zip_file}
-    pushd ${boost_lib}
+    pushd ${boost_lib} >/dev/null
 
     # build boost
     echo "Build boost library..."
@@ -80,8 +80,8 @@ function download_build_boost
     ./bootstrap.sh
     ./b2 install --prefix=$boost_root
 
-    popd
-    popd
+    popd >/dev/null
+    popd >/dev/null
 }
 
 function build_caffe_icc

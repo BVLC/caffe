@@ -346,7 +346,7 @@ function get_model_fname
 function check_lmdb_files
 {
     model_file_=$1
-
+    
     lmdb_dirs=(ilsvrc12_train_lmdb ilsvrc12_val_lmdb) 
     is_missing_lmdb=0
     for lmdb_dir in "${lmdb_dirs[@]}"
