@@ -378,6 +378,8 @@ std::map<std::string, std::shared_ptr<Blob<Dtype>>> Net<Dtype>::ForwardConst(
 
   if (use_gpu) {
     Caffe::set_mode(caffe::Caffe::GPU);
+  } else {
+    Caffe::set_mode(caffe::Caffe::CPU);
   }
   auto mode = Caffe::mode();
 
@@ -391,6 +393,7 @@ std::map<std::string, std::shared_ptr<Blob<Dtype>>> Net<Dtype>::ForwardConst(
     for (auto const &ptr : top_blobs[i]) {
       top.push_back(ptr.get());
     }
+ //   std::cout << "go layer " << layers_[i]->type() << std::endl;
 
     layers_[i]->Reshape_const(bottom, top);
 
@@ -403,7 +406,7 @@ std::map<std::string, std::shared_ptr<Blob<Dtype>>> Net<Dtype>::ForwardConst(
       break;
     case Caffe::GPU:
       //	printf("net_gpu_const begin,i=%d\n",i);
-      layers_[i]->Forward_gpu_const(bottom, top);
+      layers_[i]->Forward_const_gpu(bottom, top);
       //	printf("net_gpu_const end,i=%d\n",i);
       break;
     default:

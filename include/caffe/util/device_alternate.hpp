@@ -19,6 +19,11 @@ template <typename Dtype> \
 void classname<Dtype>::funcname##_##gpu(const vector<Blob<Dtype>*>& bottom, \
     const vector<Blob<Dtype>*>& top) { NO_GPU; } \
 
+#define STUB_GPU_FORWARD_CONST(classname, funcname) \
+template <typename Dtype> \
+void classname<Dtype>::funcname##_##gpu(const vector<Blob<Dtype>*>& bottom, \
+    const vector<Blob<Dtype>*>& top) const { NO_GPU; } \
+
 #else  // Normal GPU + CPU Caffe.
 
 #include <cublas_v2.h>
