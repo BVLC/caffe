@@ -154,7 +154,7 @@ public:
   // return the ordinal of the first available device.
   static int FindDevice(const int start_id = 0);
 
-protected:
+private:
 #ifndef CPU_ONLY
   cublasHandle_t cublas_handle_;
   std::unique_ptr<deepir::allocator::buddy_pool> host_pool_;
