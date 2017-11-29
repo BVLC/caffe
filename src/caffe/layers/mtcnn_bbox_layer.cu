@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <memory>
 #include <thrust/count.h>
 #include <thrust/device_ptr.h>
 #include <thrust/device_vector.h>
@@ -47,16 +48,17 @@ void MTCNNBBoxLayer<Dtype>::Forward_const_gpu(
   const auto prob = bottom[1]->gpu_data() + shape[2] * shape[3];
   const auto scale = bottom[2]->cpu_data()[0];
 
-  // find out the indices
-  thrust::device_vector<int> indices(shape[2] * shape[3]);
+  std::unique_ptr<Blob<int>> indices_ptr;
+  indices_ptr.reset(new Blob<int>(shape[2] * shape[3], 1, 1, 1));
+
+  auto begin = thrust::device_ptr<int>(indices_ptr->mutable_gpu_data());
   auto end =
       thrust::copy_if(thrust::make_counting_iterator(0),
                       thrust::make_counting_iterator(shape[2] * shape[3]),
                       thrust::device_ptr<Dtype>(const_cast<Dtype *>(prob)),
-                      indices.begin(), thrust::placeholders::_1 > threshold_);
+                      begin, thrust::placeholders::_1 > threshold_);
 
-  auto cnt = end - indices.begin();
-  indices.resize(cnt);
+  auto cnt = end - begin;
 
   if (cnt == 0) {
     return;
@@ -66,9 +68,8 @@ void MTCNNBBoxLayer<Dtype>::Forward_const_gpu(
   auto top_data = top[0]->mutable_cpu_data();
 
   generateBBox<Dtype><<<CAFFE_GET_BLOCKS(cnt), CAFFE_CUDA_NUM_THREADS>>>(
-      scale, shape[2], shape[3], (int)cnt,
-      thrust::raw_pointer_cast(indices.data()), bbox_reg, prob, stride_,
-      cellsize_, top[0]->mutable_gpu_data());
+      scale, shape[2], shape[3], (int)cnt, indices_ptr->gpu_data(), bbox_reg,
+      prob, stride_, cellsize_, top[0]->mutable_gpu_data());
   CUDA_POST_KERNEL_CHECK;
 }
 
