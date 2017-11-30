@@ -156,6 +156,8 @@ class Solver {
   // Make and apply the update value for the current iteration.
   virtual void ApplyUpdate() = 0;
   virtual void ApplyUpdate(int param_id) = 0;
+  // Print learning rate to logs
+  virtual void PrintLearningRate() = 0;
 
   void TestAll();
 

@@ -354,8 +354,10 @@ void Solver<Dtype>::Step(int iters) {
       PERFORMANCE_MEASUREMENT_BEGIN();
       ApplyUpdate();
       PERFORMANCE_MEASUREMENT_END_STATIC("weights_update");
+    }else{
+       //While using multinodes mode, force to print current lr to logs
+       PrintLearningRate();
     }
-
     iter_time += iter_timer.MilliSeconds();
 
 #ifdef CAFFE_PER_LAYER_TIMINGS

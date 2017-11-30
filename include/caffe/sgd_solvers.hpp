@@ -66,6 +66,7 @@ class SGDSolver : public Solver<Dtype> {
   Dtype GetLearningRate();
   Dtype GetLocalRate(int param_id) const;
 
+  virtual void PrintLearningRate();
   virtual void ApplyUpdate();
   virtual void ApplyUpdate(int param_id);
   virtual void Normalize(int param_id);
