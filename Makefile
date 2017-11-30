@@ -251,7 +251,13 @@ ifneq ($(CPU_ONLY), 1)
 	LIBRARIES := cudart cublas curand
 endif
 
-LIBRARIES += glog gflags protobuf m hdf5_hl hdf5
+LIBRARIES += glog gflags protobuf m
+ifeq ($(shell  find /usr/lib* /usr/local/lib* -name "libhdf5_serial.so" 2> /dev/null | grep serial >/dev/null  && echo serial) , serial)
+	LIBRARIES += hdf5_serial_hl hdf5_serial
+else
+	LIBRARIES += hdf5_hl hdf5
+endif
+
 BOOST_LIBRARIES += boost_system boost_filesystem boost_regex
 
 # handle IO dependencies
