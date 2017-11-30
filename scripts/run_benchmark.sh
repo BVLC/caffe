@@ -103,7 +103,10 @@ function run_specific_model
         exec_command="${caffe_bin} --model_file ${model_file} --mode time --iteration ${iterations} --benchmark none"
     else
         solver_file="models/intel_optimized_models/${model}/${cpu_model}/solver_dummydata.prototxt"
-        exec_command="${caffe_bin} --hostfile $host_file --solver $solver_file --network $network --netmask $tcp_netmask --benchmark none"
+        exec_command="${caffe_bin} --hostfile $host_file --solver $solver_file --network $network --benchmark none"
+        if [ $network == "tcp" ]; then
+            exec_command+=" --netmask $tcp_netmask"
+        fi
     fi 
 
     # Result file to save detailed run intelcaffe results
