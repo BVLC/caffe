@@ -138,8 +138,6 @@ void MKLDNNMemoryDescriptor<Dtype, is_diff>::convert_to_prv(void* cpu_ptr)
 #ifdef DEBUG
     LOG(INFO) << "--- MKLDNNMemoryDescriptorBase<Dtype>::convert_to_prv --- " << this->name;
 #endif
-    CHECK(cpu_ptr);
-    CHECK_EQ(this->_cpu_ptr, cpu_ptr);
     create_reorder_to_prv(cpu_ptr);
     VLOG(1) << "--- MKLDNNMemoryDescriptorBase<Dtype>::convert_to_prv --- " << this->name;
 #ifdef DEBUG
