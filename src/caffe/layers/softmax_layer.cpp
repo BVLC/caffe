@@ -10,6 +10,10 @@ template <typename Dtype>
 void SoftmaxLayer<Dtype>::Reshape_const(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) const {
   top[0]->ReshapeLike(*bottom[0]);
+  softmax_axis_ =
+      bottom[0]->CanonicalAxisIndex(this->layer_param_.softmax_param().axis());
+  outer_num_ = bottom[0]->count(0, softmax_axis_);
+  inner_num_ = bottom[0]->count(softmax_axis_ + 1);
 }
 
 template <typename Dtype>
