@@ -691,6 +691,7 @@ TYPED_TEST(MKLDNNConvolutionLayerTest, TestSimpleConvolutionGroup) {
   }
 }
 
+#if 0
 TYPED_TEST(MKLDNNConvolutionLayerTest, TestSimpleConvolutionReLUGroup) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
@@ -720,7 +721,6 @@ TYPED_TEST(MKLDNNConvolutionLayerTest, TestSimpleConvolutionReLUGroup) {
   }
 }
 
-#if 0
 TYPED_TEST(MKLDNNConvolutionLayerTest, TestSobelConvolution) {
   // Test separable convolution by computing the Sobel operator
   // as a single filter then comparing the result

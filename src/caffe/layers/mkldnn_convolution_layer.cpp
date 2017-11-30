@@ -201,39 +201,54 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
     shared_ptr<convolution_relu_forward::primitive_desc> convReluFwd_pd = NULL;
     mkldnn::algorithm eligibleAlgorithms[2] = {conv_algorithm, algorithm::convolution_direct};
     convFwd_pd = NULL;
-    for (auto &convAlgorithm : eligibleAlgorithms) {
-        // ---- Initialize convolution primitive descriptor -------------
-        shared_ptr<convolution_forward::desc> convFwd_desc;
-        if (this->bias_term_) {
-            convFwd_desc.reset(new convolution_forward::desc(propagation, convAlgorithm
-                                                             , init_bottom_md, init_weights_md, init_bias_md, init_top_md
-                                                             , convolutionStrides, padding, padding, padding_kind::zero));
-        } else {
-            convFwd_desc.reset(new convolution_forward::desc(propagation, convAlgorithm
-                                                             , init_bottom_md, init_weights_md, init_top_md
-                                                             , convolutionStrides, padding, padding, padding_kind::zero));
-        }
-        shared_ptr<convolution_relu_forward::desc> convReluFwd_desc;
-        if(relu) convReluFwd_desc.reset(new convolution_relu_forward::desc(*convFwd_desc, negative_slope));
+    mkldnn::primitive_attr attr;
+    mkldnn::post_ops ops;
+    
+    if(relu) {
+        float scale = 1.0f; //for fp32, scale is 1.
+        Dtype alpha = negative_slope;  // negative slope for mkldnn_eltwise_relu.
+        float beta = 1.0f;  //ignored for mkldnn_eltwise_relu.
+        ops.append_eltwise(scale, eltwise_relu, alpha, beta);
+        attr.set_post_ops(ops);
+    }
 
-        for(subEngineIndex=0; subEngineIndex < ep.getNumberOfSubEngines(); subEngineIndex++) {
-            try {
-                convFwd_pd.reset(new convolution_forward::primitive_desc(*convFwd_desc,
-                                                                         ep.getMKLDNNSubEngine(subEngineIndex)));
-                if(relu) convReluFwd_pd.reset(new convolution_relu_forward::primitive_desc(*convReluFwd_desc,
-                                                                                           ep.getMKLDNNSubEngine(subEngineIndex)));
-            }
-            catch(...) {
-                continue;
-            }
-            break;
+    for (auto& convAlgorithm : eligibleAlgorithms) {
+      // ---- Initialize convolution primitive descriptor -------------
+      shared_ptr<convolution_forward::desc> convFwd_desc;
+      if (this->bias_term_) {
+        convFwd_desc.reset(new convolution_forward::desc(
+            propagation, convAlgorithm, init_bottom_md, init_weights_md,
+            init_bias_md, init_top_md, convolutionStrides, padding, padding,
+            padding_kind::zero));
+      } else {
+        convFwd_desc.reset(new convolution_forward::desc(
+            propagation, convAlgorithm, init_bottom_md, init_weights_md,
+            init_top_md, convolutionStrides, padding, padding,
+            padding_kind::zero));
+      }
+
+      for (subEngineIndex = 0; subEngineIndex < ep.getNumberOfSubEngines();
+           subEngineIndex++) {
+        try {
+          if (relu) {
+            convFwd_pd.reset(new convolution_forward::primitive_desc(
+                *convFwd_desc, attr, ep.getMKLDNNSubEngine(subEngineIndex)));
+
+          } else {
+            convFwd_pd.reset(new convolution_forward::primitive_desc(
+                *convFwd_desc, ep.getMKLDNNSubEngine(subEngineIndex)));
+          }
+
+        } catch (...) {
+            continue;
         }
-        if ((convFwd_pd) && (!relu || convReluFwd_pd))
-                break;
+        
+        break;
+      }
+      if (convFwd_pd) break;
     }
 
     CHECK(convFwd_pd);
-    if (relu) CHECK(convReluFwd_pd);
     engine cpu_engine = CpuEngine::Instance().get_engine();
 
     // ---- Create priv memory primitive descriptors stored as class members -------------
@@ -272,28 +287,17 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
         fwd_bias_data.reset(new MKLDNNData<Dtype>(usr_bias_data_memory_pd, prv_fwd_bias_data_memory_pd, this->blobs_[1].get(), this));
         fwd_bias_data->name = "fwd_bias_data     @ " + this->layer_param_.name();
         fwd_bias_data_primitive = fwd_bias_data->create_input(true);
-        if(relu) {
-          convFwd.reset(new convolution_relu_forward(*convReluFwd_pd
-                          , *fwd_bottom_data_primitive, *fwd_weights_data_primitive
-                          , *fwd_bias_data_primitive, *fwd_top_data_memory));
-        } else {
-          convFwd.reset(new convolution_forward(*convFwd_pd
-                          , *fwd_bottom_data_primitive, *fwd_weights_data_primitive
-                          , *fwd_bias_data_primitive, *fwd_top_data_memory));
-        }
+
+        convFwd.reset(new convolution_forward(*convFwd_pd
+                        , *fwd_bottom_data_primitive, *fwd_weights_data_primitive
+                        , *fwd_bias_data_primitive, *fwd_top_data_memory));
         //fwd_bias_data->set_mkldnn_primitive(convFwd);   //Wrong passed primitive! (For sure!)
         MKLDNNPrimitive<Dtype> fwd_bias_data_primitive_transfer(fwd_bias_data_primitive);
         fwd_bias_data->set_mkldnn_primitive(fwd_bias_data_primitive_transfer);
     } else {
-        if(relu) {
-          convFwd.reset(new convolution_relu_forward(*convReluFwd_pd
-                          , *fwd_bottom_data_primitive, *fwd_weights_data_primitive
-                          , *fwd_top_data_memory));
-        } else {
-          convFwd.reset(new convolution_forward(*convFwd_pd
-                          , *fwd_bottom_data_primitive, *fwd_weights_data_primitive
-                          , *fwd_top_data_memory));
-        }
+        convFwd.reset(new convolution_forward(*convFwd_pd
+                        , *fwd_bottom_data_primitive, *fwd_weights_data_primitive
+                        , *fwd_top_data_memory));
     }
     //fwd_bottom_data->set_mkldnn_primitive(convFwd);   //Wrong passed primitive! (For sure!)
     MKLDNNPrimitive<Dtype> fwd_bottom_data_primitive_transfer(fwd_bottom_data_primitive);
