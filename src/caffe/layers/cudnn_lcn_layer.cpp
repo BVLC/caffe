@@ -6,8 +6,8 @@
 namespace caffe {
 
 template <typename Dtype>
-void CuDNNLCNLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-    const vector<Blob<Dtype>*>& top) {
+void CuDNNLCNLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype> *> &bottom,
+                                      const vector<Blob<Dtype> *> &top) {
   LRNLayer<Dtype>::LayerSetUp(bottom, top);
 
   CUDNN_CHECK(cudnnCreate(&handle_));
@@ -27,19 +27,23 @@ void CuDNNLCNLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-void CuDNNLCNLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
-    const vector<Blob<Dtype>*>& top) {
+void CuDNNLCNLayer<Dtype>::Reshape(const vector<Blob<Dtype> *> &bottom,
+                                   const vector<Blob<Dtype> *> &top) {
   LRNLayer<Dtype>::Reshape(bottom, top);
   cudnn::setTensor4dDesc<Dtype>(&bottom_desc_, bottom[0]->num(),
-      this->channels_, this->height_, this->width_);
-  cudnn::setTensor4dDesc<Dtype>(&top_desc_, bottom[0]->num(),
-      this->channels_, this->height_, this->width_);
+                                this->channels_, this->height_, this->width_);
+  cudnn::setTensor4dDesc<Dtype>(&top_desc_, bottom[0]->num(), this->channels_,
+                                this->height_, this->width_);
   CUDNN_CHECK(cudnnSetLRNDescriptor(norm_desc_, size_, alpha_, beta_, k_));
 
   // allocate / reallocate tempData buffers
-  size_t totalSizeInBytes = sizeof(Dtype)*bottom[0]->num()* \
-                            this->channels_*this->height_*this->width_;
+  size_t totalSizeInBytes = sizeof(Dtype) * bottom[0]->num() * this->channels_ *
+                            this->height_ * this->width_;
 
+  this->tempData1.reset(new Blob<int>(1, 1, 1, totalSizeInBytes));
+  this->tempData2.reset(new Blob<int>(1, 1, 1, totalSizeInBytes));
+
+  /*
   if (totalSizeInBytes > tempDataSize) {
     tempDataSize = totalSizeInBytes;
 
@@ -56,27 +60,23 @@ void CuDNNLCNLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     tempData2 = SyncedMemory::gpu_malloc(totalSizeInBytes);
 
   }
+  */
 }
 
-template <typename Dtype>
-CuDNNLCNLayer<Dtype>::~CuDNNLCNLayer() {
+template <typename Dtype> CuDNNLCNLayer<Dtype>::~CuDNNLCNLayer() {
   // Check that handles have been setup before destroying.
-  if (!handles_setup_) { return; }
+  if (!handles_setup_) {
+    return;
+  }
 
   cudnnDestroyTensorDescriptor(bottom_desc_);
   cudnnDestroyTensorDescriptor(top_desc_);
 
   // destroy LRN handle
   cudnnDestroy(handle_);
-
-  // free temp buffers
-  //cudaFree(tempData1);
-  //cudaFree(tempData2);
-  SyncedMemory::gpu_free(tempData1);
-  SyncedMemory::gpu_free(tempData2);
 }
 
 INSTANTIATE_CLASS(CuDNNLCNLayer);
 
-}   // namespace caffe
+} // namespace caffe
 #endif

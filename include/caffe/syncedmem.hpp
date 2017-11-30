@@ -35,8 +35,8 @@ public:
   static size_t get_used_size();
 
 
-  static void *gpu_malloc(size_t size);
-  static void gpu_free(void *data);
+  deepir::allocator::buddy_pool *host_pool_;
+  deepir::allocator::buddy_pool * device_pool_;
 
 private:
   void check_device();
@@ -50,6 +50,12 @@ private:
   bool own_cpu_data_;
   bool cpu_malloc_use_cuda_;
   bool own_gpu_data_;
+
+  void host_malloc(void **ptr, size_t size);
+   void host_free(void *ptr, size_t size);
+
+  void *gpu_malloc(size_t size);
+  void gpu_free(void *data);
 
   DISABLE_COPY_AND_ASSIGN(SyncedMemory);
 }; // class SyncedMemory

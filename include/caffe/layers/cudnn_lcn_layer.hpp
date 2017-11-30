@@ -2,6 +2,7 @@
 #define CAFFE_CUDNN_LCN_LAYER_HPP_
 
 #include <vector>
+#include <boost/thread/tss.hpp>
 
 #include "caffe/blob.hpp"
 #include "caffe/layer.hpp"
@@ -38,7 +39,8 @@ class CuDNNLCNLayer : public LRNLayer<Dtype> {
   Dtype alpha_, beta_, k_;
 
   size_t tempDataSize;
-  void *tempData1, *tempData2;
+  mutable ::boost::thread_specific_ptr<Blob<int>> tempData1;
+  mutable ::boost::thread_specific_ptr<Blob<int>> tempData2;
 };
 #endif
 

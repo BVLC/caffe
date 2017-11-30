@@ -87,11 +87,10 @@ void CuDNNConvolutionLayer<Dtype>::Forward_const_gpu(
 
     for (int g = 0; g < this->group_; g++) {
       CUDNN_CHECK(cudnnCreate(&(*handle_ptr_)[g]));
-      CUDNN_CHECK(cudnnSetStream((*handle_ptr_)[g],cudaStreamPerThread));
+      CUDNN_CHECK(cudnnSetStream((*handle_ptr_)[g], cudaStreamPerThread));
       //     CUDA_CHECK(cudaStreamCreate(&(*stream_ptr_)[g]));
-      //CUDNN_CHECK(cudnnSetStream((*handle_ptr_)[g], (*stream_ptr_)[g]));
+      // CUDNN_CHECK(cudnnSetStream((*handle_ptr_)[g], (*stream_ptr_)[g]));
     }
-
   }
 
   if (!filter_desc_ptr_.get()) {
@@ -121,8 +120,7 @@ void CuDNNConvolutionLayer<Dtype>::Forward_const_gpu(
     CUDNN_CHECK(cudnnGetConvolutionForwardAlgorithm(
         (*handle_ptr_)[0], (*bottom_descs_ptr_)[i], *filter_desc_ptr_,
         (*conv_descs_ptr_)[i], (*top_descs_ptr_)[i],
-        CUDNN_CONVOLUTION_FWD_PREFER_FASTEST, 0,
-        &fwd_algo_[i]));
+        CUDNN_CONVOLUTION_FWD_PREFER_FASTEST, 0, &fwd_algo_[i]));
 
     CUDNN_CHECK(cudnnGetConvolutionForwardWorkspaceSize(
         (*handle_ptr_)[0], (*bottom_descs_ptr_)[i], *filter_desc_ptr_,
@@ -143,16 +141,14 @@ void CuDNNConvolutionLayer<Dtype>::Forward_const_gpu(
   // ensure all groups have enough workspace
   size_t total_max_workspace = max_workspace * (this->group_);
 
-
   // free the existing workspace and allocate a new (larger) one
-  this->workspaceData.reset(SyncedMemory::gpu_malloc(total_max_workspace));
-  if (!this->workspaceData.get()) {
+  this->workspaceData.reset(new Blob<int>(1, 1, 1, total_max_workspace));
+  if (!this->workspaceData->count()) {
     // force zero memory path
     for (int i = 0; i < bottom.size(); i++) {
       workspace_fwd_sizes_[i] = 0;
       fwd_algo_[i] = (cudnnConvolutionFwdAlgo_t)0;
     }
-
   }
 
   // Tensor descriptor for bias.
@@ -174,7 +170,6 @@ void CuDNNConvolutionLayer<Dtype>::Forward_const_gpu(
   int top_dim = top[0]->count(this->channel_axis_);
   int top_offset = top_dim / this->group_;
 
-
   for (int i = 0; i < bottom.size(); ++i) {
     const Dtype *bottom_data = bottom[i]->gpu_data();
     Dtype *top_data = top[i]->mutable_gpu_data();
@@ -182,9 +177,10 @@ void CuDNNConvolutionLayer<Dtype>::Forward_const_gpu(
     // Forward through cuDNN in parallel over groups.
     for (int g = 0; g < this->group_; g++) {
       char *workspace = nullptr;
-      if (workspaceData.get()) {
+
+      if (workspaceData->count()) {
         workspace =
-            reinterpret_cast<char *>(workspaceData.get()) + g * max_workspace;
+            (char *)workspaceData->mutable_gpu_data() + g * max_workspace;
       }
 
       // Filters.
