@@ -216,9 +216,7 @@ void SyncedMemory::gpu_free(void *data) {
   }
 
   if (device_pool_) {
-    if (!device_pool_->free(data)) {
-      LOG(ERROR) << "free failed";
-    }
+    CHECK(device_pool_->free(data)) << "free device failed";
     device_pool_ = nullptr;
     return;
   }
@@ -277,9 +275,8 @@ void SyncedMemory::host_free(void *ptr, size_t size) {
 #ifndef CPU_ONLY
   if (cpu_malloc_use_cuda_) {
     if (host_pool_) {
-      if (!host_pool_->free(ptr)) {
-        LOG(ERROR) << "free failed";
-      }
+      CHECK(host_pool_->free(ptr)) << "free host failed";
+      host_pool_ = nullptr;
       return;
     }
     CUDA_CHECK(cudaFreeHost(ptr));
