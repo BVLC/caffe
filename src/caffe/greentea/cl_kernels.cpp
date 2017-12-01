@@ -924,8 +924,8 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "const ushort output_width,",    // NOLINT
 "const ushort output_height) {",    // NOLINT
 "",    // NOLINT
-"int_tp outputX = get_global_id(0) * 4;",    // NOLINT
-"int_tp outputY = get_global_id(1) * 4;",    // NOLINT
+"int_tp outputX = get_global_id(0) * OUT_BLOCK_WIDTH;",    // NOLINT
+"int_tp outputY = get_global_id(1) * OUT_BLOCK_HEIGHT;",    // NOLINT
 "const int_tp outputZ = get_global_id(2);",    // NOLINT
 "",    // NOLINT
 "int_tp org_y = outputY * STRIDE_H - PAD_H;",    // NOLINT
@@ -959,9 +959,9 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "__global Dtype *image_ptr = image_data + image_offset;",    // NOLINT
 "",    // NOLINT
 "int_tp iy = 0;",    // NOLINT
-"LOOP(4, iy, {",    // NOLINT
+"LOOP(OUT_BLOCK_HEIGHT, iy, {",    // NOLINT
 "int_tp ix = 0;",    // NOLINT
-"LOOP(4, ix, {",    // NOLINT
+"LOOP(OUT_BLOCK_WIDTH, ix, {",    // NOLINT
 "const int_tp local_image_offset = org_y * input_width + org_x;",    // NOLINT
 "",    // NOLINT
 "__global Dtype* image_dataPtrFloat = image_ptr + local_image_offset;",    // NOLINT
@@ -1000,8 +1000,8 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "});",    // NOLINT
 "outputY += 1;",    // NOLINT
 "org_y += STRIDE_H;",    // NOLINT
-"org_x -= STRIDE_W * 4;",    // NOLINT
-"outputX -= 4;",    // NOLINT
+"org_x -= STRIDE_W * OUT_BLOCK_WIDTH;",    // NOLINT
+"outputX -= OUT_BLOCK_WIDTH;",    // NOLINT
 "});",    // NOLINT
 "}",    // NOLINT
 "#endif",    // NOLINT

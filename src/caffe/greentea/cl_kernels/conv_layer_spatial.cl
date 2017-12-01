@@ -150,8 +150,8 @@ __kernel void DWCONV(
     const ushort output_width,
     const ushort output_height) {
 
-  int_tp outputX = get_global_id(0) * 4;
-  int_tp outputY = get_global_id(1) * 4;
+  int_tp outputX = get_global_id(0) * OUT_BLOCK_WIDTH;
+  int_tp outputY = get_global_id(1) * OUT_BLOCK_HEIGHT;
   const int_tp outputZ = get_global_id(2);
   
   int_tp org_y = outputY * STRIDE_H - PAD_H;
@@ -185,9 +185,9 @@ __kernel void DWCONV(
   __global Dtype *image_ptr = image_data + image_offset;
 
   int_tp iy = 0;
-  LOOP(4, iy, {
+  LOOP(OUT_BLOCK_HEIGHT, iy, {
     int_tp ix = 0;
-    LOOP(4, ix, {
+    LOOP(OUT_BLOCK_WIDTH, ix, {
       const int_tp local_image_offset = org_y * input_width + org_x;
 
       __global Dtype* image_dataPtrFloat = image_ptr + local_image_offset;
@@ -226,8 +226,8 @@ __kernel void DWCONV(
     });
     outputY += 1;
     org_y += STRIDE_H;
-    org_x -= STRIDE_W * 4;
-    outputX -= 4;
+    org_x -= STRIDE_W * OUT_BLOCK_WIDTH;
+    outputX -= OUT_BLOCK_WIDTH;
   });
 }
 #endif

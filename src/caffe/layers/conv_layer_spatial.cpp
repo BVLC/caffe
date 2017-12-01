@@ -1007,9 +1007,11 @@ cl_int ConvolutionLayerSpatial<Dtype>::convolve(
       kernel.arg(argIdx++, (uint16_t)output_h_);
 
       size_t globalSize[3];
+      int blockWidth = config->workItem_output[0];
+      int blockHeight = config->workItem_output[1];
 
-      globalSize[0] = ((output_w_ + 3)/4 + 3) & ~3;
-      globalSize[1] = ((output_h_ + 3)/4 + 3) & ~3;
+      globalSize[0] = ((output_w_ + blockWidth - 1)/blockWidth + 3) & ~3;
+      globalSize[1] = ((output_h_ + blockHeight - 1)/blockHeight + 3) & ~3;
       globalSize[2] = this->num_output_ * this->num_;
 
       size_t localSize[3];
@@ -1421,10 +1423,11 @@ bool ConvolutionLayerSpatial<Dtype>::create_dw_conv_kernel(
     int_tp blockHeight, int_tp blockDepth) {
   CHECK_EQ((std::is_same<Dtype, double>::value), false);
 
-
   if (!dwconv_)
     return false;
 
+  int_tp output_block_width = blockWidth;
+  int_tp output_block_height = blockHeight;
   // Standard spatial setup is done here
   std::stringstream keyBuilder;
   std::stringstream multFunctionBuilder;
@@ -1452,15 +1455,12 @@ bool ConvolutionLayerSpatial<Dtype>::create_dw_conv_kernel(
                                                  blockWidth,
                                                  blockHeight,
                                                  blockDepth);
-  int_tp workItemOutput[3];
-  workItemOutput[0] = 1;
-  workItemOutput[1] = 1;
-  workItemOutput[2] = 1;
+  int_tp simd_size = 16;
+  int_tp workItemOutput[3] = { blockWidth, blockHeight, simd_size };
 
   std::string kernel_name = "DWCONV_";
   kernel_name += kernelUKey.c_str();
 
-  int_tp simd_size = 16;
   int_tp wvec_size = (kernel_w_ * kernel_h_ + simd_size -1) / simd_size;
   // Build list of options and defines
   optionsString.str("");
@@ -1479,6 +1479,8 @@ bool ConvolutionLayerSpatial<Dtype>::create_dw_conv_kernel(
                 << " -D APPLY_BIAS=" << this->bias_term_
                 << " -D OUTPUT_Z=" << this->num_output_*this->num_
                 << " -D CHANNELS=" << this->num_output_
+                << " -D OUT_BLOCK_WIDTH=" << output_block_width
+                << " -D OUT_BLOCK_HEIGHT=" << output_block_height
                 << " -D " << kernelDef.c_str() << " -D DWCONV="
                 << kernel_name;
 
@@ -1881,10 +1883,14 @@ void ConvolutionLayerSpatial<Dtype>::setup_convolution(
     const vector<Blob<Dtype>*>& top) {
 
   if (this->device_->CheckCapability("cl_intel_subgroups")) {
+    int has_dwconv_kernel = 0;
+    has_dwconv_kernel = create_convolution_kernel(bottom, top, ConvType::DWCONV, 1, 1, 1);
+    has_dwconv_kernel += create_convolution_kernel(bottom, top, ConvType::DWCONV, 2, 2, 1);
+    has_dwconv_kernel +=  create_convolution_kernel(bottom, top, ConvType::DWCONV, 4, 4, 1);
+     
     /* IDLF kernels are using Intel specific extension which make
        them intel only. */
-    if (create_convolution_kernel(bottom, top, ConvType::DWCONV, 1, 1, 1)
-        && this->group_ > 8)
+    if (has_dwconv_kernel && this->group_ > 8)
       return;
     // Create WINOGRAD kernels.
     create_convolution_kernel(bottom, top, ConvType::WINOGRAD, 4, 4, 8);
