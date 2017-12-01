@@ -150,52 +150,69 @@ __kernel void DWCONV(
     const ushort output_width,
     const ushort output_height) {
 
-  const int_tp outputX = get_global_id(0);
-  const int_tp outputY = get_global_id(1);
+  int_tp outputX = get_global_id(0) * 4;
+  int_tp outputY = get_global_id(1) * 4;
   const int_tp outputZ = get_global_id(2);
   
-  const int_tp org_y = outputY * STRIDE_H - PAD_H;
-  const int_tp org_x = outputX * STRIDE_W - PAD_W;
+  int_tp org_y = outputY * STRIDE_H - PAD_H;
+  int_tp org_x = outputX * STRIDE_W - PAD_W;
   const int_tp currentKernelOffset = KERNEL_SIZE*(outputZ%CHANNELS);
   const int_tp biasIndex=outputZ%CHANNELS;
-  const int_tp local_image_offset = org_y*input_width + org_x;
+  // const int_tp local_image_offset = org_y*input_width + org_x;
   const int_tp imageSize = input_width*input_height;
 
-  __global Dtype* image_dataPtrFloat = (image_data + (imageSize*outputZ + local_image_offset));
+  // __global Dtype* image_dataPtrFloat = (image_data + (imageSize*outputZ + local_image_offset));
   __global Dtype* kernel_dataPtrFloat = (kernel_data + (currentKernelOffset));
   const int_tp sub_id = get_sub_group_local_id();
 
-  Dtype local_kernel_data = 0.;
+  Dtype local_kernel_data[WVEC_SIZE];
   Dtype local_bias_data = 0.;
-  if (sub_id < KERNEL_SIZE)
-    local_kernel_data = kernel_dataPtrFloat[sub_id];
+
+  int_tp reg = 0;
+  LOOP(WVEC_SIZE, reg,
+      {
+        int_tp item = sub_id + reg * SIMD_SIZE;
+        if (item < KERNEL_SIZE)
+          local_kernel_data[reg] = kernel_dataPtrFloat[item];
+      }
+  );
   if (sub_id == 0)
     local_bias_data = biases_base[biasIndex];
   
-  // #define BLOCK_IN(n,i) sub_group_broadcast(kernel_data, (n))
-  if(outputX < output_width && outputY < output_height)
-  {
-    Dtype sum = 0.;
+  for(int_tp iy = 0; iy < 4; ++iy) {
+    for(int_tp ix = 0; ix < 4; ++ix) {
+      const int_tp local_image_offset = org_y*input_width + org_x;
 
-    for(int_tp y = 0; y < KERNEL_H; y++)
-    {
-      for(int_tp x = 0; x < KERNEL_W; x++)
+      __global Dtype* image_dataPtrFloat = (image_data + (imageSize*outputZ + local_image_offset));
+      if(outputX < output_width && outputY < output_height)
       {
-        if(!(org_y + y * DILATION_Y >= 0 && org_y + y * DILATION_Y < input_height && org_x + x * DILATION_X >= 0 && org_x + x * DILATION_X < input_width))
+        Dtype sum = 0.;
+
+        for(int_tp y = 0; y < KERNEL_H; y++)
         {
-          continue;
+          for(int_tp x = 0; x < KERNEL_W; x++)
+          {
+            if(!(org_y + y * DILATION_Y >= 0 && org_y + y * DILATION_Y < input_height && org_x + x * DILATION_X >= 0 && org_x + x * DILATION_X < input_width))
+            {
+              continue;
+            }
+            sum += image_dataPtrFloat[x * DILATION_X] * sub_group_broadcast(local_kernel_data[(x+y*KERNEL_W)/SIMD_SIZE], (x+y*KERNEL_W)%SIMD_SIZE);
+          }
+          image_dataPtrFloat += input_width * DILATION_Y;
         }
-        sum += image_dataPtrFloat[x * DILATION_X] * sub_group_broadcast(local_kernel_data, (x+y*KERNEL_W));
+        #if APPLY_BIAS
+        int_tp offset = outputZ*output_height*output_width + outputY*output_width + outputX;
+        ACTIVATION_FUNCTION(convolved_image, offset, sum + sub_group_broadcast(local_bias_data, 0), biasIndex);
+        #else
+        int_tp offset = outputZ*output_height*output_width + outputY*output_width + outputX;
+        ACTIVATION_FUNCTION(convolved_image, offset, sum, biasIndex);
+        #endif
       }
-      image_dataPtrFloat += input_width * DILATION_Y;
+      outputX += 1;
+      org_x += STRIDE_W;
     }
-    #if APPLY_BIAS
-    int_tp offset = outputZ*output_height*output_width + outputY*output_width + outputX;
-    ACTIVATION_FUNCTION(convolved_image, offset, sum + sub_group_broadcast(local_bias_data, 0), biasIndex);
-    #else
-    int_tp offset = outputZ*output_height*output_width + outputY*output_width + outputX;
-    ACTIVATION_FUNCTION(convolved_image, offset, sum, biasIndex);
-    #endif
+    outputY += 1;
+    org_y += STRIDE_H;
   }
 }
 #endif
