@@ -1,0 +1,19 @@
+net: "models/intel_optimized_models/multinode/vgg_16_16nodes_1k_batch/train_val_ip_grad_compress.prototxt"
+warmup_iter: 6255 # 1281167 / 1024 * 5 epochs
+warmup_start_lr: 0.003
+
+test_iter: 1000
+test_interval: 8000
+momentum: 0.9
+weight_decay: 0.0005
+#base_lr: 0.04
+base_lr: 0.06
+lr_policy: "poly"
+power: 2
+max_iter: 80000
+display: 40
+snapshot: 10000
+solver_mode: CPU
+
+snapshot_prefix: "models/intel_optimized_models/multinode/vgg_16_16nodes_1k_batch/vgg_16_grad_compress"
+

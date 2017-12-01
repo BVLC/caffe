@@ -90,8 +90,55 @@ void InternalThread::entry(int device, Caffe::Brew mode, int rand_seed,
   caffe::cpu::OpenMpManager::bindCurrentThreadToNonPrimaryCoreIfPossible();
 #endif
 
+  SetThreadAffinity();
+  
   InternalThreadEntry();
 }
+
+void InternalThread::SetThreadAffinity() {
+#define MAX_CORES 64
+
+  static int count = 0;
+  static int ncores = 0;
+  static int affinity_cores[MAX_CORES];
+  static boost::mutex internal_thread_mutex;
+
+  boost::mutex::scoped_lock lock(internal_thread_mutex);
+  if (count == 0) {
+    char * pin_cores = getenv("INTERNAL_THREADS_PIN");
+    if (pin_cores != NULL) {
+      char * token = strtok(pin_cores, ",");
+      while (token != NULL) {
+        affinity_cores[ncores] = atoi(token);
+        token = strtok(NULL, ",");
+        ncores++;
+        if (ncores >= MAX_CORES) {
+          LOG(INFO) << "Too many cores used for internal threads. Just take first " << ncores << " cores.";
+          break;
+        }
+      }
+    }
+  }
+
+  if (ncores > 0) {
+    int pin_core_id = count % ncores;
+    cpu_set_t set;
+    CPU_ZERO(&set);
+    CPU_SET(affinity_cores[pin_core_id], &set);
+    pthread_t thread = pthread_self();
+    int s = pthread_setaffinity_np(thread, sizeof(cpu_set_t), &set);
+    if (s != 0) {
+      LOG(WARNING) << "Cannot set affinity for internal thread!";
+    }
+    for (int j=0; j<CPU_SETSIZE; j++) {
+      if (CPU_ISSET(j, &set)) {
+        LOG(INFO) << "Internal thread is affinitized to core " << j;
+      }
+    }
+  }
+  count++;
+}
+
 
 void InternalThread::StopInternalThread() {
   if (is_started()) {

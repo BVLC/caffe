@@ -24,6 +24,9 @@ num_mlsl_servers=-1
 
 numservers=0
 
+# pin internal threads to 2 CPU cores for reading data
+internal_thread_pin="on"
+
 function init_mpi_envs
 {
     if [ ${numnodes} -eq 1 ]; then
@@ -154,7 +157,13 @@ function set_openmp_envs
     sockets=`lscpu | grep "Socket(s)" | awk  '{print $2}'`
     maxcores=$((cores*sockets))
 
-    numthreads=$(((maxcores-numservers)*threadspercore))
+    if [ "$internal_thread_pin" == "on" ]; then
+        num_internal_threads=2
+        export INTERNAL_THREADS_PIN=$((maxcores-2)),$((maxcores-1))
+    else
+        num_internal_threads=0
+    fi
+    numthreads=$(((maxcores-numservers-num_internal_threads)*threadspercore))
     numthreads_per_proc=$((numthreads/ppncpu))
 
     # OMP configuration
@@ -174,7 +183,7 @@ function set_openmp_envs
 
         export OMP_NUM_THREADS=${numthreads_per_proc}
         export KMP_HW_SUBSET=1t
-        affinitystr="proclist=[0-5,$((5+numservers+reserved_cores+1))-$((maxcores-1))],granularity=thread,explicit"
+        affinitystr="proclist=[0-5,$((5+numservers+reserved_cores+1))-$((maxcores-1-num_internal_threads))],granularity=thread,explicit"
         export KMP_AFFINITY=$affinitystr
     else
         # For single node only set for KNM
@@ -229,6 +238,10 @@ do
             ;;
         --num_omp_threads)
             num_omp_threads=$2
+            shift
+            ;;
+        --internal_thread_pin)
+            internal_thread_pin=$2
             shift
             ;;
         *)

@@ -39,12 +39,16 @@ weight_file=""
 num_omp_threads=0
 
 # specify engine for running caffe
-engine="MKLDNN"
+engine=""
 
 #default numa node if needed
 numanode=0
 
+# pin internal threads to 2 CPU cores for reading data
+internal_thread_pin="on"
+
 result_dir=""
+
 mpibench_bin="IMB-MPI1"
 mpibench_param="allreduce"
 
@@ -61,6 +65,7 @@ function usage
     echo "               [--iteration iter] [--model_file deploy.prototxt]"
     echo "               [--snapshot snapshot.caffemodel]"
     echo "               [--num_mlsl_servers num_mlsl_servers]"
+    echo "               [--internal_thread_pin on/off]"
     echo "               [--output output_folder]"
     echo "               [--mpibench_bin mpibench_bin]"
     echo "               [--mpibench_param mpibench_param]"
@@ -80,6 +85,7 @@ function usage
     echo "    iteration and model_file: only used if mode is time (caffe time)"
     echo "    snapshot: it's specified if train is resumed"
     echo "    num_mlsl_servers: number of MLSL ep servers"
+    echo "    internal_thread_pin: on(default). pin internal threads to 2 CPU cores for reading data."
     echo "    output_folder: output folder for storing results"
     echo "    mpibench_bin: IMB-MPI1 (default). relative path of binary of mpi benchmark."
     echo "    mpibench_param: allreduce (default). parameter of mpi benchmark."
@@ -307,15 +313,19 @@ function run_caffe
     echo "Run caffe with ${numnodes} nodes..."
 
     if [ ${mode} == "time" ]; then
-        xeonbin="$caffe_bin time --iterations $iteration --model $model_file  -engine=$engine"
+        xeonbin="$caffe_bin time --iterations $iteration --model $model_file"
     else
-        xeonbin="$caffe_bin train --solver $solver_file -engine=$engine"
+        xeonbin="$caffe_bin train --solver $solver_file"
         if [ "${snapshot}" != "" ]; then
             xeonbin+=" --snapshot=${snapshot}"
         fi
         if [ "${weight_file}" != "" ]; then
             xeonbin+=" --weights ${weight_file}"
         fi
+    fi
+
+    if [ "${engine}" != "" ]; then
+        xeonbin+=" --engine=$engine"
     fi
 
     execute_command "$xeonbin" $result_dir
@@ -352,7 +362,7 @@ function check_lmdb_files
     for lmdb_dir in "${lmdb_dirs[@]}"
     do
         data_source_dir=$(grep -w "$lmdb_dir" $model_file_ | head -n 1 | awk -F ' ' '{print $(NF)}' | sed 's/\"//g')
-        echo "LMDB data source: $data_source_dir"
+        echo "    LMDB data source: $data_source_dir"
         if [ ! -d $data_source_dir ]; then
             echo "Error: LMDB data source doesn't exist ($data_source_dir)."
             let is_missing_lmdb=1
@@ -436,6 +446,10 @@ do
             ;;
         --num_omp_threads)
             num_omp_threads=$2
+            shift
+            ;;
+        --internal_thread_pin)
+            internal_thread_pin=$2
             shift
             ;;
         --engine)
@@ -558,7 +572,6 @@ if [[ $host_file != "" ]]; then
     fi
     numnodes=${#nodenames[@]}
 fi
-echo "    Number of nodes: $numnodes"
 
 # test connection between nodes via ssh
 test_ssh_connection $host_file
