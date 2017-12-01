@@ -192,8 +192,8 @@ void *SyncedMemory::gpu_malloc(size_t size) {
   }
   void *ptr = nullptr;
 
-  auto pool = Caffe::device_pool();
-  if (pool) {
+  const auto &pool = Caffe::device_pool();
+  if (pool.get()) {
     ptr = pool->alloc(size);
   } else {
     printf("no memory pool\n");
@@ -215,9 +215,9 @@ void SyncedMemory::gpu_free(void *data) {
     return;
   }
 
-  if (device_pool_) {
+  if (device_pool_.get()) {
     CHECK(device_pool_->free(data)) << "free device failed";
-    device_pool_ = nullptr;
+    device_pool_.reset();
     return;
   }
   CUDA_CHECK(cudaFree(data));
@@ -246,8 +246,8 @@ void SyncedMemory::host_malloc(void **ptr, size_t size) {
 #ifndef CPU_ONLY
   constexpr size_t pinned_memory_max_size = 128;
   if (Caffe::mode() == Caffe::GPU && size <= pinned_memory_max_size) {
-    auto pool = Caffe::host_pool();
-    if (pool) {
+    auto const &pool = Caffe::host_pool();
+    if (pool.get()) {
       *ptr = pool->alloc(size);
       if (*ptr) {
         // puts("malloc cubud cpu");
@@ -274,9 +274,9 @@ void SyncedMemory::host_malloc(void **ptr, size_t size) {
 void SyncedMemory::host_free(void *ptr, size_t size) {
 #ifndef CPU_ONLY
   if (cpu_malloc_use_cuda_) {
-    if (host_pool_) {
+    if (host_pool_.get()) {
       CHECK(host_pool_->free(ptr)) << "free host failed";
-      host_pool_ = nullptr;
+      host_pool_.reset();
       return;
     }
     CUDA_CHECK(cudaFreeHost(ptr));

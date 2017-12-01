@@ -1,8 +1,8 @@
-#include <memory>
-#include <glog/logging.h>
 #include <cmath>
 #include <cstdio>
 #include <ctime>
+#include <glog/logging.h>
+#include <memory>
 #ifdef _WIN32
 #include <process.h>
 #endif
@@ -14,34 +14,25 @@
 namespace caffe {
 
 // Make sure each thread can have different values.
-//static boost::thread_specific_ptr<Caffe> thread_instance_;
+// static boost::thread_specific_ptr<Caffe> thread_instance_;
 static thread_local std::unique_ptr<Caffe> thread_instance_;
 
-Caffe& Caffe::Get() {
+Caffe &Caffe::Get() {
   if (!thread_instance_.get()) {
     thread_instance_.reset(new Caffe());
   }
   return *(thread_instance_.get());
 }
 
-#ifdef CPU_ONLY  // CPU-only Caffe.
+#ifdef CPU_ONLY // CPU-only Caffe.
 
-Caffe::Caffe()
-    :  mode_(Caffe::CPU), device_id_(-1)
-{
+Caffe::Caffe() : mode_(Caffe::CPU), device_id_(-1) {}
 
-}
+Caffe::~Caffe() {}
 
-Caffe::~Caffe() { }
+void Caffe::SetDevice(const int device_id) { NO_GPU; }
 
-
-void Caffe::SetDevice(const int device_id) {
-  NO_GPU;
-}
-
-void Caffe::DeviceQuery() {
-  NO_GPU;
-}
+void Caffe::DeviceQuery() { NO_GPU; }
 
 bool Caffe::CheckDevice(const int device_id) {
   NO_GPU;
@@ -53,13 +44,11 @@ int Caffe::FindDevice(const int start_id) {
   return -1;
 }
 
-#else  // Normal GPU + CPU Caffe.
+#else // Normal GPU + CPU Caffe.
 
-Caffe::Caffe()
-    : cublas_handle_(NULL),
-    mode_(Caffe::CPU),device_id_(-1) {
+Caffe::Caffe() : cublas_handle_(NULL), mode_(Caffe::CPU), device_id_(-1) {
   if (cudaGetDevice(&device_id_) != cudaSuccess) {
-    device_id_=-1;
+    device_id_ = -1;
     LOG(ERROR) << "Cannot get device id.";
   }
   // Try to create a cublas handler, and report an error if failed (but we will
@@ -71,12 +60,15 @@ Caffe::Caffe()
     CUBLAS_CHECK(cublasSetStream(cublas_handle_, cudaStreamPerThread));
   }
 
-  host_pool_=std::make_unique<deepir::allocator::buddy_pool>(deepir::allocator::buddy_pool::alloc_location::host);
-  device_pool_=std::make_unique<deepir::allocator::buddy_pool>(deepir::allocator::buddy_pool::alloc_location::device);
+  host_pool_ = std::make_shared<deepir::allocator::buddy_pool>(
+      deepir::allocator::buddy_pool::alloc_location::host);
+  device_pool_ = std::make_shared<deepir::allocator::buddy_pool>(
+      deepir::allocator::buddy_pool::alloc_location::device);
 }
 
 Caffe::~Caffe() {
-  if (cublas_handle_) CUBLAS_CHECK(cublasDestroy(cublas_handle_));
+  if (cublas_handle_)
+    CUBLAS_CHECK(cublasDestroy(cublas_handle_));
 }
 
 void Caffe::SetDevice(const int device_id) {
@@ -89,9 +81,9 @@ void Caffe::SetDevice(const int device_id) {
   // may perform initialization using the GPU.
   CUDA_CHECK(cudaSetDevice(device_id));
   Get().device_id_ = device_id;
-  if (Get().cublas_handle_) CUBLAS_CHECK(cublasDestroy(Get().cublas_handle_));
+  if (Get().cublas_handle_)
+    CUBLAS_CHECK(cublasDestroy(Get().cublas_handle_));
   CUBLAS_CHECK(cublasCreate(&Get().cublas_handle_));
-
 }
 
 void Caffe::DeviceQuery() {
@@ -112,20 +104,18 @@ void Caffe::DeviceQuery() {
   LOG(INFO) << "Warp size:                     " << prop.warpSize;
   LOG(INFO) << "Maximum memory pitch:          " << prop.memPitch;
   LOG(INFO) << "Maximum threads per block:     " << prop.maxThreadsPerBlock;
-  LOG(INFO) << "Maximum dimension of block:    "
-      << prop.maxThreadsDim[0] << ", " << prop.maxThreadsDim[1] << ", "
-      << prop.maxThreadsDim[2];
-  LOG(INFO) << "Maximum dimension of grid:     "
-      << prop.maxGridSize[0] << ", " << prop.maxGridSize[1] << ", "
-      << prop.maxGridSize[2];
+  LOG(INFO) << "Maximum dimension of block:    " << prop.maxThreadsDim[0]
+            << ", " << prop.maxThreadsDim[1] << ", " << prop.maxThreadsDim[2];
+  LOG(INFO) << "Maximum dimension of grid:     " << prop.maxGridSize[0] << ", "
+            << prop.maxGridSize[1] << ", " << prop.maxGridSize[2];
   LOG(INFO) << "Clock rate:                    " << prop.clockRate;
   LOG(INFO) << "Total constant memory:         " << prop.totalConstMem;
   LOG(INFO) << "Texture alignment:             " << prop.textureAlignment;
   LOG(INFO) << "Concurrent copy and execution: "
-      << (prop.deviceOverlap ? "Yes" : "No");
+            << (prop.deviceOverlap ? "Yes" : "No");
   LOG(INFO) << "Number of multiprocessors:     " << prop.multiProcessorCount;
   LOG(INFO) << "Kernel execution timeout:      "
-      << (prop.kernelExecTimeoutEnabled ? "Yes" : "No");
+            << (prop.kernelExecTimeoutEnabled ? "Yes" : "No");
   return;
 }
 
@@ -146,7 +136,7 @@ bool Caffe::CheckDevice(const int device_id) {
   bool r = ((cudaSuccess == cudaSetDevice(device_id)) &&
             (cudaSuccess == cudaFree(0)));
   // reset any error that may have occurred.
-  //cudaGetLastError();
+  // cudaGetLastError();
   return r;
 }
 
@@ -158,12 +148,13 @@ int Caffe::FindDevice(const int start_id) {
   int count = 0;
   CUDA_CHECK(cudaGetDeviceCount(&count));
   for (int i = start_id; i < count; i++) {
-    if (CheckDevice(i)) return i;
+    if (CheckDevice(i))
+      return i;
   }
   return -1;
 }
 
-const char* cublasGetErrorString(cublasStatus_t error) {
+const char *cublasGetErrorString(cublasStatus_t error) {
   switch (error) {
   case CUBLAS_STATUS_SUCCESS:
     return "CUBLAS_STATUS_SUCCESS";
@@ -193,6 +184,6 @@ const char* cublasGetErrorString(cublasStatus_t error) {
   return "Unknown cublas status";
 }
 
-#endif  // CPU_ONLY
+#endif // CPU_ONLY
 
-}  // namespace caffe
+} // namespace caffe
