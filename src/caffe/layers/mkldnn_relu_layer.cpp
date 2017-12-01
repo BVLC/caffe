@@ -88,7 +88,7 @@ void MKLDNNReLULayer<Dtype>::InitReLUFwd(const vector<Blob<Dtype>*>& bottom, con
     engine cpu_engine = CpuEngine::Instance().get_engine();
     memory::data_type mpcsn = memory::data_type::f32;
     // ---- Initialize memory descriptors -------------
-    shared_ptr<memory::desc> top_data_md;
+    shared_ptr<memory::desc> bottom_data_md, top_data_md;
     shared_ptr<memory::primitive_desc> usr_data_mpd(NULL), prv_data_mpd(NULL);
     if (bottom_data_is_prv) {
         shared_ptr<MKLDNNMemoryDescriptor<Dtype, false> > mem_descr
@@ -196,7 +196,10 @@ void MKLDNNReLULayer<Dtype>::InitReLUBwd(const vector<Blob<Dtype>*>& top
     memory::data_type mpcsn = memory::data_type::f32;
 
     // ---- Initialize memory descriptors -------------
+    shared_ptr<memory::desc> bottom_diff_md = NULL;
     shared_ptr<memory::desc> top_diff_md = NULL;
+    shared_ptr<memory::desc> top_data_md = NULL;
+
     shared_ptr<memory::primitive_desc> usr_diff_mpd = NULL;
     shared_ptr<memory::primitive_desc> prv_diff_mpd = NULL;
 
@@ -250,11 +253,14 @@ void MKLDNNReLULayer<Dtype>::InitReLUBwd(const vector<Blob<Dtype>*>& top
       usr_diff_mpd.reset(new memory::primitive_desc(*top_diff_md, cpu_engine));
     }
     
+    top_data_md = top_diff_md;
+    bottom_diff_md = top_diff_md;
+
     // ---- Initialize relu primitive descriptor -------------
     //relu_backward::desc reluBwd_desc(*top_diff_md, *top_data_md, negative_slope);
     // MKLDNN is deprecating standalone relu primitive in MKL-DNN.
     // Now MKLDNN has eltwise primitive with eltwise_relu algorithm inside.
-    eltwise_backward::desc eltwise_reluBwd_desc(eltwise_relu, *top_diff_md, *bottom_data_md, negative_slope);
+    eltwise_backward::desc eltwise_reluBwd_desc(eltwise_relu, *top_diff_md, *top_data_md, negative_slope);
 
     // ---- Determining engine to use -----------------------
     std::string subengines = this->layer_param_.engine();

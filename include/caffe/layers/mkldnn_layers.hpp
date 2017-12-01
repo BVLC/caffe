@@ -104,7 +104,6 @@ private:
     shared_ptr<MKLDNNDiff<Dtype> > bwd_top_diff, bwd_bottom_diff;
     shared_ptr<batch_normalization_forward::primitive_desc> BatchNormFwd_pd;
     shared_ptr<batch_normalization_backward::primitive_desc> BatchNormBwd_pd;
-    shared_ptr<memory::desc> input_stats_md;
 
     vector<MKLDNNPrimitive<Dtype> > BatchNormFwd, BatchNormBwd;
     vector<shared_ptr<memory> > mean_memory, variance_memory;
@@ -392,7 +391,6 @@ private:
     shared_ptr<MKLDNNDiff<Dtype> > bwd_top_diff, bwd_bottom_diff;
     shared_ptr<relu_forward::primitive_desc> reluFwd_pd;
     shared_ptr<relu_backward::primitive_desc> reluBwd_pd;
-    shared_ptr<memory::desc> bottom_data_md;
     MKLDNNPrimitive<Dtype> reluFwd, reluBwd;
     shared_ptr<memory> fwd_top_data_memory, bwd_bottom_diff_memory;
     shared_ptr<primitive> fwd_bottom_data_primitive, bwd_top_diff_primitive;
