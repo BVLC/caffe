@@ -56,7 +56,8 @@ void MTCNNBBoxLayer<Dtype>::Forward_cpu_const(
 }
 
 #ifdef CPU_ONLY
-// STUB_GPU(MTCNNBBoxLayer);
+STUB_GPU(MTCNNBBoxLayer);
+STUB_GPU_FORWARD_CONST(MTCNNBBoxLayer,Forward_const);
 #endif
 
 INSTANTIATE_CLASS(MTCNNBBoxLayer);

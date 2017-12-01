@@ -22,21 +22,11 @@ size_t SyncedMemory::get_used_size() { return 0; }
 SyncedMemory::SyncedMemory()
     : cpu_ptr_(NULL), gpu_ptr_(NULL), size_(0), head_(UNINITIALIZED),
       own_cpu_data_(false), cpu_malloc_use_cuda_(false), own_gpu_data_(false) {
-#ifndef CPU_ONLY
-#ifdef DEBUG
-  CUDA_CHECK(cudaGetDevice(&device_));
-#endif
-#endif
 }
 
 SyncedMemory::SyncedMemory(size_t size)
     : cpu_ptr_(NULL), gpu_ptr_(NULL), size_(size), head_(UNINITIALIZED),
       own_cpu_data_(false), cpu_malloc_use_cuda_(false), own_gpu_data_(false) {
-#ifndef CPU_ONLY
-#ifdef DEBUG
-  CUDA_CHECK(cudaGetDevice(&device_));
-#endif
-#endif
 }
 
 SyncedMemory::~SyncedMemory() {
@@ -221,21 +211,8 @@ void SyncedMemory::gpu_free(void *data) {
     return;
   }
   CUDA_CHECK(cudaFree(data));
-
-  /*
-  CUDA_CHECK(cudaDeviceSynchronize());
-  //在caffe實例銷毀的時候由其它線程觸發刪除
-   puts("gpu_free global");
-  auto device_id = Caffe::GetDevice();
-
-//  std::shared_lock<std::shared_timed_mutex> lock(gpu_pool_mutex);
-  for(auto &pool:device_pools[device_id]) {
-    if(pool->free(data)) {
-      return;
-    }
-  }
-  */
 }
+#endif
 
 // If CUDA is available and in GPU mode, host memory will be allocated pinned,
 // using cudaMallocHost. It avoids dynamic pinning for transfers (DMA).
@@ -289,7 +266,5 @@ void SyncedMemory::host_free(void *ptr, size_t size) {
   free(ptr);
 #endif
 }
-
-#endif
 
 } // namespace caffe
