@@ -185,10 +185,10 @@ function obtain_batch_size
         echo "Error: log file $log_file does not exist..."
         exit 1
     fi
-    if [ $numnodes -eq 1 ]; then
-        batch_size=`cat $log_file | grep shape | sed -n "3, 1p" | awk '{print $(NF-4)}'`
-    else
-        batch_size=`cat $log_file | grep SetMinibatchSize | sed -n "1, 1p" | awk '{print $(NF)}'`
+    batch_size=`cat $log_file | grep shape | sed -n "3, 1p" | awk '{print $(NF-4)}'`
+    batch_size_opt=`cat $log_file | grep SetMinibatchSize | sed -n "1, 1p" | awk '{print $(NF)}'`
+    if [[ $batch_size_opt != "" ]]; then
+        batch_size=$batch_size_opt
     fi
     echo "batch size: $batch_size"
 }

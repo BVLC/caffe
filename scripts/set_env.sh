@@ -175,6 +175,7 @@ function set_openmp_envs
         export OMP_NUM_THREADS=${numthreads_per_proc}
         export KMP_HW_SUBSET=1t
         affinitystr="proclist=[0-5,$((5+numservers+reserved_cores+1))-$((maxcores-1))],granularity=thread,explicit"
+        export KMP_AFFINITY=$affinitystr
     else
         # For single node only set for KNM
         if [ "${cpu_model}" == "knm" ]; then 
@@ -182,9 +183,9 @@ function set_openmp_envs
             export MKL_ENABLE_INSTRUCTIONS=AVX512_MIC_E1
             export OMP_NUM_THREADS=${numthreads_per_proc}
             affinitystr="compact,1,0,granularity=fine"
+            export KMP_AFFINITY=$affinitystr
         fi
     fi
-    export KMP_AFFINITY=$affinitystr
 
     echo "Number of OpenMP threads: ${numthreads_per_proc}"
 }
