@@ -1007,9 +1007,11 @@ cl_int ConvolutionLayerSpatial<Dtype>::convolve(
       kernel.arg(argIdx++, (uint16_t)output_h_);
 
       size_t globalSize[3];
-      globalSize[0] = output_w_;
-      globalSize[1] = output_h_;
+
+      globalSize[0] = (output_w_ + 3)/4;
+      globalSize[1] = (output_h_+3)/4;
       globalSize[2] = this->num_output_*this->num_;
+
       err = clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
                                    kernel.handle().get(), 3,
                                    NULL,
@@ -1453,12 +1455,16 @@ bool ConvolutionLayerSpatial<Dtype>::create_dw_conv_kernel(
   std::string kernel_name = "DWCONV_";
   kernel_name += kernelUKey.c_str();
 
+  int_tp simd_size = 16;
+  int_tp wvec_size = (kernel_w_ * kernel_h_ + simd_size -1) / simd_size;
   // Build list of options and defines
   optionsString.str("");
   optionsString << "-cl-fast-relaxed-math "
-                << " -D KERNELSIZE=" << kernel_w_ * kernel_h_
+                << " -D SIMD_SIZE=" << simd_size
+                << " -D KERNEL_SIZE=" << kernel_w_ * kernel_h_
                 << " -D KERNEL_W=" << kernel_w_
                 << " -D KERNEL_H=" << kernel_h_
+                << " -D WVEC_SIZE=" << wvec_size
                 << " -D STRIDE_H=" << stride_h_
                 << " -DDILATION_X=" << dilation_w_
                 << " -DDILATION_Y=" << dilation_h_

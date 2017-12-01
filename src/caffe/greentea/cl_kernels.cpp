@@ -911,6 +911,7 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "#endif",    // NOLINT
 "",    // NOLINT
 "#ifdef DWCONV",    // NOLINT
+"__attribute__((intel_reqd_sub_group_size(SIMD_SIZE)))",    // NOLINT
 "__kernel void DWCONV(",    // NOLINT
 "ELTWISE_DATA_ARG",    // NOLINT
 "NEGATIVE_SLOPE_ARG",    // NOLINT
@@ -923,22 +924,43 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "const ushort output_width,",    // NOLINT
 "const ushort output_height) {",    // NOLINT
 "",    // NOLINT
-"const int_tp outputX = get_global_id(0);",    // NOLINT
-"const int_tp outputY = get_global_id(1);",    // NOLINT
+"int_tp outputX = get_global_id(0) * 4;",    // NOLINT
+"int_tp outputY = get_global_id(1) * 4;",    // NOLINT
 "const int_tp outputZ = get_global_id(2);",    // NOLINT
+"",    // NOLINT
+"int_tp org_y = outputY * STRIDE_H - PAD_H;",    // NOLINT
+"int_tp org_x = outputX * STRIDE_W - PAD_W;",    // NOLINT
+"const int_tp currentKernelOffset = KERNEL_SIZE*(outputZ%CHANNELS);",    // NOLINT
+"const int_tp biasIndex=outputZ%CHANNELS;",    // NOLINT
+"// const int_tp local_image_offset = org_y*input_width + org_x;",    // NOLINT
+"const int_tp imageSize = input_width*input_height;",    // NOLINT
+"",    // NOLINT
+"// __global Dtype* image_dataPtrFloat = (image_data + (imageSize*outputZ + local_image_offset));",    // NOLINT
+"__global Dtype* kernel_dataPtrFloat = (kernel_data + (currentKernelOffset));",    // NOLINT
+"const int_tp sub_id = get_sub_group_local_id();",    // NOLINT
+"",    // NOLINT
+"Dtype local_kernel_data[WVEC_SIZE];",    // NOLINT
+"Dtype local_bias_data = 0.;",    // NOLINT
+"",    // NOLINT
+"int_tp reg = 0;",    // NOLINT
+"LOOP(WVEC_SIZE, reg,",    // NOLINT
+"{",    // NOLINT
+"int_tp item = sub_id + reg * SIMD_SIZE;",    // NOLINT
+"if (item < KERNEL_SIZE)",    // NOLINT
+"local_kernel_data[reg] = kernel_dataPtrFloat[item];",    // NOLINT
+"}",    // NOLINT
+");",    // NOLINT
+"if (sub_id == 0)",    // NOLINT
+"local_bias_data = biases_base[biasIndex];",    // NOLINT
+"",    // NOLINT
+"for(int_tp iy = 0; iy < 4; ++iy) {",    // NOLINT
+"for(int_tp ix = 0; ix < 4; ++ix) {",    // NOLINT
+"const int_tp local_image_offset = org_y*input_width + org_x;",    // NOLINT
+"",    // NOLINT
+"__global Dtype* image_dataPtrFloat = (image_data + (imageSize*outputZ + local_image_offset));",    // NOLINT
 "if(outputX < output_width && outputY < output_height)",    // NOLINT
 "{",    // NOLINT
 "Dtype sum = 0.;",    // NOLINT
-"",    // NOLINT
-"const int_tp org_y = outputY * STRIDE_H - PAD_H;",    // NOLINT
-"const int_tp org_x = outputX * STRIDE_W - PAD_W;",    // NOLINT
-"const int_tp currentKernelOffset = KERNELSIZE*(outputZ%CHANNELS);",    // NOLINT
-"const int_tp biasIndex=outputZ%CHANNELS;",    // NOLINT
-"const int_tp local_image_offset = org_y*input_width + org_x;",    // NOLINT
-"const int_tp imageSize = input_width*input_height;",    // NOLINT
-"",    // NOLINT
-"__global Dtype* image_dataPtrFloat = (image_data + (imageSize*outputZ + local_image_offset));",    // NOLINT
-"__global Dtype* kernel_dataPtrFloat = (kernel_data + (currentKernelOffset));",    // NOLINT
 "",    // NOLINT
 "for(int_tp y = 0; y < KERNEL_H; y++)",    // NOLINT
 "{",    // NOLINT
@@ -948,19 +970,23 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "{",    // NOLINT
 "continue;",    // NOLINT
 "}",    // NOLINT
-"sum += image_dataPtrFloat[x * DILATION_X] * kernel_dataPtrFloat[x];",    // NOLINT
+"sum += image_dataPtrFloat[x * DILATION_X] * sub_group_broadcast(local_kernel_data[(x+y*KERNEL_W)/SIMD_SIZE], (x+y*KERNEL_W)%SIMD_SIZE);",    // NOLINT
 "}",    // NOLINT
 "image_dataPtrFloat += input_width * DILATION_Y;",    // NOLINT
-"kernel_dataPtrFloat += KERNEL_W;",    // NOLINT
 "}",    // NOLINT
-"",    // NOLINT
 "#if APPLY_BIAS",    // NOLINT
 "int_tp offset = outputZ*output_height*output_width + outputY*output_width + outputX;",    // NOLINT
-"ACTIVATION_FUNCTION(convolved_image, offset, sum + biases_base[biasIndex], biasIndex);",    // NOLINT
+"ACTIVATION_FUNCTION(convolved_image, offset, sum + sub_group_broadcast(local_bias_data, 0), biasIndex);",    // NOLINT
 "#else",    // NOLINT
 "int_tp offset = outputZ*output_height*output_width + outputY*output_width + outputX;",    // NOLINT
 "ACTIVATION_FUNCTION(convolved_image, offset, sum, biasIndex);",    // NOLINT
 "#endif",    // NOLINT
+"}",    // NOLINT
+"outputX += 1;",    // NOLINT
+"org_x += STRIDE_W;",    // NOLINT
+"}",    // NOLINT
+"outputY += 1;",    // NOLINT
+"org_y += STRIDE_H;",    // NOLINT
 "}",    // NOLINT
 "}",    // NOLINT
 "#endif",    // NOLINT
