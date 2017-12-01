@@ -78,6 +78,8 @@ class InternalThread {
   /* Should be tested when running loops to exit when requested. */
   bool must_stop();
 
+  void SetThreadAffinity();
+
  private:
   void entry(int device, Caffe::Brew mode, int rand_seed, int solver_count,
       bool root_solver);

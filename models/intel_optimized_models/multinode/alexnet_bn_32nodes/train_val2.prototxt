@@ -3,6 +3,8 @@
 #------------------------------------------
 name: "AlexNet_bn"
 
+engine:"MKL2017"
+
 #default_conv_algos_override: "1,1,1"
 #default_cudnn_math_override: 0
 
