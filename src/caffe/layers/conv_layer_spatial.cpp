@@ -1008,14 +1008,19 @@ cl_int ConvolutionLayerSpatial<Dtype>::convolve(
 
       size_t globalSize[3];
 
-      globalSize[0] = (output_w_ + 3)/4;
-      globalSize[1] = (output_h_+3)/4;
-      globalSize[2] = this->num_output_*this->num_;
+      globalSize[0] = ((output_w_ + 3)/4 + 3) & ~3;
+      globalSize[1] = ((output_h_ + 3)/4 + 3) & ~3;
+      globalSize[2] = this->num_output_ * this->num_;
+
+      size_t localSize[3];
+      localSize[0] = 4;
+      localSize[1] = 4;
+      localSize[2] = 1;
 
       err = clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
                                    kernel.handle().get(), 3,
                                    NULL,
-                                   globalSize, NULL, 0, NULL,
+                                   globalSize, localSize, 0, NULL,
                                    NULL);
 
       if (err != CL_SUCCESS)

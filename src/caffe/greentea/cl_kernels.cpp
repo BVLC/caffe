@@ -930,64 +930,79 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "",    // NOLINT
 "int_tp org_y = outputY * STRIDE_H - PAD_H;",    // NOLINT
 "int_tp org_x = outputX * STRIDE_W - PAD_W;",    // NOLINT
-"const int_tp currentKernelOffset = KERNEL_SIZE*(outputZ%CHANNELS);",    // NOLINT
-"const int_tp biasIndex=outputZ%CHANNELS;",    // NOLINT
-"// const int_tp local_image_offset = org_y*input_width + org_x;",    // NOLINT
-"const int_tp imageSize = input_width*input_height;",    // NOLINT
+"int_tp channel_id = outputZ % CHANNELS;",    // NOLINT
+"const int_tp currentKernelOffset = KERNEL_SIZE * channel_id;",    // NOLINT
+"const int_tp biasIndex = channel_id;",    // NOLINT
+"const int_tp imageSize = input_width * input_height;",    // NOLINT
 "",    // NOLINT
-"// __global Dtype* image_dataPtrFloat = (image_data + (imageSize*outputZ + local_image_offset));",    // NOLINT
-"__global Dtype* kernel_dataPtrFloat = (kernel_data + (currentKernelOffset));",    // NOLINT
+"__global Dtype* kernel_dataPtrFloat = (kernel_data + currentKernelOffset);",    // NOLINT
 "const int_tp sub_id = get_sub_group_local_id();",    // NOLINT
 "",    // NOLINT
 "Dtype local_kernel_data[WVEC_SIZE];",    // NOLINT
-"Dtype local_bias_data = 0.;",    // NOLINT
 "",    // NOLINT
 "int_tp reg = 0;",    // NOLINT
+"",    // NOLINT
+"#if APPLY_BIAS",    // NOLINT
+"Dtype local_bias_data;",    // NOLINT
+"if (sub_id == 0)",    // NOLINT
+"local_bias_data = biases_base[biasIndex];",    // NOLINT
+"Dtype bias_value = sub_group_broadcast(local_bias_data, 0);",    // NOLINT
+"#endif",    // NOLINT
 "LOOP(WVEC_SIZE, reg,",    // NOLINT
 "{",    // NOLINT
 "int_tp item = sub_id + reg * SIMD_SIZE;",    // NOLINT
-"if (item < KERNEL_SIZE)",    // NOLINT
 "local_kernel_data[reg] = kernel_dataPtrFloat[item];",    // NOLINT
 "}",    // NOLINT
 ");",    // NOLINT
-"if (sub_id == 0)",    // NOLINT
-"local_bias_data = biases_base[biasIndex];",    // NOLINT
 "",    // NOLINT
-"for(int_tp iy = 0; iy < 4; ++iy) {",    // NOLINT
-"for(int_tp ix = 0; ix < 4; ++ix) {",    // NOLINT
-"const int_tp local_image_offset = org_y*input_width + org_x;",    // NOLINT
+"int_tp image_offset = imageSize * outputZ;",    // NOLINT
+"__global Dtype *image_ptr = image_data + image_offset;",    // NOLINT
 "",    // NOLINT
-"__global Dtype* image_dataPtrFloat = (image_data + (imageSize*outputZ + local_image_offset));",    // NOLINT
-"if(outputX < output_width && outputY < output_height)",    // NOLINT
-"{",    // NOLINT
+"int_tp iy = 0;",    // NOLINT
+"LOOP(4, iy, {",    // NOLINT
+"int_tp ix = 0;",    // NOLINT
+"LOOP(4, ix, {",    // NOLINT
+"const int_tp local_image_offset = org_y * input_width + org_x;",    // NOLINT
+"",    // NOLINT
+"__global Dtype* image_dataPtrFloat = image_ptr + local_image_offset;",    // NOLINT
+"",    // NOLINT
+"if(outputX < output_width &&",    // NOLINT
+"outputY < output_height) {",    // NOLINT
+"",    // NOLINT
 "Dtype sum = 0.;",    // NOLINT
 "",    // NOLINT
-"for(int_tp y = 0; y < KERNEL_H; y++)",    // NOLINT
-"{",    // NOLINT
-"for(int_tp x = 0; x < KERNEL_W; x++)",    // NOLINT
-"{",    // NOLINT
-"if(!(org_y + y * DILATION_Y >= 0 && org_y + y * DILATION_Y < input_height && org_x + x * DILATION_X >= 0 && org_x + x * DILATION_X < input_width))",    // NOLINT
-"{",    // NOLINT
-"continue;",    // NOLINT
+"int_tp y = 0;",    // NOLINT
+"LOOP(KERNEL_H, y, {",    // NOLINT
+"int_tp x = 0;",    // NOLINT
+"LOOP(KERNEL_W, x, {",    // NOLINT
+"if(org_y + y * DILATION_Y >= 0 &&",    // NOLINT
+"org_y + y * DILATION_Y < input_height &&",    // NOLINT
+"org_x + x * DILATION_X >= 0 &&",    // NOLINT
+"org_x + x * DILATION_X < input_width) {",    // NOLINT
+"int_tp kernel_idx = (x + y * KERNEL_W) / SIMD_SIZE;",    // NOLINT
+"int_tp kernel_ch = (x + y * KERNEL_W) % SIMD_SIZE;",    // NOLINT
+"Dtype data = image_dataPtrFloat[x * DILATION_X];",    // NOLINT
+"Dtype weight_data = sub_group_broadcast(local_kernel_data[kernel_idx], kernel_ch);",    // NOLINT
+"sum += data * weight_data;",    // NOLINT
 "}",    // NOLINT
-"sum += image_dataPtrFloat[x * DILATION_X] * sub_group_broadcast(local_kernel_data[(x+y*KERNEL_W)/SIMD_SIZE], (x+y*KERNEL_W)%SIMD_SIZE);",    // NOLINT
-"}",    // NOLINT
+"});",    // NOLINT
 "image_dataPtrFloat += input_width * DILATION_Y;",    // NOLINT
-"}",    // NOLINT
+"});",    // NOLINT
+"int_tp offset = outputZ * output_height * output_width + outputY * output_width + outputX;",    // NOLINT
 "#if APPLY_BIAS",    // NOLINT
-"int_tp offset = outputZ*output_height*output_width + outputY*output_width + outputX;",    // NOLINT
-"ACTIVATION_FUNCTION(convolved_image, offset, sum + sub_group_broadcast(local_bias_data, 0), biasIndex);",    // NOLINT
+"ACTIVATION_FUNCTION(convolved_image, offset, sum + bias_value, biasIndex);",    // NOLINT
 "#else",    // NOLINT
-"int_tp offset = outputZ*output_height*output_width + outputY*output_width + outputX;",    // NOLINT
 "ACTIVATION_FUNCTION(convolved_image, offset, sum, biasIndex);",    // NOLINT
 "#endif",    // NOLINT
 "}",    // NOLINT
 "outputX += 1;",    // NOLINT
 "org_x += STRIDE_W;",    // NOLINT
-"}",    // NOLINT
+"});",    // NOLINT
 "outputY += 1;",    // NOLINT
 "org_y += STRIDE_H;",    // NOLINT
-"}",    // NOLINT
+"org_x -= STRIDE_W * 4;",    // NOLINT
+"outputX -= 4;",    // NOLINT
+"});",    // NOLINT
 "}",    // NOLINT
 "#endif",    // NOLINT
 "",    // NOLINT

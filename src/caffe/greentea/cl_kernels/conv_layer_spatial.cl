@@ -156,64 +156,79 @@ __kernel void DWCONV(
   
   int_tp org_y = outputY * STRIDE_H - PAD_H;
   int_tp org_x = outputX * STRIDE_W - PAD_W;
-  const int_tp currentKernelOffset = KERNEL_SIZE*(outputZ%CHANNELS);
-  const int_tp biasIndex=outputZ%CHANNELS;
-  // const int_tp local_image_offset = org_y*input_width + org_x;
-  const int_tp imageSize = input_width*input_height;
+  int_tp channel_id = outputZ % CHANNELS;
+  const int_tp currentKernelOffset = KERNEL_SIZE * channel_id;
+  const int_tp biasIndex = channel_id;
+  const int_tp imageSize = input_width * input_height;
 
-  // __global Dtype* image_dataPtrFloat = (image_data + (imageSize*outputZ + local_image_offset));
-  __global Dtype* kernel_dataPtrFloat = (kernel_data + (currentKernelOffset));
+  __global Dtype* kernel_dataPtrFloat = (kernel_data + currentKernelOffset);
   const int_tp sub_id = get_sub_group_local_id();
 
   Dtype local_kernel_data[WVEC_SIZE];
-  Dtype local_bias_data = 0.;
 
   int_tp reg = 0;
+
+  #if APPLY_BIAS
+  Dtype local_bias_data;
+  if (sub_id == 0)
+    local_bias_data = biases_base[biasIndex];
+  Dtype bias_value = sub_group_broadcast(local_bias_data, 0);
+  #endif
   LOOP(WVEC_SIZE, reg,
       {
         int_tp item = sub_id + reg * SIMD_SIZE;
-        if (item < KERNEL_SIZE)
-          local_kernel_data[reg] = kernel_dataPtrFloat[item];
+        local_kernel_data[reg] = kernel_dataPtrFloat[item];
       }
   );
-  if (sub_id == 0)
-    local_bias_data = biases_base[biasIndex];
   
-  for(int_tp iy = 0; iy < 4; ++iy) {
-    for(int_tp ix = 0; ix < 4; ++ix) {
-      const int_tp local_image_offset = org_y*input_width + org_x;
+  int_tp image_offset = imageSize * outputZ;
+  __global Dtype *image_ptr = image_data + image_offset;
 
-      __global Dtype* image_dataPtrFloat = (image_data + (imageSize*outputZ + local_image_offset));
-      if(outputX < output_width && outputY < output_height)
-      {
+  int_tp iy = 0;
+  LOOP(4, iy, {
+    int_tp ix = 0;
+    LOOP(4, ix, {
+      const int_tp local_image_offset = org_y * input_width + org_x;
+
+      __global Dtype* image_dataPtrFloat = image_ptr + local_image_offset;
+
+      if(outputX < output_width &&
+         outputY < output_height) {
+
         Dtype sum = 0.;
 
-        for(int_tp y = 0; y < KERNEL_H; y++)
-        {
-          for(int_tp x = 0; x < KERNEL_W; x++)
-          {
-            if(!(org_y + y * DILATION_Y >= 0 && org_y + y * DILATION_Y < input_height && org_x + x * DILATION_X >= 0 && org_x + x * DILATION_X < input_width))
-            {
-              continue;
+        int_tp y = 0;
+        LOOP(KERNEL_H, y, {
+          int_tp x = 0;
+          LOOP(KERNEL_W, x, {
+            if(org_y + y * DILATION_Y >= 0 &&
+                 org_y + y * DILATION_Y < input_height &&
+                 org_x + x * DILATION_X >= 0 &&
+                 org_x + x * DILATION_X < input_width) {
+              int_tp kernel_idx = (x + y * KERNEL_W) / SIMD_SIZE;
+              int_tp kernel_ch = (x + y * KERNEL_W) % SIMD_SIZE;
+              Dtype data = image_dataPtrFloat[x * DILATION_X];
+              Dtype weight_data = sub_group_broadcast(local_kernel_data[kernel_idx], kernel_ch);
+              sum += data * weight_data;
             }
-            sum += image_dataPtrFloat[x * DILATION_X] * sub_group_broadcast(local_kernel_data[(x+y*KERNEL_W)/SIMD_SIZE], (x+y*KERNEL_W)%SIMD_SIZE);
-          }
+          });
           image_dataPtrFloat += input_width * DILATION_Y;
-        }
+        });
+        int_tp offset = outputZ * output_height * output_width + outputY * output_width + outputX;
         #if APPLY_BIAS
-        int_tp offset = outputZ*output_height*output_width + outputY*output_width + outputX;
-        ACTIVATION_FUNCTION(convolved_image, offset, sum + sub_group_broadcast(local_bias_data, 0), biasIndex);
+        ACTIVATION_FUNCTION(convolved_image, offset, sum + bias_value, biasIndex);
         #else
-        int_tp offset = outputZ*output_height*output_width + outputY*output_width + outputX;
         ACTIVATION_FUNCTION(convolved_image, offset, sum, biasIndex);
         #endif
       }
       outputX += 1;
       org_x += STRIDE_W;
-    }
+    });
     outputY += 1;
     org_y += STRIDE_H;
-  }
+    org_x -= STRIDE_W * 4;
+    outputX -= 4;
+  });
 }
 #endif
 
