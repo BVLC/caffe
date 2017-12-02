@@ -45,7 +45,11 @@ void EuclideanLossLayer<Dtype, MItype, MOtype>::Backward_gpu(
   }
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(EuclideanLossLayer, (float), (float), (float));
-INSTANTIATE_LAYER_GPU_FUNCS(EuclideanLossLayer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(EuclideanLossLayer,
+                             (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(EuclideanLossLayer,
+                             (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(EuclideanLossLayer,
+                             (double), (double), (double));
 
 }  // namespace caffe

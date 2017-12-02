@@ -77,8 +77,9 @@ uint_tp caffe_rng_rand();
 template<typename Dtype>
 Dtype caffe_nextafter(const Dtype b);
 
+void caffe_rng_uniform(const uint_tp n, uint8_t* r);
+void caffe_rng_uniform(const uint_tp n, uint16_t* r);
 void caffe_rng_uniform(const uint_tp n, uint32_t* r);
-
 void caffe_rng_uniform(const uint_tp n, uint64_t* r);
 
 template<typename Dtype>

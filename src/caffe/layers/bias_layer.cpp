@@ -119,10 +119,12 @@ void BiasLayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob<MOtype>*>&
 STUB_GPU(BiasLayer);
 #endif
 
-INSTANTIATE_CLASS_3T(BiasLayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T(BiasLayer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(BiasLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(BiasLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(BiasLayer, (double), (double), (double));
 
 REGISTER_LAYER_CLASS(Bias);
+REGISTER_LAYER_CLASS_INST(Bias, (half_fp), (half_fp), (half_fp));
 REGISTER_LAYER_CLASS_INST(Bias, (float), (float), (float));
 REGISTER_LAYER_CLASS_INST(Bias, (double), (double), (double));
 

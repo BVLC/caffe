@@ -59,7 +59,7 @@ void CuDNNTanHLayer<Dtype, MItype, MOtype>::Backward_gpu(const vector<Blob<MOtyp
 #endif
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(CuDNNTanHLayer);
+INSTANTIATE_CLASS_3T_GUARDED(CuDNNTanHLayer);
 
 }  // namespace caffe
 #endif

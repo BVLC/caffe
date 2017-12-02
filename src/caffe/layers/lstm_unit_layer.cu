@@ -151,7 +151,7 @@ void LSTMUnitLayer<Dtype, MItype, MOtype>::GenerateProgram() {
      ss << this->device_program_->kernel_loop("uint_tp", "index", "nthreads");
      ss << "const int_tp n = index / dim;" << std::endl;
      ss << "const int_tp d = index % dim;" << std::endl;
-     ss << this->device_->global_ptr("const Dtype", "x_offset")
+     ss << this->device_program_->global_ptr("const Dtype", "x_offset")
         << " = x + 4 * dim * n;" << std::endl;
      ss << "const Dtype i = x_offset[d];" << std::endl;
      ss << "const Dtype f = x_offset[1 * dim + d];" << std::endl;
@@ -160,17 +160,17 @@ void LSTMUnitLayer<Dtype, MItype, MOtype>::GenerateProgram() {
      ss << "const Dtype c_prev_t = c_prev[index];" << std::endl;
      ss << "const Dtype c_t = c[index];" << std::endl;
      ss << "const Dtype tanh_c = " << tanh<Dtype>("c_t") << ";" << std::endl;
-     ss << this->device_->global_ptr("Dtype", "c_prev_diff_t")
+     ss << this->device_program_->global_ptr("Dtype", "c_prev_diff_t")
         << " = c_prev_diff + index;" << std::endl;
-     ss << this->device_->global_ptr("Dtype", "x_diff_offset")
+     ss << this->device_program_->global_ptr("Dtype", "x_diff_offset")
         << " = x_diff + 4 * dim * n;" << std::endl;
-     ss << this->device_->global_ptr("Dtype", "i_diff")
+     ss << this->device_program_->global_ptr("Dtype", "i_diff")
         << " = x_diff_offset + d;" << std::endl;
-     ss << this->device_->global_ptr("Dtype", "f_diff")
+     ss << this->device_program_->global_ptr("Dtype", "f_diff")
         << " = x_diff_offset + 1 * dim + d;" << std::endl;
-     ss << this->device_->global_ptr("Dtype", "o_diff")
+     ss << this->device_program_->global_ptr("Dtype", "o_diff")
         << " = x_diff_offset + 2 * dim + d;" << std::endl;
-     ss << this->device_->global_ptr("Dtype", "g_diff")
+     ss << this->device_program_->global_ptr("Dtype", "g_diff")
         << " = x_diff_offset + 3 * dim + d;" << std::endl;
      ss << "const Dtype c_term_diff = "
         << "c_diff[index] + h_diff[index] * o * (1 - tanh_c * tanh_c);"
@@ -296,6 +296,7 @@ void LSTMUnitLayer<Dtype, MItype, MOtype>::Backward_gpu(
   }
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(LSTMUnitLayer);
-
+INSTANTIATE_CLASS_3T_GUARDED(LSTMUnitLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(LSTMUnitLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(LSTMUnitLayer, (double), (double), (double));
 }  // namespace caffe

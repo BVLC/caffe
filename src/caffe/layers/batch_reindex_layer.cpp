@@ -79,10 +79,16 @@ void BatchReindexLayer<Dtype, MItype, MOtype>::Backward_cpu(
 STUB_GPU(BatchReindexLayer);
 #endif
 
-INSTANTIATE_CLASS_3T(BatchReindexLayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T(BatchReindexLayer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(BatchReindexLayer,
+                             (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(BatchReindexLayer,
+                             (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(BatchReindexLayer,
+                             (double), (double), (double));
 
 REGISTER_LAYER_CLASS(BatchReindex);
+REGISTER_LAYER_CLASS_INST(BatchReindex, (half_fp), (half_fp), (half_fp));
 REGISTER_LAYER_CLASS_INST(BatchReindex, (float), (float), (float));
 REGISTER_LAYER_CLASS_INST(BatchReindex, (double), (double), (double));
+
 }  // namespace caffe

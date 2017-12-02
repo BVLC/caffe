@@ -132,10 +132,12 @@ void DataLayer<Dtype, MItype, MOtype>::load_batch(Batch<Dtype>* batch) {
   DLOG(INFO)<< "Transform time: " << trans_time / 1000 << " ms.";
 }
 
-INSTANTIATE_CLASS_3T(DataLayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T(DataLayer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(DataLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(DataLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(DataLayer, (double), (double), (double));
 
 REGISTER_LAYER_CLASS(Data);
+REGISTER_LAYER_CLASS_INST(Data, (half_fp), (half_fp), (half_fp));
 REGISTER_LAYER_CLASS_INST(Data, (float), (float), (float));
 REGISTER_LAYER_CLASS_INST(Data, (double), (double), (double));
 

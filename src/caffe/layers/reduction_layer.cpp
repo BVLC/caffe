@@ -126,10 +126,12 @@ void ReductionLayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob<MOtyp
 STUB_GPU(ReductionLayer);
 #endif
 
-INSTANTIATE_CLASS_3T(ReductionLayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T(ReductionLayer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(ReductionLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(ReductionLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(ReductionLayer, (double), (double), (double));
 
 REGISTER_LAYER_CLASS(Reduction);
+REGISTER_LAYER_CLASS_INST(Reduction, (half_fp), (half_fp), (half_fp));
 REGISTER_LAYER_CLASS_INST(Reduction, (float), (float), (float));
 REGISTER_LAYER_CLASS_INST(Reduction, (double), (double), (double));
 

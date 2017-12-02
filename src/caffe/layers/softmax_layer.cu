@@ -324,6 +324,8 @@ void SoftmaxLayer<Dtype, MItype, MOtype>::Backward_gpu(
                                      top_data, bottom_diff);
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(SoftmaxLayer);
+INSTANTIATE_CLASS_3T_GUARDED(SoftmaxLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(SoftmaxLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(SoftmaxLayer, (double), (double), (double));
 
 }  // namespace caffe

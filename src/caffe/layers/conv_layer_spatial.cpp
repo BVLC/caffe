@@ -1627,14 +1627,14 @@ void ConvolutionLayerSpatial<Dtype>::Backward_gpu(
   NOT_IMPLEMENTED;
 }
 #endif
-INSTANTIATE_LAYER_GPU_FUNCS(ConvolutionLayerSpatial);
+INSTANTIATE_CLASS_3T_GUARDED(ConvolutionLayerSpatial);
 #endif
 
 #ifdef CPU_ONLY
 STUB_GPU(ConvolutionLayerSpatial);
 #endif
 
-INSTANTIATE_CLASS_3T(ConvolutionLayerSpatial);
+INSTANTIATE_CLASS_3T_GUARDED(ConvolutionLayerSpatial);
 
 }  // namespace caffe
 #endif  // USE_INTEL_SPATIAL

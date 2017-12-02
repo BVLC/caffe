@@ -56,7 +56,8 @@ CuDNNLRNLayer<Dtype, MItype, MOtype>::~CuDNNLRNLayer() {
   cudnnDestroy(handle_);
 }
 
-INSTANTIATE_CLASS_3T(CuDNNLRNLayer);
+INSTANTIATE_CLASS_3T_GUARDED(CuDNNLRNLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(CuDNNLRNLayer, (double), (double), (double));
 
 }   // namespace caffe
 #endif

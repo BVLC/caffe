@@ -41,7 +41,7 @@ class Device {
   virtual bool CheckVendor(string vendor);
   virtual bool CheckType(string type);
   virtual void SwitchQueue(uint_tp id);
-  virtual uint_tp current_queue_id();
+  uint_tp current_queue_id();
   size_t workgroup_size(uint_tp id);
   virtual void get_threads(const vector<size_t>* work_size,
                            vector<size_t>* local,
@@ -173,8 +173,10 @@ class Device {
 
   // rng_uniform with two arguments generates integers in the range
   // [0, UINT_MAX].
-  virtual void rng_uniform(const uint_tp n, vptr<uint32_t> r);  // NOLINT
-  virtual void rng_uniform(const uint_tp n, vptr<uint64_t> r);  // NOLINT
+  virtual void rng_uniform(const uint_tp n, vptr<uint8_t> r);
+  virtual void rng_uniform(const uint_tp n, vptr<uint16_t> r);
+  virtual void rng_uniform(const uint_tp n, vptr<uint32_t> r);
+  virtual void rng_uniform(const uint_tp n, vptr<uint64_t> r);
 
   // rng_uniform with four arguments generates floats in the range
   // (a, b] (strictly greater than a, less than or equal to b)
@@ -187,10 +189,21 @@ class Device {
                     vptr<Dtype> r);
 
   template<typename Dtype>
-  void rng_bernoulli(const uint_tp n, const Dtype p, vptr<int> r);
-
+  void rng_bernoulli(const uint_tp n, const Dtype p, vptr<int8_t> r);
   template<typename Dtype>
-  void rng_bernoulli(const uint_tp n, const Dtype p, vptr<unsigned int> r);
+  void rng_bernoulli(const uint_tp n, const Dtype p, vptr<int16_t> r);
+  template<typename Dtype>
+  void rng_bernoulli(const uint_tp n, const Dtype p, vptr<int32_t> r);
+  template<typename Dtype>
+  void rng_bernoulli(const uint_tp n, const Dtype p, vptr<int64_t> r);
+  template<typename Dtype>
+  void rng_bernoulli(const uint_tp n, const Dtype p, vptr<uint8_t> r);
+  template<typename Dtype>
+  void rng_bernoulli(const uint_tp n, const Dtype p, vptr<uint16_t> r);
+  template<typename Dtype>
+  void rng_bernoulli(const uint_tp n, const Dtype p, vptr<uint32_t> r);
+  template<typename Dtype>
+  void rng_bernoulli(const uint_tp n, const Dtype p, vptr<uint64_t> r);
 
   template<typename Dtype>
   void dot(const uint_tp n, vptr<const Dtype> x, vptr<const Dtype> y,
@@ -297,22 +310,53 @@ class Device {
                                    const double sigma, vptr<double> r);
 
   virtual void rng_bernoulli_half(const uint_tp n, const half_fp p,
-                                  vptr<int> r);
-
-  virtual void rng_bernoulli_float(const uint_tp n, const float p,
-                                   vptr<int> r);
-
-  virtual void rng_bernoulli_double(const uint_tp n, const double p,
-                                    vptr<int> r);
-
+                                  vptr<int8_t> r);
   virtual void rng_bernoulli_half(const uint_tp n, const half_fp p,
-                                  vptr<unsigned int> r);
-
+                                  vptr<int16_t> r);
+  virtual void rng_bernoulli_half(const uint_tp n, const half_fp p,
+                                  vptr<int32_t> r);
+  virtual void rng_bernoulli_half(const uint_tp n, const half_fp p,
+                                  vptr<int64_t> r);
+  virtual void rng_bernoulli_half(const uint_tp n, const half_fp p,
+                                  vptr<uint8_t> r);
+  virtual void rng_bernoulli_half(const uint_tp n, const half_fp p,
+                                  vptr<uint16_t> r);
+  virtual void rng_bernoulli_half(const uint_tp n, const half_fp p,
+                                  vptr<uint32_t> r);
+  virtual void rng_bernoulli_half(const uint_tp n, const half_fp p,
+                                  vptr<uint64_t> r);
   virtual void rng_bernoulli_float(const uint_tp n, const float p,
-                                   vptr<unsigned int> r);
-
+                                   vptr<int8_t> r);
+  virtual void rng_bernoulli_float(const uint_tp n, const float p,
+                                   vptr<int16_t> r);
+  virtual void rng_bernoulli_float(const uint_tp n, const float p,
+                                   vptr<int32_t> r);
+  virtual void rng_bernoulli_float(const uint_tp n, const float p,
+                                   vptr<int64_t> r);
+  virtual void rng_bernoulli_float(const uint_tp n, const float p,
+                                   vptr<uint8_t> r);
+  virtual void rng_bernoulli_float(const uint_tp n, const float p,
+                                   vptr<uint16_t> r);
+  virtual void rng_bernoulli_float(const uint_tp n, const float p,
+                                   vptr<uint32_t> r);
+  virtual void rng_bernoulli_float(const uint_tp n, const float p,
+                                   vptr<uint64_t> r);
   virtual void rng_bernoulli_double(const uint_tp n, const double p,
-                                    vptr<unsigned int> r);
+                                    vptr<int8_t> r);
+  virtual void rng_bernoulli_double(const uint_tp n, const double p,
+                                    vptr<int16_t> r);
+  virtual void rng_bernoulli_double(const uint_tp n, const double p,
+                                    vptr<int32_t> r);
+  virtual void rng_bernoulli_double(const uint_tp n, const double p,
+                                    vptr<int64_t> r);
+  virtual void rng_bernoulli_double(const uint_tp n, const double p,
+                                    vptr<uint8_t> r);
+  virtual void rng_bernoulli_double(const uint_tp n, const double p,
+                                    vptr<uint16_t> r);
+  virtual void rng_bernoulli_double(const uint_tp n, const double p,
+                                    vptr<uint32_t> r);
+  virtual void rng_bernoulli_double(const uint_tp n, const double p,
+                                    vptr<uint64_t> r);
 
   virtual void dot_half(const uint_tp n, vptr<const half_fp> x,
                      vptr<const half_fp> y, half_fp *out);
@@ -340,6 +384,18 @@ class Device {
   virtual void scal_double(const uint_tp n, const double alpha,
                          vptr<double> x);
 
+  virtual void scal_int8(const uint_tp n, const int8_t alpha,
+                         vptr<int8_t> x);
+
+  virtual void scal_int16(const uint_tp n, const int16_t alpha,
+                          vptr<int16_t> x);
+
+  virtual void scal_int32(const uint_tp n, const int32_t alpha,
+                          vptr<int32_t> x);
+
+  virtual void scal_int64(const uint_tp n, const int64_t alpha,
+                          vptr<int64_t> x);
+
   virtual void scale_half(const uint_tp n, const half_fp alpha,
                           vptr<const half_fp> x,
                           vptr<half_fp> y);
@@ -350,22 +406,22 @@ class Device {
   virtual void scale_double(const uint_tp n, const double alpha,
                             vptr<const double> x, vptr<double> y);
 
-  int current_queue_id_;
+  int_tp current_queue_id_;
   size_t max_local_size_;
   vector<size_t> max_local_sizes_;
   vector<size_t> max_group_sizes_;
-  int id_;
-  int list_id_;
+  int_tp id_;
+  int_tp list_id_;
   Backend backend_;
   uint_tp memory_usage_;
   uint_tp peak_memory_usage_;
-  vector<shared_ptr<Blob<char> > > buffers_;
+  vector<shared_ptr<Blob<int8_t> > > buffers_;
   std::mutex buffer_vec_mutex_;
   vector<shared_ptr<std::mutex> > buffer_mutex_;
   bool host_unified_;
   bool fast_unsafe_math_;
   string name_;
-  shared_ptr<DeviceProgram> math_program_;
+  vector<shared_ptr<DeviceProgram>> math_programs_;
   shared_ptr<DeviceProgram> im2col_program_;
 };
 

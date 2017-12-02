@@ -149,10 +149,12 @@ void CropLayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob<MOtype>*>&
 STUB_GPU(CropLayer);
 #endif
 
-INSTANTIATE_CLASS_3T(CropLayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T(CropLayer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(CropLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(CropLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(CropLayer, (double), (double), (double));
 
 REGISTER_LAYER_CLASS(Crop);
+REGISTER_LAYER_CLASS_INST(Crop, (half_fp), (half_fp), (half_fp));
 REGISTER_LAYER_CLASS_INST(Crop, (float), (float), (float));
 REGISTER_LAYER_CLASS_INST(Crop, (double), (double), (double));
 

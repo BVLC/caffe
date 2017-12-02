@@ -28,7 +28,7 @@ for i in range(0, len(variant_types)):
         header.write('\n')
     else:
         header.write('\\\n')
-        
+   
 header.write('#define PROTO_TYPES\\\n')
 for i in range(0, len(proto_types.keys())):
     header.write('  (' + proto_types.keys()[i] + ')')
@@ -52,6 +52,8 @@ for var_type_1 in variant_types:
         flag = variant_enable_flags[var_type_1]
         if not flag in flags:
             flags.append(flag)
+    header.write('#define INSTANTIATE_CLASS_' + var_type_1 + '(CLASSNAME)\\\n')
+    header.write('  template class CLASSNAME<' + var_type_1 + '>;\n')
     if len(flags) > 0:
         header.write('#if ')
     for i in range(0, len(flags)):
@@ -60,14 +62,15 @@ for var_type_1 in variant_types:
             header.write('\n')
         else:
             header.write(' && ')
-    header.write('#define INSTANTIATE_CLASS_' + var_type_1 + '(CLASSNAME)\\\n')
+    header.write('#define INSTANTIATE_CLASS_GUARDED_' + var_type_1 + '(CLASSNAME)\\\n')
     header.write('  template class CLASSNAME<' + var_type_1 + '>;\n')
     header.write('#define REGISTER_SOLVER_CREATOR_' + var_type_1 + '(TYPE, CREATOR)\\\n')
     header.write('  static SolverRegisterer<' + var_type_1 + '> ')
     header.write('g_creator_' + var_type_1 + '_##TYPE(#TYPE, CREATOR<'+ var_type_1 + '>);\n')
     if len(flags) > 0:
         header.write('#else\n')
-        header.write('#define INSTANTIATE_CLASS_' + var_type_1 + '(CLASSNAME)\n')
+        header.write('#define INSTANTIATE_CLASS_GUARDED_' + var_type_1 + '(CLASSNAME)\n')
+        header.write('#define REGISTER_SOLVER_CREATOR_' + var_type_1 + '(TYPE, CREATOR)\n')
         header.write('#endif\n')
 
 # 2 template class instantiation
@@ -82,6 +85,8 @@ for var_type_1 in variant_types:
             flag = variant_enable_flags[var_type_2]
             if not flag in flags:
                 flags.append(flag)
+        header.write('#define INSTANTIATE_CLASS_' + var_type_1 + '_' + var_type_2 + '(CLASSNAME)\\\n')
+        header.write('  template class CLASSNAME<' + var_type_1 + ',' + var_type_2 + '>;\n')
         if len(flags) > 0:
             header.write('#if ')
         for i in range(0, len(flags)):
@@ -90,11 +95,11 @@ for var_type_1 in variant_types:
                 header.write('\n')
             else:
                 header.write(' && ')
-        header.write('#define INSTANTIATE_CLASS_' + var_type_1 + '_' + var_type_2 + '(CLASSNAME)\\\n')
+        header.write('#define INSTANTIATE_CLASS_GUARDED_' + var_type_1 + '_' + var_type_2 + '(CLASSNAME)\\\n')
         header.write('  template class CLASSNAME<' + var_type_1 + ',' + var_type_2 + '>;\n')
         if len(flags) > 0:
             header.write('#else\n')
-            header.write('#define INSTANTIATE_CLASS_' + var_type_1 + '_' + var_type_2 + '(CLASSNAME)\n')
+            header.write('#define INSTANTIATE_CLASS_GUARDED_' + var_type_1 + '_' + var_type_2 + '(CLASSNAME)\n')
             header.write('#endif\n')
 
 # 3 template class instantiation
@@ -114,6 +119,8 @@ for var_type_1 in variant_types:
                 flag = variant_enable_flags[var_type_3]
                 if not flag in flags:
                     flags.append(flag)
+            header.write('#define INSTANTIATE_CLASS_' + var_type_1 + '_' + var_type_2 + '_' + var_type_3 + '(CLASSNAME)\\\n')
+            header.write('  template class CLASSNAME<' + var_type_1 + ',' + var_type_2 + ',' + var_type_3 + '>;\n')
             if len(flags) > 0:
                 header.write('#if ')
             for i in range(0, len(flags)):
@@ -122,7 +129,7 @@ for var_type_1 in variant_types:
                     header.write('\n')
                 else:
                     header.write(' && ')
-            header.write('#define INSTANTIATE_CLASS_' + var_type_1 + '_' + var_type_2 + '_' + var_type_3 + '(CLASSNAME)\\\n')
+            header.write('#define INSTANTIATE_CLASS_GUARDED_' + var_type_1 + '_' + var_type_2 + '_' + var_type_3 + '(CLASSNAME)\\\n')
             header.write('  template class CLASSNAME<' + var_type_1 + ',' + var_type_2 + ',' + var_type_3 + '>;\n')
             header.write('#define INSTANTIATE_LAYER_GPU_FORWARD_' + var_type_1 + '_' + var_type_2 + '_' + var_type_3 + '(CLASSNAME)\\\n')
             header.write('  template void CLASSNAME<' + var_type_1 + ',' + var_type_2 + ',' + var_type_3 + '>::Forward_gpu(\\\n')
@@ -138,7 +145,7 @@ for var_type_1 in variant_types:
             header.write('g_creator_' + var_type_1 + '_' + var_type_2 + '_' + var_type_3 + '_##TYPE(#TYPE, CREATOR<'+ var_type_1 + ',' + var_type_2 + ',' + var_type_3 + '>);\n')
             if len(flags) > 0:
                 header.write('#else\n')
-                header.write('#define INSTANTIATE_CLASS_' + var_type_1 + '_' + var_type_2 + '_' + var_type_3 + '(CLASSNAME)\n')
+                header.write('#define INSTANTIATE_CLASS_GUARDED_' + var_type_1 + '_' + var_type_2 + '_' + var_type_3 + '(CLASSNAME)\n')
                 header.write('#define INSTANTIATE_LAYER_GPU_FORWARD_' + var_type_1 + '_' + var_type_2 + '_' + var_type_3 + '(CLASSNAME)\n')
                 header.write('#define INSTANTIATE_LAYER_GPU_BACKWARD_' + var_type_1 + '_' + var_type_2 + '_' + var_type_3 + '(CLASSNAME)\n')
                 header.write('#define REGISTER_LAYER_CREATOR_' + var_type_1 + '_' + var_type_2 + '_' + var_type_3 + '(TYPE, CREATOR)\n')
@@ -157,26 +164,33 @@ header.write('  (BOOST_PP_CAT(BOOST_PP_CAT(BOOST_PP_CAT(BOOST_PP_SEQ_ELEM(0,SEQ_
 header.write('#define CART_SET_JOIN_US_3T(T1, T2, T3)\\\n')
 header.write('  BOOST_PP_SEQ_FOR_EACH_PRODUCT(CART_PROD_JOIN_US_3T, (T1) (T2) (T3))\n')
 
-# 1 template class instantiation
-header.write('#define INSTANTIATE_CLASS_1T_HELPER(R, CLASSNAME, T1)\\\n')
-header.write('  BOOST_PP_CAT(INSTANTIATE_CLASS_, T1)(CLASSNAME)\n')
+# template class instantiation
+header.write('#define INSTANTIATE_CLASS_HELPER(R, CLASSNAME, T)\\\n')
+header.write('  BOOST_PP_CAT(INSTANTIATE_CLASS_, T)(CLASSNAME)\n')
 
+header.write('#define INSTANTIATE_CLASS_GUARDED_HELPER(R, CLASSNAME, T)\\\n')
+header.write('  BOOST_PP_CAT(INSTANTIATE_CLASS_GUARDED_, T)(CLASSNAME)\n')
+
+# 1 template class instantiation
 header.write('#define INSTANTIATE_CLASS_1T(CLASSNAME, T1)\\\n')
-header.write('  BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_CLASS_1T_HELPER, CLASSNAME, T1)\n')
+header.write('  BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_CLASS_HELPER, CLASSNAME, T1)\n')
+
+header.write('#define INSTANTIATE_CLASS_1T_GUARDED(CLASSNAME, T1)\\\n')
+header.write('  BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_CLASS_GUARDED_HELPER, CLASSNAME, T1)\n')
 
 # 2 template class instantiation
-header.write('#define INSTANTIATE_CLASS_2T_HELPER(R, CLASSNAME, T1T2)\\\n')
-header.write('  BOOST_PP_CAT(INSTANTIATE_CLASS_, T1T2)(CLASSNAME)\n')
-
 header.write('#define INSTANTIATE_CLASS_2T(CLASSNAME, T1, T2)\\\n')
-header.write('  BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_CLASS_2T_HELPER, CLASSNAME, CART_SET_JOIN_US_2T(T1, T2))\n')
+header.write('  BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_CLASS_HELPER, CLASSNAME, CART_SET_JOIN_US_2T(T1, T2))\n')
+
+header.write('#define INSTANTIATE_CLASS_2T_GUARDED(CLASSNAME, T1, T2)\\\n')
+header.write('  BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_CLASS_GUARDED_HELPER, CLASSNAME, CART_SET_JOIN_US_2T(T1, T2))\n')
 
 # 3 template class instantiation
-header.write('#define INSTANTIATE_CLASS_3T_HELPER(R, CLASSNAME, T1T2T3)\\\n')
-header.write('  BOOST_PP_CAT(INSTANTIATE_CLASS_, T1T2T3)(CLASSNAME)\n')
-
 header.write('#define INSTANTIATE_CLASS_3T(CLASSNAME, T1, T2, T3)\\\n')
-header.write('  BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_CLASS_1T_HELPER, CLASSNAME, CART_SET_JOIN_US_3T(T1, T2, T3))\n')
+header.write('  BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_CLASS_HELPER, CLASSNAME, CART_SET_JOIN_US_3T(T1, T2, T3))\n')
+
+header.write('#define INSTANTIATE_CLASS_3T_GUARDED(CLASSNAME, T1, T2, T3)\\\n')
+header.write('  BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_CLASS_GUARDED_HELPER, CLASSNAME, CART_SET_JOIN_US_3T(T1, T2, T3))\n')
 
 # Instantiate pointer class
 header.write('#define INSTANTIATE_POINTER_CLASS(CLASSNAME)\\\n')

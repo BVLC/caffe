@@ -179,6 +179,8 @@ void BatchNormLayer<Dtype, MItype, MOtype>::Backward_gpu(
                                      temp_.gpu_data(), bottom_diff);
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(BatchNormLayer);
+INSTANTIATE_CLASS_3T_GUARDED(BatchNormLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(BatchNormLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(BatchNormLayer, (double), (double), (double));
 
 }  // namespace caffe

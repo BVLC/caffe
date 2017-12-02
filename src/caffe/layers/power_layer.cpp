@@ -96,10 +96,12 @@ void PowerLayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob<MOtype>*>
 STUB_GPU(PowerLayer);
 #endif
 
-INSTANTIATE_CLASS_3T(PowerLayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T(PowerLayer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(PowerLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(PowerLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(PowerLayer, (double), (double), (double));
 
 REGISTER_LAYER_CLASS(Power);
+REGISTER_LAYER_CLASS_INST(Power, (half_fp), (half_fp), (half_fp));
 REGISTER_LAYER_CLASS_INST(Power, (float), (float), (float));
 REGISTER_LAYER_CLASS_INST(Power, (double), (double), (double));
 

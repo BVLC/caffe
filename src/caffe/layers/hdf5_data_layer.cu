@@ -34,7 +34,9 @@ void HDF5DataLayer<Dtype, MItype, MOtype>::Forward_gpu(
   }
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(HDF5DataLayer);
+INSTANTIATE_CLASS_3T_GUARDED(HDF5DataLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(HDF5DataLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(HDF5DataLayer, (double), (double), (double));
 
 }  // namespace caffe
 #endif  // USE_HDF5

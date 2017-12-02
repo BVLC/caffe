@@ -84,4 +84,6 @@ template void adadelta_update_gpu<double>(Device* dev,
                   double delta, double local_rate);
 #endif  // USE_DOUBLE
 
+INSTANTIATE_CLASS_1T_GUARDED(AdaDeltaSolver, (half_fp)(float)(double));
+
 }  // namespace caffe

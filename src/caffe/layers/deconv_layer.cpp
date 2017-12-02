@@ -81,11 +81,19 @@ void DeconvolutionLayer<Dtype, MItype, MOtype>::Backward_cpu(
 STUB_GPU(DeconvolutionLayer);
 #endif
 
-INSTANTIATE_CLASS_3T(DeconvolutionLayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T(DeconvolutionLayer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(DeconvolutionLayer,
+                             (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(DeconvolutionLayer,
+                             (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(DeconvolutionLayer,
+                             (double), (double), (double));
 
 REGISTER_LAYER_CLASS(Deconvolution);
-REGISTER_LAYER_CLASS_INST(Deconvolution, (float), (float), (float));
-REGISTER_LAYER_CLASS_INST(Deconvolution, (double), (double), (double));
+REGISTER_LAYER_CLASS_INST(Deconvolution,
+                          (half_fp), (half_fp), (half_fp));
+REGISTER_LAYER_CLASS_INST(Deconvolution,
+                          (float), (float), (float));
+REGISTER_LAYER_CLASS_INST(Deconvolution,
+                          (double), (double), (double));
 
 }  // namespace caffe

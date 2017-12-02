@@ -446,10 +446,12 @@ void PoolingLayer<Dtype, MItype, MOtype>::Backward_cpu(
 STUB_GPU(PoolingLayer);
 #endif
 
-INSTANTIATE_CLASS_3T(PoolingLayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T(PoolingLayer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(PoolingLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(PoolingLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(PoolingLayer, (double), (double), (double));
 
 REGISTER_LAYER_CLASS(Pooling);
+REGISTER_LAYER_CLASS_INST(Pooling, (half_fp), (half_fp), (half_fp));
 REGISTER_LAYER_CLASS_INST(Pooling, (float), (float), (float));
 REGISTER_LAYER_CLASS_INST(Pooling, (double), (double), (double));
 

@@ -99,6 +99,8 @@ void TanHLayer<Dtype, MItype, MOtype>::Backward_gpu(
   }
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(TanHLayer);
+INSTANTIATE_CLASS_3T_GUARDED(TanHLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(TanHLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(TanHLayer, (double), (double), (double));
 
 }  // namespace caffe

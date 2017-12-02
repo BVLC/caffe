@@ -115,10 +115,15 @@ void ContrastiveLossLayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob
 STUB_GPU(ContrastiveLossLayer);
 #endif
 
-INSTANTIATE_CLASS_3T(ContrastiveLossLayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T(ContrastiveLossLayer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(ContrastiveLossLayer,
+                             (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(ContrastiveLossLayer,
+                             (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(ContrastiveLossLayer,
+                             (double), (double), (double));
 
 REGISTER_LAYER_CLASS(ContrastiveLoss);
+REGISTER_LAYER_CLASS_INST(ContrastiveLoss, (half_fp), (half_fp), (half_fp));
 REGISTER_LAYER_CLASS_INST(ContrastiveLoss, (float), (float), (float));
 REGISTER_LAYER_CLASS_INST(ContrastiveLoss, (double), (double), (double));
 

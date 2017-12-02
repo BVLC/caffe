@@ -40,7 +40,9 @@ void HDF5OutputLayer<Dtype, MItype, MOtype>::Backward_gpu(
   return;
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(HDF5OutputLayer);
+INSTANTIATE_CLASS_3T_GUARDED(HDF5OutputLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(HDF5OutputLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(HDF5OutputLayer, (double), (double), (double));
 
 }  // namespace caffe
 #endif  // USE_HDF5

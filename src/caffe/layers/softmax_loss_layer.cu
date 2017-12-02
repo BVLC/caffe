@@ -205,6 +205,11 @@ void SoftmaxWithLossLayer<Dtype, MItype, MOtype>::Backward_gpu(
   }
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(SoftmaxWithLossLayer);
+INSTANTIATE_CLASS_3T_GUARDED(SoftmaxWithLossLayer,
+                            (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(SoftmaxWithLossLayer,
+                            (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(SoftmaxWithLossLayer,
+                            (double), (double), (double));
 
 }  // namespace caffe

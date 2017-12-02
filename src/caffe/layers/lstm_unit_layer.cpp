@@ -132,10 +132,12 @@ void LSTMUnitLayer<Dtype, MItype, MOtype>::Backward_cpu(
 STUB_GPU(LSTMUnitLayer);
 #endif
 
-INSTANTIATE_CLASS_3T(LSTMUnitLayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T(LSTMUnitLayer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(LSTMUnitLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(LSTMUnitLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(LSTMUnitLayer, (double), (double), (double));
 
 REGISTER_LAYER_CLASS(LSTMUnit);
+REGISTER_LAYER_CLASS_INST(LSTMUnit, (half_fp), (half_fp), (half_fp));
 REGISTER_LAYER_CLASS_INST(LSTMUnit, (float), (float), (float));
 REGISTER_LAYER_CLASS_INST(LSTMUnit, (double), (double), (double));
 

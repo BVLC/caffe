@@ -166,9 +166,12 @@ void LibDNNConvolutionLayer<Dtype, MItype, MOtype>::Tune(
                       batch_size);
 }
 
-
-INSTANTIATE_CLASS_3T(LibDNNConvolutionLayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T(LibDNNConvolutionLayer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(LibDNNConvolutionLayer,
+                             (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(LibDNNConvolutionLayer,
+                             (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(LibDNNConvolutionLayer,
+                             (double), (double), (double));
 
 }   // namespace caffe
 #endif  // USE_LIBDNN

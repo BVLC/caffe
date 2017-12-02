@@ -147,7 +147,15 @@ void BasePrefetchingDataLayer<Dtype, MItype, MOtype>::Forward_cpu(
 STUB_GPU_FORWARD(BasePrefetchingDataLayer, Forward);
 #endif
 
-INSTANTIATE_CLASS_3T(BaseDataLayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T(BaseDataLayer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(BaseDataLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(BaseDataLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(BaseDataLayer, (double), (double), (double));
+
+INSTANTIATE_CLASS_3T_GUARDED(BasePrefetchingDataLayer,
+                             (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(BasePrefetchingDataLayer,
+                             (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(BasePrefetchingDataLayer,
+                             (double), (double), (double));
 
 }  // namespace caffe

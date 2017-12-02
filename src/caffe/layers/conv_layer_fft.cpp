@@ -442,7 +442,7 @@ void ConvolutionLayerFFT<Dtype>::Backward_gpu_fft_task(
 STUB_GPU(ConvolutionLayerFFT);
 #endif  // CPU_ONLY
 
-INSTANTIATE_CLASS_3T(ConvolutionLayerFFT);
+INSTANTIATE_CLASS_3T_GUARDED(ConvolutionLayerFFT);
 
 }  // namespace caffe
 #endif  // USE_FFT

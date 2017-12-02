@@ -199,10 +199,11 @@ string OclDeviceProgram::global_size(string runtime_index) {
   return "get_global_size(" + runtime_index + ")";
 }
 
-string local_barrier() {
+string OclDeviceProgram::local_barrier() {
   return "barrier(CLK_LOCAL_MEM_FENCE)";
 }
-string global_barrier() {
+
+string OclDeviceProgram::global_barrier() {
   return "barrier(CLK_GLOBAL_MEM_FENCE)";
 }
 

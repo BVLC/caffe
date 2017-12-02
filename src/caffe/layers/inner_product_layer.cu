@@ -82,6 +82,8 @@ void InnerProductLayer<Dtype, MItype, MOtype>::Backward_gpu(
   }
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(InnerProductLayer);
+INSTANTIATE_CLASS_3T_GUARDED(InnerProductLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(InnerProductLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(InnerProductLayer, (double), (double), (double));
 
 }  // namespace caffe

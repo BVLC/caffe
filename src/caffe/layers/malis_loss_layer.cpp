@@ -449,10 +449,12 @@ void MalisLossLayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob<MOtyp
   }
 }
 
-INSTANTIATE_CLASS_3T(MalisLossLayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T(MalisLossLayer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(MalisLossLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(MalisLossLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(MalisLossLayer, (double), (double), (double));
 
 REGISTER_LAYER_CLASS(MalisLoss);
+REGISTER_LAYER_CLASS_INST(MalisLoss, (half_fp), (half_fp), (half_fp));
 REGISTER_LAYER_CLASS_INST(MalisLoss, (float), (float), (float));
 REGISTER_LAYER_CLASS_INST(MalisLoss, (double), (double), (double));
 

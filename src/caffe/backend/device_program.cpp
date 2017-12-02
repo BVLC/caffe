@@ -30,12 +30,12 @@ string DeviceProgram::atomic_add(string source, string operand) {
           + "_add(" + source + ", " + operand + ")";
 }
 
-template<>
+template
 string DeviceProgram::atomic_add<half_fp>(string source,
                                                    string operand);
-template<>
+template
 string DeviceProgram::atomic_add<float>(string source, string operand);
-template<>
+template
 string DeviceProgram::atomic_add<double>(string source, string operand);
 
 template<typename Dtype>
@@ -48,33 +48,32 @@ string DeviceProgram::define_type(string name) {
   return ss.str();
 }
 
-template<>
+template
 string DeviceProgram::define_type<bool>(string name);
-template<>
+template
 string DeviceProgram::define_type<char>(string name);
-template<>
+template
 string DeviceProgram::define_type<half_fp>(string name);
-template<>
+template
 string DeviceProgram::define_type<float>(string name);
-template<>
+template
 string DeviceProgram::define_type<double>(string name);
-template<>
+template
 string DeviceProgram::define_type<int8_t>(string name);
-template<>
+template
 string DeviceProgram::define_type<int16_t>(string name);
-template<>
+template
 string DeviceProgram::define_type<int32_t>(string name);
-template<>
+template
 string DeviceProgram::define_type<int64_t>(string name);
-template<>
+template
 string DeviceProgram::define_type<uint8_t>(string name);
-template<>
+template
 string DeviceProgram::define_type<uint16_t>(string name);
-template<>
+template
 string DeviceProgram::define_type<uint32_t>(string name);
-template<>
+template
 string DeviceProgram::define_type<uint64_t>(string name);
-
 
 template<>
 KernelArg DeviceProgram::create_kernel_arg<void>(

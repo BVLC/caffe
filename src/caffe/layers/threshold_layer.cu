@@ -57,6 +57,8 @@ void ThresholdLayer<Dtype, MItype, MOtype>::Forward_gpu(
   kernel->Execute(group, local);
 }
 
-INSTANTIATE_LAYER_GPU_FORWARD(ThresholdLayer);
+INSTANTIATE_CLASS_3T_GUARDED(ThresholdLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(ThresholdLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(ThresholdLayer, (double), (double), (double));
 
 }  // namespace caffe

@@ -44,6 +44,8 @@ void ExpLayer<Dtype, MItype, MOtype>::Backward_gpu(
   }
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(ExpLayer);
+INSTANTIATE_CLASS_3T_GUARDED(ExpLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(ExpLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(ExpLayer, (double), (double), (double));
 
 }  // namespace caffe

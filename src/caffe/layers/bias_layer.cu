@@ -97,6 +97,8 @@ void BiasLayer<Dtype, MItype, MOtype>::Backward_gpu(
   }
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(BiasLayer);
+INSTANTIATE_CLASS_3T_GUARDED(BiasLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(BiasLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(BiasLayer, (double), (double), (double));
 
 }  // namespace caffe

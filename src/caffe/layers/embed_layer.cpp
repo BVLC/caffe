@@ -121,10 +121,12 @@ void EmbedLayer<Dtype, MItype, MOtype>::Backward_cpu(
 STUB_GPU(EmbedLayer);
 #endif
 
-INSTANTIATE_CLASS_3T(EmbedLayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T(EmbedLayer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(EmbedLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(EmbedLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(EmbedLayer, (double), (double), (double));
 
 REGISTER_LAYER_CLASS(Embed);
+REGISTER_LAYER_CLASS_INST(Embed, (half_fp), (half_fp), (half_fp));
 REGISTER_LAYER_CLASS_INST(Embed, (float), (float), (float));
 REGISTER_LAYER_CLASS_INST(Embed, (double), (double), (double));
 

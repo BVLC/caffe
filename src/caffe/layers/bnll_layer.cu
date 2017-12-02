@@ -105,6 +105,7 @@ void BNLLLayer<Dtype, MItype, MOtype>::Backward_gpu(
   }
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(BNLLLayer);
-
+INSTANTIATE_CLASS_3T_GUARDED(BNLLLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(BNLLLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(BNLLLayer, (double), (double), (double));
 }  // namespace caffe

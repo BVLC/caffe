@@ -98,10 +98,12 @@ void SoftmaxLayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob<MOtype>
 STUB_GPU(SoftmaxLayer);
 #endif
 
-INSTANTIATE_CLASS_3T(SoftmaxLayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T(SoftmaxLayer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(SoftmaxLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(SoftmaxLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(SoftmaxLayer, (double), (double), (double));
 
 REGISTER_LAYER_CLASS(Softmax);
+REGISTER_LAYER_CLASS_INST(Softmax, (half_fp), (half_fp), (half_fp));
 REGISTER_LAYER_CLASS_INST(Softmax, (float), (float), (float));
 REGISTER_LAYER_CLASS_INST(Softmax, (double), (double), (double));
 

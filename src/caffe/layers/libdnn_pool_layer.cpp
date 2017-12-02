@@ -186,9 +186,12 @@ void LibDNNPoolingLayer<Dtype, MItype, MOtype>::Backward_gpu(
                           mask, top_mask, rand_idx);
 }
 
-
-INSTANTIATE_CLASS_3T(LibDNNPoolingLayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T(LibDNNPoolingLayer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(LibDNNPoolingLayer,
+                             (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(LibDNNPoolingLayer,
+                             (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(LibDNNPoolingLayer,
+                             (double), (double), (double));
 
 }   // namespace caffe
 #endif  // USE_LIBDNN

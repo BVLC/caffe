@@ -298,7 +298,8 @@ void RecurrentLayer<Dtype, MItype, MOtype>::Backward_cpu(
 STUB_GPU_FORWARD(RecurrentLayer, Forward);
 #endif
 
-INSTANTIATE_CLASS_3T(RecurrentLayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T(RecurrentLayer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(RecurrentLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(RecurrentLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(RecurrentLayer, (double), (double), (double));
 
 }  // namespace caffe

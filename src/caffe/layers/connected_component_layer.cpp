@@ -93,10 +93,15 @@ void ConnectedComponentLayer<Dtype, MItype, MOtype>::Backward_cpu(
   return;
 }
 
-INSTANTIATE_CLASS_3T(ConnectedComponentLayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T(ConnectedComponentLayer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(ConnectedComponentLayer,
+                             (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(ConnectedComponentLayer,
+                             (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(ConnectedComponentLayer,
+                             (double), (double), (double));
 
 REGISTER_LAYER_CLASS(ConnectedComponent);
+REGISTER_LAYER_CLASS_INST(ConnectedComponent, (half_fp), (half_fp), (half_fp));
 REGISTER_LAYER_CLASS_INST(ConnectedComponent, (float), (float), (float));
 REGISTER_LAYER_CLASS_INST(ConnectedComponent, (double), (double), (double));
 

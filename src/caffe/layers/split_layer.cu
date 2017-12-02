@@ -39,6 +39,8 @@ void SplitLayer<Dtype, MItype, MOtype>::Backward_gpu(
   }
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(SplitLayer);
+INSTANTIATE_CLASS_3T_GUARDED(SplitLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(SplitLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(SplitLayer, (double), (double), (double));
 
 }  // namespace caffe

@@ -31,6 +31,10 @@ namespace caffe {
 
 class LayerBase {
  public:
+  virtual ~LayerBase() {
+
+  }
+
   virtual void Reshape(const vector<BlobBase*>& bottom,
                        const vector<BlobBase*>& top) = 0;
 
@@ -193,7 +197,7 @@ class LayerBase {
   /**
    * @brief Writes the layer parameter to a protocol buffer
    */
-  virtual void ToProto(LayerParameter* param, bool write_diff = false);
+  virtual void ToProto(LayerParameter* param, bool write_diff = false) = 0;
 
   virtual int_tp blobs_size() = 0;
 
@@ -203,7 +207,7 @@ class LayerBase {
   /**
    * @brief Returns the vector of learnable parameter blobs.
    */
-  virtual vector<shared_ptr<BlobBase> >& blob_bases() = 0;
+  virtual vector<shared_ptr<BlobBase> > blob_bases() = 0;
 
  protected:
   /** Device context */
@@ -216,7 +220,6 @@ class LayerBase {
   vector<bool> param_propagate_down_;
 
   shared_ptr<QuantizerBase> net_quant_;
- private:
 };
 
 /**
@@ -252,6 +255,7 @@ class Layer : public LayerBase {
   }
 
   virtual ~Layer() {
+
   }
 
   /**
@@ -420,7 +424,7 @@ class Layer : public LayerBase {
   /**
    * @brief Returns the vector of learnable parameter blobs.
    */
-  virtual vector<shared_ptr<BlobBase> >& blob_bases() {
+  virtual vector<shared_ptr<BlobBase> > blob_bases() {
     vector<shared_ptr<BlobBase> > blob_base_vec;
     for (size_t i = 0; i < blobs_.size(); ++i) {
       blob_base_vec.push_back(blobs_[i]);

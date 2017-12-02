@@ -11,7 +11,8 @@ void NeuronLayer<Dtype, MItype, MOtype>::Reshape(
   top[0]->ReshapeLike(*bottom[0]);
 }
 
-INSTANTIATE_CLASS_3T(NeuronLayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T(NeuronLayer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(NeuronLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(NeuronLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(NeuronLayer, (double), (double), (double));
 
 }  // namespace caffe

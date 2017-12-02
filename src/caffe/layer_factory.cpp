@@ -121,11 +121,35 @@ LayerRegisterer<Dtype, MItype, MOtype>::LayerRegisterer(const string& type,
   LayerRegistry<Dtype, MItype, MOtype>::AddCreator(type, creator);
 }
 
-INSTANTIATE_CLASS_3T(LayerRegistry, (float), (float), (float));
-INSTANTIATE_CLASS_3T(LayerRegistry, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(LayerRegistry,
+                             (half_fp), PROTO_TYPES, PROTO_TYPES);
+INSTANTIATE_CLASS_3T_GUARDED(LayerRegistry,
+                             (float), PROTO_TYPES, PROTO_TYPES);
+INSTANTIATE_CLASS_3T_GUARDED(LayerRegistry,
+                             (double), PROTO_TYPES, PROTO_TYPES);
+INSTANTIATE_CLASS_3T_GUARDED(LayerRegistry,
+                             (int8_t), PROTO_TYPES, PROTO_TYPES);
+INSTANTIATE_CLASS_3T_GUARDED(LayerRegistry,
+                             (int16_t), PROTO_TYPES, PROTO_TYPES);
+INSTANTIATE_CLASS_3T_GUARDED(LayerRegistry,
+                             (int32_t), PROTO_TYPES, PROTO_TYPES);
+INSTANTIATE_CLASS_3T_GUARDED(LayerRegistry,
+                             (int64_t), PROTO_TYPES, PROTO_TYPES);
 
-INSTANTIATE_CLASS_3T(LayerRegisterer, (float), (float), (float));
-INSTANTIATE_CLASS_3T(LayerRegisterer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(LayerRegisterer,
+                             (half_fp), PROTO_TYPES, PROTO_TYPES);
+INSTANTIATE_CLASS_3T_GUARDED(LayerRegisterer,
+                             (float), PROTO_TYPES, PROTO_TYPES);
+INSTANTIATE_CLASS_3T_GUARDED(LayerRegisterer,
+                             (double), PROTO_TYPES, PROTO_TYPES);
+INSTANTIATE_CLASS_3T_GUARDED(LayerRegisterer,
+                             (int8_t), PROTO_TYPES, PROTO_TYPES);
+INSTANTIATE_CLASS_3T_GUARDED(LayerRegisterer,
+                             (int16_t), PROTO_TYPES, PROTO_TYPES);
+INSTANTIATE_CLASS_3T_GUARDED(LayerRegisterer,
+                             (int32_t), PROTO_TYPES, PROTO_TYPES);
+INSTANTIATE_CLASS_3T_GUARDED(LayerRegisterer,
+                             (int64_t), PROTO_TYPES, PROTO_TYPES);
 
 bool checkConvolutionDilated(ConvolutionParameter param) {
   for (int i = 0; i < param.dilation_size(); ++i) {

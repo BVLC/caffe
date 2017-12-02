@@ -132,8 +132,9 @@ void AffinityLayer<Dtype, MItype, MOtype>::Backward_cpu(
   }
 }
 
-INSTANTIATE_CLASS_3T(AffinityLayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T(AffinityLayer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(AffinityLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(AffinityLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(AffinityLayer, (double), (double), (double));
 
 REGISTER_LAYER_CLASS(Affinity);
 REGISTER_LAYER_CLASS_INST(Affinity, (float), (float), (float));

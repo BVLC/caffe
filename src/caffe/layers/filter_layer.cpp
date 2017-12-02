@@ -120,10 +120,12 @@ void FilterLayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob<MOtype>*
 STUB_GPU(FilterLayer);
 #endif
 
-INSTANTIATE_CLASS_3T(FilterLayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T(FilterLayer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(FilterLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(FilterLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(FilterLayer, (double), (double), (double));
 
 REGISTER_LAYER_CLASS(Filter);
+REGISTER_LAYER_CLASS_INST(Filter, (half_fp), (half_fp), (half_fp));
 REGISTER_LAYER_CLASS_INST(Filter, (float), (float), (float));
 REGISTER_LAYER_CLASS_INST(Filter, (double), (double), (double));
 

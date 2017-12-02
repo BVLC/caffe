@@ -106,6 +106,8 @@ void ReLULayer<Dtype, MItype, MOtype>::Backward_gpu(
   }
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(ReLULayer);
+INSTANTIATE_CLASS_3T_GUARDED(ReLULayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(ReLULayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(ReLULayer, (double), (double), (double));
 
 }  // namespace caffe

@@ -134,7 +134,7 @@ void AdaDeltaSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
   }
 }
 
-INSTANTIATE_CLASS_1T(AdaDeltaSolver, (half_fp)(float)(double));
+INSTANTIATE_CLASS_1T_GUARDED(AdaDeltaSolver, (half_fp)(float)(double));
 REGISTER_SOLVER_CLASS(AdaDelta);
 REGISTER_SOLVER_CLASS_INST(AdaDelta, (half_fp)(float)(double));
 

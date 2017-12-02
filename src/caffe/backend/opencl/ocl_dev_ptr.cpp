@@ -283,6 +283,15 @@ ocl_dev_ptr<Dtype, typename const_enable_if<Dtype>::type>
 
 template<typename Dtype>
 ocl_dev_ptr<Dtype, typename const_enable_if<Dtype>::type>
+                               ::ocl_dev_ptr(const dev_ptr<const char> &other) {
+  const ocl_dev_ptr<const bool>& cast_other =
+      dynamic_cast<const ocl_dev_ptr<const char>&>(other);
+  ocl_mem_ = cast_other.get_ocl_mem();
+  off_ = compute_off<Dtype, const char>(cast_other);
+}
+
+template<typename Dtype>
+ocl_dev_ptr<Dtype, typename const_enable_if<Dtype>::type>
                              ::ocl_dev_ptr(const dev_ptr<const int8_t> &other) {
   const ocl_dev_ptr<const int8_t>& cast_other =
       dynamic_cast<const ocl_dev_ptr<const int8_t>&>(other);
@@ -640,6 +649,16 @@ void ocl_dev_ptr<Dtype, typename const_enable_if<Dtype>::type>
 }
 template<typename Dtype>
 void ocl_dev_ptr<Dtype, typename non_const_enable_if<Dtype>::type>
+                                                                 ::increment() {
+  ++off_;
+}
+template<typename Dtype>
+void ocl_dev_ptr<Dtype, typename const_enable_if<Dtype>::type>
+                                                                 ::decrement() {
+  --off_;
+}
+template<typename Dtype>
+void ocl_dev_ptr<Dtype, typename non_const_enable_if<Dtype>::type>
                                                                  ::decrement() {
   --off_;
 }
@@ -651,10 +670,20 @@ void ocl_dev_ptr<Dtype, typename const_enable_if<Dtype>::type>
 }
 template<typename Dtype>
 void ocl_dev_ptr<Dtype, typename non_const_enable_if<Dtype>::type>
+                                                       ::increment(int_tp val) {
+  off_ += val;
+}
+
+template<typename Dtype>
+void ocl_dev_ptr<Dtype, typename const_enable_if<Dtype>::type>
                                                        ::decrement(int_tp val) {
   off_ -= val;
 }
-
+template<typename Dtype>
+void ocl_dev_ptr<Dtype, typename non_const_enable_if<Dtype>::type>
+                                                       ::decrement(int_tp val) {
+  off_ -= val;
+}
 
 template<typename Dtype>
 cl_mem  ocl_dev_ptr<Dtype, typename const_enable_if<Dtype>::type>

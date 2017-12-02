@@ -90,10 +90,12 @@ void ReshapeLayer<Dtype, MItype, MOtype>::Reshape(const vector<Blob<MItype>*>& b
   top[0]->ShareDiff(*bottom[0]);
 }
 
-INSTANTIATE_CLASS_3T(ReshapeLayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T(ReshapeLayer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(ReshapeLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(ReshapeLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(ReshapeLayer, (double), (double), (double));
 
 REGISTER_LAYER_CLASS(Reshape);
+REGISTER_LAYER_CLASS_INST(Reshape, (half_fp), (half_fp), (half_fp));
 REGISTER_LAYER_CLASS_INST(Reshape, (float), (float), (float));
 REGISTER_LAYER_CLASS_INST(Reshape, (double), (double), (double));
 

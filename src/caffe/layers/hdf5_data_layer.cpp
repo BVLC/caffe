@@ -181,10 +181,12 @@ void HDF5DataLayer<Dtype, MItype, MOtype>::Forward_cpu(const vector<Blob<MItype>
 STUB_GPU_FORWARD(HDF5DataLayer, Forward);
 #endif
 
-INSTANTIATE_CLASS_3T(HDF5DataLayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T(HDF5DataLayer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(HDF5DataLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(HDF5DataLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(HDF5DataLayer, (double), (double), (double));
 
 REGISTER_LAYER_CLASS(HDF5Data);
+REGISTER_LAYER_CLASS_INST(HDF5Data, (half_fp), (half_fp), (half_fp));
 REGISTER_LAYER_CLASS_INST(HDF5Data, (float), (float), (float));
 REGISTER_LAYER_CLASS_INST(HDF5Data, (double), (double), (double));
 

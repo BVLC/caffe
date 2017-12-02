@@ -6,6 +6,7 @@
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
+#include "caffe/definitions.hpp"
 #include "caffe/net.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/db.hpp"
@@ -16,7 +17,10 @@ using caffe::Blob;
 using caffe::Caffe;
 using caffe::Datum;
 using caffe::Net;
-using string;
+using std::string;
+using std::vector;
+using std::shared_ptr;
+
 namespace db = caffe::db;
 
 template<typename Dtype>
@@ -94,7 +98,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
    }
    */
   string feature_extraction_proto(argv[++arg_pos]);
-  boost::shared_ptr<Net<Dtype> > feature_extraction_net(
+  shared_ptr<Net<Dtype> > feature_extraction_net(
       new Net<Dtype>(feature_extraction_proto, caffe::TEST,
                      Caffe::GetDefaultDevice()));
   feature_extraction_net->CopyTrainedLayersFrom(pretrained_binary_proto);
@@ -119,15 +123,15 @@ int feature_extraction_pipeline(int argc, char** argv) {
 
   int_tp num_mini_batches = atoi(argv[++arg_pos]);
 
-  vector<boost::shared_ptr<db::DB> > feature_dbs;
-  vector<boost::shared_ptr<db::Transaction> > txns;
+  vector<shared_ptr<db::DB> > feature_dbs;
+  vector<shared_ptr<db::Transaction> > txns;
   const char* db_type = argv[++arg_pos];
   for (uint_tp i = 0; i < num_features; ++i) {
     LOG(INFO)<< "Opening dataset " << dataset_names[i];
-    boost::shared_ptr<db::DB> db(db::GetDB(db_type));
+    shared_ptr<db::DB> db(db::GetDB(db_type));
     db->Open(dataset_names.at(i), db::NEW);
     feature_dbs.push_back(db);
-    boost::shared_ptr<db::Transaction> txn(db->NewTransaction());
+    shared_ptr<db::Transaction> txn(db->NewTransaction());
     txns.push_back(txn);
   }
 
@@ -138,8 +142,9 @@ int feature_extraction_pipeline(int argc, char** argv) {
   for (int_tp batch_index = 0; batch_index < num_mini_batches; ++batch_index) {
     feature_extraction_net->Forward();
     for (int_tp i = 0; i < num_features; ++i) {
-      const boost::shared_ptr<Blob<Dtype> > feature_blob =
-        feature_extraction_net->blob_by_name(blob_names[i]);
+      const shared_ptr<Blob<Dtype> > feature_blob =
+        std::static_pointer_cast<Blob<Dtype> >(
+            feature_extraction_net->blob_by_name(blob_names[i]));
       int_tp batch_size = feature_blob->shape(0);
       int_tp dim_features = feature_blob->count() / batch_size;
       const Dtype* feature_blob_data;

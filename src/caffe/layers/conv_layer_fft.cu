@@ -519,7 +519,7 @@ void ConvolutionLayerFFT<double>::Backward_gpu(
   NOT_IMPLEMENTED;
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(ConvolutionLayerFFT);
+INSTANTIATE_CLASS_3T_GUARDED(ConvolutionLayerFFT);
 
 }  // namespace caffe
 #endif  // USE_OPENCL && USE_FFT

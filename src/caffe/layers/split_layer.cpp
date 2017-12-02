@@ -53,10 +53,12 @@ void SplitLayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob<MOtype>*>
 STUB_GPU(SplitLayer);
 #endif
 
-INSTANTIATE_CLASS_3T(SplitLayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T(SplitLayer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(SplitLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(SplitLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(SplitLayer, (double), (double), (double));
 
 REGISTER_LAYER_CLASS(Split);
+REGISTER_LAYER_CLASS_INST(Split, (half_fp), (half_fp), (half_fp));
 REGISTER_LAYER_CLASS_INST(Split, (float), (float), (float));
 REGISTER_LAYER_CLASS_INST(Split, (double), (double), (double));
 

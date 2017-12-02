@@ -130,6 +130,12 @@ inline void OclDeviceKernel::set_arg_helper(uint_tp idx, cl_mem mem,
   }
 }
 
+void OclDeviceKernel::set_arg(uint_tp idx, vptr<bool> *arg) {
+  set_arg_helper(idx, arg->get_ocl_mem(), arg->get_ocl_off());
+}
+void OclDeviceKernel::set_arg(uint_tp idx, vptr<char> *arg) {
+  set_arg_helper(idx, arg->get_ocl_mem(), arg->get_ocl_off());
+}
 void OclDeviceKernel::set_arg(uint_tp idx, vptr<int8_t> *arg) {
   set_arg_helper(idx, arg->get_ocl_mem(), arg->get_ocl_off());
 }
@@ -167,6 +173,12 @@ void OclDeviceKernel::set_arg(uint_tp idx, vptr<void> *arg) {
   set_arg_helper(idx, arg->get_ocl_mem(), arg->get_ocl_off());
 }
 
+void OclDeviceKernel::set_arg(uint_tp idx, vptr<const bool> *arg) {
+  set_arg_helper(idx, arg->get_ocl_mem(), arg->get_ocl_off());
+}
+void OclDeviceKernel::set_arg(uint_tp idx, vptr<const char> *arg) {
+  set_arg_helper(idx, arg->get_ocl_mem(), arg->get_ocl_off());
+}
 void OclDeviceKernel::set_arg(uint_tp idx, vptr<const int8_t> *arg) {
   set_arg_helper(idx, arg->get_ocl_mem(), arg->get_ocl_off());
 }

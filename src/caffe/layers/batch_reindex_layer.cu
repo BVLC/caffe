@@ -124,7 +124,7 @@ void BatchReindexLayer<Dtype, MItype, MOtype>::Backward_gpu(
   // k'th element of `begins` points to the location in `top_indexes` where the
   // list for the k'th example begin, and the k'th element of `counts` is the
   // length of that list.
-  vector<uint_tp> shape;
+  vector<int_tp> shape;
   shape.push_back(bottom[1]->count());
   Blob<Dtype> top_indexes(shape, this->device_);
   shape[0] = bottom[0]->shape(0);
@@ -168,6 +168,7 @@ void BatchReindexLayer<Dtype, MItype, MOtype>::Backward_gpu(
   kernel->Execute(group, local);
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(BatchReindexLayer);
-
+INSTANTIATE_CLASS_3T_GUARDED(BatchReindexLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(BatchReindexLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(BatchReindexLayer, (double), (double), (double));
 }  // namespace caffe

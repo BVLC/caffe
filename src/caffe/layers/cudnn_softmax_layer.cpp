@@ -47,7 +47,9 @@ CuDNNSoftmaxLayer<Dtype, MItype, MOtype>::~CuDNNSoftmaxLayer() {
   cudnnDestroy(handle_);
 }
 
-INSTANTIATE_CLASS_3T(CuDNNSoftmaxLayer);
+INSTANTIATE_CLASS_3T_GUARDED(CuDNNSoftmaxLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(CuDNNSoftmaxLayer, (double), (double), (double));
+
 
 }  // namespace caffe
 #endif

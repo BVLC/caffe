@@ -92,7 +92,7 @@ void AdaGradSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
     }
   }
 
-INSTANTIATE_CLASS_1T(AdaGradSolver, (half_fp)(float)(double));
+INSTANTIATE_CLASS_1T_GUARDED(AdaGradSolver, (half_fp)(float)(double));
 REGISTER_SOLVER_CLASS(AdaGrad);
 REGISTER_SOLVER_CLASS_INST(AdaGrad, (half_fp)(float)(double));
 

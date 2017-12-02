@@ -215,6 +215,8 @@ void PReLULayer<Dtype, MItype, MOtype>::Backward_gpu(
   }
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(PReLULayer);
+INSTANTIATE_CLASS_3T_GUARDED(PReLULayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(PReLULayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(PReLULayer, (double), (double), (double));
 
 }  // namespace caffe

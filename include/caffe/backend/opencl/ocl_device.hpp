@@ -23,7 +23,6 @@ class OclDevice : public Device {
   virtual bool CheckVendor(string vendor);
   virtual bool CheckType(string type);
   virtual void SwitchQueue(uint_tp id);
-  virtual uint_tp current_queue_id();
   virtual void get_threads(const vector<size_t>* work_size,
                            vector<size_t>* local,
                            vector<size_t>* group,
@@ -43,12 +42,11 @@ class OclDevice : public Device {
   virtual bool CheckZeroCopy(vptr<const void> gpu_ptr, void* cpu_ptr,
                              uint_tp size);
 
+  void null_kernel(float arg, cl_event event);
+
   virtual void memcpy(const uint_tp n, vptr<const void> x, vptr<void> y);
   virtual void memcpy(const uint_tp n, const void* x, vptr<void> y);
   virtual void memcpy(const uint_tp n, vptr<const void> x, void* y);
-
-  virtual void rng_uniform(const uint_tp n, vptr<uint32_t> r);
-  virtual void rng_uniform(const uint_tp n, vptr<uint64_t> r);
 
   virtual void gemm_half
                 (const CBLAS_TRANSPOSE trans_a, const CBLAS_TRANSPOSE trans_b,
@@ -113,42 +111,6 @@ class OclDevice : public Device {
 
   virtual void axpby_double(const uint_tp n, const double alpha,
                      vptr<const double> x, const double beta, vptr<double> y);
-
-  virtual void rng_uniform_half(const uint_tp n, const half_fp a,
-                        const half_fp b, vptr<half_fp> r);
-
-  virtual void rng_uniform_float(const uint_tp n, const float a, const float b,
-                                 vptr<float> r);
-
-  virtual void rng_uniform_double(const uint_tp n, const double a,
-                                  const double b, vptr<double> r);
-
-  virtual void rng_gaussian_half(const uint_tp n, const half_fp mu,
-                    const half_fp sigma, vptr<half_fp> r);
-
-  virtual void rng_gaussian_float(const uint_tp n, const float mu,
-                                  const float sigma, vptr<float> r);
-
-  virtual void rng_gaussian_double(const uint_tp n, const double mu,
-                                   const double sigma, vptr<double> r);
-
-  virtual void rng_bernoulli_half(const uint_tp n, const half_fp p,
-                                  vptr<int> r);
-
-  virtual void rng_bernoulli_float(const uint_tp n, const float p,
-                                   vptr<int> r);
-
-  virtual void rng_bernoulli_double(const uint_tp n, const double p,
-                                    vptr<int> r);
-
-  virtual void rng_bernoulli_half(const uint_tp n, const half_fp p,
-                                  vptr<unsigned int> r);
-
-  virtual void rng_bernoulli_float(const uint_tp n, const float p,
-                                   vptr<unsigned int> r);
-
-  virtual void rng_bernoulli_double(const uint_tp n, const double p,
-                                    vptr<unsigned int> r);
 
   virtual void dot_half(const uint_tp n, vptr<const half_fp> x,
                         vptr<const half_fp> y, half_fp *out);

@@ -474,10 +474,12 @@ void WindowDataLayer<Dtype, MItype, MOtype>::load_batch(Batch<MOtype>* batch) {
   DLOG(INFO) << "Transform time: " << trans_time / 1000 << " ms.";
 }
 
-INSTANTIATE_CLASS_3T(WindowDataLayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T(WindowDataLayer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(WindowDataLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(WindowDataLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(WindowDataLayer, (double), (double), (double));
 
 REGISTER_LAYER_CLASS(WindowData);
+REGISTER_LAYER_CLASS_INST(WindowData, (half_fp), (half_fp), (half_fp));
 REGISTER_LAYER_CLASS_INST(WindowData, (float), (float), (float));
 REGISTER_LAYER_CLASS_INST(WindowData, (double), (double), (double));
 

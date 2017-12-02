@@ -62,10 +62,12 @@ void TileLayer<Dtype, MItype, MOtype>::Backward_cpu(
 STUB_GPU(TileLayer);
 #endif
 
-INSTANTIATE_CLASS_3T(TileLayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T(TileLayer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(TileLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(TileLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(TileLayer, (double), (double), (double));
 
 REGISTER_LAYER_CLASS(Tile);
+REGISTER_LAYER_CLASS_INST(Tile, (half_fp), (half_fp), (half_fp));
 REGISTER_LAYER_CLASS_INST(Tile, (float), (float), (float));
 REGISTER_LAYER_CLASS_INST(Tile, (double), (double), (double));
 

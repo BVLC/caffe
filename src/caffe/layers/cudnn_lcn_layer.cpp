@@ -75,7 +75,8 @@ CuDNNLCNLayer<Dtype, MItype, MOtype>::~CuDNNLCNLayer() {
   cudaFree(tempData2);
 }
 
-INSTANTIATE_CLASS_3T(CuDNNLCNLayer);
+INSTANTIATE_CLASS_3T_GUARDED(CuDNNLCNLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(CuDNNLCNLayer, (double), (double), (double));
 
 }   // namespace caffe
 #endif

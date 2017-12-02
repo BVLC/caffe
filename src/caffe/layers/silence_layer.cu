@@ -25,6 +25,8 @@ void SilenceLayer<Dtype, MItype, MOtype>::Backward_gpu(
   }
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(SilenceLayer);
+INSTANTIATE_CLASS_3T_GUARDED(SilenceLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(SilenceLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(SilenceLayer, (double), (double), (double));
 
 }  // namespace caffe

@@ -2,6 +2,8 @@
 
 namespace caffe {
 
+class LayerBase;
+
 INSTANTIATE_CLASS_3T(Layer, (half_fp), PROTO_TYPES, PROTO_TYPES);
 INSTANTIATE_CLASS_3T(Layer, (float), PROTO_TYPES, PROTO_TYPES);
 INSTANTIATE_CLASS_3T(Layer, (double), PROTO_TYPES, PROTO_TYPES);

@@ -25,9 +25,6 @@ class NeuronLayer : public Layer<Dtype, MItype, MOtype> {
 
   virtual inline int_tp ExactNumBottomBlobs() const { return 1; }
   virtual inline int_tp ExactNumTopBlobs() const { return 1; }
-
- protected:
-  virtual void GenerateProgram();
 };
 
 }  // namespace caffe

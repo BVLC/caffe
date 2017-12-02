@@ -163,6 +163,11 @@ void SigmoidCrossEntropyLossLayer<Dtype, MItype, MOtype>::Backward_gpu(
   }
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(SigmoidCrossEntropyLossLayer);
+INSTANTIATE_CLASS_3T_GUARDED(SigmoidCrossEntropyLossLayer,
+                            (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(SigmoidCrossEntropyLossLayer,
+                            (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(SigmoidCrossEntropyLossLayer,
+                            (double), (double), (double));
 
 }  // namespace caffe

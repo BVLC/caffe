@@ -229,10 +229,12 @@ void ScaleLayer<Dtype, MItype, MOtype>::Backward_cpu(
 STUB_GPU(ScaleLayer);
 #endif
 
-INSTANTIATE_CLASS_3T(ScaleLayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T(ScaleLayer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(ScaleLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(ScaleLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(ScaleLayer, (double), (double), (double));
 
 REGISTER_LAYER_CLASS(Scale);
+REGISTER_LAYER_CLASS_INST(Scale, (half_fp), (half_fp), (half_fp));
 REGISTER_LAYER_CLASS_INST(Scale, (float), (float), (float));
 REGISTER_LAYER_CLASS_INST(Scale, (double), (double), (double));
 

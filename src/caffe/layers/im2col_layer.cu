@@ -67,6 +67,8 @@ void Im2colLayer<Dtype, MItype, MOtype>::Backward_gpu(
   }
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(Im2colLayer);
+INSTANTIATE_CLASS_3T_GUARDED(Im2colLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(Im2colLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(Im2colLayer, (double), (double), (double));
 
 }  // namespace caffe

@@ -54,10 +54,12 @@ void ELULayer<Dtype, MItype, MOtype>::Backward_cpu(
 STUB_GPU(ELULayer);
 #endif
 
-INSTANTIATE_CLASS_3T(ELULayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T(ELULayer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(ELULayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(ELULayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(ELULayer, (double), (double), (double));
 
 REGISTER_LAYER_CLASS(ELU);
+REGISTER_LAYER_CLASS_INST(ELU, (half_fp), (half_fp), (half_fp));
 REGISTER_LAYER_CLASS_INST(ELU, (float), (float), (float));
 REGISTER_LAYER_CLASS_INST(ELU, (double), (double), (double));
 
