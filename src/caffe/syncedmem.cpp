@@ -21,13 +21,11 @@ namespace caffe {
 size_t SyncedMemory::get_used_size() { return 0; }
 SyncedMemory::SyncedMemory()
     : cpu_ptr_(NULL), gpu_ptr_(NULL), size_(0), head_(UNINITIALIZED),
-      own_cpu_data_(false), cpu_malloc_use_cuda_(false), own_gpu_data_(false) {
-}
+      own_cpu_data_(false), cpu_malloc_use_cuda_(false), own_gpu_data_(false) {}
 
 SyncedMemory::SyncedMemory(size_t size)
     : cpu_ptr_(NULL), gpu_ptr_(NULL), size_(size), head_(UNINITIALIZED),
-      own_cpu_data_(false), cpu_malloc_use_cuda_(false), own_gpu_data_(false) {
-}
+      own_cpu_data_(false), cpu_malloc_use_cuda_(false), own_gpu_data_(false) {}
 
 SyncedMemory::~SyncedMemory() {
   check_device();
@@ -177,26 +175,19 @@ void SyncedMemory::check_device() {
 
 #ifndef CPU_ONLY
 void *SyncedMemory::gpu_malloc(size_t size) {
-  if (size == 0) {
-    return nullptr;
-  }
   void *ptr = nullptr;
 
-  const auto &pool = Caffe::device_pool();
-  if (pool.get()) {
-    ptr = pool->alloc(size);
-  } else {
-    printf("no memory pool\n");
+  device_pool_ = Caffe::device_pool();
+  if (device_pool_.get()) {
+    ptr = device_pool_->alloc(size);
+    if (ptr) {
+      return ptr;
+    }
   }
 
-  if (ptr) {
-    device_pool_ = pool;
-  } else {
-    printf("alloc from cuda size=%zu\n", size);
-    CUDA_CHECK(cudaMalloc(&ptr, size));
-  }
+  device_pool_.reset();
+  CUDA_CHECK(cudaMalloc(&ptr, size));
 
-  //  std::cout<<std::this_thread::get_id()<<" malloc "<<(size_t)ptr<<std::endl;
   return ptr;
 }
 
@@ -223,16 +214,15 @@ void SyncedMemory::host_malloc(void **ptr, size_t size) {
 #ifndef CPU_ONLY
   constexpr size_t pinned_memory_max_size = 128;
   if (Caffe::mode() == Caffe::GPU && size <= pinned_memory_max_size) {
-    auto const &pool = Caffe::host_pool();
-    if (pool.get()) {
-      *ptr = pool->alloc(size);
+    host_pool_ = Caffe::host_pool();
+    if (host_pool_.get()) {
+      *ptr = host_pool_->alloc(size);
       if (*ptr) {
-        // puts("malloc cubud cpu");
-        host_pool_ = pool;
         cpu_malloc_use_cuda_ = true;
         return;
       }
     }
+    host_pool_.reset();
     if (cudaMallocHost(ptr, size) == cudaSuccess) {
       cpu_malloc_use_cuda_ = true;
       return;
@@ -253,7 +243,6 @@ void SyncedMemory::host_free(void *ptr, size_t size) {
   if (cpu_malloc_use_cuda_) {
     if (host_pool_.get()) {
       CHECK(host_pool_->free(ptr)) << "free host failed";
-      host_pool_.reset();
       return;
     }
     CUDA_CHECK(cudaFreeHost(ptr));

@@ -118,12 +118,10 @@ public:
 
 #ifndef CPU_ONLY
   inline static cublasHandle_t cublas_handle() { return Get().cublas_handle_; }
-  inline static const std::shared_ptr<deepir::allocator::buddy_pool> &
-  host_pool() {
+  inline static std::shared_ptr<deepir::allocator::buddy_pool> host_pool() {
     return Get().host_pool_;
   }
-  inline static const std::shared_ptr<deepir::allocator::buddy_pool> &
-  device_pool() {
+  inline static std::shared_ptr<deepir::allocator::buddy_pool> device_pool() {
     return Get().device_pool_;
   }
 
@@ -133,6 +131,7 @@ public:
   inline static Brew mode() { return Get().mode_; }
   static void set_mode(Brew mode);
   static int GetDevice() { return Get().device_id_; }
+
 private:
 #ifndef CPU_ONLY
   cublasHandle_t cublas_handle_;
