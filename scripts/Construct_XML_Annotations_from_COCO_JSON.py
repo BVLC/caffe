@@ -125,22 +125,23 @@ for image in grouped:
         E.segmented(0)
     )
     for row in image[1].iterrows():
-        objectNode = E.object(
-            E.name(str(row[1]['category_id'])),
-            E.pose("Unspecified"),
-            E.truncated("0"),
-            E.difficult("0"),
-            E.bndbox(
-                E.xmin(
-                    str(int(round(row[1]['bbox'][0]))) if ROUND_COORDS else str(int(row[1]['bbox'][0]))),
-                E.ymin(
-                    str(int(round(row[1]['bbox'][1]))) if ROUND_COORDS else str(int(row[1]['bbox'][1]))),
-                E.xmax(str(int(round(row[1]['bbox'][0] + row[1]['bbox'][2])))
-                       if ROUND_COORDS else str(int(row[1]['bbox'][0] + row[1]['bbox'][2]))),
-                E.ymax(str(int(round(row[1]['bbox'][1] + row[1]['bbox'][3])))
-                       if ROUND_COORDS else str(int(row[1]['bbox'][1] + row[1]['bbox'][3]))),
-            ),
-        )
+        if row[1]['category_id'] in label_ids:
+            objectNode = E.object(
+                E.name(str(row[1]['category_id'])),
+                E.pose("Unspecified"),
+                E.truncated("0"),
+                E.difficult("0"),
+                E.bndbox(
+                    E.xmin(
+                        str(int(round(row[1]['bbox'][0]))) if ROUND_COORDS else str(int(row[1]['bbox'][0]))),
+                    E.ymin(
+                        str(int(round(row[1]['bbox'][1]))) if ROUND_COORDS else str(int(row[1]['bbox'][1]))),
+                    E.xmax(str(int(round(row[1]['bbox'][0] + row[1]['bbox'][2])))
+                           if ROUND_COORDS else str(int(row[1]['bbox'][0] + row[1]['bbox'][2]))),
+                    E.ymax(str(int(round(row[1]['bbox'][1] + row[1]['bbox'][3])))
+                           if ROUND_COORDS else str(int(row[1]['bbox'][1] + row[1]['bbox'][3]))),
+                ),
+            )
         img_annotation.append(objectNode)
     xml_pretty = etree.tostring(img_annotation, pretty_print=True)
     with open(ANN_DIR + imagename + ".xml", 'wb') as ann_file:
@@ -151,12 +152,11 @@ if TYPEPREFIX == 'train':
     if TRAIN_SPLIT and TRAIN_SPLIT < 1.0:
         TRAIN_DIR = 'Images/train_minusminival%d/' % (YEAR)
         TRAIN_FULL_DIR = '%s%s' % (ROOT_COCO, TRAIN_DIR)
-        TRAIN_ANN_DIR = 'Annotations/train_minusminival%d/' % (
-            ROOT_COCO, YEAR)
+        TRAIN_ANN_DIR = 'Annotations/train_minusminival%d/' % (YEAR)
         TRAIN_FULL_ANN_DIR = '%s%s' % (ROOT_COCO, TRAIN_ANN_DIR)
-        MINIVAL_DIR = 'Images/minival%d/' % (ROOT_COCO, YEAR)
+        MINIVAL_DIR = 'Images/minival%d/' % (YEAR)
         MINIVAL_FULL_DIR = '%s%s' % (ROOT_COCO, MINIVAL_DIR)
-        MINIVAL_ANN_DIR = 'Annotations/minival%d/' % (ROOT_COCO, YEAR)
+        MINIVAL_ANN_DIR = 'Annotations/minival%d/' % (YEAR)
         MINIVAL_FULL_ANN_DIR = '%s%s' % (ROOT_COCO, MINIVAL_ANN_DIR)
         if not path.isdir(TRAIN_DIR):
             mkdir(TRAIN_FULL_DIR)
@@ -173,7 +173,7 @@ if TYPEPREFIX == 'train':
             SELECTED_FOR_MINIVAL.append(int(RANDOM_IDX))
         SELECTED_FOR_TRAIN = sorted(
             list(set(list(range(len(IMAGE_NAMES)))).difference(SELECTED_FOR_MINIVAL)))
-        with open('train.txt', 'w') as train_file:
+        with open('train2.txt', 'w') as train_file:
             for idx in SELECTED_FOR_TRAIN:
                 if COPY_FILES:
                     copyfile(
@@ -191,7 +191,7 @@ if TYPEPREFIX == 'train':
                         TRAIN_FULL_ANN_DIR + IMAGE_NAMES[idx] + ".xml")
                 train_file.write(
                     "/" + TRAIN_DIR + IMAGE_NAMES[idx] + ".jpg /" + TRAIN_ANN_DIR + IMAGE_NAMES[idx] + ".xml\n")
-        with open('minival.txt', 'w')as minival_file:
+        with open('minival2.txt', 'w')as minival_file:
             for idx in SELECTED_FOR_MINIVAL:
                 if COPY_FILES:
                     copyfile(
@@ -214,7 +214,7 @@ if TYPEPREFIX == 'train':
                 minival_file.write(
                     "/" + MINIVAL_DIR + IMAGE_NAMES[idx] + ".jpg /" + MINIVAL_ANN_DIR + IMAGE_NAMES[idx] + ".xml\n")
     else:
-        with open('train.txt', 'w') as train_file:
+        with open('train2.txt', 'w') as train_file:
             IMG_RELATIVE = '/Images/train%d/' % (YEAR)
             TRAIN_ANN_DIR = 'Annotations/train%d/' % (YEAR)
             TRAIN_FULL_ANN_DIR = "%s%s" % (ROOT_COCO, TRAIN_ANN_DIR)
@@ -224,7 +224,7 @@ if TYPEPREFIX == 'train':
                 train_file.write(
                     IMG_RELATIVE + IMAGE_NAMES[i] + ".jpg /" + TRAIN_ANN_DIR + IMAGE_NAMES[i] + ".xml\n")
 else:
-    with open('val.txt', 'w') as val_file:
+    with open('val2.txt', 'w') as val_file:
         IMG_RELATIVE = '/Images/val%d/' % (YEAR)
         VAL_ANN_DIR = 'Annotations/val%d/' % (YEAR)
         VALL_FULL_ANN_DIR = '%s%s' % (ROOT_COCO, VAL_ANN_DIR)
