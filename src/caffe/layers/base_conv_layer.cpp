@@ -466,7 +466,11 @@ void BaseConvolutionLayer<Dtype, MItype, MOtype>::unlock_col_buffer() {
 
 #endif  // !CPU_ONLY
 
-INSTANTIATE_CLASS_3T(BaseConvolutionLayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T(BaseConvolutionLayer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(BaseConvolutionLayer,
+                             (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(BaseConvolutionLayer,
+                             (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(BaseConvolutionLayer,
+                             (double), (double), (double));
 
 }  // namespace caffe

@@ -221,10 +221,15 @@ void InfogainLossLayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob<MO
   }
 }
 
-INSTANTIATE_CLASS_3T(InfogainLossLayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T(InfogainLossLayer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(InfogainLossLayer,
+                             (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(InfogainLossLayer,
+                             (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(InfogainLossLayer,
+                             (double), (double), (double));
 
 REGISTER_LAYER_CLASS(InfogainLoss);
+REGISTER_LAYER_CLASS_INST(InfogainLoss, (half_fp), (half_fp), (half_fp));
 REGISTER_LAYER_CLASS_INST(InfogainLoss, (float), (float), (float));
 REGISTER_LAYER_CLASS_INST(InfogainLoss, (double), (double), (double));
 

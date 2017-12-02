@@ -411,13 +411,13 @@ string create_source(Device* dev,
   return ss.str();
 }
 
-template<>
+template
 string create_source<half_fp>(Device* dev,
     shared_ptr<DeviceProgram> program);
-template<>
+template
 string create_source<float>(Device* dev,
     shared_ptr<DeviceProgram> program);
-template<>
+template
 string create_source<double>(Device* dev,
     shared_ptr<DeviceProgram> program);
 
@@ -428,15 +428,15 @@ void Device::CreateIm2ColProgram() {
   ss << this->im2col_program_->setup();
 
 #ifdef USE_HALF
-  ss << create_source<half_fp>(this, this->math_program_);
+  ss << create_source<half_fp>(this, this->im2col_program_);
 #endif
 
 #ifdef USE_SINGLE
-  ss << create_source<float>(this, this->math_program_);
+  ss << create_source<float>(this, this->im2col_program_);
 #endif
 
 #ifdef USE_DOUBLE
-  ss << create_source<double>(this, this->math_program_);
+  ss << create_source<double>(this, this->im2col_program_);
 #endif
 
   this->im2col_program_->set_source(ss.str());
@@ -577,7 +577,7 @@ void Device::col2im_nd(vptr<const Dtype> data_col,
 }
 
 #ifdef USE_HALF
-template<>
+template
 void Device::im2col(vptr<const half_fp> data_im, const int_tp channels,
                     const int_tp height, const int_tp width,
                     const int_tp kernel_h, const int_tp kernel_w,
@@ -585,7 +585,7 @@ void Device::im2col(vptr<const half_fp> data_im, const int_tp channels,
                     const int_tp stride_h, const int_tp stride_w,
                     const int_tp dilation_h, const int_tp dilation_w,
                     vptr<half_fp> data_col);
-template<>
+template
 void Device::col2im(vptr<const half_fp> data_col,
                     const int_tp channels, const int_tp height,
                     const int_tp width, const int_tp kernel_h,
@@ -593,7 +593,7 @@ void Device::col2im(vptr<const half_fp> data_col,
                     const int_tp pad_w, const int_tp stride_h,
                     const int_tp stride_w, const int_tp dilation_h,
                     const int_tp dilation_w, vptr<half_fp> data_im);
-template<>
+template
 void Device::im2col_nd(vptr<const half_fp> data_im,
                        const int_tp num_spatial_axes,
                        const int_tp num_kernels, vptr<const int_tp> im_shape,
@@ -602,7 +602,7 @@ void Device::im2col_nd(vptr<const half_fp> data_im,
                        vptr<const int_tp> pad, vptr<const int_tp> stride,
                        vptr<const int_tp> dilation,
                        vptr<half_fp> data_col);
-template<>
+template
 void Device::col2im_nd(vptr<const half_fp> data_col,
                        const int_tp num_spatial_axes,
                        const int_tp im_size, vptr<const int_tp> im_shape,
@@ -615,7 +615,7 @@ void Device::col2im_nd(vptr<const half_fp> data_col,
 
 
 #ifdef USE_SINGLE
-template<>
+template
 void Device::im2col(vptr<const float> data_im, const int_tp channels,
                     const int_tp height, const int_tp width,
                     const int_tp kernel_h, const int_tp kernel_w,
@@ -623,7 +623,7 @@ void Device::im2col(vptr<const float> data_im, const int_tp channels,
                     const int_tp stride_h, const int_tp stride_w,
                     const int_tp dilation_h, const int_tp dilation_w,
                     vptr<float> data_col);
-template<>
+template
 void Device::col2im(vptr<const float> data_col, const int_tp channels,
                     const int_tp height, const int_tp width,
                     const int_tp kernel_h, const int_tp kernel_w,
@@ -631,7 +631,7 @@ void Device::col2im(vptr<const float> data_col, const int_tp channels,
                     const int_tp stride_h, const int_tp stride_w,
                     const int_tp dilation_h, const int_tp dilation_w,
                     vptr<float> data_im);
-template<>
+template
 void Device::im2col_nd(vptr<const float> data_im,
                        const int_tp num_spatial_axes,
                        const int_tp num_kernels, vptr<const int_tp> im_shape,
@@ -639,7 +639,7 @@ void Device::im2col_nd(vptr<const float> data_im,
                        vptr<const int_tp> kernel_shape,
                        vptr<const int_tp> pad, vptr<const int_tp> stride,
                        vptr<const int_tp> dilation, vptr<float> data_col);
-template<>
+template
 void Device::col2im_nd(vptr<const float> data_col,
                        const int_tp num_spatial_axes,
                        const int_tp im_size, vptr<const int_tp> im_shape,
@@ -651,7 +651,7 @@ void Device::col2im_nd(vptr<const float> data_col,
 
 
 #ifdef USE_DOUBLE
-template<>
+template
 void Device::im2col(vptr<const double> data_im, const int_tp channels,
                     const int_tp height, const int_tp width,
                     const int_tp kernel_h, const int_tp kernel_w,
@@ -659,7 +659,7 @@ void Device::im2col(vptr<const double> data_im, const int_tp channels,
                     const int_tp stride_h, const int_tp stride_w,
                     const int_tp dilation_h, const int_tp dilation_w,
                     vptr<double> data_col);
-template<>
+template
 void Device::col2im(vptr<const double> data_col, const int_tp channels,
                     const int_tp height, const int_tp width,
                     const int_tp kernel_h, const int_tp kernel_w,
@@ -667,7 +667,7 @@ void Device::col2im(vptr<const double> data_col, const int_tp channels,
                     const int_tp stride_h, const int_tp stride_w,
                     const int_tp dilation_h, const int_tp dilation_w,
                     vptr<double> data_im);
-template<>
+template
 void Device::im2col_nd(vptr<const double> data_im,
                        const int_tp num_spatial_axes,
                        const int_tp num_kernels, vptr<const int_tp> im_shape,
@@ -675,7 +675,7 @@ void Device::im2col_nd(vptr<const double> data_im,
                        vptr<const int_tp> kernel_shape,
                        vptr<const int_tp> pad, vptr<const int_tp> stride,
                        vptr<const int_tp> dilation, vptr<double> data_col);
-template<>
+template
 void Device::col2im_nd(vptr<const double> data_col,
                        const int_tp num_spatial_axes,
                        const int_tp im_size, vptr<const int_tp> im_shape,

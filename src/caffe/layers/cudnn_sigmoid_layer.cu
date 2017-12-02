@@ -58,7 +58,7 @@ void CuDNNSigmoidLayer<Dtype, MItype, MOtype>::Backward_gpu(const vector<Blob<MO
 #endif
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(CuDNNSigmoidLayer);
+INSTANTIATE_CLASS_3T_GUARDED(CuDNNSigmoidLayer);
 
 }  // namespace caffe
 #endif

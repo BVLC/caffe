@@ -146,10 +146,15 @@ void InnerProductLayer<Dtype, MItype, MOtype>::Backward_cpu(
 STUB_GPU(InnerProductLayer);
 #endif
 
-INSTANTIATE_CLASS_3T(InnerProductLayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T(InnerProductLayer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(InnerProductLayer,
+                             (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(InnerProductLayer,
+                             (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(InnerProductLayer,
+                             (double), (double), (double));
 
 REGISTER_LAYER_CLASS(InnerProduct);
+REGISTER_LAYER_CLASS_INST(InnerProduct, (half_fp), (half_fp), (half_fp));
 REGISTER_LAYER_CLASS_INST(InnerProduct, (float), (float), (float));
 REGISTER_LAYER_CLASS_INST(InnerProduct, (double), (double), (double));
 

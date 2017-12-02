@@ -85,8 +85,8 @@ void hdf5_load_nd_dataset_helper(
 
 #ifdef USE_HALF
 template <>
-void hdf5_load_nd_dataset<half>(hid_t file_id, const char* dataset_name_,
-        int min_dim, int max_dim, Blob<half>* blob, bool reshape) {
+void hdf5_load_nd_dataset<half_fp>(hid_t file_id, const char* dataset_name_,
+        int min_dim, int max_dim, Blob<half_fp>* blob, bool reshape) {
   // FIXME
   hdf5_load_nd_dataset_helper(file_id, dataset_name_, min_dim, max_dim, blob,
                               reshape);
@@ -118,8 +118,8 @@ void hdf5_load_nd_dataset<double>(hid_t file_id, const char* dataset_name_,
 
 #ifdef USE_HALF
 template <>
-void hdf5_save_nd_dataset<half>(
-    const hid_t file_id, const string& dataset_name, const Blob<half>& blob,
+void hdf5_save_nd_dataset<half_fp>(
+    const hid_t file_id, const string& dataset_name, const Blob<half_fp>& blob,
     bool write_diff) {
   // FIXME
   int_tp num_axes = blob.num_axes();
@@ -127,7 +127,7 @@ void hdf5_save_nd_dataset<half>(
   for (int_tp i = 0; i < num_axes; ++i) {
     dims[i] = blob.shape(i);
   }
-  const half* data;
+  const half_fp* data;
   if (write_diff) {
     data = blob.cpu_diff();
   } else {

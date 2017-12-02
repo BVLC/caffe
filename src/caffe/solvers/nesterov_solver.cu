@@ -6,7 +6,7 @@
 namespace caffe {
 
 template<typename Dtype>
-void AdamSolver<Dtype>::GenerateProgram() {
+void NesterovSolver<Dtype>::GenerateProgram() {
   this->device_program_ = this->device_->CreateProgram();
   stringstream ss;
 
@@ -74,5 +74,7 @@ template void nesterov_update_gpu<double>(Device* dev,
               vptr<double> h, double momentum,
               double local_rate);
 #endif  // USE_DOUBLE
+
+INSTANTIATE_CLASS_1T_GUARDED(NesterovSolver, (half_fp)(float)(double));
 
 }  // namespace caffe

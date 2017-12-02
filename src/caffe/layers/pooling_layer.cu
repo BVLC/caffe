@@ -473,7 +473,7 @@ void PoolingLayer<Dtype, MItype, MOtype>::GenerateProgram() {
     ss << "int_tp pwend = min(((w + pad_w) / stride_w + 1), pooled_width);"
        << std::endl;
     ss << "Dtype gradient = 0.0;" << std::endl;
-    ss << this->device_->global_ptr("const Dtype", "top_diff_slice")
+    ss << this->device_program_->global_ptr("const Dtype", "top_diff_slice")
        << " = top_diff + (n * channels + c) * pooled_height * pooled_width;"
        << std::endl;
     ss << "for (int_tp ph = phstart; ph < phend; ++ph) {" << std::endl;
@@ -557,7 +557,7 @@ void PoolingLayer<Dtype, MItype, MOtype>::GenerateProgram() {
     ss << "wstart = max((int_tpc) (wstart), (int_tpc) (0));" << std::endl;
     ss << "Dtype maxval = -FLT_MAX;" << std::endl;
     ss << "int_tp maxidx = -1;" << std::endl;
-    ss << this->device_->global_ptr("const Dtype", "bottom_slice")
+    ss << this->device_program_->global_ptr("const Dtype", "bottom_slice")
        << " = bottom_data + (n * channels + c) * height * width;" << std::endl;
     ss << "for (int_tp h = hstart; h < hend; ++h) {" << std::endl;
     ss << "for (int_tp w = wstart; w < wend; ++w) {" << std::endl;
@@ -631,7 +631,7 @@ void PoolingLayer<Dtype, MItype, MOtype>::GenerateProgram() {
     ss << "hend = min((int_tpc) (hend), (int_tpc) (height));" << std::endl;
     ss << "wend = min((int_tpc) (wend), (int_tpc) (width));" << std::endl;
     ss << "Dtype aveval = 0;" << std::endl;
-    ss << this->device_->global_ptr("const Dtype", "bottom_slice")
+    ss << this->device_program_->global_ptr("const Dtype", "bottom_slice")
        << " = bottom_data + (n * channels + c) * height * width;" << std::endl;
     ss << "for (int_tp h = hstart; h < hend; ++h) {" << std::endl;
     ss << "for (int_tp w = wstart; w < wend; ++w) {" << std::endl;
@@ -689,7 +689,7 @@ void PoolingLayer<Dtype, MItype, MOtype>::GenerateProgram() {
     ss << "const int_tp wend = min((int_tpc) (wstart + kernel_w),"
        << " (int_tpc) width);" << std::endl;
     ss << "Dtype cumsum = 0.;" << std::endl;
-    ss << this->device_->global_ptr("const Dtype", "bottom_slice")
+    ss << this->device_program_->global_ptr("const Dtype", "bottom_slice")
        << " = bottom_data + (n * channels + c) * height * width;" << std::endl;
     // First pass: get sum
     ss << "for (int_tp h = hstart; h < hend; ++h) {" << std::endl;
@@ -761,7 +761,7 @@ void PoolingLayer<Dtype, MItype, MOtype>::GenerateProgram() {
     // We set cumsum to be 0 to avoid divide-by-zero problems
     ss << "Dtype cumsum = 0.;" << std::endl;
     ss << "Dtype cumvalues = 0.;" << std::endl;
-    ss << this->device_->global_ptr("const Dtype", "bottom_slice")
+    ss << this->device_program_->global_ptr("const Dtype", "bottom_slice")
        << " = bottom_data + (n * channels + c) * height * width;" << std::endl;
     // First pass: get sum
     ss << "for (int_tp h = hstart; h < hend; ++h) {" << std::endl;
@@ -834,10 +834,10 @@ void PoolingLayer<Dtype, MItype, MOtype>::GenerateProgram() {
     ss << "Dtype gradient = 0;" << std::endl;
     ss << "const int_tp offset = (n * channels + c)"
        << " * pooled_height * pooled_width;" << std::endl;
-    ss << this->device_->global_ptr("const Dtype", "top_diff_slice")
+    ss << this->device_program_->global_ptr("const Dtype", "top_diff_slice")
        << " = top_diff + offset;" << std::endl;
     ss << "if (mask) {" << std::endl;
-    ss << this->device_->global_ptr("const int_tp", "mask_slice")
+    ss << this->device_program_->global_ptr("const int_tp", "mask_slice")
        << " = mask + offset;" << std::endl;
     ss << "for (int_tp ph = phstart; ph < phend; ++ph) {" << std::endl;
     ss << "for (int_tp pw = pwstart; pw < pwend; ++pw) {" << std::endl;
@@ -848,7 +848,7 @@ void PoolingLayer<Dtype, MItype, MOtype>::GenerateProgram() {
     ss << "}" << std::endl;
     ss << "}" << std::endl;
     ss << "} else {" << std::endl;
-    ss << this->device_->global_ptr("const Dtype", "top_mask_slice")
+    ss << this->device_program_->global_ptr("const Dtype", "top_mask_slice")
        << " = top_mask + offset;" << std::endl;
     ss << "for (int_tp ph = phstart; ph < phend; ++ph) {" << std::endl;
     ss << "for (int_tp pw = pwstart; pw < pwend; ++pw) {" << std::endl;
@@ -913,7 +913,7 @@ void PoolingLayer<Dtype, MItype, MOtype>::GenerateProgram() {
     ss << "const int_tp pwend = min((int_tpc) (w / stride_w + 1),"
        << " (int_tpc) (pooled_width));" << std::endl;
     ss << "Dtype gradient = 0;" << std::endl;
-    ss << this->device_->global_ptr("const Dtype", "top_diff_slice")
+    ss << this->device_program_->global_ptr("const Dtype", "top_diff_slice")
        << " = top_diff + (n * channels + c) * pooled_height * pooled_width;"
        << std::endl;
     ss << "for (int_tp ph = phstart; ph < phend; ++ph) {" << std::endl;
@@ -982,10 +982,10 @@ void PoolingLayer<Dtype, MItype, MOtype>::GenerateProgram() {
     ss << "const int_tp pwend = min((int_tpc) (w / stride_w + 1),"
        << " (int_tpc) pooled_width);" << std::endl;
     ss << "Dtype gradient = 0;" << std::endl;
-    ss << this->device_->global_ptr("const Dtype", "rand_idx_slice")
+    ss << this->device_program_->global_ptr("const Dtype", "rand_idx_slice")
        << " = rand_idx + (n * channels + c) * pooled_height * pooled_width;"
        << std::endl;
-    ss << this->device_->global_ptr("const Dtype", "top_diff_slice")
+    ss << this->device_program_->global_ptr("const Dtype", "top_diff_slice")
        << " = top_diff + (n * channels + c) * pooled_height * pooled_width;"
        << std::endl;
     ss << "for (int_tp ph = phstart; ph < phend; ++ph) {" << std::endl;
@@ -1377,7 +1377,6 @@ void PoolingLayer<Dtype, MItype, MOtype>::Forward_gpu(
           LOG(FATAL)<< "Unknown pooling method.";
         }
       }
-      CUDA_POST_KERNEL_CHECK;
     } else {
       // 2D case
       switch (this->layer_param_.pooling_param().pool()) {
@@ -1806,10 +1805,11 @@ void PoolingLayer<Dtype, MItype, MOtype>::Backward_gpu(
         "Unknown or unsupported pooling method in Backward_gpu().";
       }
     }
-    CUDA_POST_KERNEL_CHECK;
   }
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(PoolingLayer);
+INSTANTIATE_CLASS_3T_GUARDED(PoolingLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(PoolingLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(PoolingLayer, (double), (double), (double));
 
 }  // namespace caffe

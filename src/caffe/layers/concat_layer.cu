@@ -133,6 +133,7 @@ void ConcatLayer<Dtype, MItype, MOtype>::Backward_gpu(
   }
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(ConcatLayer);
-
+INSTANTIATE_CLASS_3T_GUARDED(ConcatLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(ConcatLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(ConcatLayer, (double), (double), (double));
 }  // namespace caffe

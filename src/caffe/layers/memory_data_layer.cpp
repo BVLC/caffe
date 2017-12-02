@@ -165,10 +165,12 @@ void MemoryDataLayer<Dtype, MItype, MOtype>::Forward_cpu(const vector<Blob<MItyp
   }
 }
 
-INSTANTIATE_CLASS_3T(MemoryDataLayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T(MemoryDataLayer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(MemoryDataLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(MemoryDataLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(MemoryDataLayer, (double), (double), (double));
 
 REGISTER_LAYER_CLASS(MemoryData);
+REGISTER_LAYER_CLASS_INST(MemoryData, (half_fp), (half_fp), (half_fp));
 REGISTER_LAYER_CLASS_INST(MemoryData, (float), (float), (float));
 REGISTER_LAYER_CLASS_INST(MemoryData, (double), (double), (double));
 

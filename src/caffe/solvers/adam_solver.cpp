@@ -112,7 +112,7 @@ void AdamSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
   }
 }
 
-INSTANTIATE_CLASS_1T(AdamSolver, (half_fp)(float)(double));
+INSTANTIATE_CLASS_1T_GUARDED(AdamSolver, (half_fp)(float)(double));
 REGISTER_SOLVER_CLASS(Adam);
 REGISTER_SOLVER_CLASS_INST(Adam, (half_fp)(float)(double));
 

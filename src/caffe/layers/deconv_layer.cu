@@ -59,6 +59,11 @@ void DeconvolutionLayer<Dtype, MItype, MOtype>::Backward_gpu(
   }
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(DeconvolutionLayer);
+INSTANTIATE_CLASS_3T_GUARDED(DeconvolutionLayer,
+                            (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(DeconvolutionLayer,
+                            (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(DeconvolutionLayer,
+                            (double), (double), (double));
 
 }  // namespace caffe

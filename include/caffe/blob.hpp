@@ -75,7 +75,7 @@ class BlobBase {
   inline int_tp count() const {
     return count_;
   }
-  virtual int_tp bytes() const = 0;
+  virtual uint_tp byte_count() const = 0;
 
   shared_ptr<QuantizerBase> net_quant();
 
@@ -206,7 +206,7 @@ class BlobBase {
 
   bool ShapeEquals(const BlobProto& other);
 
-  virtual DataType data_type() = 0;
+  virtual const DataType data_type() const = 0;
 
   virtual void asum_data(void* out) const = 0;
   virtual void asum_diff(void* out) const = 0;
@@ -218,10 +218,10 @@ class BlobBase {
   virtual void gpu_data(vptr<void> out) const = 0;
   virtual void gpu_diff(vptr<void> out) const = 0;
 
-  virtual void set_cpu_data(const void* in) const = 0;
-  virtual void set_cpu_diff(const void* in) const = 0;
-  virtual void set_gpu_data(vptr<const void> in) const = 0;
-  virtual void set_gpu_diff(vptr<const void> in) const = 0;
+  virtual void set_cpu_data(const void* const in) = 0;
+  virtual void set_cpu_diff(const void* const in) = 0;
+  virtual void set_gpu_data(vptr<const void> in) = 0;
+  virtual void set_gpu_diff(vptr<const void> in) = 0;
 
   void ShareDataBase(const BlobBase* other);
   void ShareDiffBase(const BlobBase* other);
@@ -364,17 +364,17 @@ class Blob : public BlobBase {
   virtual void gpu_data(vptr<void> out) const;
   virtual void gpu_diff(vptr<void> out) const;
 
-  virtual void set_cpu_data(const void* in) const;
-  virtual void set_cpu_diff(const void* in) const;
-  virtual void set_gpu_data(vptr<const void> in) const;
-  virtual void set_gpu_diff(vptr<const void> in) const;
+  virtual void set_cpu_data(const void* const in);
+  virtual void set_cpu_diff(const void* const in);
+  virtual void set_gpu_data(vptr<const void> in);
+  virtual void set_gpu_diff(vptr<const void> in);
 
   /// @brief Scale the blob data by a constant factor.
   void scale_data(Dtype scale_factor);
   /// @brief Scale the blob diff by a constant factor.
   void scale_diff(Dtype scale_factor);
 
-  virtual int_tp bytes() const;
+  virtual uint_tp byte_count() const;
 
   /**
    * @brief Set the data_ shared_ptr to point to the SyncedMemory holding the
@@ -395,7 +395,7 @@ class Blob : public BlobBase {
    */
   void ShareDiff(const Blob& other);
 
-  virtual DataType data_type();
+  virtual const DataType data_type() const;
 
   DISABLE_COPY_AND_ASSIGN(Blob);
 };  // class Blob

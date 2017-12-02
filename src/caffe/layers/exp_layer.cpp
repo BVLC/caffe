@@ -62,10 +62,12 @@ void ExpLayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob<MOtype>*>& 
 STUB_GPU(ExpLayer);
 #endif
 
-INSTANTIATE_CLASS_3T(ExpLayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T(ExpLayer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(ExpLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(ExpLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(ExpLayer, (double), (double), (double));
 
 REGISTER_LAYER_CLASS(Exp);
+REGISTER_LAYER_CLASS_INST(Exp, (half_fp), (half_fp), (half_fp));
 REGISTER_LAYER_CLASS_INST(Exp, (float), (float), (float));
 REGISTER_LAYER_CLASS_INST(Exp, (double), (double), (double));
 

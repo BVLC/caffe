@@ -169,7 +169,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
           LOG(INFO) << "    with loss weight " << layer_loss;
         }
       }
-      memory_used_ += top_vecs_[layer_id][top_id]->bytes();
+      memory_used_ += top_vecs_[layer_id][top_id]->byte_count();
     }
     if (Caffe::root_solver()) {
       DLOG(INFO) << "Memory required for data: " << memory_used_ << " B";
@@ -760,7 +760,7 @@ void Net<Dtype>::ShareTrainedLayersWith(const Net* other) {
       continue;
     }
     DLOG(INFO)<< "Copying source layer " << source_layer_name;
-    vector<shared_ptr<BlobBase> >& target_blobs = layers_[target_layer_id]
+    vector<shared_ptr<BlobBase> > target_blobs = layers_[target_layer_id]
         ->blob_bases();
     CHECK_EQ(target_blobs.size(), source_layer->blobs_size())
         << "Incompatible number of blobs for layer " << source_layer_name;
@@ -833,7 +833,7 @@ void Net<Dtype>::CopyTrainedLayersFrom(const NetParameter& param) {
       continue;
     }
     DLOG(INFO)<< "Copying source layer " << source_layer_name;
-    vector<shared_ptr<BlobBase> >& target_blobs = layers_[target_layer_id]
+    vector<shared_ptr<BlobBase> > target_blobs = layers_[target_layer_id]
         ->blob_bases();
     CHECK_EQ(target_blobs.size(), source_layer.blobs_size())
         << "Incompatible number of blobs for layer " << source_layer_name;
@@ -894,7 +894,7 @@ void Net<Dtype>::CopyTrainedLayersFromHDF5(const string trained_filename) {
     }
     int_tp target_layer_id = layer_names_index_[source_layer_name];
     DLOG(INFO) << "Copying source layer " << source_layer_name;
-    vector<shared_ptr<BlobBase> >& target_blobs =
+    vector<shared_ptr<BlobBase> > target_blobs =
         layers_[target_layer_id]->blob_bases();
     hid_t layer_hid = H5Gopen2(data_hid, source_layer_name.c_str(),
         H5P_DEFAULT);

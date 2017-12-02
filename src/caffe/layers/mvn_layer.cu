@@ -116,6 +116,7 @@ void MVNLayer<Dtype, MItype, MOtype>::Backward_gpu(
   }
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(MVNLayer);
-
+INSTANTIATE_CLASS_3T_GUARDED(MVNLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(MVNLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(MVNLayer, (double), (double), (double));
 }  // namespace caffe

@@ -129,6 +129,8 @@ void SliceLayer<Dtype, MItype, MOtype>::Backward_gpu(
   }
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(SliceLayer);
+INSTANTIATE_CLASS_3T_GUARDED(SliceLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(SliceLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(SliceLayer, (double), (double), (double));
 
 }  // namespace caffe

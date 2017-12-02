@@ -31,6 +31,11 @@ void Device::MallocMemHost(void** ptr, uint_tp size) {
   CHECK(*ptr) << "host allocation of size " << size << " failed";
 }
 
+vptr<void> Device::MallocMemDevice(uint_tp size, void** ptr,
+                                               bool zero_copy) {
+  return vptr<void>();
+}
+
 void Device::FreeMemHost(void* ptr) {
 #ifdef USE_MKL
   mkl_free(ptr);
@@ -39,8 +44,16 @@ void Device::FreeMemHost(void* ptr) {
 #endif  // USE_MKL
 }
 
+void Device::FreeMemDevice(vptr<void> ptr) {
+  NOT_IMPLEMENTED;
+}
+
 uint_tp Device::num_queues() {
   return 1;
+}
+
+bool Device::is_host_unified() {
+  return true;
 }
 
 bool Device::CheckVendor(string vendor) {
@@ -62,7 +75,21 @@ void Device::SwitchQueue(uint_tp id) {}
 
 void Device::FinishQueues() {}
 
-void Device::memcpy(const uint_tp n, vptr<const void> x, vptr<void> y) {}
+shared_ptr<DeviceProgram> Device::CreateProgram() {
+  return nullptr;
+}
+
+void Device::memcpy(const uint_tp n, vptr<const void> x, vptr<void> y) {
+  NOT_IMPLEMENTED;
+}
+
+void Device::memcpy(const uint_tp n, const void* x, vptr<void> y) {
+  NOT_IMPLEMENTED;
+}
+
+void Device::memcpy(const uint_tp n, vptr<const void> x, void* y) {
+  NOT_IMPLEMENTED;
+}
 
 Backend Device::backend() const {
   return backend_;
@@ -133,14 +160,14 @@ shared_ptr<Blob<Dtype> > Device::Buffer(vector<int_tp> shape, int_tp* lock_id) {
   // No buffers available, create a new one
   if (buffer_id == -1) {
     buffer_id = buffers_.size();
-    buffers_.push_back(std::make_shared<Blob<char> >(this));
+    buffers_.push_back(std::make_shared<Blob<int8_t> >(this));
     buffer_mutex_.push_back(std::make_shared<std::mutex>());
     buffer_mutex_[buffer_id]->lock();
   }
 
   buffer_vec_mutex_.unlock();
 
-  Blob<char>* buffer = buffers_[buffer_id].get();
+  Blob<int8_t>* buffer = buffers_[buffer_id].get();
 
   // Ensure the buffer is big enough for the request
   buffer->Reshape(buffer_shape);
@@ -160,8 +187,6 @@ template shared_ptr<Blob<half_fp> > Device::Buffer(vector<int_tp> shape,
 template shared_ptr<Blob<float> > Device::Buffer(vector<int_tp> shape,
                                                    int_tp* lock_id);
 template shared_ptr<Blob<double> > Device::Buffer(vector<int_tp> shape,
-                                                   int_tp* lock_id);
-template shared_ptr<Blob<char> > Device::Buffer(vector<int_tp> shape,
                                                    int_tp* lock_id);
 template shared_ptr<Blob<int8_t> > Device::Buffer(vector<int_tp> shape,
                                                    int_tp* lock_id);

@@ -96,7 +96,7 @@ void RMSPropSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
   }
 }
 
-INSTANTIATE_CLASS_1T(RMSPropSolver, (half_fp)(float)(double));
+INSTANTIATE_CLASS_1T_GUARDED(RMSPropSolver, (half_fp)(float)(double));
 REGISTER_SOLVER_CLASS(RMSProp);
 REGISTER_SOLVER_CLASS_INST(RMSProp, (half_fp)(float)(double));
 

@@ -41,7 +41,7 @@ void OclDevice::gemv_half(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
   const size_t incy = 1;
 
   OPENCL_CLBLAST_CHECK(
-    clblast::Gemv<half_fp>(
+    clblast::Gemv<clblast::half>(
       layout, a_transpose,
       m, n,
       alpha,

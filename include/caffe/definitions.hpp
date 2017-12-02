@@ -18,7 +18,9 @@
 #include <vector>
 #include <boost/variant.hpp>
 
+#include "caffe/trait_helper.hpp"
 #include "caffe/util/half_fp.hpp"
+
 
 #ifdef USE_INDEX_64
 // Types used for parameters, offset computations and so on

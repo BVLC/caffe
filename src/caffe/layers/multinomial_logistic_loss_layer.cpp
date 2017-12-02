@@ -60,12 +60,16 @@ void MultinomialLogisticLossLayer<Dtype, MItype, MOtype>::Backward_cpu(
   }
 }
 
-INSTANTIATE_CLASS_3T(MultinomialLogisticLossLayer,
+INSTANTIATE_CLASS_3T_GUARDED(MultinomialLogisticLossLayer,
+                     (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(MultinomialLogisticLossLayer,
                      (float), (float), (float));
-INSTANTIATE_CLASS_3T(MultinomialLogisticLossLayer,
+INSTANTIATE_CLASS_3T_GUARDED(MultinomialLogisticLossLayer,
                      (double), (double), (double));
 
 REGISTER_LAYER_CLASS(MultinomialLogisticLoss);
+REGISTER_LAYER_CLASS_INST(MultinomialLogisticLoss,
+                          (half_fp), (half_fp), (half_fp));
 REGISTER_LAYER_CLASS_INST(MultinomialLogisticLoss,
                           (float), (float), (float));
 REGISTER_LAYER_CLASS_INST(MultinomialLogisticLoss,

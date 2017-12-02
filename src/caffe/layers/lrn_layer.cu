@@ -218,8 +218,8 @@ void LRNLayer<Dtype, MItype, MOtype>::Forward_gpu(
       break;
     default:
       LOG(FATAL)<< "Unknown normalization region.";
-    }
   }
+}
 
 
 template<typename Dtype, typename MItype, typename MOtype>
@@ -245,7 +245,8 @@ void LRNLayer<Dtype, MItype, MOtype>::CrossChannelForward_gpu(
     kernel->add_arg(&height_);
     kernel->add_arg(&width_);
     kernel->add_arg(&size_);
-    kernel->add_arg(&alpha_ / size_);
+    Dtype alpha_size = alpha_ / size_;
+    kernel->add_arg(&alpha_size);
     kernel->add_arg(&k_);
     kernel->add_arg(&scale_data);
 
@@ -273,19 +274,6 @@ void LRNLayer<Dtype, MItype, MOtype>::CrossChannelForward_gpu(
     kernel->Execute(group, local);
   }
 }
-#ifdef USE_HALF
-template<>
-void LRNLayer<half_fp, half_fp, half_fp>
-                                                      ::CrossChannelForward_gpu(
-    const vector<Blob<half_fp>*>& bottom,
-    const vector<Blob<half_fp>*>& top);
-#endif  // USE_HALF
-template<>
-void LRNLayer<float, float, float>::CrossChannelForward_gpu(
-    const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top);
-template<>
-void LRNLayer<double, double, double>::CrossChannelForward_gpu(
-    const vector<Blob<double>*>& bottom, const vector<Blob<double>*>& top);
 
 template<typename Dtype, typename MItype, typename MOtype>
 void LRNLayer<Dtype, MItype, MOtype>::Backward_gpu(
@@ -313,7 +301,7 @@ void LRNLayer<Dtype, MItype, MOtype>::CrossChannelBackward_gpu(
   Dtype cache_ratio = Dtype(2. * alpha_ * beta_ / size_);
   vptr<const Dtype> bottom_data = bottom[0]->gpu_data();
   vptr<const Dtype> top_data = top[0]->gpu_data();
-  vptr<const Dtype> scale_data = scale_->gpu_data();
+  vptr<const Dtype> scale_data = scale_.gpu_data();
   vptr<const Dtype> top_diff = top[0]->gpu_diff();
   vptr<Dtype> bottom_diff = bottom[0]->mutable_gpu_diff();
 
@@ -339,23 +327,10 @@ void LRNLayer<Dtype, MItype, MOtype>::CrossChannelBackward_gpu(
   this->device_->get_threads(&work_size, &group, &local, kernel.get(), true);
   kernel->Execute(group, local);
 }
-#ifdef USE_HALF
-template<>
-void LRNLayer<half_fp, half_fp, half_fp>
-                                                     ::CrossChannelBackward_gpu(
-    const vector<Blob<half_fp>*>& top,
-    const vector<bool>& propagate_down,
-    const vector<Blob<half_fp>*>& bottom);
-#endif  // USE_HALF
-template<>
-void LRNLayer<float, float, float>::CrossChannelBackward_gpu(
-    const vector<Blob<float>*>& top, const vector<bool>& propagate_down,
-    const vector<Blob<float>*>& bottom);
-template<>
-void LRNLayer<double, double, double>::CrossChannelBackward_gpu(
-    const vector<Blob<double>*>& top, const vector<bool>& propagate_down,
-    const vector<Blob<double>*>& bottom);
 
-INSTANTIATE_LAYER_GPU_FUNCS(LRNLayer);
+
+INSTANTIATE_CLASS_3T_GUARDED(LRNLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(LRNLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(LRNLayer, (double), (double), (double));
 
 }  // namespace caffe

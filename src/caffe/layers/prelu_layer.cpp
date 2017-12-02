@@ -140,10 +140,12 @@ void PReLULayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob<MOtype>*>
 STUB_GPU(PReLULayer);
 #endif
 
-INSTANTIATE_CLASS_3T(PReLULayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T(PReLULayer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(PReLULayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(PReLULayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(PReLULayer, (double), (double), (double));
 
 REGISTER_LAYER_CLASS(PReLU);
+REGISTER_LAYER_CLASS_INST(PReLU, (half_fp), (half_fp), (half_fp));
 REGISTER_LAYER_CLASS_INST(PReLU, (float), (float), (float));
 REGISTER_LAYER_CLASS_INST(PReLU, (double), (double), (double));
 

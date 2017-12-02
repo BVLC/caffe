@@ -108,7 +108,7 @@ Blob<Dtype>::Blob(const vector<int_tp>& shape, Device *dev) {
 }
 
 template<typename Dtype>
-int_tp Blob<Dtype>::bytes() const {
+uint_tp Blob<Dtype>::byte_count() const {
   return safe_sizeof<Dtype>() * count_;
 }
 
@@ -203,12 +203,12 @@ void Blob<Dtype>::ShareDiff(const Blob& other) {
 
 
 void BlobBase::ShareDataBase(const BlobBase* other) {
-  CHECK_EQ(bytes(), other->bytes());
+  CHECK_EQ(byte_count(), other->byte_count());
   data_ = other->data();
 }
 
 void BlobBase::ShareDiffBase(const BlobBase* other) {
-  CHECK_EQ(bytes(), other->bytes());
+  CHECK_EQ(byte_count(), other->byte_count());
   diff_ = other->diff();
 }
 
@@ -219,10 +219,28 @@ shared_ptr<QuantizerBase> BlobBase::net_quant() {
 // The "update" method is used for parameter blobs in a Net, which are stored
 // as Blob<float> or Blob<double> -- hence we do not define it for
 // Blob<int_tp> or Blob<int_tp>.
-template<> void Blob<int_tp>::Update() {
+template<> void Blob<int8_t>::Update() {
   NOT_IMPLEMENTED;
 }
-template<> void Blob<uint_tp>::Update() {
+template<> void Blob<int16_t>::Update() {
+  NOT_IMPLEMENTED;
+}
+template<> void Blob<int32_t>::Update() {
+  NOT_IMPLEMENTED;
+}
+template<> void Blob<int64_t>::Update() {
+  NOT_IMPLEMENTED;
+}
+template<> void Blob<uint8_t>::Update() {
+  NOT_IMPLEMENTED;
+}
+template<> void Blob<uint16_t>::Update() {
+  NOT_IMPLEMENTED;
+}
+template<> void Blob<uint32_t>::Update() {
+  NOT_IMPLEMENTED;
+}
+template<> void Blob<uint64_t>::Update() {
   NOT_IMPLEMENTED;
 }
 
@@ -254,12 +272,35 @@ void Blob<Dtype>::Update() {
   }
 }
 
-template<> int_tp Blob<int_tp>::asum_data() const {
+template<> int8_t Blob<int8_t>::asum_data() const {
   NOT_IMPLEMENTED;
   return 0;
 }
-
-template<> uint_tp Blob<uint_tp>::asum_data() const {
+template<> int16_t Blob<int16_t>::asum_data() const {
+  NOT_IMPLEMENTED;
+  return 0;
+}
+template<> int32_t Blob<int32_t>::asum_data() const {
+  NOT_IMPLEMENTED;
+  return 0;
+}
+template<> int64_t Blob<int64_t>::asum_data() const {
+  NOT_IMPLEMENTED;
+  return 0;
+}
+template<> uint8_t Blob<uint8_t>::asum_data() const {
+  NOT_IMPLEMENTED;
+  return 0;
+}
+template<> uint16_t Blob<uint16_t>::asum_data() const {
+  NOT_IMPLEMENTED;
+  return 0;
+}
+template<> uint32_t Blob<uint32_t>::asum_data() const {
+  NOT_IMPLEMENTED;
+  return 0;
+}
+template<> uint64_t Blob<uint64_t>::asum_data() const {
   NOT_IMPLEMENTED;
   return 0;
 }
@@ -290,12 +331,35 @@ Dtype Blob<Dtype>::asum_data() const {
   return 0;
 }
 
-template<> int_tp Blob<int_tp>::asum_diff() const {
+template<> int8_t Blob<int8_t>::asum_diff() const {
   NOT_IMPLEMENTED;
   return 0;
 }
-
-template<> uint_tp Blob<uint_tp>::asum_diff() const {
+template<> int16_t Blob<int16_t>::asum_diff() const {
+  NOT_IMPLEMENTED;
+  return 0;
+}
+template<> int32_t Blob<int32_t>::asum_diff() const {
+  NOT_IMPLEMENTED;
+  return 0;
+}
+template<> int64_t Blob<int64_t>::asum_diff() const {
+  NOT_IMPLEMENTED;
+  return 0;
+}
+template<> uint8_t Blob<uint8_t>::asum_diff() const {
+  NOT_IMPLEMENTED;
+  return 0;
+}
+template<> uint16_t Blob<uint16_t>::asum_diff() const {
+  NOT_IMPLEMENTED;
+  return 0;
+}
+template<> uint32_t Blob<uint32_t>::asum_diff() const {
+  NOT_IMPLEMENTED;
+  return 0;
+}
+template<> uint64_t Blob<uint64_t>::asum_diff() const {
   NOT_IMPLEMENTED;
   return 0;
 }
@@ -326,12 +390,35 @@ Dtype Blob<Dtype>::asum_diff() const {
   return 0;
 }
 
-template<> int_tp Blob<int_tp>::sumsq_data() const {
+template<> int8_t Blob<int8_t>::sumsq_data() const {
   NOT_IMPLEMENTED;
   return 0;
 }
-
-template<> uint_tp Blob<uint_tp>::sumsq_data() const {
+template<> int16_t Blob<int16_t>::sumsq_data() const {
+  NOT_IMPLEMENTED;
+  return 0;
+}
+template<> int32_t Blob<int32_t>::sumsq_data() const {
+  NOT_IMPLEMENTED;
+  return 0;
+}
+template<> int64_t Blob<int64_t>::sumsq_data() const {
+  NOT_IMPLEMENTED;
+  return 0;
+}
+template<> uint8_t Blob<uint8_t>::sumsq_data() const {
+  NOT_IMPLEMENTED;
+  return 0;
+}
+template<> uint16_t Blob<uint16_t>::sumsq_data() const {
+  NOT_IMPLEMENTED;
+  return 0;
+}
+template<> uint32_t Blob<uint32_t>::sumsq_data() const {
+  NOT_IMPLEMENTED;
+  return 0;
+}
+template<> uint64_t Blob<uint64_t>::sumsq_data() const {
   NOT_IMPLEMENTED;
   return 0;
 }
@@ -370,12 +457,35 @@ Dtype Blob<Dtype>::sumsq_data() const {
   return sumsq;
 }
 
-template<> int_tp Blob<int_tp>::sumsq_diff() const {
+template<> int8_t Blob<int8_t>::sumsq_diff() const {
   NOT_IMPLEMENTED;
   return 0;
 }
-
-template<> uint_tp Blob<uint_tp>::sumsq_diff() const {
+template<> int16_t Blob<int16_t>::sumsq_diff() const {
+  NOT_IMPLEMENTED;
+  return 0;
+}
+template<> int32_t Blob<int32_t>::sumsq_diff() const {
+  NOT_IMPLEMENTED;
+  return 0;
+}
+template<> int64_t Blob<int64_t>::sumsq_diff() const {
+  NOT_IMPLEMENTED;
+  return 0;
+}
+template<> uint8_t Blob<uint8_t>::sumsq_diff() const {
+  NOT_IMPLEMENTED;
+  return 0;
+}
+template<> uint16_t Blob<uint16_t>::sumsq_diff() const {
+  NOT_IMPLEMENTED;
+  return 0;
+}
+template<> uint32_t Blob<uint32_t>::sumsq_diff() const {
+  NOT_IMPLEMENTED;
+  return 0;
+}
+template<> uint64_t Blob<uint64_t>::sumsq_diff() const {
   NOT_IMPLEMENTED;
   return 0;
 }
@@ -413,11 +523,36 @@ Dtype Blob<Dtype>::sumsq_diff() const {
   return sumsq;
 }
 
-template<> void Blob<int_tp>::scale_data(int_tp scale_factor) {
+template<> void Blob<int8_t>::scale_data(int8_t scale_factor) {
   NOT_IMPLEMENTED;
 }
 
-template<> void Blob<uint_tp>::scale_data(uint_tp scale_factor) {
+template<> void Blob<int16_t>::scale_data(int16_t scale_factor) {
+  NOT_IMPLEMENTED;
+}
+
+template<> void Blob<int32_t>::scale_data(int32_t scale_factor) {
+  NOT_IMPLEMENTED;
+}
+
+template<> void Blob<int64_t>::scale_data(int64_t scale_factor) {
+  NOT_IMPLEMENTED;
+}
+
+
+template<> void Blob<uint8_t>::scale_data(uint8_t scale_factor) {
+  NOT_IMPLEMENTED;
+}
+
+template<> void Blob<uint16_t>::scale_data(uint16_t scale_factor) {
+  NOT_IMPLEMENTED;
+}
+
+template<> void Blob<uint32_t>::scale_data(uint32_t scale_factor) {
+  NOT_IMPLEMENTED;
+}
+
+template<> void Blob<uint64_t>::scale_data(uint64_t scale_factor) {
   NOT_IMPLEMENTED;
 }
 
@@ -451,11 +586,35 @@ void Blob<Dtype>::scale_data(Dtype scale_factor) {
     }
   }
 
-template<> void Blob<int_tp>::scale_diff(int_tp scale_factor) {
+template<> void Blob<int8_t>::scale_diff(int8_t scale_factor) {
   NOT_IMPLEMENTED;
 }
 
-template<> void Blob<uint_tp>::scale_diff(uint_tp scale_factor) {
+template<> void Blob<int16_t>::scale_diff(int16_t scale_factor) {
+  NOT_IMPLEMENTED;
+}
+
+template<> void Blob<int32_t>::scale_diff(int32_t scale_factor) {
+  NOT_IMPLEMENTED;
+}
+
+template<> void Blob<int64_t>::scale_diff(int64_t scale_factor) {
+  NOT_IMPLEMENTED;
+}
+
+template<> void Blob<uint8_t>::scale_diff(uint8_t scale_factor) {
+  NOT_IMPLEMENTED;
+}
+
+template<> void Blob<uint16_t>::scale_diff(uint16_t scale_factor) {
+  NOT_IMPLEMENTED;
+}
+
+template<> void Blob<uint32_t>::scale_diff(uint32_t scale_factor) {
+  NOT_IMPLEMENTED;
+}
+
+template<> void Blob<uint64_t>::scale_diff(uint64_t scale_factor) {
   NOT_IMPLEMENTED;
 }
 
@@ -597,43 +756,8 @@ void Blob<Dtype>::FromProto(const BlobProto& proto, bool reshape) {
 }
 
 template<>
-void Blob<half_fp>::ToProto(BlobProto* proto, bool write_diff) const {
-  proto->clear_shape();
-  for (int_tp i = 0; i < shape_.size(); ++i) {
-    proto->mutable_shape()->add_dim(shape_[i]);
-  }
-  proto->clear_double_data();
-  proto->clear_double_diff();
-  const half_fp* data_vec = cpu_data();
-  for (int_tp i = 0; i < count_; ++i) {
-    proto->add_double_data(data_vec[i]);
-  }
-  if (write_diff) {
-    const half_fp* diff_vec = cpu_diff();
-    for (int_tp i = 0; i < count_; ++i) {
-      proto->add_double_diff(diff_vec[i]);
-    }
-  }
-}
-
-template<>
-void Blob<double>::ToProto(BlobProto* proto, bool write_diff) const {
-  proto->clear_shape();
-  for (int_tp i = 0; i < shape_.size(); ++i) {
-    proto->mutable_shape()->add_dim(shape_[i]);
-  }
-  proto->clear_double_data();
-  proto->clear_double_diff();
-  const double* data_vec = cpu_data();
-  for (int_tp i = 0; i < count_; ++i) {
-    proto->add_double_data(data_vec[i]);
-  }
-  if (write_diff) {
-    const double* diff_vec = cpu_diff();
-    for (int_tp i = 0; i < count_; ++i) {
-      proto->add_double_diff(diff_vec[i]);
-    }
-  }
+void Blob<bool>::ToProto(BlobProto* proto, bool write_diff) const {
+  NOT_IMPLEMENTED;
 }
 
 template<>
@@ -641,7 +765,9 @@ void Blob<float>::ToProto(BlobProto* proto, bool write_diff) const {
   proto->clear_shape();
   for (int_tp i = 0; i < shape_.size(); ++i) {
     proto->mutable_shape()->add_dim(shape_[i]);
+    proto->mutable_shape_stride()->add_dim(shape_stride_[i]);
   }
+  proto->set_data_type(this->data_type());
   proto->clear_data();
   proto->clear_diff();
   const float* data_vec = cpu_data();
@@ -656,8 +782,48 @@ void Blob<float>::ToProto(BlobProto* proto, bool write_diff) const {
   }
 }
 
+template<>
+void Blob<double>::ToProto(BlobProto* proto, bool write_diff) const {
+  proto->clear_shape();
+  for (int_tp i = 0; i < shape_.size(); ++i) {
+    proto->mutable_shape()->add_dim(shape_[i]);
+    proto->mutable_shape_stride()->add_dim(shape_stride_[i]);
+  }
+  proto->set_data_type(this->data_type());
+  proto->clear_double_data();
+  proto->clear_double_diff();
+  const double* data_vec = cpu_data();
+  for (int_tp i = 0; i < count_; ++i) {
+    proto->add_double_data(data_vec[i]);
+  }
+  if (write_diff) {
+    const double* diff_vec = cpu_diff();
+    for (int_tp i = 0; i < count_; ++i) {
+      proto->add_double_diff(diff_vec[i]);
+    }
+  }
+}
+
 template<typename Dtype>
-DataType Blob<Dtype>::data_type() {
+void Blob<Dtype>::ToProto(BlobProto* proto, bool write_diff) const {
+  proto->clear_shape();
+  for (int_tp i = 0; i < shape_.size(); ++i) {
+    proto->mutable_shape()->add_dim(shape_[i]);
+    proto->mutable_shape_stride()->add_dim(shape_stride_[i]);
+  }
+  proto->set_data_type(this->data_type());
+  proto->clear_double_data();
+  proto->clear_double_diff();
+  const char* data_vec = reinterpret_cast<const char*>(cpu_data());
+  proto->set_packed_data(data_vec, byte_count());
+  if (write_diff) {
+    const char* diff_vec = reinterpret_cast<const char*>(cpu_diff());
+    proto->set_packed_data(diff_vec, byte_count());
+  }
+}
+
+template<typename Dtype>
+const DataType Blob<Dtype>::data_type() const {
   return proto_data_type<Dtype>();
 }
 
@@ -704,21 +870,21 @@ void Blob<Dtype>::gpu_diff(vptr<void> out) const {
 }
 
 template<typename Dtype>
-void Blob<Dtype>::set_cpu_data(const void* in) const {
+void Blob<Dtype>::set_cpu_data(const void* const in) {
   CHECK(data_->cpu_data());
   this->net_quant_->Forward_cpu(count(), in, data_->mutable_cpu_data());
 }
 template<typename Dtype>
-void Blob<Dtype>::set_cpu_diff(const void* in) const {
+void Blob<Dtype>::set_cpu_diff(const void* const in) {
   CHECK(diff_->cpu_data());
   this->net_quant_->Forward_cpu(count(), in, diff_->mutable_cpu_data());
 }
 template<typename Dtype>
-void Blob<Dtype>::set_gpu_data(vptr<const void> in) const {
+void Blob<Dtype>::set_gpu_data(vptr<const void> in) {
   this->net_quant_->Forward_gpu(count(), in, data_->mutable_gpu_data());
 }
 template<typename Dtype>
-void Blob<Dtype>::set_gpu_diff(vptr<const void> in) const {
+void Blob<Dtype>::set_gpu_diff(vptr<const void> in) {
   this->net_quant_->Forward_gpu(count(), in, diff_->mutable_gpu_data());
 }
 
@@ -741,7 +907,16 @@ void Blob<Dtype>::Clear() {
   }
 }
 
-INSTANTIATE_CLASS_1T(Blob, VARIANT_TYPES);
+INSTANTIATE_CLASS_1T(Blob, (float));
+#ifdef USE_HALF
+INSTANTIATE_CLASS_1T(Blob, (half_fp));
+#endif  // USE_HALF
+#ifdef USE_DOUBLE
+INSTANTIATE_CLASS_1T(Blob, (double));
+#endif  // USE_DOUBLE
+INSTANTIATE_CLASS_1T(Blob, (int8_t)(int16_t)(int32_t)(int64_t));
+INSTANTIATE_CLASS_1T(Blob, (uint8_t)(uint16_t)(uint32_t)(uint64_t));
+
 
 }  // namespace caffe
 

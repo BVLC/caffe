@@ -72,4 +72,6 @@ template void adagrad_update_gpu<double>(Device* dev,
                  double local_rate);
 #endif  // USE_DOUBLE
 
+INSTANTIATE_CLASS_1T_GUARDED(AdaGradSolver, (half_fp)(float)(double))
+
 }  // namespace caffe

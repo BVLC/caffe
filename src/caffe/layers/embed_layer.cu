@@ -141,7 +141,9 @@ void EmbedLayer<Dtype, MItype, MOtype>::Backward_gpu(
   }
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(EmbedLayer);
+INSTANTIATE_CLASS_3T_GUARDED(EmbedLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(EmbedLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(EmbedLayer, (double), (double), (double));
 
 }  // namespace caffe
 

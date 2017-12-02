@@ -53,10 +53,13 @@ void ReLULayer<Dtype, MItype, MOtype>::Backward_cpu(
 STUB_GPU(ReLULayer);
 #endif
 
-INSTANTIATE_CLASS_3T(ReLULayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T(ReLULayer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(ReLULayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(ReLULayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(ReLULayer, (double), (double), (double));
 
 REGISTER_LAYER_CLASS(ReLU);
+REGISTER_LAYER_CLASS_INST(ReLU, (half_fp), (half_fp), (half_fp));
 REGISTER_LAYER_CLASS_INST(ReLU, (float), (float), (float));
 REGISTER_LAYER_CLASS_INST(ReLU, (double), (double), (double));
+
 }  // namespace caffe

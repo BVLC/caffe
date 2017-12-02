@@ -37,7 +37,8 @@ CuDNNTanHLayer<Dtype, MItype, MOtype>::~CuDNNTanHLayer() {
   cudnnDestroy(this->handle_);
 }
 
-INSTANTIATE_CLASS_3T(CuDNNTanHLayer);
+INSTANTIATE_CLASS_3T_GUARDED(CuDNNTanHLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(CuDNNTanHLayer, (double), (double), (double));
 
 }  // namespace caffe
 #endif

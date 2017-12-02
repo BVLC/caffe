@@ -125,6 +125,8 @@ void TileLayer<Dtype, MItype, MOtype>::Backward_gpu(
   kernel->Execute(group, local);
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(TileLayer);
+INSTANTIATE_CLASS_3T_GUARDED(TileLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(TileLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(TileLayer, (double), (double), (double));
 
 }  // namespace caffe

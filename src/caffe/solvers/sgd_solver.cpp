@@ -494,7 +494,7 @@ void SGDSolver<Dtype>::RestoreSolverStateFromHDF5(const string& state_file) {
 #endif  // USE_HDF5
 }
 
-INSTANTIATE_CLASS_1T(SGDSolver, (half_fp)(float)(double));
+INSTANTIATE_CLASS_1T_GUARDED(SGDSolver, (half_fp)(float)(double));
 REGISTER_SOLVER_CLASS(SGD);
 REGISTER_SOLVER_CLASS_INST(SGD, (half_fp)(float)(double));
 

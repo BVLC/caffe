@@ -84,10 +84,15 @@ uint_tp BlockingQueue<T>::size() const {
   boost::mutex::scoped_lock lock(sync_->mutex_);
   return queue_.size();
 }
+
 #ifdef USE_HALF
-template class BlockingQueue<Batch<half>*>;
+template class BlockingQueue<Batch<half_fp>*>;
 #endif
+#ifdef USE_SINGLE
 template class BlockingQueue<Batch<float>*>;
+#endif
+#ifdef USE_DOUBLE
 template class BlockingQueue<Batch<double>*>;
+#endif
 
 }  // namespace caffe

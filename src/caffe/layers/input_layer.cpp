@@ -21,10 +21,12 @@ void InputLayer<Dtype, MItype, MOtype>::LayerSetUp(const vector<Blob<MItype>*>& 
   }
 }
 
-INSTANTIATE_CLASS_3T(InputLayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T(InputLayer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(InputLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(InputLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(InputLayer, (double), (double), (double));
 
 REGISTER_LAYER_CLASS(Input);
+REGISTER_LAYER_CLASS_INST(Input, (half_fp), (half_fp), (half_fp));
 REGISTER_LAYER_CLASS_INST(Input, (float), (float), (float));
 REGISTER_LAYER_CLASS_INST(Input, (double), (double), (double));
 

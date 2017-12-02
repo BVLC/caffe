@@ -109,6 +109,8 @@ void ReductionLayer<Dtype, MItype, MOtype>::Backward_gpu(
   }
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(ReductionLayer);
+INSTANTIATE_CLASS_3T_GUARDED(ReductionLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(ReductionLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(ReductionLayer, (double), (double), (double));
 
 }  // namespace caffe

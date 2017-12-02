@@ -97,6 +97,8 @@ void SigmoidLayer<Dtype, MItype, MOtype>::Backward_gpu(
   }
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(SigmoidLayer);
+INSTANTIATE_CLASS_3T_GUARDED(SigmoidLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(SigmoidLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(SigmoidLayer, (double), (double), (double));
 
 }  // namespace caffe

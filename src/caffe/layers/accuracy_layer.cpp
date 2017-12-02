@@ -105,10 +105,12 @@ void AccuracyLayer<Dtype, MItype, MOtype>::Forward_cpu(
   // Accuracy layer should not be used as a loss function.
 }
 
-INSTANTIATE_CLASS_3T(AccuracyLayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T(AccuracyLayer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(AccuracyLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(AccuracyLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(AccuracyLayer, (double), (double), (double));
 
 REGISTER_LAYER_CLASS(Accuracy);
+REGISTER_LAYER_CLASS_INST(Accuracy, (half_fp), (half_fp), (half_fp));
 REGISTER_LAYER_CLASS_INST(Accuracy, (float), (float), (float));
 REGISTER_LAYER_CLASS_INST(Accuracy, (double), (double), (double));
 

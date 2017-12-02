@@ -41,6 +41,8 @@ void RecurrentLayer<Dtype, MItype, MOtype>::Forward_gpu(
   }
 }
 
-INSTANTIATE_LAYER_GPU_FORWARD(RecurrentLayer);
+INSTANTIATE_LAYER_GPU_FORWARD(RecurrentLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_LAYER_GPU_FORWARD(RecurrentLayer, (float), (float), (float));
+INSTANTIATE_LAYER_GPU_FORWARD(RecurrentLayer, (double), (double), (double));
 
 }  // namespace caffe

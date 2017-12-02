@@ -29,11 +29,11 @@
 #include "caffe/util/math_functions.hpp"
 
 #if defined(USE_CLBLAS)
-  #include <clBLAS.h>       // NOLINT
-#endif
+#include <clBLAS.h>       // NOLINT
+#endif  // USE_CLBLAS
 #if defined(USE_CLBLAST)
-  #include <clblast.h>      // NOLINT
-#endif
+#include <clblast.h>      // NOLINT
+#endif  // USE_CLBLAST
 #include "viennacl/linalg/inner_prod.hpp"
 #include "viennacl/linalg/norm_1.hpp"
 #include "viennacl/linalg/norm_2.hpp"
@@ -42,6 +42,16 @@
 #include "viennacl/matrix.hpp"
 #include "viennacl/scalar.hpp"
 #include "viennacl/vector.hpp"
+
+namespace clblast {
+
+#if defined(USE_CLBLAST)
+#if defined(USE_HALF)
+#include  <clblast_half.h>
+#endif  // USE_HALF
+#endif  // USE_CLBLAST
+
+}
 
 
 // ViennaCL 1.5.1 compatibility fix

@@ -53,7 +53,8 @@ CuDNNPoolingLayer<Dtype, MItype, MOtype>::~CuDNNPoolingLayer() {
   cudnnDestroy(handle_);
 }
 
-INSTANTIATE_CLASS_3T(CuDNNPoolingLayer);
+INSTANTIATE_CLASS_3T_GUARDED(CuDNNPoolingLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(CuDNNPoolingLayer, (double), (double), (double));
 
 }   // namespace caffe
 #endif

@@ -42,10 +42,12 @@ void AbsValLayer<Dtype, MItype, MOtype>::Backward_cpu(
 STUB_GPU(AbsValLayer);
 #endif
 
-INSTANTIATE_CLASS_3T(AbsValLayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T(AbsValLayer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(AbsValLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(AbsValLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(AbsValLayer, (double), (double), (double));
 
 REGISTER_LAYER_CLASS(AbsVal);
+REGISTER_LAYER_CLASS_INST(AbsVal, (half_fp), (half_fp), (half_fp));
 REGISTER_LAYER_CLASS_INST(AbsVal, (float), (float), (float));
 REGISTER_LAYER_CLASS_INST(AbsVal, (double), (double), (double));
 

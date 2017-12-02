@@ -122,10 +122,12 @@ void SliceLayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob<MOtype>*>
 STUB_GPU(SliceLayer);
 #endif
 
-INSTANTIATE_CLASS_3T(SliceLayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T(SliceLayer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(SliceLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(SliceLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(SliceLayer, (double), (double), (double));
 
 REGISTER_LAYER_CLASS(Slice);
+REGISTER_LAYER_CLASS_INST(Slice, (half_fp), (half_fp), (half_fp));
 REGISTER_LAYER_CLASS_INST(Slice, (float), (float), (float));
 REGISTER_LAYER_CLASS_INST(Slice, (double), (double), (double));
 

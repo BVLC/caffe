@@ -42,10 +42,12 @@ void BNLLLayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob<MOtype>*>&
 STUB_GPU(BNLLLayer);
 #endif
 
-INSTANTIATE_CLASS_3T(BNLLLayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T(BNLLLayer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(BNLLLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(BNLLLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(BNLLLayer, (double), (double), (double));
 
 REGISTER_LAYER_CLASS(BNLL);
+REGISTER_LAYER_CLASS_INST(BNLL, (half_fp), (half_fp), (half_fp));
 REGISTER_LAYER_CLASS_INST(BNLL, (float), (float), (float));
 REGISTER_LAYER_CLASS_INST(BNLL, (double), (double), (double));
 

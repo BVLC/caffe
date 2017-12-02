@@ -35,7 +35,7 @@ void CuDNNPoolingLayer<Dtype, MItype, MOtype>::Backward_gpu(const vector<Blob<MO
         bottom_desc_, bottom_diff));
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(CuDNNPoolingLayer);
+INSTANTIATE_CLASS_3T_GUARDED(CuDNNPoolingLayer);
 
 }  // namespace caffe
 #endif

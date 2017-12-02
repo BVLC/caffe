@@ -154,6 +154,10 @@ void ContrastiveLossLayer<Dtype, MItype, MOtype>::Backward_gpu(
   }
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(ContrastiveLossLayer);
-
+INSTANTIATE_CLASS_3T_GUARDED(ContrastiveLossLayer,
+                            (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(ContrastiveLossLayer,
+                            (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(ContrastiveLossLayer,
+                            (double), (double), (double));
 }  // namespace caffe

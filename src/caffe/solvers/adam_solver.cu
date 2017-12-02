@@ -87,4 +87,6 @@ template void adam_update_gpu<double>(Device* dev,
               double eps_hat, double corrected_local_rate);
 #endif  // USE_DOUBLE
 
+INSTANTIATE_CLASS_1T_GUARDED(AdamSolver, (half_fp)(float)(double));
+
 }  // namespace caffe

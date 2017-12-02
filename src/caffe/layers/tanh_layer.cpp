@@ -49,10 +49,12 @@ void TanHLayer<Dtype, MItype, MOtype>::Backward_cpu(
 STUB_GPU(TanHLayer);
 #endif
 
-INSTANTIATE_CLASS_3T(TanHLayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T(TanHLayer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(TanHLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(TanHLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(TanHLayer, (double), (double), (double));
 
 REGISTER_LAYER_CLASS(TanH);
+REGISTER_LAYER_CLASS_INST(TanH, (half_fp), (half_fp), (half_fp));
 REGISTER_LAYER_CLASS_INST(TanH, (float), (float), (float));
 REGISTER_LAYER_CLASS_INST(TanH, (double), (double), (double));
 

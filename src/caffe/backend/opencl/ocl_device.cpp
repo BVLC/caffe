@@ -1,3 +1,5 @@
+#include <memory>
+
 #include "caffe/backend/opencl/ocl_device.hpp"
 #include "caffe/backend/opencl/ocl_device_program.hpp"
 #include "caffe/backend/opencl/caffe_opencl.hpp"
@@ -312,6 +314,21 @@ bool OclDevice::is_beignet() {
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(id_);
   return ctx.devices()[0].opencl_c_version().find("beignet")
          != string::npos;
+}
+
+void OclDevice::null_kernel(float arg, cl_event event) {
+  clWaitForEvents(1, &event);
+  clReleaseEvent(event);
+  viennacl::ocl::context &ctx = viennacl::ocl::get_context(
+      Caffe::GetDefaultDevice()->id());
+  shared_ptr<OclDeviceKernel> ocl_dev_kernel =
+      std::static_pointer_cast<OclDeviceKernel>(
+          this->math_programs_[AUX_DATA_INDEX]->GetKernel("null_kernel"));
+  viennacl::ocl::kernel kernel = ocl_dev_kernel->get_ocl_kernel();
+  clSetKernelArg(kernel.handle().get(), 0, sizeof(arg), &arg);
+  clEnqueueTask(ctx.get_queue().handle().get(), kernel.handle().get(), 0,
+                  NULL, &event);
+  clFinish(ctx.get_queue().handle().get());
 }
 
 const char* OclDevice::clGetErrorString(cl_int error) {

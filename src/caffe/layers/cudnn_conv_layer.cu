@@ -114,7 +114,7 @@ void CuDNNConvolutionLayer<Dtype, MItype, MOtype>::Backward_gpu(
   }
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(CuDNNConvolutionLayer);
+INSTANTIATE_CLASS_3T_GUARDED(CuDNNConvolutionLayer);
 
 }  // namespace caffe
 #endif

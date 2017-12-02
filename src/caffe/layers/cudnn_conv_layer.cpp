@@ -296,7 +296,10 @@ CuDNNConvolutionLayer<Dtype, MItype, MOtype>::~CuDNNConvolutionLayer() {
   delete [] workspace_bwd_filter_sizes_;
 }
 
-INSTANTIATE_CLASS_3T(CuDNNConvolutionLayer);
+INSTANTIATE_CLASS_3T_GUARDED(CuDNNConvolutionLayer,
+                             (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(CuDNNConvolutionLayer,
+                             (double), (double), (double));
 
 }   // namespace caffe
 #endif

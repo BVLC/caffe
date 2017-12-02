@@ -224,10 +224,12 @@ void SPPLayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob<MOtype>*>& 
   split_layer_->Backward(split_top_vec_, propagate_down, bottom);
 }
 
-INSTANTIATE_CLASS_3T(SPPLayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T(SPPLayer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(SPPLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(SPPLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(SPPLayer, (double), (double), (double));
 
 REGISTER_LAYER_CLASS(SPP);
+REGISTER_LAYER_CLASS_INST(SPP, (half_fp), (half_fp), (half_fp));
 REGISTER_LAYER_CLASS_INST(SPP, (float), (float), (float));
 REGISTER_LAYER_CLASS_INST(SPP, (double), (double), (double));
 

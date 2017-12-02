@@ -69,10 +69,12 @@ void HDF5OutputLayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob<MOty
 STUB_GPU(HDF5OutputLayer);
 #endif
 
-INSTANTIATE_CLASS_3T(HDF5OutputLayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T(HDF5OutputLayer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(HDF5OutputLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(HDF5OutputLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(HDF5OutputLayer, (double), (double), (double));
 
 REGISTER_LAYER_CLASS(HDF5Output);
+REGISTER_LAYER_CLASS_INST(HDF5Output, (half_fp), (half_fp), (half_fp));
 REGISTER_LAYER_CLASS_INST(HDF5Output, (float), (float), (float));
 REGISTER_LAYER_CLASS_INST(HDF5Output, (double), (double), (double));
 

@@ -298,6 +298,7 @@ void MergeCropLayer<Dtype, MItype, MOtype>::Backward_gpu(
   kernel->Execute(group, local);
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(MergeCropLayer);
-
+INSTANTIATE_CLASS_3T_GUARDED(MergeCropLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(MergeCropLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(MergeCropLayer, (double), (double), (double));
 }  // namespace caffe

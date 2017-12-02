@@ -31,6 +31,9 @@ void AbsValLayer<Dtype, MItype, MOtype>::Backward_gpu(
   }
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(AbsValLayer);
+INSTANTIATE_CLASS_3T_GUARDED(AbsValLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(AbsValLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(AbsValLayer, (double), (double), (double));
+
 
 }  // namespace caffe

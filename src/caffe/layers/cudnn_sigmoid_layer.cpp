@@ -38,7 +38,9 @@ CuDNNSigmoidLayer<Dtype, MItype, MOtype>::~CuDNNSigmoidLayer() {
   cudnnDestroy(this->handle_);
 }
 
-INSTANTIATE_CLASS_3T(CuDNNSigmoidLayer);
+INSTANTIATE_CLASS_3T_GUARDED(CuDNNSigmoidLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(CuDNNSigmoidLayer, (double), (double), (double));
+
 
 }  // namespace caffe
 #endif

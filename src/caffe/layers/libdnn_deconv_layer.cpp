@@ -168,10 +168,15 @@ void LibDNNDeconvolutionLayer<Dtype, MItype, MOtype>::Tune(
 }
 
 
-INSTANTIATE_CLASS_3T(LibDNNDeconvolutionLayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T(LibDNNDeconvolutionLayer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(LibDNNDeconvolutionLayer,
+                             (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(LibDNNDeconvolutionLayer,
+                             (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(LibDNNDeconvolutionLayer,
+                             (double), (double), (double));
 
 REGISTER_LAYER_CLASS(LibDNNDeconvolution);
+REGISTER_LAYER_CLASS_INST(LibDNNDeconvolution, (half_fp), (half_fp), (half_fp));
 REGISTER_LAYER_CLASS_INST(LibDNNDeconvolution, (float), (float), (float));
 REGISTER_LAYER_CLASS_INST(LibDNNDeconvolution, (double), (double), (double));
 

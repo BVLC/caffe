@@ -24,7 +24,8 @@ void LossLayer<Dtype, MItype, MOtype>::Reshape(
   top[0]->Reshape(loss_shape);
 }
 
-INSTANTIATE_CLASS_3T(LossLayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T(LossLayer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(LossLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(LossLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(LossLayer, (double), (double), (double));
 
 }  // namespace caffe

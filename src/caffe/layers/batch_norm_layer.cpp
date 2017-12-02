@@ -246,10 +246,12 @@ void BatchNormLayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob<MOtyp
 STUB_GPU(BatchNormLayer);
 #endif
 
-INSTANTIATE_CLASS_3T(BatchNormLayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T(BatchNormLayer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(BatchNormLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(BatchNormLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(BatchNormLayer, (double), (double), (double));
 
 REGISTER_LAYER_CLASS(BatchNorm);
+REGISTER_LAYER_CLASS_INST(BatchNorm, (half_fp), (half_fp), (half_fp));
 REGISTER_LAYER_CLASS_INST(BatchNorm, (float), (float), (float));
 REGISTER_LAYER_CLASS_INST(BatchNorm, (double), (double), (double));
 

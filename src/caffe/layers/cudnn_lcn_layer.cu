@@ -40,7 +40,7 @@ void CuDNNLCNLayer<Dtype, MItype, MOtype>::Backward_gpu(const vector<Blob<MOtype
         NULL) );
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(CuDNNLCNLayer);
+INSTANTIATE_CLASS_3T_GUARDED(CuDNNLCNLayer);
 
 }  // namespace caffe
 #endif

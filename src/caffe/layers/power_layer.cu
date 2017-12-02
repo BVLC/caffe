@@ -87,6 +87,8 @@ void PowerLayer<Dtype, MItype, MOtype>::Backward_gpu(
   }
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(PowerLayer);
+INSTANTIATE_CLASS_3T_GUARDED(PowerLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(PowerLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(PowerLayer, (double), (double), (double));
 
 }  // namespace caffe

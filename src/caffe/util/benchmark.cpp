@@ -4,6 +4,10 @@
 #include "caffe/backend/device.hpp"
 #include "caffe/util/benchmark.hpp"
 
+#ifdef USE_OPENCL
+#include "caffe/backend/opencl/ocl_device.hpp"
+#endif
+
 namespace caffe {
 
 Timer::Timer()
@@ -45,17 +49,9 @@ void Timer::Start() {
 #endif  // USE_CUDA
 #ifdef USE_OPENCL
       if (Caffe::GetDefaultDevice()->backend() == BACKEND_OPENCL) {
-        clWaitForEvents(1, &start_gpu_cl_);
-        clReleaseEvent(start_gpu_cl_);
-        viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-            Caffe::GetDefaultDevice()->id());
-        viennacl::ocl::program &program = Caffe::GetDefaultDevice()->program();
-        viennacl::ocl::kernel &kernel = program.get_kernel("null_kernel_float");
         float arg = 0;
-        clSetKernelArg(kernel.handle().get(), 0, sizeof(arg), &arg);
-        clEnqueueTask(ctx.get_queue().handle().get(), kernel.handle().get(), 0,
-                        NULL, &start_gpu_cl_);
-        clFinish(ctx.get_queue().handle().get());
+        static_cast<OclDevice*>(Caffe::GetDefaultDevice())->null_kernel(arg,
+                                                                start_gpu_cl_);
       }
 #endif
 #else
@@ -80,17 +76,9 @@ void Timer::Stop() {
 #endif  // USE_CUDA
 #ifdef USE_OPENCL
       if (Caffe::GetDefaultDevice()->backend() == BACKEND_OPENCL) {
-        clWaitForEvents(1, &stop_gpu_cl_);
-        clReleaseEvent(stop_gpu_cl_);
-        viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-            Caffe::GetDefaultDevice()->id());
-        viennacl::ocl::program &program = Caffe::GetDefaultDevice()->program();
-        viennacl::ocl::kernel &kernel = program.get_kernel("null_kernel_float");
         float arg = 0;
-        clSetKernelArg(kernel.handle().get(), 0, sizeof(arg), &arg);
-        clEnqueueTask(ctx.get_queue().handle().get(), kernel.handle().get(), 0,
-                        NULL, &stop_gpu_cl_);
-        clFinish(ctx.get_queue().handle().get());
+        static_cast<OclDevice*>(Caffe::GetDefaultDevice())->null_kernel(arg,
+                                                                stop_gpu_cl_);
       }
 #endif
 #else

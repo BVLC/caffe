@@ -31,6 +31,11 @@ void BasePrefetchingDataLayer<Dtype, MItype, MOtype>::Forward_gpu(
   }
 }
 
-INSTANTIATE_LAYER_GPU_FORWARD(BasePrefetchingDataLayer);
+INSTANTIATE_LAYER_GPU_FORWARD(BasePrefetchingDataLayer,
+                              (half_fp), (half_fp), (half_fp));
+INSTANTIATE_LAYER_GPU_FORWARD(BasePrefetchingDataLayer,
+                              (float), (float), (float));
+INSTANTIATE_LAYER_GPU_FORWARD(BasePrefetchingDataLayer,
+                              (double), (double), (double));
 
 }  // namespace caffe

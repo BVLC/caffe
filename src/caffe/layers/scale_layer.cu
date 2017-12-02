@@ -209,6 +209,8 @@ void ScaleLayer<Dtype, MItype, MOtype>::Backward_gpu(
   }
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(ScaleLayer);
+INSTANTIATE_CLASS_3T_GUARDED(ScaleLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(ScaleLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(ScaleLayer, (double), (double), (double));
 
 }  // namespace caffe

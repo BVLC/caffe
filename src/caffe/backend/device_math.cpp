@@ -8,30 +8,30 @@ void Device::copy(const uint_tp n, vptr<const Dtype> x, vptr<Dtype> y) {
   this->memcpy(safe_sizeof<Dtype>() * n, x, y);
 }
 
-template<>
+template
 void Device::copy(const uint_tp n, vptr<const half_fp> x,
                   vptr<half_fp> y);
-template<>
+template
 void Device::copy(const uint_tp n, vptr<const float> x, vptr<float> y);
-template<>
+template
 void Device::copy(const uint_tp n, vptr<const double> x, vptr<double> y);
-template<>
+template
 void Device::copy(const uint_tp n, vptr<const int8_t> x, vptr<int8_t> y);
-template<>
+template
 void Device::copy(const uint_tp n, vptr<const int16_t> x, vptr<int16_t> y);
-template<>
+template
 void Device::copy(const uint_tp n, vptr<const int32_t> x, vptr<int32_t> y);
-template<>
+template
 void Device::copy(const uint_tp n, vptr<const int64_t> x, vptr<int64_t> y);
-template<>
+template
 void Device::copy(const uint_tp n, vptr<const uint8_t> x, vptr<uint8_t> y);
-template<>
+template
 void Device::copy(const uint_tp n, vptr<const uint16_t> x, vptr<uint16_t> y);
-template<>
+template
 void Device::copy(const uint_tp n, vptr<const uint32_t> x, vptr<uint32_t> y);
-template<>
+template
 void Device::copy(const uint_tp n, vptr<const uint64_t> x, vptr<uint64_t> y);
-template<>
+template
 void Device::copy(const uint_tp n, vptr<const void> x, vptr<void> y);
 
 
@@ -40,32 +40,32 @@ void Device::copy(const uint_tp n, const Dtype* x, vptr<Dtype> y) {
   this->memcpy(safe_sizeof<Dtype>() * n, x, y);
 }
 
-template<>
+template
 void Device::copy(const uint_tp n, const char* x, vptr<char> y);
-template<>
+template
 void Device::copy(const uint_tp n, const half_fp* x,
                   vptr<half_fp> y);
-template<>
+template
 void Device::copy(const uint_tp n, const float* x, vptr<float> y);
-template<>
+template
 void Device::copy(const uint_tp n, const double* x, vptr<double> y);
-template<>
+template
 void Device::copy(const uint_tp n, const int8_t* x, vptr<int8_t> y);
-template<>
+template
 void Device::copy(const uint_tp n, const int16_t* x, vptr<int16_t> y);
-template<>
+template
 void Device::copy(const uint_tp n, const int32_t* x, vptr<int32_t> y);
-template<>
+template
 void Device::copy(const uint_tp n, const int64_t* x, vptr<int64_t> y);
-template<>
+template
 void Device::copy(const uint_tp n, const uint8_t* x, vptr<uint8_t> y);
-template<>
+template
 void Device::copy(const uint_tp n, const uint16_t* x, vptr<uint16_t> y);
-template<>
+template
 void Device::copy(const uint_tp n, const uint32_t* x, vptr<uint32_t> y);
-template<>
+template
 void Device::copy(const uint_tp n, const uint64_t* x, vptr<uint64_t> y);
-template<>
+template
 void Device::copy(const uint_tp n, const void* x, vptr<void> y);
 
 
@@ -74,30 +74,30 @@ void Device::copy(const uint_tp n, vptr<const Dtype> x, Dtype* y) {
   this->memcpy(safe_sizeof<Dtype>() * n, x, y);
 }
 
-template<>
+template
 void Device::copy(const uint_tp n, vptr<const half_fp> x,
                   half_fp* y);
-template<>
+template
 void Device::copy(const uint_tp n, vptr<const float> x, float* y);
-template<>
+template
 void Device::copy(const uint_tp n, vptr<const double> x, double* y);
-template<>
+template
 void Device::copy(const uint_tp n, vptr<const int8_t> x, int8_t* y);
-template<>
+template
 void Device::copy(const uint_tp n, vptr<const int16_t> x, int16_t* y);
-template<>
+template
 void Device::copy(const uint_tp n, vptr<const int32_t> x, int32_t* y);
-template<>
+template
 void Device::copy(const uint_tp n, vptr<const int64_t> x, int64_t* y);
-template<>
+template
 void Device::copy(const uint_tp n, vptr<const uint8_t> x, uint8_t* y);
-template<>
+template
 void Device::copy(const uint_tp n, vptr<const uint16_t> x, uint16_t* y);
-template<>
+template
 void Device::copy(const uint_tp n, vptr<const uint32_t> x, uint32_t* y);
-template<>
+template
 void Device::copy(const uint_tp n, vptr<const uint64_t> x, uint64_t* y);
-template<>
+template
 void Device::copy(const uint_tp n, vptr<const void> x, void* y);
 
 
@@ -192,76 +192,6 @@ void Device::axpby(const uint_tp n, const double alpha,
 }
 
 template<>
-void Device::rng_uniform(const uint_tp n, const half_fp a,
-                      const half_fp b, vptr<half_fp> r) {
-  this->rng_uniform_half(n, a, b, r);
-}
-
-template<>
-void Device::rng_uniform(const uint_tp n, const float a, const float b,
-                               vptr<float> r) {
-  this->rng_uniform_float(n, a, b, r);
-}
-
-template<>
-void Device::rng_uniform(const uint_tp n, const double a,
-                                const double b, vptr<double> r) {
-  this->rng_uniform_double(n, a, b, r);
-}
-
-template<>
-void Device::rng_gaussian(const uint_tp n, const half_fp mu,
-                  const half_fp sigma, vptr<half_fp> r) {
-  this->rng_gaussian_half(n, mu, sigma, r);
-}
-
-template<>
-void Device::rng_gaussian(const uint_tp n, const float mu,
-                                const float sigma, vptr<float> r) {
-  this->rng_gaussian_float(n, mu, sigma, r);
-}
-
-template<>
-void Device::rng_gaussian(const uint_tp n, const double mu,
-                                 const double sigma, vptr<double> r) {
-  this->rng_gaussian_double(n, mu, sigma, r);
-}
-
-template<>
-void Device::rng_bernoulli(const uint_tp n, const half_fp p,
-                           vptr<int> r) {
-  this->rng_bernoulli_half(n, p, r);
-}
-
-template<>
-void Device::rng_bernoulli(const uint_tp n, const float p, vptr<int> r) {
-  this->rng_bernoulli_float(n, p, r);
-}
-
-template<>
-void Device::rng_bernoulli(const uint_tp n, const double p, vptr<int> r) {
-  this->rng_bernoulli_double(n, p, r);
-}
-
-template<>
-void Device::rng_bernoulli(const uint_tp n, const half_fp p,
-                           vptr<unsigned int> r) {
-  this->rng_bernoulli_half(n, p, r);
-}
-
-template<>
-void Device::rng_bernoulli(const uint_tp n, const float p,
-                           vptr<unsigned int> r) {
-  this->rng_bernoulli_float(n, p, r);
-}
-
-template<>
-void Device::rng_bernoulli(const uint_tp n, const double p,
-                           vptr<unsigned int> r) {
-  this->rng_bernoulli_double(n, p, r);
-}
-
-template<>
 void Device::dot(const uint_tp n, vptr<const half_fp> x,
                     vptr<const half_fp> y, half_fp *out) {
   this->dot_half(n, x, y, out);
@@ -310,6 +240,26 @@ void Device::scal(const uint_tp n, const float alpha, vptr<float> x) {
 template<>
 void Device::scal(const uint_tp n, const double alpha, vptr<double> x) {
   this->scal_double(n, alpha, x);
+}
+
+template<>
+void Device::scal(const uint_tp n, const int8_t alpha, vptr<int8_t> x) {
+  this->scal_int8(n, alpha, x);
+}
+
+template<>
+void Device::scal(const uint_tp n, const int16_t alpha, vptr<int16_t> x) {
+  this->scal_int16(n, alpha, x);
+}
+
+template<>
+void Device::scal(const uint_tp n, const int32_t alpha, vptr<int32_t> x) {
+  this->scal_int32(n, alpha, x);
+}
+
+template<>
+void Device::scal(const uint_tp n, const int64_t alpha, vptr<int64_t> x) {
+  this->scal_int64(n, alpha, x);
 }
 
 template<>

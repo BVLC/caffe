@@ -6,7 +6,7 @@
 namespace caffe {
 
 template<typename Dtype>
-void AdamSolver<Dtype>::GenerateProgram() {
+void RMSPropSolver<Dtype>::GenerateProgram() {
   this->device_program_ = this->device_->CreateProgram();
   stringstream ss;
 
@@ -78,5 +78,7 @@ template void rmsprop_update_gpu<double>(Device* dev,
               vptr<double> h, double rms_decay, double delta,
               double local_rate);
 #endif  // USE_DOUBLE
+
+INSTANTIATE_CLASS_1T_GUARDED(RMSPropSolver, (half_fp)(float)(double));
 
 }  // namespace caffe

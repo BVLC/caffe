@@ -40,6 +40,7 @@ class OclDeviceKernel : public DeviceKernel {
   virtual void set_arg(uint_tp idx, const float *arg);
   virtual void set_arg(uint_tp idx, const double *arg);
 
+  virtual void set_arg(uint_tp idx, vptr<bool> *arg);
   virtual void set_arg(uint_tp idx, vptr<char> *arg);
   virtual void set_arg(uint_tp idx, vptr<int8_t> *arg);
   virtual void set_arg(uint_tp idx, vptr<int16_t> *arg);
@@ -54,6 +55,7 @@ class OclDeviceKernel : public DeviceKernel {
   virtual void set_arg(uint_tp idx, vptr<double> *arg);
   virtual void set_arg(uint_tp idx, vptr<void> *arg);
 
+  virtual void set_arg(uint_tp idx, vptr<const bool> *arg);
   virtual void set_arg(uint_tp idx, vptr<const char> *arg);
   virtual void set_arg(uint_tp idx, vptr<const int8_t> *arg);
   virtual void set_arg(uint_tp idx, vptr<const int16_t> *arg);

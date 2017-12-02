@@ -54,9 +54,11 @@ void SigmoidLayer<Dtype, MItype, MOtype>::Backward_cpu(
 STUB_GPU(SigmoidLayer);
 #endif
 
-INSTANTIATE_CLASS_3T(SigmoidLayer,
+INSTANTIATE_CLASS_3T_GUARDED(SigmoidLayer,
+                     (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(SigmoidLayer,
                      (float), (float), (float));
-INSTANTIATE_CLASS_3T(SigmoidLayer,
+INSTANTIATE_CLASS_3T_GUARDED(SigmoidLayer,
                      (double), (double), (double));
 
 
