@@ -41,6 +41,16 @@ class BlobBase {
   virtual void Update() = 0;
   virtual void Clear() = 0;
 
+  virtual bool Reshape(const vector<int_tp>& shape) = 0;
+  virtual bool Reshape(const vector<int_tp>& shape,
+               const vector<int_tp>& shape_stride) = 0;
+  virtual bool Reshape(const BlobShape& shape) = 0;
+  virtual bool Reshape(const BlobShape& shape,
+                       const BlobShape& shape_stride) = 0;
+  virtual bool Reshape(const int_tp num, const int_tp channels,
+                       const int_tp height, const int_tp width) = 0;
+  virtual bool ReshapeLike(const BlobBase* other) = 0;
+
   inline string shape_string() const {
     std::ostringstream stream;
     for (int_tp i = 0; i < shape_.size(); ++i) {
@@ -289,13 +299,15 @@ class Blob : public BlobBase {
    *
    * Reshape returns true if new memory was allocated.
    */
-  bool Reshape(const vector<int_tp>& shape);
-  bool Reshape(const vector<int_tp>& shape,
+  virtual bool Reshape(const vector<int_tp>& shape);
+  virtual bool Reshape(const vector<int_tp>& shape,
                const vector<int_tp>& shape_stride);
-  bool Reshape(const BlobShape& shape);
-  bool Reshape(const BlobShape& shape, const BlobShape& shape_stride);
-  bool Reshape(const int_tp num, const int_tp channels, const int_tp height,
-               const int_tp width);
+  virtual bool Reshape(const BlobShape& shape);
+  virtual bool Reshape(const BlobShape& shape,
+                       const BlobShape& shape_stride);
+  virtual bool Reshape(const int_tp num, const int_tp channels,
+                       const int_tp height, const int_tp width);
+  virtual bool ReshapeLike(const BlobBase* other);
   bool ReshapeLike(const Blob& other);
 
   /**

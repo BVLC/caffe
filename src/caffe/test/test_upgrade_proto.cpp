@@ -2893,7 +2893,7 @@ TEST_F(NetUpgradeTest, TestImageNet) {
 
 TEST_F(NetUpgradeTest, TestUpgradeV1LayerType) {
   LayerParameter layer_param;
-  shared_ptr<Layer<float> > layer;
+  shared_ptr<Layer<float, float, float> > layer;
   for (int_tp i = 0; i < V1LayerParameter_LayerType_LayerType_ARRAYSIZE; ++i) {
     ASSERT_TRUE(V1LayerParameter_LayerType_IsValid(i));
     V1LayerParameter_LayerType v1_type = V1LayerParameter_LayerType(i);
@@ -2921,7 +2921,7 @@ TEST_F(NetUpgradeTest, TestUpgradeV1LayerType) {
      continue;
     }
     #endif  // !USE_OPENCV
-    layer = LayerRegistry<float>::CreateLayer(layer_param);
+    layer = LayerRegistry<float, float, float>::CreateLayer(layer_param);
     EXPECT_EQ(v2_layer_type, layer->type());
   }
 }
