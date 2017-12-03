@@ -50,7 +50,7 @@ TYPED_TEST(TileLayerTest, TestTrivialSetup) {
   layer_param.mutable_tile_param()->set_tiles(kNumTiles);
   for (int_tp i = 0; i < this->blob_bottom_->num_axes(); ++i) {
     layer_param.mutable_tile_param()->set_axis(i);
-    TileLayer<Dtype> layer(layer_param);
+    TileLayer<Dtype, Dtype, Dtype> layer(layer_param);
     layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     ASSERT_EQ(this->blob_top_->num_axes(), this->blob_bottom_->num_axes());
     for (int_tp j = 0; j < this->blob_bottom_->num_axes(); ++j) {
@@ -66,7 +66,7 @@ TYPED_TEST(TileLayerTest, TestSetup) {
   layer_param.mutable_tile_param()->set_tiles(kNumTiles);
   for (int_tp i = 0; i < this->blob_bottom_->num_axes(); ++i) {
     layer_param.mutable_tile_param()->set_axis(i);
-    TileLayer<Dtype> layer(layer_param);
+    TileLayer<Dtype, Dtype, Dtype> layer(layer_param);
     layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     ASSERT_EQ(this->blob_top_->num_axes(), this->blob_bottom_->num_axes());
     for (int_tp j = 0; j < this->blob_bottom_->num_axes(); ++j) {
@@ -84,7 +84,7 @@ TYPED_TEST(TileLayerTest, TestForwardNum) {
   const int_tp kNumTiles = 3;
   layer_param.mutable_tile_param()->set_axis(kTileAxis);
   layer_param.mutable_tile_param()->set_tiles(kNumTiles);
-  TileLayer<Dtype> layer(layer_param);
+  TileLayer<Dtype, Dtype, Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   for (int_tp n = 0; n < this->blob_top_->num(); ++n) {
@@ -105,7 +105,7 @@ TYPED_TEST(TileLayerTest, TestForwardChannels) {
   LayerParameter layer_param;
   const int_tp kNumTiles = 3;
   layer_param.mutable_tile_param()->set_tiles(kNumTiles);
-  TileLayer<Dtype> layer(layer_param);
+  TileLayer<Dtype, Dtype, Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   for (int_tp n = 0; n < this->blob_top_->num(); ++n) {
@@ -126,7 +126,7 @@ TYPED_TEST(TileLayerTest, TestTrivialGradient) {
   LayerParameter layer_param;
   const int_tp kNumTiles = 1;
   layer_param.mutable_tile_param()->set_tiles(kNumTiles);
-  TileLayer<Dtype> layer(layer_param);
+  TileLayer<Dtype, Dtype, Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-2);
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_);
@@ -139,7 +139,7 @@ TYPED_TEST(TileLayerTest, TestGradientNum) {
   const int_tp kNumTiles = 3;
   layer_param.mutable_tile_param()->set_axis(kTileAxis);
   layer_param.mutable_tile_param()->set_tiles(kNumTiles);
-  TileLayer<Dtype> layer(layer_param);
+  TileLayer<Dtype, Dtype, Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-2);
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_);
@@ -152,7 +152,7 @@ TYPED_TEST(TileLayerTest, TestGradientChannels) {
   const int_tp kNumTiles = 3;
   layer_param.mutable_tile_param()->set_axis(kTileAxis);
   layer_param.mutable_tile_param()->set_tiles(kNumTiles);
-  TileLayer<Dtype> layer(layer_param);
+  TileLayer<Dtype, Dtype, Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-2);
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_);

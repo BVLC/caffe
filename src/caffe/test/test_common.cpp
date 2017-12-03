@@ -32,8 +32,8 @@ TEST_F(CommonTest, TestBrewMode) {
 }
 
 TEST_F(CommonTest, TestRandSeedCPU) {
-  SyncedMemory data_a(10 * sizeof(int), Caffe::GetDefaultDevice(), DINT32);
-  SyncedMemory data_b(10 * sizeof(int), Caffe::GetDefaultDevice(), DINT32);
+  SyncedMemory data_a(10 * sizeof(int), Caffe::GetDefaultDevice());
+  SyncedMemory data_b(10 * sizeof(int), Caffe::GetDefaultDevice());
   Caffe::set_random_seed(1701, Caffe::GetDefaultDevice());
   caffe_rng_bernoulli(10, 0.5, static_cast<int*>(data_a.mutable_cpu_data()));
 

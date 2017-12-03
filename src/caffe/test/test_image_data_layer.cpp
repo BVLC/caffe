@@ -78,7 +78,7 @@ TYPED_TEST(ImageDataLayerTest, TestRead) {
   image_data_param->set_batch_size(5);
   image_data_param->set_source(this->filename_.c_str());
   image_data_param->set_shuffle(false);
-  ImageDataLayer<Dtype> layer(param);
+  ImageDataLayer<Dtype, Dtype, Dtype> layer(param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_data_->num(), 5);
   EXPECT_EQ(this->blob_top_data_->channels(), 3);
@@ -106,7 +106,7 @@ TYPED_TEST(ImageDataLayerTest, TestResize) {
   image_data_param->set_new_height(256);
   image_data_param->set_new_width(256);
   image_data_param->set_shuffle(false);
-  ImageDataLayer<Dtype> layer(param);
+  ImageDataLayer<Dtype, Dtype, Dtype> layer(param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_data_->num(), 5);
   EXPECT_EQ(this->blob_top_data_->channels(), 3);
@@ -132,7 +132,7 @@ TYPED_TEST(ImageDataLayerTest, TestReshape) {
   image_data_param->set_batch_size(1);
   image_data_param->set_source(this->filename_reshape_.c_str());
   image_data_param->set_shuffle(false);
-  ImageDataLayer<Dtype> layer(param);
+  ImageDataLayer<Dtype, Dtype, Dtype> layer(param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_label_->num(), 1);
   EXPECT_EQ(this->blob_top_label_->channels(), 1);
@@ -159,7 +159,7 @@ TYPED_TEST(ImageDataLayerTest, TestShuffle) {
   image_data_param->set_batch_size(5);
   image_data_param->set_source(this->filename_.c_str());
   image_data_param->set_shuffle(true);
-  ImageDataLayer<Dtype> layer(param);
+  ImageDataLayer<Dtype, Dtype, Dtype> layer(param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_data_->num(), 5);
   EXPECT_EQ(this->blob_top_data_->channels(), 3);
@@ -193,7 +193,7 @@ TYPED_TEST(ImageDataLayerTest, TestSpace) {
   image_data_param->set_batch_size(1);
   image_data_param->set_source(this->filename_space_.c_str());
   image_data_param->set_shuffle(false);
-  ImageDataLayer<Dtype> layer(param);
+  ImageDataLayer<Dtype, Dtype, Dtype> layer(param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_label_->num(), 1);
   EXPECT_EQ(this->blob_top_label_->channels(), 1);

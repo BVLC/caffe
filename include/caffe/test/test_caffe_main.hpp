@@ -9,12 +9,14 @@
 #include <cstdio>
 #include <cstdlib>
 
-#include "../device.hpp"
+#include "caffe/backend/device.hpp"
 #include "caffe/common.hpp"
 #include "caffe/util/io.hpp"
 
 using std::cout;
 using std::endl;
+using std::string;
+using std::vector;
 
 #ifdef CMAKE_BUILD
   #include "caffe_config.h"
@@ -42,7 +44,7 @@ class MultiDeviceTest : public ::testing::Test {
 };
 
 #ifdef USE_HALF
-typedef ::testing::Types<half, float, double> TestDtypes;
+typedef ::testing::Types<half_fp, float, double> TestDtypes;
 #else
 typedef ::testing::Types<float, double> TestDtypes;
 #endif
@@ -78,14 +80,14 @@ class GPUDeviceTest : public MultiDeviceTest<GPUDevice<Dtype> > {
 };
 
 #ifdef USE_HALF
-typedef ::testing::Types<CPUDevice<half>, CPUDevice<float>, CPUDevice<double>,
-                         GPUDevice<half>, GPUDevice<float>, GPUDevice<double> >
+typedef ::testing::Types<CPUDevice<half_fp>, CPUDevice<float>, CPUDevice<double>,
+                         GPUDevice<half_fp>, GPUDevice<float>, GPUDevice<double> >
                          TestDtypesAndDevices;
 
 typedef ::testing::Types<CPUDevice<float>,
-                         CPUDevice<half>,
+                         CPUDevice<half_fp>,
                          GPUDevice<float>,
-                         GPUDevice<half>>
+                         GPUDevice<half_fp>>
                          TestFloatAndDevices;
 #else
 typedef ::testing::Types<CPUDevice<float>, CPUDevice<double>,
@@ -125,13 +127,13 @@ template <>
 bool isSupported<CPUDevice<double> >(void);
 #ifdef USE_HALF
 template <>
-bool isSupported<half>(void);
+bool isSupported<half_fp>(void);
 
 template <>
-bool isSupported<GPUDevice<half> >(void);
+bool isSupported<GPUDevice<half_fp> >(void);
 
 template <>
-bool isSupported<CPUDevice<half> >(void);
+bool isSupported<CPUDevice<half_fp> >(void);
 #endif
 
 template <>

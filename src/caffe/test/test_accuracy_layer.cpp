@@ -73,7 +73,7 @@ TYPED_TEST_CASE(AccuracyLayerTest, TestDtypes);
 
 TYPED_TEST(AccuracyLayerTest, TestSetup) {
   LayerParameter layer_param;
-  AccuracyLayer<TypeParam> layer(layer_param);
+  AccuracyLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), 1);
   EXPECT_EQ(this->blob_top_->channels(), 1);
@@ -86,7 +86,7 @@ TYPED_TEST(AccuracyLayerTest, TestSetupTopK) {
   AccuracyParameter* accuracy_param =
       layer_param.mutable_accuracy_param();
   accuracy_param->set_top_k(5);
-  AccuracyLayer<TypeParam> layer(layer_param);
+  AccuracyLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), 1);
   EXPECT_EQ(this->blob_top_->channels(), 1);
@@ -96,7 +96,7 @@ TYPED_TEST(AccuracyLayerTest, TestSetupTopK) {
 
 TYPED_TEST(AccuracyLayerTest, TestSetupOutputPerClass) {
   LayerParameter layer_param;
-  AccuracyLayer<TypeParam> layer(layer_param);
+  AccuracyLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_per_class_vec_);
   EXPECT_EQ(this->blob_top_->num(), 1);
   EXPECT_EQ(this->blob_top_->channels(), 1);
@@ -110,7 +110,7 @@ TYPED_TEST(AccuracyLayerTest, TestSetupOutputPerClass) {
 
 TYPED_TEST(AccuracyLayerTest, TestForwardCPU) {
   LayerParameter layer_param;
-  AccuracyLayer<TypeParam> layer(layer_param);
+  AccuracyLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
 
@@ -146,7 +146,7 @@ TYPED_TEST(AccuracyLayerTest, TestForwardWithSpatialAxes) {
   this->FillBottoms();
   LayerParameter layer_param;
   layer_param.mutable_accuracy_param()->set_axis(1);
-  AccuracyLayer<TypeParam> layer(layer_param);
+  AccuracyLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
 
@@ -190,7 +190,7 @@ TYPED_TEST(AccuracyLayerTest, TestForwardIgnoreLabel) {
   LayerParameter layer_param;
   const TypeParam kIgnoreLabelValue = -1;
   layer_param.mutable_accuracy_param()->set_ignore_label(kIgnoreLabelValue);
-  AccuracyLayer<TypeParam> layer(layer_param);
+  AccuracyLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
   // Manually set some labels to the ignore label value (-1).
   this->blob_bottom_label_->mutable_cpu_data()[2] = kIgnoreLabelValue;
   this->blob_bottom_label_->mutable_cpu_data()[5] = kIgnoreLabelValue;
@@ -232,7 +232,7 @@ TYPED_TEST(AccuracyLayerTest, TestForwardCPUTopK) {
   LayerParameter layer_param;
   AccuracyParameter* accuracy_param = layer_param.mutable_accuracy_param();
   accuracy_param->set_top_k(this->top_k_);
-  AccuracyLayer<TypeParam> layer(layer_param);
+  AccuracyLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
 
@@ -263,7 +263,7 @@ TYPED_TEST(AccuracyLayerTest, TestForwardCPUTopK) {
 
 TYPED_TEST(AccuracyLayerTest, TestForwardCPUPerClass) {
   LayerParameter layer_param;
-  AccuracyLayer<TypeParam> layer(layer_param);
+  AccuracyLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_per_class_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_per_class_vec_);
 
@@ -307,7 +307,7 @@ TYPED_TEST(AccuracyLayerTest, TestForwardCPUPerClassWithIgnoreLabel) {
   LayerParameter layer_param;
   const TypeParam kIgnoreLabelValue = -1;
   layer_param.mutable_accuracy_param()->set_ignore_label(kIgnoreLabelValue);
-  AccuracyLayer<TypeParam> layer(layer_param);
+  AccuracyLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
   // Manually set some labels to the ignore label value (-1).
   this->blob_bottom_label_->mutable_cpu_data()[2] = kIgnoreLabelValue;
   this->blob_bottom_label_->mutable_cpu_data()[5] = kIgnoreLabelValue;

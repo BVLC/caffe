@@ -53,7 +53,7 @@ TYPED_TEST(CropLayerTest, TestSetupShapeAll) {
   LayerParameter layer_param;
   // Crop all dimensions
   layer_param.mutable_crop_param()->set_axis(0);
-  CropLayer<Dtype> layer(layer_param);
+  CropLayer<Dtype, Dtype, Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   for (int_tp i = 0; i < this->blob_top_->num_axes(); ++i) {
     EXPECT_EQ(this->blob_bottom_1_->shape(i), this->blob_top_->shape(i));
@@ -64,7 +64,7 @@ TYPED_TEST(CropLayerTest, TestSetupShapeDefault) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   // Crop last two dimensions, axis is 2 by default
-  CropLayer<Dtype> layer(layer_param);
+  CropLayer<Dtype, Dtype, Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   for (int_tp i = 0; i < this->blob_top_->num_axes(); ++i) {
     if (i < 2) {
@@ -80,7 +80,7 @@ TYPED_TEST(CropLayerTest, TestSetupShapeNegativeIndexing) {
   LayerParameter layer_param;
   // Crop last dimension by negative indexing
   layer_param.mutable_crop_param()->set_axis(-1);
-  CropLayer<Dtype> layer(layer_param);
+  CropLayer<Dtype, Dtype, Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   for (int_tp i = 0; i < this->blob_top_->num_axes(); ++i) {
     if (i < 3) {
@@ -98,7 +98,7 @@ TYPED_TEST(CropLayerTest, TestDimensionsCheck) {
   // the size blob has more channels than the data blob, but this is fine
   // since the channels dimension is not cropped in this configuration.
   this->blob_bottom_1_->Reshape(2, 5, 4, 2);
-  CropLayer<Dtype> layer(layer_param);
+  CropLayer<Dtype, Dtype, Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   for (int i = 0; i < this->blob_top_->num_axes(); ++i) {
     if (i < 2) {
@@ -113,7 +113,7 @@ TYPED_TEST(CropLayerTest, TestCropAll) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   layer_param.mutable_crop_param()->set_axis(0);
-  CropLayer<Dtype> layer(layer_param);
+  CropLayer<Dtype, Dtype, Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   for (int_tp n = 0; n < this->blob_bottom_0_->num(); ++n) {
@@ -141,7 +141,7 @@ TYPED_TEST(CropLayerTest, TestCropAllOffset) {
   layer_param.mutable_crop_param()->add_offset(1);
   layer_param.mutable_crop_param()->add_offset(1);
   layer_param.mutable_crop_param()->add_offset(2);
-  CropLayer<Dtype> layer(layer_param);
+  CropLayer<Dtype, Dtype, Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   for (int_tp n = 0; n < this->blob_bottom_0_->num(); ++n) {
@@ -167,7 +167,7 @@ TYPED_TEST(CropLayerTest, TestCropHW) {
   layer_param.mutable_crop_param()->set_axis(2);
   layer_param.mutable_crop_param()->add_offset(1);
   layer_param.mutable_crop_param()->add_offset(2);
-  CropLayer<Dtype> layer(layer_param);
+  CropLayer<Dtype, Dtype, Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   for (int_tp n = 0; n < this->blob_bottom_0_->num(); ++n) {
@@ -206,7 +206,7 @@ TYPED_TEST(CropLayerTest, TestCrop5D) {
   layer_param.mutable_crop_param()->add_offset(1);
   layer_param.mutable_crop_param()->add_offset(2);
   layer_param.mutable_crop_param()->add_offset(0);
-  CropLayer<Dtype> layer(layer_param);
+  CropLayer<Dtype, Dtype, Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   vector<int_tp> bottom_idx = vector<int_tp>(5, 0);
@@ -242,7 +242,7 @@ TYPED_TEST(CropLayerTest, TestCropAllGradient) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   layer_param.mutable_crop_param()->set_axis(0);
-  CropLayer<Dtype> layer(layer_param);
+  CropLayer<Dtype, Dtype, Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-3);
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_);
@@ -254,7 +254,7 @@ TYPED_TEST(CropLayerTest, TestCropHWGradient) {
   layer_param.mutable_crop_param()->set_axis(2);
   layer_param.mutable_crop_param()->add_offset(1);
   layer_param.mutable_crop_param()->add_offset(2);
-  CropLayer<Dtype> layer(layer_param);
+  CropLayer<Dtype, Dtype, Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-3);
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_);
@@ -267,7 +267,7 @@ TYPED_TEST(CropLayerTest, TestCrop5DGradient) {
   layer_param.mutable_crop_param()->add_offset(1);
   layer_param.mutable_crop_param()->add_offset(2);
   layer_param.mutable_crop_param()->add_offset(0);
-  CropLayer<Dtype> layer(layer_param);
+  CropLayer<Dtype, Dtype, Dtype> layer(layer_param);
   // Add dimension to each bottom for >4D check
   vector<int_tp> bottom_0_shape = this->blob_bottom_0_->shape();
   vector<int_tp> bottom_1_shape = this->blob_bottom_1_->shape();

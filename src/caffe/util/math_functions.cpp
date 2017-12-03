@@ -472,14 +472,15 @@ double caffe_cpu_strided_dot<double>(const int_tp n, const double* X,
 }
 
 template<typename Dtype>
-Dtype caffe_cpu_dot(const int_tp n, const Dtype* X, const Dtype* Y) {
+typename std::enable_if<float_is_same<Dtype>::value, Dtype>::type
+caffe_cpu_dot(const int_tp n, const Dtype* X, const Dtype* Y) {
   return caffe_cpu_strided_dot(n, X, 1, Y, 1);
 }
 
 #ifdef USE_HALF
 template
 half_fp caffe_cpu_dot<half_fp>(const int_tp n,
-                                     const half_fp* X, const half_fp* Y);
+                               const half_fp* X, const half_fp* Y);
 #endif
 template
 float caffe_cpu_dot<float>(const int_tp n, const float* X, const float* Y);

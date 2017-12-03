@@ -49,7 +49,7 @@ class TanHLayerTest : public MultiDeviceTest<TypeParam> {
     filler.Fill(this->blob_bottom_);
 
     LayerParameter layer_param;
-    TanHLayer<Dtype> layer(layer_param);
+    TanHLayer<Dtype, Dtype, Dtype> layer(layer_param);
     layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
     // Now, check values
@@ -77,7 +77,7 @@ class TanHLayerTest : public MultiDeviceTest<TypeParam> {
     filler.Fill(this->blob_bottom_);
 
     LayerParameter layer_param;
-    TanHLayer<Dtype> layer(layer_param);
+    TanHLayer<Dtype, Dtype, Dtype> layer(layer_param);
     GradientChecker<Dtype> checker(1e-2, 1e-2, 1701);
     checker.CheckGradientEltwise(&layer, this->blob_bottom_vec_,
         this->blob_top_vec_);

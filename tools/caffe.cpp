@@ -17,18 +17,20 @@ namespace bp = boost::python;
 #include "caffe/backend/device.hpp"
 #include "caffe/util/signal_handler.h"
 
+using caffe::BlobBase;
 using caffe::Blob;
 using caffe::Caffe;
 using caffe::Net;
+using caffe::LayerBase;
 using caffe::Layer;
 using caffe::Solver;
 using caffe::Timer;
-using caffe::device;
+using caffe::Device;
 
-using string;
+using std::string;
 using std::ostringstream;
-using shared_ptr;
-using vector;
+using std::shared_ptr;
+using std::vector;
 
 
 DEFINE_string(gpu, "",
@@ -259,7 +261,8 @@ int train() {
         GetRequestedAction(FLAGS_sighup_effect));
 
   shared_ptr<caffe::Solver<float> >
-      solver(caffe::SolverRegistry<float>::CreateSolver(solver_param));
+      solver(caffe::SolverRegistry<float>::CreateSolver(solver_param,
+                                                    Caffe::GetDefaultDevice()));
 
   solver->SetActionFunction(signal_handler.GetActionFunction());
 
@@ -329,12 +332,13 @@ int test() {
   float loss = 0;
   for (int_tp i = 0; i < FLAGS_iterations; ++i) {
     float iter_loss;
-    const vector<Blob<float, float>*>& result =
+    const vector<BlobBase*>& result =
         caffe_net.Forward(&iter_loss);
     loss += iter_loss;
     int_tp idx = 0;
     for (int_tp j = 0; j < result.size(); ++j) {
-      const float* result_vec = result[j]->cpu_data();
+      const float* result_vec = static_cast<Blob<float>*>(result[j])
+          ->cpu_data();
       for (int_tp k = 0; k < result[j]->count(); ++k, ++idx) {
         const float score = result_vec[k];
         if (i == 0) {
@@ -415,9 +419,9 @@ int time() {
     caffe_net.Backward();
   }
 
-  const vector<shared_ptr<Layer<float> > >& layers = caffe_net.layers();
-  const vector<vector<Blob<float>*> >& bottom_vecs = caffe_net.bottom_vecs();
-  const vector<vector<Blob<float>*> >& top_vecs = caffe_net.top_vecs();
+  const vector<shared_ptr<LayerBase > >& layers = caffe_net.layers();
+  const vector<vector<BlobBase*> >& bottom_vecs = caffe_net.bottom_vecs();
+  const vector<vector<BlobBase*> >& top_vecs = caffe_net.top_vecs();
   const vector<vector<bool> >& bottom_need_backward =
       caffe_net.bottom_need_backward();
   LOG(INFO) << "*** Benchmark begins ***";
@@ -441,7 +445,7 @@ int time() {
         timer.Start();
       }
 
-      layers[i]->Forward(bottom_vecs[i], top_vecs[i]);
+      layers[i]->Forward(bottom_vecs[i], top_vecs[i], nullptr);
 
       if (FLAGS_lt) {
         Caffe::Synchronize(Caffe::GetDefaultDevice()->id());

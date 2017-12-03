@@ -94,7 +94,7 @@ TYPED_TEST(HDF5OutputLayerTest, TestForward) {
   // This code block ensures that the layer is deconstructed and
   //   the output hdf5 file is closed.
   {
-    HDF5OutputLayer<Dtype> layer(param);
+    HDF5OutputLayer<Dtype, Dtype, Dtype> layer(param);
     layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     EXPECT_EQ(layer.file_name(), this->output_file_name_);
     layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);

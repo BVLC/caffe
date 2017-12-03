@@ -121,7 +121,7 @@ TYPED_TEST_CASE(LRNLayerTest, TestDtypesAndDevices);
 TYPED_TEST(LRNLayerTest, TestSetupAcrossChannels) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  LRNLayer<Dtype> layer(layer_param);
+  LRNLayer<Dtype, Dtype, Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), 2);
   EXPECT_EQ(this->blob_top_->channels(), 7);
@@ -132,7 +132,7 @@ TYPED_TEST(LRNLayerTest, TestSetupAcrossChannels) {
 TYPED_TEST(LRNLayerTest, TestForwardAcrossChannels) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  LRNLayer<Dtype> layer(layer_param);
+  LRNLayer<Dtype, Dtype, Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   Blob<Dtype> top_reference;
@@ -148,7 +148,7 @@ TYPED_TEST(LRNLayerTest, TestForwardAcrossChannelsLargeRegion) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   layer_param.mutable_lrn_param()->set_local_size(15);
-  LRNLayer<Dtype> layer(layer_param);
+  LRNLayer<Dtype, Dtype, Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   Blob<Dtype> top_reference;
@@ -163,7 +163,7 @@ TYPED_TEST(LRNLayerTest, TestForwardAcrossChannelsLargeRegion) {
 TYPED_TEST(LRNLayerTest, TestGradientAcrossChannels) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  LRNLayer<Dtype> layer(layer_param);
+  LRNLayer<Dtype, Dtype, Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-2);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -185,7 +185,7 @@ TYPED_TEST(LRNLayerTest, TestGradientAcrossChannelsLargeRegion) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   layer_param.mutable_lrn_param()->set_local_size(15);
-  LRNLayer<Dtype> layer(layer_param);
+  LRNLayer<Dtype, Dtype, Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-2);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -209,7 +209,7 @@ TYPED_TEST(LRNLayerTest, TestSetupWithinChannel) {
   layer_param.mutable_lrn_param()->set_norm_region(
       LRNParameter_NormRegion_WITHIN_CHANNEL);
   layer_param.mutable_lrn_param()->set_local_size(3);
-  LRNLayer<Dtype> layer(layer_param);
+  LRNLayer<Dtype, Dtype, Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), 2);
   EXPECT_EQ(this->blob_top_->channels(), 7);
@@ -223,7 +223,7 @@ TYPED_TEST(LRNLayerTest, TestForwardWithinChannel) {
   layer_param.mutable_lrn_param()->set_norm_region(
       LRNParameter_NormRegion_WITHIN_CHANNEL);
   layer_param.mutable_lrn_param()->set_local_size(3);
-  LRNLayer<Dtype> layer(layer_param);
+  LRNLayer<Dtype, Dtype, Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   Blob<Dtype> top_reference;
@@ -241,7 +241,7 @@ TYPED_TEST(LRNLayerTest, TestGradientWithinChannel) {
   layer_param.mutable_lrn_param()->set_norm_region(
       LRNParameter_NormRegion_WITHIN_CHANNEL);
   layer_param.mutable_lrn_param()->set_local_size(3);
-  LRNLayer<Dtype> layer(layer_param);
+  LRNLayer<Dtype, Dtype, Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-2);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -349,7 +349,7 @@ TYPED_TEST(CuDNNLRNLayerTest, TestForwardAcrossChannelsCuDNN) {
   if (Caffe::GetDefaultDevice()->backend() == BACKEND_CUDA) {
     // typedef typename TypeParam::Dtype Dtype;
     LayerParameter layer_param;
-    CuDNNLRNLayer<TypeParam> layer(layer_param);
+    CuDNNLRNLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
     layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
     Blob<TypeParam> top_reference;
@@ -367,7 +367,7 @@ TYPED_TEST(CuDNNLRNLayerTest, TestForwardAcrossChannelsLargeRegionCuDNN) {
     typedef TypeParam Dtype;
     LayerParameter layer_param;
     layer_param.mutable_lrn_param()->set_local_size(15);
-    CuDNNLRNLayer<Dtype> layer(layer_param);
+    CuDNNLRNLayer<Dtype, Dtype, Dtype> layer(layer_param);
     layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
     Blob<Dtype> top_reference;
@@ -384,7 +384,7 @@ TYPED_TEST(CuDNNLRNLayerTest, TestGradientAcrossChannelsCuDNN) {
   if (Caffe::GetDefaultDevice()->backend() == BACKEND_CUDA) {
     typedef TypeParam Dtype;
     LayerParameter layer_param;
-    CuDNNLRNLayer<Dtype> layer(layer_param);
+    CuDNNLRNLayer<Dtype, Dtype, Dtype> layer(layer_param);
     GradientChecker<Dtype> checker(1e-2, 1e-2);
     layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -406,7 +406,7 @@ TYPED_TEST(CuDNNLRNLayerTest, TestForwardWithinChannel) {
     layer_param.mutable_lrn_param()->set_norm_region(
         LRNParameter_NormRegion_WITHIN_CHANNEL);
     layer_param.mutable_lrn_param()->set_local_size(3);
-    CuDNNLCNLayer<Dtype> layer(layer_param);
+    CuDNNLCNLayer<Dtype, Dtype, Dtype> layer(layer_param);
     layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
     Blob<Dtype> top_reference;
@@ -426,7 +426,7 @@ TYPED_TEST(CuDNNLRNLayerTest, TestGradientWithinChannel) {
     layer_param.mutable_lrn_param()->set_norm_region(
         LRNParameter_NormRegion_WITHIN_CHANNEL);
     layer_param.mutable_lrn_param()->set_local_size(3);
-    CuDNNLCNLayer<Dtype> layer(layer_param);
+    CuDNNLCNLayer<Dtype, Dtype, Dtype> layer(layer_param);
     GradientChecker<Dtype> checker(1e-2, 1e-2);
     layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -443,7 +443,7 @@ TYPED_TEST(CuDNNLRNLayerTest, TestGradientAcrossChannelsLargeRegionCuDNN) {
     typedef TypeParam Dtype;
     LayerParameter layer_param;
     layer_param.mutable_lrn_param()->set_local_size(15);
-    CuDNNLRNLayer<Dtype> layer(layer_param);
+    CuDNNLRNLayer<Dtype, Dtype, Dtype> layer(layer_param);
     GradientChecker<Dtype> checker(1e-2, 1e-2);
     layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -492,7 +492,7 @@ TYPED_TEST(LRNFuseLayerTest, TestForwardAcrossChannelsFusePoolMax) {
   LayerParameter layer_param;
 
   Blob<TypeParam> top_reference;
-  LRNLayer<TypeParam> lrnLayer(layer_param);
+  LRNLayer<TypeParam, TypeParam, TypeParam> lrnLayer(layer_param);
 
   // calculate reference value by lrn layer followed by pooling layer
   lrnLayer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -502,7 +502,7 @@ TYPED_TEST(LRNFuseLayerTest, TestForwardAcrossChannelsFusePoolMax) {
     set_pool(PoolingParameter_PoolMethod_MAX);
   pooling_param.mutable_pooling_param()->add_kernel_size(3);
   pooling_param.mutable_pooling_param()->add_stride(2);
-  PoolingLayer<TypeParam> pooling_layer(pooling_param);
+  PoolingLayer<TypeParam, TypeParam, TypeParam> pooling_layer(pooling_param);
   vector<Blob<TypeParam>*> top_reference_vec;
   top_reference_vec.push_back(&top_reference);
   pooling_layer.SetUp(this->blob_top_vec_, top_reference_vec);
@@ -524,7 +524,7 @@ TYPED_TEST(LRNFuseLayerTest, TestForwardAcrossChannelsFusePoolMax) {
   for (int_tp index = 0; index < 2; index++) {
     fused_layer_param.mutable_lrn_param()->
       set_unit_test_fuse_kernel(test_fuse_kernel[index]);
-    LRNLayer<TypeParam> fused_layer(fused_layer_param);
+    LRNLayer<TypeParam, TypeParam, TypeParam> fused_layer(fused_layer_param);
     fused_layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     fused_layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
 

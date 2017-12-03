@@ -50,7 +50,7 @@ TYPED_TEST(Im2colLayerTest, TestSetup) {
   convolution_param->add_kernel_size(3);
   convolution_param->add_stride(2);
   convolution_param->add_dilation(3);
-  Im2colLayer<Dtype> layer(layer_param);
+  Im2colLayer<Dtype, Dtype, Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), 2);
   EXPECT_EQ(this->blob_top_->channels(), 27);
@@ -65,7 +65,7 @@ TYPED_TEST(Im2colLayerTest, TestForward) {
       layer_param.mutable_convolution_param();
   convolution_param->add_kernel_size(3);
   convolution_param->add_stride(2);
-  Im2colLayer<Dtype> layer(layer_param);
+  Im2colLayer<Dtype, Dtype, Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   // We are lazy and will only check the top left block
@@ -82,7 +82,7 @@ TYPED_TEST(Im2colLayerTest, TestGradient) {
       layer_param.mutable_convolution_param();
   convolution_param->add_kernel_size(3);
   convolution_param->add_stride(2);
-  Im2colLayer<Dtype> layer(layer_param);
+  Im2colLayer<Dtype, Dtype, Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-2);
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_);
@@ -102,7 +102,7 @@ TYPED_TEST(Im2colLayerTest, TestDilatedGradient) {
   convolution_param->add_kernel_size(3);
   convolution_param->add_stride(2);
   convolution_param->add_dilation(3);
-  Im2colLayer<Dtype> layer(layer_param);
+  Im2colLayer<Dtype, Dtype, Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-2);
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
                                   this->blob_top_vec_);
@@ -116,7 +116,7 @@ TYPED_TEST(Im2colLayerTest, TestGradientForceND) {
   convolution_param->add_kernel_size(3);
   convolution_param->add_stride(2);
   convolution_param->set_force_nd_im2col(true);
-  Im2colLayer<Dtype> layer(layer_param);
+  Im2colLayer<Dtype, Dtype, Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-2);
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_);
@@ -137,7 +137,7 @@ TYPED_TEST(Im2colLayerTest, TestDilatedGradientForceND) {
   convolution_param->add_stride(2);
   convolution_param->add_dilation(3);
   convolution_param->set_force_nd_im2col(true);
-  Im2colLayer<Dtype> layer(layer_param);
+  Im2colLayer<Dtype, Dtype, Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-2);
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
                                   this->blob_top_vec_);
@@ -151,7 +151,7 @@ TYPED_TEST(Im2colLayerTest, TestRect) {
   convolution_param->set_kernel_h(5);
   convolution_param->set_kernel_w(3);
   convolution_param->add_stride(2);
-  Im2colLayer<Dtype> layer(layer_param);
+  Im2colLayer<Dtype, Dtype, Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   // We are lazy and will only check the top left block
@@ -169,7 +169,7 @@ TYPED_TEST(Im2colLayerTest, TestRectGradient) {
   convolution_param->set_kernel_h(5);
   convolution_param->set_kernel_w(3);
   convolution_param->add_stride(2);
-  Im2colLayer<Dtype> layer(layer_param);
+  Im2colLayer<Dtype, Dtype, Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-2);
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_);

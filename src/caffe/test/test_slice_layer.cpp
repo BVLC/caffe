@@ -62,7 +62,7 @@ TYPED_TEST(SliceLayerTest, TestSetupNum) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   layer_param.mutable_slice_param()->set_axis(0);
-  SliceLayer<Dtype> layer(layer_param);
+  SliceLayer<Dtype, Dtype, Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_1_);
   EXPECT_EQ(this->blob_bottom_->num(), 3 * this->blob_top_0_->num());
   EXPECT_EQ(this->blob_top_0_->num(), this->blob_top_1_->num());
@@ -76,7 +76,7 @@ TYPED_TEST(SliceLayerTest, TestSetupChannels) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   layer_param.mutable_slice_param()->add_slice_point(3);
-  SliceLayer<Dtype> layer(layer_param);
+  SliceLayer<Dtype, Dtype, Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_0_);
   EXPECT_EQ(this->blob_top_0_->num(), this->blob_bottom_->num());
   EXPECT_EQ(this->blob_top_0_->channels(), 3);
@@ -92,7 +92,7 @@ TYPED_TEST(SliceLayerTest, TestTrivialSlice) {
   // should be the identity.
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  SliceLayer<Dtype> layer(layer_param);
+  SliceLayer<Dtype, Dtype, Dtype> layer(layer_param);
   this->blob_top_vec_0_.resize(1);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_0_);
   ASSERT_EQ(this->blob_bottom_->shape(), this->blob_top_0_->shape());
@@ -106,7 +106,7 @@ TYPED_TEST(SliceLayerTest, TestSliceAcrossNum) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   layer_param.mutable_slice_param()->set_axis(0);
-  SliceLayer<Dtype> layer(layer_param);
+  SliceLayer<Dtype, Dtype, Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_0_);
   const int_tp top_num = this->blob_bottom_->num() / 2;
   ASSERT_EQ(top_num, this->blob_top_0_->num());
@@ -140,7 +140,7 @@ TYPED_TEST(SliceLayerTest, TestSliceAcrossChannels) {
   const int_tp kSlicePoint1 = 8;
   layer_param.mutable_slice_param()->add_slice_point(kSlicePoint0);
   layer_param.mutable_slice_param()->add_slice_point(kSlicePoint1);
-  SliceLayer<Dtype> layer(layer_param);
+  SliceLayer<Dtype, Dtype, Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_1_);
   ASSERT_EQ(kSlicePoint0, this->blob_top_0_->channels());
   ASSERT_EQ(kSlicePoint1 - kSlicePoint0, this->blob_top_1_->channels());
@@ -180,7 +180,7 @@ TYPED_TEST(SliceLayerTest, TestGradientTrivial) {
   // should be the identity.
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  SliceLayer<Dtype> layer(layer_param);
+  SliceLayer<Dtype, Dtype, Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-3);
   this->blob_top_vec_0_.resize(1);
   checker.CheckGradientEltwise(&layer, this->blob_bottom_vec_,
@@ -193,7 +193,7 @@ TYPED_TEST(SliceLayerTest, TestGradientAcrossNum) {
   this->ReduceBottomBlobSize();
   LayerParameter layer_param;
   layer_param.mutable_slice_param()->set_axis(0);
-  SliceLayer<Dtype> layer(layer_param);
+  SliceLayer<Dtype, Dtype, Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-3);
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
     this->blob_top_vec_0_);
@@ -206,7 +206,7 @@ TYPED_TEST(SliceLayerTest, TestGradientAcrossChannels) {
   LayerParameter layer_param;
   const int_tp kSlicePoint = 4;
   layer_param.mutable_slice_param()->add_slice_point(kSlicePoint);
-  SliceLayer<Dtype> layer(layer_param);
+  SliceLayer<Dtype, Dtype, Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-3);
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
     this->blob_top_vec_0_);

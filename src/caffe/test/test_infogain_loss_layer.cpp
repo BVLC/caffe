@@ -75,7 +75,7 @@ TYPED_TEST(InfogainLossLayerTest, TestInfogainLoss) {
   lw->clear();
   lw->push_back(1);
   lw->push_back(1);*/
-  InfogainLossLayer<Dtype> layer(layer_param);
+  InfogainLossLayer<Dtype, Dtype, Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   // Now, check values
@@ -129,7 +129,7 @@ TYPED_TEST(InfogainLossLayerTest, TestGradient) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   layer_param.mutable_infogain_loss_param()->set_axis(2);
-  InfogainLossLayer<Dtype> layer(layer_param);
+  InfogainLossLayer<Dtype, Dtype, Dtype> layer(layer_param);
   this->blob_top_vec_.clear();  // ignore prob top.
   this->blob_top_vec_.push_back(this->blob_top_loss_);
   GradientChecker<Dtype> checker(1e-4, 2e-2, 1701);  // no "kink"

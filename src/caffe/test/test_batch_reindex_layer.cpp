@@ -78,7 +78,7 @@ class BatchReindexLayerTest : public MultiDeviceTest<TypeParam> {
     for (int_tp i = 0; i < blob_bottom_permute_->count(); ++i) {
       blob_bottom_permute_->mutable_cpu_data()[i] = perm[i];
     }
-    BatchReindexLayer<Dtype> layer(layer_param);
+    BatchReindexLayer<Dtype, Dtype, Dtype> layer(layer_param);
     layer.SetUp(blob_bottom_vec_, blob_top_vec_);
     EXPECT_EQ(blob_top_->num(), blob_bottom_permute_->num());
     EXPECT_EQ(blob_top_->channels(), blob_bottom_->channels());
@@ -109,7 +109,7 @@ TYPED_TEST(BatchReindexLayerTest, TestForward) {
 TYPED_TEST(BatchReindexLayerTest, TestGradient) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  BatchReindexLayer<Dtype> layer(layer_param);
+  BatchReindexLayer<Dtype, Dtype, Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-4, 1e-2);
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_, 0);

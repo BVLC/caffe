@@ -64,7 +64,7 @@ class PoolingNDLayerTest : public GPUDeviceTest<TypeParam> {
 
     pooling_param->set_axis(1);
 
-    PoolingLayer<TypeParam> layer(layer_param);
+    PoolingLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
     layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 
     int_tp d = blob_bottom_->shape(2);
@@ -113,7 +113,7 @@ class PoolingNDLayerTest : public GPUDeviceTest<TypeParam> {
 
     pooling_param->set_axis(1);
 
-    PoolingLayer<TypeParam> layer(layer_param);
+    PoolingLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
     layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 
     int_tp d = blob_bottom_->shape(2);
@@ -189,7 +189,7 @@ TYPED_TEST(PoolingNDLayerTest, TestSetup) {
   pooling_param->set_pool(PoolingParameter_PoolMethod_MAX);
 
 
-  PoolingLayer<TypeParam> layer(layer_param);
+  PoolingLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 
   EXPECT_EQ(2, this->blob_top_->shape(2));

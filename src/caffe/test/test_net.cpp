@@ -1,4 +1,5 @@
 #include <string>
+#include <memory>
 #include <utility>
 #include <vector>
 
@@ -45,26 +46,28 @@ class NetTest : public MultiDeviceTest<TypeParam> {
   virtual void CopyNetBlobs(const bool copy_diff,
       vector<shared_ptr<Blob<Dtype> > >* blobs_copy) {
     CHECK(net_);
-    const vector<shared_ptr<Blob<Dtype> > >& net_blobs = net_->blobs();
+    const vector<shared_ptr<BlobBase> >& net_blobs = net_->blobs();
     blobs_copy->clear();
     blobs_copy->resize(net_blobs.size());
     const bool kReshape = true;
     for (int_tp i = 0; i < net_blobs.size(); ++i) {
       (*blobs_copy)[i].reset(new Blob<Dtype>());
-      (*blobs_copy)[i]->CopyFrom(*net_blobs[i], copy_diff, kReshape);
+      (*blobs_copy)[i]->CopyFrom(*net_blobs[i],
+                                 copy_diff, kReshape);
     }
   }
 
   virtual void CopyNetParams(const bool copy_diff,
       vector<shared_ptr<Blob<Dtype> > >* params_copy) {
     CHECK(net_);
-    const vector<shared_ptr<Blob<Dtype> > >& net_params = net_->params();
+    const vector<shared_ptr<BlobBase> >& net_params = net_->params();
     params_copy->clear();
     params_copy->resize(net_params.size());
     const bool kReshape = true;
     for (int_tp i = 0; i < net_params.size(); ++i) {
       (*params_copy)[i].reset(new Blob<Dtype>());
-      (*params_copy)[i]->CopyFrom(*net_params[i], copy_diff, kReshape);
+      (*params_copy)[i]->CopyFrom(*net_params[i],
+                                  copy_diff, kReshape);
     }
   }
 
@@ -1190,8 +1193,8 @@ TYPED_TEST(NetTest, TestUnsharedWeightsDiffNet) {
   Net<Dtype>* net = this->net_.get();
   net->Forward();
   net->Backward();
-  Layer<Dtype>* ip1_layer = net->layer_by_name("innerproduct1").get();
-  Layer<Dtype>* ip2_layer = net->layer_by_name("innerproduct2").get();
+  Layer<Dtype, Dtype, Dtype>* ip1_layer = net->layer_by_name("innerproduct1").get();
+  Layer<Dtype, Dtype, Dtype>* ip2_layer = net->layer_by_name("innerproduct2").get();
   const int_tp count = ip1_layer->blobs()[0]->count();
   const Dtype* grad1 = ip1_layer->blobs()[0]->cpu_diff();
   const Dtype* grad2 = ip2_layer->blobs()[0]->cpu_diff();
@@ -1209,8 +1212,8 @@ TYPED_TEST(NetTest, TestSharedWeightsDiffNet) {
   net->Forward(&loss);
   net->Backward();
   EXPECT_FLOAT_EQ(loss, 0);
-  Layer<Dtype>* ip1_layer = net->layer_by_name("innerproduct1").get();
-  Layer<Dtype>* ip2_layer = net->layer_by_name("innerproduct2").get();
+  Layer<Dtype, Dtype, Dtype>* ip1_layer = net->layer_by_name("innerproduct1").get();
+  Layer<Dtype, Dtype, Dtype>* ip2_layer = net->layer_by_name("innerproduct2").get();
   const int_tp count = ip1_layer->blobs()[0]->count();
   const Dtype* grad1 = ip1_layer->blobs()[0]->cpu_diff();
   const Dtype* grad2 = ip2_layer->blobs()[0]->cpu_diff();
@@ -1364,14 +1367,15 @@ TYPED_TEST(NetTest, TestParamPropagateDown) {
       kBiasTerm, blobs_lr_w1, blobs_lr_w2, blobs_lr_b1, blobs_lr_b2);
   this->net_->Forward();
   this->net_->Backward();
-  const vector<shared_ptr<Blob<Dtype> > >& params = this->net_->params();
+  const vector<shared_ptr<BlobBase> >& params = this->net_->params();
   const int_tp num_params = params.size();
   ASSERT_EQ(4, num_params);
   const Dtype kNonZeroTestMin = 1e-3;
   vector<Dtype> param_asums(params.size());
   for (int_tp i = 0; i < num_params; ++i) {
     const Dtype param_asum =
-       caffe_cpu_asum(params[i]->count(), params[i]->cpu_diff());
+       caffe_cpu_asum(params[i]->count(),
+                 std::static_pointer_cast<Blob<Dtype> >(params[i])->cpu_diff());
     param_asums[i] = param_asum;
     EXPECT_GT(param_asum, kNonZeroTestMin);
   }

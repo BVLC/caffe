@@ -2,6 +2,7 @@
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 
 #include <boost/make_shared.hpp>
+#include <boost/preprocessor/seq/enum.hpp>
 #include <boost/python.hpp>
 #include <boost/python/exception_translator.hpp>
 #include <boost/python/raw_function.hpp>
@@ -15,6 +16,7 @@
 
 #include "caffe/caffe.hpp"
 #include "caffe/definitions.hpp"
+#include "caffe/layer.hpp"
 #include "caffe/layers/memory_data_layer.hpp"
 #include "caffe/layers/python_layer.hpp"
 #include "caffe/sgd_solvers.hpp"
@@ -27,7 +29,19 @@
 #endif
 
 /* Fix to avoid registration warnings in pycaffe (#3960) */
-#define BP_REGISTER_shared_ptr_TO_PYTHON(PTR) do { \
+#define BP_REGISTER_shared_ptr_TO_PYTHON(PTR, TYPES) do { \
+  const boost::python::type_info info = \
+    boost::python::type_id<shared_ptr<PTR<BOOST_PP_SEQ_ENUM(TYPES)> > >(); \
+  const boost::python::converter::registration* reg = \
+    boost::python::converter::registry::query(info); \
+  if (reg == NULL) { \
+    bp::register_ptr_to_python<shared_ptr<PTR<BOOST_PP_SEQ_ENUM(TYPES)> > >(); \
+  } else if ((*reg).m_to_python == NULL) { \
+    bp::register_ptr_to_python<shared_ptr<PTR<BOOST_PP_SEQ_ENUM(TYPES)> > >(); \
+  } \
+} while (0)
+
+#define BP_REGISTER_shared_ptr_TO_PYTHON_NO_TEMPLATE(PTR) do { \
   const boost::python::type_info info = \
     boost::python::type_id<shared_ptr<PTR > >(); \
   const boost::python::converter::registration* reg = \
@@ -236,8 +250,9 @@ void Net_LoadHDF5(Net<Dtype>* net, string filename) {
 void Net_SetInputArrays(Net<Dtype>* net, int index, bp::object data_obj,
     bp::object labels_obj) {
   // check that this network has an input MemoryDataLayer
-  shared_ptr<MemoryDataLayer<Dtype> > md_layer =
-    boost::dynamic_pointer_cast<MemoryDataLayer<Dtype> >(net->layers()[index]);
+  shared_ptr<MemoryDataLayer<Dtype, Dtype, Dtype> > md_layer =
+    std::dynamic_pointer_cast<MemoryDataLayer<Dtype, Dtype, Dtype> >(
+        net->layers()[index]);
   if (!md_layer) {
     throw std::runtime_error("set_input_arrays may only be called if the"
         " first layer is a MemoryDataLayer");
@@ -265,9 +280,10 @@ void Net_SetInputArrays(Net<Dtype>* net, int index, bp::object data_obj,
 }
 
 
-void Net_SetLayerInputArrays(Net<Dtype>* net, Layer<Dtype>* layer,
+void Net_SetLayerInputArrays(Net<Dtype>* net, Layer<Dtype, Dtype, Dtype>* layer,
                              bp::object data_obj, bp::object labels_obj) {
-  MemoryDataLayer<Dtype>* md_layer = (MemoryDataLayer<Dtype>*)(layer);
+  MemoryDataLayer<Dtype, Dtype, Dtype>* md_layer =
+      (MemoryDataLayer<Dtype, Dtype, Dtype>*) (layer);
   // check that we were passed appropriately-sized contiguous memory
   PyArrayObject* data_arr =
       reinterpret_cast<PyArrayObject*>(data_obj.ptr());
@@ -300,11 +316,12 @@ void Net_SetLayerInputArrays(Net<Dtype>* net, Layer<Dtype>* layer,
 Solver<Dtype>* GetSolverFromFile(const string& filename) {
   SolverParameter param;
   ReadSolverParamsFromTextFileOrDie(filename, &param);
-  return SolverRegistry<Dtype>::CreateSolver(param);
+  return SolverRegistry<Dtype>::CreateSolver(param, Caffe::GetDefaultDevice());
 }
 
 Solver<Dtype>* GetSolver(const SolverParameter& solver_param) {
-  return SolverRegistry<Dtype>::CreateSolver(solver_param);
+  return SolverRegistry<Dtype>::CreateSolver(solver_param,
+                                             Caffe::GetDefaultDevice());
 }
 
 struct NdarrayConverterGenerator {
@@ -526,6 +543,7 @@ bp::object NCCL_New_Uid() {
 
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(SolveOverloads, Solve, 0, 1);
 
+
 BOOST_PYTHON_MODULE(_caffe) {
   bp::register_exception_translator<std::exception>(&exception_translator);
 
@@ -554,7 +572,8 @@ BOOST_PYTHON_MODULE(_caffe) {
   bp::def("solver_rank", &Caffe::solver_rank);
   bp::def("set_solver_rank", &Caffe::set_solver_rank);
   bp::def("set_multiprocess", &Caffe::set_multiprocess);
-  bp::def("layer_type_list", &LayerRegistry<Dtype>::LayerTypeList);
+  bp::def("layer_type_list",
+          &LayerRegistry<Dtype, Dtype, Dtype>::LayerTypeList);
 
   bp::class_<Net<Dtype>, shared_ptr<Net<Dtype> >, boost::noncopyable >("Net",
     bp::no_init)
@@ -609,7 +628,7 @@ BOOST_PYTHON_MODULE(_caffe) {
     .def("before_backward", &Net_before_backward)
     .def("after_backward", &Net_after_backward)
     .def("after_backward", &Net_add_nccl);
-  BP_REGISTER_shared_ptr_TO_PYTHON(Net<Dtype>);
+  BP_REGISTER_shared_ptr_TO_PYTHON(Net, (Dtype));
 
   bp::class_<Blob<Dtype>, shared_ptr<Blob<Dtype> >, boost::noncopyable>(
     "Blob", bp::no_init)
@@ -629,18 +648,21 @@ BOOST_PYTHON_MODULE(_caffe) {
           NdarrayCallPolicies()))
     .add_property("diff",     bp::make_function(&Blob<Dtype>::mutable_cpu_diff,
           NdarrayCallPolicies()));
-  BP_REGISTER_shared_ptr_TO_PYTHON(Blob<Dtype>);
+  BP_REGISTER_shared_ptr_TO_PYTHON(Blob, (Dtype));
 
-  bp::class_<Layer<Dtype>, shared_ptr<PythonLayer<Dtype> >,
+  bp::class_<Layer<Dtype, Dtype, Dtype>, shared_ptr<PythonLayer<Dtype, Dtype, Dtype> >,
     boost::noncopyable>("Layer", bp::init<const LayerParameter&>())
-    .add_property("blobs", bp::make_function(&Layer<Dtype>::blobs,
+    .add_property("blobs", bp::make_function(&Layer<Dtype, Dtype, Dtype>::blobs,
           bp::return_internal_reference<>()))
-    .def("setup", &Layer<Dtype>::LayerSetUp)
-    .def("reshape", &Layer<Dtype>::Reshape)
-    .add_property("type", bp::make_function(&Layer<Dtype>::type))
-    .add_property("layer_param", bp::make_function(&Layer<Dtype>::layer_param,
+    .def("setup", &Layer<Dtype, Dtype, Dtype>::LayerSetUp)
+    .def("reshape", static_cast<void (Layer<Dtype, Dtype, Dtype>::*)
+         (const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top)>
+         (&Layer<Dtype, Dtype, Dtype>::Reshape))
+    .add_property("type", bp::make_function(&Layer<Dtype, Dtype, Dtype>::type))
+    .add_property("layer_param", bp::make_function(&Layer<Dtype, Dtype, Dtype>::layer_param,
           bp::return_internal_reference<>()));
-  BP_REGISTER_shared_ptr_TO_PYTHON(Layer<Dtype>);
+
+  BP_REGISTER_shared_ptr_TO_PYTHON(Layer, (Dtype)(Dtype)(Dtype));
 
   bp::class_<LayerParameter>("LayerParameter", bp::no_init)
     .add_property("name",          bp::make_function(
@@ -684,7 +706,7 @@ BOOST_PYTHON_MODULE(_caffe) {
     .def("share_weights", &share_weights)
     .add_property("param", bp::make_function(&Solver<Dtype>::param,
               bp::return_value_policy<bp::copy_const_reference>()));
-  BP_REGISTER_shared_ptr_TO_PYTHON(Solver<Dtype>);
+  BP_REGISTER_shared_ptr_TO_PYTHON(Solver, (Dtype));
 
   bp::class_<NetState>("NetState", bp::init<>())
     .add_property("phase", &NetState::phase,
@@ -788,22 +810,22 @@ BOOST_PYTHON_MODULE(_caffe) {
 
   bp::class_<SGDSolver<Dtype>, bp::bases<Solver<Dtype> >,
     shared_ptr<SGDSolver<Dtype> >, boost::noncopyable>(
-        "SGDSolver", bp::init<string>());
+        "SGDSolver", bp::init<string, Device*>());
   bp::class_<NesterovSolver<Dtype>, bp::bases<Solver<Dtype> >,
     shared_ptr<NesterovSolver<Dtype> >, boost::noncopyable>(
-        "NesterovSolver", bp::init<string>());
+        "NesterovSolver", bp::init<string, Device*>());
   bp::class_<AdaGradSolver<Dtype>, bp::bases<Solver<Dtype> >,
     shared_ptr<AdaGradSolver<Dtype> >, boost::noncopyable>(
-        "AdaGradSolver", bp::init<string>());
+        "AdaGradSolver", bp::init<string, Device*>());
   bp::class_<RMSPropSolver<Dtype>, bp::bases<Solver<Dtype> >,
     shared_ptr<RMSPropSolver<Dtype> >, boost::noncopyable>(
-        "RMSPropSolver", bp::init<string>());
+        "RMSPropSolver", bp::init<string, Device*>());
   bp::class_<AdaDeltaSolver<Dtype>, bp::bases<Solver<Dtype> >,
     shared_ptr<AdaDeltaSolver<Dtype> >, boost::noncopyable>(
-        "AdaDeltaSolver", bp::init<string>());
+        "AdaDeltaSolver", bp::init<string, Device*>());
   bp::class_<AdamSolver<Dtype>, bp::bases<Solver<Dtype> >,
     shared_ptr<AdamSolver<Dtype> >, boost::noncopyable>(
-        "AdamSolver", bp::init<string>());
+        "AdamSolver", bp::init<string, Device*>());
 
   bp::def("get_solver_from_file", &GetSolverFromFile,
       bp::return_value_policy<bp::manage_new_object>());
@@ -817,8 +839,8 @@ BOOST_PYTHON_MODULE(_caffe) {
     .def("add_blob", bp::raw_function(&BlobVec_add_blob));
   bp::class_<vector<Blob<Dtype>*> >("RawBlobVec")
     .def(bp::vector_indexing_suite<vector<Blob<Dtype>*>, true>());
-  bp::class_<vector<shared_ptr<Layer<Dtype> > > >("LayerVec")
-    .def(bp::vector_indexing_suite<vector<shared_ptr<Layer<Dtype> > >, true>());
+  bp::class_<vector<shared_ptr<Layer<Dtype, Dtype, Dtype> > > >("LayerVec")
+    .def(bp::vector_indexing_suite<vector<shared_ptr<Layer<Dtype, Dtype, Dtype> > >, true>());
   bp::class_<vector<string> >("StringVec")
     .def(bp::vector_indexing_suite<vector<string> >());
   bp::class_<vector<int_tp> >("IntTpVec")
@@ -841,14 +863,14 @@ BOOST_PYTHON_MODULE(_caffe) {
 #endif
     /* NOLINT_NEXT_LINE(whitespace/semicolon) */
   ;
-  BP_REGISTER_shared_ptr_TO_PYTHON(NCCL<Dtype>);
+  BP_REGISTER_shared_ptr_TO_PYTHON(NCCL, (Dtype));
 
   bp::class_<Timer, shared_ptr<Timer>, boost::noncopyable>(
     "Timer", bp::init<>())
     .def("start", &Timer::Start)
     .def("stop", &Timer::Stop)
     .add_property("ms", &Timer::MilliSeconds);
-  BP_REGISTER_shared_ptr_TO_PYTHON(Timer);
+  BP_REGISTER_shared_ptr_TO_PYTHON_NO_TEMPLATE(Timer);
 
   // boost python expects a void (missing) return value, while import_array
   // returns NULL for python3. import_array1() forces a void return value.

@@ -44,7 +44,7 @@ namespace caffe {
     typedef typename TypeParam::Dtype Dtype;
     LayerParameter layer_param;
 
-    BatchNormLayer<Dtype> layer(layer_param);
+    BatchNormLayer<Dtype, Dtype, Dtype> layer(layer_param);
     layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
 
@@ -89,7 +89,7 @@ namespace caffe {
     blob_bottom_vec.push_back(&blob_inplace);
     blob_top_vec.push_back(&blob_inplace);
 
-    BatchNormLayer<Dtype> layer(layer_param);
+    BatchNormLayer<Dtype, Dtype, Dtype> layer(layer_param);
     layer.SetUp(blob_bottom_vec, blob_top_vec);
     layer.Forward(blob_bottom_vec, blob_top_vec);
 
@@ -126,7 +126,7 @@ namespace caffe {
     typedef typename TypeParam::Dtype Dtype;
     LayerParameter layer_param;
 
-    BatchNormLayer<Dtype> layer(layer_param);
+    BatchNormLayer<Dtype, Dtype, Dtype> layer(layer_param);
     GradientChecker<Dtype> checker(1e-2, 1e-4);
     checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
         this->blob_top_vec_);

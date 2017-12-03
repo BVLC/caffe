@@ -86,7 +86,7 @@ class MergeCropLayerTest : public GPUDeviceTest<TypeParam> {
     LayerParameter layer_param;
     MergeCropParameter *merge_param = layer_param.mutable_mergecrop_param();
     merge_param->set_operation(op);
-    MergeCropLayer<TypeParam> layer(layer_param);
+    MergeCropLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
     layer.SetUp(blob_bottom_vec_, blob_top_vec_);
 
     EXPECT_EQ(this->blob_top_->shape(0), this->blob_bottom_a_->shape(0));
@@ -177,7 +177,7 @@ class MergeCropLayerTest : public GPUDeviceTest<TypeParam> {
     LayerParameter layer_param;
     MergeCropParameter *merge_param = layer_param.mutable_mergecrop_param();
     merge_param->set_operation(op);
-    MergeCropLayer<TypeParam> layer(layer_param);
+    MergeCropLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
     layer.SetUp(blob_bottom_vec_, blob_top_vec_);
 
     layer.Forward(blob_bottom_vec_, blob_top_vec_);
@@ -214,7 +214,7 @@ TYPED_TEST_CASE(MergeCropLayerTest, TestDtypes);
 
 TYPED_TEST(MergeCropLayerTest, TestSetup) {
   LayerParameter layer_param;
-  MergeCropLayer<TypeParam> layer(layer_param);
+  MergeCropLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 
   EXPECT_EQ(this->blob_top_->shape(0), this->blob_bottom_a_->shape(0));

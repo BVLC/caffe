@@ -51,9 +51,10 @@
 #ifndef GTEST_INCLUDE_GTEST_GTEST_H_
 #define GTEST_INCLUDE_GTEST_GTEST_H_
 
-#include "caffe/util/fp16.hpp"
 #include <limits>
 #include <vector>
+
+#include "caffe/util/half_fp.hpp"
 
 // Copyright 2005, Google Inc.
 // All rights reserved.
@@ -140,10 +141,10 @@
 //                              is/isn't available.
 //   GTEST_HAS_EXCEPTIONS     - Define it to 1/0 to indicate that exceptions
 //                              are enabled.
-//   GTEST_HAS_GLOBAL_STRING  - Define it to 1/0 to indicate that string
+//   GTEST_HAS_GLOBAL_STRING  - Define it to 1/0 to indicate that ::string
 //                              is/isn't available (some systems define
-//                              string, which is different to string).
-//   GTEST_HAS_GLOBAL_WSTRING - Define it to 1/0 to indicate that string
+//                              ::string, which is different to std::string).
+//   GTEST_HAS_GLOBAL_WSTRING - Define it to 1/0 to indicate that ::string
 //                              is/isn't available (some systems define
 //                              ::wstring, which is different to std::wstring).
 //   GTEST_HAS_POSIX_RE       - Define it to 1/0 to indicate that POSIX regular
@@ -426,12 +427,12 @@
 // some clients still depend on it.
 # define GTEST_HAS_STD_STRING 1
 #elif !GTEST_HAS_STD_STRING
-// The user told us that string isn't available.
-# error "Google Test cannot be used where string isn't available."
+// The user told us that ::std::string isn't available.
+# error "Google Test cannot be used where ::std::string isn't available."
 #endif  // !defined(GTEST_HAS_STD_STRING)
 
 #ifndef GTEST_HAS_GLOBAL_STRING
-// The user didn't tell us whether string is available, so we need
+// The user didn't tell us whether ::string is available, so we need
 // to figure it out.
 
 # define GTEST_HAS_GLOBAL_STRING 0
@@ -613,7 +614,7 @@
    private:
 #endif
 
-// GTEST_n_TUPLE_(T) is the type of an N-tuple.
+// GTEST_n_TUPLE_(T) is the type of an n-tuple.
 #define GTEST_0_TUPLE_(T) tuple<>
 #define GTEST_1_TUPLE_(T) tuple<T##0, void, void, void, void, void, void, \
     void, void, void>
@@ -636,7 +637,7 @@
 #define GTEST_10_TUPLE_(T) tuple<T##0, T##1, T##2, T##3, T##4, T##5, T##6, \
     T##7, T##8, T##9>
 
-// GTEST_n_TYPENAMES_(T) declares a list of N typenames.
+// GTEST_n_TYPENAMES_(T) declares a list of n typenames.
 #define GTEST_0_TYPENAMES_(T)
 #define GTEST_1_TYPENAMES_(T) typename T##0
 #define GTEST_2_TYPENAMES_(T) typename T##0, typename T##1
@@ -1814,9 +1815,9 @@ template <typename T>
 struct StaticAssertTypeEqHelper<T, T> {};
 
 #if GTEST_HAS_GLOBAL_STRING
-typedef string string;
+typedef ::string string;
 #else
-typedef string string;
+typedef ::std::string string;
 #endif  // GTEST_HAS_GLOBAL_STRING
 
 #if GTEST_HAS_GLOBAL_WSTRING
@@ -1876,11 +1877,11 @@ class GTEST_API_ RE {
   RE(const RE& other) { Init(other.pattern()); }
 
   // Constructs an RE from a string.
-  RE(const string& regex) { Init(regex.c_str()); }  // NOLINT
+  RE(const ::std::string& regex) { Init(regex.c_str()); }  // NOLINT
 
 #if GTEST_HAS_GLOBAL_STRING
 
-  RE(const string& regex) { Init(regex.c_str()); }  // NOLINT
+  RE(const ::string& regex) { Init(regex.c_str()); }  // NOLINT
 
 #endif  // GTEST_HAS_GLOBAL_STRING
 
@@ -1897,19 +1898,19 @@ class GTEST_API_ RE {
   //
   // TODO(wan@google.com): make FullMatch() and PartialMatch() work
   // when str contains NUL characters.
-  static bool FullMatch(const string& str, const RE& re) {
+  static bool FullMatch(const ::std::string& str, const RE& re) {
     return FullMatch(str.c_str(), re);
   }
-  static bool PartialMatch(const string& str, const RE& re) {
+  static bool PartialMatch(const ::std::string& str, const RE& re) {
     return PartialMatch(str.c_str(), re);
   }
 
 #if GTEST_HAS_GLOBAL_STRING
 
-  static bool FullMatch(const string& str, const RE& re) {
+  static bool FullMatch(const ::string& str, const RE& re) {
     return FullMatch(str.c_str(), re);
   }
-  static bool PartialMatch(const string& str, const RE& re) {
+  static bool PartialMatch(const ::string& str, const RE& re) {
     return PartialMatch(str.c_str(), re);
   }
 
@@ -1944,12 +1945,12 @@ class GTEST_API_ RE {
 
 // Formats a source file path and a line number as they would appear
 // in an error message from the compiler used to compile this code.
-GTEST_API_ string FormatFileLocation(const char* file, int line);
+GTEST_API_ ::std::string FormatFileLocation(const char* file, int line);
 
 // Formats a file location for compiler-independent XML output.
 // Although this function is not platform dependent, we put it next to
 // FormatFileLocation in order to contrast the two functions.
-GTEST_API_ string FormatCompilerIndependentFileLocation(const char* file,
+GTEST_API_ ::std::string FormatCompilerIndependentFileLocation(const char* file,
                                                                int line);
 
 // Defines logging utilities:
@@ -2042,7 +2043,7 @@ inline void FlushInfoLog() { fflush(NULL); }
 // similar functions users may have (e.g., implicit_cast). The internal
 // namespace alone is not enough because the function can be found by ADL.
 template<typename To>
-inline To ImplicitCast_(To X) { return X; }
+inline To ImplicitCast_(To x) { return x; }
 
 // When you upcast (that is, cast a pointer from type Foo to type
 // SuperclassOfFoo), it's fine to use ImplicitCast_<>, since upcasts
@@ -2117,10 +2118,10 @@ GTEST_API_ String GetCapturedStderr();
 #if GTEST_HAS_DEATH_TEST
 
 // A copy of all command line arguments.  Set by InitGoogleTest().
-extern ::vector<String> g_argvs;
+extern ::std::vector<String> g_argvs;
 
-// GTEST_HAS_DEATH_TEST implies we have string.
-const ::vector<String>& GetArgvs();
+// GTEST_HAS_DEATH_TEST implies we have ::std::string.
+const ::std::vector<String>& GetArgvs();
 
 #endif  // GTEST_HAS_DEATH_TEST
 
@@ -2128,13 +2129,13 @@ const ::vector<String>& GetArgvs();
 
 #if GTEST_HAS_PTHREAD
 
-// Sleeps for (roughly) N milli-seconds.  This function is only for
+// Sleeps for (roughly) n milli-seconds.  This function is only for
 // testing Google Test's own constructs.  Don't use it in user tests,
 // either directly or indirectly.
-inline void SleepMilliseconds(int N) {
+inline void SleepMilliseconds(int n) {
   const timespec time = {
     0,                  // 0 seconds.
-    N * 1000L * 1000L,  // And N ms.
+    n * 1000L * 1000L,  // And n ms.
   };
   nanosleep(&time, NULL);
 }
@@ -2669,8 +2670,8 @@ inline bool IsDir(const StatStruct& st) { return S_ISDIR(st.st_mode); }
 # pragma warning(disable:4996)
 #endif
 
-inline const char* StrNCpy(char* dest, const char* src, size_t N) {
-  return strncpy(dest, src, N);
+inline const char* StrNCpy(char* dest, const char* src, size_t n) {
+  return strncpy(dest, src, n);
 }
 
 // ChDir(), FReopen(), FDOpen(), Read(), Write(), Close(), and
@@ -2822,7 +2823,7 @@ typedef TypeWithSize<8>::Int TimeInMillis;  // Represents time in milliseconds.
 #define GTEST_DECLARE_int32_(name) \
     GTEST_API_ extern ::testing::internal::Int32 GTEST_FLAG(name)
 #define GTEST_DECLARE_string_(name) \
-    GTEST_API_ extern ::testing::internalstring GTEST_FLAG(name)
+    GTEST_API_ extern ::testing::internal::String GTEST_FLAG(name)
 
 // Macros for defining flags.
 #define GTEST_DEFINE_bool_(name, default_val, doc) \
@@ -2830,7 +2831,7 @@ typedef TypeWithSize<8>::Int TimeInMillis;  // Represents time in milliseconds.
 #define GTEST_DEFINE_int32_(name, default_val, doc) \
     GTEST_API_ ::testing::internal::Int32 GTEST_FLAG(name) = (default_val)
 #define GTEST_DEFINE_string_(name, default_val, doc) \
-    GTEST_API_ ::testing::internalstring GTEST_FLAG(name) = (default_val)
+    GTEST_API_ ::testing::internal::String GTEST_FLAG(name) = (default_val)
 
 // Parses 'str' for a 32-bit signed integer.  If successful, writes the result
 // to *value and returns true; otherwise leaves *value unchanged and returns
@@ -2921,13 +2922,13 @@ namespace internal {
 
 // String - a UTF-8 string class.
 //
-// For historic reasons, we don't use string.
+// For historic reasons, we don't use std::string.
 //
-// TODO(wan@google.com): replace this class with string or
+// TODO(wan@google.com): replace this class with std::string or
 // implement it in terms of the latter.
 //
 // Note that String can represent both NULL and the empty string,
-// while string cannot represent NULL.
+// while std::string cannot represent NULL.
 //
 // NULL and the empty string are considered different.  NULL is less
 // than anything (including the empty string) except itself.
@@ -2937,7 +2938,7 @@ namespace internal {
 // string class here.
 //
 // Since the purpose of this class is to provide a substitute for
-// string on platforms where it cannot be used, we define a copy
+// std::string on platforms where it cannot be used, we define a copy
 // constructor and assignment operators such that we don't need
 // conditional compilation in a lot of places.
 //
@@ -3082,24 +3083,24 @@ class GTEST_API_ String {
   // doesn't need to be virtual.
   ~String() { delete[] c_str_; }
 
-  // Allows a String to be implicitly converted to an string or
-  // string, and vice versa.  Converting a String containing a NULL
-  // pointer to string or string is undefined behavior.
-  // Converting a string or string containing an embedded NUL
+  // Allows a String to be implicitly converted to an ::std::string or
+  // ::string, and vice versa.  Converting a String containing a NULL
+  // pointer to ::std::string or ::string is undefined behavior.
+  // Converting a ::std::string or ::string containing an embedded NUL
   // character to a String will result in the prefix up to the first
   // NUL character.
-  String(const string& str) {
+  String(const ::std::string& str) {
     ConstructNonNull(str.c_str(), str.length());
   }
 
-  operator string() const { return string(c_str(), length()); }
+  operator ::std::string() const { return ::std::string(c_str(), length()); }
 
 #if GTEST_HAS_GLOBAL_STRING
-  String(const string& str) {
+  String(const ::string& str) {
     ConstructNonNull(str.c_str(), str.length());
   }
 
-  operator string() const { return string(c_str(), length()); }
+  operator ::string() const { return ::string(c_str(), length()); }
 #endif  // GTEST_HAS_GLOBAL_STRING
 
   // Returns true iff this is an empty string (i.e. "").
@@ -3196,11 +3197,11 @@ inline ::std::ostream& operator<<(::std::ostream& os, const String& str) {
 
 // Gets the content of the stringstream's buffer as a String.  Each '\0'
 // character in the buffer is replaced with "\\0".
-GTEST_API_ String StringStreamToString(stringstream* stream);
+GTEST_API_ String StringStreamToString(::std::stringstream* stream);
 
 // Converts a streamable value to a String.  A NULL pointer is
-// converted to "(null)".  When the input value is a string,
-// string, ::wstring, or ::std::wstring object, each NUL
+// converted to "(null)".  When the input value is a ::string,
+// ::std::string, ::wstring, or ::std::wstring object, each NUL
 // character in it is replaced with "\\0".
 
 // Declared here but defined in gtest.h, so that it has access
@@ -6807,7 +6808,7 @@ class TestPartResult;                  // Result of a test part.
 class UnitTest;                        // A collection of test cases.
 
 template <typename T>
-string PrintToString(const T& value);
+::std::string PrintToString(const T& value);
 
 namespace internal {
 
@@ -6835,26 +6836,26 @@ class Secret;
 // picked by the compiler.  These helpers have no implementations, as
 // we only need their signatures.
 //
-// Given IsNullLiteralHelper(X), the compiler will pick the first
-// version if X can be implicitly converted to Secret*, and pick the
+// Given IsNullLiteralHelper(x), the compiler will pick the first
+// version if x can be implicitly converted to Secret*, and pick the
 // second version otherwise.  Since Secret is a secret and incomplete
 // type, the only expression a user can write that has type Secret* is
-// a null pointer literal.  Therefore, we know that X is a null
+// a null pointer literal.  Therefore, we know that x is a null
 // pointer literal if and only if the first version is picked by the
 // compiler.
 char IsNullLiteralHelper(Secret* p);
 char (&IsNullLiteralHelper(...))[2];  // NOLINT
 
-// A compile-time bool constant that is true if and only if X is a
+// A compile-time bool constant that is true if and only if x is a
 // null pointer literal (i.e. NULL or any 0-valued compile-time
 // integral constant).
 #ifdef GTEST_ELLIPSIS_NEEDS_POD_
 // We lose support for NULL detection where the compiler doesn't like
 // passing non-POD classes through ellipsis (...).
-# define GTEST_IS_NULL_LITERAL_(X) false
+# define GTEST_IS_NULL_LITERAL_(x) false
 #else
-# define GTEST_IS_NULL_LITERAL_(X) \
-    (sizeof(::testing::internal::IsNullLiteralHelper(X)) == 1)
+# define GTEST_IS_NULL_LITERAL_(x) \
+    (sizeof(::testing::internal::IsNullLiteralHelper(x)) == 1)
 #endif  // GTEST_ELLIPSIS_NEEDS_POD_
 
 // Appends the user-supplied message to the Google-Test-generated message.
@@ -6881,8 +6882,8 @@ class GTEST_API_ ScopedTrace {
                             // need to be used otherwise.
 
 // Converts a streamable value to a String.  A NULL pointer is
-// converted to "(null)".  When the input value is a string,
-// string, ::wstring, or ::std::wstring object, each NUL
+// converted to "(null)".  When the input value is a ::string,
+// ::std::string, ::wstring, or ::std::wstring object, each NUL
 // character in it is replaced with "\\0".
 // Declared here but defined in gtest.h, so that it has access
 // to the definition of the Message class, required by the ARM
@@ -6902,7 +6903,7 @@ String StreamableToString(const T& streamable);
 #endif
 
 // When this operand is a const char* or char*, if the other operand
-// is a string or string, we print this operand as a C string
+// is a ::std::string or ::string, we print this operand as a C string
 // rather than a pointer (we do the same for wide strings); otherwise
 // we print it as a pointer to be safe.
 
@@ -6919,13 +6920,13 @@ inline String FormatForComparisonFailureMessage(\
   return operand1_printer(str);\
 }
 
-GTEST_FORMAT_IMPL_(string, String::ShowCStringQuoted)
+GTEST_FORMAT_IMPL_(::std::string, String::ShowCStringQuoted)
 #if GTEST_HAS_STD_WSTRING
 GTEST_FORMAT_IMPL_(::std::wstring, String::ShowWideCStringQuoted)
 #endif  // GTEST_HAS_STD_WSTRING
 
 #if GTEST_HAS_GLOBAL_STRING
-GTEST_FORMAT_IMPL_(string, String::ShowCStringQuoted)
+GTEST_FORMAT_IMPL_(::string, String::ShowCStringQuoted)
 #endif  // GTEST_HAS_GLOBAL_STRING
 #if GTEST_HAS_GLOBAL_WSTRING
 GTEST_FORMAT_IMPL_(::wstring, String::ShowWideCStringQuoted)
@@ -7056,9 +7057,9 @@ class FloatingPoint {
   // On an Intel CPU, passing a non-normalized NAN (Not a Number)
   // around may change its bits, although the new value is guaranteed
   // to be also a NAN.  Therefore, don't expect this constructor to
-  // preserve the bits in X when X is a NAN.
-  //explicit FloatingPoint(const RawType& X) { u_.bits_ = *(const Bits*)(&X); }
-  explicit FloatingPoint(const RawType X) { memcpy(&u_.bits_, &X, sizeof(RawType)); }
+  // preserve the bits in x when x is a NAN.
+  //explicit FloatingPoint(const RawType& x) { u_.bits_ = *(const Bits*)(&x); }
+  explicit FloatingPoint(const RawType x) { memcpy(&u_.bits_, &x, sizeof(RawType)); }
 
   // Static methods
 
@@ -7131,8 +7132,8 @@ class FloatingPoint {
 
   // Converts an integer from the sign-and-magnitude representation to
   // the biased representation.  More precisely, let N be 2 to the
-  // power of (kBitCount - 1), an integer X is represented by the
-  // unsigned number X + N.
+  // power of (kBitCount - 1), an integer x is represented by the
+  // unsigned number x + N.
   //
   // For instance,
   //
@@ -7168,7 +7169,7 @@ class FloatingPoint {
 
 // Typedefs the instances of the FloatingPoint template class that we
 // care to use.
-typedef FloatingPoint<half_fp> Half;
+typedef FloatingPoint<half_float::half> Half;
 typedef FloatingPoint<float> Float;
 typedef FloatingPoint<double> Double;
 
@@ -7298,7 +7299,7 @@ class GTEST_API_ TypedTestCasePState {
                    const char* test_name) {
     if (registered_) {
       fprintf(stderr, "%s Test %s must be defined before "
-              "REGISTER_TYPED_TEST_CASE_P(%s, ...).\N",
+              "REGISTER_TYPED_TEST_CASE_P(%s, ...).\n",
               FormatFileLocation(file, line).c_str(), test_name, case_name);
       fflush(stderr);
       posix::Abort();
@@ -7562,14 +7563,14 @@ class ImplicitlyConvertible {
   static From MakeFrom();
 
   // These two functions are overloaded.  Given an expression
-  // Helper(X), the compiler will pick the first version if X can be
+  // Helper(x), the compiler will pick the first version if x can be
   // implicitly converted to type To; otherwise it will pick the
   // second version.
   //
   // The first version returns a value of size 1, and the second
   // version returns a value of size 2.  Therefore, by checking the
-  // size of Helper(X), which can be done at compile time, we can tell
-  // which version of Helper() is used, and hence whether X can be
+  // size of Helper(x), which can be done at compile time, we can tell
+  // which version of Helper() is used, and hence whether x can be
   // implicitly converted to type To.
   static char Helper(To);
   static char (&Helper(...))[2];  // NOLINT
@@ -7831,13 +7832,13 @@ class NativeArray {
     catch (...) { \
       gtest_msg.value = \
           "Expected: " #statement " throws an exception of type " \
-          #expected_exception ".\N  Actual: it throws a different type."; \
+          #expected_exception ".\n  Actual: it throws a different type."; \
       goto GTEST_CONCAT_TOKEN_(gtest_label_testthrow_, __LINE__); \
     } \
     if (!gtest_caught_expected) { \
       gtest_msg.value = \
           "Expected: " #statement " throws an exception of type " \
-          #expected_exception ".\N  Actual: it throws nothing."; \
+          #expected_exception ".\n  Actual: it throws nothing."; \
       goto GTEST_CONCAT_TOKEN_(gtest_label_testthrow_, __LINE__); \
     } \
   } else \
@@ -7855,7 +7856,7 @@ class NativeArray {
     } \
   } else \
     GTEST_CONCAT_TOKEN_(gtest_label_testnothrow_, __LINE__): \
-      fail("Expected: " #statement " doesn't throw an exception.\N" \
+      fail("Expected: " #statement " doesn't throw an exception.\n" \
            "  Actual: it throws.")
 
 #define GTEST_TEST_ANY_THROW_(statement, fail) \
@@ -7873,7 +7874,7 @@ class NativeArray {
     } \
   } else \
     GTEST_CONCAT_TOKEN_(gtest_label_testanythrow_, __LINE__): \
-      fail("Expected: " #statement " throws an exception.\N" \
+      fail("Expected: " #statement " throws an exception.\n" \
            "  Actual: it doesn't.")
 
 
@@ -7900,7 +7901,7 @@ class NativeArray {
   } else \
     GTEST_CONCAT_TOKEN_(gtest_label_testnofatal_, __LINE__): \
       fail("Expected: " #statement " doesn't generate new fatal " \
-           "failures in the current thread.\N" \
+           "failures in the current thread.\n" \
            "  Actual: it does.")
 
 // Expands to the name of the class that implements the given test.
@@ -8136,8 +8137,8 @@ GTEST_API_ bool ExitedUnsuccessfully(int exit_status);
   } catch (const ::std::exception& gtest_exception) { \
     fprintf(\
         stderr, \
-        "\N%s: Caught std::exception-derived exception escaping the " \
-        "death test statement. Exception message: %s\N", \
+        "\n%s: Caught std::exception-derived exception escaping the " \
+        "death test statement. Exception message: %s\n", \
         ::testing::internal::FormatFileLocation(__FILE__, __LINE__).c_str(), \
         gtest_exception.what()); \
     fflush(stderr); \
@@ -8263,7 +8264,7 @@ InternalRunDeathTestFlag* ParseInternalRunDeathTestFlag();
     GTEST_AMBIGUOUS_ELSE_BLOCKER_ \
     if (::testing::internal::AlwaysTrue()) { \
       GTEST_LOG_(WARNING) \
-          << "Death tests are not supported on this platform.\N" \
+          << "Death tests are not supported on this platform.\n" \
           << "Statement '" #statement "' cannot be verified."; \
     } else if (::testing::internal::AlwaysFalse()) { \
       ::testing::internal::RE::PartialMatch(".*", (regex)); \
@@ -8335,36 +8336,36 @@ GTEST_DECLARE_string_(death_test_style);
 //   implementation should be enough most of the time when writing
 //   death tests; though it lacks many features you can find in PCRE
 //   or POSIX extended regex syntax.  For example, we don't support
-//   union ("X|Y"), grouping ("(xy)"), brackets ("[xy]"), and
-//   repetition count ("X{5,7}"), among others.
+//   union ("x|y"), grouping ("(xy)"), brackets ("[xy]"), and
+//   repetition count ("x{5,7}"), among others.
 //
 //   Below is the syntax that we do support.  We chose it to be a
 //   subset of both PCRE and POSIX extended regex, so it's easy to
 //   learn wherever you come from.  In the following: 'A' denotes a
 //   literal character, period (.), or a single \\ escape sequence;
-//   'X' and 'Y' denote regular expressions; 'm' and 'N' are for
+//   'x' and 'y' denote regular expressions; 'm' and 'n' are for
 //   natural numbers.
 //
 //     c     matches any literal character c
 //     \\d   matches any decimal digit
 //     \\D   matches any character that's not a decimal digit
 //     \\f   matches \f
-//     \\N   matches \N
+//     \\n   matches \n
 //     \\r   matches \r
-//     \\s   matches any ASCII whitespace, including \N
+//     \\s   matches any ASCII whitespace, including \n
 //     \\S   matches any character that's not a whitespace
 //     \\t   matches \t
 //     \\v   matches \v
 //     \\w   matches any letter, _, or decimal digit
 //     \\W   matches any character that \\w doesn't match
 //     \\c   matches any literal character c, which must be a punctuation
-//     .     matches any single character except \N
+//     .     matches any single character except \n
 //     A?    matches 0 or 1 occurrences of A
 //     A*    matches 0 or many occurrences of A
 //     A+    matches 1 or many occurrences of A
 //     ^     matches the beginning of a string (not that of each line)
 //     $     matches the end of a string (not that of each line)
-//     xy    matches X followed by Y
+//     xy    matches x followed by y
 //
 //   If you accidentally use PCRE or POSIX extended regex features
 //   not implemented by us, you will get a run-time failure.  In that
@@ -8611,19 +8612,19 @@ class GTEST_API_ Message {
   // ASSERT/EXPECT in a procedure adds over 200 bytes to the procedure's
   // stack frame leading to huge stack frames in some cases; gcc does not reuse
   // the stack space.
-  Message() : ss_(new stringstream) {
+  Message() : ss_(new ::std::stringstream) {
     // By default, we want there to be enough precision when printing
     // a double to a Message.
     *ss_ << std::setprecision(std::numeric_limits<double>::digits10 + 2);
   }
 
   // Copy constructor.
-  Message(const Message& msg) : ss_(new stringstream) {  // NOLINT
+  Message(const Message& msg) : ss_(new ::std::stringstream) {  // NOLINT
     *ss_ << msg.GetString();
   }
 
   // Constructs a Message from a C-string.
-  explicit Message(const char* str) : ss_(new stringstream) {
+  explicit Message(const char* str) : ss_(new ::std::stringstream) {
     *ss_ << str;
   }
 
@@ -8685,10 +8686,10 @@ class GTEST_API_ Message {
   // These two overloads allow streaming a wide C string to a Message
   // using the UTF-8 encoding.
   Message& operator <<(const wchar_t* wide_c_str) {
-    return *this << internalstring::ShowWideCString(wide_c_str);
+    return *this << internal::String::ShowWideCString(wide_c_str);
   }
   Message& operator <<(wchar_t* wide_c_str) {
-    return *this << internalstring::ShowWideCString(wide_c_str);
+    return *this << internal::String::ShowWideCString(wide_c_str);
   }
 
 #if GTEST_HAS_STD_WSTRING
@@ -8707,8 +8708,8 @@ class GTEST_API_ Message {
   // Each '\0' character in the buffer is replaced with "\\0".
   //
   // INTERNAL IMPLEMENTATION - DO NOT USE IN A USER PROGRAM.
-  internalstring GetString() const {
-    return internal:stringstreamToString(ss_.get());
+  internal::String GetString() const {
+    return internal::StringStreamToString(ss_.get());
   }
 
  private:
@@ -8733,7 +8734,7 @@ class GTEST_API_ Message {
 #endif  // GTEST_OS_SYMBIAN
 
   // We'll hold the text streamed to this object here.
-  const internal::scoped_ptr< stringstream> ss_;
+  const internal::scoped_ptr< ::std::stringstream> ss_;
 
   // We declare (but don't implement) this to prevent the compiler
   // from implementing the assignment operator.
@@ -9191,13 +9192,13 @@ class linked_ptr {
 };
 
 template<typename T> inline
-bool operator==(T* ptr, const linked_ptr<T>& X) {
-  return ptr == X.get();
+bool operator==(T* ptr, const linked_ptr<T>& x) {
+  return ptr == x.get();
 }
 
 template<typename T> inline
-bool operator!=(T* ptr, const linked_ptr<T>& X) {
-  return ptr != X.get();
+bool operator!=(T* ptr, const linked_ptr<T>& x) {
+  return ptr != x.get();
 }
 
 // A function to convert T* into linked_ptr<T>
@@ -9274,7 +9275,7 @@ linked_ptr<T> make_linked_ptr(T* ptr) {
 //   // Prints a value to a string.  For a (const or not) char
 //   // pointer, the NUL-terminated string (but not the pointer) is
 //   // printed.
-//   string ::testing::PrintToString(const T& value);
+//   std::string ::testing::PrintToString(const T& value);
 //
 //   // Prints a value tersely: for a reference type, the referenced
 //   // value (but not the address) is printed; for a (const or not) char
@@ -9290,7 +9291,7 @@ linked_ptr<T> make_linked_ptr(T* ptr) {
 //   // Prints the fields of a tuple tersely to a string vector, one
 //   // element for each field. Tuple support must be enabled in
 //   // gtest-port.h.
-//   vector<string> UniversalTersePrintTupleFieldsToStrings(
+//   std::vector<string> UniversalTersePrintTupleFieldsToStrings(
 //       const Tuple& value);
 //
 // Known limitation:
@@ -9359,10 +9360,10 @@ template <typename T>
 class TypeWithoutFormatter<T, kProtobuf> {
  public:
   static void PrintValue(const T& value, ::std::ostream* os) {
-    const ::testing::internalstring short_str = value.ShortDebugString();
-    const ::testing::internalstring pretty_str =
+    const ::testing::internal::string short_str = value.ShortDebugString();
+    const ::testing::internal::string pretty_str =
         short_str.length() <= kProtobufOneLinerMaxLength ?
-        short_str : ("\N" + value.DebugString());
+        short_str : ("\n" + value.DebugString());
     *os << ("<" + pretty_str + ">");
   }
 };
@@ -9409,11 +9410,11 @@ class TypeWithoutFormatter<T, kConvertibleToInteger> {
 // specific.
 template <typename Char, typename CharTraits, typename T>
 ::std::basic_ostream<Char, CharTraits>& operator<<(
-    ::std::basic_ostream<Char, CharTraits>& os, const T& X) {
+    ::std::basic_ostream<Char, CharTraits>& os, const T& x) {
   TypeWithoutFormatter<T,
       (internal::IsAProtocolMessage<T>::value ? kProtobuf :
        internal::ImplicitlyConvertible<const T&, internal::BiggestInt>::value ?
-       kConvertibleToInteger : kOtherType)>::PrintValue(X, &os);
+       kConvertibleToInteger : kOtherType)>::PrintValue(x, &os);
   return os;
 }
 
@@ -9583,8 +9584,8 @@ void PrintTo(const T& value, ::std::ostream* os) {
   // in Symbian's C++ compiler that prevents it from picking the right
   // overload between:
   //
-  //   PrintTo(const T& X, ...);
-  //   PrintTo(T* X, ...);
+  //   PrintTo(const T& x, ...);
+  //   PrintTo(T* x, ...);
   DefaultPrintTo(IsContainerTest<T>(0), is_pointer<T>(), value, os);
 }
 
@@ -9603,8 +9604,8 @@ inline void PrintTo(char c, ::std::ostream* os) {
 }
 
 // Overloads for other simple built-in types.
-inline void PrintTo(bool X, ::std::ostream* os) {
-  *os << (X ? "true" : "false");
+inline void PrintTo(bool x, ::std::ostream* os) {
+  *os << (x ? "true" : "false");
 }
 
 // Overload for wchar_t type.
@@ -9664,16 +9665,16 @@ void PrintRawArrayTo(const T a[], size_t count, ::std::ostream* os) {
   }
 }
 
-// Overloads for string and string.
+// Overloads for ::string and ::std::string.
 #if GTEST_HAS_GLOBAL_STRING
-GTEST_API_ void PrintStringTo(const string&s, ::std::ostream* os);
-inline void PrintTo(const string& s, ::std::ostream* os) {
+GTEST_API_ void PrintStringTo(const ::string&s, ::std::ostream* os);
+inline void PrintTo(const ::string& s, ::std::ostream* os) {
   PrintStringTo(s, os);
 }
 #endif  // GTEST_HAS_GLOBAL_STRING
 
-GTEST_API_ void PrintStringTo(const string&s, ::std::ostream* os);
-inline void PrintTo(const string& s, ::std::ostream* os) {
+GTEST_API_ void PrintStringTo(const ::std::string&s, ::std::ostream* os);
+inline void PrintTo(const ::std::string& s, ::std::ostream* os) {
   PrintStringTo(s, os);
 }
 
@@ -9910,7 +9911,7 @@ void UniversalPrint(const T& value, ::std::ostream* os) {
 }
 
 #if GTEST_HAS_TR1_TUPLE
-typedef ::vector<string> Strings;
+typedef ::std::vector<string> Strings;
 
 // This helper template allows PrintTo() for tuples and
 // UniversalTersePrintTupleFieldsToStrings() to be defined by
@@ -9936,7 +9937,7 @@ struct TuplePrefixPrinter {
   template <typename Tuple>
   static void TersePrintPrefixToStrings(const Tuple& t, Strings* strings) {
     TuplePrefixPrinter<N - 1>::TersePrintPrefixToStrings(t, strings);
-    stringstream ss;
+    ::std::stringstream ss;
     UniversalTersePrint(::std::tr1::get<N - 1>(t), &ss);
     strings->push_back(ss.str());
   }
@@ -9966,7 +9967,7 @@ struct TuplePrefixPrinter<1> {
 
   template <typename Tuple>
   static void TersePrintPrefixToStrings(const Tuple& t, Strings* strings) {
-    stringstream ss;
+    ::std::stringstream ss;
     UniversalTersePrint(::std::tr1::get<0>(t), &ss);
     strings->push_back(ss.str());
   }
@@ -9997,8 +9998,8 @@ Strings UniversalTersePrintTupleFieldsToStrings(const Tuple& value) {
 }  // namespace internal
 
 template <typename T>
-string PrintToString(const T& value) {
-  stringstream ss;
+::std::string PrintToString(const T& value) {
+  ::std::stringstream ss;
   internal::UniversalTersePrint(value, &ss);
   return ss.str();
 }
@@ -10241,7 +10242,7 @@ class ValuesInIteratorRangeGenerator : public ParamGeneratorInterface<T> {
   }
 
  private:
-  typedef typename ::vector<T> ContainerType;
+  typedef typename ::std::vector<T> ContainerType;
 
   class Iterator : public ParamIteratorInterface<T> {
    public:
@@ -10437,7 +10438,7 @@ class ParameterizedTestCaseInfo : public ParameterizedTestCaseInfoBase {
                                GeneratorCreationFunc* func,
                                const char* /* file */,
                                int /* line */) {
-    instantiations_.push_back(::make_pair(instantiation_name, func));
+    instantiations_.push_back(::std::make_pair(instantiation_name, func));
     return 0;  // Return value used only to run this method in namespace scope.
   }
   // UnitTest class invokes this method to register tests in this test case
@@ -10495,10 +10496,10 @@ class ParameterizedTestCaseInfo : public ParameterizedTestCaseInfoBase {
     const string test_base_name;
     const scoped_ptr<TestMetaFactoryBase<ParamType> > test_meta_factory;
   };
-  typedef ::vector<linked_ptr<TestInfo> > TestInfoContainer;
+  typedef ::std::vector<linked_ptr<TestInfo> > TestInfoContainer;
   // Keeps pairs of <Instantiation name, Sequence generator creation function>
   // received from INSTANTIATE_TEST_CASE_P macros.
-  typedef ::vector<std::pair<string, GeneratorCreationFunc*> >
+  typedef ::std::vector<std::pair<string, GeneratorCreationFunc*> >
       InstantiationContainer;
 
   const string test_case_name_;
@@ -10565,7 +10566,7 @@ class ParameterizedTestCaseRegistry {
   }
 
  private:
-  typedef ::vector<ParameterizedTestCaseInfoBase*> TestCaseInfoContainer;
+  typedef ::std::vector<ParameterizedTestCaseInfoBase*> TestCaseInfoContainer;
 
   TestCaseInfoContainer test_case_infos_;
 
@@ -15485,8 +15486,8 @@ internal::ParamGenerator<T> Range(T start, T end) {
 // This instantiates tests from test case StlStringTest
 // each with STL strings with values "a" and "b":
 //
-// ::vector< string> GetParameterStrings() {
-//   ::vector< string> v;
+// ::std::vector< ::std::string> GetParameterStrings() {
+//   ::std::vector< ::std::string> v;
 //   v.push_back("a");
 //   v.push_back("b");
 //   return v;
@@ -16785,16 +16786,16 @@ class GTEST_API_ TestPartResult {
 
   // Gets the summary of the failure message by omitting the stack
   // trace in it.
-  static internalstring ExtractSummary(const char* message);
+  static internal::String ExtractSummary(const char* message);
 
   // The name of the source file where the test part took place, or
   // NULL if the source file is unknown.
-  internalstring file_name_;
+  internal::String file_name_;
   // The line in the source file where the test part took place, or -1
   // if the line number is unknown.
   int line_number_;
-  internalstring summary_;  // The test failure summary.
-  internalstring message_;  // The test failure message.
+  internal::String summary_;  // The test failure summary.
+  internal::String message_;  // The test failure message.
 };
 
 // Prints a TestPartResult object.
@@ -16818,7 +16819,7 @@ class GTEST_API_ TestPartResultArray {
   int size() const;
 
  private:
-  vector<TestPartResult> array_;
+  std::vector<TestPartResult> array_;
 
   GTEST_DISALLOW_COPY_AND_ASSIGN_(TestPartResultArray);
 };
@@ -16927,16 +16928,16 @@ TYPED_TEST(FooTest, DoesBlah) {
   // Inside a test, refer to TypeParam to get the type parameter.
   // Since we are inside a derived class template, C++ requires use to
   // visit the members of FooTest via 'this'.
-  TypeParam N = this->value_;
+  TypeParam n = this->value_;
 
   // To visit static members of the fixture, add the TestFixture::
   // prefix.
-  N += TestFixture::shared_;
+  n += TestFixture::shared_;
 
   // To refer to typedefs in the fixture, add the "typename
   // TestFixture::" prefix.
   typename TestFixture::List values;
-  values.push_back(N);
+  values.push_back(n);
   ...
 }
 
@@ -16976,7 +16977,7 @@ TYPED_TEST_CASE_P(FooTest);
 // for this type-parameterized test case as you want.
 TYPED_TEST_P(FooTest, DoesBlah) {
   // Inside a test, refer to TypeParam to get the type parameter.
-  TypeParam N = 0;
+  TypeParam n = 0;
   ...
 }
 
@@ -17117,15 +17118,15 @@ INSTANTIATE_TYPED_TEST_CASE_P(My, FooTest, MyTypes);
 #endif  // GTEST_INCLUDE_GTEST_GTEST_TYPED_TEST_H_
 
 // Depending on the platform, different string classes are available.
-// On Linux, in addition to string, Google also makes use of
-// class string, which has the same interface as string, but
+// On Linux, in addition to ::std::string, Google also makes use of
+// class ::string, which has the same interface as ::std::string, but
 // has a different implementation.
 //
 // The user can define GTEST_HAS_GLOBAL_STRING to 1 to indicate that
-// string is available AND is a distinct type to string, or
+// ::string is available AND is a distinct type to ::std::string, or
 // define it to 0 to indicate otherwise.
 //
-// If the user's string and string are the same class due to
+// If the user's ::std::string and ::string are the same class due to
 // aliasing, he should define GTEST_HAS_GLOBAL_STRING to 0.
 //
 // If the user doesn't define GTEST_HAS_GLOBAL_STRING, it is defined
@@ -17214,8 +17215,8 @@ void ReportFailureInUnknownLocation(TestPartResult::Type result_type,
                                     const String& message);
 
 // Converts a streamable value to a String.  A NULL pointer is
-// converted to "(null)".  When the input value is a string,
-// string, ::wstring, or ::std::wstring object, each NUL
+// converted to "(null)".  When the input value is a ::string,
+// ::std::string, ::wstring, or ::std::wstring object, each NUL
 // character in it is replaced with "\\0".
 // Declared in gtest-internal.h but defined here, so that it has access
 // to the definition of the Message class, required by the ARM
@@ -17250,11 +17251,11 @@ class UnitTest;
 //
 // For example, if you define IsEven predicate:
 //
-//   testing::AssertionResult IsEven(int N) {
-//     if ((N % 2) == 0)
+//   testing::AssertionResult IsEven(int n) {
+//     if ((n % 2) == 0)
 //       return testing::AssertionSuccess();
 //     else
-//       return testing::AssertionFailure() << N << " is odd";
+//       return testing::AssertionFailure() << n << " is odd";
 //   }
 //
 // Then the failed expectation EXPECT_TRUE(IsEven(Fib(5)))
@@ -17277,11 +17278,11 @@ class UnitTest;
 // about half as often as positive ones in our tests), supply messages for
 // both success and failure cases:
 //
-//   testing::AssertionResult IsEven(int N) {
-//     if ((N % 2) == 0)
-//       return testing::AssertionSuccess() << N << " is even";
+//   testing::AssertionResult IsEven(int n) {
+//     if ((n % 2) == 0)
+//       return testing::AssertionSuccess() << n << " is even";
 //     else
-//       return testing::AssertionFailure() << N << " is odd";
+//       return testing::AssertionFailure() << n << " is odd";
 //   }
 //
 // Then a statement EXPECT_FALSE(IsEven(Fib(6))) will print
@@ -17301,12 +17302,12 @@ class UnitTest;
 //
 // you need to define:
 //
-//   testing::AssertionResult IsEven(const char* expr, int N) {
-//     if ((N % 2) == 0)
+//   testing::AssertionResult IsEven(const char* expr, int n) {
+//     if ((n % 2) == 0)
 //       return testing::AssertionSuccess();
 //     else
 //       return testing::AssertionFailure()
-//         << "Expected: " << expr << " is even\N  Actual: it's " << N;
+//         << "Expected: " << expr << " is even\n  Actual: it's " << n;
 //   }
 //
 // If Foo() returns 5, you will see the following message:
@@ -17357,7 +17358,7 @@ class GTEST_API_ AssertionResult {
   // Appends the contents of message to message_.
   void AppendMessage(const Message& a_message) {
     if (message_.get() == NULL)
-      message_.reset(new string);
+      message_.reset(new ::std::string);
     message_->append(a_message.GetString().c_str());
   }
 
@@ -17367,7 +17368,7 @@ class GTEST_API_ AssertionResult {
   // construct is not satisfied with the predicate's outcome.
   // Referenced via a pointer to avoid taking too much stack frame space
   // with test assertions.
-  internal::scoped_ptr< string> message_;
+  internal::scoped_ptr< ::std::string> message_;
 
   GTEST_DISALLOW_ASSIGN_(AssertionResult);
 };
@@ -17546,9 +17547,9 @@ class TestProperty {
 
  private:
   // The key supplied by the user.
-  internalstring key_;
+  internal::String key_;
   // The value supplied by the user.
-  internalstring value_;
+  internal::String value_;
 };
 
 // The result of a single Test.  This includes a list of
@@ -17607,12 +17608,12 @@ class GTEST_API_ TestResult {
   friend class internal::WindowsDeathTest;
 
   // Gets the vector of TestPartResults.
-  const vector<TestPartResult>& test_part_results() const {
+  const std::vector<TestPartResult>& test_part_results() const {
     return test_part_results_;
   }
 
   // Gets the vector of TestProperties.
-  const vector<TestProperty>& test_properties() const {
+  const std::vector<TestProperty>& test_properties() const {
     return test_properties_;
   }
 
@@ -17651,9 +17652,9 @@ class GTEST_API_ TestResult {
   internal::Mutex test_properites_mutex_;
 
   // The vector of TestPartResults
-  vector<TestPartResult> test_part_results_;
+  std::vector<TestPartResult> test_part_results_;
   // The vector of TestProperties
-  vector<TestProperty> test_properties_;
+  std::vector<TestProperty> test_properties_;
   // Running count of death tests.
   int death_test_count_;
   // The elapsed time, in milliseconds.
@@ -17763,14 +17764,14 @@ class GTEST_API_ TestInfo {
   }
 
   // These fields are immutable properties of the test.
-  const string test_case_name_;     // Test case name
-  const string name_;               // Test name
+  const std::string test_case_name_;     // Test case name
+  const std::string name_;               // Test name
   // Name of the parameter type, or NULL if this is not a typed or a
   // type-parameterized test.
-  const internal::scoped_ptr<const string> type_param_;
+  const internal::scoped_ptr<const ::std::string> type_param_;
   // Text representation of the value parameter, or NULL if this is not a
   // value-parameterized test.
-  const internal::scoped_ptr<const string> value_param_;
+  const internal::scoped_ptr<const ::std::string> value_param_;
   const internal::TypeId fixture_class_id_;   // ID of the test fixture class
   bool should_run_;                 // True iff this test should run
   bool is_disabled_;                // True iff this test is disabled
@@ -17857,10 +17858,10 @@ class GTEST_API_ TestCase {
   friend class internal::UnitTestImpl;
 
   // Gets the (mutable) vector of TestInfos in this TestCase.
-  vector<TestInfo*>& test_info_list() { return test_info_list_; }
+  std::vector<TestInfo*>& test_info_list() { return test_info_list_; }
 
   // Gets the (immutable) vector of TestInfos in this TestCase.
-  const vector<TestInfo*>& test_info_list() const {
+  const std::vector<TestInfo*>& test_info_list() const {
     return test_info_list_;
   }
 
@@ -17921,17 +17922,17 @@ class GTEST_API_ TestCase {
   void UnshuffleTests();
 
   // Name of the test case.
-  internalstring name_;
+  internal::String name_;
   // Name of the parameter type, or NULL if this is not a typed or a
   // type-parameterized test.
-  const internal::scoped_ptr<const string> type_param_;
+  const internal::scoped_ptr<const ::std::string> type_param_;
   // The vector of TestInfos in their original order.  It owns the
   // elements in the vector.
-  vector<TestInfo*> test_info_list_;
+  std::vector<TestInfo*> test_info_list_;
   // Provides a level of indirection for the test list to allow easy
   // shuffling and restoring the test order.  The i-th element in this
   // vector is the index of the i-th test in the shuffled test list.
-  vector<int> test_indices_;
+  std::vector<int> test_indices_;
   // Pointer to the function that sets up the test case.
   Test::SetUpTestCaseFunc set_up_tc_;
   // Pointer to the function that tears down the test case.
@@ -18241,8 +18242,8 @@ class GTEST_API_ UnitTest {
   void AddTestPartResult(TestPartResult::Type result_type,
                          const char* file_name,
                          int line_number,
-                         const internalstring& message,
-                         const internalstring& os_stack_trace);
+                         const internal::String& message,
+                         const internal::String& os_stack_trace);
 
   // Adds a TestProperty to the current TestResult object. If the result already
   // contains a property with the same key, the value will be updated.
@@ -18265,7 +18266,7 @@ class GTEST_API_ UnitTest {
   friend internal::UnitTestImpl* internal::GetUnitTestImpl();
   friend void internal::ReportFailureInUnknownLocation(
       TestPartResult::Type result_type,
-      const internalstring& message);
+      const internal::String& message);
 
   // Creates an empty UnitTest.
   UnitTest();
@@ -18338,7 +18339,7 @@ namespace internal {
 // of the other operand may affect the format.  This allows us to
 // print a char* as a raw pointer when it is compared against another
 // char*, and print it as a C string when it is compared against an
-// string object, for example.
+// std::string object, for example.
 //
 // The default implementation ignores the type of the other operand.
 // Some specialized versions are used to handle formatting wide or
@@ -18579,10 +18580,10 @@ GTEST_API_ AssertionResult IsNotSubstring(
     const wchar_t* needle, const wchar_t* haystack);
 GTEST_API_ AssertionResult IsSubstring(
     const char* needle_expr, const char* haystack_expr,
-    const string& needle, const string& haystack);
+    const ::std::string& needle, const ::std::string& haystack);
 GTEST_API_ AssertionResult IsNotSubstring(
     const char* needle_expr, const char* haystack_expr,
-    const string& needle, const string& haystack);
+    const ::std::string& needle, const ::std::string& haystack);
 
 #if GTEST_HAS_STD_WSTRING
 GTEST_API_ AssertionResult IsSubstring(
@@ -18616,11 +18617,11 @@ AssertionResult CmpHelperFloatingPointEQ(const char* expected_expression,
     return AssertionSuccess();
   }
 
-  stringstream expected_ss;
+  ::std::stringstream expected_ss;
   expected_ss << std::setprecision(std::numeric_limits<RawType>::digits10 + 2)
               << expected;
 
-  stringstream actual_ss;
+  ::std::stringstream actual_ss;
   actual_ss << std::setprecision(std::numeric_limits<RawType>::digits10 + 2)
             << actual;
 
@@ -18643,11 +18644,11 @@ AssertionResult CmpHelperFloatingPointGE(const char* expected_expression,
     return AssertionSuccess();
   }
 
-  stringstream expected_ss;
+  ::std::stringstream expected_ss;
   expected_ss << std::setprecision(std::numeric_limits<RawType>::digits10 + 2)
               << expected;
 
-  stringstream actual_ss;
+  ::std::stringstream actual_ss;
   actual_ss << std::setprecision(std::numeric_limits<RawType>::digits10 + 2)
             << actual;
 
@@ -18672,11 +18673,11 @@ AssertionResult CmpHelperFloatingPointLE(const char* expected_expression,
     return AssertionSuccess();
   }
 
-  stringstream expected_ss;
+  ::std::stringstream expected_ss;
   expected_ss << std::setprecision(std::numeric_limits<RawType>::digits10 + 2)
               << expected;
 
-  stringstream actual_ss;
+  ::std::stringstream actual_ss;
   actual_ss << std::setprecision(std::numeric_limits<RawType>::digits10 + 2)
             << actual;
 
@@ -18955,7 +18956,7 @@ class TestWithParam : public Test, public WithParamInterface<T> {
 //   ASSERT_PRED_FORMAT2(pred_format, v1, v2)
 //   ...
 //
-// where pred_format is a function or functor that takes N (in the
+// where pred_format is a function or functor that takes n (in the
 // case of ASSERT_PRED_FORMATn) values and their source expression
 // text, and returns a testing::AssertionResult.  See the definition
 // of ASSERT_EQ in gtest.h for an example.
@@ -18967,7 +18968,7 @@ class TestWithParam : public Test, public WithParamInterface<T> {
 //   ASSERT_PRED2(pred, v1, v2)
 //   ...
 //
-// where pred is an N-ary function or functor that returns bool,
+// where pred is an n-ary function or functor that returns bool,
 // and the values v1, v2, ..., must support the << operator for
 // streaming to std::ostream.
 //
@@ -19000,7 +19001,7 @@ AssertionResult AssertPred1Helper(const char* pred_text,
 
   return AssertionFailure() << pred_text << "("
                             << e1 << ") evaluates to false, where"
-                            << "\N" << e1 << " evaluates to " << v1;
+                            << "\n" << e1 << " evaluates to " << v1;
 }
 
 // Internal macro for implementing {EXPECT|ASSERT}_PRED_FORMAT1.
@@ -19045,8 +19046,8 @@ AssertionResult AssertPred2Helper(const char* pred_text,
   return AssertionFailure() << pred_text << "("
                             << e1 << ", "
                             << e2 << ") evaluates to false, where"
-                            << "\N" << e1 << " evaluates to " << v1
-                            << "\N" << e2 << " evaluates to " << v2;
+                            << "\n" << e1 << " evaluates to " << v1
+                            << "\n" << e2 << " evaluates to " << v2;
 }
 
 // Internal macro for implementing {EXPECT|ASSERT}_PRED_FORMAT2.
@@ -19097,9 +19098,9 @@ AssertionResult AssertPred3Helper(const char* pred_text,
                             << e1 << ", "
                             << e2 << ", "
                             << e3 << ") evaluates to false, where"
-                            << "\N" << e1 << " evaluates to " << v1
-                            << "\N" << e2 << " evaluates to " << v2
-                            << "\N" << e3 << " evaluates to " << v3;
+                            << "\n" << e1 << " evaluates to " << v1
+                            << "\n" << e2 << " evaluates to " << v2
+                            << "\n" << e3 << " evaluates to " << v3;
 }
 
 // Internal macro for implementing {EXPECT|ASSERT}_PRED_FORMAT3.
@@ -19156,10 +19157,10 @@ AssertionResult AssertPred4Helper(const char* pred_text,
                             << e2 << ", "
                             << e3 << ", "
                             << e4 << ") evaluates to false, where"
-                            << "\N" << e1 << " evaluates to " << v1
-                            << "\N" << e2 << " evaluates to " << v2
-                            << "\N" << e3 << " evaluates to " << v3
-                            << "\N" << e4 << " evaluates to " << v4;
+                            << "\n" << e1 << " evaluates to " << v1
+                            << "\n" << e2 << " evaluates to " << v2
+                            << "\n" << e3 << " evaluates to " << v3
+                            << "\n" << e4 << " evaluates to " << v4;
 }
 
 // Internal macro for implementing {EXPECT|ASSERT}_PRED_FORMAT4.
@@ -19222,11 +19223,11 @@ AssertionResult AssertPred5Helper(const char* pred_text,
                             << e3 << ", "
                             << e4 << ", "
                             << e5 << ") evaluates to false, where"
-                            << "\N" << e1 << " evaluates to " << v1
-                            << "\N" << e2 << " evaluates to " << v2
-                            << "\N" << e3 << " evaluates to " << v3
-                            << "\N" << e4 << " evaluates to " << v4
-                            << "\N" << e5 << " evaluates to " << v5;
+                            << "\n" << e1 << " evaluates to " << v1
+                            << "\n" << e2 << " evaluates to " << v2
+                            << "\n" << e3 << " evaluates to " << v3
+                            << "\n" << e4 << " evaluates to " << v4
+                            << "\n" << e5 << " evaluates to " << v5;
 }
 
 // Internal macro for implementing {EXPECT|ASSERT}_PRED_FORMAT5.
@@ -19319,7 +19320,7 @@ AssertionResult AssertPred5Helper(const char* pred_text,
 #define EXPECT_NE(expected, actual) \
   EXPECT_PRED_FORMAT2(::testing::internal::CmpHelperNE, expected, actual)
 #define EXPECT_LE(val1, val2) \
-  if (!std::is_same<decltype(val1), half_fp>::value) \
+  if (!std::is_same<decltype(val1), half_float::half>::value) \
     EXPECT_PRED_FORMAT2(::testing::internal::CmpHelperLE, val1, val2); \
   else \
     EXPECT_FLOAT_LE(val1, val2)
@@ -19327,7 +19328,7 @@ AssertionResult AssertPred5Helper(const char* pred_text,
 #define EXPECT_LT(val1, val2) \
   EXPECT_PRED_FORMAT2(::testing::internal::CmpHelperLT, val1, val2)
 #define EXPECT_GE(val1, val2) \
-  if (!std::is_same<decltype(val1), half_fp>::value) \
+  if (!std::is_same<decltype(val1), half_float::half>::value) \
     EXPECT_PRED_FORMAT2(::testing::internal::CmpHelperGE, val1, val2); \
   else \
     EXPECT_FLOAT_GE(val1, val2)

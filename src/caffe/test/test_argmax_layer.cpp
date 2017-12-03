@@ -39,7 +39,7 @@ TYPED_TEST_CASE(ArgMaxLayerTest, TestDtypes);
 
 TYPED_TEST(ArgMaxLayerTest, TestSetup) {
   LayerParameter layer_param;
-  ArgMaxLayer<TypeParam> layer(layer_param);
+  ArgMaxLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->shape(0), this->blob_bottom_->shape(0));
   EXPECT_EQ(this->blob_top_->channels(), 1);
@@ -49,7 +49,7 @@ TYPED_TEST(ArgMaxLayerTest, TestSetupMaxVal) {
   LayerParameter layer_param;
   ArgMaxParameter* argmax_param = layer_param.mutable_argmax_param();
   argmax_param->set_out_max_val(true);
-  ArgMaxLayer<TypeParam> layer(layer_param);
+  ArgMaxLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->shape(0), this->blob_bottom_->shape(0));
   EXPECT_EQ(this->blob_top_->channels(), 2);
@@ -59,7 +59,7 @@ TYPED_TEST(ArgMaxLayerTest, TestSetupAxis) {
   LayerParameter layer_param;
   ArgMaxParameter* argmax_param = layer_param.mutable_argmax_param();
   argmax_param->set_axis(0);
-  ArgMaxLayer<TypeParam> layer(layer_param);
+  ArgMaxLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->shape(0), argmax_param->top_k());
   EXPECT_EQ(this->blob_top_->shape(1), this->blob_bottom_->shape(0));
@@ -71,7 +71,7 @@ TYPED_TEST(ArgMaxLayerTest, TestSetupAxisNegativeIndexing) {
   LayerParameter layer_param;
   ArgMaxParameter* argmax_param = layer_param.mutable_argmax_param();
   argmax_param->set_axis(-2);
-  ArgMaxLayer<TypeParam> layer(layer_param);
+  ArgMaxLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->shape(0), this->blob_bottom_->shape(0));
   EXPECT_EQ(this->blob_top_->shape(1), this->blob_bottom_->shape(1));
@@ -84,7 +84,7 @@ TYPED_TEST(ArgMaxLayerTest, TestSetupAxisMaxVal) {
   ArgMaxParameter* argmax_param = layer_param.mutable_argmax_param();
   argmax_param->set_axis(2);
   argmax_param->set_out_max_val(true);
-  ArgMaxLayer<TypeParam> layer(layer_param);
+  ArgMaxLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->shape(0), this->blob_bottom_->shape(0));
   EXPECT_EQ(this->blob_top_->shape(1), this->blob_bottom_->shape(1));
@@ -94,7 +94,7 @@ TYPED_TEST(ArgMaxLayerTest, TestSetupAxisMaxVal) {
 
 TYPED_TEST(ArgMaxLayerTest, TestCPU) {
   LayerParameter layer_param;
-  ArgMaxLayer<TypeParam> layer(layer_param);
+  ArgMaxLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   // Now, check values
@@ -119,7 +119,7 @@ TYPED_TEST(ArgMaxLayerTest, TestCPUMaxVal) {
   LayerParameter layer_param;
   ArgMaxParameter* argmax_param = layer_param.mutable_argmax_param();
   argmax_param->set_out_max_val(true);
-  ArgMaxLayer<TypeParam> layer(layer_param);
+  ArgMaxLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   // Now, check values
@@ -145,7 +145,7 @@ TYPED_TEST(ArgMaxLayerTest, TestCPUTopK) {
   LayerParameter layer_param;
   ArgMaxParameter* argmax_param = layer_param.mutable_argmax_param();
   argmax_param->set_top_k(this->top_k_);
-  ArgMaxLayer<TypeParam> layer(layer_param);
+  ArgMaxLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   // Now, check values
@@ -176,7 +176,7 @@ TYPED_TEST(ArgMaxLayerTest, TestCPUMaxValTopK) {
   ArgMaxParameter* argmax_param = layer_param.mutable_argmax_param();
   argmax_param->set_out_max_val(true);
   argmax_param->set_top_k(this->top_k_);
-  ArgMaxLayer<TypeParam> layer(layer_param);
+  ArgMaxLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   // Now, check values
@@ -207,7 +207,7 @@ TYPED_TEST(ArgMaxLayerTest, TestCPUAxis) {
   LayerParameter layer_param;
   ArgMaxParameter* argmax_param = layer_param.mutable_argmax_param();
   argmax_param->set_axis(0);
-  ArgMaxLayer<TypeParam> layer(layer_param);
+  ArgMaxLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   // Now, check values
@@ -234,7 +234,7 @@ TYPED_TEST(ArgMaxLayerTest, TestCPUAxisTopK) {
   ArgMaxParameter* argmax_param = layer_param.mutable_argmax_param();
   argmax_param->set_axis(2);
   argmax_param->set_top_k(this->top_k_);
-  ArgMaxLayer<TypeParam> layer(layer_param);
+  ArgMaxLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   // Now, check values
@@ -268,7 +268,7 @@ TYPED_TEST(ArgMaxLayerTest, TestCPUAxisMaxValTopK) {
   argmax_param->set_axis(-1);
   argmax_param->set_top_k(this->top_k_);
   argmax_param->set_out_max_val(true);
-  ArgMaxLayer<TypeParam> layer(layer_param);
+  ArgMaxLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   // Now, check values

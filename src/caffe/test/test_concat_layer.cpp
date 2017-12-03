@@ -61,7 +61,7 @@ TYPED_TEST(ConcatLayerTest, TestSetupNum) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   layer_param.mutable_concat_param()->set_axis(0);
-  ConcatLayer<Dtype> layer(layer_param);
+  ConcatLayer<Dtype, Dtype, Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_1_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(),
       this->blob_bottom_0_->num() + this->blob_bottom_2_->num());
@@ -73,7 +73,7 @@ TYPED_TEST(ConcatLayerTest, TestSetupNum) {
 TYPED_TEST(ConcatLayerTest, TestSetupChannels) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  ConcatLayer<Dtype> layer(layer_param);
+  ConcatLayer<Dtype, Dtype, Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_0_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_0_->num());
   EXPECT_EQ(this->blob_top_->channels(),
@@ -85,7 +85,7 @@ TYPED_TEST(ConcatLayerTest, TestSetupChannels) {
 TYPED_TEST(ConcatLayerTest, TestSetupChannelsNegativeIndexing) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  ConcatLayer<Dtype> layer(layer_param);
+  ConcatLayer<Dtype, Dtype, Dtype> layer(layer_param);
   // "channels" index is the third one from the end -- test negative indexing
   // by setting axis to -3 and checking that we get the same results as above in
   // TestSetupChannels.
@@ -101,7 +101,7 @@ TYPED_TEST(ConcatLayerTest, TestSetupChannelsNegativeIndexing) {
 TYPED_TEST(ConcatLayerTest, TestForwardTrivial) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  ConcatLayer<Dtype> layer(layer_param);
+  ConcatLayer<Dtype, Dtype, Dtype> layer(layer_param);
   this->blob_bottom_vec_0_.resize(1);
   layer.SetUp(this->blob_bottom_vec_0_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_0_, this->blob_top_vec_);
@@ -115,7 +115,7 @@ TYPED_TEST(ConcatLayerTest, TestForwardNum) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   layer_param.mutable_concat_param()->set_axis(0);
-  ConcatLayer<Dtype> layer(layer_param);
+  ConcatLayer<Dtype, Dtype, Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_1_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_1_, this->blob_top_vec_);
   for (int_tp n = 0; n < this->blob_bottom_vec_1_[0]->num(); ++n) {
@@ -143,7 +143,7 @@ TYPED_TEST(ConcatLayerTest, TestForwardNum) {
 TYPED_TEST(ConcatLayerTest, TestForwardChannels) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  ConcatLayer<Dtype> layer(layer_param);
+  ConcatLayer<Dtype, Dtype, Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_0_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_0_, this->blob_top_vec_);
   for (int_tp n = 0; n < this->blob_top_->num(); ++n) {
@@ -169,7 +169,7 @@ TYPED_TEST(ConcatLayerTest, TestForwardChannels) {
 TYPED_TEST(ConcatLayerTest, TestGradientTrivial) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  ConcatLayer<Dtype> layer(layer_param);
+  ConcatLayer<Dtype, Dtype, Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-2);
   this->blob_bottom_vec_0_.resize(1);
   checker.CheckGradientEltwise(&layer, this->blob_bottom_vec_0_,
@@ -180,7 +180,7 @@ TYPED_TEST(ConcatLayerTest, TestGradientNum) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   layer_param.mutable_concat_param()->set_axis(0);
-  ConcatLayer<Dtype> layer(layer_param);
+  ConcatLayer<Dtype, Dtype, Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-2);
   checker.CheckGradient(&layer, this->blob_bottom_vec_1_,
     this->blob_top_vec_);
@@ -189,7 +189,7 @@ TYPED_TEST(ConcatLayerTest, TestGradientNum) {
 TYPED_TEST(ConcatLayerTest, TestGradientChannels) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  ConcatLayer<Dtype> layer(layer_param);
+  ConcatLayer<Dtype, Dtype, Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-2);
   checker.CheckGradient(&layer, this->blob_bottom_vec_0_,
     this->blob_top_vec_);
@@ -198,7 +198,7 @@ TYPED_TEST(ConcatLayerTest, TestGradientChannels) {
 TYPED_TEST(ConcatLayerTest, TestGradientChannelsBottomOneOnly) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  ConcatLayer<Dtype> layer(layer_param);
+  ConcatLayer<Dtype, Dtype, Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-2);
   checker.CheckGradient(&layer, this->blob_bottom_vec_0_,
     this->blob_top_vec_, 1);

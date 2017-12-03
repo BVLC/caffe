@@ -16,6 +16,8 @@
 #include "caffe/util/format.hpp"
 #include "caffe/util/math_functions.hpp"
 
+using std::string;
+
 #ifdef USE_LEVELDB
 #include "leveldb/db.h"
 

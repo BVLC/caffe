@@ -64,6 +64,18 @@ bool Device::CheckCapability(string cap) {
   return false;
 }
 
+bool Device::CheckZeroCopy(vptr<const void> gpu_ptr, void* cpu_ptr,
+                                       uint_tp size) {
+  NOT_IMPLEMENTED;
+}
+
+void Device::get_threads(const vector<size_t>* work_size,
+                         vector<size_t>* local,
+                         vector<size_t>* group,
+                         DeviceKernel* kernel,
+                         bool auto_select) {
+  NOT_IMPLEMENTED;
+}
 
 bool Device::CheckType(string type) {
   if (type.compare("CPU") == 1)

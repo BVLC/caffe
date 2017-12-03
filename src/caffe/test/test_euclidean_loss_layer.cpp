@@ -41,7 +41,7 @@ class EuclideanLossLayerTest : public MultiDeviceTest<TypeParam> {
     // Get the loss without a specified objective weight -- should be
     // equivalent to explicitly specifying a weight of 1.
     LayerParameter layer_param;
-    EuclideanLossLayer<Dtype> layer_weight_1(layer_param);
+    EuclideanLossLayer<Dtype, Dtype, Dtype> layer_weight_1(layer_param);
     layer_weight_1.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     const Dtype loss_weight_1 =
         layer_weight_1.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -50,7 +50,7 @@ class EuclideanLossLayerTest : public MultiDeviceTest<TypeParam> {
     // scaled appropriately.
     const Dtype kLossWeight = 3.7;
     layer_param.add_loss_weight(kLossWeight);
-    EuclideanLossLayer<Dtype> layer_weight_2(layer_param);
+    EuclideanLossLayer<Dtype, Dtype, Dtype> layer_weight_2(layer_param);
     layer_weight_2.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     const Dtype loss_weight_2 =
         layer_weight_2.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -81,7 +81,7 @@ TYPED_TEST(EuclideanLossLayerTest, TestGradient) {
   LayerParameter layer_param;
   const Dtype kLossWeight = 3.7;
   layer_param.add_loss_weight(kLossWeight);
-  EuclideanLossLayer<Dtype> layer(layer_param);
+  EuclideanLossLayer<Dtype, Dtype, Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   GradientChecker<Dtype> checker(1e-2, 1e-2, 1701);
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,

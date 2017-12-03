@@ -67,7 +67,7 @@ TYPED_TEST_CASE(FilterLayerTest, TestDtypesAndDevices);
 TYPED_TEST(FilterLayerTest, TestReshape) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  FilterLayer<Dtype> layer(layer_param);
+  FilterLayer<Dtype, Dtype, Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Reshape(this->blob_bottom_vec_, this->blob_top_vec_);
   // In the test first and last items should have been filtered
@@ -87,7 +87,7 @@ TYPED_TEST(FilterLayerTest, TestReshape) {
 TYPED_TEST(FilterLayerTest, TestForward) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  FilterLayer<Dtype> layer(layer_param);
+  FilterLayer<Dtype, Dtype, Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Reshape(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -115,7 +115,7 @@ TYPED_TEST(FilterLayerTest, TestForward) {
 TYPED_TEST(FilterLayerTest, TestGradient) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  FilterLayer<Dtype> layer(layer_param);
+  FilterLayer<Dtype, Dtype, Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-3);
   // check only input 0 (data) because labels and selector
   // don't need backpropagation
