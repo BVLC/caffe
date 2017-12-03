@@ -16,23 +16,22 @@ namespace bp = boost::python;
 #include "caffe/caffe.hpp"
 #include "caffe/backend/device.hpp"
 #include "caffe/util/signal_handler.h"
+#include "caffe/util/half_fp.hpp"
 
-#ifdef USE_LIBDNN
-#include "caffe/layers/libdnn_conv_layer.hpp"
-#endif
-
+using caffe::BlobBase;
 using caffe::Blob;
 using caffe::Caffe;
 using caffe::Net;
+using caffe::LayerBase;
 using caffe::Layer;
 using caffe::Solver;
 using caffe::Timer;
-using caffe::device;
+using caffe::Device;
 
-using string;
+using std::string;
 using std::ostringstream;
-using shared_ptr;
-using vector;
+using std::shared_ptr;
+using std::vector;
 
 DEFINE_string(gpu, "",
     "Optional; run in GPU mode on given device IDs separated by ','."
@@ -68,7 +67,7 @@ DEFINE_bool(lt, false,
 
 // A simple registry for caffe commands.
 typedef int (*BrewFunction)();
-typedef std::map<caffestring, BrewFunction> BrewMap;
+typedef std::map<string, BrewFunction> BrewMap;
 BrewMap g_brew_map;
 
 #define RegisterBrewFunction(func) \
@@ -82,7 +81,7 @@ class __Registerer_##func { \
 __Registerer_##func g_registerer_##func; \
 }
 
-static BrewFunction GetBrewFunction(const caffestring& name) {
+static BrewFunction GetBrewFunction(const string& name) {
   if (g_brew_map.count(name)) {
     return g_brew_map[name];
   } else {
@@ -176,7 +175,7 @@ RegisterBrewFunction(device_query);
 
 // Load the weights from the specified caffemodel(s) into the train and
 // test nets.
-void CopyLayers(caffe::Solver<half>* solver, const string& model_list) {
+void CopyLayers(caffe::Solver<half_fp>* solver, const string& model_list) {
   vector<string> model_names;
   boost::split(model_names, model_list, boost::is_any_of(",") );
   for (int i = 0; i < model_names.size(); ++i) {
@@ -261,8 +260,9 @@ int train() {
         GetRequestedAction(FLAGS_sigint_effect),
         GetRequestedAction(FLAGS_sighup_effect));
 
-  shared_ptr<caffe::Solver<half> >
-      solver(caffe::SolverRegistry<half>::CreateSolver(solver_param));
+  shared_ptr<caffe::Solver<half_fp> >
+      solver(caffe::SolverRegistry<half_fp>::CreateSolver(solver_param,
+                                                    Caffe::GetDefaultDevice()));
 
   solver->SetActionFunction(signal_handler.GetActionFunction());
 
@@ -322,24 +322,25 @@ int test() {
     Caffe::set_mode(Caffe::CPU);
   }
   // Instantiate the caffe net.
-  Net<half> caffe_net(FLAGS_model, caffe::TEST,
+  Net<half_fp> caffe_net(FLAGS_model, caffe::TEST,
                        Caffe::GetDefaultDevice(), FLAGS_level, &stages);
   caffe_net.CopyTrainedLayersFrom(FLAGS_weights);
   LOG(INFO) << "Running for " << FLAGS_iterations << " iterations.";
 
   vector<int> test_score_output_id;
-  vector<half> test_score;
-  half loss = 0;
+  vector<half_fp> test_score;
+  half_fp loss = 0;
   for (int_tp i = 0; i < FLAGS_iterations; ++i) {
-    half iter_loss;
-    const vector<Blob<half>*>& result =
+    half_fp iter_loss;
+    const vector<BlobBase*> result =
         caffe_net.Forward(&iter_loss);
     loss += iter_loss;
     int_tp idx = 0;
     for (int_tp j = 0; j < result.size(); ++j) {
-      const half* result_vec = result[j]->cpu_data();
+      const half_fp* result_vec =
+          static_cast<Blob<half_fp>*>(result[j])->cpu_data();
       for (int_tp k = 0; k < result[j]->count(); ++k, ++idx) {
-        const half score = result_vec[k];
+        const half_fp score = result_vec[k];
         if (i == 0) {
           test_score.push_back(score);
           test_score_output_id.push_back(j);
@@ -357,10 +358,10 @@ int test() {
   for (int_tp i = 0; i < test_score.size(); ++i) {
     const string& output_name = caffe_net.blob_names()[
         caffe_net.output_blob_indices()[test_score_output_id[i]]];
-    const half loss_weight = caffe_net.blob_loss_weights()[
+    const half_fp loss_weight = caffe_net.blob_loss_weights()[
         caffe_net.output_blob_indices()[test_score_output_id[i]]];
     std::ostringstream loss_msg_stream;
-    const half mean_score = test_score[i] / FLAGS_iterations;
+    const half_fp mean_score = test_score[i] / FLAGS_iterations;
     if (loss_weight) {
       loss_msg_stream << " (* " << loss_weight
                       << " = " << loss_weight * mean_score << " loss)";
@@ -402,7 +403,7 @@ int time() {
     Caffe::set_mode(Caffe::CPU);
   }
   // Instantiate the caffe net.
-  Net<half> caffe_net(FLAGS_model, phase,
+  Net<half_fp> caffe_net(FLAGS_model, phase,
                        Caffe::GetDefaultDevice(), FLAGS_level, &stages);
 
   // Do a clean forward and backward pass, so that memory allocation are done
@@ -410,7 +411,7 @@ int time() {
   LOG(INFO) << "Performing Forward";
   // Note that for the speed benchmark, we will assume that the network does
   // not take any input blobs.
-  half initial_loss;
+  half_fp initial_loss;
   caffe_net.Forward(&initial_loss);
   LOG(INFO) << "Initial loss: " << initial_loss;
   if (phase == caffe::TRAIN) {
@@ -418,9 +419,9 @@ int time() {
     caffe_net.Backward();
   }
 
-  const vector<shared_ptr<Layer<half> > >& layers = caffe_net.layers();
-  const vector<vector<Blob<half>*> >& bottom_vecs = caffe_net.bottom_vecs();
-  const vector<vector<Blob<half>*> >& top_vecs = caffe_net.top_vecs();
+  const vector<shared_ptr<LayerBase > >& layers = caffe_net.layers();
+  const vector<vector<BlobBase*> >& bottom_vecs = caffe_net.bottom_vecs();
+  const vector<vector<BlobBase*> >& top_vecs = caffe_net.top_vecs();
   const vector<vector<bool> >& bottom_need_backward =
       caffe_net.bottom_need_backward();
   LOG(INFO) << "*** Benchmark begins ***";
@@ -444,7 +445,7 @@ int time() {
         timer.Start();
       }
 
-      layers[i]->Forward(bottom_vecs[i], top_vecs[i]);
+      layers[i]->Forward(bottom_vecs[i], top_vecs[i], nullptr);
 
       if (FLAGS_lt) {
         Caffe::Synchronize(Caffe::GetDefaultDevice()->id());
@@ -471,7 +472,7 @@ int time() {
   if (FLAGS_lt) {
     LOG(INFO) << "Average time per layer: ";
     for (int_tp i = 0; i < layers.size(); ++i) {
-      const caffestring& layername = layers[i]->layer_param().name();
+      const string& layername = layers[i]->layer_param().name();
       LOG(INFO) << std::setfill(' ') << std::setw(10) << layername <<
         "\tforward: " << forward_time_per_layer[i] / 1000 /
         FLAGS_iterations << " ms.";
@@ -532,18 +533,18 @@ int autotune() {
         GetRequestedAction(FLAGS_sigint_effect),
         GetRequestedAction(FLAGS_sighup_effect));
 
-  Net<half> net(FLAGS_model, caffe::TRAIN, Caffe::GetDefaultDevice());
+  Net<half_fp> net(FLAGS_model, caffe::TRAIN, Caffe::GetDefaultDevice());
 
   for (int i = 0; i < net.layers().size(); ++i) {
 #ifdef USE_LIBDNN
-    shared_ptr<caffe::LibDNNConvolutionLayer<half> > layer =
-        boost::dynamic_pointer_cast<caffe::LibDNNConvolutionLayer<half> >
+    shared_ptr<caffe::LibDNNConvolutionLayer<half_fp> > layer =
+        boost::dynamic_pointer_cast<caffe::LibDNNConvolutionLayer<half_fp> >
                 (net.layers()[i]);
     if (layer.get() != nullptr) {
-      half* top_data = net.top_vecs()[i][0]->mutable_gpu_data();
-      half* top_diff = net.top_vecs()[i][0]->mutable_gpu_diff();
-      half* bottom_data = net.top_vecs()[i][0]->mutable_gpu_data();
-      half* bottom_diff = net.top_vecs()[i][0]->mutable_gpu_diff();
+      half_fp* top_data = net.top_vecs()[i][0]->mutable_gpu_data();
+      half_fp* top_diff = net.top_vecs()[i][0]->mutable_gpu_diff();
+      half_fp* bottom_data = net.top_vecs()[i][0]->mutable_gpu_data();
+      half_fp* bottom_diff = net.top_vecs()[i][0]->mutable_gpu_diff();
       int_tp batch_size = net.top_vecs()[i][0]->shape(0);
       layer->Tune(top_data, top_diff, bottom_data, bottom_diff, batch_size);
     }
@@ -576,7 +577,7 @@ int main(int argc, char** argv) {
 #ifdef WITH_PYTHON_LAYER
     try {
 #endif
-      return GetBrewFunction(caffestring(argv[1]))();
+      return GetBrewFunction(string(argv[1]))();
 #ifdef WITH_PYTHON_LAYER
     } catch (bp::error_already_set) {
       PyErr_Print();

@@ -137,10 +137,10 @@ void caffe_conv(const Blob<Dtype>* in, ConvolutionParameter* conv_param,
   }
 }
 #ifdef USE_HALF
-template void caffe_conv(const Blob<half>* in,
+template void caffe_conv(const Blob<half_fp>* in,
     ConvolutionParameter* conv_param,
-    const vector<shared_ptr<Blob<half> > >& weights,
-    Blob<half>* out);
+    const vector<shared_ptr<Blob<half_fp> > >& weights,
+    Blob<half_fp>* out);
 #endif
 template void caffe_conv(const Blob<float>* in,
     ConvolutionParameter* conv_param,
@@ -209,7 +209,7 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, TestSetup_Spatial) {
     convolution_param->set_num_output(4);
     this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
     this->blob_top_vec_.push_back(this->blob_top_2_);
-    shared_ptr<Layer<Dtype> > layer(
+    shared_ptr<Layer<Dtype, Dtype, Dtype> > layer(
         new ConvolutionLayerSpatial<Dtype>(layer_param));
     layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     EXPECT_EQ(this->blob_top_->num(), 2);
@@ -252,7 +252,7 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, TestSimpleConvolution_Spatial) {
     convolution_param->mutable_weight_filler()->set_type("gaussian");
     convolution_param->mutable_bias_filler()->set_type("constant");
     convolution_param->mutable_bias_filler()->set_value(0.1);
-    shared_ptr<Layer<Dtype> > layer(
+    shared_ptr<Layer<Dtype, Dtype, Dtype> > layer(
         new ConvolutionLayerSpatial<Dtype>(layer_param));
     layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -294,7 +294,7 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, TestSimpleConvolution_Spatial3x3) {
     convolution_param->mutable_weight_filler()->set_type("gaussian");
     convolution_param->mutable_bias_filler()->set_type("constant");
     convolution_param->mutable_bias_filler()->set_value(0.1);
-    shared_ptr<Layer<Dtype> > layer(
+    shared_ptr<Layer<Dtype, Dtype, Dtype> > layer(
         new ConvolutionLayerSpatial<Dtype>(layer_param));
     layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -339,7 +339,7 @@ TYPED_TEST(ConvolutionLayerTest_Spatial,
     convolution_param->mutable_weight_filler()->set_type("gaussian");
     convolution_param->mutable_bias_filler()->set_type("constant");
     convolution_param->mutable_bias_filler()->set_value(0.1);
-    shared_ptr<Layer<Dtype> > layer(
+    shared_ptr<Layer<Dtype, Dtype, Dtype> > layer(
         new ConvolutionLayerSpatial<Dtype>(layer_param));
     layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -394,7 +394,7 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, TestDilatedConvolution) {
     convolution_param->mutable_weight_filler()->set_type("gaussian");
     convolution_param->mutable_bias_filler()->set_type("constant");
     convolution_param->mutable_bias_filler()->set_value(0.1);
-    shared_ptr<Layer<Dtype> > layer(
+    shared_ptr<Layer<Dtype, Dtype, Dtype> > layer(
         new ConvolutionLayerSpatial<Dtype>(layer_param));
     layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -438,7 +438,7 @@ TYPED_TEST(ConvolutionLayerTest_Spatial,
     convolution_param->mutable_weight_filler()->set_type("gaussian");
     convolution_param->mutable_bias_filler()->set_type("constant");
     convolution_param->mutable_bias_filler()->set_value(0);
-    shared_ptr<Layer<Dtype> > layer(
+    shared_ptr<Layer<Dtype, Dtype, Dtype> > layer(
         new ConvolutionLayerSpatial<Dtype>(layer_param));
     layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -484,7 +484,7 @@ TYPED_TEST(ConvolutionLayerTest_Spatial,
     convolution_param->mutable_weight_filler()->set_type("gaussian");
     convolution_param->mutable_bias_filler()->set_type("constant");
     convolution_param->mutable_bias_filler()->set_value(0.7);
-    shared_ptr<Layer<Dtype> > layer(
+    shared_ptr<Layer<Dtype, Dtype, Dtype> > layer(
         new ConvolutionLayerSpatial<Dtype>(layer_param));
     layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -529,7 +529,7 @@ TYPED_TEST(ConvolutionLayerTest_Spatial,
     convolution_param->mutable_weight_filler()->set_type("gaussian");
     convolution_param->mutable_bias_filler()->set_type("constant");
     convolution_param->mutable_bias_filler()->set_value(0);
-    shared_ptr<Layer<Dtype> > layer(
+    shared_ptr<Layer<Dtype, Dtype, Dtype> > layer(
         new ConvolutionLayerSpatial<Dtype>(layer_param));
     layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -574,7 +574,7 @@ TYPED_TEST(ConvolutionLayerTest_Spatial,
     convolution_param->mutable_weight_filler()->set_type("gaussian");
     convolution_param->mutable_bias_filler()->set_type("constant");
     convolution_param->mutable_bias_filler()->set_value(0.7);
-    shared_ptr<Layer<Dtype> > layer(
+    shared_ptr<Layer<Dtype, Dtype, Dtype> > layer(
         new ConvolutionLayerSpatial<Dtype>(layer_param));
     layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -619,7 +619,7 @@ TYPED_TEST(ConvolutionLayerTest_Spatial,
     convolution_param->mutable_weight_filler()->set_type("gaussian");
     convolution_param->mutable_bias_filler()->set_type("constant");
     convolution_param->mutable_bias_filler()->set_value(0.7);
-    shared_ptr<Layer<Dtype> > layer(
+    shared_ptr<Layer<Dtype, Dtype, Dtype> > layer(
         new ConvolutionLayerSpatial<Dtype>(layer_param));
     layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -663,7 +663,7 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, TestSimpleConvolution_Spatial5x5) {
     convolution_param->mutable_weight_filler()->set_type("gaussian");
     convolution_param->mutable_bias_filler()->set_type("constant");
     convolution_param->mutable_bias_filler()->set_value(0.7);
-    shared_ptr<Layer<Dtype> > layer(
+    shared_ptr<Layer<Dtype, Dtype, Dtype> > layer(
         new ConvolutionLayerSpatial<Dtype>(layer_param));
     layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -703,7 +703,7 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, Test1x1Convolution_Spatial) {
     convolution_param->mutable_weight_filler()->set_type("gaussian");
     convolution_param->mutable_bias_filler()->set_type("constant");
     convolution_param->mutable_bias_filler()->set_value(0.1);
-    shared_ptr<Layer<Dtype> > layer(
+    shared_ptr<Layer<Dtype, Dtype, Dtype> > layer(
         new ConvolutionLayerSpatial<Dtype>(layer_param));
     layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -737,7 +737,7 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, TestSimpleConvolutionGroup_Spatial) {
     convolution_param->mutable_weight_filler()->set_type("gaussian");
     convolution_param->mutable_bias_filler()->set_type("constant");
     convolution_param->mutable_bias_filler()->set_value(0.1);
-    shared_ptr<Layer<Dtype> > layer(
+    shared_ptr<Layer<Dtype, Dtype, Dtype> > layer(
         new ConvolutionLayerSpatial<Dtype>(layer_param));
     layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -779,7 +779,7 @@ TYPED_TEST(ConvolutionLayerTest_Spatial, TestSobelConvolution_Spatial) {
     convolution_param->add_stride(2);
     convolution_param->set_num_output(1);
     convolution_param->set_bias_term(false);
-    shared_ptr<Layer<Dtype> > layer(
+    shared_ptr<Layer<Dtype, Dtype, Dtype> > layer(
         new ConvolutionLayerSpatial<Dtype>(layer_param));
     layer->blobs().resize(1);
     layer->blobs()[0].reset(new Blob<Dtype>(1, 3, 3, 3));

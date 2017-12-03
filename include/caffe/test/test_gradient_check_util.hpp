@@ -35,13 +35,13 @@ class GradientChecker {
   // layers.
   // Note that after the gradient check, we do not guarantee that the data
   // stored in the layer parameters and the blobs are unchanged.
-  void CheckGradient(Layer<Dtype>* layer, const vector<Blob<Dtype>*>& bottom,
+  void CheckGradient(Layer<Dtype, Dtype, Dtype>* layer, const vector<Blob<Dtype>*>& bottom,
                      const vector<Blob<Dtype>*>& top,
                      int_tp check_bottom = -1) {
     layer->SetUp(bottom, top);
     CheckGradientSingle(layer, bottom, top, check_bottom, -1, -1);
   }
-  void CheckGradientExhaustive(Layer<Dtype>* layer,
+  void CheckGradientExhaustive(Layer<Dtype, Dtype, Dtype>* layer,
                                const vector<Blob<Dtype>*>& bottom,
                                const vector<Blob<Dtype>*>& top,
                                int_tp check_bottom = -1);
@@ -49,7 +49,7 @@ class GradientChecker {
   // CheckGradientEltwise can be used to test layers that perform element-wise
   // computation only (e.g., neuron layers) -- where (d y_i) / (d x_j) = 0 when
   // i != j.
-  void CheckGradientEltwise(Layer<Dtype>* layer,
+  void CheckGradientEltwise(Layer<Dtype, Dtype, Dtype>* layer,
                             const vector<Blob<Dtype>*>& bottom,
                             const vector<Blob<Dtype>*>& top);
 
@@ -57,7 +57,7 @@ class GradientChecker {
   // blob(s).  If check_bottom = i >= 0, check only the ith bottom Blob.
   // If check_bottom == -1, check everything -- all bottom Blobs and all
   // param Blobs.  Otherwise (if check_bottom < -1), check only param Blobs.
-  void CheckGradientSingle(Layer<Dtype>* layer,
+  void CheckGradientSingle(Layer<Dtype, Dtype, Dtype>* layer,
                            const vector<Blob<Dtype>*>& bottom,
                            const vector<Blob<Dtype>*>& top, int_tp check_bottom,
                            int_tp top_id,
@@ -71,7 +71,7 @@ class GradientChecker {
                         const vector<Blob<Dtype>*>& input);
 
  protected:
-  Dtype GetObjAndGradient(const Layer<Dtype>& layer,
+  Dtype GetObjAndGradient(const Layer<Dtype, Dtype, Dtype>& layer,
                           const vector<Blob<Dtype>*>& top, int_tp top_id = -1,
                           int_tp top_data_id = -1);
   Dtype stepsize_;
@@ -83,7 +83,7 @@ class GradientChecker {
 
 template<typename Dtype>
 void GradientChecker<Dtype>::CheckGradientSingle(
-    Layer<Dtype>* layer, const vector<Blob<Dtype>*>& bottom,
+    Layer<Dtype, Dtype, Dtype>* layer, const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top, int_tp check_bottom, int_tp top_id,
     int_tp top_data_id,
     bool element_wise) {
@@ -200,7 +200,7 @@ void GradientChecker<Dtype>::CheckGradientSingle(
 
 template<typename Dtype>
 void GradientChecker<Dtype>::CheckGradientExhaustive(
-    Layer<Dtype>* layer, const vector<Blob<Dtype>*>& bottom,
+    Layer<Dtype, Dtype, Dtype>* layer, const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top, int_tp check_bottom) {
   layer->SetUp(bottom, top);
   CHECK_GT(top.size(), 0)<< "Exhaustive mode requires at least one top blob.";
@@ -216,7 +216,7 @@ void GradientChecker<Dtype>::CheckGradientExhaustive(
 
 template<typename Dtype>
 void GradientChecker<Dtype>::CheckGradientEltwise(
-    Layer<Dtype>* layer, const vector<Blob<Dtype>*>& bottom,
+    Layer<Dtype, Dtype, Dtype>* layer, const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   layer->SetUp(bottom, top);
   CHECK_GT(top.size(), 0)<< "Eltwise mode requires at least one top blob.";
@@ -232,7 +232,7 @@ void GradientChecker<Dtype>::CheckGradientEltwise(
 template<typename Dtype>
 void GradientChecker<Dtype>::CheckGradientNet(
     const Net<Dtype>& net, const vector<Blob<Dtype>*>& input) {
-  const vector<shared_ptr<Layer<Dtype> > >& layers = net.layers();
+  const vector<shared_ptr<Layer<Dtype, Dtype, Dtype> > >& layers = net.layers();
   vector<vector<Blob<Dtype>*> >& bottom_vecs = net.bottom_vecs();
   vector<vector<Blob<Dtype>*> >& top_vecs = net.top_vecs();
   for (int_tp i = 0; i < layers.size(); ++i) {
@@ -243,7 +243,7 @@ void GradientChecker<Dtype>::CheckGradientNet(
 }
 
 template<typename Dtype>
-Dtype GradientChecker<Dtype>::GetObjAndGradient(const Layer<Dtype>& layer,
+Dtype GradientChecker<Dtype>::GetObjAndGradient(const Layer<Dtype, Dtype, Dtype>& layer,
                                                 const vector<Blob<Dtype>*>& top,
                                                 int_tp top_id,
                                                 int_tp top_data_id) {

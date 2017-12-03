@@ -39,7 +39,7 @@ TYPED_TEST_CASE(ThresholdLayerTest, TestDtypesAndDevices);
 TYPED_TEST(ThresholdLayerTest, TestSetup) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  ThresholdLayer<Dtype> layer(layer_param);
+  ThresholdLayer<Dtype, Dtype, Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_->num());
   EXPECT_EQ(this->blob_top_->channels(), this->blob_bottom_->channels());
@@ -50,7 +50,7 @@ TYPED_TEST(ThresholdLayerTest, TestSetup) {
 TYPED_TEST(ThresholdLayerTest, Test) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  ThresholdLayer<Dtype> layer(layer_param);
+  ThresholdLayer<Dtype, Dtype, Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   // Now, check values
@@ -75,7 +75,7 @@ TYPED_TEST(ThresholdLayerTest, Test2) {
   ThresholdParameter* threshold_param =
     layer_param.mutable_threshold_param();
   threshold_param->set_threshold(0.5);
-  ThresholdLayer<Dtype> layer(layer_param);
+  ThresholdLayer<Dtype, Dtype, Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   // Now, check values

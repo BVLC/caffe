@@ -713,6 +713,6 @@ vptr<Dtype>& vptr<Dtype, typename const_enable_if<Dtype>::type>
   return *this;
 }
 
-INSTANTIATE_POINTER_CLASS(vptr)
+INSTANTIATE_POINTER_CLASS(vptr);
 
 }

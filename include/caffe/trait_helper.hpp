@@ -1,6 +1,8 @@
 #ifndef CAFFE_TRAIT_HELPER_HPP_
 #define CAFFE_TRAIT_HELPER_HPP_
 
+#include <type_traits>
+
 #include "caffe/util/half_fp.hpp"
 
 namespace caffe {

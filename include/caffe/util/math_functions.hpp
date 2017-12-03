@@ -103,7 +103,12 @@ template<typename Dtype>
 void caffe_abs(const int_tp n, const Dtype* a, Dtype* Y);
 
 template<typename Dtype>
-Dtype caffe_cpu_dot(const int_tp n, const Dtype* X, const Dtype* Y);
+typename std::enable_if<float_is_same<Dtype>::value, Dtype>::type
+caffe_cpu_dot(const int_tp n, const Dtype* X, const Dtype* Y);
+
+template<typename Dtype>
+typename std::enable_if<signed_integer_is_same<Dtype>::value, Dtype>::type
+caffe_cpu_dot(const int_tp n, const Dtype* X, const Dtype* Y);
 
 template<typename Dtype>
 Dtype caffe_cpu_strided_dot(const int_tp n, const Dtype* X, const int_tp incx,

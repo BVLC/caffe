@@ -75,12 +75,10 @@ void Device::dot_half(const uint_tp n, vptr<const half_fp> x,
                          half_fp* out) {
   NOT_IMPLEMENTED;
 }
-
 void Device::dot_float(const uint_tp n, vptr<const float> x,
                           vptr<const float> y, float* out) {
   NOT_IMPLEMENTED;
 }
-
 void Device::dot_double(const uint_tp n, vptr<const double> x,
                            vptr<const double> y, double* out) {
   NOT_IMPLEMENTED;

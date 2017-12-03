@@ -196,18 +196,51 @@ void Device::dot(const uint_tp n, vptr<const half_fp> x,
                     vptr<const half_fp> y, half_fp *out) {
   this->dot_half(n, x, y, out);
 }
-
 template<>
 void Device::dot(const uint_tp n, vptr<const float> x, vptr<const float> y,
                  float *out) {
   this->dot_float(n, x, y, out);
 }
-
 template<>
 void Device::dot(const uint_tp n, vptr<const double> x, vptr<const double> y,
                  double *out) {
   this->dot_double(n, x, y, out);
 }
+
+template<typename Dtype>
+typename std::enable_if<signed_integer_is_same<Dtype>::value, void>::type
+Device::dot(const uint_tp n, vptr<const Dtype> x, vptr<const Dtype> y,
+            Dtype *out) {
+  shared_ptr<DeviceKernel> kernel
+      = math_programs_[proto_data_type_index<Dtype>()]
+                       ->GetKernel("caffe_gpu_dot");
+
+  int_tp buffer_id = -1;
+  vptr<Dtype> gpu_out = this->Buffer<Dtype>(vector<int_tp>(1), &buffer_id)
+      ->mutable_gpu_data();
+
+  kernel->add_arg(&n);
+  kernel->add_arg(&x);
+  kernel->add_arg(&y);
+  kernel->add_arg(&gpu_out);
+
+  vector<size_t> work_size(1, n);
+  vector<size_t> group(1, 1);
+  vector<size_t> local(1, 1);
+  kernel->Execute(group, local);
+
+  this->template copy<Dtype>(1, gpu_out, out);
+  this->unlock_buffer(&buffer_id);
+}
+
+template void Device::dot(const uint_tp n, vptr<const int8_t> x,
+                          vptr<const int8_t> y, int8_t *out);
+template void Device::dot(const uint_tp n, vptr<const int16_t> x,
+                          vptr<const int16_t> y, int16_t *out);
+template void Device::dot(const uint_tp n, vptr<const int32_t> x,
+                          vptr<const int32_t> y, int32_t *out);
+template void Device::dot(const uint_tp n, vptr<const int64_t> x,
+                          vptr<const int64_t> y, int64_t *out);
 
 template<>
 void Device::asum(const uint_tp n, vptr<const half_fp> x,

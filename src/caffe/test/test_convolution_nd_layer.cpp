@@ -70,7 +70,7 @@ class ConvolutionNDLayerTest : public GPUDeviceTest<TypeParam> {
     convolution_param->mutable_bias_filler()->set_type("constant");
     convolution_param->mutable_bias_filler()->set_value(0);
 
-    ConvolutionLayer<TypeParam> layer(layer_param);
+    ConvolutionLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
     layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 
     int_tp d = blob_bottom_->shape(2);
@@ -122,7 +122,7 @@ class ConvolutionNDLayerTest : public GPUDeviceTest<TypeParam> {
     convolution_param->mutable_bias_filler()->set_type("constant");
     convolution_param->mutable_bias_filler()->set_value(0);
 
-    ConvolutionLayer<TypeParam> layer(layer_param);
+    ConvolutionLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
     layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 
     TypeParam *top_diff = blob_top_->mutable_cpu_diff();
@@ -176,7 +176,7 @@ TYPED_TEST(ConvolutionNDLayerTest, TestSetup) {
   convolution_param->set_num_output(4);
 
 
-  ConvolutionLayer<TypeParam> layer(layer_param);
+  ConvolutionLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 
   EXPECT_EQ(1, this->blob_top_->shape(2));

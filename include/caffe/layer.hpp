@@ -352,7 +352,9 @@ class Layer : public LayerBase {
       cast_top.push_back(static_cast<Blob<MOtype>*>(top[i]));
     }
     Dtype layer_loss = this->Forward(cast_bottom, cast_top);
-    net_quant_->Backward_cpu(1, static_cast<void*>(&layer_loss), out_loss);
+    if (out_loss != nullptr) {
+      net_quant_->Backward_cpu(1, static_cast<void*>(&layer_loss), out_loss);
+    }
   }
 
   virtual void Backward(const vector<BlobBase*>& top,

@@ -59,7 +59,7 @@ TYPED_TEST_CASE(ContrastiveLossLayerTest, TestDtypesAndDevices);
 TYPED_TEST(ContrastiveLossLayerTest, TestForward) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  ContrastiveLossLayer<Dtype> layer(layer_param);
+  ContrastiveLossLayer<Dtype, Dtype, Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   // manually compute to compare
@@ -89,7 +89,7 @@ TYPED_TEST(ContrastiveLossLayerTest, TestForward) {
 TYPED_TEST(ContrastiveLossLayerTest, TestGradient) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  ContrastiveLossLayer<Dtype> layer(layer_param);
+  ContrastiveLossLayer<Dtype, Dtype, Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   GradientChecker<Dtype> checker(1e-2, 1e-2, 1701);
   // check the gradient for the first two bottom layers
@@ -103,7 +103,7 @@ TYPED_TEST(ContrastiveLossLayerTest, TestForwardLegacy) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   layer_param.mutable_contrastive_loss_param()->set_legacy_version(true);
-  ContrastiveLossLayer<Dtype> layer(layer_param);
+  ContrastiveLossLayer<Dtype, Dtype, Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   // manually compute to compare
@@ -133,7 +133,7 @@ TYPED_TEST(ContrastiveLossLayerTest, TestGradientLegacy) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   layer_param.mutable_contrastive_loss_param()->set_legacy_version(true);
-  ContrastiveLossLayer<Dtype> layer(layer_param);
+  ContrastiveLossLayer<Dtype, Dtype, Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   GradientChecker<Dtype> checker(1e-2, 1e-2, 1701);
   // check the gradient for the first two bottom layers

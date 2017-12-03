@@ -38,18 +38,18 @@ bool caffe::isSupported<double>(void) {
 }
 #ifdef USE_HALF
 template <>
-bool caffe::isSupported<half>(void) {
+bool caffe::isSupported<half_fp>(void) {
   return caffe::Caffe::GetDefaultDevice()->backend() != caffe::BACKEND_OPENCL ||
          caffe::Caffe::GetDefaultDevice()->CheckCapability("cl_khr_fp16");
 }
 
 template <>
-bool caffe::isSupported<caffe::GPUDevice<half>>(void) {
-  return caffe::isSupported<half>();
+bool caffe::isSupported<caffe::GPUDevice<half_fp>>(void) {
+  return caffe::isSupported<half_fp>();
 }
 
 template <>
-bool caffe::isSupported<caffe::CPUDevice<half>>(void) {
+bool caffe::isSupported<caffe::CPUDevice<half_fp>>(void) {
   return true;
 }
 #endif

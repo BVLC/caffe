@@ -6,7 +6,7 @@ namespace caffe {
 
 void Device::memset(const uint_tp n, const char alpha, vptr<char> x) {
   shared_ptr<DeviceKernel> kernel
-        = math_programs_[0]->GetKernel("gpu_memset");
+        = math_programs_[0]->GetKernel("caffe_gpu_memset");
 
   kernel->add_arg(&n);
   kernel->add_arg(&alpha);
@@ -22,7 +22,7 @@ void Device::memset(const uint_tp n, const char alpha, vptr<char> x) {
 template<typename Dtype>
 void Device::set(const uint_tp n, const Dtype alpha, vptr<Dtype> x) {
   shared_ptr<DeviceKernel> kernel
-    = math_programs_[proto_data_type_index<Dtype>()]->GetKernel("gpu_set");
+    = math_programs_[proto_data_type_index<Dtype>()]->GetKernel("caffe_gpu_set");
 
   kernel->add_arg(&n);
   kernel->add_arg(&alpha);
@@ -35,20 +35,31 @@ void Device::set(const uint_tp n, const Dtype alpha, vptr<Dtype> x) {
   kernel->Execute(group, local);
 }
 
-template
-void Device::set(const uint_tp n, const half_fp alpha,
-                 vptr<half_fp> x);
-template
-void Device::set(const uint_tp n, const float alpha, vptr<float> x);
-template
-void Device::set(const uint_tp n, const double alpha, vptr<double> x);
-
+template void Device::set(const uint_tp n, const half_fp alpha,
+                          vptr<half_fp> x);
+template void Device::set(const uint_tp n, const float alpha, vptr<float> x);
+template void Device::set(const uint_tp n, const double alpha, vptr<double> x);
+template void Device::set(const uint_tp n, const int8_t alpha, vptr<int8_t> x);
+template void Device::set(const uint_tp n, const int16_t alpha,
+                          vptr<int16_t> x);
+template void Device::set(const uint_tp n, const int32_t alpha,
+                          vptr<int32_t> x);
+template void Device::set(const uint_tp n, const int64_t alpha,
+                          vptr<int64_t> x);
+template void Device::set(const uint_tp n, const uint8_t alpha,
+                          vptr<uint8_t> x);
+template void Device::set(const uint_tp n, const uint16_t alpha,
+                          vptr<uint16_t> x);
+template void Device::set(const uint_tp n, const uint32_t alpha,
+                          vptr<uint32_t> x);
+template void Device::set(const uint_tp n, const uint64_t alpha,
+                          vptr<uint64_t> x);
 
 template<typename Dtype>
 void Device::add_scalar(const uint_tp n, const Dtype alpha, vptr<Dtype> x) {
   shared_ptr<DeviceKernel> kernel
       = math_programs_[proto_data_type_index<Dtype>()]
-                       ->GetKernel("gpu_add_scalar");
+                       ->GetKernel("caffe_gpu_add_scalar");
 
   kernel->add_arg(&n);
   kernel->add_arg(&alpha);
@@ -74,7 +85,7 @@ template<typename Dtype>
 void Device::scal(const uint_tp n, const Dtype alpha, vptr<Dtype> x) {
   shared_ptr<DeviceKernel> kernel
       = math_programs_[proto_data_type_index<Dtype>()]
-                       ->GetKernel("gpu_scal");
+                       ->GetKernel("caffe_gpu_scal");
 
   kernel->add_arg(&n);
   kernel->add_arg(&alpha);
@@ -101,7 +112,7 @@ void Device::add(const uint_tp n, vptr<const Dtype> a,
                  vptr<const Dtype> b, vptr<Dtype> y) {
   shared_ptr<DeviceKernel> kernel
       = math_programs_[proto_data_type_index<Dtype>()]
-                       ->GetKernel("gpu_add");
+                       ->GetKernel("caffe_gpu_add");
 
   kernel->add_arg(&n);
   kernel->add_arg(&a);
@@ -131,7 +142,7 @@ void Device::sub(const uint_tp n, vptr<const Dtype> a, vptr<const Dtype> b,
                  vptr<Dtype> y) {
   shared_ptr<DeviceKernel> kernel
       = math_programs_[proto_data_type_index<Dtype>()]
-                       ->GetKernel("gpu_sub");
+                       ->GetKernel("caffe_gpu_sub");
 
   kernel->add_arg(&n);
   kernel->add_arg(&a);
@@ -161,7 +172,7 @@ void Device::mul(const uint_tp n, vptr<const Dtype> a, vptr<const Dtype> b,
                  vptr<Dtype> y) {
   shared_ptr<DeviceKernel> kernel
       = math_programs_[proto_data_type_index<Dtype>()]
-                       ->GetKernel("gpu_mul");
+                       ->GetKernel("caffe_gpu_mul");
 
   kernel->add_arg(&n);
   kernel->add_arg(&a);
@@ -191,7 +202,7 @@ void Device::div(const uint_tp n, vptr<const Dtype> a, vptr<const Dtype> b,
                  vptr<Dtype> y) {
   shared_ptr<DeviceKernel> kernel
       = math_programs_[proto_data_type_index<Dtype>()]
-                       ->GetKernel("gpu_div");
+                       ->GetKernel("caffe_gpu_div");
 
   kernel->add_arg(&n);
   kernel->add_arg(&a);
@@ -220,7 +231,7 @@ template<typename Dtype>
 void Device::abs(const uint_tp n, vptr<const Dtype> a, vptr<Dtype> y) {
   shared_ptr<DeviceKernel> kernel
       = math_programs_[proto_data_type_index<Dtype>()]
-                       ->GetKernel("gpu_abs");
+                       ->GetKernel("caffe_gpu_abs");
 
   kernel->add_arg(&n);
   kernel->add_arg(&a);
@@ -246,7 +257,7 @@ template<typename Dtype>
 void Device::exp(const uint_tp n, vptr<const Dtype> a, vptr<Dtype> y) {
   shared_ptr<DeviceKernel> kernel
       = math_programs_[proto_data_type_index<Dtype>()]
-                       ->GetKernel("gpu_exp");
+                       ->GetKernel("caffe_gpu_exp");
 
   kernel->add_arg(&n);
   kernel->add_arg(&a);
@@ -272,7 +283,7 @@ template<typename Dtype>
 void Device::log(const uint_tp n, vptr<const Dtype> a, vptr<Dtype> y) {
   shared_ptr<DeviceKernel> kernel
       = math_programs_[proto_data_type_index<Dtype>()]
-                       ->GetKernel("gpu_log");
+                       ->GetKernel("caffe_gpu_log");
 
   kernel->add_arg(&n);
   kernel->add_arg(&a);
@@ -299,7 +310,7 @@ void Device::powx(const uint_tp n, vptr<const Dtype> a, const Dtype b,
                   vptr<Dtype> y) {
   shared_ptr<DeviceKernel> kernel
       = math_programs_[proto_data_type_index<Dtype>()]
-                       ->GetKernel("gpu_powx");
+                       ->GetKernel("caffe_gpu_powx");
 
   kernel->add_arg(&n);
   kernel->add_arg(&a);
@@ -328,7 +339,7 @@ template<typename Dtype>
 void Device::sqrt(const uint_tp n, vptr<const Dtype> a, vptr<Dtype> y) {
   shared_ptr<DeviceKernel> kernel
       = math_programs_[proto_data_type_index<Dtype>()]
-                       ->GetKernel("gpu_sqrt");
+                       ->GetKernel("caffe_gpu_sqrt");
 
   kernel->add_arg(&n);
   kernel->add_arg(&a);
@@ -354,7 +365,7 @@ template<typename Dtype>
 void Device::sign(const uint_tp n, vptr<const Dtype> x, vptr<Dtype> y) {
   shared_ptr<DeviceKernel> kernel
       = math_programs_[proto_data_type_index<Dtype>()]
-                       ->GetKernel("gpu_sign");
+                       ->GetKernel("caffe_gpu_sign");
 
   kernel->add_arg(&n);
   kernel->add_arg(&x);
@@ -380,7 +391,7 @@ template<typename Dtype>
 void Device::sgnbit(const uint_tp n, vptr<const Dtype> x, vptr<Dtype> y) {
   shared_ptr<DeviceKernel> kernel
       = math_programs_[proto_data_type_index<Dtype>()]
-                       ->GetKernel("gpu_signbit");
+                       ->GetKernel("caffe_gpu_signbit");
 
   kernel->add_arg(&n);
   kernel->add_arg(&x);
@@ -418,8 +429,7 @@ string create_source(Device* dev,
                       KERNEL_ARG_CONST));
     args.push_back(program->create_kernel_arg<Dtype>("y",
                       KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_MEM_OFFSET));
-    ss << program->function("gpu_set",
-                                          args);
+    ss << program->function("caffe_gpu_set", args);
     ss << program->kernel_loop("uint_tp", "index", "n");
     ss << "y[index] = alpha;" << std::endl;
     ss << "}" << std::endl;
@@ -435,8 +445,7 @@ string create_source(Device* dev,
                       KERNEL_ARG_CONST));
     args.push_back(program->create_kernel_arg<Dtype>("y",
                       KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_MEM_OFFSET));
-    ss << program->function("gpu_add_scalar_"
-                                               + safe_type_name<Dtype>(), args);
+    ss << program->function("caffe_gpu_add_scalar", args);
     ss << program->kernel_loop("uint_tp", "index", "n");
     ss << "y[index] += alpha;" << std::endl;
     ss << "}" << std::endl;
@@ -460,8 +469,7 @@ string create_source(Device* dev,
                       | KERNEL_ARG_MEM_OFFSET));
     args.push_back(program->create_kernel_arg<Dtype>("y",
                       KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_MEM_OFFSET));
-    ss << program->function("gpu_" + op_name + "_"
-                                          + safe_type_name<Dtype>(), args);
+    ss << program->function("caffe_gpu_" + op_name, args);
     ss << program->kernel_loop("uint_tp", "index", "n");
     ss << "y[index] = a[index] " << op << " b[index];" << std::endl;
     ss << "}" << std::endl;
@@ -480,8 +488,7 @@ string create_source(Device* dev,
                       KERNEL_ARG_CONST));
     args.push_back(program->create_kernel_arg<Dtype>("y",
                       KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_MEM_OFFSET));
-    ss << program->function("gpu_powx_"
-                                          + safe_type_name<Dtype>(), args);
+    ss << program->function("caffe_gpu_powx", args);
     ss << program->kernel_loop("uint_tp", "index", "n");
     ss << "if(alpha == 2.0) {" << std::endl;
     string abs_fun;
@@ -518,8 +525,7 @@ string create_source(Device* dev,
                       | KERNEL_ARG_MEM_OFFSET));
     args.push_back(program->create_kernel_arg<Dtype>("y",
                       KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_MEM_OFFSET));
-    ss << program->function("gpu_" + func_name + "_"
-                                          + safe_type_name<Dtype>(), args);
+    ss << program->function("caffe_gpu_" + func_name, args);
     ss << program->kernel_loop("uint_tp", "index", "n");
     ss << "y[index] = " << func << "(a[index]);" << std::endl;
     ss << "}" << std::endl;
@@ -536,8 +542,7 @@ string create_source(Device* dev,
                       | KERNEL_ARG_MEM_OFFSET));
     args.push_back(program->create_kernel_arg<Dtype>("y",
                       KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_MEM_OFFSET));
-    ss << program->function("gpu_sign",
-                                          args);
+    ss << program->function("caffe_gpu_sign", args);
     ss << program->kernel_loop("uint_tp", "index", "n");
     ss << "y[index] = (0.0 < x[index]) - (x[index] < 0.0);" << std::endl;
     ss << "}" << std::endl;
@@ -554,10 +559,30 @@ string create_source(Device* dev,
                       | KERNEL_ARG_MEM_OFFSET));
     args.push_back(program->create_kernel_arg<Dtype>("y",
                       KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_MEM_OFFSET));
-    ss << program->function("gpu_signbit_"
-                                          + safe_type_name<Dtype>(), args);
+    ss << program->function("caffe_gpu_signbit", args);
     ss << program->kernel_loop("uint_tp", "index", "n");
     ss << "y[index] = signbit(x[index]);" << std::endl;
+    ss << "}" << std::endl;
+    ss << "}" << std::endl;
+  }
+
+  // Dot
+  // TODO: Better implementation
+  {
+    KernelArgs args;
+    args.push_back(program->create_kernel_arg<uint_tp>("n",
+                      KERNEL_ARG_CONST));
+    args.push_back(program->create_kernel_arg<Dtype>("x",
+                      KERNEL_ARG_CONST | KERNEL_ARG_GLOBAL_MEM
+                      | KERNEL_ARG_MEM_OFFSET));
+    args.push_back(program->create_kernel_arg<Dtype>("y",
+                      KERNEL_ARG_CONST | KERNEL_ARG_GLOBAL_MEM
+                      | KERNEL_ARG_MEM_OFFSET));
+    args.push_back(program->create_kernel_arg<Dtype>("out",
+                      KERNEL_ARG_NONE));
+    ss << program->function("caffe_gpu_dot", args);
+    ss << program->kernel_loop("uint_tp", "index", "n");
+    ss << "out += x[index] * y[index];" << std::endl;
     ss << "}" << std::endl;
     ss << "}" << std::endl;
   }
@@ -597,7 +622,7 @@ void Device::CreateMathProgram() {
           args.push_back(this->math_programs_[i]
                                 ->create_kernel_arg<char>("y",
                                 KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_MEM_OFFSET));
-          ss << this->math_programs_[i]->function("gpu_memset", args);
+          ss << this->math_programs_[i]->function("caffe_gpu_memset", args);
           ss << this->math_programs_[i]->kernel_loop("uint_tp", "index", "n");
           ss << "y[index] = alpha;" << std::endl;
           ss << "}" << std::endl;
@@ -631,6 +656,23 @@ void Device::CreateMathProgram() {
 #ifdef USE_DOUBLE
         ss << create_source<double>(this, this->math_programs_[i]);
 #endif
+        break;
+      }
+      case INT8_QUANTIZED_DATA_INDEX: {
+        ss << create_source<int8_t>(this, this->math_programs_[i]);
+        break;
+      }
+      case INT16_QUANTIZED_DATA_INDEX: {
+        ss << create_source<int16_t>(this, this->math_programs_[i]);
+        break;
+      }
+      case INT32_QUANTIZED_DATA_INDEX: {
+        ss << create_source<int32_t>(this, this->math_programs_[i]);
+        break;
+      }
+      case INT64_QUANTIZED_DATA_INDEX: {
+        ss << create_source<int64_t>(this, this->math_programs_[i]);
+        break;
       }
     }
     this->math_programs_[i]->set_source(ss.str());

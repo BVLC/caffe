@@ -843,7 +843,7 @@ void OclDevice::scale_half(const uint_tp n, const half_fp alpha,
         y.get_ocl_mem(), offY, incY,
         &queue));
     OPENCL_CLBLAST_CHECK(
-      clblast::Scal<half_fp>(
+      clblast::Scal<clblast::half>(
         n,
         alpha,
         y.get_ocl_mem(), offY, incY,

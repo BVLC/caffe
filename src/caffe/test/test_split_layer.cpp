@@ -50,7 +50,7 @@ TYPED_TEST_CASE(SplitLayerTest, TestDtypesAndDevices);
 TYPED_TEST(SplitLayerTest, TestSetup) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  SplitLayer<Dtype> layer(layer_param);
+  SplitLayer<Dtype, Dtype, Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_a_->num(), 2);
   EXPECT_EQ(this->blob_top_a_->channels(), 3);
@@ -65,7 +65,7 @@ TYPED_TEST(SplitLayerTest, TestSetup) {
 TYPED_TEST(SplitLayerTest, Test) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  SplitLayer<Dtype> layer(layer_param);
+  SplitLayer<Dtype, Dtype, Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   for (int_tp i = 0; i < this->blob_bottom_->count(); ++i) {
@@ -78,7 +78,7 @@ TYPED_TEST(SplitLayerTest, Test) {
 TYPED_TEST(SplitLayerTest, TestGradient) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  SplitLayer<Dtype> layer(layer_param);
+  SplitLayer<Dtype, Dtype, Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-2);
   checker.CheckGradientEltwise(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_);

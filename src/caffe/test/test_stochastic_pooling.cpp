@@ -58,7 +58,7 @@ TYPED_TEST(CPUStochasticPoolingLayerTest, TestSetup) {
   PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
   pooling_param->add_kernel_size(3);
   pooling_param->add_stride(2);
-  PoolingLayer<TypeParam> layer(layer_param);
+  PoolingLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_->num());
   EXPECT_EQ(this->blob_top_->channels(), this->blob_bottom_->channels());
@@ -82,7 +82,7 @@ TYPED_TEST(GPUStochasticPoolingLayerTest, TestStochastic) {
   pooling_param->add_kernel_size(3);
   pooling_param->add_stride(2);
   pooling_param->set_pool(PoolingParameter_PoolMethod_STOCHASTIC);
-  PoolingLayer<TypeParam> layer(layer_param);
+  PoolingLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
 
@@ -125,7 +125,7 @@ TYPED_TEST(GPUStochasticPoolingLayerTest, TestStochasticTestPhase) {
   pooling_param->add_kernel_size(3);
   pooling_param->add_stride(2);
   pooling_param->set_pool(PoolingParameter_PoolMethod_STOCHASTIC);
-  PoolingLayer<TypeParam> layer(layer_param);
+  PoolingLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
 
@@ -162,7 +162,7 @@ TYPED_TEST(GPUStochasticPoolingLayerTest, TestGradient) {
   pooling_param->add_kernel_size(3);
   pooling_param->add_stride(2);
   pooling_param->set_pool(PoolingParameter_PoolMethod_STOCHASTIC);
-  PoolingLayer<TypeParam> layer(layer_param);
+  PoolingLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-4, 1e-2);
   // it is too expensive to call curand multiple times, so we don't do an
   // exhaustive gradient check.

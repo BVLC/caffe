@@ -78,7 +78,7 @@ class LibDNNPoolingLayerTest : public GPUDeviceTest<Dtype> {
       blob_bottom_->mutable_cpu_data()[i + 13] = 2;
       blob_bottom_->mutable_cpu_data()[i + 14] = 3;
     }
-    LibDNNPoolingLayer<Dtype> layer(layer_param);
+    LibDNNPoolingLayer<Dtype, Dtype, Dtype> layer(layer_param);
     layer.SetUp(blob_bottom_vec_, blob_top_vec_);
     EXPECT_EQ(blob_top_->num(), num);
     EXPECT_EQ(blob_top_->channels(), channels);
@@ -176,7 +176,7 @@ class LibDNNPoolingLayerTest : public GPUDeviceTest<Dtype> {
       blob_bottom_->mutable_cpu_data()[i + 34] = 18;
       blob_bottom_->mutable_cpu_data()[i + 35] = 11;
     }
-    LibDNNPoolingLayer<Dtype> layer(layer_param);
+    LibDNNPoolingLayer<Dtype, Dtype, Dtype> layer(layer_param);
     layer.SetUp(blob_bottom_vec_, blob_top_vec_);
     EXPECT_EQ(blob_top_->num(), num);
     EXPECT_EQ(blob_top_->channels(), channels);
@@ -301,7 +301,7 @@ class LibDNNPoolingLayerTest : public GPUDeviceTest<Dtype> {
       blob_bottom_->mutable_cpu_data()[i + 34] = 18;
       blob_bottom_->mutable_cpu_data()[i + 35] = 11;
     }
-    LibDNNPoolingLayer<Dtype> layer(layer_param);
+    LibDNNPoolingLayer<Dtype, Dtype, Dtype> layer(layer_param);
     layer.SetUp(blob_bottom_vec_, blob_top_vec_);
     EXPECT_EQ(blob_top_->num(), num);
     EXPECT_EQ(blob_top_->channels(), channels);
@@ -381,7 +381,7 @@ TYPED_TEST(LibDNNPoolingLayerTest, TestSetup) {
   PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
   pooling_param->add_kernel_size(3);
   pooling_param->add_stride(2);
-  LibDNNPoolingLayer<TypeParam> layer(layer_param);
+  LibDNNPoolingLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_->num());
   EXPECT_EQ(this->blob_top_->channels(), this->blob_bottom_->channels());
@@ -396,7 +396,7 @@ TYPED_TEST(LibDNNPoolingLayerTest, TestSetupPadded) {
   pooling_param->add_stride(2);
   pooling_param->add_pad(1);
   pooling_param->set_pool(PoolingParameter_PoolMethod_AVE);
-  LibDNNPoolingLayer<TypeParam> layer(layer_param);
+  LibDNNPoolingLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_->num());
   EXPECT_EQ(this->blob_top_->channels(), this->blob_bottom_->channels());
@@ -409,7 +409,7 @@ TYPED_TEST(LibDNNPoolingLayerTest, TestSetupGlobalPooling) {
   PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
   pooling_param->set_global_pooling(true);
   pooling_param->set_pool(PoolingParameter_PoolMethod_AVE);
-  LibDNNPoolingLayer<TypeParam> layer(layer_param);
+  LibDNNPoolingLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_->num());
   EXPECT_EQ(this->blob_top_->channels(), this->blob_bottom_->channels());
@@ -423,7 +423,7 @@ TYPED_TEST(LibDNNPoolingLayerTest, PrintBackward) {
   layer_param.add_kernel_size(3);
   layer_param.add_stride(2);
   layer_param.set_pool(LayerParameter_PoolMethod_MAX);
-  LibDNNPoolingLayer<TypeParam> layer(layer_param);
+  LibDNNPoolingLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   for (int_tp i = 0; i < this->blob_bottom_->count(); ++i) {
@@ -466,7 +466,7 @@ TYPED_TEST(LibDNNPoolingLayerTest, TestGradientMax) {
       pooling_param->add_stride(2);
       pooling_param->add_pad(1);
       pooling_param->set_pool(PoolingParameter_PoolMethod_MAX);
-      LibDNNPoolingLayer<TypeParam> layer(layer_param);
+      LibDNNPoolingLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
       GradientChecker<TypeParam> checker(1e-4, 1e-2);
       checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
           this->blob_top_vec_);
@@ -495,7 +495,7 @@ TYPED_TEST(LibDNNPoolingLayerTest, TestForwardMaxPadded) {
   this->blob_bottom_->mutable_cpu_data()[6] = 4;
   this->blob_bottom_->mutable_cpu_data()[7] = 2;
   this->blob_bottom_->mutable_cpu_data()[8] = 1;
-  LibDNNPoolingLayer<TypeParam> layer(layer_param);
+  LibDNNPoolingLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), 1);
   EXPECT_EQ(this->blob_top_->channels(), 1);
@@ -528,7 +528,7 @@ TYPED_TEST(LibDNNPoolingLayerTest, TestGradientMaxTopMask) {
       pooling_param->add_stride(2);
       pooling_param->set_pool(PoolingParameter_PoolMethod_MAX);
       this->blob_top_vec_.push_back(this->blob_top_mask_);
-      LibDNNPoolingLayer<TypeParam> layer(layer_param);
+      LibDNNPoolingLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
       GradientChecker<TypeParam> checker(1e-4, 1e-2);
       checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
           this->blob_top_vec_);
@@ -549,7 +549,7 @@ TYPED_TEST(LibDNNPoolingLayerTest, TestForwardAve) {
   filler_param.set_value(TypeParam(2));
   ConstantFiller<TypeParam> filler(filler_param);
   filler.Fill(this->blob_bottom_);
-  LibDNNPoolingLayer<TypeParam> layer(layer_param);
+  LibDNNPoolingLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), 1);
   EXPECT_EQ(this->blob_top_->channels(), 1);
@@ -577,7 +577,7 @@ TYPED_TEST(LibDNNPoolingLayerTest, TestGradientAve) {
       pooling_param->set_kernel_w(kernel_w);
       pooling_param->add_stride(2);
       pooling_param->set_pool(PoolingParameter_PoolMethod_AVE);
-      LibDNNPoolingLayer<TypeParam> layer(layer_param);
+      LibDNNPoolingLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
       GradientChecker<TypeParam> checker(1e-2, 1e-2);
       checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
           this->blob_top_vec_);
@@ -595,7 +595,7 @@ TYPED_TEST(LibDNNPoolingLayerTest, TestGradientAvePadded) {
       pooling_param->add_stride(2);
       pooling_param->add_pad(2);
       pooling_param->set_pool(PoolingParameter_PoolMethod_AVE);
-      LibDNNPoolingLayer<TypeParam> layer(layer_param);
+      LibDNNPoolingLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
       GradientChecker<TypeParam> checker(1e-2, 1e-2);
       checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
           this->blob_top_vec_);
@@ -652,7 +652,7 @@ class LibDNNPoolingLayerNDTest : public GPUDeviceTest<TypeParam> {
 
     pooling_param->set_axis(1);
 
-    LibDNNPoolingLayer<TypeParam> layer(layer_param);
+    LibDNNPoolingLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
     layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 
     int_tp d = blob_bottom_->shape(2);
@@ -701,7 +701,7 @@ class LibDNNPoolingLayerNDTest : public GPUDeviceTest<TypeParam> {
 
     pooling_param->set_axis(1);
 
-    LibDNNPoolingLayer<TypeParam> layer(layer_param);
+    LibDNNPoolingLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
     layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 
     int_tp d = blob_bottom_->shape(2);
@@ -777,7 +777,7 @@ TYPED_TEST(LibDNNPoolingLayerNDTest, TestSetup) {
   pooling_param->set_pool(PoolingParameter_PoolMethod_MAX);
 
 
-  LibDNNPoolingLayer<TypeParam> layer(layer_param);
+  LibDNNPoolingLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 
   EXPECT_EQ(2, this->blob_top_->shape(2));
@@ -943,10 +943,10 @@ class LibDNNComparativePoolTest : public GPUDeviceTest<TypeParam> {
     blob_bottom_ref_->Reshape(shape);
 
 
-    LibDNNPoolingLayer<TypeParam> layer(layer_param);
+    LibDNNPoolingLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
     layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 
-    PoolingLayer<TypeParam> ref_layer(layer_param);
+    PoolingLayer<TypeParam, TypeParam, TypeParam> ref_layer(layer_param);
     ref_layer.SetUp(this->blob_bottom_vec_ref_, this->blob_top_vec_ref_);
 
     for (int_tp i = 0; i < layer.blobs().size(); ++i) {
@@ -1134,10 +1134,10 @@ class LibDNNComparativePoolTest : public GPUDeviceTest<TypeParam> {
     blob_bottom_->Reshape(shape);
     blob_bottom_ref_->Reshape(shape);
 
-    LibDNNPoolingLayer<TypeParam> layer(layer_param);
+    LibDNNPoolingLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
     layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 
-    PoolingLayer<TypeParam> ref_layer(layer_param);
+    PoolingLayer<TypeParam, TypeParam, TypeParam> ref_layer(layer_param);
     ref_layer.SetUp(this->blob_bottom_vec_ref_, this->blob_top_vec_ref_);
 
     for (int_tp i = 0; i < layer.blobs().size(); ++i) {

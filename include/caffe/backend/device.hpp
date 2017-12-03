@@ -13,6 +13,7 @@
 #include "caffe/backend/device_program.hpp"
 #include "caffe/backend/device_kernel.hpp"
 #include "caffe/backend/vptr.hpp"
+#include "caffe/trait_helper.hpp"
 #include "caffe/util/type_utils.hpp"
 
 
@@ -206,7 +207,12 @@ class Device {
   void rng_bernoulli(const uint_tp n, const Dtype p, vptr<uint64_t> r);
 
   template<typename Dtype>
-  void dot(const uint_tp n, vptr<const Dtype> x, vptr<const Dtype> y,
+  typename std::enable_if<float_is_same<Dtype>::value, void>::type
+  dot(const uint_tp n, vptr<const Dtype> x, vptr<const Dtype> y,
+           Dtype* out);
+  template<typename Dtype>
+  typename std::enable_if<signed_integer_is_same<Dtype>::value, void>::type
+  dot(const uint_tp n, vptr<const Dtype> x, vptr<const Dtype> y,
            Dtype* out);
 
   template<typename Dtype>
@@ -360,10 +366,8 @@ class Device {
 
   virtual void dot_half(const uint_tp n, vptr<const half_fp> x,
                      vptr<const half_fp> y, half_fp *out);
-
   virtual void dot_float(const uint_tp n, vptr<const float> x,
                          vptr<const float> y, float *out);
-
   virtual void dot_double(const uint_tp n, vptr<const double> x,
                           vptr<const double> y, double *out);
 

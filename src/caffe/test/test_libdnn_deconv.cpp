@@ -66,8 +66,8 @@ TYPED_TEST(LibDNNDeconvolutionLayerTest, TestSetup) {
   convolution_param->set_num_output(4);
   this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
   this->blob_top_vec_.push_back(this->blob_top_2_);
-  shared_ptr<Layer<TypeParam> > layer(
-      new LibDNNDeconvolutionLayer<TypeParam>(layer_param));
+  shared_ptr<Layer<TypeParam, TypeParam, TypeParam> > layer(
+      new LibDNNDeconvolutionLayer<TypeParam, TypeParam, TypeParam>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), 2);
   EXPECT_EQ(this->blob_top_->channels(), 4);
@@ -80,7 +80,7 @@ TYPED_TEST(LibDNNDeconvolutionLayerTest, TestSetup) {
   // setting group should not change the shape
   convolution_param->set_num_output(3);
   convolution_param->set_group(3);
-  layer.reset(new LibDNNDeconvolutionLayer<TypeParam>(layer_param));
+  layer.reset(new LibDNNDeconvolutionLayer<TypeParam, TypeParam, TypeParam>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), 2);
   EXPECT_EQ(this->blob_top_->channels(), 3);
@@ -105,8 +105,8 @@ TYPED_TEST(LibDNNDeconvolutionLayerTest, TestSimpleDeconvolution) {
   convolution_param->mutable_weight_filler()->set_value(1);
   convolution_param->mutable_bias_filler()->set_type("constant");
   convolution_param->mutable_bias_filler()->set_value(0.1);
-  shared_ptr<Layer<TypeParam> > layer(
-      new LibDNNDeconvolutionLayer<TypeParam>(layer_param));
+  shared_ptr<Layer<TypeParam, TypeParam, TypeParam> > layer(
+      new LibDNNDeconvolutionLayer<TypeParam, TypeParam, TypeParam>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   // constant-fill the bottom blobs
   FillerParameter filler_param;
@@ -150,7 +150,7 @@ TYPED_TEST(LibDNNDeconvolutionLayerTest, TestGradient) {
   convolution_param->set_num_output(1);
   convolution_param->mutable_weight_filler()->set_type("gaussian");
   convolution_param->mutable_bias_filler()->set_type("gaussian");
-  LibDNNDeconvolutionLayer<TypeParam> layer(layer_param);
+  LibDNNDeconvolutionLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-3);
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_);
@@ -179,7 +179,7 @@ TYPED_TEST(LibDNNDeconvolutionLayerTest, TestGradient3D) {
   convolution_param->set_num_output(2);
   convolution_param->mutable_weight_filler()->set_type("gaussian");
   convolution_param->mutable_bias_filler()->set_type("gaussian");
-  LibDNNDeconvolutionLayer<TypeParam> layer(layer_param);
+  LibDNNDeconvolutionLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
   GradientChecker<TypeParam> checker(1e-2, 1e-3);
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_);
@@ -329,10 +329,10 @@ class LibDNNComparativeDeconvTest : public GPUDeviceTest<TypeParam> {
       convolution_param->set_bias_term(true);
     }
 
-    LibDNNDeconvolutionLayer<TypeParam> layer(layer_param);
+    LibDNNDeconvolutionLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
     layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 
-    DeconvolutionLayer<TypeParam> ref_layer(layer_param);
+    DeconvolutionLayer<TypeParam, TypeParam, TypeParam> ref_layer(layer_param);
     ref_layer.SetUp(this->blob_bottom_vec_ref_, this->blob_top_vec_ref_);
 
     for (int_tp i = 0; i < layer.blobs().size(); ++i) {
@@ -516,10 +516,10 @@ class LibDNNComparativeDeconvTest : public GPUDeviceTest<TypeParam> {
       convolution_param->set_bias_term(true);
     }
 
-    LibDNNDeconvolutionLayer<TypeParam> layer(layer_param);
+    LibDNNDeconvolutionLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
     layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
 
-    DeconvolutionLayer<TypeParam> ref_layer(layer_param);
+    DeconvolutionLayer<TypeParam, TypeParam, TypeParam> ref_layer(layer_param);
     ref_layer.SetUp(this->blob_bottom_vec_ref_, this->blob_top_vec_ref_);
 
     for (int_tp i = 0; i < layer.blobs().size(); ++i) {

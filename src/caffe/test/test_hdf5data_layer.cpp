@@ -71,7 +71,7 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
   int_tp width = 5;
 
   // Test that the layer setup gives correct parameters.
-  HDF5DataLayer<Dtype> layer(param);
+  HDF5DataLayer<Dtype, Dtype, Dtype> layer(param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_data_->num(), batch_size);
   EXPECT_EQ(this->blob_top_data_->channels(), num_cols);
@@ -93,8 +93,8 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
   for (int_tp iter = 0; iter < 10; ++iter) {
     layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
 
-    // On even iterations, we're reading the first half of the data.
-    // On odd iterations, we're reading the second half of the data.
+    // On even iterations, we're reading the first half_fp of the data.
+    // On odd iterations, we're reading the second half_fp of the data.
     // NB: label is 1-indexed
     int_tp label_offset = 1 + ((iter % 2 == 0) ? 0 : batch_size);
     int_tp label2_offset = 1 + label_offset;
@@ -148,7 +148,7 @@ TYPED_TEST(HDF5DataLayerTest, TestSkip) {
   for (int dev = 0; dev < Caffe::solver_count(); ++dev) {
     Caffe::set_solver_rank(dev);
 
-    HDF5DataLayer<Dtype> layer(param);
+    HDF5DataLayer<Dtype, Dtype, Dtype> layer(param);
     layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     int label = dev;
     for (int iter = 0; iter < 1; ++iter) {

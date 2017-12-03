@@ -11,11 +11,6 @@
 
 #include "caffe/test/test_caffe_main.hpp"
 
-#ifdef USE_OPENCL
-#include "caffe/greentea/greentea.hpp"
-#include "caffe/greentea/greentea_math_functions.hpp"
-#endif
-
 namespace caffe {
 
 template <typename TypeParam>
@@ -148,16 +143,8 @@ TYPED_TEST(GPUMathFunctionsTest, TestAsum) {
 
   Device *dc = Caffe::GetDefaultDevice();
 
-  if (dc->backend() == BACKEND_CUDA) {
-#ifdef USE_CUDA
-    this->device_->template asum<Dtype><TypeParam>(n, this->blob_bottom_->gpu_data(), &gpu_asum);
-#endif  // USE_CUDA
-  } else {
-#ifdef USE_OPENCL
-    greentea_gpu_asum<TypeParam>(dc->id(), n,
-                    (cl_mem)(this->blob_bottom_->gpu_data()), 0, &gpu_asum);
-#endif  // USE_OPENCL
-  }
+  dc->template asum<TypeParam>(n, this->blob_bottom_->gpu_data(),
+                                          &gpu_asum);
   EXPECT_LT((gpu_asum - std_asum) / std_asum, precision);
 }
 
@@ -166,18 +153,8 @@ TYPED_TEST(GPUMathFunctionsTest, TestSign) {
 
   Device *dc = Caffe::GetDefaultDevice();
 
-  if (dc->backend() == BACKEND_CUDA) {
-#ifdef USE_CUDA
-    this->device_->template sign<Dtype><TypeParam>(n, this->blob_bottom_->gpu_data(),
-                            this->blob_bottom_->mutable_gpu_diff());
-#endif  // USE_CUDA
-  } else {
-#ifdef USE_OPENCL
-    greentea_gpu_sign<TypeParam>(dc->id(), n,
-                      (cl_mem)(this->blob_bottom_->gpu_data()), 0,
-                      (cl_mem)(this->blob_bottom_->mutable_gpu_diff()), 0);
-#endif  // USE_OPENCL
-  }
+  dc->template sign<TypeParam>(n, this->blob_bottom_->gpu_data(),
+                                        this->blob_bottom_->mutable_gpu_diff());
 
   const TypeParam* signs = this->blob_bottom_->cpu_diff();
   const TypeParam* X = this->blob_bottom_->cpu_data();
@@ -191,18 +168,8 @@ TYPED_TEST(GPUMathFunctionsTest, TestSgnbit) {
 
   Device *dc = Caffe::GetDefaultDevice();
 
-  if (dc->backend() == BACKEND_CUDA) {
-#ifdef USE_CUDA
-    caffe_gpu_sgnbit<TypeParam>(n, this->blob_bottom_->gpu_data(),
-                            this->blob_bottom_->mutable_gpu_diff());
-#endif  // USE_CUDA
-  } else {
-#ifdef USE_OPENCL
-    greentea_gpu_sgnbit<TypeParam>(dc->id(), n,
-                          (cl_mem)(this->blob_bottom_->gpu_data()), 0,
-                          (cl_mem)(this->blob_bottom_->mutable_gpu_diff()), 0);
-#endif  // USE_OPENCL
-  }
+  dc->template sgnbit<TypeParam>(n, this->blob_bottom_->gpu_data(),
+                                 this->blob_bottom_->mutable_gpu_diff());
 
   const TypeParam* signbits = this->blob_bottom_->cpu_diff();
   const TypeParam* X = this->blob_bottom_->cpu_data();
@@ -216,18 +183,8 @@ TYPED_TEST(GPUMathFunctionsTest, TestFabs) {
 
   Device *dc = Caffe::GetDefaultDevice();
 
-  if (dc->backend() == BACKEND_CUDA) {
-#ifdef USE_CUDA
-    caffe_gpu_abs<TypeParam>(n, this->blob_bottom_->gpu_data(),
-                            this->blob_bottom_->mutable_gpu_diff());
-#endif  // USE_CUDA
-  } else {
-#ifdef USE_OPENCL
-    greentea_gpu_abs<TypeParam>(dc->id(), n,
-                         (cl_mem)(this->blob_bottom_->gpu_data()), 0,
-                         (cl_mem)(this->blob_bottom_->mutable_gpu_diff()), 0);
-#endif  // USE_OPENCL
-  }
+  dc->template abs<TypeParam>(n, this->blob_bottom_->gpu_data(),
+                              this->blob_bottom_->mutable_gpu_diff());
 
   const TypeParam* abs_val = this->blob_bottom_->cpu_diff();
   const TypeParam* X = this->blob_bottom_->cpu_data();
@@ -242,18 +199,9 @@ TYPED_TEST(GPUMathFunctionsTest, TestScale) {
                                                    this->blob_bottom_->count()];
 
   Device *dc = Caffe::GetDefaultDevice();
-  if (dc->backend() == BACKEND_CUDA) {
-#ifdef USE_CUDA
-    this->device_->scale<TypeParam>(n, alpha, this->blob_bottom_->gpu_data(),
-                             this->blob_bottom_->mutable_gpu_diff());
-#endif  // USE_CUDA
-  } else {
-#ifdef USE_OPENCL
-    greentea_gpu_scale<TypeParam>(dc->id(), n, alpha,
-                         (cl_mem)(this->blob_bottom_->gpu_data()), 0,
-                         (cl_mem)(this->blob_bottom_->mutable_gpu_diff()), 0);
-#endif  // USE_OPENCL
-  }
+
+  dc->template scale<TypeParam>(n, alpha, this->blob_bottom_->gpu_data(),
+                                this->blob_bottom_->mutable_gpu_diff());
 
   const TypeParam* scaled = this->blob_bottom_->cpu_diff();
   const TypeParam* X = this->blob_bottom_->cpu_data();
@@ -264,28 +212,16 @@ TYPED_TEST(GPUMathFunctionsTest, TestScale) {
 
 TYPED_TEST(GPUMathFunctionsTest, TestCopy) {
   const int_tp n = this->blob_bottom_->count();
-  const TypeParam* bottom_data = this->blob_bottom_->gpu_data();
-  TypeParam* top_data = this->blob_top_->mutable_gpu_data();
+  vptr<const TypeParam> bottom_data = this->blob_bottom_->gpu_data();
+  vptr<TypeParam> top_data = this->blob_top_->mutable_gpu_data();
 
   Device *dc = Caffe::GetDefaultDevice();
-  if (dc->backend() == BACKEND_CUDA) {
-  #ifdef USE_CUDA
-    caffe_copy(n, bottom_data, top_data);
-  #endif  // USE_CUDA
-  } else {
-  #ifdef USE_OPENCL
-    viennacl::ocl::context &ctx = viennacl::ocl::get_context(
-            dc->id());
+  dc->template copy<TypeParam>(n, bottom_data, top_data);
 
-    greentea_copy<TypeParam>(n, (cl_mem)bottom_data, 0,
-                             (cl_mem)top_data, 0, &ctx);
-  #endif  // USE_OPENCL
-  }
-
-  bottom_data = this->blob_bottom_->cpu_data();
-  top_data = this->blob_top_->mutable_cpu_data();
+  const TypeParam* cpu_bottom_data = this->blob_bottom_->cpu_data();
+  TypeParam* cpu_top_data = this->blob_top_->mutable_cpu_data();
   for (int_tp i = 0; i < n; ++i) {
-    EXPECT_EQ(bottom_data[i], top_data[i]);
+    EXPECT_EQ(cpu_bottom_data[i], cpu_top_data[i]);
   }
 }
 

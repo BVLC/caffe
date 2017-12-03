@@ -86,7 +86,7 @@ class RandomNumberGeneratorTest : public ::testing::Test {
     const Dtype sample_mean = this->sample_mean(
         static_cast<const Dtype*>(cpu_data));
     EXPECT_NEAR(sample_mean, true_mean, bound);
-    // Check that roughly half the samples are above the true mean.
+    // Check that roughly half_fp the samples are above the true mean.
     int_tp num_above_mean = 0;
     int_tp num_below_mean = 0;
     int_tp num_mean = 0;
@@ -129,7 +129,7 @@ class RandomNumberGeneratorTest : public ::testing::Test {
     const Dtype bound = this->mean_bound(true_std);
     const Dtype sample_mean = this->sample_mean(rng_data);
     EXPECT_NEAR(sample_mean, true_mean, bound);
-    // Check that roughly half the samples are above the true mean, and none are
+    // Check that roughly half_fp the samples are above the true mean, and none are
     // above upper or below lower.
     int_tp num_above_mean = 0;
     int_tp num_below_mean = 0;

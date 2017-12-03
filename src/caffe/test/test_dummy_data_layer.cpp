@@ -51,7 +51,7 @@ TYPED_TEST(DummyDataLayerTest, TestOneTopConstant) {
   dummy_data_param->add_height(2);
   dummy_data_param->add_width(4);
   this->blob_top_vec_.resize(1);
-  DummyDataLayer<TypeParam> layer(param);
+  DummyDataLayer<TypeParam, TypeParam, TypeParam> layer(param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_a_->num(), 5);
   EXPECT_EQ(this->blob_top_a_->channels(), 3);
@@ -86,7 +86,7 @@ TYPED_TEST(DummyDataLayerTest, TestTwoTopConstant) {
   FillerParameter* data_filler_param = dummy_data_param->add_data_filler();
   data_filler_param->set_value(7);
   this->blob_top_vec_.resize(2);
-  DummyDataLayer<TypeParam> layer(param);
+  DummyDataLayer<TypeParam, TypeParam, TypeParam> layer(param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_a_->num(), 5);
   EXPECT_EQ(this->blob_top_a_->channels(), 3);
@@ -127,7 +127,7 @@ TYPED_TEST(DummyDataLayerTest, TestThreeTopConstantGaussianConstant) {
   data_filler_param_b->set_std(gaussian_std);
   FillerParameter* data_filler_param_c = dummy_data_param->add_data_filler();
   data_filler_param_c->set_value(9);
-  DummyDataLayer<TypeParam> layer(param);
+  DummyDataLayer<TypeParam, TypeParam, TypeParam> layer(param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_a_->num(), 5);
   EXPECT_EQ(this->blob_top_a_->channels(), 3);

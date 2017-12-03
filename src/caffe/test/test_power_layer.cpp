@@ -36,7 +36,7 @@ class PowerLayerTest : public MultiDeviceTest<TypeParam> {
     layer_param.mutable_power_param()->set_power(power);
     layer_param.mutable_power_param()->set_scale(scale);
     layer_param.mutable_power_param()->set_shift(shift);
-    PowerLayer<Dtype> layer(layer_param);
+    PowerLayer<Dtype, Dtype, Dtype> layer(layer_param);
     layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
     // Now, check values
@@ -66,7 +66,7 @@ class PowerLayerTest : public MultiDeviceTest<TypeParam> {
     layer_param.mutable_power_param()->set_power(power);
     layer_param.mutable_power_param()->set_scale(scale);
     layer_param.mutable_power_param()->set_shift(shift);
-    PowerLayer<Dtype> layer(layer_param);
+    PowerLayer<Dtype, Dtype, Dtype> layer(layer_param);
     if (power != Dtype(0) && power != Dtype(1) && power != Dtype(2)) {
       // Avoid NaNs by forcing (shift + scale * X) >= 0
       Dtype* bottom_data = this->blob_bottom_->mutable_cpu_data();
