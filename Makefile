@@ -373,6 +373,14 @@ ifeq ($(BLAS), mkl)
 	MKLROOT ?= /opt/intel/mkl
 	BLAS_INCLUDE ?= $(MKLROOT)/include
 	BLAS_LIB ?= $(MKLROOT)/lib $(MKLROOT)/lib/intel64
+	# 10.11 strips DYLD_* env vars so link MKL (rpath is available on 10.5+)
+	OSX_10_OR_LATER   := $(shell [ $(OSX_MAJOR_VERSION) -ge 10 ] && echo true)
+	OSX_10_5_OR_LATER := $(shell [ $(OSX_MINOR_VERSION) -ge 5 ] && echo true)
+	ifeq ($(OSX_10_OR_LATER),true)
+		ifeq ($(OSX_10_5_OR_LATER),true)
+			LDFLAGS += -Wl,-rpath,$(MKLROOT)/lib
+		endif
+	endif
 else ifeq ($(BLAS), open)
 	# OpenBLAS
 	LIBRARIES += openblas
