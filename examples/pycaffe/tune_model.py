@@ -10,7 +10,13 @@ def genOptimalModel(net, mkldnn_direct_time_map, mkldnn_winograd_time_map, optim
     for index in range(0, len(net.layer)):
         l = net.layer[index]
         if l.type == "Convolution":
-            if mkldnn_winograd_time_map[l.name] < mkldnn_direct_time_map[l.name]:
+            if len(l.convolution_param.kernel_size) == 0:
+                continue
+            kernel_size = l.convolution_param.kernel_size[0]
+            stride = 1
+            if len(l.convolution_param.stride) != 0:
+                stride = l.convolution_param.stride[0]
+            if mkldnn_winograd_time_map[l.name] < mkldnn_direct_time_map[l.name] and kernel_size == 3 and stride == 1 and l.convolution_param.num_output % 16 ==0:
                 l.convolution_param.conv_algorithm = "winograd"
             else:
                 l.convolution_param.conv_algorithm = "direct"
