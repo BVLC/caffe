@@ -12,13 +12,11 @@
 #ifndef CPU_ONLY  // CPU-GPU test
 #ifdef USE_OPENCL
 
-#include "caffe/greentea/cl_kernels.hpp"
-#include "caffe/greentea/greentea.hpp"
-#include "caffe/greentea/greentea_math_functions.hpp"
-
 namespace caffe {
 
-template<typename TypeParam>
+// FIXME: General RTC compile test
+
+/*template<typename TypeParam>
 class OpenCLKernelCompileTest : public GPUDeviceTest<TypeParam> {
  protected:
   OpenCLKernelCompileTest() {
@@ -79,6 +77,7 @@ TYPED_TEST(OpenCLKernelCompileTest, TestCompile) {
     ASSERT_FALSE(failure);
   }
 }
+*/
 
 }  // namespace caffe
 #endif  // USE_OPENCL

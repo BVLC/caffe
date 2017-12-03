@@ -88,12 +88,4 @@ INSTANTIATE_CLASS_3T_GUARDED(DeconvolutionLayer,
 INSTANTIATE_CLASS_3T_GUARDED(DeconvolutionLayer,
                              (double), (double), (double));
 
-REGISTER_LAYER_CLASS(Deconvolution);
-REGISTER_LAYER_CLASS_INST(Deconvolution,
-                          (half_fp), (half_fp), (half_fp));
-REGISTER_LAYER_CLASS_INST(Deconvolution,
-                          (float), (float), (float));
-REGISTER_LAYER_CLASS_INST(Deconvolution,
-                          (double), (double), (double));
-
 }  // namespace caffe

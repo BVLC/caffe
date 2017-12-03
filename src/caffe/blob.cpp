@@ -90,6 +90,11 @@ bool Blob<Dtype>::ReshapeLike(const Blob<Dtype>& other) {
 }
 
 template<typename Dtype>
+bool Blob<Dtype>::ReshapeLike(const BlobBase* other) {
+  return Reshape(other->shape());
+}
+
+template<typename Dtype>
 Blob<Dtype>::Blob(const int_tp num, const int_tp channels,
                   const int_tp height, const int_tp width,
                   Device *dev) {
