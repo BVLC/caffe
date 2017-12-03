@@ -303,7 +303,7 @@ bool Net<Dtype>::StateMeetsRule(const NetState& state,
     if (state.level() < rule.min_level()) {
       LOG_IF(INFO, Caffe::root_solver())
           << "The NetState level (" << state.level()
-          << ") is above the min_level (" << rule.min_level()
+          << ") is below the min_level (" << rule.min_level()
           << ") specified by a rule in layer " << layer_name;
       return false;
     }
