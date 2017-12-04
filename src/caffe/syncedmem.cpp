@@ -177,16 +177,23 @@ void SyncedMemory::check_device() {
 void *SyncedMemory::gpu_malloc(size_t size) {
   void *ptr = nullptr;
 
+  /*
+  if(!mem_mutex.try_lock()) {
+    throw std::runtime_error("concurrent update");
+  }
+  */
   device_pool_ = Caffe::device_pool();
   if (device_pool_.get()) {
     ptr = device_pool_->alloc(size);
     if (ptr) {
+      //  mem_mutex.unlock();
       return ptr;
     }
   }
 
   device_pool_.reset();
   CUDA_CHECK(cudaMalloc(&ptr, size));
+  // mem_mutex.unlock();
 
   return ptr;
 }

@@ -2,6 +2,7 @@
 #define CAFFE_SYNCEDMEM_HPP_
 
 #include <cstdlib>
+//#include <mutex>
 
 #ifdef USE_MKL
 #include "mkl.h"
@@ -55,6 +56,7 @@ private:
 
   void *gpu_malloc(size_t size);
   void gpu_free(void *data);
+//  std::mutex mem_mutex;
 
   DISABLE_COPY_AND_ASSIGN(SyncedMemory);
 }; // class SyncedMemory

@@ -258,6 +258,7 @@ void Blob<Dtype>::FromProto(const BlobProto& proto, bool reshape) {
       data_vec[i] = proto.data(i);
     }
   }
+  gpu_data();
   if (proto.double_diff_size() > 0) {
     CHECK_EQ(count_, proto.double_diff_size());
     Dtype* diff_vec = mutable_cpu_diff();
@@ -271,6 +272,7 @@ void Blob<Dtype>::FromProto(const BlobProto& proto, bool reshape) {
       diff_vec[i] = proto.diff(i);
     }
   }
+  gpu_diff();
 }
 
 INSTANTIATE_CLASS(Blob);

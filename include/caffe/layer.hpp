@@ -38,6 +38,9 @@ public:
       for (int i = 0; i < layer_param_.blobs_size(); ++i) {
         blobs_[i].reset(new Blob<Dtype>());
         blobs_[i]->FromProto(layer_param_.blobs(i));
+	//提前分配顯存
+        blobs_[i]->cpu_data();
+        blobs_[i]->gpu_data();
       }
     }
   }
