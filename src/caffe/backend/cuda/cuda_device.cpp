@@ -19,6 +19,21 @@ CudaDevice::CudaDevice(uint_tp id, uint_tp list_id) {
   name_ = "";
 }
 
+void CudaDevice::Init() {
+  cudaDeviceProp prop;
+  CUDA_CHECK(cudaGetDeviceProperties(&prop, id_));
+  max_local_sizes_[0] = prop.maxThreadsDim[0];
+  max_local_sizes_[1] = prop.maxThreadsDim[1];
+  max_local_sizes_[2] = prop.maxThreadsDim[2];
+  max_group_sizes_[0] = prop.maxGridSize[0];
+  max_group_sizes_[1] = prop.maxGridSize[1];
+  max_group_sizes_[2] = prop.maxGridSize[2];
+  max_local_size_ = prop.maxThreadsPerBlock;
+
+  this->CreateMathProgram();
+  this->CreateIm2ColProgram();
+}
+
 string CudaDevice::name() {
   if (name_ == "") {
     cudaDeviceProp prop;
@@ -46,6 +61,8 @@ void CudaDevice::FreeMemHost(void* ptr) {
 
 vptr<void> CudaDevice::MallocMemDevice(uint_tp size, void** ptr,
                                         bool zero_copy) {
+  CHECK_GT(size, 0) << "Illegal allocation of size 0.";
+
   int initial_device;
   cudaGetDevice(&initial_device);
   cudaSetDevice(this->id());
@@ -77,7 +94,7 @@ bool CudaDevice::is_host_unified() {
 }
 
 void CudaDevice::get_threads(const vector<size_t>* work_size,
-                             vector<size_t>* local, vector<size_t>* group,
+                             vector<size_t>* group, vector<size_t>* local,
                              DeviceKernel* kernel, bool auto_select) {
 
   for(uint_tp i = 0; i < work_size->size(); ++i) {
@@ -107,19 +124,6 @@ void CudaDevice::get_threads(const vector<size_t>* work_size,
   for (uint_tp i = 0; i < work_size->size(); ++i) {
     (*group)[i] = ((*work_size)[i] - 1) / ((*local)[i]) + 1;
   }
-}
-
-
-void CudaDevice::Init() {
-  cudaDeviceProp prop;
-  CUDA_CHECK(cudaGetDeviceProperties(&prop, id_));
-  max_local_sizes_[0] = prop.maxThreadsDim[0];
-  max_local_sizes_[1] = prop.maxThreadsDim[1];
-  max_local_sizes_[2] = prop.maxThreadsDim[2];
-  max_group_sizes_[0] = prop.maxGridSize[0];
-  max_group_sizes_[1] = prop.maxGridSize[1];
-  max_group_sizes_[2] = prop.maxGridSize[2];
-  max_local_size_ = prop.maxThreadsPerBlock;
 }
 
 shared_ptr<DeviceProgram> CudaDevice::CreateProgram() {

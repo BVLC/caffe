@@ -107,7 +107,7 @@ string OclDeviceProgram::function(string name, KernelArgs args) {
         ss << "const ";
       }
       ss << std::get<0>(args[i]) << " " << base_name;
-      ss << " = " << var_name << " + " << off_name;
+      ss << " = " << var_name << " + " << off_name << ";";
       ss << std::endl;
     }
   }
@@ -126,6 +126,15 @@ string OclDeviceProgram::kernel_loop(string type,
 
 string OclDeviceProgram::setup() {
   stringstream ss;
+  ss << "#define int8_t char" << std::endl;
+  ss << "#define int16_t short" << std::endl;
+  ss << "#define int32_t int" << std::endl;
+  ss << "#define int64_t long" << std::endl;
+  ss << "#define uint8_t uchar" << std::endl;
+  ss << "#define uint16_t ushort" << std::endl;
+  ss << "#define uint32_t uint" << std::endl;
+  ss << "#define uint64_t ulong" << std::endl;
+
   // Test/enable KHR 64 bit (double)
   ss << "#if defined(cl_khr_fp64)" << std::endl;
   ss << "#pragma OPENCL EXTENSION cl_khr_fp64 : enable" << std::endl;
@@ -158,8 +167,8 @@ string OclDeviceProgram::local_ptr(string type, string name) {
   return "__local " + type + "* " + name;
 }
 
-string OclDeviceProgram::local_mem(string type) {
-  return "__local " + type;
+string OclDeviceProgram::local_mem(string type, string name) {
+  return "__local " + type + " " + name;
 }
 
 string OclDeviceProgram::local_id(uint_tp fixed_index) {
@@ -200,11 +209,11 @@ string OclDeviceProgram::global_size(string runtime_index) {
 }
 
 string OclDeviceProgram::local_barrier() {
-  return "barrier(CLK_LOCAL_MEM_FENCE)";
+  return "barrier(CLK_LOCAL_MEM_FENCE);";
 }
 
 string OclDeviceProgram::global_barrier() {
-  return "barrier(CLK_GLOBAL_MEM_FENCE)";
+  return "barrier(CLK_GLOBAL_MEM_FENCE);";
 }
 
 string OclDeviceProgram::atomics() {

@@ -9,24 +9,23 @@ namespace caffe {
 SyncedMemory::~SyncedMemory() {
 #ifndef CPU_ONLY
   // Free device memory
-  if (gpu_ptr_.get() && own_gpu_data_) {
-    if (own_zero_copy_data_) {
-      device_->FreeMemHost(cpu_ptr_);
-    } else {
-      device_->FreeMemDevice(gpu_ptr_);
-    }
+  if (gpu_ptr_.is_valid() && own_gpu_data_) {
+    device_->FreeMemDevice(gpu_ptr_);
     device_->decrease_memory_usage(size_);
     gpu_ptr_ = vptr<void>();
   }
 #endif  // !CPU_ONLY
   // Free host memory
-  if (cpu_ptr_ && own_cpu_data_ && !own_zero_copy_data_) {
+  if (cpu_ptr_ && own_cpu_data_) {
     device_->FreeMemHost(cpu_ptr_);
     cpu_ptr_ = nullptr;
   }
 }
 
 inline void SyncedMemory::to_cpu() {
+  if (size_ == 0)
+      return;
+
   switch (head_) {
     case UNINITIALIZED: {
 #ifndef CPU_ONLY
@@ -74,6 +73,9 @@ inline void SyncedMemory::to_cpu() {
 }
 
 inline void SyncedMemory::to_gpu() {
+  if (size_ == 0)
+      return;
+
 #ifndef CPU_ONLY
   switch (head_) {
     case UNINITIALIZED: {

@@ -63,6 +63,9 @@ void OclDevice::Init() {
   for (int q = 0; q < OPENCL_QUEUE_COUNT - 1; ++q) {
     ctx.add_queue(ctx.devices()[0]);
   }
+
+  this->CreateMathProgram();
+  this->CreateIm2ColProgram();
 }
 
 shared_ptr<DeviceProgram> OclDevice::CreateProgram() {
@@ -120,6 +123,8 @@ void OclDevice::FreeMemHost(void* ptr) {
 
 vptr<void> OclDevice::MallocMemDevice(uint_tp size, void** ptr,
                                                bool zero_copy) {
+  CHECK_GT(size, 0) << "Illegal allocation of size 0.";
+
   cl_mem gpu_ptr;
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(this->id());
   cl_int err;
@@ -130,6 +135,7 @@ vptr<void> OclDevice::MallocMemDevice(uint_tp size, void** ptr,
     gpu_ptr = clCreateBuffer(ctx.handle().get(),
                       CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR,
                       zero_copy_size, *ptr, &err);
+
     void *mapped_ptr = clEnqueueMapBuffer(ctx.get_queue().handle().get(),
                                           gpu_ptr, true,
                                           CL_MAP_READ | CL_MAP_WRITE,
@@ -144,7 +150,8 @@ vptr<void> OclDevice::MallocMemDevice(uint_tp size, void** ptr,
                                  CL_MEM_READ_WRITE,
                                  size, nullptr, &err);
   }
-  CHECK_EQ(0, err) << "OpenCL buffer allocation of size " << size << " failed.";
+  CHECK_EQ(0, err) << "OpenCL buffer allocation of size "
+                   << size << " failed.";
   return vptr<void>(std::make_shared<ocl_dev_ptr<void> >(gpu_ptr));
 }
 
@@ -179,17 +186,22 @@ uint_tp OclDevice::num_queues() {
 }
 
 void OclDevice::get_threads(const vector<size_t>* work_size,
-                         vector<size_t>* local,
-                         vector<size_t>* group,
-                         DeviceKernel* kernel,
-                         bool auto_select) {
+                            vector<size_t>* group,
+                            vector<size_t>* local,
+                            DeviceKernel* kernel,
+                            bool auto_select) {
+  CHECK(work_size);
+  CHECK(local);
+  CHECK(group);
+  CHECK(kernel);
+
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(id_);
 
   // Let the OpenCL implementation choose sizes
   if (auto_select) {
     for(uint_tp i = 0; i < work_size->size(); ++i) {
       local->insert(local->begin() + i, 0);
-      group->insert(group->begin() + i, 0);
+      group->insert(group->begin() + i, (*work_size)[i]);
     }
     return;
   } else {

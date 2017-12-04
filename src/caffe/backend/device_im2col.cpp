@@ -8,6 +8,7 @@ template<typename Dtype>
 string create_source(Device* dev,
                            shared_ptr<DeviceProgram> program) {
   stringstream ss;
+
   ss << program->define_type<Dtype>("Dtype");
 
   {
@@ -57,7 +58,8 @@ string create_source(Device* dev,
     ss << "const int_tp w_offset = w_col * stride_w - pad_w;" << std::endl;
     ss << program->global_ptr("Dtype", "data_col_ptr")
        << " = data_col;" << std::endl;
-    ss << "data_col_ptr += (c_col * height_col + h_col) * width_col + w_col";
+    ss << "data_col_ptr += (c_col * height_col + h_col) * width_col + w_col;"
+       << std::endl;
     ss << program->global_ptr("const Dtype", "data_im_ptr")
        << " = data_im;" << std::endl;
     ss << "data_im_ptr += (c_im * height + h_offset) * width + w_offset;"
@@ -152,7 +154,7 @@ string create_source(Device* dev,
     ss << "}" << std::endl;
   }
 
-  for (int_tp num_axes = 0; num_axes < 6; ++num_axes) {
+  for (int_tp num_axes = 1; num_axes < 7; ++num_axes) {
     KernelArgs fw_args;
     KernelArgs bw_args;
 
@@ -182,28 +184,30 @@ string create_source(Device* dev,
     ss << "int_tp d_temp[" << num_axes << "];" << std::endl;
     ss << "int_tp d_iter[" << num_axes << "];" << std::endl;
 
-    ss << program->local_mem("int_tp") << "shared_dilation["
-       << num_axes << "];" << std::endl;
-    ss << program->local_mem("int_tp") << "shared_kernel_shape["
-       << num_axes << "];" << std::endl;
-    ss << program->local_mem("int_tp") << "shared_pad["
-       << num_axes << "];" << std::endl;
-    ss << program->local_mem("int_tp") << "shared_stride["
-       << num_axes << "];" << std::endl;
-    ss << program->local_mem("int_tp") << "shared_col_shape["
-       << (num_axes + 1) << "];" << std::endl;
-    ss << program->local_mem("int_tp") << "shared_im_shape["
-       << (num_axes + 1) << "];" << std::endl;
+    ss << program->local_mem("int_tp", "shared_dilation["
+       + std::to_string(num_axes) + "]") << ";" << std::endl;
+    ss << program->local_mem("int_tp", "shared_kernel_shape["
+       + std::to_string(num_axes) + "]") << ";" << std::endl;
+    ss << program->local_mem("int_tp", "shared_pad["
+       + std::to_string(num_axes) + "]") << ";" << std::endl;
+    ss << program->local_mem("int_tp", "shared_stride["
+       + std::to_string(num_axes) + "]") << ";" << std::endl;
+    ss << program->local_mem("int_tp", "shared_col_shape["
+       + std::to_string(num_axes + 1) + "]") << ";" << std::endl;
+    ss << program->local_mem("int_tp", "shared_im_shape["
+       + std::to_string(num_axes + 1) + "]") << ";" << std::endl;
 
-    ss << "for(int_tp li = " << program->local_id(0) << "; li < num_axes; "
-       << "li += " << program->local_size(0) << ") {" << std::endl;
+    ss << "for(int_tp li = " << program->local_id(0) << "; li < "
+       << num_axes << "; " << "li += " << program->local_size(0)
+       << ") {" << std::endl;
     ss << "shared_dilation[li] = dilation[li];" << std::endl;
     ss << "shared_kernel_shape[li] = kernel_shape[li];" << std::endl;
     ss << "shared_pad[li] = pad[li];" << std::endl;
     ss << "shared_stride[li] = stride[li];" << std::endl;
     ss << "}" << std::endl;
-    ss << "for(int_tp li = " << program->local_id(0) << "; li < num_axes; "
-       << "li += (" << program->local_size(0) << " + 1) {" << std::endl;
+    ss << "for(int_tp li = " << program->local_id(0) << "; li < "
+       << num_axes << "; " << "li += (" << program->local_size(0) << " + 1)) {"
+       << std::endl;
     ss << "shared_col_shape[li] = col_shape[li];" << std::endl;
     ss << "shared_im_shape[li] = im_shape[li];" << std::endl;
     ss << "}" << std::endl;
@@ -216,14 +220,14 @@ string create_source(Device* dev,
     // computations used to compute the spatial indices.
     ss << "int_tp channel_in = index;" << std::endl;
     ss << "int_tp channel_out = 1;" << std::endl;
-    ss << "for (i = num_axes - 1; i >= 0; --i) {" << std::endl;
+    ss << "for (i = " << (num_axes - 1) << "; i >= 0; --i) {" << std::endl;
     ss << "d_temp[i] = channel_in % shared_col_shape[i + 1];" << std::endl;
     ss << "channel_in /= shared_col_shape[i + 1];" << std::endl;
     ss << "channel_out *= shared_kernel_shape[i];" << std::endl;
     ss << "}" << std::endl;
     ss << "channel_out *= channel_in;" << std::endl;
     ss << "int_tp data_col_inc = 1;" << std::endl;
-    ss << "for (i = 0; i < num_axes; ++i) {" << std::endl;
+    ss << "for (i = 0; i < " << num_axes << "; ++i) {" << std::endl;
     ss << "channel_out *= shared_col_shape[i + 1];" << std::endl;
     ss << "channel_out += d_temp[i];" << std::endl;
     ss << "d_temp[i] = d_temp[i] * shared_stride[i] - shared_pad[i];"
@@ -240,7 +244,7 @@ string create_source(Device* dev,
     ss << "bool incremented;" << std::endl;
     ss << "do {" << std::endl;
     ss << "bool in_range = true;" << std::endl;
-    ss << "for (i = 0; i < num_axes; ++i) {" << std::endl;
+    ss << "for (i = 0; i < " << num_axes << "; ++i) {" << std::endl;
     ss << "const int_tp d_iter_im = d_iter[i] * shared_dilation[i] + d_temp[i];"
        << std::endl;
     ss << "in_range &= d_iter_im >= 0 && d_iter_im < shared_im_shape[i + 1];"
@@ -250,7 +254,7 @@ string create_source(Device* dev,
     ss << "if (in_range) {" << std::endl;
     ss << "int_tp data_im_offset = d_iter[0] * shared_dilation[0];"
        << std::endl;
-    ss << "for (i = 1; i < num_axes; ++i) {" << std::endl;
+    ss << "for (i = 1; i < " << num_axes << "; ++i) {" << std::endl;
     ss << "data_im_offset *= shared_im_shape[i + 1];" << std::endl;
     ss << "data_im_offset += d_iter[i] * shared_dilation[i];" << std::endl;
     ss << "}" << std::endl;
@@ -260,7 +264,7 @@ string create_source(Device* dev,
     ss << "}" << std::endl;
     ss << "data_col_ptr += data_col_inc;" << std::endl;
     ss << "incremented = false;" << std::endl;
-    ss << "for (i = num_axes - 1; i >= 0; --i) {" << std::endl;
+    ss << "for (i = " << (num_axes - 1) << "; i >= 0; --i) {" << std::endl;
     ss << "const int_tp d_max = shared_kernel_shape[i];" << std::endl;
     ss << "if (d_iter[i] == d_max - 1) {" << std::endl;
     ss << "d_iter[i] = 0;" << std::endl;
@@ -269,7 +273,8 @@ string create_source(Device* dev,
     ss << "incremented = true;" << std::endl;
     ss << "break;" << std::endl;
     ss << "}" << std::endl;
-    ss << "}  // for (int_tp i = num_axes - 1; i >= 0; --i)" << std::endl;
+    ss << "}  // for (int_tp i = " << (num_axes - 1) << "; i >= 0; --i)"
+       << std::endl;
     ss << "} while (incremented);" << std::endl;  // do
     ss << "}" << std::endl;  // KERNEL_LOOP(index, n)
     ss << "}" << std::endl;
@@ -302,28 +307,29 @@ string create_source(Device* dev,
     ss << "int_tp d_col_start[" << num_axes << "];" << std::endl;
     ss << "int_tp d_col_end[" << num_axes << "];" << std::endl;
 
-    ss << program->local_mem("int_tp") << "shared_dilation["
-       << num_axes << "];" << std::endl;
-    ss << program->local_mem("int_tp") << "shared_kernel_shape["
-       << num_axes << "];" << std::endl;
-    ss << program->local_mem("int_tp") << "shared_pad["
-       << num_axes << "];" << std::endl;
-    ss << program->local_mem("int_tp") << "shared_stride["
-       << num_axes << "];" << std::endl;
-    ss << program->local_mem("int_tp") << "shared_col_shape["
-       << (num_axes + 1) << "];" << std::endl;
-    ss << program->local_mem("int_tp") << "shared_im_shape["
-       << (num_axes + 1) << "];" << std::endl;
+    ss << program->local_mem("int_tp", "shared_dilation["
+                             + std::to_string(num_axes) + "]") << ";"
+                             << std::endl;
+    ss << program->local_mem("int_tp", "shared_kernel_shape["
+       + std::to_string(num_axes) + "]") << ";" << std::endl;
+    ss << program->local_mem("int_tp", "shared_pad["
+       + std::to_string(num_axes) + "]") << ";" << std::endl;
+    ss << program->local_mem("int_tp", "shared_stride["
+       + std::to_string(num_axes) + "]") << ";" << std::endl;
+    ss << program->local_mem("int_tp", "shared_col_shape["
+       + std::to_string(num_axes + 1) + "]") << ";" << std::endl;
+    ss << program->local_mem("int_tp", "shared_im_shape["
+       + std::to_string(num_axes + 1) + "]") << ";" << std::endl;
 
-    ss << "for(int_tp li = " << program->local_id(0) << "; li < num_axes; "
-       << "li += " << program->local_size(0) << ") {" << std::endl;
+    ss << "for(int_tp li = " << program->local_id(0) << "; li < " << num_axes
+       << ";li += " << program->local_size(0) << ") {" << std::endl;
     ss << "shared_dilation[li] = dilation[li];" << std::endl;
     ss << "shared_kernel_shape[li] = kernel_shape[li];" << std::endl;
     ss << "shared_pad[li] = pad[li];" << std::endl;
     ss << "shared_stride[li] = stride[li];" << std::endl;
     ss << "}" << std::endl;
-    ss << "for(int_tp li = " << program->local_id(0) << "; li < num_axes; "
-       << "li += (" << program->local_size(0) << " + 1) {" << std::endl;
+    ss << "for(int_tp li = " << program->local_id(0) << "; li < " << num_axes
+       << ";li += (" << program->local_size(0) << " + 1)) {" << std::endl;
     ss << "shared_col_shape[li] = col_shape[li];" << std::endl;
     ss << "shared_im_shape[li] = im_shape[li];" << std::endl;
     ss << "}" << std::endl;
@@ -331,18 +337,19 @@ string create_source(Device* dev,
     ss << program->local_barrier() << std::endl;
 
     ss << program->kernel_loop("int_tp", "index", "n") << std::endl;
-    // Initialize channel_in, computed in the loop below, with int_tpermediate
+    // Initialize channel_in, computed in the loop below, with intermediate
     // computations used to compute the spatial indices.
     ss << "int_tp c_im = index;" << std::endl;
     // Calculate d_im (image dimensions).
-    ss << "for (int_tp i = num_axes - 1; i >= 0; --i) {" << std::endl;
+    ss << "for (int_tp i = " << (num_axes - 1) << "; i >= 0; --i) {"
+       << std::endl;
     ss << "d_im[i] = c_im % shared_im_shape[i + 1] + shared_pad[i];"
        << std::endl;
     ss << "c_im /= shared_im_shape[i + 1];" << std::endl;
     ss << "}" << std::endl;
     // Calculate col start/end indices.
     ss << "bool done = false;" << std::endl;
-    ss << "for (int_tp i = 0; i < num_axes; ++i) {" << std::endl;
+    ss << "for (int_tp i = 0; i < " << num_axes << "; ++i) {" << std::endl;
     ss << "const int_tp kernel_extent = "
        << "shared_dilation[i] * (shared_kernel_shape[i] - 1) + 1;" << std::endl;
     ss << "d_col_start[i] = d_col_iter[i] ="
@@ -371,7 +378,8 @@ string create_source(Device* dev,
     ss << "int_tp final_offset = 0;" << std::endl;
     ss << "int_tp kernel_shape_prod = 1;" << std::endl;
     ss << "int_tp kernel_index;" << std::endl;
-    ss << "for (int_tp i = num_axes - 1; i >= 0; --i) {" << std::endl;
+    ss << "for (int_tp i = " << (num_axes - 1) << "; i >= 0; --i) {"
+       << std::endl;
     ss << "kernel_index = d_im[i] - d_col_iter[i] * shared_stride[i];"
        << std::endl;
     ss << "if (kernel_index % shared_dilation[i]) {" << std::endl;
@@ -385,7 +393,7 @@ string create_source(Device* dev,
     ss << "}" << std::endl;
     ss << "if (!skip) {" << std::endl;
     ss << "final_offset += kernel_shape_prod * c_im;" << std::endl;
-    ss << "for (int_tp i = 0; i < num_axes; ++i) {" << std::endl;
+    ss << "for (int_tp i = 0; i < " << num_axes << "; ++i) {" << std::endl;
     ss << "final_offset *= shared_col_shape[i + 1];" << std::endl;
     ss << "final_offset += d_col_iter[i];" << std::endl;
     ss << "}" << std::endl;
@@ -393,7 +401,8 @@ string create_source(Device* dev,
     ss << "}" << std::endl;
     ss << "skip = false;" << std::endl;
     ss << "incremented = false;" << std::endl;
-    ss << "for (int_tp i = num_axes - 1; i >= 0; --i) {" << std::endl;
+    ss << "for (int_tp i = " << (num_axes - 1) << "; i >= 0; --i) {"
+       << std::endl;
     ss << "const int_tp d_max = d_col_end[i];" << std::endl;
     ss << "if (d_col_iter[i] == d_max - 1) {" << std::endl;
     ss << "d_col_iter[i] = d_col_start[i];" << std::endl;
@@ -408,6 +417,7 @@ string create_source(Device* dev,
     ss << "}" << std::endl;  // KERNEL_LOOP(index, n)
     ss << "}" << std::endl;
   }
+
   return ss.str();
 }
 
@@ -422,25 +432,51 @@ string create_source<double>(Device* dev,
     shared_ptr<DeviceProgram> program);
 
 void Device::CreateIm2ColProgram() {
-  this->im2col_program_ = this->CreateProgram();
-  stringstream ss;
+  for (int_tp i = 0; i < PROTO_DATA_INDEX_MAX; ++i) {
+    this->im2col_programs_.push_back(this->CreateProgram());
 
-  ss << this->im2col_program_->setup();
+    stringstream ss;
+    ss << this->im2col_programs_[i]->setup();
 
+    switch (i) {
+      case HALF_DATA_INDEX: {
 #ifdef USE_HALF
-  ss << create_source<half_fp>(this, this->im2col_program_);
+        ss << "#ifdef HALF_SUPPORT_AVAILABLE" << std::endl;
+        ss << create_source<half_fp>(this, this->im2col_programs_[i]);
+        ss << "#endif  // HALF_SUPPORT_AVAILABLE" << std::endl;
 #endif
-
+        break;
+      }
+      case FLOAT_DATA_INDEX: {
 #ifdef USE_SINGLE
-  ss << create_source<float>(this, this->im2col_program_);
+        ss << create_source<float>(this, this->im2col_programs_[i]);
 #endif
-
+        break;
+      }
+      case DOUBLE_DATA_INDEX: {
 #ifdef USE_DOUBLE
-  ss << create_source<double>(this, this->im2col_program_);
+        ss << "#ifdef DOUBLE_SUPPORT_AVAILABLE" << std::endl;
+        ss << create_source<double>(this, this->im2col_programs_[i]);
+        ss << "#endif  // DOUBLE_SUPPORT_AVAILABLE" << std::endl;
 #endif
-
-  this->im2col_program_->set_source(ss.str());
-  this->im2col_program_->Compile(true, true);
+        break;
+      }
+      case INT8_QUANTIZED_DATA_INDEX: {
+        break;
+      }
+      case INT16_QUANTIZED_DATA_INDEX: {
+        break;
+      }
+      case INT32_QUANTIZED_DATA_INDEX: {
+        break;
+      }
+      case INT64_QUANTIZED_DATA_INDEX: {
+        break;
+      }
+    }
+    this->im2col_programs_[i]->set_source(ss.str());
+    this->im2col_programs_[i]->Compile(true, true);
+  }
 }
 
 
@@ -459,7 +495,8 @@ void Device::im2col(vptr<const Dtype> data_im, const int_tp channels,
       / stride_w + 1;
   int_tp num_kernels = channels * height_col * width_col;
 
-  shared_ptr<DeviceKernel> kernel = this->im2col_program_->GetKernel("im2col");
+  shared_ptr<DeviceKernel> kernel =
+    this->im2col_programs_[proto_data_type_index<Dtype>()]->GetKernel("im2col");
   kernel->add_arg(&num_kernels);
   kernel->add_arg(&data_im);
   kernel->add_arg(&height);
@@ -499,7 +536,8 @@ void Device::col2im(vptr<const Dtype> data_col, const int_tp channels,
   // To avoid involving atomic operations, we will launch one kernel per
   // bottom dimension, and then in the kernel add up the top dimensions.
 
-  shared_ptr<DeviceKernel> kernel = this->im2col_program_->GetKernel("col2im");
+  shared_ptr<DeviceKernel> kernel =
+    this->im2col_programs_[proto_data_type_index<Dtype>()]->GetKernel("col2im");
   kernel->add_arg(&num_kernels);
   kernel->add_arg(&data_col);
   kernel->add_arg(&height);
@@ -530,7 +568,8 @@ void Device::im2col_nd(vptr<const Dtype> data_im, const int_tp num_spatial_axes,
                        vptr<const int_tp> col_shape, vptr<const int_tp> kernel_shape,
                        vptr<const int_tp> pad, vptr<const int_tp> stride,
                        vptr<const int_tp> dilation, vptr<Dtype> data_col) {
-  shared_ptr<DeviceKernel> kernel = this->im2col_program_
+  shared_ptr<DeviceKernel> kernel =
+      this->im2col_programs_[proto_data_type_index<Dtype>()]
                                                        ->GetKernel("im2col_nd");
   kernel->add_arg(&num_kernels);
   kernel->add_arg(&data_im);
@@ -557,7 +596,8 @@ void Device::col2im_nd(vptr<const Dtype> data_col,
                        vptr<const int_tp> kernel_shape,
                        vptr<const int_tp> pad, vptr<const int_tp> stride,
                        vptr<const int_tp> dilation, vptr<Dtype> data_im) {
-  shared_ptr<DeviceKernel> kernel = this->im2col_program_
+  shared_ptr<DeviceKernel> kernel =
+      this->im2col_programs_[proto_data_type_index<Dtype>()]
                                                        ->GetKernel("col2im_nd");
   kernel->add_arg(&im_size);
   kernel->add_arg(&data_col);

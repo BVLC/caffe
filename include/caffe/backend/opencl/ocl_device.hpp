@@ -24,8 +24,8 @@ class OclDevice : public Device {
   virtual bool CheckType(string type);
   virtual void SwitchQueue(uint_tp id);
   virtual void get_threads(const vector<size_t>* work_size,
-                           vector<size_t>* local,
                            vector<size_t>* group,
+                           vector<size_t>* local,
                            DeviceKernel* kernel,
                            bool auto_select);
   virtual void FinishQueues();

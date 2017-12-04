@@ -11,14 +11,14 @@ namespace caffe {
 #ifdef USE_OPENCL
 
 OclDeviceKernel::OclDeviceKernel(Device* dev, viennacl::ocl::kernel ocl_ker,
-                                     KernelArgs args) {
+                                 KernelArgs args) : DeviceKernel() {
   this->device_ = dev;
   this->ocl_kernel_ = ocl_ker;
   this->args_ = args;
 }
 
 void OclDeviceKernel::Execute(vector<size_t> group,
-                                vector<size_t> local) {
+                              vector<size_t> local) {
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(this->device_->id());
 
   cl_kernel kernel = ocl_kernel_.handle().get();
@@ -28,13 +28,25 @@ void OclDeviceKernel::Execute(vector<size_t> group,
   vector<size_t> local_ws;
   vector<size_t> global_ws;
 
+  // Flag if OpenCL should determine the local work size instead
+  bool auto_local_ws = false;
+
   for (int_tp i = 0; i < work_dim; ++i) {
-    global_ws.push_back(local[i] * group[i]);
+    auto_local_ws = auto_local_ws || (local[i] == 0);
+    if (auto_local_ws) {
+      global_ws.push_back(group[i]);
+    } else {
+      global_ws.push_back(local[i] * group[i]);
+    }
     local_ws.push_back(local[i]);
   }
 
   const size_t *global_ws_ptr = &global_ws[0];
   const size_t *local_ws_ptr = &local_ws[0];
+
+  if (auto_local_ws) {
+    local_ws_ptr = NULL;
+  }
 
   OCL_CHECK(clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
                                    kernel, work_dim, NULL,

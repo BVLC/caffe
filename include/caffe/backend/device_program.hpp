@@ -22,7 +22,7 @@ class DeviceProgram {
   virtual string atomics() = 0;
   virtual string global_ptr(string type, string name) = 0;
   virtual string local_ptr(string type, string name) = 0;
-  virtual string local_mem(string type) = 0;
+  virtual string local_mem(string type, string name) = 0;
 
   virtual string local_id(uint_tp fixed_index) = 0;
   virtual string local_id(string runtime_index) = 0;

@@ -171,6 +171,40 @@ inline int_tp proto_data_type_index<int64_t>() {
   return INT64_QUANTIZED_DATA_INDEX;
 }
 
+template<typename Dtype>
+inline bool is_signed_integer_type() {
+  return std::is_same<Dtype, int8_t>::value
+      || std::is_same<Dtype, int16_t>::value
+      || std::is_same<Dtype, int32_t>::value
+      || std::is_same<Dtype, int64_t>::value;
+}
+
+template<typename Dtype>
+inline bool is_unsigned_integer_type() {
+  return std::is_same<Dtype, uint8_t>::value
+      || std::is_same<Dtype, uint16_t>::value
+      || std::is_same<Dtype, uint32_t>::value
+      || std::is_same<Dtype, uint64_t>::value;
+}
+
+template<typename Dtype>
+inline bool is_integer_type() {
+  return std::is_same<Dtype, int8_t>::value
+      || std::is_same<Dtype, int16_t>::value
+      || std::is_same<Dtype, int32_t>::value
+      || std::is_same<Dtype, int64_t>::value
+      || std::is_same<Dtype, uint8_t>::value
+      || std::is_same<Dtype, uint16_t>::value
+      || std::is_same<Dtype, uint32_t>::value
+      || std::is_same<Dtype, uint64_t>::value;
+}
+
+template<typename Dtype>
+inline bool is_float_type() {
+  return std::is_same<Dtype, half_fp>::value
+      || std::is_same<Dtype, float>::value
+      || std::is_same<Dtype, double>::value;
+}
 
 }  // namespace caffe
 

@@ -10,7 +10,8 @@ namespace caffe {
 #ifdef USE_CUDA
 
 CudaDeviceKernel::CudaDeviceKernel(Device* dev, CUfunction cuda_kernel,
-                                       KernelArgs args) : cuda_args_(0) {
+                                       KernelArgs args) : DeviceKernel(),
+                                           cuda_args_(0) {
   this->device_ = dev;
   this->cuda_kernel_ = cuda_kernel;
   this->args_ = args;

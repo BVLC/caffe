@@ -142,8 +142,8 @@ string CudaDeviceProgram::local_ptr(string type, string name) {
   return type + "* " + name;
 }
 
-string CudaDeviceProgram::local_mem(string type) {
-  return "__shared__ " + type;
+string CudaDeviceProgram::local_mem(string type, string name) {
+  return "__shared__ " + type + " " + name;
 }
 
 string CudaDeviceProgram::local_id(uint_tp fixed_index) {

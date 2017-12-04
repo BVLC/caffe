@@ -29,7 +29,7 @@ class OclDeviceProgram : public DeviceProgram {
   virtual string atomics();
   virtual string global_ptr(string type, string name);
   virtual string local_ptr(string type, string name);
-  virtual string local_mem(string type);
+  virtual string local_mem(string type, string name);
 
   virtual string local_id(uint_tp fixed_index);
   virtual string local_id(string runtime_index);
