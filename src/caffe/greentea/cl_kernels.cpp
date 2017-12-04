@@ -952,6 +952,9 @@ static std::vector<std::vector<std::string>> cl_kernels{
 "{",    // NOLINT
 "int_tp item = sub_id + reg * SIMD_SIZE;",    // NOLINT
 "local_kernel_data[reg] = kernel_dataPtrFloat[item];",    // NOLINT
+"if (channel_id > 0xfffffffeul) {",    // NOLINT
+"convolved_image[0] = local_kernel_data[reg];",    // NOLINT
+"}",    // NOLINT
 "}",    // NOLINT
 ");",    // NOLINT
 "",    // NOLINT
