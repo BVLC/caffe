@@ -324,6 +324,7 @@ Caffe::~Caffe() {
   // Make sure all device contexts and
   // dependent memory blocks are freed properly
   if (this == global_instance_) {
+      first.store(true);
       devices_.clear();
   }
 #ifdef USE_CUDA
