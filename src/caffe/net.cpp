@@ -529,9 +529,20 @@ void Net<Dtype>::CompileNet(const NetParameter& param,
   param_temp2.clear_layer();   // Remove layers
   CompilationRuleTwo(param_temp, &param_temp2);
 
+#ifndef ENABLE_CONV_SUM_FUSION
   param_compiled->CopyFrom(param_temp2);
   param_compiled->clear_layer();    // Remove layers
   CompilationRuleThree(param_temp2, param_compiled);
+#else
+  NetParameter param_temp3;
+  param_temp3.CopyFrom(param_temp2);
+  param_temp3.clear_layer();
+  CompilationRuleThree(param_temp2, &param_temp3);
+
+  param_compiled->CopyFrom(param_temp3);
+  param_compiled->clear_layer();
+  CompilationRuleFour(param_temp3, param_compiled);
+#endif 
 }
 
 template <typename Dtype>
@@ -827,6 +838,68 @@ void Net<Dtype>::CompilationRuleThree(const NetParameter& param,
         const_cast<string&>((each_layer_pair[0])->top(0)).append("_x");
       }
     }
+  }
+
+  return;
+}
+
+template <typename Dtype>
+void Net<Dtype>::CompilationRuleFour(const NetParameter& param,
+                                     NetParameter* param_compiled) {
+  // only apply this rule for inference(TEST) phase
+  if (param.state().phase() != TEST) {
+    param_compiled->CopyFrom(param);
+    return;
+  }
+  string blob_need_to_insert;
+  LayerParameter* need_to_convert_layer = NULL;
+  for (int i = 0; i < param.layer_size(); i++) {
+    LayerParameter* layer_param =
+        (const_cast<NetParameter&>(param)).mutable_layer(i);
+    if (layer_param->type().compare("Convolution") == 0) {
+      std::vector<const LayerParameter*> child_layers_params;
+      Net<Dtype>::GetBlobConsumers(child_layers_params, layer_param->top(0),
+                                   param,
+                                   i + 1 < param.layer_size() ? i + 1 : i);
+
+      if (child_layers_params[0]->type().compare("Eltwise") == 0) {
+        std::vector<const LayerParameter*> grand_child_layers_params;
+
+        Net<Dtype>::GetBlobConsumers(grand_child_layers_params,
+                                     child_layers_params[0]->top(0), param,
+                                     i + 1 < param.layer_size() ? i + 1 : i);
+        const LayerParameter& grand_child_layer_param =
+            grand_child_layers_params.size() > 0
+                ? *(grand_child_layers_params[0])
+                : *layer_param;
+
+        if (grand_child_layer_param.type().compare("ReLU") != 0) {
+          param_compiled->add_layer()->CopyFrom(*layer_param);
+          continue;
+        }
+
+        if (child_layers_params[0]->bottom(0) == layer_param->top(0) ) {
+          param_compiled->add_layer()->CopyFrom(*layer_param);
+          need_to_convert_layer = layer_param;
+          continue;
+        }
+
+        const_cast<string&>(layer_param->top(0)) =
+            grand_child_layer_param.top(0);
+        if (need_to_convert_layer != NULL) {
+          layer_param->add_bottom(
+              const_cast<string&>(need_to_convert_layer->top(0)));
+          need_to_convert_layer = NULL;
+        } else {
+          layer_param->add_bottom(
+              const_cast<string&>(child_layers_params[0]->bottom(0)));
+        }
+
+        i += 2;  // skip next eltwise and relu
+      }
+    }
+
+    param_compiled->add_layer()->CopyFrom(*layer_param);
   }
 
   return;

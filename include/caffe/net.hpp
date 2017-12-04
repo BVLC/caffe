@@ -304,7 +304,12 @@ class Net {
   static void CompilationRuleThree(const NetParameter& param,
                              NetParameter* param_compiled);
 
-
+  /**
+  * @brief This is rule analyze for conv/elt/relu fusion.
+  */
+  static void CompilationRuleFour(const NetParameter& param,
+                             NetParameter* param_compiled);
+  
   /**
    * @brief If find "Conv--BN--Scale" in current network, merge BN and Scale layer into Convolution
    * layers, this optimization only works in caffe TEST phase now.
