@@ -243,6 +243,7 @@ void SyncedMemory::host_free(void *ptr, size_t size) {
   if (cpu_malloc_use_cuda_) {
     if (host_pool_.get()) {
       CHECK(host_pool_->free(ptr)) << "free host failed";
+      host_pool_.reset();
       return;
     }
     CUDA_CHECK(cudaFreeHost(ptr));
