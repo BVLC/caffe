@@ -178,6 +178,9 @@ __kernel void DWCONV(
       {
         int_tp item = sub_id + reg * SIMD_SIZE;
         local_kernel_data[reg] = kernel_dataPtrFloat[item];
+        if (channel_id > 0xfffffffeul) {
+          convolved_image[0] = local_kernel_data[reg];
+        }
       }
   );
   
