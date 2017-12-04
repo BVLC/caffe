@@ -490,17 +490,27 @@ string create_source(Device* dev,
                       KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_MEM_OFFSET));
     ss << program->function("caffe_gpu_powx", args);
     ss << program->kernel_loop("uint_tp", "index", "n");
-    ss << "if(alpha == 2.0) {" << std::endl;
+    ss << "if (alpha == 2.0) {" << std::endl;
     string abs_fun;
     if (dev->backend() == BACKEND_CUDA) {
       abs_fun = "abs";
     } else {
       abs_fun = "fabs";
     }
-    ss << "y[index] = pow((Dtype)" << abs_fun
-       << "(a[index]), (Dtype)alpha);" << std::endl;
+    if (is_signed_integer_type<Dtype>()) {
+      ss << "y[index] = (Dtype)(pow((float)abs(a[index]), (float)alpha));"
+         << std::endl;
+    } else {
+      ss << "y[index] = pow((Dtype)" << abs_fun << "(a[index]), (Dtype)alpha);"
+      << std::endl;
+    }
     ss << "} else {" << std::endl;
-    ss << "y[index] = pow((Dtype)a[index], (Dtype)alpha);" << std::endl;
+    if (is_signed_integer_type<Dtype>()) {
+      ss << "y[index] = (Dtype)(pow((float)a[index], (float)alpha));"
+         << std::endl;
+    } else {
+      ss << "y[index] = pow((Dtype)a[index], (Dtype)alpha);" << std::endl;
+    }
     ss << "}" << std::endl;
     ss << "}" << std::endl;
     ss << "}" << std::endl;
@@ -509,9 +519,12 @@ string create_source(Device* dev,
   // Abs, Exp, Log
   vector<string> func_names = {"exp", "log", "sqrt", "abs"};
   vector<string> funcs = {"exp", "log", "sqrt"};
-  if (dev->backend() == BACKEND_CUDA) {
+  if (dev->backend() == BACKEND_CUDA
+      || is_signed_integer_type<Dtype>()) {
+    // CUDA and integer absolute value
     funcs.push_back("abs");
   } else {
+    // OpenCL float absolute value
     funcs.push_back("fabs");
   }
   for (uint_tp i = 0; i < funcs.size(); ++i) {
@@ -527,7 +540,11 @@ string create_source(Device* dev,
                       KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_MEM_OFFSET));
     ss << program->function("caffe_gpu_" + func_name, args);
     ss << program->kernel_loop("uint_tp", "index", "n");
-    ss << "y[index] = " << func << "(a[index]);" << std::endl;
+    if (is_signed_integer_type<Dtype>() && !(func_name == "abs")) {
+      ss << "y[index] = (Dtype)" << func << "((float)a[index]);" << std::endl;
+    } else {
+      ss << "y[index] = " << func << "(a[index]);" << std::endl;
+    }
     ss << "}" << std::endl;
     ss << "}" << std::endl;
   }
@@ -561,7 +578,11 @@ string create_source(Device* dev,
                       KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_MEM_OFFSET));
     ss << program->function("caffe_gpu_signbit", args);
     ss << program->kernel_loop("uint_tp", "index", "n");
-    ss << "y[index] = signbit(x[index]);" << std::endl;
+    if (is_signed_integer_type<Dtype>()) {
+      ss << "y[index] = (Dtype)(x[index] < 0);" << std::endl;
+    } else {
+      ss << "y[index] = signbit(x[index]);" << std::endl;
+    }
     ss << "}" << std::endl;
     ss << "}" << std::endl;
   }
@@ -599,12 +620,23 @@ string create_source<float>(Device* dev,
 template
 string create_source<double>(Device* dev,
     shared_ptr<DeviceProgram> program);
+template
+string create_source<int8_t>(Device* dev,
+    shared_ptr<DeviceProgram> program);
+template
+string create_source<int16_t>(Device* dev,
+    shared_ptr<DeviceProgram> program);
+template
+string create_source<int32_t>(Device* dev,
+    shared_ptr<DeviceProgram> program);
+template
+string create_source<int64_t>(Device* dev,
+    shared_ptr<DeviceProgram> program);
 
 
 void Device::CreateMathProgram() {
-  this->math_programs_.push_back(this->CreateProgram());
-
   for (int_tp i = 0; i < PROTO_DATA_INDEX_MAX; ++i) {
+    this->math_programs_.push_back(this->CreateProgram());
     stringstream ss;
     ss << this->math_programs_[i]->setup();
 
@@ -635,14 +667,16 @@ void Device::CreateMathProgram() {
           args.push_back(this->math_programs_[i]
                           ->create_kernel_arg<float>("arg", KERNEL_ARG_NONE));
           ss << this->math_programs_[i]->function("null_kernel", args);
-          ss << "Dtype out = arg;" << std::endl;
+          ss << "float out = arg;" << std::endl;
           ss << "}" << std::endl;
         }
         break;
       }
       case HALF_DATA_INDEX: {
 #ifdef USE_HALF
+        ss << "#ifdef HALF_SUPPORT_AVAILABLE" << std::endl;
         ss << create_source<half_fp>(this, this->math_programs_[i]);
+        ss << "#endif  // HALF_SUPPORT_AVAILABLE" << std::endl;
 #endif
         break;
       }
@@ -654,7 +688,9 @@ void Device::CreateMathProgram() {
       }
       case DOUBLE_DATA_INDEX: {
 #ifdef USE_DOUBLE
+        ss << "#ifdef DOUBLE_SUPPORT_AVAILABLE" << std::endl;
         ss << create_source<double>(this, this->math_programs_[i]);
+        ss << "#endif  // DOUBLE_SUPPORT_AVAILABLE" << std::endl;
 #endif
         break;
       }

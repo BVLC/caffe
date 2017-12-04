@@ -34,6 +34,10 @@ class BlobBase {
         capacity_(0),
         device_(dev) {
   }
+  virtual ~BlobBase() {
+
+  }
+
 
   virtual void FromProto(const BlobProto& proto, bool reshape = true) = 0;
   virtual void ToProto(BlobProto* proto, bool write_diff = false) const = 0;
@@ -216,7 +220,7 @@ class BlobBase {
 
   bool ShapeEquals(const BlobProto& other);
 
-  virtual const DataType data_type() const = 0;
+  virtual DataType data_type() const = 0;
 
   virtual void asum_data(void* out) const = 0;
   virtual void asum_diff(void* out) const = 0;
@@ -258,6 +262,8 @@ class BlobBase {
   int_tp capacity_;
   Device *device_;
   shared_ptr<QuantizerBase> net_quant_;
+
+  DISABLE_COPY_AND_ASSIGN(BlobBase);
 };
 
 /**
@@ -271,6 +277,10 @@ template<typename Dtype>
 class Blob : public BlobBase {
  public:
   Blob() : BlobBase() { }
+  virtual ~Blob() {
+
+  }
+
   explicit Blob(Device *dev) : BlobBase(dev) { }
   explicit Blob(const int_tp num, const int_tp channels, const int_tp height,
                 const int_tp width, Device *device_context =
@@ -407,7 +417,7 @@ class Blob : public BlobBase {
    */
   void ShareDiff(const Blob& other);
 
-  virtual const DataType data_type() const;
+  virtual DataType data_type() const;
 
   DISABLE_COPY_AND_ASSIGN(Blob);
 };  // class Blob

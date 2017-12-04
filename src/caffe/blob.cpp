@@ -829,7 +829,7 @@ void Blob<bool>::ToProto(BlobProto* proto, bool write_diff) const {
 }
 
 template<typename Dtype>
-const DataType Blob<Dtype>::data_type() const {
+DataType Blob<Dtype>::data_type() const {
   return proto_data_type<Dtype>();
 }
 

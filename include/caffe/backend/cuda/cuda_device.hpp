@@ -25,8 +25,8 @@ class CudaDevice : public Device {
   virtual void SwitchQueue(uint_tp id);
   virtual uint_tp current_queue_id();
   virtual void get_threads(const vector<size_t>* work_size,
-                           vector<size_t>* local,
                            vector<size_t>* group,
+                           vector<size_t>* local,
                            DeviceKernel* kernel,
                            bool auto_select);
   virtual void FinishQueues();

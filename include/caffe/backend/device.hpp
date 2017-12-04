@@ -45,8 +45,8 @@ class Device {
   uint_tp current_queue_id();
   size_t workgroup_size(uint_tp id);
   virtual void get_threads(const vector<size_t>* work_size,
-                           vector<size_t>* local,
                            vector<size_t>* group,
+                           vector<size_t>* local,
                            DeviceKernel* kernel,
                            bool auto_select);
   virtual void FinishQueues();
@@ -425,8 +425,8 @@ class Device {
   bool host_unified_;
   bool fast_unsafe_math_;
   string name_;
-  vector<shared_ptr<DeviceProgram>> math_programs_;
-  shared_ptr<DeviceProgram> im2col_program_;
+  vector<shared_ptr<DeviceProgram> > math_programs_;
+  vector<shared_ptr<DeviceProgram> > im2col_programs_;
 };
 
 }  // namespace caffe

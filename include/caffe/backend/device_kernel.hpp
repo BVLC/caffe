@@ -11,7 +11,6 @@ namespace caffe {
 class Device;
 
 class DeviceKernel {
-
  public:
   virtual void Execute(vector<size_t> local,
                        vector<size_t> group) = 0;
@@ -59,6 +58,8 @@ class DeviceKernel {
   void add_arg(vptr<const void> *arg);
 
  protected:
+  explicit DeviceKernel();
+
   virtual void set_arg(uint_tp idx, const bool *arg) = 0;
   virtual void set_arg(uint_tp idx, const char *arg) = 0;
   virtual void set_arg(uint_tp idx, const int8_t *arg) = 0;
