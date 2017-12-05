@@ -87,7 +87,7 @@ void ReshapeLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   CHECK_EQ(top[0]->count(), bottom[0]->count())
       << "output count must match input count";
   top[0]->ShareData(*bottom[0]);
-  top[0]->ShareDiff(*bottom[0]);
+  //top[0]->ShareDiff(*bottom[0]);
 }
 
 INSTANTIATE_CLASS(ReshapeLayer);

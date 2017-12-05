@@ -210,26 +210,12 @@ class Blob {
   const int* gpu_shape() const;
   const Dtype* gpu_data() const;
   void set_gpu_data(Dtype* data);
-    const Dtype* cpu_diff() const {
-    return nullptr;
-    }
-  const Dtype* gpu_diff() const {
-    return nullptr;
-  }
   Dtype* mutable_cpu_data();
   Dtype* mutable_gpu_data();
-    Dtype* mutable_cpu_diff() {
-      return nullptr;
-    }
-  Dtype* mutable_gpu_diff() {
-    return nullptr;
-  }
   void FromProto(const BlobProto& proto, bool reshape = true);
 
   /// @brief Scale the blob data by a constant factor.
   void scale_data(Dtype scale_factor);
-  /// @brief Scale the blob diff by a constant factor.
-  //void scale_diff(Dtype scale_factor);
 
   /**
    * @brief Set the data_ shared_ptr to point to the SyncedMemory holding the
@@ -255,7 +241,7 @@ class Blob {
 
  protected:
   shared_ptr<SyncedMemory> data_;
-  shared_ptr<SyncedMemory> diff_;
+//  shared_ptr<SyncedMemory> diff_;
   shared_ptr<SyncedMemory> shape_data_;
   vector<int> shape_;
   int count_;

@@ -92,7 +92,6 @@ void Blob<Dtype>::set_cpu_data(Dtype* data) {
   size_t size = count_ * sizeof(Dtype);
   if (data_->size() != size) {
     data_.reset(new SyncedMemory(size));
-    //diff_.reset(new SyncedMemory(size));
   }
   data_->set_cpu_data(data);
 }
@@ -110,7 +109,6 @@ void Blob<Dtype>::set_gpu_data(Dtype* data) {
   size_t size = count_ * sizeof(Dtype);
   if (data_->size() != size) {
     data_.reset(new SyncedMemory(size));
-    //diff_.reset(new SyncedMemory(size));
   }
   data_->set_gpu_data(data);
 }
@@ -191,6 +189,10 @@ bool Blob<Dtype>::ShapeEquals(const BlobProto& other) {
 
 template <typename Dtype>
 void Blob<Dtype>::CopyFrom(const Blob& source, bool copy_diff, bool reshape) {
+  if(copy_diff) {
+    LOG(FATAL) << "No diff to copy.";
+    return;
+  }
   if (source.count() != count_ || source.shape() != shape_) {
     if (reshape) {
       ReshapeLike(source);
@@ -200,19 +202,21 @@ void Blob<Dtype>::CopyFrom(const Blob& source, bool copy_diff, bool reshape) {
   }
   switch (Caffe::mode()) {
   case Caffe::GPU:
+    /*
     if (copy_diff) {
       caffe_copy(count_, source.gpu_diff(),
           static_cast<Dtype*>(diff_->mutable_gpu_data()));
-    } else {
+    } else*/ {
       caffe_copy(count_, source.gpu_data(),
           static_cast<Dtype*>(data_->mutable_gpu_data()));
     }
     break;
   case Caffe::CPU:
+    /*
     if (copy_diff) {
       caffe_copy(count_, source.cpu_diff(),
           static_cast<Dtype*>(diff_->mutable_cpu_data()));
-    } else {
+    } else*/ {
       caffe_copy(count_, source.cpu_data(),
           static_cast<Dtype*>(data_->mutable_cpu_data()));
     }
@@ -259,20 +263,6 @@ void Blob<Dtype>::FromProto(const BlobProto& proto, bool reshape) {
     }
   }
   gpu_data();
-  if (proto.double_diff_size() > 0) {
-    CHECK_EQ(count_, proto.double_diff_size());
-    Dtype* diff_vec = mutable_cpu_diff();
-    for (int i = 0; i < count_; ++i) {
-      diff_vec[i] = proto.double_diff(i);
-    }
-  } else if (proto.diff_size() > 0) {
-    CHECK_EQ(count_, proto.diff_size());
-    Dtype* diff_vec = mutable_cpu_diff();
-    for (int i = 0; i < count_; ++i) {
-      diff_vec[i] = proto.diff(i);
-    }
-  }
-  gpu_diff();
 }
 
 INSTANTIATE_CLASS(Blob);
