@@ -130,6 +130,13 @@ def set_input(in_model, out_model):
     for i in range(len(in_model.input_dim)):
             out_model.input_dim.extend([in_model.input_dim[i]])
 
+# should not add the original conv layer's top to the new bottom.
+def append_eltwise_bottom(new_bottom, top, bottom):
+    if (bottom[0] != top):
+        new_bottom.append(bottom[0])
+    elif (bottom[1] != top):
+        new_bottom.append(bottom[1])
+
 def fuse_layer(in_model, in_index, out_model, new_index):
     (fuse_mode, fused_layer_count) = check_fuse_type(in_model, in_index)
     if is_conv_fusion(fuse_mode):
@@ -142,9 +149,9 @@ def fuse_layer(in_model, in_index, out_model, new_index):
         out_model.layer[new_index].top.remove(out_model.layer[new_index].top[0])
         out_model.layer[new_index].top.append(new_top)
         if fuse_mode == FuseMode.CONV_ELTWISE_RELU or fuse_mode == FuseMode.CONV_ELTWISE_PRELU:
-            out_model.layer[new_index].bottom.append(in_model.layer[in_index + fused_layer_count - 1].bottom[0])
+            append_eltwise_bottom(out_model.layer[new_index].bottom, in_model.layer[in_index].top[0], in_model.layer[in_index + fused_layer_count - 1].bottom)
         if fuse_mode == FuseMode.CONV_ELTWISE:
-            out_model.layer[new_index].bottom.append(in_model.layer[in_index + fused_layer_count].bottom[0])
+            append_eltwise_bottom(out_model.layer[new_index].bottom, in_model.layer[in_index].top[0], in_model.layer[in_index + fused_layer_count].bottom)
         if has_relu(fuse_mode) and in_model.layer[in_index + fused_layer_count].relu_param.negative_slope != 0:
             out_model.layer[new_index].convolution_param.relu_param.negative_slope = in_model.layer[in_index + fused_layer_count].relu_param.negative_slope
         if has_prelu(fuse_mode) and in_model.layer[in_index + fused_layer_count].prelu_param.channel_shared != False:
