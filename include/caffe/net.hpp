@@ -43,16 +43,6 @@ class Net {
    */
   void Reshape();
 
-  /// @brief Updates the network weights based on the diff values computed.
-  void Update();
-  /**
-   * @brief Shares weight data of owner blobs with shared blobs.
-   *
-   * Note: this is called by Net::Init, and thus should normally not be
-   * called manually.
-   */
-  void ShareWeights();
-
   /**
    * @brief For an already initialized net, implicitly copies (i.e., using no
    *        additional memory) the pre-trained layers from another Net.

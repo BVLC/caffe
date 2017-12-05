@@ -367,8 +367,6 @@ BOOST_PYTHON_MODULE(_caffe) {
         &Blob<Dtype>::count))
     .def("reshape",           bp::raw_function(&Blob_Reshape))
     .add_property("data",     bp::make_function(&Blob<Dtype>::mutable_cpu_data,
-          NdarrayCallPolicies()))
-    .add_property("diff",     bp::make_function(&Blob<Dtype>::mutable_cpu_diff,
           NdarrayCallPolicies()));
   BP_REGISTER_SHARED_PTR_TO_PYTHON(Blob<Dtype>);
 
