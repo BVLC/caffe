@@ -30,45 +30,39 @@ Caffe::Caffe() : mode_(Caffe::CPU), device_id_(-1) {}
 
 Caffe::~Caffe() {}
 
-void Caffe::set_mode(Brew mode) {
-  if (mode == GPU) {
+void Caffe::set_device(int device_id) {
+  if (device_id >= 0) {
     NO_GPU;
     return;
   }
-  Get().mode_ = mode;
+  Get().mode_ = CPU;
 }
 
 #else // Normal GPU + CPU Caffe.
 
-Caffe::Caffe() : cublas_handle_(NULL), mode_(Caffe::CPU), device_id_(-1) {
-
-}
+Caffe::Caffe() : cublas_handle_(NULL), mode_(Caffe::CPU), device_id_(-1) {}
 
 Caffe::~Caffe() {
   if (cublas_handle_)
     CUBLAS_CHECK(cublasDestroy(cublas_handle_));
 }
 
-
-void Caffe::set_mode(Brew mode) {
-  Get().mode_ = mode;
-  if (mode == CPU) {
+void Caffe::set_device(int device_id) {
+  if (device_id < 0) {
+    Get().mode_ = CPU;
     return;
   }
 
-  int current_device;
-  CUDA_CHECK(cudaGetDevice(&current_device));
-  CHECK_GE(current_device, 0);
-
-  if (Get().device_id_ == current_device) {
-    return;
+  if (Get().device_id_ >= 0) {
+    if (Get().device_id_ == device_id) {
+      return;
+    }
+    std::cout << "device_id_=" << Get().device_id_ << std::endl;
+    throw std::runtime_error("caffe thread has binded device");
   }
 
-  Get().device_id_ = current_device;
-  if (Get().cublas_handle_) {
-    CUBLAS_CHECK(cublasDestroy(Get().cublas_handle_));
-    Get().cublas_handle_ = nullptr;
-  }
+  Get().device_id_ = device_id;
+  Get().mode_ = GPU;
   // Try to create a cublas handler, and report an error if failed (but we will
   // keep the program running as one might just want to run CPU code).
   if (cublasCreate(&Get().cublas_handle_) != CUBLAS_STATUS_SUCCESS) {

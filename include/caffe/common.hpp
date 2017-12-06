@@ -129,7 +129,7 @@ public:
 
   // Returns the mode: running on CPU or GPU.
   inline static Brew mode() { return Get().mode_; }
-  static void set_mode(Brew mode);
+  static void set_device(int device_id);
   static int GetDevice() { return Get().device_id_; }
 
 private:

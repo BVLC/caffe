@@ -333,7 +333,7 @@ int Net<Dtype>::AppendBottom(const NetParameter &param, const int layer_id,
 template <typename Dtype>
 std::map<std::string, std::shared_ptr<Blob<Dtype>>> Net<Dtype>::ForwardConst(
     std::map<std::string, std::shared_ptr<Blob<Dtype>>> &input_blobs,
-    const std::set<std::string> &output_blob_names, bool use_gpu) {
+    const std::set<std::string> &output_blob_names, int gpu_no) {
 
   int end = -1;
 
@@ -376,11 +376,7 @@ std::map<std::string, std::shared_ptr<Blob<Dtype>>> Net<Dtype>::ForwardConst(
 
   CHECK_GE(end, 0);
 
-  if (use_gpu) {
-    Caffe::set_mode(caffe::Caffe::GPU);
-  } else {
-    Caffe::set_mode(caffe::Caffe::CPU);
-  }
+  Caffe::set_device(gpu_no);
   auto mode = Caffe::mode();
 
   for (int i = 0; i <= end; ++i) {
@@ -393,21 +389,17 @@ std::map<std::string, std::shared_ptr<Blob<Dtype>>> Net<Dtype>::ForwardConst(
     for (auto const &ptr : top_blobs[i]) {
       top.push_back(ptr.get());
     }
- //   std::cout << "go layer " << layers_[i]->type() << std::endl;
+    //   std::cout << "go layer " << layers_[i]->type() << std::endl;
 
     layers_[i]->Reshape_const(bottom, top);
 
     switch (mode) {
 
     case Caffe::CPU:
-      //	printf("net_cpu_const begin,i=%d\n",i);
       layers_[i]->Forward_cpu_const(bottom, top);
-      //	printf("net_cpu_const end,i=%d\n",i);
       break;
     case Caffe::GPU:
-      //	printf("net_gpu_const begin,i=%d\n",i);
       layers_[i]->Forward_const_gpu(bottom, top);
-      //	printf("net_gpu_const end,i=%d\n",i);
       break;
     default:
       LOG(FATAL) << "Unknown caffe mode.";
