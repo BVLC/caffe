@@ -1,0 +1,19 @@
+#test accuracy / target accuracy
+#Top-5: 0.887741 / 0.89
+#Top-1: 0.683879 / 0.687
+#Training was performed using server equipped with Intel(R) Xeon Phi(TM) CPU 7250 processor. 
+net: "models/intel_optimized_models/multinode/googlenet_16nodes_1k_batch/train_val.prototxt"
+test_iter: 1000
+test_interval: 2000
+test_initialization: false
+display: 40
+average_loss: 40
+base_lr: 0.065
+lr_policy: "poly"
+power: 0.5
+max_iter: 90000
+momentum: 0.9
+weight_decay: 0.0002
+snapshot: 10000
+snapshot_prefix: "models/intel_optimized_models/multinode/googlenet_16nodes_1k_batch/snapshots/googlenet"
+solver_mode: CPU
