@@ -51,6 +51,55 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace caffe {
 
+#ifdef CAFFE_PER_LAYER_TIMINGS
+  template <typename Dtype> class Solver;
+
+#define LAYER_TIMING_START() do { \
+  root_solver_->timer.Start(); \
+}while(0)
+
+#define LAYER_TIMING_STOP(name, index) do { \
+  root_solver_->name##_time_per_layer[index] += root_solver_->timer.MicroSeconds(); \
+}while(0)
+
+#ifdef FW_OVERLAP_OPT
+#define LAYER_WAIT_TIMING_START() do { \
+  root_solver_->wait_timer.Start(); \
+}while(0)
+
+#define LAYER_WAIT_TIMING_STOP(layer_index) do { \
+  root_solver_->waitcomm_time_per_layer[layer_index] += root_solver_->wait_timer.MicroSeconds(); \
+}while(0)
+
+#define LAYER_REMOVE_UPDATE_TIME(layer_i, layer_k) do { \
+  root_solver_->waitcomm_time_per_layer[layer_i] -= root_solver_->update_time_per_layer[layer_k]; \
+} while (0)
+#endif
+
+#define ITER_TIMING_START() do { \
+  root_solver_->timer.Start(); \
+}while(0)
+
+#define ITER_TIMING_STOP(name) do { \
+  root_solver_->name##_time_per_iter += root_solver_->timer.MicroSeconds(); \
+}while(0)
+
+#else
+
+#define LAYER_TIMING_START()
+#define LAYER_TIMING_STOP(name,index)
+
+#ifdef FW_OVERLAP_OPT
+#define LAYER_WAIT_TIMING_START()
+#define LAYER_WAIT_TIMING_STOP(index)
+#define LAYER_REMOVE_UPDATE_TIME(layer_i, layer_k)
+#endif
+
+#define ITER_TIMING_START()
+#define ITER_TIMING_STOP(name)
+
+#endif /* CAFFE_PER_LAYER_TIMINGS */
+
 /**
  * @brief Connects Layer%s together into a directed acyclic graph (DAG)
  *        specified by a NetParameter.
@@ -336,6 +385,9 @@ class Net {
   /// @brief return whether NetState state meets NetStateRule rule
   static bool StateMeetsRule(const NetState& state, const NetStateRule& rule,
       const string& layer_name);
+#ifdef CAFFE_PER_LAYER_TIMINGS
+  void set_root_solver(Solver<Dtype> * solver) { root_solver_ = solver; }
+#endif
   inline const map<string,int>& blob_names_index() const {
     return blob_names_index_;
   }
@@ -425,6 +477,10 @@ class Net {
   /// The root net that actually holds the shared layers in data parallelism
   const Net* const root_net_;
   DISABLE_COPY_AND_ASSIGN(Net);
+
+#ifdef CAFFE_PER_LAYER_TIMINGS
+  Solver<Dtype> * root_solver_;
+#endif
 };
 
 

@@ -189,6 +189,7 @@ class Solver {
   void InitTimers();
   void ResetTimers();
   void PrintTimers(bool printTotal);
+
 #endif /* CAFFE_PER_LAYER_TIMINGS */
 
  protected:

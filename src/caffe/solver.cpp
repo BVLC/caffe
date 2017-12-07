@@ -125,6 +125,7 @@ void Solver<Dtype>::Init(const SolverParameter& param) {
 
 #ifdef CAFFE_PER_LAYER_TIMINGS
   InitTimers();
+  net_->set_root_solver(this);
 #endif
 }
 
@@ -340,11 +341,6 @@ void Solver<Dtype>::Step(int iters) {
       }
     }
 
-#ifdef CAFFE_PER_LAYER_TIMINGS
-    PrintTimers(false);
-    ResetTimers();
-#endif
-
     iter_timer.Start();
 
     for (int i = 0; i < callbacks_.size(); ++i) {
@@ -361,6 +357,9 @@ void Solver<Dtype>::Step(int iters) {
     iter_time += iter_timer.MilliSeconds();
 
 #ifdef CAFFE_PER_LAYER_TIMINGS
+    PrintTimers(false);
+    ResetTimers();
+
     if (mn::get_node_id() == 0)
         LOG(INFO) << "iter " << iter_ << ", forward_backward_update_time: "
                 << iter_time << " ms";

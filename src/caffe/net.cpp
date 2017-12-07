@@ -64,6 +64,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/util/remove_batch_norm.hpp"
 #include "caffe/util/apply_bn_stats_batch_size.hpp"
 
+#ifdef CAFFE_PER_LAYER_TIMINGS
+#include "caffe/solver.hpp"
+#endif
+
 PERFORMANCE_CREATE_MONITOR();
 
 namespace caffe {
@@ -1230,12 +1234,14 @@ Dtype Net<Dtype>::ForwardFromTo(int start, int end) {
   CHECK_LT(end, layers_.size());
   Dtype loss = 0;
   for (int i = start; i <= end; ++i) {
+    LAYER_TIMING_START();
     PERFORMANCE_MEASUREMENT_BEGIN();
 
     // LOG(ERROR) << "Forwarding " << layer_names_[i];
     Dtype layer_loss = layers_[i]->Forward(bottom_vecs_[i], top_vecs_[i]);
 
     PERFORMANCE_MEASUREMENT_END((std::string("FW_") + layer_names_[i]).c_str());
+    LAYER_TIMING_STOP(forward, i);
 
     loss += layer_loss;
     if (debug_info_) { ForwardDebugInfo(i); }
@@ -1281,12 +1287,14 @@ void Net<Dtype>::BackwardFromTo(int start, int end) {
   CHECK_LT(start, layers_.size());
   for (int i = start; i >= end; --i) {
     if (layer_need_backward_[i]) {
+      LAYER_TIMING_START();
       PERFORMANCE_MEASUREMENT_BEGIN();
 
       layers_[i]->Backward(
           top_vecs_[i], bottom_need_backward_[i], bottom_vecs_[i]);
 
       PERFORMANCE_MEASUREMENT_END((std::string("BW_")+layer_names_[i]).c_str());
+      LAYER_TIMING_STOP(backward, i);
 
       if (debug_info_) { BackwardDebugInfo(i); }
     }
@@ -1794,9 +1802,11 @@ void Net<Dtype>::ClearParamDiffs(int learnable_param_id) {
 
 template <typename Dtype>
 void Net<Dtype>::ClearParamDiffs() {
+  ITER_TIMING_START();
   for (int i = 0; i < learnable_params_.size(); ++i) {
     ClearParamDiffs(i);
   }
+  ITER_TIMING_STOP(cleardiffs);
 }
 
 template <typename Dtype>
