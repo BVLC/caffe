@@ -850,7 +850,7 @@ class CuDNNNeuronLayerTest : public GPUDeviceTest<Dtype> {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-TYPED_TEST_CASE(CuDNNNeuronLayerTest, TestDtypes);
+TYPED_TEST_CASE(CuDNNNeuronLayerTest, TestDtypesFloatNoHalf);
 
 TYPED_TEST(CuDNNNeuronLayerTest, TestReLUCuDNN) {
   if (Caffe::GetDefaultDevice()->backend() == BACKEND_CUDA) {

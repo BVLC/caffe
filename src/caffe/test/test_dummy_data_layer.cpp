@@ -41,7 +41,7 @@ class DummyDataLayerTest : public CPUDeviceTest<Dtype> {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-TYPED_TEST_CASE(DummyDataLayerTest, TestDtypes);
+TYPED_TEST_CASE(DummyDataLayerTest, TestDtypesFloat);
 
 TYPED_TEST(DummyDataLayerTest, TestOneTopConstant) {
   LayerParameter param;

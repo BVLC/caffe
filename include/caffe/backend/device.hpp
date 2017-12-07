@@ -16,8 +16,14 @@
 #include "caffe/trait_helper.hpp"
 #include "caffe/util/type_utils.hpp"
 
-
 namespace caffe {
+
+#ifdef USE_LIBDNN
+// Forward declare LibDNN
+class LibDNNBase;
+template<typename Dtype, typename MItype, typename MOtype>
+class LibDNNBlas;
+#endif  // USE_LIBDNN
 
 class Device {
  public:
@@ -63,6 +69,13 @@ class Device {
   virtual void FreeMemDevice(vptr<void> ptr);
   virtual bool CheckZeroCopy(vptr<const void> gpu_ptr, void* cpu_ptr,
                              uint_tp size);
+
+#ifdef USE_LIBDNN
+  template<typename Dtype, typename MItype, typename MOtype>
+  shared_ptr<LibDNNBlas<Dtype, MItype, MOtype>> GetLibDNNBlas();
+#endif
+
+  void null_kernel(float arg);
 
   template<typename Dtype>
   void im2col(vptr<const Dtype> data_im, const int_tp channels,
@@ -427,6 +440,10 @@ class Device {
   string name_;
   vector<shared_ptr<DeviceProgram> > math_programs_;
   vector<shared_ptr<DeviceProgram> > im2col_programs_;
+#ifdef USE_LIBDNN
+  vector<shared_ptr<LibDNNBase>> libdnn_blas_;
+  std::map<string, size_t> libdnn_blas_map_;
+#endif  // USE_LIBDNN
 };
 
 }  // namespace caffe

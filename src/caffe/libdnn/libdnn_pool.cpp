@@ -1,22 +1,21 @@
+#ifdef USE_LIBDNN
+
 #include <functional>
 #include <numeric>
 #include <string>
 #include <vector>
 #include "caffe/common.hpp"
-#ifdef USE_LIBDNN
 #include "caffe/backend/device.hpp"
-#include "caffe/greentea/libdnn.hpp"
 #include "caffe/util/benchmark.hpp"
-
-// #define LIBDNN_DEBUG 1
+#include "caffe/libdnn/libdnn_pool.hpp"
 
 namespace caffe {
 
-template<typename Dtype>
-LibDNNPool<Dtype>::LibDNNPool(LibDNNPoolConfig config) {
+template<typename Dtype, typename MItype, typename MOtype>
+LibDNNPool<Dtype, MItype, MOtype>::LibDNNPool(LibDNNPoolConfig config)
+        : LibDNN<Dtype, MItype, MOtype>(config.dev_ptr)  {
   config_ = config;
-  LibDNN<Dtype>::dev_ptr_ = config.dev_ptr;
-  LibDNN<Dtype>::fast_unsafe_math_ = config.fast_unsafe_math;
+  this->fast_unsafe_math_ = config.fast_unsafe_math;
   int_tp dims = config.in_shape.size();
   int_tp spatial_dims = config.kernel.size();
 
@@ -49,20 +48,24 @@ LibDNNPool<Dtype>::LibDNNPool(LibDNNPoolConfig config) {
   bw_tuner_->add_range_param<int_tp>("LW1", 8, 4, 16, 4);
 
 
-  GenerateKernels();
-  LibDNN<Dtype>::CompileKernels();
+  this->GenerateKernels();
+  this->CompileKernels();
 }
 
-template<typename Dtype>
-const LibDNNPoolConfig LibDNNPool<Dtype>::get_config() {
+template<typename Dtype, typename MItype, typename MOtype>
+const LibDNNPoolConfig LibDNNPool<Dtype, MItype, MOtype>::get_config() {
   return config_;
 }
 
 
-template<typename Dtype>
-string LibDNNPool<Dtype>string_identifier() {
+template<typename Dtype, typename MItype, typename MOtype>
+string LibDNNPool<Dtype, MItype, MOtype>::string_identifier() {
   stringstream ss;
   ss << "POOL_";
+  // Type names
+  ss << safe_type_name<Dtype>() << "_";
+  ss << safe_type_name<MItype>() << "_";
+  ss << safe_type_name<MOtype>() << "_";
   switch (pool_method_) {
     case LIBDNN_POOLING_METHOD_MAX:
       ss << "MAX_";
@@ -74,13 +77,8 @@ string LibDNNPool<Dtype>string_identifier() {
       ss << "STO_";
       break;
   }
-  if (std::is_same<Dtype, double>::value) {
-    ss << "double_";
-  } else {
-    ss << "float_";
-  }
   // Device name
-  ss << LibDNN<Dtype>::dev_ptr_->name();
+  ss << this->dev_ptr_->name();
   ss << "_";
   ss << num_axes_ << "D_";
   ss << "IN[";
@@ -129,77 +127,81 @@ string LibDNNPool<Dtype>string_identifier() {
   return ss.str();
 }
 
-template<typename Dtype>
-string LibDNNPool<Dtype>::generate_fw_defs() {
+template<typename Dtype, typename MItype, typename MOtype>
+string LibDNNPool<Dtype, MItype, MOtype>::generate_fw_defs() {
   stringstream ss;
 
   // Number of spatial axes
-  LibDNN<Dtype>::add_def(ss, "v_nax", num_axes_);
+  ss << this->program_->define("v_nax", num_axes_);
 
   for (int_tp i = 0; i < kernel_shape_.size(); ++i) {
-    LibDNN<Dtype>::add_def(ss, "v_k_" + std::to_string(i), kernel_shape_[i]);
+    ss << this->program_->define("v_k_" + std::to_string(i), kernel_shape_[i]);
   }
   for (int_tp i = 0; i < pad_.size(); ++i) {
-    LibDNN<Dtype>::add_def(ss, "v_p_" + std::to_string(i), pad_[i]);
+    ss << this->program_->define("v_p_" + std::to_string(i), pad_[i]);
   }
   for (int_tp i = 0; i < stride_.size(); ++i) {
-    LibDNN<Dtype>::add_def(ss, "v_s_" + std::to_string(i), stride_[i]);
+    ss << this->program_->define("v_s_" + std::to_string(i), stride_[i]);
   }
   for (int_tp i = 0; i < dilation_.size(); ++i) {
-    LibDNN<Dtype>::add_def(ss, "v_d_" + std::to_string(i), dilation_[i]);
+    ss << this->program_->define("v_d_" + std::to_string(i), dilation_[i]);
   }
 
   int_tp imsi = 1;
   int_tp imso = 1;
   for (int_tp i = 0; i < im_in_shape_.size(); ++i) {
-    LibDNN<Dtype>::add_def(ss, "v_imsi_" + std::to_string(i), im_in_shape_[i]);
+    ss << this->program_->define("v_imsi_" + std::to_string(i),
+                                 im_in_shape_[i]);
     imsi *= im_in_shape_[i];
-    LibDNN<Dtype>::add_def(ss, "v_imso_" + std::to_string(i), im_out_shape_[i]);
+    ss << this->program_->define("v_imso_" + std::to_string(i),
+                                 im_out_shape_[i]);
     imso *= im_out_shape_[i];
   }
-  LibDNN<Dtype>::add_def(ss, "v_imsi", imsi);
-  LibDNN<Dtype>::add_def(ss, "v_imso", imso);
+  ss << this->program_->define("v_imsi", imsi);
+  ss << this->program_->define("v_imso", imso);
 
   return ss.str();
 }
 
 
-template<typename Dtype>
-string LibDNNPool<Dtype>::generate_bw_defs() {
+template<typename Dtype, typename MItype, typename MOtype>
+string LibDNNPool<Dtype, MItype, MOtype>::generate_bw_defs() {
   stringstream ss;
 
   // Number of spatial axes
-  LibDNN<Dtype>::add_def(ss, "v_nax", num_axes_);
+  ss << this->program_->define("v_nax", num_axes_);
   for (int_tp i = 0; i < kernel_shape_.size(); ++i) {
-    LibDNN<Dtype>::add_def(ss, "v_k_" + std::to_string(i), kernel_shape_[i]);
+    ss << this->program_->define("v_k_" + std::to_string(i), kernel_shape_[i]);
   }
   for (int_tp i = 0; i < pad_.size(); ++i) {
-    LibDNN<Dtype>::add_def(ss, "v_p_" + std::to_string(i), pad_[i]);
+    ss << this->program_->define("v_p_" + std::to_string(i), pad_[i]);
   }
   for (int_tp i = 0; i < stride_.size(); ++i) {
-    LibDNN<Dtype>::add_def(ss, "v_s_" + std::to_string(i), stride_[i]);
+    ss << this->program_->define("v_s_" + std::to_string(i), stride_[i]);
   }
   for (int_tp i = 0; i < dilation_.size(); ++i) {
-    LibDNN<Dtype>::add_def(ss, "v_d_" + std::to_string(i), dilation_[i]);
+    ss << this->program_->define("v_d_" + std::to_string(i), dilation_[i]);
   }
 
   int_tp imsi = 1;
   int_tp imso = 1;
   for (int_tp i = 0; i < im_in_shape_.size(); ++i) {
-    LibDNN<Dtype>::add_def(ss, "v_imsi_" + std::to_string(i), im_in_shape_[i]);
+    ss << this->program_->define("v_imsi_" + std::to_string(i),
+                                 im_in_shape_[i]);
     imsi *= im_in_shape_[i];
-    LibDNN<Dtype>::add_def(ss, "v_imso_" + std::to_string(i), im_out_shape_[i]);
+    ss << this->program_->define("v_imso_" + std::to_string(i),
+                                 im_out_shape_[i]);
     imso *= im_out_shape_[i];
   }
-  LibDNN<Dtype>::add_def(ss, "v_imsi", imsi);
-  LibDNN<Dtype>::add_def(ss, "v_imso", imso);
+  ss << this->program_->define("v_imsi", imsi);
+  ss << this->program_->define("v_imso", imso);
 
   return ss.str();
 }
 
-template<typename Dtype>
-string LibDNNPool<Dtype>::generate_fw_kernels(string name,
-                                                   bool test_mode) {
+template<typename Dtype, typename MItype, typename MOtype>
+string LibDNNPool<Dtype, MItype, MOtype>::generate_fw_kernels(string name,
+                                                              bool test_mode) {
   stringstream ss;
 #ifdef USE_HALF
   if (std::is_same<Dtype, half_fp>::value) {
@@ -213,22 +215,30 @@ string LibDNNPool<Dtype>::generate_fw_kernels(string name,
   }
 #endif
 
-  ss << "__kernel void " + name + "(";
-  ss << "__global const Dtype* __restrict bottom_data, ";
-  ss << "__global Dtype* __restrict top_data, ";
+  KernelArgs args;
+  args.push_back(this->program_->template create_kernel_arg<MItype>(
+      "bottom_data", KERNEL_ARG_CONST | KERNEL_ARG_GLOBAL_MEM
+      | KERNEL_ARG_RESTRICT));
+  args.push_back(this->program_->template create_kernel_arg<MOtype>("top_data",
+                                  KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_RESTRICT));
   if (pool_method_ == LIBDNN_POOLING_METHOD_MAX) {
     if (use_top_mask_) {
-      ss << "__global Dtype* __restrict top_mask, ";
+      args.push_back(this->program_->template create_kernel_arg<Dtype>(
+          "top_mask", KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_RESTRICT));
     } else {
-      ss << "__global int_tp* __restrict mask, ";
+      args.push_back(this->program_->template create_kernel_arg<int_tp>(
+          "mask", KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_RESTRICT));
     }
   }
   if (pool_method_ == LIBDNN_POOLING_METHOD_STO && !test_mode) {
-    ss << "__global Dtype* __restrict rand_idx, ";
+    args.push_back(this->program_->template create_kernel_arg<Dtype>(
+             "rand_idx", KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_RESTRICT));
   }
-  ss << "int_tp channels, ";
-  ss << "int_tp batch_size";
-  ss << ") {" << std::endl;
+  args.push_back(this->program_->template create_kernel_arg<int_tp>(
+                                                 "channels", KERNEL_ARG_CONST));
+  args.push_back(this->program_->template create_kernel_arg<int_tp>(
+                                               "batch_size", KERNEL_ARG_CONST));
+  ss << this->program_->function(name, args);
 
   ss << "int_tp out_idx = get_global_id(0);" << std::endl;
   ss << "if (get_global_id(1) >= channels * batch_size) {return;}" << std::endl;
@@ -441,15 +451,15 @@ string LibDNNPool<Dtype>::generate_fw_kernels(string name,
   return ss.str();
 }
 
-template<typename Dtype>
-string LibDNNPool<Dtype>::generate_fwtr_kernels(string name) {
+template<typename Dtype, typename MItype, typename MOtype>
+string LibDNNPool<Dtype, MItype, MOtype>::generate_fwtr_kernels(string name) {
   stringstream ss;
   ss << generate_fw_kernels(name, false);
   return ss.str();
 }
 
-template<typename Dtype>
-string LibDNNPool<Dtype>::generate_fwte_kernels(string name) {
+template<typename Dtype, typename MItype, typename MOtype>
+string LibDNNPool<Dtype, MItype, MOtype>::generate_fwte_kernels(string name) {
   stringstream ss;
   ss << generate_fw_kernels(name, true);
   return ss.str();
@@ -457,8 +467,8 @@ string LibDNNPool<Dtype>::generate_fwte_kernels(string name) {
 
 
 
-template<typename Dtype>
-string LibDNNPool<Dtype>::generate_bw_kernels(string name) {
+template<typename Dtype, typename MItype, typename MOtype>
+string LibDNNPool<Dtype, MItype, MOtype>::generate_bw_kernels(string name) {
   stringstream ss;
 
   ss << "__kernel void " + name + "(";
@@ -595,7 +605,7 @@ string LibDNNPool<Dtype>::generate_bw_kernels(string name) {
             ss << "true) {" << std::endl;
           }
           if (ave_idx == 1) {
-            ss << "atomicAdd((&out_ptr[" << kernel_offset << "]), val);"
+            ss << "caffe_gpu_atomic_add((&out_ptr[" << kernel_offset << "]), val);"
                << std::endl;
           }
           if ((ave_idx == 1) && (pad_guard || overspill_guard)) {
@@ -630,13 +640,13 @@ string LibDNNPool<Dtype>::generate_bw_kernels(string name) {
     }
     if (pool_method_ == LIBDNN_POOLING_METHOD_MAX) {
       ss << "if (mask_ptr[0] >= 0 && mask_ptr[0] < v_imsi) {" << std::endl;
-      ss << "atomicAdd(&out_ptr[(int_tp)(mask_ptr[0])], "
+      ss << "caffe_gpu_atomic_add(&out_ptr[(int_tp)(mask_ptr[0])], "
          << "in_ptr[0]);" << std::endl;
       ss << "}" << std::endl;
     }
     if (pool_method_ == LIBDNN_POOLING_METHOD_STO) {
       ss << "if (mask_ptr[0] >= 0 && mask_ptr[0] < v_imsi) {" << std::endl;
-      ss << "atomicAdd(&out_ptr[(int_tp)(rand_ptr[0])], "
+      ss << "caffe_gpu_atomic_add(&out_ptr[(int_tp)(rand_ptr[0])], "
          << "in_ptr[0]);" << std::endl;
       ss << "}" << std::endl;
     }
@@ -704,7 +714,7 @@ string LibDNNPool<Dtype>::generate_bw_kernels(string name) {
       ss << "int_tp av_start[" << num_axes_ << "];" << std::endl;
       ss << "int_tp av_end[" << num_axes_ << "];" << std::endl;
     }
-    // ss << "printf(\"%f\\n\", (float)ave);" << std::endl;
+    // ss << "printf(\"%f\\N\", (float)ave);" << std::endl;
     ss << "Dtype gradient = 0.0;" << std::endl;
     ss << "bool incremented;" << std::endl;
     ss << "do {" << std::endl;
@@ -785,11 +795,15 @@ string LibDNNPool<Dtype>::generate_bw_kernels(string name) {
   return ss.str();
 }
 
-template<typename Dtype>
-void LibDNNPool<Dtype>::GenerateKernels() {
+template<typename Dtype, typename MItype, typename MOtype>
+void LibDNNPool<Dtype, MItype, MOtype>::GenerateKernels() {
   stringstream ss;
 
-  ss << LibDNN<Dtype>::generate_header();
+  ss << this->program_->setup();
+  ss << this->program_->template define_vector_type<Dtype>("Dtype", 0, 16);
+  ss << this->program_->template define_vector_type<MItype>("MItype", 0, 16);
+  ss << this->program_->template define_vector_type<MOtype>("MOtype", 0, 16);
+  ss << this->program_->atomics();
   ss << generate_fw_defs();
   ss << generate_fwtr_kernels("pool_forward_train");
   ss << generate_fwte_kernels("pool_forward_test");
@@ -797,18 +811,15 @@ void LibDNNPool<Dtype>::GenerateKernels() {
   ss << generate_bw_kernels("pool_backward");
 
   // Write complete kernel string
-  LibDNN<Dtype>::kernel_ = ss.str();
+  this->program_->set_source(ss.str());
 }
 
-template<typename Dtype>
-void LibDNNPool<Dtype>::Forward(const Dtype* bottom_data,
-                                Dtype* top_data,
-                                int_tp channels,
-                                int_tp batch_size,
-                                bool test_mode,
-                                int_tp* mask,
-                                Dtype* top_mask,
-                                Dtype* rand_idx) {
+template<typename Dtype, typename MItype, typename MOtype>
+void LibDNNPool<Dtype, MItype, MOtype>::Forward(
+              vptr<const MItype> bottom_data, vptr<MOtype> top_data,
+              int_tp channels, int_tp batch_size,
+              bool test_mode, vptr<int_tp> mask,
+              vptr<MOtype> top_mask, vptr<Dtype> rand_idx) {
   int_tp imsi = std::accumulate(im_in_shape_.begin(), im_in_shape_.end(),
                                 1, std::multiplies<int_tp>());
   int_tp imso = std::accumulate(im_out_shape_.begin(), im_out_shape_.end(),
@@ -817,134 +828,63 @@ void LibDNNPool<Dtype>::Forward(const Dtype* bottom_data,
   int_tp lw0 = fw_tuner_->get_param<int_tp>("LW0");
   int_tp lw1 = fw_tuner_->get_param<int_tp>("LW1");
 
-#ifdef USE_OPENCL
-  if (LibDNN<Dtype>::dev_ptr_->backend() == BACKEND_OPENCL) {
-    viennacl::ocl::kernel &kernel =
-        LibDNN<Dtype>::ocl_program_.get_kernel(
-        test_mode ? "pool_forward_test" : "pool_forward_train");
-    viennacl::ocl::context &ctx =
-        viennacl::ocl::get_context(LibDNN<Dtype>::dev_ptr_->id());
+  shared_ptr<DeviceKernel> kernel =
+      this->program_->GetKernel(test_mode ? "pool_forward_test"
+                                          : "pool_forward_train");
+  vector<size_t> group = {((imso - 1) / lw0 + 1),
+                          ((channels * batch_size - 1) / lw1 + 1), 1};
+  vector<size_t> local = {lw0, lw1, 1};
 
-    kernel.local_work_size(0, lw0);
-    kernel.local_work_size(1, lw1);
-    kernel.local_work_size(2, 1);
-
-    kernel.global_work_size(0, ((imso - 1) / lw0 + 1) * lw0);
-    kernel.global_work_size(1, ((channels * batch_size - 1) / lw1 + 1) * lw1);
-    kernel.global_work_size(2, 1);
-
-    switch (pool_method_) {
-      case LIBDNN_POOLING_METHOD_MAX:
-        if (use_top_mask_) {
-          viennacl::ocl::enqueue(
-                 kernel(WrapHandle((cl_mem) bottom_data, &ctx),
-                        WrapHandle((cl_mem) top_data, &ctx),
-                        WrapHandle((cl_mem) top_mask, &ctx),
-                        channels,
-                        batch_size),
-                 ctx.get_queue());
-        } else {
-         viennacl::ocl::enqueue(
-                kernel(WrapHandle((cl_mem) bottom_data, &ctx),
-                       WrapHandle((cl_mem) top_data, &ctx),
-                       WrapHandle((cl_mem) mask, &ctx),
-                       channels,
-                       batch_size),
-                ctx.get_queue());
-        }
-        break;
-      case LIBDNN_POOLING_METHOD_AVE:
-        viennacl::ocl::enqueue(
-               kernel(WrapHandle((cl_mem) bottom_data, &ctx),
-                      WrapHandle((cl_mem) top_data, &ctx),
-                      channels,
-                      batch_size),
-               ctx.get_queue());
-        break;
-      case LIBDNN_POOLING_METHOD_STO:
-        viennacl::ocl::enqueue(
-               kernel(WrapHandle((cl_mem) bottom_data, &ctx),
-                      WrapHandle((cl_mem) top_data, &ctx),
-                      WrapHandle((cl_mem) rand_idx, &ctx),
-                      channels,
-                      batch_size),
-               ctx.get_queue());
-        break;
+  switch (pool_method_) {
+    case LIBDNN_POOLING_METHOD_MAX: {
+      if (use_top_mask_) {
+        kernel->add_arg(&bottom_data);
+        kernel->add_arg(&top_data);
+        kernel->add_arg(&top_mask);
+        kernel->add_arg(&channels);
+        kernel->add_arg(&batch_size);
+        kernel->Execute(group, local);
+      } else {
+        kernel->add_arg(&bottom_data);
+        kernel->add_arg(&top_data);
+        kernel->add_arg(&mask);
+        kernel->add_arg(&channels);
+        kernel->add_arg(&batch_size);
+        kernel->Execute(group, local);
+      }
+      break;
+    }
+    case LIBDNN_POOLING_METHOD_AVE: {
+      kernel->add_arg(&bottom_data);
+      kernel->add_arg(&top_data);
+      kernel->add_arg(&channels);
+      kernel->add_arg(&batch_size);
+      kernel->Execute(group, local);
+      break;
+    }
+    case LIBDNN_POOLING_METHOD_STO: {
+      kernel->add_arg(&bottom_data);
+      kernel->add_arg(&top_data);
+      kernel->add_arg(&rand_idx);
+      kernel->add_arg(&channels);
+      kernel->add_arg(&batch_size);
+      kernel->Execute(group, local);
+      break;
     }
   }
-#endif  // USE_OPENCL
-
-#ifdef USE_CUDA
-  if (LibDNN<Dtype>::dev_ptr_->backend() == BACKEND_CUDA) {
-    CUfunction kernel;
-    cuModuleGetFunction(&kernel, LibDNN<Dtype>::cuda_module_,
-               test_mode ? "pool_forward_test" : "pool_forward_train");
-
-    switch (pool_method_) {
-      case LIBDNN_POOLING_METHOD_MAX: {
-        if (use_top_mask_) {
-          void *args[] = { &bottom_data, &top_data, &top_mask,
-              &channels, &batch_size };
-          cuLaunchKernel(kernel,
-                         (imso - 1) / lw0 + 1,                   // Grid X
-                         (channels * batch_size - 1) / lw1 + 1,  // Grid Y
-                         1,                                      // Grid Z
-                         lw0, lw1, 1,                            // Local
-                         0, NULL, args, 0);                      // Arguments
-        } else {
-          void *args[] = { &bottom_data, &top_data, &mask,
-              &channels, &batch_size };
-          cuLaunchKernel(kernel,
-                         (imso - 1) / lw0 + 1,                   // Grid X
-                         (channels * batch_size - 1) / lw1 + 1,  // Grid Y
-                         1,                                      // Grid Z
-                         lw0, lw1, 1,                            // Local
-                         0, NULL, args, 0);                      // Arguments
-        }
-        break;
-      }
-      case LIBDNN_POOLING_METHOD_AVE: {
-        void *args[] = { &bottom_data, &top_data,
-            &channels, &batch_size };
-        cuLaunchKernel(kernel,
-                       (imso - 1) / lw0 + 1,                   // Grid X
-                       (channels * batch_size - 1) / lw1 + 1,  // Grid Y
-                       1,                                      // Grid Z
-                       lw0, lw1, 1,                            // Local
-                       0, NULL, args, 0);                      // Arguments
-        break;
-      }
-      case LIBDNN_POOLING_METHOD_STO: {
-        void *args[] = { &bottom_data, &top_data, &rand_idx,
-            &channels, &batch_size };
-        cuLaunchKernel(kernel,
-                       (imso - 1) / lw0 + 1,                   // Grid X
-                       (channels * batch_size - 1) / lw1 + 1,  // Grid Y
-                       1,                                      // Grid Z
-                       lw0, lw1, 1,                            // Local
-                       0, NULL, args, 0);                      // Arguments
-        break;
-      }
-    }
-    cuCtxSynchronize();
-  }
-#endif  // USE_CUDA
 }
 
-
-template<typename Dtype>
-void LibDNNPool<Dtype>::Backward(const Dtype* top_diff,
-                                Dtype* bottom_diff,
-                                int_tp channels,
-                                int_tp batch_size,
-                                const int_tp* mask,
-                                const Dtype* top_mask,
-                                const Dtype* rand_idx) {
+template<typename Dtype, typename MItype, typename MOtype>
+void LibDNNPool<Dtype, MItype, MOtype>::Backward(
+                      vptr<const MOtype> top_diff, vptr<MItype> bottom_diff,
+                      int_tp channels, int_tp batch_size,
+                      vptr<const int_tp> mask, vptr<const MOtype> top_mask,
+                      vptr<const Dtype> rand_idx) {
   int_tp ims = batch_size * channels;
   for (int_tp i = 0; i < im_in_shape_.size(); ++i) {
     ims *= im_in_shape_[i];
   }
-  LibDNN<Dtype>::SetMemory(bottom_diff, ims, 0, (Dtype) 0);
+  this->dev_ptr_->template set<MItype>(ims, (MItype)0, bottom_diff);
 
   int_tp imsi = std::accumulate(im_in_shape_.begin(), im_in_shape_.end(),
                                 1, std::multiplies<int_tp>());
@@ -963,119 +903,54 @@ void LibDNNPool<Dtype>::Backward(const Dtype* top_diff,
   int_tp lw0 = bw_tuner_->get_param<int_tp>("LW0");
   int_tp lw1 = bw_tuner_->get_param<int_tp>("LW1");
 
-#ifdef USE_OPENCL
-  if (LibDNN<Dtype>::dev_ptr_->backend() == BACKEND_OPENCL) {
-    viennacl::ocl::kernel &kernel =
-        LibDNN<Dtype>::ocl_program_.get_kernel("pool_backward");
-    viennacl::ocl::context &ctx =
-        viennacl::ocl::get_context(LibDNN<Dtype>::dev_ptr_->id());
+  shared_ptr<DeviceKernel> kernel =
+      this->program_->GetKernel("pool_backward");
+  vector<size_t> group = {((imsw - 1) / lw0 + 1),
+                          ((channels * batch_size - 1) / lw1 + 1), 1};
+  vector<size_t> local = {lw0, lw1, 1};
 
-    kernel.local_work_size(0, lw0);
-    kernel.local_work_size(1, lw1);
-    kernel.local_work_size(2, 1);
-
-    kernel.global_work_size(0, ((imsw - 1) / lw0 + 1) * lw0);
-    kernel.global_work_size(1, ((channels * batch_size - 1) / lw1 + 1) * lw1);
-    kernel.global_work_size(2, 1);
-
-    switch (pool_method_) {
-      case LIBDNN_POOLING_METHOD_MAX:
-        if (use_top_mask_) {
-          viennacl::ocl::enqueue(
-                 kernel(WrapHandle((cl_mem) top_diff, &ctx),
-                        WrapHandle((cl_mem) bottom_diff, &ctx),
-                        WrapHandle((cl_mem) top_mask, &ctx),
-                        channels,
-                        batch_size),
-                 ctx.get_queue());
-        } else {
-         viennacl::ocl::enqueue(
-                kernel(WrapHandle((cl_mem) top_diff, &ctx),
-                       WrapHandle((cl_mem) bottom_diff, &ctx),
-                       WrapHandle((cl_mem) mask, &ctx),
-                       channels,
-                       batch_size),
-                ctx.get_queue());
-        }
-        break;
-      case LIBDNN_POOLING_METHOD_AVE:
-        viennacl::ocl::enqueue(
-               kernel(WrapHandle((cl_mem) top_diff, &ctx),
-                      WrapHandle((cl_mem) bottom_diff, &ctx),
-                      channels,
-                      batch_size),
-               ctx.get_queue());
-        break;
-      case LIBDNN_POOLING_METHOD_STO:
-        viennacl::ocl::enqueue(
-               kernel(WrapHandle((cl_mem) top_diff, &ctx),
-                      WrapHandle((cl_mem) bottom_diff, &ctx),
-                      WrapHandle((cl_mem) rand_idx, &ctx),
-                      channels,
-                      batch_size),
-               ctx.get_queue());
-        break;
+  switch (pool_method_) {
+    case LIBDNN_POOLING_METHOD_MAX: {
+      if (use_top_mask_) {
+        kernel->add_arg(&top_diff);
+        kernel->add_arg(&bottom_diff);
+        kernel->add_arg(&top_mask);
+        kernel->add_arg(&channels);
+        kernel->add_arg(&batch_size);
+        kernel->Execute(group, local);
+      } else {
+        kernel->add_arg(&top_diff);
+        kernel->add_arg(&bottom_diff);
+        kernel->add_arg(&mask);
+        kernel->add_arg(&channels);
+        kernel->add_arg(&batch_size);
+        kernel->Execute(group, local);
+      }
+      break;
+    }
+    case LIBDNN_POOLING_METHOD_AVE: {
+      kernel->add_arg(&top_diff);
+      kernel->add_arg(&bottom_diff);
+      kernel->add_arg(&channels);
+      kernel->add_arg(&batch_size);
+      kernel->Execute(group, local);
+      break;
+    }
+    case LIBDNN_POOLING_METHOD_STO: {
+      kernel->add_arg(&top_diff);
+      kernel->add_arg(&bottom_diff);
+      kernel->add_arg(&rand_idx);
+      kernel->add_arg(&channels);
+      kernel->add_arg(&batch_size);
+      kernel->Execute(group, local);
+      break;
     }
   }
-#endif  // USE_OPENCL
-
-#ifdef USE_CUDA
-  if (LibDNN<Dtype>::dev_ptr_->backend() == BACKEND_CUDA) {
-    CUfunction kernel;
-    cuModuleGetFunction(&kernel, LibDNN<Dtype>::cuda_module_, "pool_backward");
-
-    switch (pool_method_) {
-      case LIBDNN_POOLING_METHOD_MAX: {
-        if (use_top_mask_) {
-          void *args[] = { &top_diff, &bottom_diff, &top_mask,
-              &channels, &batch_size };
-          cuLaunchKernel(kernel,
-                         (imsw - 1) / lw0 + 1,                   // Grid X
-                         (channels * batch_size - 1) / lw1 + 1,  // Grid Y
-                         1,                                      // Grid Z
-                         lw0, lw1, 1,                            // Local
-                         0, NULL, args, 0);                      // Arguments
-        } else {
-          void *args[] = { &top_diff, &bottom_diff, &mask,
-              &channels, &batch_size };
-          cuLaunchKernel(kernel,
-                         (imsw - 1) / lw0 + 1,                   // Grid X
-                         (channels * batch_size - 1) / lw1 + 1,  // Grid Y
-                         1,                                      // Grid Z
-                         lw0, lw1, 1,                            // Local
-                         0, NULL, args, 0);                      // Arguments
-        }
-        break;
-      }
-      case LIBDNN_POOLING_METHOD_AVE: {
-        void *args[] = { &top_diff, &bottom_diff,
-            &channels, &batch_size };
-        cuLaunchKernel(kernel,
-                       (imsw - 1) / lw0 + 1,                   // Grid X
-                       (channels * batch_size - 1) / lw1 + 1,  // Grid Y
-                       1,                                      // Grid Z
-                       lw0, lw1, 1,                            // Local
-                       0, NULL, args, 0);                      // Arguments
-        break;
-      }
-      case LIBDNN_POOLING_METHOD_STO: {
-        void *args[] = { &top_diff, &bottom_diff, &rand_idx,
-            &channels, &batch_size };
-        cuLaunchKernel(kernel,
-                       (imsw - 1) / lw0 + 1,                   // Grid X
-                       (channels * batch_size - 1) / lw1 + 1,  // Grid Y
-                       1,                                      // Grid Z
-                       lw0, lw1, 1,                            // Local
-                       0, NULL, args, 0);                      // Arguments
-        break;
-      }
-    }
-    cuCtxSynchronize();
-  }
-#endif  // USE_CUDA
 }
 
-INSTANTIATE_CLASS(LibDNNPool);
+INSTANTIATE_CLASS_3T_GUARDED(LibDNNPool, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(LibDNNPool, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(LibDNNPool, (double), (double), (double));
 
 }  // namespace caffe
 

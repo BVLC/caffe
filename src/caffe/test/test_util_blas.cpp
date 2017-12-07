@@ -12,7 +12,7 @@ namespace caffe {
 template <typename TypeParam>
 class GemmTest : public ::testing::Test {};
 
-TYPED_TEST_CASE(GemmTest, TestDtypes);
+TYPED_TEST_CASE(GemmTest, TestDtypesFloat);
 
 TYPED_TEST(GemmTest, TestGemmCPUGPU) {
   Device *dc = Caffe::GetDefaultDevice();

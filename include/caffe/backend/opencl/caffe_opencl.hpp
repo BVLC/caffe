@@ -51,7 +51,7 @@ namespace caffe {
 #define OPENCL_CL_BLAS_CHECK(condition) \
     {clblasStatus status = condition; \
     CHECK_EQ(status, clblasSuccess) << \
-    "GREENTEA ERROR: clBLAS error";}
+    "OPENCL ERROR: clBLAS error";}
 #endif
 
 #if defined (USE_CLBLAST)
@@ -60,7 +60,7 @@ namespace caffe {
     CHECK_EQ(\
       static_cast<int>(status), \
       static_cast<int>(clblast::StatusCode::kSuccess)) << \
-    "GREENTEA ERROR: CLBlast error";}
+    "OPENCL ERROR: CLBlast error";}
 #endif
 
 const char* clGetErrorString(cl_int error);

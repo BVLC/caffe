@@ -71,7 +71,6 @@ function(caffe_pickup_caffe_sources root)
   caffe_source_group("Include"        GLOB "${root}/include/caffe/*.h*")
   caffe_source_group("Include\\Util"  GLOB "${root}/include/caffe/util/*.h*")
   caffe_source_group("Include"        GLOB "${PROJECT_BINARY_DIR}/caffe_config.h*")
-  caffe_source_group("Include"        GLOB "${root}/include/caffe/greentea/*.hpp")
   caffe_source_group("Include"        GLOB "${caffe_export_hdr}")
   if(MSVC AND NOT BUILD_SHARED_LIBS)
     caffe_source_group("Include"        GLOB "${caffe_symbols_hdr}")
@@ -82,7 +81,6 @@ function(caffe_pickup_caffe_sources root)
   caffe_source_group("Source\\Cuda"   GLOB "${root}/src/caffe/layers/*.cu")
   caffe_source_group("Source\\Cuda"   GLOB "${root}/src/caffe/util/*.cu")
   caffe_source_group("Source\\Proto"  GLOB "${root}/src/caffe/proto/*.proto")
-  caffe_source_group("Source"         GLOB "${root}/src/caffe/greentea*.cpp")
 
   # source groups for test target
   caffe_source_group("Include"      GLOB "${root}/include/caffe/test/test_*.h*")
@@ -118,7 +116,7 @@ function(caffe_pickup_caffe_sources root)
 
 
   # OpenCL but not CUDA backend tweak
-  if(USE_OPENCL AND NOT USE_CUDA)
+  if((USE_OPENCL AND NOT USE_CUDA) OR FORCE_COMPILE_CU_AS_CPP)
     SET_SOURCE_FILES_PROPERTIES(${cuda} PROPERTIES LANGUAGE CXX)
     SET_SOURCE_FILES_PROPERTIES(${test_cuda} PROPERTIES LANGUAGE CXX)
 	

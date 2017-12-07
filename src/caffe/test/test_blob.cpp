@@ -21,7 +21,7 @@ class BlobSimpleTest : public ::testing::Test {
   Blob<Dtype>* const blob_preshaped_;
 };
 
-TYPED_TEST_CASE(BlobSimpleTest, TestDtypes);
+TYPED_TEST_CASE(BlobSimpleTest, TestDtypesFloat);
 
 TYPED_TEST(BlobSimpleTest, TestInitialization) {
   EXPECT_TRUE(this->blob_);

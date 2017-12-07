@@ -6,10 +6,12 @@
 namespace caffe {
 
 template<typename Dtype, typename MItype, typename MOtype>
-void CuDNNReLULayer<Dtype, MItype, MOtype>::Forward_gpu(const vector<Blob<MItype>*>& bottom,
+void CuDNNReLULayer<Dtype, MItype, MOtype>::Forward_gpu(
+    const vector<Blob<MItype>*>& bottom,
     const vector<Blob<MOtype>*>& top) {
   // Fallback to standard Caffe for leaky ReLU.
-  if (ReLULayer<Dtype, MItype, MOtype>::layer_param_.relu_param().negative_slope() != 0) {
+  if (ReLULayer<Dtype, MItype, MOtype>::
+      layer_param_.relu_param().negative_slope() != 0) {
     return ReLULayer<Dtype, MItype, MOtype>::Forward_gpu(bottom, top);
   }
 
@@ -33,7 +35,8 @@ void CuDNNReLULayer<Dtype, MItype, MOtype>::Forward_gpu(const vector<Blob<MItype
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void CuDNNReLULayer<Dtype, MItype, MOtype>::Backward_gpu(const vector<Blob<MOtype>*>& top,
+void CuDNNReLULayer<Dtype, MItype, MOtype>::Backward_gpu(
+    const vector<Blob<MOtype>*>& top,
     const vector<bool>& propagate_down,
     const vector<Blob<MItype>*>& bottom) {
   if (!propagate_down[0]) {
@@ -41,8 +44,10 @@ void CuDNNReLULayer<Dtype, MItype, MOtype>::Backward_gpu(const vector<Blob<MOtyp
   }
 
   // Fallback to standard Caffe for leaky ReLU.
-  if (ReLULayer<Dtype, MItype, MOtype>::layer_param_.relu_param().negative_slope() != 0) {
-    return ReLULayer<Dtype, MItype, MOtype>::Backward_gpu(top, propagate_down, bottom);
+  if (ReLULayer<Dtype, MItype, MOtype>::
+      layer_param_.relu_param().negative_slope() != 0) {
+    return ReLULayer<Dtype, MItype, MOtype>::
+        Backward_gpu(top, propagate_down, bottom);
   }
 
   const Dtype* top_data = top[0]->gpu_data().get_cuda_ptr();
@@ -68,7 +73,8 @@ void CuDNNReLULayer<Dtype, MItype, MOtype>::Backward_gpu(const vector<Blob<MOtyp
 #endif
 }
 
-INSTANTIATE_CLASS_3T_GUARDED(CuDNNReLULayer);
+INSTANTIATE_CLASS_3T_GUARDED(CuDNNReLULayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(CuDNNReLULayer, (double), (double), (double));
 
 }  // namespace caffe
 #endif

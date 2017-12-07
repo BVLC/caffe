@@ -42,6 +42,24 @@ static std::atomic<bool> first(true);
 // Device contexts are initialized once and shared on all threads
 vector< shared_ptr<Device> > Caffe::devices_;
 
+inline vector<viennacl::ocl::platform> get_platforms_safe() {
+  vector<viennacl::ocl::platform> ret;
+  cl_int err;
+  cl_uint num_platforms = 0;
+  err = clGetPlatformIDs(0, NULL, &num_platforms);
+  VIENNACL_ERR_CHECK(err);
+
+  cl_platform_id ids[num_platforms];
+  err = clGetPlatformIDs(num_platforms, ids, &num_platforms);
+  VIENNACL_ERR_CHECK(err);
+
+  for (cl_uint i = 0; i < num_platforms; ++i) {
+    ret.push_back(viennacl::ocl::platform(ids[i]));
+  }
+
+  return ret;
+}
+
 Caffe& Caffe::Get() {
   if (first.exchange(false)) {
     // The first call must be single threaded
@@ -344,7 +362,7 @@ void Caffe::Synchronize(int device_id) {
 
 int Caffe::EnumerateDevices(bool silent) {
   int cuda_device_count = 0;
-  int greentea_device_count = 0;
+  int opencl_device_count = 0;
 
 #ifdef USE_CUDA
   cudaGetDeviceCount(&cuda_device_count);
@@ -352,7 +370,7 @@ int Caffe::EnumerateDevices(bool silent) {
 
 #ifdef USE_OPENCL
   typedef vector<viennacl::ocl::platform> platforms_type;
-  platforms_type platforms = viennacl::ocl::get_platforms();
+  platforms_type platforms = get_platforms_safe();
 
   vector<std::tuple<viennacl::ocl::platform,
     viennacl::ocl::device>> platform_devices;
@@ -366,7 +384,7 @@ int Caffe::EnumerateDevices(bool silent) {
       for (std::size_t device_id = 0; device_id < devices.size(); ++device_id) {
         platform_devices.push_back(
             std::make_tuple(platforms[platform_id], devices[device_id]));
-        greentea_device_count++;
+        opencl_device_count++;
       }
     } catch (...) {
       if (!silent) {
@@ -379,9 +397,9 @@ int Caffe::EnumerateDevices(bool silent) {
 #endif  // USE_OPENCL
 
   if (!silent) {
-    LOG(INFO)<< "Total devices: " << cuda_device_count + greentea_device_count;
+    LOG(INFO)<< "Total devices: " << cuda_device_count + opencl_device_count;
     LOG(INFO)<< "CUDA devices: " << cuda_device_count;
-    LOG(INFO)<< "OpenCL devices: " << greentea_device_count;
+    LOG(INFO)<< "OpenCL devices: " << opencl_device_count;
 
     // Display info for all devices
 #ifdef USE_CUDA
@@ -404,7 +422,7 @@ int Caffe::EnumerateDevices(bool silent) {
 #endif  // USE_CUDA
 
 #ifdef USE_OPENCL
-    for (int i = 0; i < greentea_device_count; ++i) {
+    for (int i = 0; i < opencl_device_count; ++i) {
       LOG(INFO)<< "Device id:                     "
       << cuda_device_count + i;
       LOG(INFO)<< "Device backend:                "
@@ -421,14 +439,14 @@ int Caffe::EnumerateDevices(bool silent) {
 #endif  // USE_OPENCL
   }
 
-  return cuda_device_count + greentea_device_count;
+  return cuda_device_count + opencl_device_count;
 }
 
 void Caffe::SetDevices(vector<int> device_ids) {
   int initcount = 0;
   Get().devices_.clear();
   int cuda_device_count = 0;
-#ifdef USE_CUDA
+
   cudaGetDeviceCount(&cuda_device_count);
   for (int i = 0; i < cuda_device_count; ++i) {
     for (int j = 0; j < device_ids.size(); ++j) {
@@ -441,14 +459,13 @@ void Caffe::SetDevices(vector<int> device_ids) {
       }
     }
   }
-#endif  // USE_CUDA
 
-  // Initialize GreenTea devices
+  // Initialize OpenCL devices
 #ifdef USE_OPENCL
-  int greentea_device_count = 0;
+  int opencl_device_count = 0;
 
   typedef vector<viennacl::ocl::platform> platforms_type;
-  platforms_type platforms = viennacl::ocl::get_platforms();
+  platforms_type platforms = get_platforms_safe();
 
   vector< std::tuple<viennacl::ocl::platform,
       viennacl::ocl::device> > platform_devices;
@@ -466,11 +483,11 @@ void Caffe::SetDevices(vector<int> device_ids) {
         // Check if this device is really used and initialize
         for (int i = 0; i < device_ids.size(); ++i) {
           int device_id = device_ids[i];
-          if (device_id == cuda_device_count + greentea_device_count) {
+          if (device_id == cuda_device_count + opencl_device_count) {
             // Setup actual context and compile kernels for this device
             viennacl::ocl::setup_context(
                 device_id,
-                std::get<1>(platform_devices[greentea_device_count]));
+                std::get<1>(platform_devices[opencl_device_count]));
 
             shared_ptr<Device> dev(
                 new OclDevice(device_id, initcount));
@@ -479,7 +496,7 @@ void Caffe::SetDevices(vector<int> device_ids) {
             ++initcount;
           }
         }
-        greentea_device_count++;
+        opencl_device_count++;
       }
     } catch (...) {
       LOG(INFO)<< "OpenCL platform: "
@@ -494,7 +511,7 @@ void Caffe::SetDevices(vector<int> device_ids) {
 }
 
 void Caffe::SetDevice(const int device_id) {
-  // Fix for compability to python and other interfaces that do not
+  // Fix for compatibility to python and other interfaces that do not
   // know or call SetDevices directly
   if (Get().devices_.size() == 0) {
     // No device has been initialized so far
@@ -514,7 +531,7 @@ void Caffe::TeardownDevice(const int device_id) {
 #endif
 }
 
-// TODO: Fix this for the new backend
+// FIXME: OpenCL equivalent and device abstraction
 void Caffe::DeviceQuery() {
   if (Get().default_device_->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA

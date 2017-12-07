@@ -48,7 +48,7 @@ class CPUMathFunctionsTest
   : public MathFunctionsTest<CPUDevice<Dtype> > {
 };
 
-TYPED_TEST_CASE(CPUMathFunctionsTest, TestDtypes);
+TYPED_TEST_CASE(CPUMathFunctionsTest, TestDtypesFloat);
 
 TYPED_TEST(CPUMathFunctionsTest, TestNothing) {
   // The first test case of a test suite takes the longest time
@@ -125,7 +125,7 @@ template <typename Dtype>
 class GPUMathFunctionsTest : public MathFunctionsTest<GPUDevice<Dtype> > {
 };
 
-TYPED_TEST_CASE(GPUMathFunctionsTest, TestDtypes);
+TYPED_TEST_CASE(GPUMathFunctionsTest, TestDtypesFloat);
 
 TYPED_TEST(GPUMathFunctionsTest, TestAsum) {
   int_tp n = this->blob_bottom_->count();

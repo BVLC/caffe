@@ -6,7 +6,8 @@
 namespace caffe {
 
 template<typename Dtype, typename MItype, typename MOtype>
-void CuDNNPoolingLayer<Dtype, MItype, MOtype>::Forward_gpu(const vector<Blob<MItype>*>& bottom,
+void CuDNNPoolingLayer<Dtype, MItype, MOtype>::Forward_gpu(
+    const vector<Blob<MItype>*>& bottom,
     const vector<Blob<MOtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->gpu_data().get_cuda_ptr();
   Dtype* top_data = top[0]->mutable_gpu_data().get_cuda_ptr();
@@ -18,8 +19,10 @@ void CuDNNPoolingLayer<Dtype, MItype, MOtype>::Forward_gpu(const vector<Blob<MIt
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void CuDNNPoolingLayer<Dtype, MItype, MOtype>::Backward_gpu(const vector<Blob<MOtype>*>& top,
-    const vector<bool>& propagate_down, const vector<Blob<MItype>*>& bottom) {
+void CuDNNPoolingLayer<Dtype, MItype, MOtype>::Backward_gpu(
+    const vector<Blob<MOtype>*>& top,
+    const vector<bool>& propagate_down,
+    const vector<Blob<MItype>*>& bottom) {
   if (!propagate_down[0]) {
     return;
   }
@@ -35,7 +38,8 @@ void CuDNNPoolingLayer<Dtype, MItype, MOtype>::Backward_gpu(const vector<Blob<MO
         bottom_desc_, bottom_diff));
 }
 
-INSTANTIATE_CLASS_3T_GUARDED(CuDNNPoolingLayer);
+INSTANTIATE_CLASS_3T_GUARDED(CuDNNPoolingLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(CuDNNPoolingLayer, (double), (double), (double));
 
 }  // namespace caffe
 #endif

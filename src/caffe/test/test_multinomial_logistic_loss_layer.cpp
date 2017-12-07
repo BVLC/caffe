@@ -43,7 +43,7 @@ class MultinomialLogisticLossLayerTest : public CPUDeviceTest<Dtype> {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-TYPED_TEST_CASE(MultinomialLogisticLossLayerTest, TestDtypes);
+TYPED_TEST_CASE(MultinomialLogisticLossLayerTest, TestDtypesFloat);
 
 
 TYPED_TEST(MultinomialLogisticLossLayerTest, TestGradientCPU) {

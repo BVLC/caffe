@@ -79,7 +79,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   // Basically, build all the layers and set up its connections.
   name_ = param.name();
   map<string, int_tp> blob_name_to_idx;
-  set<string> available_blobs;
+  std::set<string> available_blobs;
   memory_used_ = 0;
   // For each layer, set up its input and output
   bottom_vecs_.resize(param.layer_size());
@@ -206,8 +206,8 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   // Also checks if all bottom blobs don't need backward computation (possible
   // because the skip_propagate_down param) and so we can skip bacward
   // computation for the entire layer
-  set<string> blobs_under_loss;
-  set<string> blobs_skip_backp;
+  std::set<string> blobs_under_loss;
+  std::set<string> blobs_skip_backp;
   for (int_tp layer_id = layers_.size() - 1; layer_id >= 0; --layer_id) {
     bool layer_contributes_loss = false;
     bool layer_skip_propagate_down = true;
@@ -283,7 +283,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     }
   }
   // In the end, all remaining blobs are considered output blobs.
-  for (set<string>::iterator it = available_blobs.begin();
+  for (std::set<string>::iterator it = available_blobs.begin();
       it != available_blobs.end(); ++it) {
     if (Caffe::root_solver()) {
       LOG(INFO) << "This network produces output " << *it;
@@ -409,7 +409,7 @@ bool Net<Dtype>::StateMeetsRule(const NetState& state, const NetStateRule& rule,
 // Helper for Net::Init: add a new top blob to the net.
 template <typename Dtype>
 void Net<Dtype>::AppendTop(const NetParameter& param, const int_tp layer_id,
-                           const int_tp top_id, set<string>* available_blobs,
+                           const int_tp top_id, std::set<string>* available_blobs,
                            map<string, int_tp>* blob_name_to_idx) {
   shared_ptr<LayerParameter> layer_param(
       new LayerParameter(param.layer(layer_id)));
@@ -455,7 +455,7 @@ void Net<Dtype>::AppendTop(const NetParameter& param, const int_tp layer_id,
 template<typename Dtype>
 int_tp Net<Dtype>::AppendBottom(const NetParameter& param,
                                 const int_tp layer_id, const int_tp bottom_id,
-                                set<string>* available_blobs,
+                                std::set<string>* available_blobs,
                                 map<string, int_tp>* blob_name_to_idx) {
   const LayerParameter& layer_param = param.layer(layer_id);
   const string& blob_name = layer_param.bottom(bottom_id);

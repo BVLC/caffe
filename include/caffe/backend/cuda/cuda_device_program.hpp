@@ -17,7 +17,7 @@ class CudaDeviceProgram : public DeviceProgram {
  public:
   explicit CudaDeviceProgram(Device *dev);
 
-  virtual void Compile(bool load_cache, bool store_cache);
+  virtual bool Compile(bool load_cache, bool store_cache);
   virtual shared_ptr<DeviceKernel> GetKernel(string name);
 
   virtual string function(string name, KernelArgs args);

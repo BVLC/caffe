@@ -12,6 +12,7 @@
 #include "caffe/backend/device.hpp"
 #include "caffe/common.hpp"
 #include "caffe/util/io.hpp"
+#include "caffe/test_macros.hpp"
 
 using std::cout;
 using std::endl;
@@ -42,12 +43,6 @@ class MultiDeviceTest : public ::testing::Test {
   // Caffe tests may create some temporary files, here we will do the cleanup.
   virtual ~MultiDeviceTest() { RemoveCaffeTempDir(); }
 };
-
-#ifdef USE_HALF
-typedef ::testing::Types<half_fp, float, double> TestDtypes;
-#else
-typedef ::testing::Types<float, double> TestDtypes;
-#endif
 
 template <typename TypeParam>
 struct CPUDevice {

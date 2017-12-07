@@ -51,7 +51,7 @@ class CPUStochasticPoolingLayerTest
   : public StochasticPoolingLayerTest<CPUDevice<Dtype> > {
 };
 
-TYPED_TEST_CASE(CPUStochasticPoolingLayerTest, TestDtypes);
+TYPED_TEST_CASE(CPUStochasticPoolingLayerTest, TestDtypesFloat);
 
 TYPED_TEST(CPUStochasticPoolingLayerTest, TestSetup) {
   LayerParameter layer_param;
@@ -73,7 +73,7 @@ class GPUStochasticPoolingLayerTest
   : public StochasticPoolingLayerTest<GPUDevice<Dtype> > {
 };
 
-TYPED_TEST_CASE(GPUStochasticPoolingLayerTest, TestDtypes);
+TYPED_TEST_CASE(GPUStochasticPoolingLayerTest, TestDtypesFloat);
 
 TYPED_TEST(GPUStochasticPoolingLayerTest, TestStochastic) {
   LayerParameter layer_param;

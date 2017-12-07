@@ -62,6 +62,7 @@ caffe_option(USE_INT_QUANT_32 "Build Caffe with 32 bit integer quantization supp
 caffe_option(USE_INT_QUANT_64 "Build Caffe with 64 bit integer quantization support" ON)
 caffe_option(USE_CUDA "Build Caffe with CUDA support" OFF)
 caffe_option(USE_OPENCL "Build Caffe with OpenCL support" ON)
+caffe_option(FORCE_COMPILE_CU_AS_CPP "Force .cu files to be compiled with C++ compiler instead of NVCC" ON)
 caffe_option(DISABLE_DEVICE_HOST_UNIFIED_MEMORY "Disable host/device shared memory" OFF)
 caffe_option(USE_LIBDNN "Build Caffe with LibDNN library support" ON)
 caffe_option(USE_CLBLAS "Build Caffe with clBLAS support (instead of using ViennaClBLAS)" OFF)

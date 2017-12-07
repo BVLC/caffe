@@ -25,6 +25,7 @@ const uint64_t KERNEL_ARG_CONST         =            1ULL <<   0;
 const uint64_t KERNEL_ARG_GLOBAL_MEM    =            1ULL <<   1;
 const uint64_t KERNEL_ARG_LOCAL_MEM     =            1ULL <<   2;
 const uint64_t KERNEL_ARG_MEM_OFFSET    =            1ULL <<   3;
+const uint64_t KERNEL_ARG_RESTRICT      =            1ULL <<   4;
 
 
 

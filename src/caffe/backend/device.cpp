@@ -154,9 +154,9 @@ template<typename Dtype>
 shared_ptr<Blob<Dtype> > Device::Buffer(vector<int_tp> shape, int_tp* lock_id) {
   CHECK(lock_id);
   shared_ptr<Blob<Dtype> > blob = std::make_shared<Blob<Dtype> >(this);
-  vector<int_tp> buffer_shape;
+  vector<int_tp> buffer_shape(1, safe_sizeof<Dtype>());
   for(size_t i = 0; i < shape.size(); ++i) {
-    buffer_shape.push_back(safe_sizeof<Dtype>() * shape[i]);
+    buffer_shape[0] *= shape[i];
   }
 
   // Ensure the thread safety of this function
@@ -184,6 +184,7 @@ shared_ptr<Blob<Dtype> > Device::Buffer(vector<int_tp> shape, int_tp* lock_id) {
   // Ensure the buffer is big enough for the request
   buffer->Reshape(buffer_shape);
   // Share data between returned Blob object and internal device buffer
+  blob->Reshape(shape);
   blob->ShareDataBase(buffer);
   blob->ShareDiffBase(buffer);
 

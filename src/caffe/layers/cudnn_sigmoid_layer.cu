@@ -28,7 +28,8 @@ void CuDNNSigmoidLayer<Dtype, MItype, MOtype>::Forward_gpu(const vector<Blob<MIt
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void CuDNNSigmoidLayer<Dtype, MItype, MOtype>::Backward_gpu(const vector<Blob<MOtype>*>& top,
+void CuDNNSigmoidLayer<Dtype, MItype, MOtype>::Backward_gpu(
+    const vector<Blob<MOtype>*>& top,
     const vector<bool>& propagate_down,
     const vector<Blob<MItype>*>& bottom) {
   if (!propagate_down[0]) {
@@ -58,7 +59,8 @@ void CuDNNSigmoidLayer<Dtype, MItype, MOtype>::Backward_gpu(const vector<Blob<MO
 #endif
 }
 
-INSTANTIATE_CLASS_3T_GUARDED(CuDNNSigmoidLayer);
+INSTANTIATE_CLASS_3T_GUARDED(CuDNNSigmoidLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(CuDNNSigmoidLayer, (double), (double), (double));
 
 }  // namespace caffe
 #endif

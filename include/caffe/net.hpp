@@ -271,11 +271,11 @@ class Net {
   // Helpers for Init.
   /// @brief Append a new top blob to the net.
   void AppendTop(const NetParameter& param, const int_tp layer_id,
-                 const int_tp top_id, set<string>* available_blobs,
+                 const int_tp top_id, std::set<string>* available_blobs,
                  map<string, int_tp>* blob_name_to_idx);
   /// @brief Append a new bottom blob to the net.
   int_tp AppendBottom(const NetParameter& param, const int_tp layer_id,
-                   const int_tp bottom_id, set<string>* available_blobs,
+                   const int_tp bottom_id, std::set<string>* available_blobs,
                    map<string, int_tp>* blob_name_to_idx);
   /// @brief Append a new parameter blob to the net.
   void AppendParam(const NetParameter& param, const int_tp layer_id,

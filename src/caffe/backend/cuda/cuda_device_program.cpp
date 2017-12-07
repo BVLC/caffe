@@ -9,7 +9,7 @@ namespace caffe {
 CudaDeviceProgram::CudaDeviceProgram(Device* dev) : DeviceProgram(dev) {
 }
 
-void CudaDeviceProgram::Compile(bool load_cache, bool store_cache) {
+bool CudaDeviceProgram::Compile(bool load_cache, bool store_cache) {
   nvrtcCreateProgram(&cuda_program_, src_.c_str(), NULL, 0, NULL, NULL);
 
   vector<const char*> build_opts;
@@ -57,6 +57,8 @@ void CudaDeviceProgram::Compile(bool load_cache, bool store_cache) {
   fclose(fp);
   free(ptx);
 #endif  // NDEBUG
+
+  return true;
 }
 
 
@@ -89,7 +91,11 @@ string CudaDeviceProgram::function(string name,
     if ((flags & KERNEL_ARG_CONST) == KERNEL_ARG_CONST) {
       ss << "const ";
     }
-    ss << std::get<0>(args[i]) << " " << std::get<1>(args[i]);
+    ss << std::get<0>(args[i]) << " ";
+    if ((flags & KERNEL_ARG_RESTRICT) == KERNEL_ARG_RESTRICT) {
+      ss << "__restrict__ ";
+    }
+    ss << std::get<1>(args[i]);
     if (i < args.size() - 1) {
       ss << ", ";
     }
@@ -110,6 +116,15 @@ string CudaDeviceProgram::kernel_loop(string type,
 
 string CudaDeviceProgram::setup() {
   stringstream ss;
+  ss << "#define int8_t char" << std::endl;
+  ss << "#define int16_t short" << std::endl;
+  ss << "#define int32_t int" << std::endl;
+  ss << "#define int64_t long" << std::endl;
+  ss << "#define uint8_t unsigned char" << std::endl;
+  ss << "#define uint16_t unsigned short" << std::endl;
+  ss << "#define uint32_t unsigned int" << std::endl;
+  ss << "#define uint64_t unsigned long" << std::endl;
+
   ss << this->define_type<int_tp>("int_tp");
   ss << this->define_type<uint_tp>("uint_tp");
 #ifdef USE_INDEX_64
@@ -121,7 +136,7 @@ string CudaDeviceProgram::setup() {
   ss << "#undef " << "uint_tpc" << std::endl;
   ss << "#endif  //" << "uint_tpc" << std::endl;
   ss << "#define " << "uint_tpc" << "unsigned long long" << std::endl;
-#else
+#else  // USE_INDEX_64
   ss << "#ifdef " << "int_tpc" << std::endl;
   ss << "#undef " << "int_tpc" << std::endl;
   ss << "#endif  //" << "int_tpc" << std::endl;

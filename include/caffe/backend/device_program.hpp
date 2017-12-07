@@ -12,7 +12,7 @@ class Device;
 class DeviceProgram {
 
  public:
-  virtual void Compile(bool load_cache, bool store_cache) = 0;
+  virtual bool Compile(bool load_cache, bool store_cache) = 0;
   virtual shared_ptr<DeviceKernel> GetKernel(string name) = 0;
 
   virtual string function(string name,
@@ -20,6 +20,7 @@ class DeviceProgram {
   virtual string kernel_loop(string type, string index, string n) = 0;
   virtual string setup() = 0;
   virtual string atomics() = 0;
+  virtual string vector_accessors();
   virtual string global_ptr(string type, string name) = 0;
   virtual string local_ptr(string type, string name) = 0;
   virtual string local_mem(string type, string name) = 0;
@@ -40,7 +41,7 @@ class DeviceProgram {
   virtual string local_barrier() = 0;
   virtual string global_barrier() = 0;
 
-  void set_compile_flags(uint32_t flags);
+  void set_compile_flags(uint64_t flags);
   void set_source(string src);
   void add_source(string src);
 
@@ -50,7 +51,22 @@ class DeviceProgram {
   string atomic_add(string source, string operand);
 
   template<typename Dtype>
+  string define_type(const char* name);
+
+  template<typename Dtype>
   string define_type(string name);
+
+  template<typename Dtype>
+  string define(const char* name, Dtype value);
+
+  template<typename Dtype>
+  string define(string name, Dtype value);
+
+  template<typename Dtype>
+  string define_vector_type(const char* name, int_tp from, int_tp to);
+
+  template<typename Dtype>
+  string define_vector_type(string name, int_tp from, int_tp to);
 
   template<typename Dtype>
   KernelArg create_kernel_arg(string name, uint64_t flags);

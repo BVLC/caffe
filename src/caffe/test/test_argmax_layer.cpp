@@ -35,7 +35,7 @@ class ArgMaxLayerTest : public CPUDeviceTest<Dtype> {
   uint_tp top_k_;
 };
 
-TYPED_TEST_CASE(ArgMaxLayerTest, TestDtypes);
+TYPED_TEST_CASE(ArgMaxLayerTest, TestDtypesFloat);
 
 TYPED_TEST(ArgMaxLayerTest, TestSetup) {
   LayerParameter layer_param;

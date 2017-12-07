@@ -11,7 +11,7 @@ namespace caffe {
 OclDeviceProgram::OclDeviceProgram(Device *dev) : DeviceProgram(dev) {
 }
 
-void OclDeviceProgram::Compile(bool load_cache, bool store_cache) {
+bool OclDeviceProgram::Compile(bool load_cache, bool store_cache) {
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(
       this->device_->id());
 
@@ -43,6 +43,8 @@ void OclDeviceProgram::Compile(bool load_cache, bool store_cache) {
   fclose(fp);
   free(bin);  // NOLINT
 #endif  // NDEBUG
+
+  return true;
 }
 
 shared_ptr<DeviceKernel> OclDeviceProgram::GetKernel(string name) {
@@ -82,7 +84,11 @@ string OclDeviceProgram::function(string name, KernelArgs args) {
       var_name += "_raw_ptr";
       off_name += "_offset";
     }
-    ss << std::get<0>(args[i]) << " " << var_name;
+    ss << std::get<0>(args[i]) << " ";
+    if ((flags & KERNEL_ARG_RESTRICT) == KERNEL_ARG_RESTRICT) {
+      ss << "__restrict ";
+    }
+    ss << var_name;
     if ((flags & KERNEL_ARG_MEM_OFFSET) == KERNEL_ARG_MEM_OFFSET) {
       ss << ", const uint_tp " << off_name;
     }

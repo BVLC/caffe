@@ -964,7 +964,7 @@ class CuDNNPoolingLayerTest : public GPUDeviceTest<Dtype> {
   }
 };
 
-TYPED_TEST_CASE(CuDNNPoolingLayerTest, TestDtypes);
+TYPED_TEST_CASE(CuDNNPoolingLayerTest, TestDtypesFloatNoHalf);
 
 TYPED_TEST(CuDNNPoolingLayerTest, TestSetupCuDNN) {
   if (Caffe::GetDefaultDevice()->backend() == BACKEND_CUDA) {

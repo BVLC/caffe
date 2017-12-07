@@ -54,15 +54,17 @@ TEST_F(CommonTest, TestRandSeedGPU) {
   if (dc->backend() == BACKEND_CUDA) {
 #ifdef USE_CUDA
     SyncedMemory data_a(10 * sizeof(unsigned int),
-                        Caffe::GetDefaultDevice(), DUINT16);
+                        Caffe::GetDefaultDevice());
     SyncedMemory data_b(10 * sizeof(unsigned int),
-                        Caffe::GetDefaultDevice(), DUINT16);
+                        Caffe::GetDefaultDevice());
     Caffe::set_random_seed(1701, Caffe::GetDefaultDevice());
     CURAND_CHECK(curandGenerate(Caffe::curand_generator(),
-          static_cast<unsigned int*>(data_a.mutable_gpu_data()), 10));
+          static_cast<unsigned int*>(data_a.mutable_gpu_data().get_cuda_ptr()),
+          10));
     Caffe::set_random_seed(1701, Caffe::GetDefaultDevice());
     CURAND_CHECK(curandGenerate(Caffe::curand_generator(),
-          static_cast<unsigned int*>(data_b.mutable_gpu_data()), 10));
+          static_cast<unsigned int*>(data_b.mutable_gpu_data().get_cuda_ptr()),
+          10));
     for (int i = 0; i < 10; ++i) {
       EXPECT_EQ(((const unsigned int*)(data_a.cpu_data()))[i],
           ((const unsigned int*)(data_b.cpu_data()))[i]);

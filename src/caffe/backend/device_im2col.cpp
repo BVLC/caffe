@@ -47,7 +47,7 @@ string create_source(Device* dev,
                                                           KERNEL_ARG_CONST));
     fw_args.push_back(program->create_kernel_arg<Dtype>("data_col",
                       KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_MEM_OFFSET));
-    ss << program->function("im2col", fw_args);
+    ss << program->function("caffe_gpu_im2col", fw_args);
     ss << program->kernel_loop("int_tp", "index", "n");
     ss << "const int_tp h_index = index / width_col;" << std::endl;
     ss << "const int_tp h_col = h_index % height_col;" << std::endl;
@@ -112,7 +112,7 @@ string create_source(Device* dev,
                                                           KERNEL_ARG_CONST));
     bw_args.push_back(program->create_kernel_arg<Dtype>("data_im",
                       KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_MEM_OFFSET));
-    ss << program->function("col2im", bw_args);
+    ss << program->function("caffe_gpu_col2im", bw_args);
     ss << program->kernel_loop("int_tp", "index", "n");
     ss << "Dtype val = 0;" << std::endl;
     ss << "const int_tp w_im = index % width + pad_w;" << std::endl;
@@ -180,7 +180,8 @@ string create_source(Device* dev,
                       KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_CONST));
     fw_args.push_back(program->create_kernel_arg<Dtype>("data_col",
                       KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_MEM_OFFSET));
-    ss << program->function("im2col_nd_" + std::to_string(num_axes), fw_args);
+    ss << program->function("caffe_gpu_im2col_nd_"
+                            + std::to_string(num_axes), fw_args);
     ss << "int_tp d_temp[" << num_axes << "];" << std::endl;
     ss << "int_tp d_iter[" << num_axes << "];" << std::endl;
 
@@ -301,7 +302,8 @@ string create_source(Device* dev,
                       KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_CONST));
     bw_args.push_back(program->create_kernel_arg<Dtype>("data_im",
                       KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_MEM_OFFSET));
-    ss << program->function("col2im_nd_" + std::to_string(num_axes), bw_args);
+    ss << program->function("caffe_gpu_col2im_nd_"
+                            + std::to_string(num_axes), bw_args);
     ss << "int_tp d_im[" << num_axes << "];" << std::endl;
     ss << "int_tp d_col_iter[" << num_axes << "];" << std::endl;
     ss << "int_tp d_col_start[" << num_axes << "];" << std::endl;
@@ -496,7 +498,8 @@ void Device::im2col(vptr<const Dtype> data_im, const int_tp channels,
   int_tp num_kernels = channels * height_col * width_col;
 
   shared_ptr<DeviceKernel> kernel =
-    this->im2col_programs_[proto_data_type_index<Dtype>()]->GetKernel("im2col");
+    this->im2col_programs_[proto_data_type_index<Dtype>()]
+                           ->GetKernel("caffe_gpu_im2col");
   kernel->add_arg(&num_kernels);
   kernel->add_arg(&data_im);
   kernel->add_arg(&height);
@@ -537,7 +540,8 @@ void Device::col2im(vptr<const Dtype> data_col, const int_tp channels,
   // bottom dimension, and then in the kernel add up the top dimensions.
 
   shared_ptr<DeviceKernel> kernel =
-    this->im2col_programs_[proto_data_type_index<Dtype>()]->GetKernel("col2im");
+    this->im2col_programs_[proto_data_type_index<Dtype>()]
+                           ->GetKernel("caffe_gpu_col2im");
   kernel->add_arg(&num_kernels);
   kernel->add_arg(&data_col);
   kernel->add_arg(&height);
@@ -565,12 +569,13 @@ void Device::col2im(vptr<const Dtype> data_col, const int_tp channels,
 template<typename Dtype>
 void Device::im2col_nd(vptr<const Dtype> data_im, const int_tp num_spatial_axes,
                        const int_tp num_kernels, vptr<const int_tp> im_shape,
-                       vptr<const int_tp> col_shape, vptr<const int_tp> kernel_shape,
+                       vptr<const int_tp> col_shape,
+                       vptr<const int_tp> kernel_shape,
                        vptr<const int_tp> pad, vptr<const int_tp> stride,
                        vptr<const int_tp> dilation, vptr<Dtype> data_col) {
   shared_ptr<DeviceKernel> kernel =
       this->im2col_programs_[proto_data_type_index<Dtype>()]
-                                                       ->GetKernel("im2col_nd");
+         ->GetKernel("caffe_gpu_im2col_nd_" + std::to_string(num_spatial_axes));
   kernel->add_arg(&num_kernels);
   kernel->add_arg(&data_im);
   kernel->add_arg(&im_shape);
@@ -598,7 +603,7 @@ void Device::col2im_nd(vptr<const Dtype> data_col,
                        vptr<const int_tp> dilation, vptr<Dtype> data_im) {
   shared_ptr<DeviceKernel> kernel =
       this->im2col_programs_[proto_data_type_index<Dtype>()]
-                                                       ->GetKernel("col2im_nd");
+          ->GetKernel("caffe_gpu_col2im_nd_"+ std::to_string(num_spatial_axes));
   kernel->add_arg(&im_size);
   kernel->add_arg(&data_col);
   kernel->add_arg(&im_shape);

@@ -6,7 +6,8 @@
 namespace caffe {
 
 template<typename Dtype, typename MItype, typename MOtype>
-void CuDNNLRNLayer<Dtype, MItype, MOtype>::Forward_gpu(const vector<Blob<MItype>*>& bottom,
+void CuDNNLRNLayer<Dtype, MItype, MOtype>::Forward_gpu(
+    const vector<Blob<MItype>*>& bottom,
     const vector<Blob<MOtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->gpu_data().get_cuda_ptr();
   Dtype* top_data = top[0]->mutable_gpu_data().get_cuda_ptr();
@@ -20,8 +21,10 @@ void CuDNNLRNLayer<Dtype, MItype, MOtype>::Forward_gpu(const vector<Blob<MItype>
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void CuDNNLRNLayer<Dtype, MItype, MOtype>::Backward_gpu(const vector<Blob<MOtype>*>& top,
-    const vector<bool>& propagate_down, const vector<Blob<MItype>*>& bottom) {
+void CuDNNLRNLayer<Dtype, MItype, MOtype>::Backward_gpu(
+    const vector<Blob<MOtype>*>& top,
+    const vector<bool>& propagate_down,
+    const vector<Blob<MItype>*>& bottom) {
   const Dtype* top_diff = top[0]->gpu_diff().get_cuda_ptr();
   const Dtype* top_data = top[0]->gpu_data().get_cuda_ptr();
   const Dtype* bottom_data = bottom[0]->gpu_data().get_cuda_ptr();
@@ -37,7 +40,8 @@ void CuDNNLRNLayer<Dtype, MItype, MOtype>::Backward_gpu(const vector<Blob<MOtype
         bottom_desc_, bottom_diff) );
 }
 
-INSTANTIATE_CLASS_3T_GUARDED(CuDNNLRNLayer);
+INSTANTIATE_CLASS_3T_GUARDED(CuDNNLRNLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(CuDNNLRNLayer, (double), (double), (double));
 
 };  // namespace caffe
 

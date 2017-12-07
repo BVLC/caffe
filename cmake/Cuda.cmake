@@ -4,7 +4,7 @@ endif()
 
 # Known NVIDIA GPU achitectures Caffe can be compiled for.
 # This list will be used for CUDA_ARCH_NAME = All option
-set(Caffe_known_gpu_archs "20 21(20) 30 35 50 60 61")
+set(Caffe_known_gpu_archs "30 35 50 60 61")
 
 ################################################################################################
 # A function for automatic detection of GPUs installed  (if autodetection is enabled)
@@ -145,7 +145,7 @@ macro(caffe_cuda_compile objlist_variable)
   foreach(var CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_RELEASE CMAKE_CXX_FLAGS_DEBUG)
     set(${var}_backup_in_cuda_compile_ "${${var}}")
 
-    # we remove /EHa as it generates warnings under windows
+    # We remove /EHa as it generates warnings under windows
     string(REPLACE "/EHa" "" ${var} "${${var}}")
 
   endforeach()
@@ -158,7 +158,10 @@ macro(caffe_cuda_compile objlist_variable)
     list(APPEND CUDA_NVCC_FLAGS -Xcompiler -Wno-unused-function)
   endif()
 
-  cuda_compile(cuda_objcs ${ARGN})
+  # Skip NVCC in favor of C++ compiler (may disable certain CUDA backend parts)
+  if(NOT FORCE_COMPILE_CU_AS_CPP)
+    cuda_compile(cuda_objcs ${ARGN})
+  endif()
 
   foreach(var CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_RELEASE CMAKE_CXX_FLAGS_DEBUG)
     set(${var} "${${var}_backup_in_cuda_compile_}")
@@ -246,8 +249,9 @@ endfunction()
 ###  Non macro section
 ################################################################################################
 
-find_package(CUDA 5.5 QUIET)
-find_cuda_helper_libs(curand)  # cmake 2.8.7 compartibility which doesn't search for curand
+find_package(CUDA 7.5 QUIET)
+find_cuda_helper_libs(curand)  # cmake 2.8.7 compatibility which doesn't search for curand
+find_cuda_helper_libs(nvrtc)  # cmake 3.9.6 compatibility which doesn't search for nvrtc
 
 if(NOT CUDA_FOUND)
   return()
@@ -256,8 +260,11 @@ endif()
 set(HAVE_CUDA TRUE)
 message(STATUS "CUDA detected: " ${CUDA_VERSION})
 list(APPEND Caffe_INCLUDE_DIRS PUBLIC ${CUDA_INCLUDE_DIRS})
-list(APPEND Caffe_LINKER_LIBS PUBLIC ${CUDA_CUDART_LIBRARY}
-                                     ${CUDA_curand_LIBRARY} ${CUDA_CUBLAS_LIBRARIES})
+list(APPEND Caffe_LINKER_LIBS PUBLIC ${CUDA_CUDA_LIBRARY}
+								     ${CUDA_CUDART_LIBRARY}
+                                     ${CUDA_curand_LIBRARY}
+                                     ${CUDA_nvrtc_LIBRARY}
+                                     ${CUDA_CUBLAS_LIBRARIES})
 list(APPEND Caffe_DEFINITIONS PUBLIC -DUSE_CUDA)
 
 # cudnn detection

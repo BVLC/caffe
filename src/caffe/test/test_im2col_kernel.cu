@@ -101,7 +101,7 @@ class Im2colKernelTest : public GPUDeviceTest<Dtype> {
   int_tp width_col_;
 };
 
-TYPED_TEST_CASE(Im2colKernelTest, TestDtypes);
+TYPED_TEST_CASE(Im2colKernelTest, TestDtypesFloat);
 
 TYPED_TEST(Im2colKernelTest, Test2D) {
   if (Caffe::GetDefaultDevice()->backend() == BACKEND_CUDA) {

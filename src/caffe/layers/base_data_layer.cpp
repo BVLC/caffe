@@ -99,6 +99,8 @@ void BasePrefetchingDataLayer<Dtype, MItype, MOtype>::InternalThreadEntry() {
 #ifndef CPU_ONLY
 #ifdef USE_CUDA
       if (Caffe::mode() == Caffe::GPU) {
+        // FIXME: Async load
+        /*
         if (this->get_device()->backend() == BACKEND_CUDA) {
           batch->data_.data().get()->async_gpu_push(stream);
           if (this->output_labels_) {
@@ -106,6 +108,7 @@ void BasePrefetchingDataLayer<Dtype, MItype, MOtype>::InternalThreadEntry() {
           }
           CUDA_CHECK(cudaStreamSynchronize(stream));
         }
+        */
       }
 #endif  // USE_CUDA
 #endif  // !CPU_ONLY

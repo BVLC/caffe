@@ -5,8 +5,6 @@
 
 namespace caffe {
 
-__global__ void sync_conv_groups() { }
-
 template<typename Dtype, typename MItype, typename MOtype>
 void CuDNNConvolutionLayer<Dtype, MItype, MOtype>::Forward_gpu(
     const vector<Blob<MItype>*>& bottom,
@@ -41,8 +39,8 @@ void CuDNNConvolutionLayer<Dtype, MItype, MOtype>::Forward_gpu(
 
     // Synchronize the work across groups, each of which went into its own
     // stream, by launching an empty kernel into the default (null) stream.
-    // NOLINT_NEXT_LINE(whitespace/operators)
-    sync_conv_groups CUDA_KERNEL(1, 1)();
+    float arg = 0.0;
+    this->device_->null_kernel(arg);
   }
 }
 
@@ -109,12 +107,17 @@ void CuDNNConvolutionLayer<Dtype, MItype, MOtype>::Backward_gpu(
 
     // Synchronize the work across groups, each of which went into its own
     // stream, by launching an empty kernel into the default (null) stream.
-    // NOLINT_NEXT_LINE(whitespace/operators)
-    sync_conv_groups CUDA_KERNEL(1, 1)();
+    float arg = 0.0;
+    this->device_->null_kernel(arg);
   }
 }
 
-INSTANTIATE_CLASS_3T_GUARDED(CuDNNConvolutionLayer);
+/*INSTANTIATE_CLASS_3T_GUARDED(CuDNNConvolutionLayer,
+                             (half_fp), (half_fp), (half_fp));*/
+INSTANTIATE_CLASS_3T_GUARDED(CuDNNConvolutionLayer,
+                             (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(CuDNNConvolutionLayer,
+                             (double), (double), (double));
 
 }  // namespace caffe
 #endif

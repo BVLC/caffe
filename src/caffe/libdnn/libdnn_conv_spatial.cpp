@@ -1,9 +1,8 @@
 #include <string>
 #include <vector>
 #include "caffe/common.hpp"
-#ifdef USE_LIBDNN
+#ifdef USE_INTEL_SPATIAL
 #include "caffe/backend/device.hpp"
-#include "caffe/greentea/libdnn.hpp"
 #include "caffe/util/benchmark.hpp"
 
 // #define LIBDNN_DEBUG 1
@@ -14,7 +13,7 @@
 // #define TEST_ALL_KERNELS
 namespace caffe {
 
-#define ALIGN(val, n) (((val) + (n) - 1) & ~((n) - 1))
+#define ALIGN(val, N) (((val) + (N) - 1) & ~((N) - 1))
 
 template<typename Dtype>
 LibDNNConvSpatial<Dtype>::LibDNNConvSpatial(LibDNNConvConfig config) {
@@ -152,17 +151,17 @@ string LibDNNConvSpatial<Dtype>::generate_fw_defs() {
      << std::endl;
   ss << "#define LOOP16(VAR, STMT) LOOP15(VAR, STMT); (STMT); (VAR)++;"
      << std::endl;
-  ss << "#define LOOP(n, VAR, STMT) CAT(LOOP, n)((VAR), (STMT))"
+  ss << "#define LOOP(N, VAR, STMT) CAT(LOOP, N)((VAR), (STMT))"
      << std::endl;
 
-  LibDNN<Dtype>::add_def(ss, "KERNEL_WIDTH", this->kernel_shape_[1]);
-  LibDNN<Dtype>::add_def(ss, "KERNEL_HEIGHT" , this->kernel_shape_[0]);
-  LibDNN<Dtype>::add_def(ss, "STRIDE_X", this->stride_[1]);
-  LibDNN<Dtype>::add_def(ss, "STRIDE_Y", this->stride_[0]);
-  LibDNN<Dtype>::add_def(ss, "DILATION_X", this->dilation_[1]);
-  LibDNN<Dtype>::add_def(ss, "DILATION_Y", this->dilation_[0]);
-  LibDNN<Dtype>::add_def(ss, "INPUT_PAD_W", this->pad_[1]);
-  LibDNN<Dtype>::add_def(ss, "INPUT_PAD_H", this->pad_[0]);
+  ss << this->program_->define("KERNEL_WIDTH", this->kernel_shape_[1]);
+  ss << this->program_->define("KERNEL_HEIGHT" , this->kernel_shape_[0]);
+  ss << this->program_->define("STRIDE_X", this->stride_[1]);
+  ss << this->program_->define("STRIDE_Y", this->stride_[0]);
+  ss << this->program_->define("DILATION_X", this->dilation_[1]);
+  ss << this->program_->define("DILATION_Y", this->dilation_[0]);
+  ss << this->program_->define("INPUT_PAD_W", this->pad_[1]);
+  ss << this->program_->define("INPUT_PAD_H", this->pad_[0]);
 
   return ss.str();
 }
@@ -221,27 +220,27 @@ string LibDNNConvSpatial<Dtype>::generate_fw_kernels(int_tp kernelType,
     int_tp tile_y_stride = (4 * simd_size) / tile_x;
     int_tp invec_size = (tile_y + tile_y_stride - 1) / tile_y_stride;
 
-    LibDNN<Dtype>::add_def(ss, "SIMD_SIZE", simd_size);
-    LibDNN<Dtype>::add_def(ss, "filter_qualifier", "__global");
-    LibDNN<Dtype>::add_def(ss, "OUT_BLOCK_WIDTH", output_block_width);
-    LibDNN<Dtype>::add_def(ss, "OUT_BLOCK_HEIGHT", output_block_height);
-    LibDNN<Dtype>::add_def(ss, "LAST_BLOCK_WIDTH", last_block_width);
-    LibDNN<Dtype>::add_def(ss, "LAST_BLOCK_HEIGHT", last_block_height);
-    LibDNN<Dtype>::add_def(ss, "INPUT_DEPTH", this->fmaps_in_ / this->group_);
-    LibDNN<Dtype>::add_def(ss, "TOTAL_INPUT_DEPTH_SIZE", this->fmaps_in_);
-    LibDNN<Dtype>::add_def(ss, "TOTAL_OUTPUT_DEPTH", this->fmaps_out_);
-    LibDNN<Dtype>::add_def(ss, "INPUT_START_X", 0);
-    LibDNN<Dtype>::add_def(ss, "INPUT_START_Y", 0);
-    LibDNN<Dtype>::add_def(ss, "INPUT_START_Z", 0);
-    LibDNN<Dtype>::add_def(ss, "NUM_FILTERS", this->M_FW_);
-    LibDNN<Dtype>::add_def(ss, "OUT_BUFF_OFFSET", 0);
-    LibDNN<Dtype>::add_def(ss, "TILE_X", tile_x);
-    LibDNN<Dtype>::add_def(ss, "TILE_Y", tile_y);
-    LibDNN<Dtype>::add_def(ss, "TILE_Y_STRIDE", tile_y_stride);
-    LibDNN<Dtype>::add_def(ss, "INVEC_SIZE", invec_size);
-    LibDNN<Dtype>::add_def(ss, "ALIGNED_NUM_FILTERS",
+    ss << this->program_->define("SIMD_SIZE", simd_size);
+    ss << this->program_->define("filter_qualifier", "__global");
+    ss << this->program_->define("OUT_BLOCK_WIDTH", output_block_width);
+    ss << this->program_->define("OUT_BLOCK_HEIGHT", output_block_height);
+    ss << this->program_->define("LAST_BLOCK_WIDTH", last_block_width);
+    ss << this->program_->define("LAST_BLOCK_HEIGHT", last_block_height);
+    ss << this->program_->define("INPUT_DEPTH", this->fmaps_in_ / this->group_);
+    ss << this->program_->define("TOTAL_INPUT_DEPTH_SIZE", this->fmaps_in_);
+    ss << this->program_->define("TOTAL_OUTPUT_DEPTH", this->fmaps_out_);
+    ss << this->program_->define("INPUT_START_X", 0);
+    ss << this->program_->define("INPUT_START_Y", 0);
+    ss << this->program_->define("INPUT_START_Z", 0);
+    ss << this->program_->define("NUM_FILTERS", this->M_FW_);
+    ss << this->program_->define("OUT_BUFF_OFFSET", 0);
+    ss << this->program_->define("TILE_X", tile_x);
+    ss << this->program_->define("TILE_Y", tile_y);
+    ss << this->program_->define("TILE_Y_STRIDE", tile_y_stride);
+    ss << this->program_->define("INVEC_SIZE", invec_size);
+    ss << this->program_->define("ALIGNED_NUM_FILTERS",
                            ALIGN(this->M_FW_, simd_size));
-    LibDNN<Dtype>::add_def(ss, "OUT_BLOCK_SIZE",
+    ss << this->program_->define("OUT_BLOCK_SIZE",
           (output_block_width*output_block_height));
 
     // kernel source
@@ -419,10 +418,10 @@ string LibDNNConvSpatial<Dtype>::generate_fw_kernels(int_tp kernelType,
        << std::endl;
     ss << "weight_addr += SIMD_SIZE * 1;" << std::endl;
     ss << "#endif" << std::endl;
-    ss << "#define BLOCK_IN(n) "
+    ss << "#define BLOCK_IN(N) "
        << "sub_group_broadcast("
-       << "in_buf.in_array[((n)%4) + ((n) / (TILE_Y_STRIDE * TILE_X)) * 4], "
-       << "(((n) % (TILE_Y_STRIDE * TILE_X))/4))" << std::endl;
+       << "in_buf.in_array[((N)%4) + ((N) / (TILE_Y_STRIDE * TILE_X)) * 4], "
+       << "(((N) % (TILE_Y_STRIDE * TILE_X))/4))" << std::endl;
     // kr = Kernel Row
     ss << "int_tp kr = 0;" << std::endl;
     ss << "LOOP(KERNEL_HEIGHT, kr," << std::endl;
@@ -579,18 +578,18 @@ string LibDNNConvSpatial<Dtype>::generate_fw_kernels(int_tp kernelType,
     options_ = opts.str();
 
     int_tp tile_n_last_div8 = (this->M_FW_ % 32) / 8;
-    LibDNN<Dtype>::add_def(ss, "INPUT_DEPTH", this->fmaps_in_);
-    LibDNN<Dtype>::add_def(ss, "WIDTH1", this->M_FW_);
-    LibDNN<Dtype>::add_def(ss, "OUT_PADDING_LEFT", 0);
-    LibDNN<Dtype>::add_def(ss, "OUT_PADDING_HEIGHT", 0);
-    LibDNN<Dtype>::add_def(ss, "OUT_DEPTH", this->M_FW_);
-    LibDNN<Dtype>::add_def(ss, "KERNEL_WIDTH_DIV2", this->kernel_shape_[1] / 2);
-    LibDNN<Dtype>::add_def(ss, "KERNEL_SLICE_DIV2", (this->kernel_shape_[1]
+    ss << this->program_->define("INPUT_DEPTH", this->fmaps_in_);
+    ss << this->program_->define("WIDTH1", this->M_FW_);
+    ss << this->program_->define("OUT_PADDING_LEFT", 0);
+    ss << this->program_->define("OUT_PADDING_HEIGHT", 0);
+    ss << this->program_->define("OUT_DEPTH", this->M_FW_);
+    ss << this->program_->define("KERNEL_WIDTH_DIV2", this->kernel_shape_[1] / 2);
+    ss << this->program_->define("KERNEL_SLICE_DIV2", (this->kernel_shape_[1]
                                                    * this->kernel_shape_[0])/2);
-    LibDNN<Dtype>::add_def(ss, "TILE_N_LAST", this->M_FW_ % 32);
-    LibDNN<Dtype>::add_def(ss, "TILE_N_LAST_DIV8", tile_n_last_div8);
-    LibDNN<Dtype>::add_def(ss, "TILE_M", blockM);
-    LibDNN<Dtype>::add_def(ss, "TILE_N_PER_LANE", 32 / simd_size);
+    ss << this->program_->define("TILE_N_LAST", this->M_FW_ % 32);
+    ss << this->program_->define("TILE_N_LAST_DIV8", tile_n_last_div8);
+    ss << this->program_->define("TILE_M", blockM);
+    ss << this->program_->define("TILE_N_PER_LANE", 32 / simd_size);
 
 #define TYPEDEF_FLOAT_N(ele_num) \
         do { \
@@ -613,15 +612,15 @@ string LibDNNConvSpatial<Dtype>::generate_fw_kernels(int_tp kernelType,
     // never used but makes compiler happy.
     ss << "typedef struct Dtype0 { Dtype s0; } Dtype0;" << std::endl;
 
-    LibDNN<Dtype>::add_def(ss, "OUT_PITCH_X", "output_width");
-    LibDNN<Dtype>::add_def(ss, "OUT_PITCH_Y", "(output_width * output_height)");
-    LibDNN<Dtype>::add_def(ss, "ROW_PITCH", "input_width");
-    LibDNN<Dtype>::add_def(ss, "SLICE_PITCH", "(input_width * input_height)");
-    LibDNN<Dtype>::add_def(ss, "TILE_K", this->kernel_shape_[1]);
-    LibDNN<Dtype>::add_def(ss, "TILE_N", 32);
-    LibDNN<Dtype>::add_def(ss, "OUT_PITCH_Z",
+    ss << this->program_->define("OUT_PITCH_X", "output_width");
+    ss << this->program_->define("OUT_PITCH_Y", "(output_width * output_height)");
+    ss << this->program_->define("ROW_PITCH", "input_width");
+    ss << this->program_->define("SLICE_PITCH", "(input_width * input_height)");
+    ss << this->program_->define("TILE_K", this->kernel_shape_[1]);
+    ss << this->program_->define("TILE_N", 32);
+    ss << this->program_->define("OUT_PITCH_Z",
                                "(output_width * output_height * OUT_DEPTH)");
-    LibDNN<Dtype>::add_def(ss, "ALIGNED_INPUT_SIZE",
+    ss << this->program_->define("ALIGNED_INPUT_SIZE",
                                "(input_height * input_width * INPUT_DEPTH)");
 
     vector<string> elems16({
@@ -677,9 +676,9 @@ string LibDNNConvSpatial<Dtype>::generate_fw_kernels(int_tp kernelType,
     // else, true for all but right-most column of threads.
     ss << "if( TILE_N_LAST == 0 || global_x < WIDTH1 / TILE_N ) " << std::endl;
     ss << "{" << std::endl;
-    // Result ctile (*dst) is m rows X n columns
+    // Result ctile (*dst) is M rows X N columns
     // LWG size is 1x8 or 1x16.
-    // Thus each thread calculates (8 or 16) *m rows X n cols of ctile.
+    // Thus each thread calculates (8 or 16) *M rows X N cols of ctile.
     if (simd_size == 16) {
       ss << "Dtype16  blockC00 = 0.f;" << std::endl;
       ss << "Dtype16  blockC10 = 0.f;" << std::endl;
@@ -697,7 +696,7 @@ string LibDNNConvSpatial<Dtype>::generate_fw_kernels(int_tp kernelType,
     }
     // Src0 (patch input) is directly used as atile.
     // Each work item points to the start of a different patch.
-    // atile is m rows X k columns." << std::endl
+    // atile is M rows X K columns." << std::endl
     ss << "int_tp curr_x = ( (global_y * TILE_M) % output_width ) * STRIDE_X;"
        << std::endl;
     ss << "int_tp curr_y = ( (global_y * TILE_M) / output_width ) * STRIDE_Y;"
@@ -735,7 +734,7 @@ string LibDNNConvSpatial<Dtype>::generate_fw_kernels(int_tp kernelType,
     }
     // Src1 (filter) is directly used as btile.
     // It starts at the top of src1 and walks down.
-    // btile is k rows X n columns.
+    // btile is K rows X N columns.
     ss << "const __global Dtype *src1_read = src1 + ( global_x * TILE_N  * 2);"
        << std::endl;
     // Walk DOWN src0 (patch 0, 1, 2, ...) and DOWN src1.
@@ -1048,8 +1047,8 @@ string LibDNNConvSpatial<Dtype>::generate_fw_kernels(int_tp kernelType,
     ss << "#if TILE_N_LAST > 0" << std::endl;
     ss << "else" << std::endl;
     ss << "{" << std::endl;
-    // Result ctile (*dst) is m rows X n columns
-    // LWG size is 1x8.  Thus each thread calculates 8*m rows X n cols of ctile.
+    // Result ctile (*dst) is M rows X N columns
+    // LWG size is 1x8.  Thus each thread calculates 8*M rows X N cols of ctile.
     ss << "int_tp i = 0;" << std::endl;
     ss << "Dtype8  blockC[TILE_N_LAST_DIV8];" << std::endl;
     ss << "LOOP(TILE_N_LAST_DIV8, i," << std::endl;
@@ -1349,10 +1348,10 @@ string LibDNNConvSpatial<Dtype>::generate_fw_kernels(int_tp kernelType,
     options_ = opts.str();
 
     // defs
-    LibDNN<Dtype>::add_def(ss, "CHANNELS", this->fmaps_in_ / this->group_);
-    LibDNN<Dtype>::add_def(ss, "APPLY_BIAS", this->bias_term_);
-    LibDNN<Dtype>::add_def(ss, "OUTPUT_Z", this->M_FW_);
-    LibDNN<Dtype>::add_def(ss, "ZPAR", 1);
+    ss << this->program_->define("CHANNELS", this->fmaps_in_ / this->group_);
+    ss << this->program_->define("APPLY_BIAS", this->bias_term_);
+    ss << this->program_->define("OUTPUT_Z", this->M_FW_);
+    ss << this->program_->define("ZPAR", 1);
 
     // kernel
     ss << "#define ACTIVATION_FUNCTION(_dst_, _offset_, _data_) "
@@ -2105,12 +2104,12 @@ cl_int LibDNNConvSpatial<Dtype>::convolve(
     if (err != CL_SUCCESS)
       return err;
   } else {
-    for (int_tp n = 0; n < numImages; ++n) {
+    for (int_tp N = 0; N < numImages; ++N) {
       for (int_tp g = 0; g < this->group_; ++g) {
         bias_offset_ = this->M_FW_ * g;
-        int_tp image_offset = n * this->bottom_dim_
+        int_tp image_offset = N * this->bottom_dim_
             + width_ * height_ * (this->fmaps_in_ / this->group_) * g;
-        int_tp output_image_offset = n * this->top_dim_
+        int_tp output_image_offset = N * this->top_dim_
             + output_w_ * output_h_ * this->M_FW_ * g;
 
         cl_uint argIdx = 0;
@@ -2237,9 +2236,9 @@ bool LibDNNConvSpatial<Dtype>::verify_result(
            0, NULL, NULL, NULL));
   verify_data = tmp_verify_data;
 
-  for (int_tp n = 0; n < numImages; ++n) {
+  for (int_tp N = 0; N < numImages; ++N) {
     for (int_tp g = 0; g < this->group_; ++g) {
-      int_tp output_image_offset = n * this->top_dim_
+      int_tp output_image_offset = N * this->top_dim_
           + output_w_ * output_h_ * this->M_FW_ * g;
       for (int_tp out_ch = 0; out_ch < this->M_FW_
                     && !verificationFail; out_ch++)
@@ -2252,8 +2251,8 @@ bool LibDNNConvSpatial<Dtype>::verify_result(
                 !(fabs(verify_data[offset]) < 1.e-3
                   && fabs(data[offset] - verify_data[offset]) < 1.e-4)) {
               dbgPrint(printf("test verification failed @ image %d group %d"
-                              "out_ch %d h %d w %d got %G expected %G\n",
-                      n, g, out_ch, h, w,
+                              "out_ch %d h %d w %d got %G expected %G\N",
+                      N, g, out_ch, h, w,
                       static_cast<double>(data[offset]),
                       static_cast<double>(verify_data[offset])));
               verificationFail = 1;
@@ -2806,4 +2805,4 @@ INSTANTIATE_CLASS(LibDNNConvSpatial);
 
 }  // namespace caffe
 #endif  // USE_OPENCL
-#endif  // USE_LIBDNN
+#endif  // USE_INTEL_SPATIAL

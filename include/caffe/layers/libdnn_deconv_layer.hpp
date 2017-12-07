@@ -8,7 +8,7 @@
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
 
-#include "caffe/libdnn/libdnn.hpp"
+#include "caffe/libdnn/libdnn_conv.hpp"
 #include "caffe/layers/deconv_layer.hpp"
 
 

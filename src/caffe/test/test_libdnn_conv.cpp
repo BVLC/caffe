@@ -194,7 +194,7 @@ class LibDNNConvolutionLayerTest : public GPUDeviceTest<Dtype> {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-TYPED_TEST_CASE(LibDNNConvolutionLayerTest, TestDtypes);
+TYPED_TEST_CASE(LibDNNConvolutionLayerTest, TestDtypesFloat);
 
 TYPED_TEST(LibDNNConvolutionLayerTest, TestSetupLibDNN) {
   this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
@@ -564,7 +564,7 @@ class LibDNNConvolutionNDLayerTest : public GPUDeviceTest<TypeParam> {
   vector<Blob<TypeParam>*> blob_top_vec_;
 };
 
-TYPED_TEST_CASE(LibDNNConvolutionNDLayerTest, TestDtypes);
+TYPED_TEST_CASE(LibDNNConvolutionNDLayerTest, TestDtypesFloat);
 
 TYPED_TEST(LibDNNConvolutionNDLayerTest, TestSetup) {
   LayerParameter layer_param;
@@ -1078,7 +1078,7 @@ class LibDNNComparativeConvTest : public GPUDeviceTest<TypeParam> {
   std::mt19937 rng_;
 };
 
-TYPED_TEST_CASE(LibDNNComparativeConvTest, TestDtypes);
+TYPED_TEST_CASE(LibDNNComparativeConvTest, TestDtypesFloat);
 
 TYPED_TEST(LibDNNComparativeConvTest, TestForward) {
   for (int i = 0; i < 100; ++i) {

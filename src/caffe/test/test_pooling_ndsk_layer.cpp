@@ -162,7 +162,7 @@ class PoolingNDSKLayerTest : public GPUDeviceTest<TypeParam> {
   vector<Blob<TypeParam>*> blob_top_vec_;
 };
 
-TYPED_TEST_CASE(PoolingNDSKLayerTest, TestDtypes);
+TYPED_TEST_CASE(PoolingNDSKLayerTest, TestDtypesFloat);
 
 TYPED_TEST(PoolingNDSKLayerTest, TestSetup) {
   LayerParameter layer_param;

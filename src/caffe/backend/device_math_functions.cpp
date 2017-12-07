@@ -4,6 +4,19 @@
 
 namespace caffe {
 
+void Device::null_kernel(float arg) {
+  shared_ptr<DeviceKernel> kernel
+        = math_programs_[AUX_DATA_INDEX]->GetKernel("caffe_gpu_null_kernel");
+
+  kernel->add_arg(&arg);
+
+  vector<size_t> work_size(1, 1);
+  vector<size_t> group;
+  vector<size_t> local;
+  this->get_threads(&work_size, &group, &local, kernel.get(), true);
+  kernel->Execute(group, local);
+}
+
 void Device::memset(const uint_tp n, const char alpha, vptr<char> x) {
   shared_ptr<DeviceKernel> kernel
         = math_programs_[0]->GetKernel("caffe_gpu_memset");
@@ -22,7 +35,7 @@ void Device::memset(const uint_tp n, const char alpha, vptr<char> x) {
 template<typename Dtype>
 void Device::set(const uint_tp n, const Dtype alpha, vptr<Dtype> x) {
   shared_ptr<DeviceKernel> kernel
-    = math_programs_[proto_data_type_index<Dtype>()]->GetKernel("caffe_gpu_set");
+   = math_programs_[proto_data_type_index<Dtype>()]->GetKernel("caffe_gpu_set");
 
   kernel->add_arg(&n);
   kernel->add_arg(&alpha);
@@ -666,7 +679,8 @@ void Device::CreateMathProgram() {
           KernelArgs args;
           args.push_back(this->math_programs_[i]
                           ->create_kernel_arg<float>("arg", KERNEL_ARG_NONE));
-          ss << this->math_programs_[i]->function("null_kernel", args);
+          ss << this->math_programs_[i]
+                                     ->function("caffe_gpu_null_kernel", args);
           ss << "float out = arg;" << std::endl;
           ss << "}" << std::endl;
         }

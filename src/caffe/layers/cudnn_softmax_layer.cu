@@ -38,7 +38,8 @@ void CuDNNSoftmaxLayer<Dtype, MItype, MOtype>::Backward_gpu(const vector<Blob<MO
   }
 }
 
-INSTANTIATE_CLASS_3T_GUARDED(CuDNNSoftmaxLayer);
+INSTANTIATE_CLASS_3T_GUARDED(CuDNNSoftmaxLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(CuDNNSoftmaxLayer, (double), (double), (double));
 
 }  // namespace caffe
 #endif

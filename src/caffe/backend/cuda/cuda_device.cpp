@@ -154,13 +154,14 @@ bool CudaDevice::CheckType(string type) {
   return false;
 }
 
-void Device::SwitchQueue(uint_tp id) {
-  return;
+bool CudaDevice::CheckZeroCopy(vptr<const void> gpu_ptr, void* cpu_ptr,
+                                       uint_tp size) {
+  return false;
 }
 
-void Device::FinishQueues() {
-  return;
-}
+void CudaDevice::SwitchQueue(uint_tp id) { }
+
+void CudaDevice::FinishQueues() { }
 
 #endif  // USE_CUDA
 
