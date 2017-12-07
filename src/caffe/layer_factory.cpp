@@ -76,7 +76,7 @@ shared_ptr<Layer<Dtype, MItype, MOtype> >
   CreatorRegistry& registry = Registry();
   CHECK_EQ(registry.count(type), 1)
       << "Unknown layer type: " << type
-      << "for data types ("
+      << " for data types ("
       << safe_type_name<Dtype>() << ","
       << safe_type_name<MItype>() << ","
       << safe_type_name<MOtype>() << ")"

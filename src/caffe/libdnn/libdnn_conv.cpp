@@ -1525,7 +1525,7 @@ void LibDNNConv<Dtype, MItype, MOtype>::GenerateKernels() {
 
 template<typename Dtype, typename MItype, typename MOtype>
 bool LibDNNConv<Dtype, MItype, MOtype>::CompileKernels() {
-  this->program_->Compile(true, true);
+  return this->program_->Compile(true, true);
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
