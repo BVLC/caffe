@@ -16,6 +16,7 @@ namespace caffe {
  */
 template<typename Dtype, typename MItype, typename MOtype>
 void CuDNNConvolutionLayer<Dtype, MItype, MOtype>::LayerSetUp(
+    const vector<Blob<MItype>*>& bottom,
     const vector<Blob<MOtype>*>& top) {
   ConvolutionLayer<Dtype, MItype, MOtype>::LayerSetUp(bottom, top);
 
@@ -90,6 +91,7 @@ void CuDNNConvolutionLayer<Dtype, MItype, MOtype>::LayerSetUp(
 
 template<typename Dtype, typename MItype, typename MOtype>
 void CuDNNConvolutionLayer<Dtype, MItype, MOtype>::Reshape(
+    const vector<Blob<MItype>*>& bottom,
     const vector<Blob<MOtype>*>& top) {
 
   this->use_colbuffer_ = false;

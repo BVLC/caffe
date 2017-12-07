@@ -16,7 +16,7 @@ SyncedMemory::~SyncedMemory() {
   }
 #endif  // !CPU_ONLY
   // Free host memory
-  if (cpu_ptr_ && own_cpu_data_) {
+  if (cpu_ptr_ && (own_cpu_data_ || own_zero_copy_data_)) {
     device_->FreeMemHost(cpu_ptr_);
     cpu_ptr_ = nullptr;
   }

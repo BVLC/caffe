@@ -278,14 +278,14 @@ class LibDNNTuner {
   std::function<double()> benchmark_routine_;
 
   std::priority_queue<shared_ptr<LibDNNTunerSnapshot>,
-    vector<shared_ptr<LibDNNTunerSnapshot>>,
+    vector<shared_ptr<LibDNNTunerSnapshot> >,
     LibDNNTunerSnapshotCompare> snapshot_queue_;
 
-  vector<shared_ptr<LibDNNTunerSnapshot>> snapshots_;
+  vector<shared_ptr<LibDNNTunerSnapshot> > snapshots_;
 
   vector<shared_ptr<LibDNNTunerConstraint> > constraints_;
   vector<shared_ptr<LibDNNTunerParam> > params_;
-  std::map<string, shared_ptr<LibDNNTunerParam>> param_map_;
+  std::map<string, shared_ptr<LibDNNTunerParam> > param_map_;
 };
 
 }  // namespace caffe

@@ -2,6 +2,10 @@ variant_types  = ['int8_t', 'int16_t', 'int32_t', 'int64_t',
                   'uint8_t', 'uint16_t', 'uint32_t', 'uint64_t', 'half_fp',
                   'float', 'double']
 
+float_types = ['half_fp', 'float', 'double']
+float_types_no_half = ['float', 'double']
+int_types = ['int8_t', 'int16_t', 'int32_t', 'uint8_t', 'uint16_t', 'uint32_t']
+
 pointer_variant_types = variant_types + ['bool', 'char', 'void']
 
 variant_enable_flags = dict()

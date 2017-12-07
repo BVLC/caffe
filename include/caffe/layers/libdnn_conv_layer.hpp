@@ -10,7 +10,7 @@
 
 #include "caffe/layers/conv_layer.hpp"
 
-#include "caffe/libdnn/libdnn.hpp"
+#include "caffe/libdnn/libdnn_conv.hpp"
 
 namespace caffe {
 

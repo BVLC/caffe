@@ -74,7 +74,7 @@ class DataTransformTest : public ::testing::Test {
   int_tp num_iter_;
 };
 
-TYPED_TEST_CASE(DataTransformTest, TestDtypes);
+TYPED_TEST_CASE(DataTransformTest, TestDtypesFloat);
 
 TYPED_TEST(DataTransformTest, TestEmptyTransform) {
   TransformationParameter transform_param;

@@ -55,7 +55,7 @@ class LibDNNDeconvolutionLayerTest : public GPUDeviceTest<Dtype> {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-TYPED_TEST_CASE(LibDNNDeconvolutionLayerTest, TestDtypes);
+TYPED_TEST_CASE(LibDNNDeconvolutionLayerTest, TestDtypesFloat);
 
 TYPED_TEST(LibDNNDeconvolutionLayerTest, TestSetup) {
   LayerParameter layer_param;
@@ -661,7 +661,7 @@ class LibDNNComparativeDeconvTest : public GPUDeviceTest<TypeParam> {
   std::mt19937 rng_;
 };
 
-TYPED_TEST_CASE(LibDNNComparativeDeconvTest, TestDtypes);
+TYPED_TEST_CASE(LibDNNComparativeDeconvTest, TestDtypesFloat);
 
 TYPED_TEST(LibDNNComparativeDeconvTest, TestForward) {
   for (int i = 0; i < 100; ++i) {

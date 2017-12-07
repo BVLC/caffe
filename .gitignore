@@ -94,6 +94,7 @@ cmake_build
 .cmake_build
 *.gen.cmake
 .libdnn_debug
+.caffe_debug
 
 # Generated documentation
 docs/_site

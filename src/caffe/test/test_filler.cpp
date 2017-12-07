@@ -22,7 +22,7 @@ class ConstantFillerTest : public ::testing::Test {
   shared_ptr<ConstantFiller<Dtype> > filler_;
 };
 
-TYPED_TEST_CASE(ConstantFillerTest, TestDtypes);
+TYPED_TEST_CASE(ConstantFillerTest, TestDtypesFloat);
 
 TYPED_TEST(ConstantFillerTest, TestFill) {
   EXPECT_TRUE(this->blob_);
@@ -51,7 +51,7 @@ class UniformFillerTest : public ::testing::Test {
   shared_ptr<UniformFiller<Dtype> > filler_;
 };
 
-TYPED_TEST_CASE(UniformFillerTest, TestDtypes);
+TYPED_TEST_CASE(UniformFillerTest, TestDtypesFloat);
 
 TYPED_TEST(UniformFillerTest, TestFill) {
   EXPECT_TRUE(this->blob_);
@@ -78,7 +78,7 @@ class PositiveUnitballFillerTest : public ::testing::Test {
   shared_ptr<PositiveUnitballFiller<Dtype> > filler_;
 };
 
-TYPED_TEST_CASE(PositiveUnitballFillerTest, TestDtypes);
+TYPED_TEST_CASE(PositiveUnitballFillerTest, TestDtypesFloat);
 
 TYPED_TEST(PositiveUnitballFillerTest, TestFill) {
   EXPECT_TRUE(this->blob_);
@@ -117,7 +117,7 @@ class GaussianFillerTest : public ::testing::Test {
   shared_ptr<GaussianFiller<Dtype> > filler_;
 };
 
-TYPED_TEST_CASE(GaussianFillerTest, TestDtypes);
+TYPED_TEST_CASE(GaussianFillerTest, TestDtypesFloat);
 
 TYPED_TEST(GaussianFillerTest, TestFill) {
   EXPECT_TRUE(this->blob_);
@@ -174,7 +174,7 @@ class XavierFillerTest : public ::testing::Test {
   shared_ptr<XavierFiller<Dtype> > filler_;
 };
 
-TYPED_TEST_CASE(XavierFillerTest, TestDtypes);
+TYPED_TEST_CASE(XavierFillerTest, TestDtypesFloat);
 
 TYPED_TEST(XavierFillerTest, TestFillFanIn) {
   TypeParam n = 2*4*5;
@@ -223,7 +223,7 @@ class MSRAFillerTest : public ::testing::Test {
   shared_ptr<MSRAFiller<Dtype> > filler_;
 };
 
-TYPED_TEST_CASE(MSRAFillerTest, TestDtypes);
+TYPED_TEST_CASE(MSRAFillerTest, TestDtypesFloat);
 
 TYPED_TEST(MSRAFillerTest, TestFillFanIn) {
   TypeParam n = 2*4*5;

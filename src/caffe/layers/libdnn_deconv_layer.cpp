@@ -175,10 +175,6 @@ INSTANTIATE_CLASS_3T_GUARDED(LibDNNDeconvolutionLayer,
 INSTANTIATE_CLASS_3T_GUARDED(LibDNNDeconvolutionLayer,
                              (double), (double), (double));
 
-REGISTER_LAYER_CLASS(LibDNNDeconvolution);
-REGISTER_LAYER_CLASS_INST(LibDNNDeconvolution, (half_fp), (half_fp), (half_fp));
-REGISTER_LAYER_CLASS_INST(LibDNNDeconvolution, (float), (float), (float));
-REGISTER_LAYER_CLASS_INST(LibDNNDeconvolution, (double), (double), (double));
-
 }   // namespace caffe
+
 #endif  // USE_LIBDNN

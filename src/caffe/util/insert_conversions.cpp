@@ -3,6 +3,7 @@
 namespace caffe {
 
 void InsertConversions(const NetParameter& param, NetParameter* param_convert) {
+  param_convert->CopyFrom(param);
 
 }
 

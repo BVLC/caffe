@@ -62,7 +62,6 @@ using std::map;
 using std::ostringstream;
 using std::pair;
 using std::tuple;
-using std::set;
 using std::string;
 using std::stringstream;
 using std::vector;

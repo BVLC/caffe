@@ -374,7 +374,7 @@ class LibDNNPoolingLayerTest : public GPUDeviceTest<Dtype> {
   }
 };
 
-TYPED_TEST_CASE(LibDNNPoolingLayerTest, TestDtypes);
+TYPED_TEST_CASE(LibDNNPoolingLayerTest, TestDtypesFloat);
 
 TYPED_TEST(LibDNNPoolingLayerTest, TestSetup) {
   LayerParameter layer_param;
@@ -759,7 +759,7 @@ class LibDNNPoolingLayerNDTest : public GPUDeviceTest<TypeParam> {
   vector<Blob<TypeParam>*> blob_top_vec_;
 };
 
-TYPED_TEST_CASE(LibDNNPoolingLayerNDTest, TestDtypes);
+TYPED_TEST_CASE(LibDNNPoolingLayerNDTest, TestDtypesFloat);
 
 TYPED_TEST(LibDNNPoolingLayerNDTest, TestSetup) {
   LayerParameter layer_param;
@@ -1236,7 +1236,7 @@ class LibDNNComparativePoolTest : public GPUDeviceTest<TypeParam> {
   std::mt19937 rng_;
 };
 
-TYPED_TEST_CASE(LibDNNComparativePoolTest, TestDtypes);
+TYPED_TEST_CASE(LibDNNComparativePoolTest, TestDtypesFloat);
 
 TYPED_TEST(LibDNNComparativePoolTest, TestForward) {
   for (int i = 0; i < 100; ++i) {

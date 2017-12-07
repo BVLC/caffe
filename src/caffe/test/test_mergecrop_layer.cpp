@@ -210,7 +210,7 @@ class MergeCropLayerTest : public GPUDeviceTest<TypeParam> {
   vector<Blob<TypeParam>*> blob_top_vec_;
 };
 
-TYPED_TEST_CASE(MergeCropLayerTest, TestDtypes);
+TYPED_TEST_CASE(MergeCropLayerTest, TestDtypesFloat);
 
 TYPED_TEST(MergeCropLayerTest, TestSetup) {
   LayerParameter layer_param;

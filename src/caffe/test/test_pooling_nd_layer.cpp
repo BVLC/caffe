@@ -171,7 +171,7 @@ class PoolingNDLayerTest : public GPUDeviceTest<TypeParam> {
   vector<Blob<TypeParam>*> blob_top_vec_;
 };
 
-TYPED_TEST_CASE(PoolingNDLayerTest, TestDtypes);
+TYPED_TEST_CASE(PoolingNDLayerTest, TestDtypesFloat);
 
 TYPED_TEST(PoolingNDLayerTest, TestSetup) {
   LayerParameter layer_param;

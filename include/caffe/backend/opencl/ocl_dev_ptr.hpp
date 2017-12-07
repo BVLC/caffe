@@ -120,8 +120,7 @@ class ocl_dev_ptr<Dtype, typename non_const_enable_if<Dtype>::type>
   virtual shared_ptr<dev_ptr<uint16_t> > instance(uint16_t* dummy);
   virtual shared_ptr<dev_ptr<uint32_t> > instance(uint32_t* dummy);
   virtual shared_ptr<dev_ptr<uint64_t> > instance(uint64_t* dummy);
-  virtual shared_ptr<dev_ptr<half_fp> >
-                                              instance(half_fp* dummy);
+  virtual shared_ptr<dev_ptr<half_fp> > instance(half_fp* dummy);
   virtual shared_ptr<dev_ptr<float> > instance(float* dummy);
   virtual shared_ptr<dev_ptr<double> > instance(double* dummy);
   virtual shared_ptr<dev_ptr<void> > instance(void* dummy);

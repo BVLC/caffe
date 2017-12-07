@@ -214,7 +214,7 @@ class RandomNumberGeneratorTest : public ::testing::Test {
   shared_ptr<SyncedMemory> int_data_2_;
 };
 
-TYPED_TEST_CASE(RandomNumberGeneratorTest, TestDtypes);
+TYPED_TEST_CASE(RandomNumberGeneratorTest, TestDtypesFloat);
 
 TYPED_TEST(RandomNumberGeneratorTest, TestRngGaussian) {
   const TypeParam mu = 0;

@@ -69,7 +69,7 @@ class AccuracyLayerTest : public CPUDeviceTest<Dtype> {
   int_tp top_k_;
 };
 
-TYPED_TEST_CASE(AccuracyLayerTest, TestDtypes);
+TYPED_TEST_CASE(AccuracyLayerTest, TestDtypesFloat);
 
 TYPED_TEST(AccuracyLayerTest, TestSetup) {
   LayerParameter layer_param;

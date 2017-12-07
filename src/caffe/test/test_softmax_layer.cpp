@@ -107,36 +107,42 @@ class CuDNNSoftmaxLayerTest : public GPUDeviceTest<Dtype> {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-TYPED_TEST_CASE(CuDNNSoftmaxLayerTest, TestDtypes);
+TYPED_TEST_CASE(CuDNNSoftmaxLayerTest, TestDtypesFloatNoHalf);
 
 TYPED_TEST(CuDNNSoftmaxLayerTest, TestForwardCuDNN) {
   if (Caffe::GetDefaultDevice()->backend() == BACKEND_CUDA) {
-    LayerParameter layer_param;
-    CuDNNSoftmaxLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
-    layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
-    layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-    // Test sum
-    for (int_tp i = 0; i < this->blob_bottom_->num(); ++i) {
-      for (int_tp k = 0; k < this->blob_bottom_->height(); ++k) {
-        for (int_tp l = 0; l < this->blob_bottom_->width(); ++l) {
-          TypeParam sum = 0;
-          for (int_tp j = 0; j < this->blob_top_->channels(); ++j) {
-            sum += this->blob_top_->data_at(i, j, k, l);
-          }
-          EXPECT_GE(sum, 0.999);
-          EXPECT_LE(sum, 1.001);
-          // Test exact values
-          TypeParam scale = 0;
-          for (int_tp j = 0; j < this->blob_bottom_->channels(); ++j) {
-            scale += exp(this->blob_bottom_->data_at(i, j, k, l));
-          }
-          for (int_tp j = 0; j < this->blob_bottom_->channels(); ++j) {
-            EXPECT_GE(Dtype(this->blob_top_->data_at(i, j, k, l) + 1e-4),
-                Dtype(exp(this->blob_bottom_->data_at(i, j, k, l)) / scale))
-                << "debug: " << i << " " << j;
-            EXPECT_LE(Dtype(this->blob_top_->data_at(i, j, k, l) - 1e-4),
-                Dtype(exp(this->blob_bottom_->data_at(i, j, k, l)) / scale))
-                << "debug: " << i << " " << j;
+    if(!std::is_same<TypeParam, half_fp>::value) {
+      LayerParameter layer_param;
+      CuDNNSoftmaxLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
+      layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+      layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+      // Test sum
+      for (int_tp i = 0; i < this->blob_bottom_->num(); ++i) {
+        for (int_tp k = 0; k < this->blob_bottom_->height(); ++k) {
+          for (int_tp l = 0; l < this->blob_bottom_->width(); ++l) {
+            TypeParam sum = 0;
+            for (int_tp j = 0; j < this->blob_top_->channels(); ++j) {
+              sum += this->blob_top_->data_at(i, j, k, l);
+            }
+            EXPECT_GE(sum, 0.999);
+            EXPECT_LE(sum, 1.001);
+            // Test exact values
+            TypeParam scale = 0;
+            for (int_tp j = 0; j < this->blob_bottom_->channels(); ++j) {
+              scale += exp(this->blob_bottom_->data_at(i, j, k, l));
+            }
+            for (int_tp j = 0; j < this->blob_bottom_->channels(); ++j) {
+              EXPECT_GE((TypeParam)(this->blob_top_->
+                        data_at(i, j, k, l) + 1e-4),
+                        (TypeParam)(exp(this->blob_bottom_->
+                        data_at(i, j, k, l)) / scale))
+                        << "debug: " << i << " " << j;
+              EXPECT_LE((TypeParam)(this->blob_top_->
+                        data_at(i, j, k, l) - 1e-4),
+                        (TypeParam)(exp(this->blob_bottom_->
+                        data_at(i, j, k, l)) / scale))
+                        << "debug: " << i << " " << j;
+            }
           }
         }
       }
@@ -146,11 +152,13 @@ TYPED_TEST(CuDNNSoftmaxLayerTest, TestForwardCuDNN) {
 
 TYPED_TEST(CuDNNSoftmaxLayerTest, TestGradientCuDNN) {
   if (Caffe::GetDefaultDevice()->backend() == BACKEND_CUDA) {
-    LayerParameter layer_param;
-    CuDNNSoftmaxLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
-    GradientChecker<TypeParam> checker(1e-2, 1e-3);
-    checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
-        this->blob_top_vec_);
+    if(!std::is_same<TypeParam, half_fp>::value) {
+      LayerParameter layer_param;
+      CuDNNSoftmaxLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
+      GradientChecker<TypeParam> checker(1e-2, 1e-3);
+      checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_);
+    }
   }
 }
 

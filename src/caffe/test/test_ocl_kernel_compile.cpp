@@ -29,7 +29,7 @@ class OpenCLKernelCompileTest : public GPUDeviceTest<TypeParam> {
   }
 };
 
-TYPED_TEST_CASE(OpenCLKernelCompileTest, TestDtypes);
+TYPED_TEST_CASE(OpenCLKernelCompileTest, TestDtypesFloat);
 
 TYPED_TEST(OpenCLKernelCompileTest, TestCompile) {
   Device* dev = Caffe::GetDefaultDevice();

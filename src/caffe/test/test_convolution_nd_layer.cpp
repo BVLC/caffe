@@ -158,7 +158,7 @@ class ConvolutionNDLayerTest : public GPUDeviceTest<TypeParam> {
   vector<Blob<TypeParam>*> blob_top_vec_;
 };
 
-TYPED_TEST_CASE(ConvolutionNDLayerTest, TestDtypes);
+TYPED_TEST_CASE(ConvolutionNDLayerTest, TestDtypesFloat);
 
 TYPED_TEST(ConvolutionNDLayerTest, TestSetup) {
   LayerParameter layer_param;

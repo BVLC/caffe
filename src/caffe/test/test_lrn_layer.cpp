@@ -343,7 +343,7 @@ void CuDNNLRNLayerTest<Dtype>::ReferenceLRNForward(
   }
 }
 
-TYPED_TEST_CASE(CuDNNLRNLayerTest, TestDtypes);
+TYPED_TEST_CASE(CuDNNLRNLayerTest, TestDtypesFloatNoHalf);
 
 TYPED_TEST(CuDNNLRNLayerTest, TestForwardAcrossChannelsCuDNN) {
   if (Caffe::GetDefaultDevice()->backend() == BACKEND_CUDA) {
@@ -486,7 +486,7 @@ class LRNFuseLayerTest : public GPUDeviceTest<Dtype> {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-TYPED_TEST_CASE(LRNFuseLayerTest, TestDtypes);
+TYPED_TEST_CASE(LRNFuseLayerTest, TestDtypesFloat);
 
 TYPED_TEST(LRNFuseLayerTest, TestForwardAcrossChannelsFusePoolMax) {
   LayerParameter layer_param;
