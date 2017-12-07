@@ -22,11 +22,8 @@ void TanHLayer<Dtype, MItype, MOtype>::GenerateProgram() {
   fw_args.push_back(this->device_program_->template create_kernel_arg<MOtype>(
                     "out", KERNEL_ARG_GLOBAL_MEM));
   ss << this->device_program_->function("TanHForward", fw_args);
-  ss << this->device_program_->kernel_loop("uint_tp", "index", "count");
-  ss << "uint_tp n = index / (inner_dim);" << std::endl;
-  ss << "uint_tp in_n = (uint_tp)(permut[n]);" << std::endl;
-  ss << "out[index] = in[in_n * (inner_dim) + index % (inner_dim)];"
-     << std::endl;
+  ss << this->device_program_->kernel_loop("uint_tp", "index", "n");
+  ss << "out[index] = tanh(in[index]);" << std::endl;
   ss << "}" << std::endl;
   ss << "}" << std::endl;
 

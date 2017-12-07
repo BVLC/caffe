@@ -165,11 +165,9 @@ string create_source(Device* dev,
                       KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_CONST |
                       KERNEL_ARG_MEM_OFFSET));
     fw_args.push_back(program->create_kernel_arg<int_tp>("im_shape",
-                      KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_CONST |
-                      KERNEL_ARG_MEM_OFFSET));
+             KERNEL_ARG_MEM_OFFSET | KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_CONST));
     fw_args.push_back(program->create_kernel_arg<int_tp>("col_shape",
-                      KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_CONST |
-                      KERNEL_ARG_MEM_OFFSET));
+             KERNEL_ARG_MEM_OFFSET | KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_CONST));
     fw_args.push_back(program->create_kernel_arg<int_tp>("kernel_shape",
                       KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_CONST));
     fw_args.push_back(program->create_kernel_arg<int_tp>("pad",

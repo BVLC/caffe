@@ -138,6 +138,9 @@ template string DeviceProgram::define<uint32_t>(const char* name,
 template string DeviceProgram::define<uint64_t>(const char* name,
                                                 uint64_t value);
 template string DeviceProgram::define<string>(const char* name, string value);
+template string DeviceProgram::define<const char*>(const char* name,
+                                                   const char* value);
+
 template<typename Dtype>
 string DeviceProgram::define(string name, Dtype value) {
   stringstream ss;
@@ -162,6 +165,8 @@ template string DeviceProgram::define<uint16_t>(string name, uint16_t value);
 template string DeviceProgram::define<uint32_t>(string name, uint32_t value);
 template string DeviceProgram::define<uint64_t>(string name, uint64_t value);
 template string DeviceProgram::define<string>(string name, string value);
+template string DeviceProgram::define<const char*>(string name,
+                                                   const char* value);
 
 template<typename Dtype>
 string DeviceProgram::define_vector_type(const char* name, int_tp from,
@@ -350,7 +355,7 @@ string DeviceProgram::string_identifier() {
     vector<string> factors;
     factors.push_back(this->device_->name());
     factors.push_back(src_);
-    string_identifier_ = generate_hash(factors);
+    string_identifier_ = hash_hex_string(generate_hash(factors));
   }
   return string_identifier_;
 }

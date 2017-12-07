@@ -1,12 +1,13 @@
+#ifdef USE_LIBDNN
+
 #include <algorithm>
 #include <random>
 #include <string>
 #include <utility>
 #include <vector>
 #include "caffe/common.hpp"
-#ifdef USE_LIBDNN
 #include "caffe/backend/device.hpp"
-#include "caffe/greentea/libdnn_tuner.hpp"
+#include "caffe/libdnn/libdnn_tuner.hpp"
 
 
 namespace caffe {

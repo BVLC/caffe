@@ -166,9 +166,12 @@ void SoftmaxWithLossLayer<Dtype, MItype, MOtype>::Backward_cpu(
 STUB_GPU(SoftmaxWithLossLayer);
 #endif
 
-INSTANTIATE_CLASS_3T_GUARDED(SoftmaxWithLossLayer, (half_fp), (half_fp), (half_fp));
-INSTANTIATE_CLASS_3T_GUARDED(SoftmaxWithLossLayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T_GUARDED(SoftmaxWithLossLayer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(SoftmaxWithLossLayer,
+                             (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(SoftmaxWithLossLayer,
+                             (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(SoftmaxWithLossLayer,
+                             (double), (double), (double));
 
 REGISTER_LAYER_CLASS(SoftmaxWithLoss);
 REGISTER_LAYER_CLASS_INST(SoftmaxWithLoss, (half_fp), (half_fp), (half_fp));

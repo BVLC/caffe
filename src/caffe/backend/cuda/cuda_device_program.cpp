@@ -42,20 +42,28 @@ bool CudaDeviceProgram::Compile(bool load_cache, bool store_cache) {
   boost::filesystem::path dir(path);
   boost::filesystem::create_directory(dir);
 
+  {
+    FILE* fp = fopen((".caffe_debug/" + string_identifier() + ".cu").c_str(),
+                     "wb");
+    fwrite(this->src_.c_str(), sizeof(char), this->src_.size(), fp);
+    fclose(fp);
+  }
 
-  size_t log_size;
-  nvrtcGetProgramLogSize(cuda_program_, &log_size);
-  vector<char> log(log_size);
-  nvrtcGetProgramLog(cuda_program_, log.data());
+  {
+    size_t log_size;
+    nvrtcGetProgramLogSize(cuda_program_, &log_size);
+    vector<char> log(log_size);
+    nvrtcGetProgramLog(cuda_program_, log.data());
 
-  std::cout << "CUDA compile log:" << std::endl;
-  std::cout << log.data() << std::endl;
+    std::cout << "CUDA compile log:" << std::endl;
+    std::cout << log.data() << std::endl;
 
-  FILE* fp = fopen((".caffe_debug/" + string_identifier() + ".cuptx").c_str(),
-                   "wb");
-  fwrite(ptx, sizeof(char), ptxSize, fp);
-  fclose(fp);
-  free(ptx);
+    FILE* fp = fopen((".caffe_debug/" + string_identifier() + ".cuptx").c_str(),
+                     "wb");
+    fwrite(ptx, sizeof(char), ptxSize, fp);
+    fclose(fp);
+    free(ptx);
+  }
 #endif  // NDEBUG
 
   return true;

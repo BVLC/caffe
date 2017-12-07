@@ -19,7 +19,7 @@ bool OclDeviceProgram::Compile(bool load_cache, bool store_cache) {
 
   build_opts += "-cl-fast-relaxed-math -cl-mad-enable ";
 
-  //    build_opts += "-cl-single-precision-constant ";
+  // build_opts += "-cl-single-precision-constant ";
 
   ctx.build_options(build_opts);
 
@@ -31,17 +31,27 @@ bool OclDeviceProgram::Compile(bool load_cache, bool store_cache) {
   boost::filesystem::path dir(path);
   boost::filesystem::create_directory(dir);
 
-  size_t bin_sz;
-  clGetProgramInfo(ocl_program_.handle().get(),
-                   CL_PROGRAM_BINARY_SIZES, sizeof(size_t), &bin_sz, NULL);
-  unsigned char *bin = (unsigned char *)malloc(bin_sz);  // NOLINT
-  clGetProgramInfo(ocl_program_.handle().get(),
-                   CL_PROGRAM_BINARIES, sizeof(unsigned char *), &bin, NULL);
-  FILE* fp = fopen((".caffe_debug/" + string_identifier() + ".clptx").c_str(),
-                   "wb");
-  fwrite(bin, sizeof(char), bin_sz, fp);
-  fclose(fp);
-  free(bin);  // NOLINT
+  {
+    FILE* fp = fopen((".caffe_debug/" + string_identifier() + ".cl").c_str(),
+                     "wb");
+    fwrite(this->src_.c_str(), sizeof(char), this->src_.size(), fp);
+    fclose(fp);
+  }
+
+
+  {
+    size_t bin_sz;
+    clGetProgramInfo(ocl_program_.handle().get(),
+                     CL_PROGRAM_BINARY_SIZES, sizeof(size_t), &bin_sz, NULL);
+    unsigned char *bin = (unsigned char *)malloc(bin_sz);  // NOLINT
+    clGetProgramInfo(ocl_program_.handle().get(),
+                     CL_PROGRAM_BINARIES, sizeof(unsigned char *), &bin, NULL);
+    FILE* fp = fopen((".caffe_debug/" + string_identifier() + ".clptx").c_str(),
+                     "wb");
+    fwrite(bin, sizeof(char), bin_sz, fp);
+    fclose(fp);
+    free(bin);  // NOLINT
+  }
 #endif  // NDEBUG
 
   return true;

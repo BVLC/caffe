@@ -216,7 +216,7 @@ LibDNNDeconv<Dtype, MItype, MOtype>::LibDNNDeconv(LibDNNDeconvConfig config)
     this->wg_tuner_->add_boolean_param("vector_unroll", true, true);
   }
 
-  GenerateKernels();
+  this->GenerateKernels();
   this->CompileKernels();
 }
 
@@ -1677,6 +1677,11 @@ void LibDNNDeconv<Dtype, MItype, MOtype>::GenerateKernels() {
 
   // Write complete kernel string
   this->program_->set_source(ss.str());
+}
+
+template<typename Dtype, typename MItype, typename MOtype>
+bool LibDNNDeconv<Dtype, MItype, MOtype>::CompileKernels() {
+  return this->program_->Compile(true, true);
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
