@@ -262,7 +262,10 @@ void Blob<Dtype>::FromProto(const BlobProto& proto, bool reshape) {
       data_vec[i] = proto.data(i);
     }
   }
+
+  //強制讓網絡的參數同步到GPU
   gpu_data();
+  CUDA_CHECK(cudaStreamSynchronize(cudaStreamPerThread));
 }
 
 INSTANTIATE_CLASS(Blob);

@@ -55,7 +55,7 @@ inline void SyncedMemory::to_cpu() {
       host_malloc(&cpu_ptr_, size_);
       own_cpu_data_ = true;
     }
-    caffe_gpu_memcpy(size_, gpu_ptr_, cpu_ptr_);
+    CUDA_CHECK(cudaMemcpyAsync(cpu_ptr_, gpu_ptr_, size_, cudaMemcpyDefault, cudaStreamPerThread));  // NOLINT(caffe/alt_fn)
     CUDA_CHECK(cudaStreamSynchronize(cudaStreamPerThread));
     head_ = SYNCED;
 #else
@@ -84,7 +84,7 @@ inline void SyncedMemory::to_gpu() {
       gpu_ptr_ = gpu_malloc(size_);
       own_gpu_data_ = true;
     }
-    caffe_gpu_memcpy(size_, cpu_ptr_, gpu_ptr_);
+    CUDA_CHECK(cudaMemcpyAsync(gpu_ptr_, cpu_ptr_, size_, cudaMemcpyDefault, cudaStreamPerThread));  // NOLINT(caffe/alt_fn)
     head_ = SYNCED;
     break;
   case HEAD_AT_GPU:
@@ -186,14 +186,14 @@ void *SyncedMemory::gpu_malloc(size_t size) {
   if (device_pool_.get()) {
     ptr = device_pool_->alloc(size);
     if (ptr) {
-      //  mem_mutex.unlock();
+   //   mem_mutex.unlock();
       return ptr;
     }
   }
 
   device_pool_.reset();
   CUDA_CHECK(cudaMalloc(&ptr, size));
-  // mem_mutex.unlock();
+ // mem_mutex.unlock();
 
   return ptr;
 }
@@ -208,6 +208,7 @@ void SyncedMemory::gpu_free(void *data) {
     device_pool_.reset();
     return;
   }
+  CUDA_CHECK(cudaStreamSynchronize(cudaStreamPerThread));
   CUDA_CHECK(cudaFree(data));
 }
 #endif
