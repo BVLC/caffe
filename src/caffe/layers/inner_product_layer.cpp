@@ -47,32 +47,22 @@ void InnerProductLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-void InnerProductLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {
-
-  this->LayerSetUp(bottom,top);
-
-  // Figure out the dimensions
-  const int axis = bottom[0]->CanonicalAxisIndex(
-      this->layer_param_.inner_product_param().axis());
-  const int new_K = bottom[0]->count(axis);
-  CHECK_EQ(K_, new_K)
-      << "Input size incompatible with inner product parameters.";
-  // The first "axis" dimensions are independent inner products; the total
-  // number of these is M_, the product over these dimensions.
-  M_ = bottom[0]->count(0, axis);
+void InnerProductLayer<Dtype>::Reshape_const(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) const {
   // The top shape will be the bottom shape with the flattened axes dropped,
   // and replaced by a single axis with dimension num_output (N_).
+  const int axis = bottom[0]->CanonicalAxisIndex(
+      this->layer_param_.inner_product_param().axis());
   vector<int> top_shape = bottom[0]->shape();
   top_shape.resize(axis + 1);
   top_shape[axis] = N_;
   top[0]->Reshape(top_shape);
-  // Set up the bias multiplier
-  if (bias_term_) {
-    vector<int> bias_shape(1, M_);
-    bias_multiplier_.Reshape(bias_shape);
-    caffe_set(M_, Dtype(1), bias_multiplier_.mutable_cpu_data());
-  }
+}
+
+template <typename Dtype>
+void InnerProductLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  Reshape_const(bottom,top);
 }
 
 template <typename Dtype>
@@ -84,14 +74,30 @@ void InnerProductLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void InnerProductLayer<Dtype>::Forward_const_cpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) const {
+
+  // Figure out the dimensions
+  const int axis = bottom[0]->CanonicalAxisIndex(
+      this->layer_param_.inner_product_param().axis());
+  const int new_K = bottom[0]->count(axis);
+  CHECK_EQ(K_, new_K)
+      << "Input size incompatible with inner product parameters.";
+  // The first "axis" dimensions are independent inner products; the total
+  // number of these is M, the product over these dimensions.
+  auto M = bottom[0]->count(0, axis);
+
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = top[0]->mutable_cpu_data();
   const Dtype* weight = this->blobs_[0]->cpu_data();
   caffe_cpu_gemm<Dtype>(CblasNoTrans, transpose_ ? CblasNoTrans : CblasTrans,
-      M_, N_, K_, (Dtype)1.,
+      M, N_, K_, (Dtype)1.,
       bottom_data, weight, (Dtype)0., top_data);
   if (bias_term_) {
-    caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, M_, N_, 1, (Dtype)1.,
+    Blob<Dtype> bias_multiplier_;
+    vector<int> bias_shape(1, M);
+    bias_multiplier_.Reshape(bias_shape);
+    caffe_set(M, Dtype(1), bias_multiplier_.mutable_cpu_data());
+
+    caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, M, N_, 1, (Dtype)1.,
         bias_multiplier_.cpu_data(),
         this->blobs_[1]->cpu_data(), (Dtype)1., top_data);
   }
@@ -99,6 +105,7 @@ void InnerProductLayer<Dtype>::Forward_const_cpu(const vector<Blob<Dtype>*>& bot
 
 #ifdef CPU_ONLY
 STUB_GPU(InnerProductLayer);
+STUB_GPU_FORWARD_CONST(InnerProductLayer,Forward_const);
 #endif
 
 INSTANTIATE_CLASS(InnerProductLayer);

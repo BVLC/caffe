@@ -37,6 +37,8 @@ class DropoutLayer : public NeuronLayer<Dtype> {
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
+  virtual void Reshape_const(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) const;
 
   virtual inline const char* type() const { return "Dropout"; }
 
@@ -63,14 +65,8 @@ class DropoutLayer : public NeuronLayer<Dtype> {
       const vector<Blob<Dtype>*>& top) const;
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
-
-  /// when divided by UINT_MAX, the randomly generated values @f$u\sim U(0,1)@f$
-  Blob<unsigned int> rand_vec_;
-  /// the probability @f$ p @f$ of dropping any input
-  Dtype threshold_;
-  /// the scale for undropped inputs at train time @f$ 1 / (1 - p) @f$
-  Dtype scale_;
-  unsigned int uint_thres_;
+  void Forward_const_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) const override;
 };
 
 }  // namespace caffe
