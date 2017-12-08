@@ -242,7 +242,7 @@ public:
   /** @brief Using the CPU device, compute the layer output. */
   virtual void Forward_cpu(const vector<Blob<Dtype> *> &bottom,
                            const vector<Blob<Dtype> *> &top) = 0;
-  virtual void Forward_cpu_const(const vector<Blob<Dtype> *> &bottom,
+  virtual void Forward_const_cpu(const vector<Blob<Dtype> *> &bottom,
                            const vector<Blob<Dtype> *> &top) const {
   
     LOG(FATAL) <<__func__<< " no implemented for "<<type();
@@ -348,7 +348,7 @@ inline Dtype Layer<Dtype>::Forward_const(const vector<Blob<Dtype> *> &bottom,
 
   switch (Caffe::mode()) {
   case Caffe::CPU:
-    Forward_cpu_const(bottom, top);
+    Forward_const_cpu(bottom, top);
     break;
   case Caffe::GPU:
     Forward_const_gpu(bottom, top);

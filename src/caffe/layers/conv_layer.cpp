@@ -25,11 +25,11 @@ vector<int> ConvolutionLayer<Dtype>::compute_output_shape() const {
 template <typename Dtype>
 void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  Forward_cpu_const(bottom,top);
+  Forward_const_cpu(bottom,top);
 }
 
 template <typename Dtype>
-void ConvolutionLayer<Dtype>::Forward_cpu_const(const vector<Blob<Dtype>*>& bottom,
+void ConvolutionLayer<Dtype>::Forward_const_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) const {
   const Dtype* weight = this->blobs_[0]->cpu_data();
   int bottom_dim = bottom[0]->count(this->channel_axis_);

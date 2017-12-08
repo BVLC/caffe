@@ -7,11 +7,11 @@ static float fix(float x) { return static_cast<int>(x + 1e-4); }
 template <typename Dtype>
 void MTCNNBBoxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype> *> &bottom,
                                         const vector<Blob<Dtype> *> &top) {
-  Forward_cpu_const(bottom, top);
+  Forward_const_cpu(bottom, top);
 }
 
 template <typename Dtype>
-void MTCNNBBoxLayer<Dtype>::Forward_cpu_const(
+void MTCNNBBoxLayer<Dtype>::Forward_const_cpu(
     const vector<Blob<Dtype> *> &bottom,
     const vector<Blob<Dtype> *> &top) const {
   const auto bbox_reg = bottom[0]->cpu_data();

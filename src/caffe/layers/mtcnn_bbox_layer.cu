@@ -69,7 +69,7 @@ template <typename Dtype>
 void MTCNNBBoxLayer<Dtype>::Forward_const_gpu(
     const vector<Blob<Dtype> *> &bottom,
     const vector<Blob<Dtype> *> &top) const {
-  return Forward_cpu_const(bottom, top);
+  return Forward_const_cpu(bottom, top);
   const auto bbox_reg = bottom[0]->gpu_data();
   const auto &shape = bottom[1]->shape();
   const auto prob = bottom[1]->gpu_data() + shape[2] * shape[3];

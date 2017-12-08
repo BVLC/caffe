@@ -396,7 +396,7 @@ std::map<std::string, std::shared_ptr<Blob<Dtype>>> Net<Dtype>::ForwardConst(
     switch (mode) {
 
     case Caffe::CPU:
-      layers_[i]->Forward_cpu_const(bottom, top);
+      layers_[i]->Forward_const_cpu(bottom, top);
       break;
     case Caffe::GPU:
       layers_[i]->Forward_const_gpu(bottom, top);

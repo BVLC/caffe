@@ -62,11 +62,11 @@ void PReLULayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void PReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
-  Forward_cpu_const(bottom,top);
+  Forward_const_cpu(bottom,top);
 }
 
 template <typename Dtype>
-void PReLULayer<Dtype>::Forward_cpu_const(const vector<Blob<Dtype>*>& bottom,
+void PReLULayer<Dtype>::Forward_const_cpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) const {
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = top[0]->mutable_cpu_data();

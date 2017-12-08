@@ -36,7 +36,7 @@ class EltwiseLayer : public Layer<Dtype> {
       const vector<Blob<Dtype>*>& top);
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
-  void Forward_cpu_const(const vector<Blob<Dtype>*>& bottom,
+  void Forward_const_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) const override;
   void Forward_const_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) const override;
