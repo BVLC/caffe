@@ -61,6 +61,7 @@ void Caffe::set_device(int device_id) {
     throw std::runtime_error("caffe thread has binded device");
   }
 
+  CUDA_CHECK(cudaSetDevice(device_id));
   Get().device_id_ = device_id;
   Get().mode_ = GPU;
   // Try to create a cublas handler, and report an error if failed (but we will
