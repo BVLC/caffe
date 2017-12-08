@@ -24,29 +24,34 @@ void EltwiseLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       coeffs_[i] = this->layer_param().eltwise_param().coeff(i);
     }
   }
-  stable_prod_grad_ = this->layer_param_.eltwise_param().stable_prod_grad();
 }
 
 template <typename Dtype>
-void EltwiseLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {
+void EltwiseLayer<Dtype>::Reshape_const(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) const {
   for (int i = 1; i < bottom.size(); ++i) {
     CHECK(bottom[0]->shape() == bottom[i]->shape())
         << "bottom[0]: " << bottom[0]->shape_string()
         << ", bottom[" << i << "]: " << bottom[i]->shape_string();
   }
   top[0]->ReshapeLike(*bottom[0]);
-  // If max operation, we will initialize the vector index part.
-  if (this->layer_param_.eltwise_param().operation() ==
-      EltwiseParameter_EltwiseOp_MAX && top.size() == 1) {
-    max_idx_.Reshape(bottom[0]->shape());
-  }
+}
+
+template <typename Dtype>
+void EltwiseLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  Reshape_const(bottom,top);
 }
 
 template <typename Dtype>
 void EltwiseLayer<Dtype>::Forward_cpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
-  int* mask = NULL;
+  Forward_cpu_const(bottom,top);
+}
+
+template <typename Dtype>
+void EltwiseLayer<Dtype>::Forward_cpu_const(
+    const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) const {
   const Dtype* bottom_data_a = NULL;
   const Dtype* bottom_data_b = NULL;
   const int count = top[0]->count();
@@ -67,8 +72,6 @@ void EltwiseLayer<Dtype>::Forward_cpu(
     break;
   case EltwiseParameter_EltwiseOp_MAX:
     // Initialize
-    mask = max_idx_.mutable_cpu_data();
-    caffe_set(count, -1, mask);
     caffe_set(count, Dtype(-FLT_MAX), top_data);
     // bottom 0 & 1
     bottom_data_a = bottom[0]->cpu_data();
@@ -76,10 +79,8 @@ void EltwiseLayer<Dtype>::Forward_cpu(
     for (int idx = 0; idx < count; ++idx) {
       if (bottom_data_a[idx] > bottom_data_b[idx]) {
         top_data[idx] = bottom_data_a[idx];  // maxval
-        mask[idx] = 0;  // maxid
       } else {
         top_data[idx] = bottom_data_b[idx];  // maxval
-        mask[idx] = 1;  // maxid
       }
     }
     // bottom 2++
@@ -88,7 +89,6 @@ void EltwiseLayer<Dtype>::Forward_cpu(
       for (int idx = 0; idx < count; ++idx) {
         if (bottom_data_b[idx] > top_data[idx]) {
           top_data[idx] = bottom_data_b[idx];  // maxval
-          mask[idx] = blob_idx;  // maxid
         }
       }
     }
@@ -100,6 +100,7 @@ void EltwiseLayer<Dtype>::Forward_cpu(
 
 #ifdef CPU_ONLY
 STUB_GPU(EltwiseLayer);
+STUB_GPU_FORWARD_CONST(EltwiseLayer,Forward_const);
 #endif
 
 INSTANTIATE_CLASS(EltwiseLayer);

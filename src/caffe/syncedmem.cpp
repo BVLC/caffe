@@ -57,6 +57,10 @@ inline void SyncedMemory::to_cpu() {
     }
     CUDA_CHECK(cudaMemcpyAsync(cpu_ptr_, gpu_ptr_, size_, cudaMemcpyDefault, cudaStreamPerThread));  // NOLINT(caffe/alt_fn)
     CUDA_CHECK(cudaStreamSynchronize(cudaStreamPerThread));
+    //我們確信該線程的任務暫時完成，所以釋放一些顯存
+    if (device_pool_.get()) {
+      device_pool_->release_space();
+    }
     head_ = SYNCED;
 #else
     NO_GPU;
