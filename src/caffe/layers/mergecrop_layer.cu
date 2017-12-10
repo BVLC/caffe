@@ -17,13 +17,13 @@ void MergeCropLayer<Dtype, MItype, MOtype>::GenerateProgram() {
   ss << this->device_program_->template define_type<MOtype>("MOtype");
 
   KernelArgs fw_args;
-  fw_args.push_back(this->device_program_->template create_kernel_arg<uint_tp>(
+  fw_args.push_back(this->device_program_->template create_kernel_arg<int_tp>(
                     "nthreads", KERNEL_ARG_CONST));
   fw_args.push_back(this->device_program_->template create_kernel_arg<int_tp>(
                     "dims", KERNEL_ARG_CONST));
   fw_args.push_back(this->device_program_->template create_kernel_arg<MItype>(
-                    "bottm_a", KERNEL_ARG_CONST | KERNEL_ARG_GLOBAL_MEM));
-  fw_args.push_back(this->device_program_->template create_kernel_arg<int_tp>(
+                    "bottom_a", KERNEL_ARG_CONST | KERNEL_ARG_GLOBAL_MEM));
+  fw_args.push_back(this->device_program_->template create_kernel_arg<bool>(
                     "forward_a", KERNEL_ARG_CONST));
   fw_args.push_back(this->device_program_->template create_kernel_arg<MItype>(
                     "bottom_b", KERNEL_ARG_CONST | KERNEL_ARG_GLOBAL_MEM));
@@ -80,6 +80,7 @@ void MergeCropLayer<Dtype, MItype, MOtype>::GenerateProgram() {
     ss << "btemp *= shape_b[i];" << std::endl;
     ss << "}" << std::endl;
     ss << "top[index] = forward_b ? bottom_b[bidx] : 0;" << std::endl;
+    ss << "}" << std::endl;
   } else {
     ss << "int_tp batch_id = index / (channels_a * size_a);" << std::endl;
     ss << "int_tp counter = index;" << std::endl;
@@ -111,12 +112,12 @@ void MergeCropLayer<Dtype, MItype, MOtype>::GenerateProgram() {
   ss << "}" << std::endl;
 
   KernelArgs bw_args;
-  bw_args.push_back(this->device_program_->template create_kernel_arg<uint_tp>(
+  bw_args.push_back(this->device_program_->template create_kernel_arg<int_tp>(
                     "nthreads", KERNEL_ARG_CONST));
   bw_args.push_back(this->device_program_->template create_kernel_arg<int_tp>(
                     "dims", KERNEL_ARG_CONST));
   bw_args.push_back(this->device_program_->template create_kernel_arg<MItype>(
-                    "bottm_a", KERNEL_ARG_GLOBAL_MEM));
+                    "bottom_a", KERNEL_ARG_GLOBAL_MEM));
   bw_args.push_back(this->device_program_->template create_kernel_arg<bool>(
                     "backward_a", KERNEL_ARG_CONST));
   bw_args.push_back(this->device_program_->template create_kernel_arg<MItype>(
@@ -213,9 +214,9 @@ void MergeCropLayer<Dtype, MItype, MOtype>::Forward_gpu(
                                           const vector<Blob<MOtype>*>& top) {
   int_tp count = top[0]->count();
 
-  vptr<const Dtype>bottom_data_a = bottom[0]->gpu_data();
-  vptr<const Dtype>bottom_data_b = bottom[1]->gpu_data();
-  vptr<Dtype>top_data = top[0]->mutable_gpu_data();
+  vptr<const Dtype> bottom_data_a = bottom[0]->gpu_data();
+  vptr<const Dtype> bottom_data_b = bottom[1]->gpu_data();
+  vptr<Dtype> top_data = top[0]->mutable_gpu_data();
 
   int_tp num = bottom[0]->shape(0);
   int_tp spatial_dims = bottom[0]->shape().size() - 2;
@@ -233,9 +234,11 @@ void MergeCropLayer<Dtype, MItype, MOtype>::Forward_gpu(
   kernel->add_arg(&count);
   kernel->add_arg(&spatial_dims);
   kernel->add_arg(&bottom_data_a);
-  kernel->add_arg(&forward_[0]);
+  bool fw_0 = forward_[0];
+  kernel->add_arg(&fw_0);
   kernel->add_arg(&bottom_data_b);
-  kernel->add_arg(&forward_[1]);
+  bool fw_1 = forward_[1];
+  kernel->add_arg(&fw_1);
   kernel->add_arg(&top_data);
   kernel->add_arg(&num);
   kernel->add_arg(&channels_a);
@@ -261,9 +264,9 @@ void MergeCropLayer<Dtype, MItype, MOtype>::Backward_gpu(
 
   int_tp count = top[0]->count();
 
-  vptr<Dtype>bottom_diff_a = bottom[0]->mutable_gpu_diff();
-  vptr<Dtype>bottom_diff_b = bottom[1]->mutable_gpu_diff();
-  vptr<const Dtype>top_diff = top[0]->gpu_diff();
+  vptr<Dtype> bottom_diff_a = bottom[0]->mutable_gpu_diff();
+  vptr<Dtype> bottom_diff_b = bottom[1]->mutable_gpu_diff();
+  vptr<const Dtype> top_diff = top[0]->gpu_diff();
 
   int_tp num = bottom[0]->shape(0);
   int_tp spatial_dims = bottom[0]->shape().size() - 2;
@@ -281,9 +284,11 @@ void MergeCropLayer<Dtype, MItype, MOtype>::Backward_gpu(
   kernel->add_arg(&count);
   kernel->add_arg(&spatial_dims);
   kernel->add_arg(&bottom_diff_a);
-  kernel->add_arg(&backward_[0]);
+  bool bw_0 = backward_[0];
+  kernel->add_arg(&bw_0);
   kernel->add_arg(&bottom_diff_b);
-  kernel->add_arg(&backward_[1]);
+  bool bw_1 = backward_[1];
+  kernel->add_arg(&bw_1);
   kernel->add_arg(&top_diff);
   kernel->add_arg(&num);
   kernel->add_arg(&channels_a);

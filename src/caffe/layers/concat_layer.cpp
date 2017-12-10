@@ -51,6 +51,10 @@ void ConcatLayer<Dtype, MItype, MOtype>::Reshape(const vector<Blob<MItype>*>& bo
     top[0]->ShareData(*bottom[0]);
     top[0]->ShareDiff(*bottom[0]);
   }
+
+  if (Caffe::mode() == Caffe::GPU && this->device_program_.get() == nullptr) {
+    this->GenerateProgram();
+  }
 }
 
 template<typename Dtype, typename MItype, typename MOtype>

@@ -47,7 +47,6 @@ LibDNNPool<Dtype, MItype, MOtype>::LibDNNPool(LibDNNPoolConfig config)
   fw_tuner_->add_range_param<int_tp>("LW1", 8, 4, 16, 4);
   bw_tuner_->add_range_param<int_tp>("LW1", 8, 4, 16, 4);
 
-
   this->GenerateKernels();
   this->CompileKernels();
 }
@@ -819,8 +818,9 @@ string LibDNNPool<Dtype, MItype, MOtype>::generate_bw_kernels(string name) {
 
 template<typename Dtype, typename MItype, typename MOtype>
 void LibDNNPool<Dtype, MItype, MOtype>::GenerateKernels() {
-  stringstream ss;
+  this->program_ = this->dev_ptr_->CreateProgram();
 
+  stringstream ss;
   ss << this->program_->setup();
   ss << this->program_->template define_vector_type<Dtype>("Dtype", 0, 16);
   ss << this->program_->template define_vector_type<MItype>("MItype", 0, 16);

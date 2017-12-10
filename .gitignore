@@ -84,6 +84,8 @@ models/*
 # build, distribute, and bins (+ python proto bindings)
 cmake_build
 build
+build_opencl
+build_cuda
 .build_debug/*
 .build_release/*
 distribute/*

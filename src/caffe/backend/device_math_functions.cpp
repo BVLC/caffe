@@ -19,7 +19,7 @@ void Device::null_kernel(float arg) {
 
 void Device::memset(const uint_tp n, const char alpha, vptr<char> x) {
   shared_ptr<DeviceKernel> kernel
-        = math_programs_[0]->GetKernel("caffe_gpu_memset");
+        = math_programs_[AUX_DATA_INDEX]->GetKernel("caffe_gpu_memset");
 
   kernel->add_arg(&n);
   kernel->add_arg(&alpha);
@@ -35,7 +35,7 @@ void Device::memset(const uint_tp n, const char alpha, vptr<char> x) {
 template<typename Dtype>
 void Device::set(const uint_tp n, const Dtype alpha, vptr<Dtype> x) {
   shared_ptr<DeviceKernel> kernel
-   = math_programs_[proto_data_type_index<Dtype>()]->GetKernel("caffe_gpu_set");
+   = math_programs_[data_type_index<Dtype>()]->GetKernel("caffe_gpu_set");
 
   kernel->add_arg(&n);
   kernel->add_arg(&alpha);
@@ -71,7 +71,7 @@ template void Device::set(const uint_tp n, const uint64_t alpha,
 template<typename Dtype>
 void Device::add_scalar(const uint_tp n, const Dtype alpha, vptr<Dtype> x) {
   shared_ptr<DeviceKernel> kernel
-      = math_programs_[proto_data_type_index<Dtype>()]
+      = math_programs_[data_type_index<Dtype>()]
                        ->GetKernel("caffe_gpu_add_scalar");
 
   kernel->add_arg(&n);
@@ -97,7 +97,7 @@ void Device::add_scalar(const uint_tp n, const double alpha, vptr<double> x);
 template<typename Dtype>
 void Device::scal(const uint_tp n, const Dtype alpha, vptr<Dtype> x) {
   shared_ptr<DeviceKernel> kernel
-      = math_programs_[proto_data_type_index<Dtype>()]
+      = math_programs_[data_type_index<Dtype>()]
                        ->GetKernel("caffe_gpu_scal");
 
   kernel->add_arg(&n);
@@ -124,7 +124,7 @@ template<typename Dtype>
 void Device::add(const uint_tp n, vptr<const Dtype> a,
                  vptr<const Dtype> b, vptr<Dtype> y) {
   shared_ptr<DeviceKernel> kernel
-      = math_programs_[proto_data_type_index<Dtype>()]
+      = math_programs_[data_type_index<Dtype>()]
                        ->GetKernel("caffe_gpu_add");
 
   kernel->add_arg(&n);
@@ -154,7 +154,7 @@ template<typename Dtype>
 void Device::sub(const uint_tp n, vptr<const Dtype> a, vptr<const Dtype> b,
                  vptr<Dtype> y) {
   shared_ptr<DeviceKernel> kernel
-      = math_programs_[proto_data_type_index<Dtype>()]
+      = math_programs_[data_type_index<Dtype>()]
                        ->GetKernel("caffe_gpu_sub");
 
   kernel->add_arg(&n);
@@ -184,7 +184,7 @@ template<typename Dtype>
 void Device::mul(const uint_tp n, vptr<const Dtype> a, vptr<const Dtype> b,
                  vptr<Dtype> y) {
   shared_ptr<DeviceKernel> kernel
-      = math_programs_[proto_data_type_index<Dtype>()]
+      = math_programs_[data_type_index<Dtype>()]
                        ->GetKernel("caffe_gpu_mul");
 
   kernel->add_arg(&n);
@@ -214,7 +214,7 @@ template<typename Dtype>
 void Device::div(const uint_tp n, vptr<const Dtype> a, vptr<const Dtype> b,
                  vptr<Dtype> y) {
   shared_ptr<DeviceKernel> kernel
-      = math_programs_[proto_data_type_index<Dtype>()]
+      = math_programs_[data_type_index<Dtype>()]
                        ->GetKernel("caffe_gpu_div");
 
   kernel->add_arg(&n);
@@ -243,7 +243,7 @@ void Device::div(const uint_tp n, vptr<const double> a, vptr<const double> b,
 template<typename Dtype>
 void Device::abs(const uint_tp n, vptr<const Dtype> a, vptr<Dtype> y) {
   shared_ptr<DeviceKernel> kernel
-      = math_programs_[proto_data_type_index<Dtype>()]
+      = math_programs_[data_type_index<Dtype>()]
                        ->GetKernel("caffe_gpu_abs");
 
   kernel->add_arg(&n);
@@ -269,7 +269,7 @@ void Device::abs(const uint_tp n, vptr<const double> a, vptr<double> y);
 template<typename Dtype>
 void Device::exp(const uint_tp n, vptr<const Dtype> a, vptr<Dtype> y) {
   shared_ptr<DeviceKernel> kernel
-      = math_programs_[proto_data_type_index<Dtype>()]
+      = math_programs_[data_type_index<Dtype>()]
                        ->GetKernel("caffe_gpu_exp");
 
   kernel->add_arg(&n);
@@ -295,7 +295,7 @@ void Device::exp(const uint_tp n, vptr<const double> a, vptr<double> y);
 template<typename Dtype>
 void Device::log(const uint_tp n, vptr<const Dtype> a, vptr<Dtype> y) {
   shared_ptr<DeviceKernel> kernel
-      = math_programs_[proto_data_type_index<Dtype>()]
+      = math_programs_[data_type_index<Dtype>()]
                        ->GetKernel("caffe_gpu_log");
 
   kernel->add_arg(&n);
@@ -322,7 +322,7 @@ template<typename Dtype>
 void Device::powx(const uint_tp n, vptr<const Dtype> a, const Dtype b,
                   vptr<Dtype> y) {
   shared_ptr<DeviceKernel> kernel
-      = math_programs_[proto_data_type_index<Dtype>()]
+      = math_programs_[data_type_index<Dtype>()]
                        ->GetKernel("caffe_gpu_powx");
 
   kernel->add_arg(&n);
@@ -351,7 +351,7 @@ void Device::powx(const uint_tp n, vptr<const double> a, const double b,
 template<typename Dtype>
 void Device::sqrt(const uint_tp n, vptr<const Dtype> a, vptr<Dtype> y) {
   shared_ptr<DeviceKernel> kernel
-      = math_programs_[proto_data_type_index<Dtype>()]
+      = math_programs_[data_type_index<Dtype>()]
                        ->GetKernel("caffe_gpu_sqrt");
 
   kernel->add_arg(&n);
@@ -377,7 +377,7 @@ void Device::sqrt(const uint_tp n, vptr<const double> a, vptr<double> y);
 template<typename Dtype>
 void Device::sign(const uint_tp n, vptr<const Dtype> x, vptr<Dtype> y) {
   shared_ptr<DeviceKernel> kernel
-      = math_programs_[proto_data_type_index<Dtype>()]
+      = math_programs_[data_type_index<Dtype>()]
                        ->GetKernel("caffe_gpu_sign");
 
   kernel->add_arg(&n);
@@ -403,7 +403,7 @@ void Device::sign(const uint_tp n, vptr<const double> x, vptr<double> y);
 template<typename Dtype>
 void Device::sgnbit(const uint_tp n, vptr<const Dtype> x, vptr<Dtype> y) {
   shared_ptr<DeviceKernel> kernel
-      = math_programs_[proto_data_type_index<Dtype>()]
+      = math_programs_[data_type_index<Dtype>()]
                        ->GetKernel("caffe_gpu_signbit");
 
   kernel->add_arg(&n);
@@ -425,14 +425,10 @@ void Device::sgnbit(const uint_tp n, vptr<const float> x, vptr<float> y);
 template
 void Device::sgnbit(const uint_tp n, vptr<const double> x, vptr<double> y);
 
-
-template<typename Dtype>
-string create_source(Device* dev,
-                           shared_ptr<DeviceProgram> program) {
+template<typename Dtype, typename MItype, typename MOtype>
+string create_set_source(Device* dev, shared_ptr<DeviceProgram> program) {
   stringstream ss;
-
   ss << program->define_type<Dtype>("Dtype");
-
   // Set
   {
     KernelArgs args;
@@ -448,6 +444,15 @@ string create_source(Device* dev,
     ss << "}" << std::endl;
     ss << "}" << std::endl;
   }
+  return ss.str();
+}
+
+
+template<typename Dtype, typename MItype, typename MOtype>
+string create_source(Device* dev, shared_ptr<DeviceProgram> program) {
+  stringstream ss;
+
+  ss << program->define_type<Dtype>("Dtype");
 
   // Add Scalar
   {
@@ -624,29 +629,6 @@ string create_source(Device* dev,
   return ss.str();
 }
 
-template
-string create_source<half_fp>(Device* dev,
-    shared_ptr<DeviceProgram> program);
-template
-string create_source<float>(Device* dev,
-    shared_ptr<DeviceProgram> program);
-template
-string create_source<double>(Device* dev,
-    shared_ptr<DeviceProgram> program);
-template
-string create_source<int8_t>(Device* dev,
-    shared_ptr<DeviceProgram> program);
-template
-string create_source<int16_t>(Device* dev,
-    shared_ptr<DeviceProgram> program);
-template
-string create_source<int32_t>(Device* dev,
-    shared_ptr<DeviceProgram> program);
-template
-string create_source<int64_t>(Device* dev,
-    shared_ptr<DeviceProgram> program);
-
-
 void Device::CreateMathProgram() {
   for (int_tp i = 0; i < PROTO_DATA_INDEX_MAX; ++i) {
     this->math_programs_.push_back(this->CreateProgram());
@@ -689,39 +671,80 @@ void Device::CreateMathProgram() {
       case HALF_DATA_INDEX: {
 #ifdef USE_HALF
         ss << "#ifdef HALF_SUPPORT_AVAILABLE" << std::endl;
-        ss << create_source<half_fp>(this, this->math_programs_[i]);
+        ss << create_set_source<half_fp, half_fp, half_fp>(this,
+                                                       this->math_programs_[i]);
+        ss << create_source<half_fp, half_fp, half_fp>(this,
+                                                       this->math_programs_[i]);
         ss << "#endif  // HALF_SUPPORT_AVAILABLE" << std::endl;
-#endif
+#endif  // USE_HALF
         break;
       }
       case FLOAT_DATA_INDEX: {
 #ifdef USE_SINGLE
-        ss << create_source<float>(this, this->math_programs_[i]);
-#endif
+        ss << create_set_source<float, float, float>(this,
+                                                       this->math_programs_[i]);
+        ss << create_source<float, float, float>(this,
+                                                       this->math_programs_[i]);
+#endif  // USE_SINGLE
         break;
       }
       case DOUBLE_DATA_INDEX: {
 #ifdef USE_DOUBLE
         ss << "#ifdef DOUBLE_SUPPORT_AVAILABLE" << std::endl;
-        ss << create_source<double>(this, this->math_programs_[i]);
+        ss << create_set_source<double, double, double>(this,
+                                                       this->math_programs_[i]);
+        ss << create_source<double, double, double>(this,
+                                                       this->math_programs_[i]);
         ss << "#endif  // DOUBLE_SUPPORT_AVAILABLE" << std::endl;
-#endif
+#endif  // USE_DOUBLE
         break;
       }
-      case INT8_QUANTIZED_DATA_INDEX: {
-        ss << create_source<int8_t>(this, this->math_programs_[i]);
+      case INT8_DATA_INDEX: {
+        ss << create_set_source<int8_t, int8_t, int8_t>(this,
+                                                       this->math_programs_[i]);
+        ss << create_source<int8_t, int8_t, int8_t>(this,
+                                                       this->math_programs_[i]);
         break;
       }
-      case INT16_QUANTIZED_DATA_INDEX: {
-        ss << create_source<int16_t>(this, this->math_programs_[i]);
+      case INT16_DATA_INDEX: {
+        ss << create_set_source<int16_t, int16_t, int16_t>(this,
+                                                       this->math_programs_[i]);
+        ss << create_source<int16_t, int16_t, int16_t>(this,
+                                                       this->math_programs_[i]);
         break;
       }
-      case INT32_QUANTIZED_DATA_INDEX: {
-        ss << create_source<int32_t>(this, this->math_programs_[i]);
+      case INT32_DATA_INDEX: {
+        ss << create_set_source<int32_t, int32_t, int32_t>(this,
+                                                       this->math_programs_[i]);
+        ss << create_source<int32_t, int32_t, int32_t>(this,
+                                                       this->math_programs_[i]);
         break;
       }
-      case INT64_QUANTIZED_DATA_INDEX: {
-        ss << create_source<int64_t>(this, this->math_programs_[i]);
+      case INT64_DATA_INDEX: {
+        ss << create_set_source<int64_t, int64_t, int64_t>(this,
+                                                       this->math_programs_[i]);
+        ss << create_source<int64_t, int64_t, int64_t>(this,
+                                                       this->math_programs_[i]);
+        break;
+      }
+      case UINT8_DATA_INDEX: {
+        ss << create_set_source<uint8_t, uint8_t, uint8_t>(this,
+                                                       this->math_programs_[i]);
+        break;
+      }
+      case UINT16_DATA_INDEX: {
+        ss << create_set_source<uint16_t, uint16_t, uint16_t>(this,
+                                                       this->math_programs_[i]);
+        break;
+      }
+      case UINT32_DATA_INDEX: {
+        ss << create_set_source<uint32_t, uint32_t, uint32_t>(this,
+                                                       this->math_programs_[i]);
+        break;
+      }
+      case UINT64_DATA_INDEX: {
+        ss << create_set_source<uint64_t, uint64_t, uint64_t>(this,
+                                                       this->math_programs_[i]);
         break;
       }
     }

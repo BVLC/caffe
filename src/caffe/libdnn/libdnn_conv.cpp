@@ -1505,13 +1505,21 @@ string LibDNNConv<Dtype, MItype, MOtype>::generate_bw_kernels(string name) {
 
 template<typename Dtype, typename MItype, typename MOtype>
 void LibDNNConv<Dtype, MItype, MOtype>::GenerateKernels() {
-  stringstream ss;
+  this->program_ = this->dev_ptr_->CreateProgram();
 
+  std::cout << "Mark 1" << std::endl;
+
+  stringstream ss;
   ss << this->program_->setup();
+  std::cout << "Mark 2" << std::endl;
   ss << this->program_->template define_vector_type<Dtype>("Dtype", 0, 16);
   ss << this->program_->template define_vector_type<MItype>("MItype", 0, 16);
   ss << this->program_->template define_vector_type<MOtype>("MOtype", 0, 16);
+  std::cout << "Mark 2.2" << std::endl;
   ss << this->program_->atomics();
+  std::cout << "Mark 3" << std::endl;
+
+  ss << this->program_->vector_accessors();
   ss << generate_fw_defs();
   ss << generate_fw_kernels("conv_forward");
   ss << generate_bw_defs();
@@ -1519,8 +1527,12 @@ void LibDNNConv<Dtype, MItype, MOtype>::GenerateKernels() {
   ss << generate_wg_defs();
   ss << generate_wg_kernels("conv_weights");
 
+  std::cout << "Mark 4" << std::endl;
+
   // Write complete kernel string
   this->program_->set_source(ss.str());
+  std::cout << "Mark 5" << std::endl;
+
 }
 
 template<typename Dtype, typename MItype, typename MOtype>

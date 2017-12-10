@@ -9,10 +9,17 @@ template<typename Dtype, typename MItype, typename MOtype>
 void CuDNNConvolutionLayer<Dtype, MItype, MOtype>::Forward_gpu(
     const vector<Blob<MItype>*>& bottom,
     const vector<Blob<MOtype>*>& top) {
+  std::cout << "Mark 0" << std::endl;
+
   const Dtype* weight = this->blobs_[0]->gpu_data().get_cuda_ptr();
+  std::cout << "Mark 0.5" << std::endl;
   for (int_tp i = 0; i < bottom.size(); ++i) {
+    std::cout << "Mark 0.7" << std::endl;
     const Dtype* bottom_data = bottom[i]->gpu_data().get_cuda_ptr();
+    std::cout << "Mark 0.8" << std::endl;
     Dtype* top_data = top[i]->mutable_gpu_data().get_cuda_ptr();
+
+    std::cout << "Mark 1." << i << std::endl;
 
     // Forward through cuDNN in parallel over groups.
     for (int_tp g = 0; g < this->group_; g++) {
@@ -26,6 +33,9 @@ void CuDNNConvolutionLayer<Dtype, MItype, MOtype>::Forward_gpu(
             cudnn::dataType<Dtype>::zero,
             top_descs_[i], top_data + top_offset_ * g));
 
+      std::cout << "Mark 2." << i << std::endl;
+
+
       // Bias.
       if (this->bias_term_) {
         const Dtype* bias_data = this->blobs_[1]->gpu_data().get_cuda_ptr();
@@ -36,6 +46,9 @@ void CuDNNConvolutionLayer<Dtype, MItype, MOtype>::Forward_gpu(
               top_descs_[i], top_data + top_offset_ * g));
       }
     }
+
+    std::cout << "Mark 3." << i << std::endl;
+
 
     // Synchronize the work across groups, each of which went into its own
     // stream, by launching an empty kernel into the default (null) stream.

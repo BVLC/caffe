@@ -1,15 +1,34 @@
 # generate macro headers
 caffe_prebuild_macros_py(${macro_gen_folder})
-caffe_prebuild_layer_creator_py(${layer_creator_gen_folder})
-caffe_prebuild_blob_creator_py(${blob_creator_gen_folder})
-caffe_prebuild_quantizer_creator_py(${quantizer_creator_gen_folder})
-caffe_prebuild_test_macros_py(${quantizer_creator_gen_folder})
+list(APPEND pre_build_srcs ${macro_gen_folder}/macros.hpp)
 
-add_library(pre_build STATIC ${macro_gen_folder}/macros.hpp
-							 ${layer_creator_gen_folder}/layer_creator.hpp
-							 ${blob_creator_gen_folder}/blob_creator.hpp
-							 ${quantizer_creator_gen_folder}/quantizer_creator.hpp
-							 ${test_macros_gen_folder}/test_macros.hpp)
+caffe_prebuild_layer_creator_py(${layer_creator_gen_folder})
+list(APPEND pre_build_srcs ${layer_creator_gen_folder}/layer_creator.hpp)
+
+caffe_prebuild_blob_creator_py(${blob_creator_gen_folder})
+list(APPEND pre_build_srcs ${blob_creator_gen_folder}/blob_creator.hpp)
+
+caffe_prebuild_quantizer_creator_py(${quantizer_creator_gen_folder})
+list(APPEND pre_build_srcs ${quantizer_creator_gen_folder}/quantizer_creator.hpp)
+
+caffe_prebuild_test_macros_py(${test_macros_gen_folder})
+list(APPEND pre_build_srcs ${test_macros_gen_folder}/test_macros.hpp)
+
+if(USE_CUDA)
+set(CUDA_NVRTC_HEADERS "")
+list(APPEND CUDA_NVRTC_HEADERS "${CUDA_TOOLKIT_INCLUDE}/cuda_fp16.h")
+list(APPEND CUDA_NVRTC_HEADERS "${CUDA_TOOLKIT_INCLUDE}/cuda_fp16.hpp")
+set(CUDA_NVRTC_SYSTEM_HEADERS "")
+set(CUDA_NVRTC_EXCLUDE_HEADERS "utility")
+caffe_cuda_nvrtc_header_loader_py(${cuda_nvrtc_header_gen_folder}
+								  "${CUDA_NVRTC_HEADERS}"
+								  "${CMAKE_CXX_COMPILER}"
+								  "${CUDA_NVRTC_SYSTEM_HEADERS}"
+								  "${CUDA_NVRTC_EXCLUDE_HEADERS}")
+list(APPEND pre_build_srcs ${cuda_nvrtc_header_gen_folder}/cuda_nvrtc_headers.hpp)
+endif()
+
+add_library(pre_build STATIC ${pre_build_srcs})
 							 
 caffe_default_properties(pre_build)
 set_target_properties(pre_build PROPERTIES LINKER_LANGUAGE CXX)

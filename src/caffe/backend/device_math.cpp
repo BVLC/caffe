@@ -212,7 +212,7 @@ typename std::enable_if<signed_integer_is_same<Dtype>::value, void>::type
 Device::dot(const uint_tp n, vptr<const Dtype> x, vptr<const Dtype> y,
             Dtype *out) {
   shared_ptr<DeviceKernel> kernel
-      = math_programs_[proto_data_type_index<Dtype>()]
+      = math_programs_[data_type_index<Dtype>()]
                        ->GetKernel("caffe_gpu_dot");
 
   int_tp buffer_id = -1;

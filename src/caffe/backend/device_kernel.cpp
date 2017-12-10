@@ -2,7 +2,8 @@
 
 namespace caffe {
 
-DeviceKernel::DeviceKernel() : arg_idx_(0), device_(nullptr) {
+DeviceKernel::DeviceKernel(Device* dev, KernelArgs args)
+  : device_(dev), arg_idx_(0),  args_(args) {
 }
 
 void DeviceKernel::add_arg(const bool *arg) {

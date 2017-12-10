@@ -137,9 +137,19 @@ TYPED_TEST(EmbedLayerTest, TestForwardWithBias) {
 TYPED_TEST(EmbedLayerTest, TestGradient) {
   typedef typename TypeParam::Dtype Dtype;
   // Skip the test on unsupported OpenCL devices with double
-  if (!Caffe::GetDefaultDevice()->
-        CheckCapability("cl_khr_int64_base_atomics")
+  if (!(Caffe::GetDefaultDevice()->
+          CheckCapability(caffe::DEVICE_INT64_GLOBAL_ATOMICS_SUPPORT) ||
+        Caffe::GetDefaultDevice()->
+          CheckCapability(caffe::DEVICE_INT64_GLOBAL_EXTENDED_ATOMICS_SUPPORT))
         && is_same<Dtype, double>::value) {
+    return;
+  }
+  if (!(Caffe::GetDefaultDevice()->
+          CheckCapability(caffe::DEVICE_INT32_GLOBAL_ATOMICS_SUPPORT) ||
+        Caffe::GetDefaultDevice()->
+          CheckCapability(caffe::DEVICE_INT32_GLOBAL_EXTENDED_ATOMICS_SUPPORT))
+        && (is_same<Dtype, float>::value ||
+            is_same<Dtype, half_fp>::value)) {
     return;
   }
   LayerParameter layer_param;
@@ -163,9 +173,19 @@ TYPED_TEST(EmbedLayerTest, TestGradient) {
 TYPED_TEST(EmbedLayerTest, TestGradientWithBias) {
   typedef typename TypeParam::Dtype Dtype;
   // Skip the test on unsupported OpenCL devices with double
-  if (!Caffe::GetDefaultDevice()->
-        CheckCapability("cl_khr_int64_base_atomics")
+  if (!(Caffe::GetDefaultDevice()->
+          CheckCapability(caffe::DEVICE_INT64_GLOBAL_ATOMICS_SUPPORT) ||
+        Caffe::GetDefaultDevice()->
+          CheckCapability(caffe::DEVICE_INT64_GLOBAL_EXTENDED_ATOMICS_SUPPORT))
         && is_same<Dtype, double>::value) {
+    return;
+  }
+  if (!(Caffe::GetDefaultDevice()->
+          CheckCapability(caffe::DEVICE_INT32_GLOBAL_ATOMICS_SUPPORT) ||
+        Caffe::GetDefaultDevice()->
+          CheckCapability(caffe::DEVICE_INT32_GLOBAL_EXTENDED_ATOMICS_SUPPORT))
+        && (is_same<Dtype, float>::value ||
+            is_same<Dtype, half_fp>::value)) {
     return;
   }
   LayerParameter layer_param;

@@ -12,8 +12,8 @@ class Device;
 
 class CudaDeviceKernel : public DeviceKernel {
  public:
-  explicit CudaDeviceKernel(Device *dev, CUfunction cuda_kernel,
-                              KernelArgs args);
+  explicit CudaDeviceKernel(Device *dev, shared_ptr<CUfunction> cuda_kernel,
+                            KernelArgs args);
   virtual void Execute(vector<size_t> group, vector<size_t> local);
 
   virtual void set_arg(uint_tp idx, const bool *arg);
@@ -59,7 +59,7 @@ class CudaDeviceKernel : public DeviceKernel {
   virtual void set_arg(uint_tp idx, vptr<const void> *arg);
 
  private:
-  CUfunction cuda_kernel_;
+  shared_ptr<CUfunction> cuda_kernel_;
   vector<void*> cuda_args_;
 
 };

@@ -1661,8 +1661,9 @@ string LibDNNDeconv<Dtype, MItype, MOtype>::generate_fw_kernels(string name) {
 
 template<typename Dtype, typename MItype, typename MOtype>
 void LibDNNDeconv<Dtype, MItype, MOtype>::GenerateKernels() {
-  stringstream ss;
+  this->program_ = this->dev_ptr_->CreateProgram();
 
+  stringstream ss;
   ss << this->program_->setup();
   ss << this->program_->template define_vector_type<Dtype>("Dtype", 0, 16);
   ss << this->program_->template define_vector_type<Dtype>("MItype", 0, 16);

@@ -11,10 +11,17 @@ namespace caffe {
 #ifdef USE_OPENCL
 
 OclDeviceKernel::OclDeviceKernel(Device* dev, viennacl::ocl::kernel ocl_ker,
-                                 KernelArgs args) : DeviceKernel() {
-  this->device_ = dev;
-  this->ocl_kernel_ = ocl_ker;
-  this->args_ = args;
+                                 KernelArgs args) : DeviceKernel(dev, args),
+                                 ocl_arg_offsets_(args.size()),
+                                 ocl_kernel_(ocl_ker) {
+  int_tp offset = 0;
+  for (size_t i = 0; i < args.size(); ++i) {
+    ocl_arg_offsets_[i] = offset;
+    uint64_t flags = std::get<2>(args[i]);
+    if ((flags & KERNEL_ARG_MEM_OFFSET) == KERNEL_ARG_MEM_OFFSET) {
+      ++offset;
+    }
+  }
 }
 
 void OclDeviceKernel::Execute(vector<size_t> group,
@@ -62,84 +69,97 @@ viennacl::ocl::kernel OclDeviceKernel::get_ocl_kernel() {
 }
 
 void OclDeviceKernel::set_arg(uint_tp idx, const bool *arg) {
-  int8_t converted_arg = static_cast<int8_t>(*arg);
-  clSetKernelArg(this->ocl_kernel_.handle().get(), idx,
+  int8_t converted_arg = *arg ? 1 : 0;
+  int_tp curr_arg_idx = idx + ocl_arg_offsets_[idx];
+  clSetKernelArg(this->ocl_kernel_.handle().get(), curr_arg_idx,
                  safe_sizeof<int8_t>(), &converted_arg);
-  this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
+  this->arg_idx_ = std::max(idx + 1, this->arg_idx_);
 }
 void OclDeviceKernel::set_arg(uint_tp idx, const char *arg) {
-  clSetKernelArg(this->ocl_kernel_.handle().get(), idx,
+  int_tp curr_arg_idx = idx + ocl_arg_offsets_[idx];
+  clSetKernelArg(this->ocl_kernel_.handle().get(), curr_arg_idx,
                  safe_sizeof<char>(), &arg);
-  this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
+  this->arg_idx_ = std::max(idx + 1, this->arg_idx_);
 }
 void OclDeviceKernel::set_arg(uint_tp idx, const int8_t *arg) {
-  clSetKernelArg(this->ocl_kernel_.handle().get(), idx,
+  int_tp curr_arg_idx = idx + ocl_arg_offsets_[idx];
+  clSetKernelArg(this->ocl_kernel_.handle().get(), curr_arg_idx,
                  safe_sizeof<int8_t>(), arg);
-  this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
+  this->arg_idx_ = std::max(idx + 1, this->arg_idx_);
 }
 void OclDeviceKernel::set_arg(uint_tp idx, const int16_t *arg) {
-  clSetKernelArg(this->ocl_kernel_.handle().get(), this->arg_idx_,
+  int_tp curr_arg_idx = idx + ocl_arg_offsets_[idx];
+  clSetKernelArg(this->ocl_kernel_.handle().get(), curr_arg_idx,
                  safe_sizeof<int16_t>(), arg);
-  this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
+  this->arg_idx_ = std::max(idx + 1, this->arg_idx_);
 }
 void OclDeviceKernel::set_arg(uint_tp idx, const int32_t  *arg) {
-  clSetKernelArg(this->ocl_kernel_.handle().get(), this->arg_idx_,
+  int_tp curr_arg_idx = idx + ocl_arg_offsets_[idx];
+  clSetKernelArg(this->ocl_kernel_.handle().get(), curr_arg_idx,
                  safe_sizeof<int32_t>(), arg);
-  this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
+  this->arg_idx_ = std::max(idx + 1, this->arg_idx_);
 }
 void OclDeviceKernel::set_arg(uint_tp idx, const int64_t *arg) {
-  clSetKernelArg(this->ocl_kernel_.handle().get(), this->arg_idx_,
+  int_tp curr_arg_idx = idx + ocl_arg_offsets_[idx];
+  clSetKernelArg(this->ocl_kernel_.handle().get(), curr_arg_idx,
                  safe_sizeof<int64_t>(), arg);
-  this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
+  this->arg_idx_ = std::max(idx + 1, this->arg_idx_);
 }
 void OclDeviceKernel::set_arg(uint_tp idx, const uint8_t *arg) {
-  clSetKernelArg(this->ocl_kernel_.handle().get(), this->arg_idx_,
+  int_tp curr_arg_idx = idx + ocl_arg_offsets_[idx];
+  clSetKernelArg(this->ocl_kernel_.handle().get(), curr_arg_idx,
                  safe_sizeof<uint8_t>(), arg);
-  this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
+  this->arg_idx_ = std::max(idx + 1, this->arg_idx_);
 }
 void OclDeviceKernel::set_arg(uint_tp idx, const uint16_t *arg) {
-  clSetKernelArg(this->ocl_kernel_.handle().get(), this->arg_idx_,
+  int_tp curr_arg_idx = idx + ocl_arg_offsets_[idx];
+  clSetKernelArg(this->ocl_kernel_.handle().get(), curr_arg_idx,
                  safe_sizeof<uint16_t>(), arg);
-  this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
+  this->arg_idx_ = std::max(idx + 1, this->arg_idx_);
 }
 void OclDeviceKernel::set_arg(uint_tp idx, const uint32_t *arg) {
-  clSetKernelArg(this->ocl_kernel_.handle().get(), this->arg_idx_,
+  int_tp curr_arg_idx = idx + ocl_arg_offsets_[idx];
+  clSetKernelArg(this->ocl_kernel_.handle().get(), curr_arg_idx,
                  safe_sizeof<uint32_t>(), arg);
-  this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
+  this->arg_idx_ = std::max(idx + 1, this->arg_idx_);
 }
 void OclDeviceKernel::set_arg(uint_tp idx, const uint64_t *arg) {
-  clSetKernelArg(this->ocl_kernel_.handle().get(), this->arg_idx_,
+  int_tp curr_arg_idx = idx + ocl_arg_offsets_[idx];
+  clSetKernelArg(this->ocl_kernel_.handle().get(), curr_arg_idx,
                  safe_sizeof<uint64_t>(), arg);
-  this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
+  this->arg_idx_ = std::max(idx + 1, this->arg_idx_);
 }
 void OclDeviceKernel::set_arg(uint_tp idx, const half_fp *arg) {
   float converted_arg = static_cast<float>(*arg);
-  clSetKernelArg(this->ocl_kernel_.handle().get(), this->arg_idx_,
+  int_tp curr_arg_idx = idx + ocl_arg_offsets_[idx];
+  clSetKernelArg(this->ocl_kernel_.handle().get(), curr_arg_idx,
                  safe_sizeof<float>(), &converted_arg);
-  this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
+  this->arg_idx_ = std::max(idx + 1, this->arg_idx_);
 }
 void OclDeviceKernel::set_arg(uint_tp idx, const float *arg) {
-  clSetKernelArg(this->ocl_kernel_.handle().get(), this->arg_idx_,
+  int_tp curr_arg_idx = idx + ocl_arg_offsets_[idx];
+  clSetKernelArg(this->ocl_kernel_.handle().get(), curr_arg_idx,
                  safe_sizeof<float>(), arg);
-  this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
+  this->arg_idx_ = std::max(idx + 1, this->arg_idx_);
 }
 void OclDeviceKernel::set_arg(uint_tp idx, const double *arg) {
-  clSetKernelArg(this->ocl_kernel_.handle().get(), this->arg_idx_,
+  int_tp curr_arg_idx = idx + ocl_arg_offsets_[idx];
+  clSetKernelArg(this->ocl_kernel_.handle().get(), curr_arg_idx,
                  safe_sizeof<double>(), arg);
-  this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
+  this->arg_idx_ = std::max(idx + 1, this->arg_idx_);
 }
 
 inline void OclDeviceKernel::set_arg_helper(uint_tp idx, cl_mem mem,
-                                                   uint_tp off) {
-  clSetKernelArg(this->ocl_kernel_.handle().get(), this->arg_idx_,
+                                            uint_tp off) {
+  int_tp curr_arg_idx = idx + ocl_arg_offsets_[idx];
+  clSetKernelArg(this->ocl_kernel_.handle().get(), curr_arg_idx,
                  sizeof(cl_mem), &mem);
-  this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
   uint64_t flags = args_.size() > idx ? std::get<2>(args_[idx]) : 0ULL;
   if ((flags & KERNEL_ARG_MEM_OFFSET) == KERNEL_ARG_MEM_OFFSET) {
-    clSetKernelArg(this->ocl_kernel_.handle().get(), this->arg_idx_,
+    clSetKernelArg(this->ocl_kernel_.handle().get(), curr_arg_idx + 1,
                    safe_sizeof<uint_tp>(), &off);
-    this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
   }
+  this->arg_idx_ = std::max(idx + 1, this->arg_idx_);
 }
 
 void OclDeviceKernel::set_arg(uint_tp idx, vptr<bool> *arg) {

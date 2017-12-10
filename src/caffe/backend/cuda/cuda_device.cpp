@@ -1,10 +1,11 @@
+#ifdef USE_CUDA
 #include "caffe/backend/cuda/cuda_device.hpp"
 #include "caffe/backend/cuda/cuda_device_program.hpp"
 #include "caffe/backend/cuda/cuda_dev_ptr.hpp"
 
-namespace caffe {
+#include "caffe/cuda_nvrtc_headers.hpp"
 
-#ifdef USE_CUDA
+namespace caffe {
 
 CudaDevice::CudaDevice(uint_tp id, uint_tp list_id) {
   current_queue_id_ = 0;
@@ -19,6 +20,13 @@ CudaDevice::CudaDevice(uint_tp id, uint_tp list_id) {
   name_ = "";
 }
 
+CudaDevice::~CudaDevice() {
+  for (size_t i = 0; i < cuda_headers_.size(); ++i) {
+    free(cuda_headers_[i]);
+    free(cuda_header_sources_[i]);
+  }
+}
+
 void CudaDevice::Init() {
   cudaDeviceProp prop;
   CUDA_CHECK(cudaGetDeviceProperties(&prop, id_));
@@ -30,8 +38,35 @@ void CudaDevice::Init() {
   max_group_sizes_[2] = prop.maxGridSize[2];
   max_local_size_ = prop.maxThreadsPerBlock;
 
+  ReadHeaders();
+
   this->CreateMathProgram();
   this->CreateIm2ColProgram();
+}
+
+void CudaDevice::ReadHeaders() {
+  map<string, string> cuda_headers = get_cuda_nvrtc_headers();
+  for (map<string, string>::iterator it = cuda_headers.begin();
+      it != cuda_headers.end(); ++it) {
+    char* header_name = new char[it->first.length() + 1];
+    strcpy(header_name, it->first.c_str());
+    cuda_headers_.push_back(header_name);
+    char* header_source = new char[it->second.length() + 1];
+    strcpy(header_source, it->second.c_str());
+    cuda_header_sources_.push_back(header_source);
+  }
+}
+
+int_tp CudaDevice::get_header_count() {
+  return cuda_headers_.size();
+}
+
+char** CudaDevice::get_header_names() {
+  return &cuda_headers_[0];
+}
+
+char** CudaDevice::get_header_sources() {
+  return &cuda_header_sources_[0];
 }
 
 string CudaDevice::name() {
@@ -96,6 +131,10 @@ bool CudaDevice::is_host_unified() {
 void CudaDevice::get_threads(const vector<size_t>* work_size,
                              vector<size_t>* group, vector<size_t>* local,
                              DeviceKernel* kernel, bool auto_select) {
+  CHECK(work_size);
+  CHECK(local);
+  CHECK(group);
+  CHECK(kernel);
 
   for(uint_tp i = 0; i < work_size->size(); ++i) {
     local->insert(local->begin() + i, 1);
@@ -103,12 +142,19 @@ void CudaDevice::get_threads(const vector<size_t>* work_size,
   }
 
   bool done = false;
+  vector<bool> local_done(work_size->size(), false);
   while (!done) {
+    done = true;
+    for (uint_tp i = 0; i < work_size->size(); ++i) {
+      done = done && local_done[i];
+    }
     for (uint_tp i = 0; i < work_size->size(); ++i) {
       if (!done
-          && ((*local)[i] < (*work_size)[i])
-          && ((*local)[i] * 2 < max_local_sizes_[i])) {
+          && ((*local)[i] <= (*work_size)[i])
+          && ((*local)[i] * 2 <= max_local_sizes_[i])) {
         (*local)[i] *= 2;
+      } else {
+        local_done[i] = true;
       }
       size_t total_local_size = 1;
       for (uint_tp j = 0; j < work_size->size(); ++j) {
@@ -137,13 +183,31 @@ bool CudaDevice::CheckVendor(string vendor) {
   return false;
 }
 
-bool CudaDevice::CheckCapability(string cap) {
-  if (cap == "cl_khr_int32_base_atomics" ||
-      cap == "cl_khr_int64_base_atomics" ||
-      cap == "cl_khr_global_int32_base_atomics") {
-    return true;
+bool CudaDevice::CheckCapability(DeviceCapability cap) {
+  switch(cap) {
+    case DEVICE_FP16_SUPPORT:
+      return true;
+    case DEVICE_FP32_SUPPORT:
+      return true;
+    case DEVICE_FP64_SUPPORT:
+      return true;
+    case DEVICE_INT32_LOCAL_ATOMICS_SUPPORT:
+      return true;
+    case DEVICE_INT64_LOCAL_ATOMICS_SUPPORT:
+      return true;
+    case DEVICE_INT32_LOCAL_EXTENDED_ATOMICS_SUPPORT:
+      return true;
+    case DEVICE_INT64_LOCAL_EXTENDED_ATOMICS_SUPPORT:
+      return true;
+    case DEVICE_INT32_GLOBAL_ATOMICS_SUPPORT:
+      return true;
+    case DEVICE_INT64_GLOBAL_ATOMICS_SUPPORT:
+      return true;
+    case DEVICE_INT32_GLOBAL_EXTENDED_ATOMICS_SUPPORT:
+      return true;
+    case DEVICE_INT64_GLOBAL_EXTENDED_ATOMICS_SUPPORT:
+      return true;
   }
-  return false;
 }
 
 bool CudaDevice::CheckType(string type) {
@@ -163,6 +227,6 @@ void CudaDevice::SwitchQueue(uint_tp id) { }
 
 void CudaDevice::FinishQueues() { }
 
-#endif  // USE_CUDA
-
 }  // namespace caffe
+
+#endif  // USE_CUDA

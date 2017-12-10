@@ -1,16 +1,31 @@
 #include <boost/filesystem.hpp>
 #include "caffe/backend/cuda/cuda_device_program.hpp"
 #include "caffe/backend/cuda/cuda_device.hpp"
+#include <iostream>
+#include <fstream>
 
 namespace caffe {
 
 #ifdef USE_CUDA
 
-CudaDeviceProgram::CudaDeviceProgram(Device* dev) : DeviceProgram(dev) {
+CudaDeviceProgram::CudaDeviceProgram(Device* dev) : DeviceProgram(dev),
+    cuda_program_(nullptr), cuda_module_(nullptr) {
+  cuda_program_ = std::make_shared<nvrtcProgram>();
+  cuda_module_ = std::make_shared<CUmodule>();
+}
+
+CudaDeviceProgram::~CudaDeviceProgram() {
+  if (cuda_program_ != nullptr) {
+    nvrtcDestroyProgram(cuda_program_.get());
+  }
 }
 
 bool CudaDeviceProgram::Compile(bool load_cache, bool store_cache) {
-  nvrtcCreateProgram(&cuda_program_, src_.c_str(), NULL, 0, NULL, NULL);
+
+  nvrtcCreateProgram(cuda_program_.get(), src_.c_str(), NULL,
+                  static_cast<CudaDevice*>(this->device_)->get_header_count(),
+                  static_cast<CudaDevice*>(this->device_)->get_header_sources(),
+                  static_cast<CudaDevice*>(this->device_)->get_header_names());
 
   vector<const char*> build_opts;
 
@@ -19,22 +34,25 @@ bool CudaDeviceProgram::Compile(bool load_cache, bool store_cache) {
 
   string arch_opt = "--gpu-architecture=compute_"
       + std::to_string(prop.major) + std::to_string(prop.minor);
-  string stdcpp_opt = "--std=c++11";
+  // string stdcpp_opt = "--std=c++11";
   string fum_opt = "--use_fast_math";
 
   build_opts.push_back(arch_opt.c_str());
-  build_opts.push_back(stdcpp_opt.c_str());
+  //build_opts.push_back(stdcpp_opt.c_str());
   if (this->device_->is_fast_unsafe_math()) {
     build_opts.push_back(fum_opt.c_str());
   }
-  nvrtcCompileProgram(cuda_program_, build_opts.size(), &build_opts[0]);
+  nvrtcCompileProgram(*cuda_program_.get(), build_opts.size(), &build_opts[0]);
 
   size_t ptxSize;
-  nvrtcGetPTXSize(cuda_program_, &ptxSize);
+  nvrtcGetPTXSize(*cuda_program_.get(), &ptxSize);
   char *ptx = new char[ptxSize];
-  nvrtcGetPTX(cuda_program_, ptx);
+  nvrtcGetPTX(*cuda_program_.get(), ptx);
 
-  cuModuleLoadDataEx(&cuda_module_, ptx, 0, 0, 0);
+  cuModuleLoadDataEx(cuda_module_.get(), ptx, 0, 0, 0);
+
+  CUfunction kernel;
+  cuModuleGetFunction(&kernel, *cuda_module_.get(), "caffe_gpu_memset");
 
 #ifndef NDEBUG
   string debug_path = ".caffe_debug";
@@ -51,9 +69,9 @@ bool CudaDeviceProgram::Compile(bool load_cache, bool store_cache) {
 
   {
     size_t log_size;
-    nvrtcGetProgramLogSize(cuda_program_, &log_size);
+    nvrtcGetProgramLogSize(*cuda_program_.get(), &log_size);
     vector<char> log(log_size);
-    nvrtcGetProgramLog(cuda_program_, log.data());
+    nvrtcGetProgramLog(*cuda_program_.get(), log.data());
 
     std::cout << "CUDA compile log:" << std::endl;
     std::cout << log.data() << std::endl;
@@ -62,19 +80,19 @@ bool CudaDeviceProgram::Compile(bool load_cache, bool store_cache) {
                      "wb");
     fwrite(ptx, sizeof(char), ptxSize, fp);
     fclose(fp);
-    free(ptx);
   }
 #endif  // NDEBUG
+  free(ptx);
 
   return true;
 }
 
 
-shared_ptr<DeviceKernel>
-              CudaDeviceProgram::GetKernel(string name) {
-
-  CUfunction kernel;
-  cuModuleGetFunction(&kernel, cuda_module_, name.c_str());
+shared_ptr<DeviceKernel> CudaDeviceProgram::GetKernel(string name) {
+  shared_ptr<CUfunction> kernel = std::make_shared<CUfunction>();
+  CHECK(cuda_module_.get()) << "CUDA module invalid.";
+  cuModuleGetFunction(kernel.get(), *cuda_module_.get(), name.c_str());
+  CHECK(kernel.get()) << "Loading CUDA kernel " << name << " failed.";
 
   KernelArgs args;
 
@@ -124,6 +142,11 @@ string CudaDeviceProgram::kernel_loop(string type,
 
 string CudaDeviceProgram::setup() {
   stringstream ss;
+
+#ifdef USE_HALF
+  ss << "#include \"cuda_fp16.h\"" << std::endl;
+#endif  // USE_HALF
+
   ss << "#define int8_t char" << std::endl;
   ss << "#define int16_t short" << std::endl;
   ss << "#define int32_t int" << std::endl;
@@ -139,20 +162,20 @@ string CudaDeviceProgram::setup() {
   ss << "#ifdef " << "int_tpc" << std::endl;
   ss << "#undef " << "int_tpc" << std::endl;
   ss << "#endif  //" << "int_tpc" << std::endl;
-  ss << "#define " << "int_tpc" << "long long" << std::endl;
+  ss << "#define " << "int_tpc" << " long long" << std::endl;
   ss << "#ifdef " << "uint_tpc" << std::endl;
   ss << "#undef " << "uint_tpc" << std::endl;
   ss << "#endif  //" << "uint_tpc" << std::endl;
-  ss << "#define " << "uint_tpc" << "unsigned long long" << std::endl;
+  ss << "#define " << "uint_tpc" << " unsigned long long" << std::endl;
 #else  // USE_INDEX_64
   ss << "#ifdef " << "int_tpc" << std::endl;
   ss << "#undef " << "int_tpc" << std::endl;
   ss << "#endif  //" << "int_tpc" << std::endl;
-  ss << "#define " << "int_tpc" << "int" << std::endl;
+  ss << "#define " << "int_tpc" << " int" << std::endl;
   ss << "#ifdef " << "uint_tpc" << std::endl;
   ss << "#undef " << "uint_tpc" << std::endl;
   ss << "#endif  //" << "uint_tpc" << std::endl;
-  ss << "#define " << "uint_tpc" << "unsigned int" << std::endl;
+  ss << "#define " << "uint_tpc" << " unsigned int" << std::endl;
 #endif  // USE_INDEX_64
   return ss.str();
 }

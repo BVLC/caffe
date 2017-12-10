@@ -73,8 +73,8 @@ class OclDeviceKernel : public DeviceKernel {
  private:
   inline void set_arg_helper(uint_tp idx, cl_mem mem, uint_tp off);
 
+  vector<uint_tp> ocl_arg_offsets_;
   viennacl::ocl::kernel ocl_kernel_;
-
 };
 
 #endif  // USE_OPENCL

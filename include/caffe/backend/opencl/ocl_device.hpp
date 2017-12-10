@@ -19,7 +19,7 @@ class OclDevice : public Device {
 #endif  // USE_CLFFT
 
   virtual void Init();
-  virtual bool CheckCapability(string cap);
+  virtual bool CheckCapability(DeviceCapability cap);
   virtual bool CheckVendor(string vendor);
   virtual bool CheckType(string type);
   virtual void SwitchQueue(uint_tp id);

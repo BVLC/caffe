@@ -221,7 +221,8 @@ TYPED_TEST(LibDNNConvolutionLayerTest, TestSetupLibDNN) {
   // setting group should not change the shape
   convolution_param->set_num_output(3);
   convolution_param->set_group(3);
-  layer.reset(new LibDNNConvolutionLayer<TypeParam, TypeParam, TypeParam>(layer_param));
+  layer.reset(new LibDNNConvolutionLayer
+                                <TypeParam, TypeParam, TypeParam>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), 2);
   EXPECT_EQ(this->blob_top_->channels(), 3);
@@ -348,7 +349,8 @@ TYPED_TEST(LibDNNConvolutionLayerTest, TestSobelConvolutionLibDNN) {
   convolution_param->set_stride_w(1);
   convolution_param->set_num_output(1);
   convolution_param->set_bias_term(false);
-  layer.reset(new LibDNNConvolutionLayer<TypeParam, TypeParam, TypeParam>(layer_param));
+  layer.reset(
+      new LibDNNConvolutionLayer<TypeParam, TypeParam, TypeParam>(layer_param));
   layer->blobs().resize(1);
   layer->blobs()[0].reset(new Blob<TypeParam>(1, 3, 3, 1));
   TypeParam* weights_1 = layer->blobs()[0]->mutable_cpu_data();
@@ -370,7 +372,8 @@ TYPED_TEST(LibDNNConvolutionLayerTest, TestSobelConvolutionLibDNN) {
   convolution_param->set_stride_w(2);
   convolution_param->set_num_output(1);
   convolution_param->set_bias_term(false);
-  layer.reset(new LibDNNConvolutionLayer<TypeParam, TypeParam, TypeParam>(layer_param));
+  layer.reset(
+      new LibDNNConvolutionLayer<TypeParam, TypeParam, TypeParam>(layer_param));
   layer->blobs().resize(1);
   layer->blobs()[0].reset(new Blob<TypeParam>(1, 1, 1, 3));
   TypeParam* weights_2 = layer->blobs()[0]->mutable_cpu_data();

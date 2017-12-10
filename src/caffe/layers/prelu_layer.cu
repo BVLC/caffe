@@ -35,7 +35,8 @@ void PReLULayer<Dtype, MItype, MOtype>::GenerateProgram() {
     ss << this->device_program_->function("PReLUForward", args);
     ss << this->device_program_->kernel_loop("uint_tp", "index", "n");
     ss << "int_tp c = (index / dim) % channels / div_factor;" << std::endl;
-    ss << "out[index] = in[index] > 0 ? in[index] : in[index] * slope_data[c];"
+    ss << "out[index] = in[index] > (Dtype)0 ? in[index] : in[index]"
+       << " * slope_data[c];"
        << std::endl;
     ss << "}" << std::endl;
     ss << "}" << std::endl;
@@ -63,7 +64,9 @@ void PReLULayer<Dtype, MItype, MOtype>::GenerateProgram() {
     ss << this->device_program_->kernel_loop("uint_tp", "index", "n");
     ss << "int_tp c = (index / dim) % channels / div_factor;" << std::endl;
     ss << "out_diff[index] = in_diff[index]"
-       << " * ((in_data[index] > 0) + (in_data[index] <= 0) * slope_data[c]);"
+       << " * ((in_data[index] > (Dtype)0) ? (Dtype)1 : (Dtype)0"
+       << " + ((in_data[index] <= (Dtype)0) ? (Dtype)1 : (Dtype)0)"
+       << " * slope_data[c]);"
        << std::endl;
     ss << "}" << std::endl;
     ss << "}" << std::endl;
@@ -86,11 +89,13 @@ void PReLULayer<Dtype, MItype, MOtype>::GenerateProgram() {
     ss << this->device_program_->function("PReLUParamBackward", args);
     ss << this->device_program_->kernel_loop("uint_tp", "index", "n");
     ss << "out_diff[index] = in_diff[index] * in_data[index]"
-       << " * (in_data[index] <= 0);" << std::endl;
+       << " * ((in_data[index] <= (Dtype)0) ? (Dtype)1: (Dtype)0);"
+       << std::endl;
     ss << "for (int k = 1; k < rows; k++) {" << std::endl;
     ss << "out_diff[index] += in_diff[index + k * rowPitch]"
        << " * in_data[index + k * rowPitch]"
-       << " * (in_data[index + k * rowPitch] <= 0);" << std::endl;
+       << " * ((in_data[index + k * rowPitch] <= (Dtype)0)"
+       << " ? (Dtype)1 : (Dtype)0);" << std::endl;
     ss << "}" << std::endl;
     ss << "}" << std::endl;
     ss << "}" << std::endl;
@@ -164,7 +169,7 @@ void PReLULayer<Dtype, MItype, MOtype>::Backward_gpu(
     int_tp top_offset = top[0]->offset(1);
 
     shared_ptr<DeviceKernel> kernel =
-                         this->device_program_->GetKernel("PReLuParamBackward");
+                         this->device_program_->GetKernel("PReLUParamBackward");
     kernel->add_arg(&cdim);
     kernel->add_arg(&num);
     kernel->add_arg(&top_offset);

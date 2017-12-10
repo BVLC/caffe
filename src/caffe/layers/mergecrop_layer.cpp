@@ -11,12 +11,12 @@ void MergeCropLayer<Dtype, MItype, MOtype>::LayerSetUp(
                                           const vector<Blob<MItype>*>& bottom,
                                           const vector<Blob<MOtype>*>& top) {
   // By default, forward both a and b
-  forward_.push_back(1);
-  forward_.push_back(1);
+  forward_.push_back(true);
+  forward_.push_back(true);
 
   // By default, backward a and do not backward b
-  backward_.push_back(1);
-  backward_.push_back(0);
+  backward_.push_back(true);
+  backward_.push_back(false);
 
   op_ = MergeCropParameter_MergeOp_STACK;
 

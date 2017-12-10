@@ -12,6 +12,10 @@
 
 #ifndef CPU_ONLY  // CPU-GPU test
 
+#define EPS_FLOAT 0
+#define EPS_DOUBLE 0
+#define EPS_HALF 3
+
 namespace caffe {
 
 template<typename TypeParam>
@@ -53,6 +57,17 @@ class MergeCropLayerTest : public GPUDeviceTest<TypeParam> {
   }
 
   void TestForward(MergeCropParameter_MergeOp op) {
+    TypeParam eps = 0.0;
+    if (std::is_same<TypeParam, half_fp>::value) {
+      eps = EPS_HALF;
+    }
+    if (std::is_same<TypeParam, float>::value) {
+      eps = EPS_FLOAT;
+    }
+    if (std::is_same<TypeParam, double>::value) {
+      eps = EPS_DOUBLE;
+    }
+
     vector<int_tp> shape_a = blob_bottom_a_->shape();
     vector<int_tp> shape_b = blob_bottom_b_->shape();
 
@@ -66,7 +81,6 @@ class MergeCropLayerTest : public GPUDeviceTest<TypeParam> {
         dec *= 10;
       }
       blob_bottom_a_->mutable_cpu_data()[i] = out;
-      // std::cout << i << " - " << out << std::endl;
     }
 
     for (int_tp i = 0; i < blob_bottom_b_->count(); ++i) {
@@ -79,9 +93,7 @@ class MergeCropLayerTest : public GPUDeviceTest<TypeParam> {
         dec *= 10;
       }
       blob_bottom_b_->mutable_cpu_data()[i] = out;
-      // std::cout << i << " - " << out << std::endl;
     }
-
 
     LayerParameter layer_param;
     MergeCropParameter *merge_param = layer_param.mutable_mergecrop_param();
@@ -122,8 +134,7 @@ class MergeCropLayerTest : public GPUDeviceTest<TypeParam> {
             dec *= 10;
           }
         }
-        EXPECT_EQ(out, blob_top_->mutable_cpu_data()[i]);
-        // std::cout << i << " - " << out << std::endl;
+        EXPECT_NEAR(out, blob_top_->mutable_cpu_data()[i], eps);
       }
     } else {
       // Test copy from a & b
@@ -137,13 +148,23 @@ class MergeCropLayerTest : public GPUDeviceTest<TypeParam> {
           val /= shape_a[d];
           dec *= 10;
         }
-        EXPECT_EQ(out, blob_top_->mutable_cpu_data()[i]);
-        // std::cout << i << " - " << out << std::endl;
+        EXPECT_NEAR(out, blob_top_->mutable_cpu_data()[i], eps);
       }
     }
   }
 
   void TestBackward(MergeCropParameter_MergeOp op) {
+    TypeParam eps = 0.0;
+    if (std::is_same<TypeParam, half_fp>::value) {
+      eps = EPS_HALF;
+    }
+    if (std::is_same<TypeParam, float>::value) {
+      eps = EPS_FLOAT;
+    }
+    if (std::is_same<TypeParam, double>::value) {
+      eps = EPS_DOUBLE;
+    }
+
     vector<int_tp> shape_a = blob_bottom_a_->shape();
     vector<int_tp> shape_b = blob_bottom_b_->shape();
     vector<int_tp> shape_top = blob_top_->shape();
@@ -158,7 +179,6 @@ class MergeCropLayerTest : public GPUDeviceTest<TypeParam> {
         dec *= 10;
       }
       blob_bottom_a_->mutable_cpu_data()[i] = out;
-      // std::cout << i << " - " << out << std::endl;
     }
 
     for (int_tp i = 0; i < blob_bottom_b_->count(); ++i) {
@@ -171,7 +191,6 @@ class MergeCropLayerTest : public GPUDeviceTest<TypeParam> {
         dec *= 10;
       }
       blob_bottom_b_->mutable_cpu_data()[i] = out;
-      // std::cout << i << " - " << out << std::endl;
     }
 
     LayerParameter layer_param;
@@ -197,8 +216,7 @@ class MergeCropLayerTest : public GPUDeviceTest<TypeParam> {
         val /= shape_a[d];
         dec *= 10;
       }
-      EXPECT_EQ(out, blob_bottom_a_->mutable_cpu_data()[i]);
-      // std::cout << i << " - " << out << std::endl;
+      EXPECT_NEAR(out, blob_bottom_a_->mutable_cpu_data()[i], eps);
     }
   }
 

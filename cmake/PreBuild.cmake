@@ -1,19 +1,16 @@
 # Executes scripts to generate code before compiling
 
 set(macro_gen_folder "${PROJECT_BINARY_DIR}/include/caffe/")
-include_directories("${PROJECT_BINARY_DIR}/include")
 
 set(layer_creator_gen_folder "${PROJECT_BINARY_DIR}/include/caffe/")
-include_directories("${PROJECT_BINARY_DIR}/include")
 
 set(blob_creator_gen_folder "${PROJECT_BINARY_DIR}/include/caffe/")
-include_directories("${PROJECT_BINARY_DIR}/include")
 
 set(quantizer_creator_gen_folder "${PROJECT_BINARY_DIR}/include/caffe/")
-include_directories("${PROJECT_BINARY_DIR}/include")
 
 set(test_macros_gen_folder "${PROJECT_BINARY_DIR}/include/caffe/")
-include_directories("${PROJECT_BINARY_DIR}/include")
+
+set(cuda_nvrtc_header_gen_folder "${PROJECT_BINARY_DIR}/include/caffe/")
 
 ################################################################################################
 function(caffe_prebuild_macros_py output_dir)
@@ -57,5 +54,18 @@ function(caffe_prebuild_test_macros_py output_dir)
 		COMMAND ${PYTHON_EXECUTABLE} ${Caffe_SCRIPT_DIR}/prebuild/test_macros.py ${output_dir}
 		OUTPUT ${output_dir}/test_macros.hpp
 		COMMENT "Generating test macros source (python -> C++)."
+	)
+endfunction()
+
+function(caffe_cuda_nvrtc_header_loader_py output_dir header_files compiler standard_include_names header_exclude_names)
+	add_custom_command(
+		COMMAND ${PYTHON_EXECUTABLE} ${Caffe_SCRIPT_DIR}/prebuild/cuda_nvrtc_header_loader.py
+			"--output_dir" ${output_dir}
+			"--header_files" ${header_files}
+			"--compiler" ${compiler}
+			"--standard_include_names" ${standard_include_names}
+			"--header_exclude_names" ${header_exclude_names}
+		OUTPUT ${output_dir}/cuda_nvrtc_headers.hpp
+		COMMENT "Loading CUDA NVRTC header files (python -> C++)."
 	)
 endfunction()

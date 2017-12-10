@@ -26,7 +26,8 @@ void ReLULayer<Dtype, MItype, MOtype>::GenerateProgram() {
                     "negative_slope", KERNEL_ARG_CONST));
   ss << this->device_program_->function("ReLUForward", fw_args);
   ss << this->device_program_->kernel_loop("uint_tp", "index", "n");
-  ss << "out[index] = in[index] > 0 ? in[index] : in[index] * negative_slope;"
+  ss << "out[index] = in[index] > (Dtype)0 ? in[index] : in[index]"
+     << " * negative_slope;"
      << std::endl;
   ss << "}" << std::endl;
   ss << "}" << std::endl;
@@ -45,7 +46,9 @@ void ReLULayer<Dtype, MItype, MOtype>::GenerateProgram() {
   ss << this->device_program_->function("ReLUBackward", bw_args);
   ss << this->device_program_->kernel_loop("uint_tp", "index", "n");
   ss << "out_diff[index] = in_diff[index]"
-     << " * ((in_data[index] > 0) + (in_data[index] <= 0) * negative_slope);"
+     << " * (((in_data[index] > (Dtype)0) ? (Dtype)1 : (Dtype)0)"
+     << " + ((in_data[index] <= (Dtype)0) ? (Dtype)1 : (Dtype)0)"
+     << " * negative_slope);"
      << std::endl;
   ss << "}" << std::endl;
   ss << "}" << std::endl;
