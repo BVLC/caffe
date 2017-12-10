@@ -14,12 +14,18 @@ namespace caffe {
 class CudaDevice : public Device {
  public:
   explicit CudaDevice(uint_tp id, uint_tp list_id);
+  ~CudaDevice();
+
   template <typename Dtype>
   void scal_str(const int_tp n, const Dtype alpha, vptr<Dtype> x,
                       cudaStream_t str);
 
+  int_tp get_header_count();
+  char** get_header_names();
+  char** get_header_sources();
+
   virtual void Init();
-  virtual bool CheckCapability(string cap);
+  virtual bool CheckCapability(DeviceCapability cap);
   virtual bool CheckVendor(string vendor);
   virtual bool CheckType(string type);
   virtual void SwitchQueue(uint_tp id);
@@ -156,6 +162,12 @@ class CudaDevice : public Device {
 
   virtual void scale_double(const uint_tp n, const double alpha,
                             vptr<const double> x, vptr<double> y);
+
+ private:
+  void ReadHeaders();
+
+  vector<char*> cuda_headers_;
+  vector<char*> cuda_header_sources_;
 };
 
 #endif  // USE_CUDA

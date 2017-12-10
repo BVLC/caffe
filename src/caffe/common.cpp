@@ -1,4 +1,3 @@
-
 #if defined(_MSC_VER)
 #include <process.h>
 #define getpid() _getpid()
@@ -42,6 +41,7 @@ static std::atomic<bool> first(true);
 // Device contexts are initialized once and shared on all threads
 vector< shared_ptr<Device> > Caffe::devices_;
 
+#ifdef USE_OPENCL
 inline vector<viennacl::ocl::platform> get_platforms_safe() {
   vector<viennacl::ocl::platform> ret;
   cl_int err;
@@ -59,6 +59,7 @@ inline vector<viennacl::ocl::platform> get_platforms_safe() {
 
   return ret;
 }
+#endif  // USE_OPENCL
 
 Caffe& Caffe::Get() {
   if (first.exchange(false)) {
@@ -447,6 +448,7 @@ void Caffe::SetDevices(vector<int> device_ids) {
   Get().devices_.clear();
   int cuda_device_count = 0;
 
+#ifdef USE_CUDA
   cudaGetDeviceCount(&cuda_device_count);
   for (int i = 0; i < cuda_device_count; ++i) {
     for (int j = 0; j < device_ids.size(); ++j) {
@@ -459,6 +461,7 @@ void Caffe::SetDevices(vector<int> device_ids) {
       }
     }
   }
+#endif  // USE_CUDA
 
   // Initialize OpenCL devices
 #ifdef USE_OPENCL

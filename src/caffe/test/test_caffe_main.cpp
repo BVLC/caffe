@@ -2,6 +2,7 @@
 
 #include "caffe/caffe.hpp"
 #include "caffe/test/test_caffe_main.hpp"
+#include "caffe/backend/device.hpp"
 
 #ifndef TEST_DEVICE
 #define TEST_DEVICE 0
@@ -15,72 +16,74 @@ cudaDeviceProp CAFFE_TEST_CUDA_PROP;
 #endif
 }
 
-#ifdef USE_OPENCL
-template <typename Dtype>
+template<typename Dtype>
 bool caffe::isSupported(void) {
-  return true;
+  return false;
 }
 
-template <>
-bool caffe::isSupported<float>(void) {
-  return true;
-}
-
-template <>
-bool caffe::isSupported<caffe::GPUDevice<float>>(void) {
-  return isSupported<float>();
-}
-
-template <>
-bool caffe::isSupported<double>(void) {
-  return caffe::Caffe::GetDefaultDevice()->backend() != caffe::BACKEND_OPENCL ||
-         caffe::Caffe::GetDefaultDevice()->CheckCapability("cl_khr_fp64");
-}
 #ifdef USE_HALF
-template <>
+template<>
 bool caffe::isSupported<half_fp>(void) {
-  return caffe::Caffe::GetDefaultDevice()->backend() != caffe::BACKEND_OPENCL ||
-         caffe::Caffe::GetDefaultDevice()->CheckCapability("cl_khr_fp16");
+  return caffe::Caffe::GetDefaultDevice()->
+      CheckCapability(caffe::DEVICE_FP16_SUPPORT);
 }
-
-template <>
-bool caffe::isSupported<caffe::GPUDevice<half_fp>>(void) {
-  return caffe::isSupported<half_fp>();
-}
-
-template <>
+template<>
 bool caffe::isSupported<caffe::CPUDevice<half_fp>>(void) {
   return true;
 }
-#endif
-template <>
-bool caffe::isSupported<caffe::GPUDevice<double>>(void) {
-  return caffe::isSupported<double>();
+template<>
+bool caffe::isSupported<caffe::GPUDevice<half_fp>>(void) {
+  return caffe::Caffe::GetDefaultDevice()->
+      CheckCapability(caffe::DEVICE_FP16_SUPPORT);
 }
+#endif  // USE_HALF
 
-template <>
-bool caffe::isSupported<caffe::CPUDevice<float>>(void) {
+#ifdef USE_SINGLE
+template<>
+bool caffe::isSupported<float>(void) {
   return true;
 }
+template<>
+bool caffe::isSupported<caffe::CPUDevice<float> >(void) {
+  return true;
+}
+template<>
+bool caffe::isSupported<caffe::GPUDevice<float> >(void) {
+  return true;
+}
+#endif  // USE_SINGLE
 
-template <>
+#ifdef USE_DOUBLE
+template<>
+bool caffe::isSupported<double>(void) {
+  return caffe::Caffe::GetDefaultDevice()->
+      CheckCapability(DEVICE_FP64_SUPPORT);
+}
+template<>
 bool caffe::isSupported<caffe::CPUDevice<double>>(void) {
   return true;
 }
+template<>
+bool caffe::isSupported<caffe::GPUDevice<double>>(void) {
+  return caffe::Caffe::GetDefaultDevice()->
+      CheckCapability(DEVICE_FP64_SUPPORT);
+}
+#endif  // USE_DOUBLE
+
+
 
 #if defined(USE_LEVELDB) && defined(USE_LMDB)
-template <>
+template<>
 bool caffe::isSupported<caffe::TypeLevelDB>(void) {
   return true;
 }
 
-template <>
+template<>
 bool caffe::isSupported<caffe::TypeLMDB>(void) {
   return true;
 }
 #endif
 
-#endif
 
 #ifndef CPU_ONLY
 #ifdef USE_CUDA

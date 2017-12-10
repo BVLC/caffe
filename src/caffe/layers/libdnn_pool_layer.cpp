@@ -80,14 +80,14 @@ void LibDNNPoolingLayer<Dtype, MItype, MOtype>::Reshape(
 
     if ((std::is_same<Dtype, float>::value
         && (this->device_->CheckCapability(
-                "cl_khr_int32_base_atomics") ||
+              DEVICE_INT64_GLOBAL_ATOMICS_SUPPORT) ||
             this->device_->CheckCapability(
-                "cl_khr_global_int32_base_atomics") ||
-            this->device_->CheckCapability(
-                "cl_khr_global_int32_extended_atomics"))) ||
+             DEVICE_INT64_GLOBAL_EXTENDED_ATOMICS_SUPPORT))) ||
         (std::is_same<Dtype, double>::value
-        && (this->device_->CheckCapability("cl_khr_int64_base_atomics") ||
-            this->device_->CheckCapability("cl_khr_int64_extended_atomics")))) {
+        && (this->device_->CheckCapability(
+            DEVICE_INT64_GLOBAL_ATOMICS_SUPPORT) ||
+            this->device_->CheckCapability(
+                DEVICE_INT64_GLOBAL_EXTENDED_ATOMICS_SUPPORT)))) {
       config.bwalgo = LIBDNN_POOLING_BW_ALGO_ATOMIC;
     } else {
       config.bwalgo = LIBDNN_POOLING_BW_ALGO_DIRECT;

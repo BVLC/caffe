@@ -49,8 +49,8 @@ class MergeCropLayer : public Layer<Dtype, MItype, MOtype> {
   void GenerateProgram();
 
  private:
-  vector<int_tp> forward_;
-  vector<int_tp> backward_;
+  vector<bool> forward_;
+  vector<bool> backward_;
   Blob<int_tp> shape_a_;
   Blob<int_tp> shape_b_;
   MergeCropParameter_MergeOp op_;

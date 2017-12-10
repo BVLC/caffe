@@ -20,7 +20,7 @@ void CropLayer<Dtype, MItype, MOtype>::GenerateProgram() {
   fw_args.push_back(this->device_program_->template create_kernel_arg<int_tp>(
                     "ndims", KERNEL_ARG_CONST));
   fw_args.push_back(this->device_program_->template create_kernel_arg<int_tp>(
-                    "scr_strides", KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_CONST));
+                    "src_strides", KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_CONST));
   fw_args.push_back(this->device_program_->template create_kernel_arg<int_tp>(
                     "dst_strides", KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_CONST));
   fw_args.push_back(this->device_program_->template create_kernel_arg<int_tp>(
@@ -48,7 +48,7 @@ void CropLayer<Dtype, MItype, MOtype>::GenerateProgram() {
   bw_args.push_back(this->device_program_->template create_kernel_arg<int_tp>(
                     "ndims", KERNEL_ARG_CONST));
   bw_args.push_back(this->device_program_->template create_kernel_arg<int_tp>(
-                    "scr_strides", KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_CONST));
+                    "src_strides", KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_CONST));
   bw_args.push_back(this->device_program_->template create_kernel_arg<int_tp>(
                     "dst_strides", KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_CONST));
   bw_args.push_back(this->device_program_->template create_kernel_arg<int_tp>(

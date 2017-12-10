@@ -105,15 +105,6 @@ if(USE_LEVELDB)
   list(APPEND Caffe_LINKER_LIBS PRIVATE ${Snappy_LIBRARIES})
 endif()
 
-# ---[ CUDA
-include(cmake/Cuda.cmake)
-if(NOT USE_CUDA)
-  message(STATUS "-- CUDA is disabled. Building without it...")
-elseif(NOT HAVE_CUDA)
-  set(USE_CUDA OFF)
-  message(WARNING "-- CUDA is not detected by cmake. Building without it...")
-endif()
-
 # ---[ ViennaCL
 if (USE_OPENCL)
   find_package(ViennaCL)
@@ -128,7 +119,7 @@ if (USE_OPENCL)
   endif()
 
   if(USE_LIBDNN)
-    list(APPEND Caffe_DEFINITIONS PRIVATE -DUSE_LIBDNN)
+    list(APPEND Caffe_DEFINITIONS PUBLIC -DUSE_LIBDNN)
   endif()
 
   if(USE_INTEL_SPATIAL)
@@ -159,6 +150,15 @@ if (USE_OPENCL)
       set(USE_FFT OFF)
     endif()
   endif()
+endif()
+
+# ---[ CUDA
+include(cmake/Cuda.cmake)
+if(NOT USE_CUDA)
+  message(STATUS "-- CUDA is disabled. Building without it...")
+elseif(NOT HAVE_CUDA)
+  set(USE_CUDA OFF)
+  message(WARNING "-- CUDA is not detected by cmake. Building without it...")
 endif()
 
 if (NOT USE_OPENCL AND NOT USE_CUDA)

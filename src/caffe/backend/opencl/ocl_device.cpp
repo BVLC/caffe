@@ -238,19 +238,25 @@ void OclDevice::get_threads(const vector<size_t>* work_size,
   }
 
   bool done = false;
+  vector<bool> local_done(work_size->size(), false);
   while (!done) {
+    done = true;
+    for (uint_tp i = 0; i < work_size->size(); ++i) {
+      done = done && local_done[i];
+    }
     for (uint_tp i = 0; i < work_size->size(); ++i) {
       if (!done
-          && ((*local)[i] < (*work_size)[i])
-          && ((*local)[i] * 2 < max_local_sizes_[i])) {
+          && ((*local)[i] <= (*work_size)[i])
+          && ((*local)[i] * 2 <= max_local_sizes_[i])) {
         (*local)[i] *= 2;
+      } else {
+        local_done[i] = true;
       }
       size_t total_local_size = 1;
       for (uint_tp j = 0; j < work_size->size(); ++j) {
         total_local_size *= (*local)[j];
       }
-      if ((total_local_size > max_local_size_kernel) ||
-          (total_local_size > max_local_size_)) {
+      if (total_local_size > max_local_size_) {
         (*local)[i] /= 2;
         done = true;
       }
@@ -272,7 +278,7 @@ bool OclDevice::CheckVendor(string vendor) {
   return false;
 }
 
-bool OclDevice::CheckCapability(string cap) {
+bool OclDevice::CheckCapability(DeviceCapability cap) {
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(id_);
 
   size_t size;
@@ -287,7 +293,38 @@ bool OclDevice::CheckCapability(string cap) {
                   std::min(size, max_size), &(exts[0]), NULL);
 
   string extsstr(&(exts[0]));
-  return extsstr.find(cap) != string::npos;
+
+  switch(cap) {
+    case DEVICE_FP16_SUPPORT:
+      return (extsstr.find("cl_khr_fp16") != string::npos);
+    case DEVICE_FP32_SUPPORT:
+      return true;
+    case DEVICE_FP64_SUPPORT:
+      return (extsstr.find("cl_khr_fp64") != string::npos)
+          || (extsstr.find("cl_amd_fp64") != string::npos);
+    case DEVICE_INT32_LOCAL_ATOMICS_SUPPORT:
+      return (extsstr.find("cl_khr_local_int32_base_atomics") != string::npos);
+    case DEVICE_INT64_LOCAL_ATOMICS_SUPPORT:
+      return (extsstr.find("cl_khr_local_int32_base_atomics") != string::npos);
+    case DEVICE_INT32_LOCAL_EXTENDED_ATOMICS_SUPPORT:
+      return (extsstr.find("cl_khr_local_int32_extended_atomics")
+                                                               != string::npos);
+    case DEVICE_INT64_LOCAL_EXTENDED_ATOMICS_SUPPORT:
+      return (extsstr.find("cl_khr_local_int64_extended_atomics")
+                                                               != string::npos);
+    case DEVICE_INT32_GLOBAL_ATOMICS_SUPPORT:
+      return (extsstr.find("cl_khr_global_int32_base_atomics") != string::npos);
+    case DEVICE_INT64_GLOBAL_ATOMICS_SUPPORT:
+      return (extsstr.find("cl_khr_global_int64_base_atomics") != string::npos);
+    case DEVICE_INT32_GLOBAL_EXTENDED_ATOMICS_SUPPORT:
+      return (extsstr.find("cl_khr_global_int32_extended_atomics")
+                                                               != string::npos);
+    case DEVICE_INT64_GLOBAL_EXTENDED_ATOMICS_SUPPORT:
+      return (extsstr.find("cl_khr_global_int64_extended_atomics")
+                                                               != string::npos);
+    default:
+      return false;
+  }
 }
 
 

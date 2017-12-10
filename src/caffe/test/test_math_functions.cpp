@@ -219,7 +219,7 @@ TYPED_TEST(GPUMathFunctionsTest, TestCopy) {
   dc->template copy<TypeParam>(n, bottom_data, top_data);
 
   const TypeParam* cpu_bottom_data = this->blob_bottom_->cpu_data();
-  TypeParam* cpu_top_data = this->blob_top_->mutable_cpu_data();
+  const TypeParam* cpu_top_data = this->blob_top_->cpu_data();
   for (int_tp i = 0; i < n; ++i) {
     EXPECT_EQ(cpu_bottom_data[i], cpu_top_data[i]);
   }

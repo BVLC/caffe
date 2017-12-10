@@ -160,10 +160,9 @@ string create_source(Device* dev,
 
     // Forward im2col_nd
     fw_args.push_back(program->create_kernel_arg<int_tp>("n",
-                      KERNEL_ARG_CONST));
+                                                         KERNEL_ARG_CONST));
     fw_args.push_back(program->create_kernel_arg<Dtype>("data_im",
-                      KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_CONST |
-                      KERNEL_ARG_MEM_OFFSET));
+             KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_CONST | KERNEL_ARG_MEM_OFFSET));
     fw_args.push_back(program->create_kernel_arg<int_tp>("im_shape",
              KERNEL_ARG_MEM_OFFSET | KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_CONST));
     fw_args.push_back(program->create_kernel_arg<int_tp>("col_shape",
@@ -205,7 +204,7 @@ string create_source(Device* dev,
     ss << "shared_stride[li] = stride[li];" << std::endl;
     ss << "}" << std::endl;
     ss << "for(int_tp li = " << program->local_id(0) << "; li < "
-       << num_axes << "; " << "li += (" << program->local_size(0) << " + 1)) {"
+       << (num_axes + 1) << "; " << "li += " << program->local_size(0) << ") {"
        << std::endl;
     ss << "shared_col_shape[li] = col_shape[li];" << std::endl;
     ss << "shared_im_shape[li] = im_shape[li];" << std::endl;
@@ -328,8 +327,9 @@ string create_source(Device* dev,
     ss << "shared_pad[li] = pad[li];" << std::endl;
     ss << "shared_stride[li] = stride[li];" << std::endl;
     ss << "}" << std::endl;
-    ss << "for(int_tp li = " << program->local_id(0) << "; li < " << num_axes
-       << ";li += (" << program->local_size(0) << " + 1)) {" << std::endl;
+    ss << "for(int_tp li = " << program->local_id(0) << "; li < "
+       << (num_axes + 1) << ";li += " << program->local_size(0) << ") {"
+       << std::endl;
     ss << "shared_col_shape[li] = col_shape[li];" << std::endl;
     ss << "shared_im_shape[li] = im_shape[li];" << std::endl;
     ss << "}" << std::endl;
@@ -461,16 +461,16 @@ void Device::CreateIm2ColProgram() {
 #endif
         break;
       }
-      case INT8_QUANTIZED_DATA_INDEX: {
+      case INT8_DATA_INDEX: {
         break;
       }
-      case INT16_QUANTIZED_DATA_INDEX: {
+      case INT16_DATA_INDEX: {
         break;
       }
-      case INT32_QUANTIZED_DATA_INDEX: {
+      case INT32_DATA_INDEX: {
         break;
       }
-      case INT64_QUANTIZED_DATA_INDEX: {
+      case INT64_DATA_INDEX: {
         break;
       }
     }
@@ -496,7 +496,7 @@ void Device::im2col(vptr<const Dtype> data_im, const int_tp channels,
   int_tp num_kernels = channels * height_col * width_col;
 
   shared_ptr<DeviceKernel> kernel =
-    this->im2col_programs_[proto_data_type_index<Dtype>()]
+    this->im2col_programs_[data_type_index<Dtype>()]
                            ->GetKernel("caffe_gpu_im2col");
   kernel->add_arg(&num_kernels);
   kernel->add_arg(&data_im);
@@ -538,7 +538,7 @@ void Device::col2im(vptr<const Dtype> data_col, const int_tp channels,
   // bottom dimension, and then in the kernel add up the top dimensions.
 
   shared_ptr<DeviceKernel> kernel =
-    this->im2col_programs_[proto_data_type_index<Dtype>()]
+    this->im2col_programs_[data_type_index<Dtype>()]
                            ->GetKernel("caffe_gpu_col2im");
   kernel->add_arg(&num_kernels);
   kernel->add_arg(&data_col);
@@ -572,7 +572,7 @@ void Device::im2col_nd(vptr<const Dtype> data_im, const int_tp num_spatial_axes,
                        vptr<const int_tp> pad, vptr<const int_tp> stride,
                        vptr<const int_tp> dilation, vptr<Dtype> data_col) {
   shared_ptr<DeviceKernel> kernel =
-      this->im2col_programs_[proto_data_type_index<Dtype>()]
+      this->im2col_programs_[data_type_index<Dtype>()]
          ->GetKernel("caffe_gpu_im2col_nd_" + std::to_string(num_spatial_axes));
   kernel->add_arg(&num_kernels);
   kernel->add_arg(&data_im);
@@ -600,8 +600,8 @@ void Device::col2im_nd(vptr<const Dtype> data_col,
                        vptr<const int_tp> pad, vptr<const int_tp> stride,
                        vptr<const int_tp> dilation, vptr<Dtype> data_im) {
   shared_ptr<DeviceKernel> kernel =
-      this->im2col_programs_[proto_data_type_index<Dtype>()]
-          ->GetKernel("caffe_gpu_col2im_nd_"+ std::to_string(num_spatial_axes));
+      this->im2col_programs_[data_type_index<Dtype>()]
+         ->GetKernel("caffe_gpu_col2im_nd_" + std::to_string(num_spatial_axes));
   kernel->add_arg(&im_size);
   kernel->add_arg(&data_col);
   kernel->add_arg(&im_shape);

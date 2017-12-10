@@ -16,6 +16,7 @@ namespace caffe {
 class CudaDeviceProgram : public DeviceProgram {
  public:
   explicit CudaDeviceProgram(Device *dev);
+  ~CudaDeviceProgram();
 
   virtual bool Compile(bool load_cache, bool store_cache);
   virtual shared_ptr<DeviceKernel> GetKernel(string name);
@@ -60,8 +61,8 @@ class CudaDeviceProgram : public DeviceProgram {
   virtual string kernel_arg_type_uint64_t(uint64_t flags);
 
  private:
-  nvrtcProgram cuda_program_;
-  CUmodule cuda_module_;
+  shared_ptr<nvrtcProgram> cuda_program_;
+  shared_ptr<CUmodule> cuda_module_;
 
 };
 

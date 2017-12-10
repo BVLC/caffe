@@ -103,8 +103,8 @@ inline int CAFFE_GET_PADDED_GLOBAL_WORK_SIZE(const int n, const int lws) {
 }
 */
 
-#endif  // USE_OPENCL
-
 }  // namespace caffe
+
+#endif  // USE_OPENCL
 
 #endif  // CAFFE_BACKEND_OPENCL_CAFFE_OPENCL_HPP_

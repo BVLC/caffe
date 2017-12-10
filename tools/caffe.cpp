@@ -541,10 +541,10 @@ int autotune() {
         boost::dynamic_pointer_cast<caffe::LibDNNConvolutionLayer<float> >
                 (net.layers()[i]);
     if (layer.get() != nullptr) {
-      float* top_data = net.top_vecs()[i][0]->mutable_gpu_data();
-      float* top_diff = net.top_vecs()[i][0]->mutable_gpu_diff();
-      float* bottom_data = net.top_vecs()[i][0]->mutable_gpu_data();
-      float* bottom_diff = net.top_vecs()[i][0]->mutable_gpu_diff();
+      vptr<float> top_data = static_cast<Blob<float>*>(net.top_vecs()[i][0])->mutable_gpu_data();
+      vptr<float> top_diff = static_cast<Blob<float>*>(net.top_vecs()[i][0])->mutable_gpu_diff();
+      vptr<float> bottom_data = static_cast<Blob<float>*>(net.top_vecs()[i][0])->mutable_gpu_data();
+      vptr<float> bottom_diff = net.top_vecs()[i][0]->mutable_gpu_diff();
       int_tp batch_size = net.top_vecs()[i][0]->shape(0);
       layer->Tune(top_data, top_diff, bottom_data, bottom_diff, batch_size);
     }

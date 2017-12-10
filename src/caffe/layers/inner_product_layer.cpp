@@ -7,8 +7,9 @@
 namespace caffe {
 
 template<typename Dtype, typename MItype, typename MOtype>
-void InnerProductLayer<Dtype, MItype, MOtype>::LayerSetUp(const vector<Blob<MItype>*>& bottom,
-                                          const vector<Blob<MOtype>*>& top) {
+void InnerProductLayer<Dtype, MItype, MOtype>::LayerSetUp(
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
   const int_tp num_output =
       this->layer_param_.inner_product_param().num_output();
   bias_term_ = this->layer_param_.inner_product_param().bias_term();

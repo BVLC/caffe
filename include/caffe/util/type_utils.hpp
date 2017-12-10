@@ -13,13 +13,17 @@ namespace caffe {
 #define HALF_DATA_INDEX 3
 #define FLOAT_DATA_INDEX 1
 #define DOUBLE_DATA_INDEX 2
-#define INT8_QUANTIZED_DATA_INDEX 4
-#define INT16_QUANTIZED_DATA_INDEX 5
-#define INT32_QUANTIZED_DATA_INDEX 6
-#define INT64_QUANTIZED_DATA_INDEX 7
+#define INT8_DATA_INDEX 4
+#define INT16_DATA_INDEX 5
+#define INT32_DATA_INDEX 6
+#define INT64_DATA_INDEX 7
+#define UINT8_DATA_INDEX 8
+#define UINT16_DATA_INDEX 9
+#define UINT32_DATA_INDEX 10
+#define UINT64_DATA_INDEX 11
 
 #define PROTO_DATA_INDEX_MIN 1
-#define PROTO_DATA_INDEX_MAX 7
+#define PROTO_DATA_INDEX_MAX 11
 
 
 template<typename T>
@@ -137,38 +141,54 @@ inline DataType proto_data_type<int64_t>() {
 
 
 template<typename T>
-inline int_tp proto_data_type_index() {
+inline int_tp data_type_index() {
   LOG(FATAL) << "Unknown type" << std::endl;
   return INVALID_DATA_INDEX;  // Unreachable
 }
 
 template<>
-inline int_tp proto_data_type_index<half_fp>() {
+inline int_tp data_type_index<half_fp>() {
   return HALF_DATA_INDEX;
 }
 template<>
-inline int_tp proto_data_type_index<float>() {
+inline int_tp data_type_index<float>() {
   return FLOAT_DATA_INDEX;
 }
 template<>
-inline int_tp proto_data_type_index<double>() {
+inline int_tp data_type_index<double>() {
   return DOUBLE_DATA_INDEX;
 }
 template<>
-inline int_tp proto_data_type_index<int8_t>() {
-  return INT8_QUANTIZED_DATA_INDEX;
+inline int_tp data_type_index<int8_t>() {
+  return INT8_DATA_INDEX;
 }
 template<>
-inline int_tp proto_data_type_index<int16_t>() {
-  return INT16_QUANTIZED_DATA_INDEX;
+inline int_tp data_type_index<int16_t>() {
+  return INT16_DATA_INDEX;
 }
 template<>
-inline int_tp proto_data_type_index<int32_t>() {
-  return INT32_QUANTIZED_DATA_INDEX;
+inline int_tp data_type_index<int32_t>() {
+  return INT32_DATA_INDEX;
 }
 template<>
-inline int_tp proto_data_type_index<int64_t>() {
-  return INT64_QUANTIZED_DATA_INDEX;
+inline int_tp data_type_index<int64_t>() {
+  return INT64_DATA_INDEX;
+}
+template<>
+inline int_tp data_type_index<uint8_t>() {
+  return UINT8_DATA_INDEX;
+}
+template<>
+inline int_tp data_type_index<uint16_t>() {
+  return UINT16_DATA_INDEX;
+}
+template<>
+inline int_tp data_type_index<uint32_t>() {
+  return UINT32_DATA_INDEX;
+}
+template<>
+inline int_tp data_type_index<uint64_t>() {
+  return UINT64_DATA_INDEX;
 }
 
 template<typename Dtype>

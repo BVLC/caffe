@@ -12,7 +12,10 @@
 #define ABS_TEST_DATA_DIR "${PROJECT_SOURCE_DIR}/src/caffe/test/test_data/"
 #define EXAMPLES_SOURCE_DIR "${PROJECT_SOURCE_DIR}/examples/"
 
+#ifdef USE_CUDA
 /* Test device */
 #define CUDA_TEST_DEVICE ${CUDA_TEST_DEVICE}
+
+#endif  // USE_CUDA
 
 #endif  // CAFFE_CONFIG_HPP_

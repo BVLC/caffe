@@ -24,7 +24,7 @@ SyncedMemory::~SyncedMemory() {
 
 inline void SyncedMemory::to_cpu() {
   if (size_ == 0)
-      return;
+    return;
 
   switch (head_) {
     case UNINITIALIZED: {
@@ -58,7 +58,8 @@ inline void SyncedMemory::to_cpu() {
       if (own_zero_copy_data_) {
         device_->CheckZeroCopy(gpu_ptr_, cpu_ptr_, size_);
       } else {
-        device_->memcpy(size_, cpu_ptr_, gpu_ptr_);
+        // std::cout << "GPU -> CPU copy: " << size_ << std::endl;
+        device_->memcpy(size_, gpu_ptr_, cpu_ptr_);
       }
       head_ = SYNCED;
 #else
@@ -74,7 +75,7 @@ inline void SyncedMemory::to_cpu() {
 
 inline void SyncedMemory::to_gpu() {
   if (size_ == 0)
-      return;
+    return;
 
 #ifndef CPU_ONLY
   switch (head_) {
@@ -103,6 +104,7 @@ inline void SyncedMemory::to_gpu() {
       if (own_zero_copy_data_) {
         device_->CheckZeroCopy(gpu_ptr_, cpu_ptr_, size_);
       } else {
+        // std::cout << "CPU -> GPU copy: " << size_ << std::endl;
         device_->memcpy(size_, cpu_ptr_, gpu_ptr_);
       }
       head_ = SYNCED;

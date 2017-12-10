@@ -69,14 +69,14 @@ void LibDNNDeconvolutionLayer<Dtype, MItype, MOtype>::Reshape(
     // - No bias term
     if (((std::is_same<Dtype, float>::value
         && (this->device_->CheckCapability(
-                "cl_khr_int32_base_atomics") ||
+              DEVICE_INT64_GLOBAL_ATOMICS_SUPPORT) ||
             this->device_->CheckCapability(
-                "cl_khr_global_int32_base_atomics") ||
-            this->device_->CheckCapability(
-                "cl_khr_global_int32_extended_atomics"))) ||
+             DEVICE_INT64_GLOBAL_EXTENDED_ATOMICS_SUPPORT))) ||
         (std::is_same<Dtype, double>::value
-        && (this->device_->CheckCapability("cl_khr_int64_base_atomics") ||
-            this->device_->CheckCapability("cl_khr_int64_extended_atomics"))))
+        && (this->device_->CheckCapability(
+            DEVICE_INT64_GLOBAL_ATOMICS_SUPPORT) ||
+            this->device_->CheckCapability(
+                DEVICE_INT64_GLOBAL_EXTENDED_ATOMICS_SUPPORT))))
             && !this->bias_term_) {
       config.wgalgo = LIBDNN_CONVOLUTION_WG_ALGO_ATOMIC;
       config.bwalgo = LIBDNN_CONVOLUTION_BW_ALGO_COL2IM_ATOMIC;

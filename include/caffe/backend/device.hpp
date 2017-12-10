@@ -18,6 +18,20 @@
 
 namespace caffe {
 
+enum DeviceCapability {
+  DEVICE_FP16_SUPPORT,
+  DEVICE_FP32_SUPPORT,
+  DEVICE_FP64_SUPPORT,
+  DEVICE_INT32_LOCAL_ATOMICS_SUPPORT,
+  DEVICE_INT64_LOCAL_ATOMICS_SUPPORT,
+  DEVICE_INT32_LOCAL_EXTENDED_ATOMICS_SUPPORT,
+  DEVICE_INT64_LOCAL_EXTENDED_ATOMICS_SUPPORT,
+  DEVICE_INT32_GLOBAL_ATOMICS_SUPPORT,
+  DEVICE_INT64_GLOBAL_ATOMICS_SUPPORT,
+  DEVICE_INT32_GLOBAL_EXTENDED_ATOMICS_SUPPORT,
+  DEVICE_INT64_GLOBAL_EXTENDED_ATOMICS_SUPPORT
+};
+
 #ifdef USE_LIBDNN
 // Forward declare LibDNN
 class LibDNNBase;
@@ -44,7 +58,7 @@ class Device {
   void reset_peak_memory_usage();
 
   virtual void Init();
-  virtual bool CheckCapability(string cap);
+  virtual bool CheckCapability(DeviceCapability cap);
   virtual bool CheckVendor(string vendor);
   virtual bool CheckType(string type);
   virtual void SwitchQueue(uint_tp id);

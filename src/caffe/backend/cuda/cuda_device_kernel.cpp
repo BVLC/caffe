@@ -9,30 +9,29 @@ namespace caffe {
 
 #ifdef USE_CUDA
 
-CudaDeviceKernel::CudaDeviceKernel(Device* dev, CUfunction cuda_kernel,
-                                       KernelArgs args) : DeviceKernel(),
-                                           cuda_args_(0) {
-  this->device_ = dev;
-  this->cuda_kernel_ = cuda_kernel;
-  this->args_ = args;
+CudaDeviceKernel::CudaDeviceKernel(Device* dev,
+                                   shared_ptr<CUfunction> cuda_kernel,
+                                   KernelArgs args) : DeviceKernel(dev, args),
+                                   cuda_args_(0),
+                                   cuda_kernel_(cuda_kernel) {
 }
 
 void CudaDeviceKernel::Execute(vector<size_t> group,
-                                 vector<size_t> local) {
-  vector<size_t> group_ws;
-  vector<size_t> local_ws;
+                               vector<size_t> local) {
+  vector<size_t> group_ws(3);
+  vector<size_t> local_ws(3);
 
   for (uint_tp i = 0; i < 3; ++i) {
-    group_ws.push_back(group.size() > i ? group[i] : 1);
-    local_ws.push_back(local.size() > i ? local[i] : 1);
+    group_ws[i] = group.size() > i ? group[i] : 1;
+    local_ws[i] = local.size() > i ? local[i] : 1;
   }
 
   void **cuargs = &cuda_args_[0];
 
-  cuLaunchKernel(cuda_kernel_,
+  cuLaunchKernel(*cuda_kernel_.get(),
                  group_ws[0], group_ws[1], group_ws[2],      // Group
                  local_ws[0], local_ws[1], local_ws[2],      // Local
-                 0, NULL, cuargs, 0);                        // Arguments
+                 0, NULL, cuargs, NULL);                     // Arguments
   cuCtxSynchronize();
   CUDA_POST_KERNEL_CHECK;
 
@@ -43,161 +42,161 @@ void CudaDeviceKernel::Execute(vector<size_t> group,
 
 void CudaDeviceKernel::set_arg(uint_tp idx, const bool *arg) {
   cuda_args_.insert(cuda_args_.begin() + idx, (void*) arg);
-  this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
+    this->arg_idx_ = std::max(idx + 1, this->arg_idx_);
 }
 void CudaDeviceKernel::set_arg(uint_tp idx, const char *arg) {
   cuda_args_.insert(cuda_args_.begin() + idx, (void*) arg);
-  this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
+    this->arg_idx_ = std::max(idx + 1, this->arg_idx_);
 }
 void CudaDeviceKernel::set_arg(uint_tp idx, const int8_t *arg) {
   cuda_args_.insert(cuda_args_.begin() + idx, (void*) arg);
-  this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
+    this->arg_idx_ = std::max(idx + 1, this->arg_idx_);
 }
 void CudaDeviceKernel::set_arg(uint_tp idx, const int16_t *arg) {
   cuda_args_.insert(cuda_args_.begin() + idx, (void*) arg);
-  this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
+    this->arg_idx_ = std::max(idx + 1, this->arg_idx_);
 }
 void CudaDeviceKernel::set_arg(uint_tp idx, const int32_t *arg) {
   cuda_args_.insert(cuda_args_.begin() + idx, (void*) arg);
-  this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
+    this->arg_idx_ = std::max(idx + 1, this->arg_idx_);
 }
 void CudaDeviceKernel::set_arg(uint_tp idx, const int64_t *arg) {
   cuda_args_.insert(cuda_args_.begin() + idx, (void*) arg);
-  this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
+    this->arg_idx_ = std::max(idx + 1, this->arg_idx_);
 }
 void CudaDeviceKernel::set_arg(uint_tp idx, const uint8_t *arg) {
   cuda_args_.insert(cuda_args_.begin() + idx, (void*) arg);
-  this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
+    this->arg_idx_ = std::max(idx + 1, this->arg_idx_);
 }
 void CudaDeviceKernel::set_arg(uint_tp idx, const uint16_t *arg) {
   cuda_args_.insert(cuda_args_.begin() + idx, (void*) arg);
-  this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
+    this->arg_idx_ = std::max(idx + 1, this->arg_idx_);
 }
 void CudaDeviceKernel::set_arg(uint_tp idx, const uint32_t *arg) {
   cuda_args_.insert(cuda_args_.begin() + idx, (void*) arg);
-  this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
+    this->arg_idx_ = std::max(idx + 1, this->arg_idx_);
 }
 void CudaDeviceKernel::set_arg(uint_tp idx, const uint64_t *arg) {
   cuda_args_.insert(cuda_args_.begin() + idx, (void*) arg);
-  this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
+    this->arg_idx_ = std::max(idx + 1, this->arg_idx_);
 }
 void CudaDeviceKernel::set_arg(uint_tp idx, const half_fp *arg) {
   cuda_args_.insert(cuda_args_.begin() + idx, (void*) arg);
-  this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
+    this->arg_idx_ = std::max(idx + 1, this->arg_idx_);
 }
 void CudaDeviceKernel::set_arg(uint_tp idx, const float *arg) {
   cuda_args_.insert(cuda_args_.begin() + idx, (void*) arg);
-  this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
+    this->arg_idx_ = std::max(idx + 1, this->arg_idx_);
 }
 void CudaDeviceKernel::set_arg(uint_tp idx, const double *arg) {
   cuda_args_.insert(cuda_args_.begin() + idx, (void*) arg);
-  this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
+    this->arg_idx_ = std::max(idx + 1, this->arg_idx_);
 }
 
 void CudaDeviceKernel::set_arg(uint_tp idx, vptr<char> *arg) {
   cuda_args_.insert(cuda_args_.begin() + idx, arg->get_cuda_ptr_ptr());
-  this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
+    this->arg_idx_ = std::max(idx + 1, this->arg_idx_);
 }
 void CudaDeviceKernel::set_arg(uint_tp idx, vptr<int8_t> *arg) {
   cuda_args_.insert(cuda_args_.begin() + idx, arg->get_cuda_ptr_ptr());
-  this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
+    this->arg_idx_ = std::max(idx + 1, this->arg_idx_);
 }
 void CudaDeviceKernel::set_arg(uint_tp idx, vptr<int16_t> *arg) {
   cuda_args_.insert(cuda_args_.begin() + idx, arg->get_cuda_ptr_ptr());
-  this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
+    this->arg_idx_ = std::max(idx + 1, this->arg_idx_);
 }
 void CudaDeviceKernel::set_arg(uint_tp idx, vptr<int32_t> *arg) {
   cuda_args_.insert(cuda_args_.begin() + idx, arg->get_cuda_ptr_ptr());
-  this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
+    this->arg_idx_ = std::max(idx + 1, this->arg_idx_);
 }
 void CudaDeviceKernel::set_arg(uint_tp idx, vptr<int64_t> *arg) {
   cuda_args_.insert(cuda_args_.begin() + idx, arg->get_cuda_ptr_ptr());
-  this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
+    this->arg_idx_ = std::max(idx + 1, this->arg_idx_);
 }
 void CudaDeviceKernel::set_arg(uint_tp idx, vptr<uint8_t> *arg) {
   cuda_args_.insert(cuda_args_.begin() + idx, arg->get_cuda_ptr_ptr());
-  this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
+    this->arg_idx_ = std::max(idx + 1, this->arg_idx_);
 }
 void CudaDeviceKernel::set_arg(uint_tp idx, vptr<uint16_t> *arg) {
   cuda_args_.insert(cuda_args_.begin() + idx, arg->get_cuda_ptr_ptr());
-  this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
+    this->arg_idx_ = std::max(idx + 1, this->arg_idx_);
 }
 void CudaDeviceKernel::set_arg(uint_tp idx, vptr<uint32_t> *arg) {
   cuda_args_.insert(cuda_args_.begin() + idx, arg->get_cuda_ptr_ptr());
-  this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
+    this->arg_idx_ = std::max(idx + 1, this->arg_idx_);
 }
 void CudaDeviceKernel::set_arg(uint_tp idx, vptr<uint64_t> *arg) {
   cuda_args_.insert(cuda_args_.begin() + idx, arg->get_cuda_ptr_ptr());
-  this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
+    this->arg_idx_ = std::max(idx + 1, this->arg_idx_);
 }
 void CudaDeviceKernel::set_arg(uint_tp idx, vptr<half_fp> *arg) {
   cuda_args_.insert(cuda_args_.begin() + idx, arg->get_cuda_ptr_ptr());
-  this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
+    this->arg_idx_ = std::max(idx + 1, this->arg_idx_);
 }
 void CudaDeviceKernel::set_arg(uint_tp idx, vptr<float> *arg) {
   cuda_args_.insert(cuda_args_.begin() + idx, arg->get_cuda_ptr_ptr());
-  this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
+    this->arg_idx_ = std::max(idx + 1, this->arg_idx_);
 }
 void CudaDeviceKernel::set_arg(uint_tp idx, vptr<double> *arg) {
   cuda_args_.insert(cuda_args_.begin() + idx, arg->get_cuda_ptr_ptr());
-  this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
+    this->arg_idx_ = std::max(idx + 1, this->arg_idx_);
 }
 void CudaDeviceKernel::set_arg(uint_tp idx, vptr<void> *arg) {
   cuda_args_.insert(cuda_args_.begin() + idx, arg->get_cuda_ptr_ptr());
-  this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
+    this->arg_idx_ = std::max(idx + 1, this->arg_idx_);
 }
 
 void CudaDeviceKernel::set_arg(uint_tp idx, vptr<const char> *arg) {
   cuda_args_.insert(cuda_args_.begin() + idx, arg->get_cuda_ptr_ptr());
-  this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
+    this->arg_idx_ = std::max(idx + 1, this->arg_idx_);
 }
 void CudaDeviceKernel::set_arg(uint_tp idx, vptr<const int8_t> *arg) {
   cuda_args_.insert(cuda_args_.begin() + idx, arg->get_cuda_ptr_ptr());
-  this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
+    this->arg_idx_ = std::max(idx + 1, this->arg_idx_);
 }
 void CudaDeviceKernel::set_arg(uint_tp idx, vptr<const int16_t> *arg) {
   cuda_args_.insert(cuda_args_.begin() + idx, arg->get_cuda_ptr_ptr());
-  this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
+    this->arg_idx_ = std::max(idx + 1, this->arg_idx_);
 }
 void CudaDeviceKernel::set_arg(uint_tp idx, vptr<const int32_t> *arg) {
   cuda_args_.insert(cuda_args_.begin() + idx, arg->get_cuda_ptr_ptr());
-  this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
+    this->arg_idx_ = std::max(idx + 1, this->arg_idx_);
 }
 void CudaDeviceKernel::set_arg(uint_tp idx, vptr<const int64_t> *arg) {
   cuda_args_.insert(cuda_args_.begin() + idx, arg->get_cuda_ptr_ptr());
-  this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
+    this->arg_idx_ = std::max(idx + 1, this->arg_idx_);
 }
 void CudaDeviceKernel::set_arg(uint_tp idx, vptr<const uint8_t> *arg) {
   cuda_args_.insert(cuda_args_.begin() + idx, arg->get_cuda_ptr_ptr());
-  this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
+    this->arg_idx_ = std::max(idx + 1, this->arg_idx_);
 }
 void CudaDeviceKernel::set_arg(uint_tp idx, vptr<const uint16_t> *arg) {
   cuda_args_.insert(cuda_args_.begin() + idx, arg->get_cuda_ptr_ptr());
-  this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
+    this->arg_idx_ = std::max(idx + 1, this->arg_idx_);
 }
 void CudaDeviceKernel::set_arg(uint_tp idx, vptr<const uint32_t> *arg) {
   cuda_args_.insert(cuda_args_.begin() + idx, arg->get_cuda_ptr_ptr());
-  this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
+    this->arg_idx_ = std::max(idx + 1, this->arg_idx_);
 }
 void CudaDeviceKernel::set_arg(uint_tp idx, vptr<const uint64_t> *arg) {
   cuda_args_.insert(cuda_args_.begin() + idx, arg->get_cuda_ptr_ptr());
-  this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
+    this->arg_idx_ = std::max(idx + 1, this->arg_idx_);
 }
 void CudaDeviceKernel::set_arg(uint_tp idx, vptr<const half_fp> *arg) {
   cuda_args_.insert(cuda_args_.begin() + idx, arg->get_cuda_ptr_ptr());
-  this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
+    this->arg_idx_ = std::max(idx + 1, this->arg_idx_);
 }
 void CudaDeviceKernel::set_arg(uint_tp idx, vptr<const float> *arg) {
   cuda_args_.insert(cuda_args_.begin() + idx, arg->get_cuda_ptr_ptr());
-  this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
+    this->arg_idx_ = std::max(idx + 1, this->arg_idx_);
 }
 void CudaDeviceKernel::set_arg(uint_tp idx, vptr<const double> *arg) {
   cuda_args_.insert(cuda_args_.begin() + idx, arg->get_cuda_ptr_ptr());
-  this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
+    this->arg_idx_ = std::max(idx + 1, this->arg_idx_);
 }
 void CudaDeviceKernel::set_arg(uint_tp idx, vptr<const void> *arg) {
   cuda_args_.insert(cuda_args_.begin() + idx, arg->get_cuda_ptr_ptr());
-  this->arg_idx_ = std::max(idx, this->arg_idx_) + 1;
+    this->arg_idx_ = std::max(idx + 1, this->arg_idx_);
 }
 
 #endif  // USE_CUDA

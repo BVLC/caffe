@@ -19,7 +19,7 @@ bool OclDeviceProgram::Compile(bool load_cache, bool store_cache) {
 
   build_opts += "-cl-fast-relaxed-math -cl-mad-enable ";
 
-  // build_opts += "-cl-single-precision-constant ";
+  build_opts += "-cl-single-precision-constant ";
 
   ctx.build_options(build_opts);
 
@@ -61,13 +61,18 @@ shared_ptr<DeviceKernel> OclDeviceProgram::GetKernel(string name) {
   viennacl::ocl::kernel &kernel = this->ocl_program_.get_kernel(name);
 
   KernelArgs args;
-
   std::map<string, KernelArgs>::iterator pos = this->args_.find(name);
   if (pos == this->args_.end()) {
     LOG(FATAL) << "OpenCL kernel " << name << " not found";
   } else {
     args = pos->second;
   }
+
+  /*for(int_tp i = 0; i < args.size(); ++i) {
+    std::cout << i << " flags: " << std::get<0>(args[i]) << std::endl;
+    std::cout << i << " flags: " << std::get<1>(args[i]) << std::endl;
+    std::cout << i << " flags: " << std::get<2>(args[i]) << std::endl;
+  }*/
 
   return std::make_shared<OclDeviceKernel>(device_, kernel, args);
 }
