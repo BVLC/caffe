@@ -533,7 +533,7 @@ void Net<Dtype>::CompileNet(const NetParameter& param,
   param_temp2.clear_layer();   // Remove layers
   CompilationRuleTwo(param_temp, &param_temp2);
 
-#ifndef ENABLE_CONV_SUM_FUSION
+#ifdef DISABLE_CONV_SUM_FUSION
   param_compiled->CopyFrom(param_temp2);
   param_compiled->clear_layer();    // Remove layers
   CompilationRuleThree(param_temp2, param_compiled);

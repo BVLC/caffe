@@ -63,7 +63,7 @@ class BaseConvolutionLayer : public Layer<Dtype> {
 
   virtual inline int MinBottomBlobs() const { return 1; }
   virtual inline int MinTopBlobs() const { return 1; }
-#ifndef ENABLE_CONV_SUM_FUSION
+#ifdef DISABLE_CONV_SUM_FUSION
   virtual inline bool EqualNumBottomTopBlobs() const { return true; }
 #endif
  protected:

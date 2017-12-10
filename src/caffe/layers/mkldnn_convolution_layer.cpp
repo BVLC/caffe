@@ -146,7 +146,7 @@ void MKLDNNConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom
     init_properties(bottom, top);
     BaseConvolutionLayer<Dtype>::ReshapeForMKL(bottom, top);
 
-#ifdef ENABLE_CONV_SUM_FUSION
+#ifndef DISABLE_CONV_SUM_FUSION
     if (bottom.size() > 1) {
         top[0]->ShareData(*bottom[1]);
     }
@@ -210,7 +210,7 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
     mkldnn::primitive_attr attr;
     mkldnn::post_ops ops;
 
-#ifdef ENABLE_CONV_SUM_FUSION
+#ifndef DISABLE_CONV_SUM_FUSION
     if(relu || bottom.size() > 1) {
 #else
     if(relu) {
@@ -218,7 +218,7 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
         float scale = 1.0f; //for fp32, scale is 1.
         Dtype alpha = negative_slope;  // negative slope for mkldnn_eltwise_relu.
         float beta = 1.0f;  //ignored for mkldnn_eltwise_relu.
-#ifdef ENABLE_CONV_SUM_FUSION
+#ifndef DISABLE_CONV_SUM_FUSION
     if (bottom.size() > 1) {
         ops.append_sum(1.0f);
     }
@@ -245,7 +245,7 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
       for (subEngineIndex = 0; subEngineIndex < ep.getNumberOfSubEngines();
            subEngineIndex++) {
         try {
-#ifdef ENABLE_CONV_SUM_FUSION
+#ifndef DISABLE_CONV_SUM_FUSION
             if(relu || bottom.size() > 1) {
 #else
             if(relu) {

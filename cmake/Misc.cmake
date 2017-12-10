@@ -11,9 +11,9 @@ if(DISABLE_BN_FOLDING)
 	add_definitions("-DDISABLE_BN_FOLDING")
 endif()
 
-if(ENABLE_CONV_SUM_FUSION)
+if(DISABLE_CONV_SUM_FUSION)
 	message(STATUS "conv/eltwise/relu fusion is disabled!")
-	add_definitions("-DENABLE_CONV_SUM_FUSION")
+	add_definitions("-DDISABLE_CONV_SUM_FUSION")
 endif()
 
 # --[ If user doesn't specify build type then assume release

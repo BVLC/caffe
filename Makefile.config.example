@@ -80,7 +80,7 @@ USE_MKLDNN_AS_DEFAULT_ENGINE := 1
 DISABLE_BN_FOLDING := 0
 
 #Use conv/eltwise/relu layer fusion to boost inference.
-ENABLE_CONV_SUM_FUSION := 0
+DISABLE_CONV_SUM_FUSION := 0
 # Intel(r) Machine Learning Scaling Library (uncomment to build
 # with MLSL for multi-node training)
 # USE_MLSL :=1
