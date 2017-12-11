@@ -34,7 +34,7 @@ string LibDNN<Dtype, MItype, MOtype>::generate_gemm_core(
   ss << "for (int_tp kt=0; kt<TSK; kt+=TSK_UNROLL) {" << std::endl;
   ss << "#pragma unroll " << tuner->get_param<int>("TSK_UNROLL") << std::endl;
   ss << "for (int_tp ku=0; ku<TSK_UNROLL; ++ku) {" << std::endl;
-  ss << "int_tp K = kt + ku;" << std::endl;
+  ss << "int_tp k = kt + ku;" << std::endl;
 
   // Cache the values of Bsub in registers
   ss << "#pragma unroll" << std::endl;
@@ -42,7 +42,7 @@ string LibDNN<Dtype, MItype, MOtype>::generate_gemm_core(
   ss << "int_tp col = tidn + wn*VWN*RTSN;" << std::endl;
   for (int i = 0; i < vwn; ++i) {
     ss << "VEC_" << vwn << "_" << i << "(Breg[wn])"
-       << " = Bsub[K][col + " << (i*rtsn)
+       << " = Bsub[k][col + " << (i*rtsn)
        << "];" << std::endl;
   }
   ss << "}" << std::endl;
@@ -53,7 +53,7 @@ string LibDNN<Dtype, MItype, MOtype>::generate_gemm_core(
   ss << "int_tp row = tidm + wm*VWM*RTSM;" << std::endl;
   for (int i = 0; i < vwm; ++i) {
     ss << "VEC_" << vwm << "_" << i << "(Areg)" << " = Asub[row + " << (i*rtsm)
-       << "][K];" << std::endl;
+       << "][k];" << std::endl;
   }
   if (dterm) {
     if (unroll) {

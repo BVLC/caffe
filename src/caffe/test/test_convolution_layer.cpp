@@ -925,18 +925,10 @@ TYPED_TEST(CuDNNConvolutionLayerTest, TestSimpleConvolutionCuDNN) {
     convolution_param->mutable_bias_filler()->set_type("constant");
     convolution_param->mutable_bias_filler()->set_value(0.1);
 
-    std::cout << "T Mark 1" << std::endl;
-
     shared_ptr<Layer<TypeParam, TypeParam, TypeParam> > layer(
        new CuDNNConvolutionLayer<TypeParam, TypeParam, TypeParam>(layer_param));
     layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
-
-    std::cout << "T Mark 2" << std::endl;
-
-
     layer->Forward(this->blob_bottom_vec_, this->blob_top_vec_);
-
-    std::cout << "T Mark 3" << std::endl;
 
     // Check against reference convolution.
     const TypeParam* top_data;
@@ -950,8 +942,6 @@ TYPED_TEST(CuDNNConvolutionLayerTest, TestSimpleConvolutionCuDNN) {
     for (int_tp i = 0; i < this->blob_top_->count(); ++i) {
       EXPECT_NEAR(top_data[i], ref_top_data[i], delta);
     }
-
-    std::cout << "T Mark 4" << std::endl;
 
     caffe_conv(this->blob_bottom_2_, convolution_param, layer->blobs(),
         this->MakeReferenceTop(this->blob_top_2_));

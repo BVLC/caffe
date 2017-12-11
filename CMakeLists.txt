@@ -88,6 +88,10 @@ caffe_option(USE_LMDB "Build with lmdb" ON)
 caffe_option(ALLOW_LMDB_NOLOCK "Allow MDB_NOLOCK when reading LMDB files (only if necessary)" OFF)
 caffe_option(USE_OPENMP "Link with OpenMP (when your BLAS wants OpenMP and you get linker errors)" OFF)
 caffe_option(USE_FFT "Build with fftw3 or/and clFFT" OFF)
+caffe_option(USE_SQLITE "Build with SQLITE kernel cache" ON)
+
+# ---[ Option to force a persistent storage path
+set(CAFFE_STORAGE_PATH_OVERRIDE "" CACHE STRING "Caffe persistent storage path override (for sqlite cache)")
 
 # ---[ Flag consistency check
 if(CPU_ONLY)

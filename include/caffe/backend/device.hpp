@@ -16,6 +16,10 @@
 #include "caffe/trait_helper.hpp"
 #include "caffe/util/type_utils.hpp"
 
+#ifdef USE_SQLITE
+#include "caffe/util/db_sqlite.hpp"
+#endif
+
 namespace caffe {
 
 enum DeviceCapability {
@@ -42,6 +46,8 @@ class LibDNNBlas;
 class Device {
  public:
   explicit Device();
+
+  shared_ptr<SQLiteHelper> get_database();
 
   Backend backend() const;
   uint_tp id() const;
@@ -458,6 +464,10 @@ class Device {
   vector<shared_ptr<LibDNNBase>> libdnn_blas_;
   std::map<string, size_t> libdnn_blas_map_;
 #endif  // USE_LIBDNN
+
+#ifdef USE_SQLITE
+  shared_ptr<SQLiteHelper> database_;
+#endif
 };
 
 }  // namespace caffe

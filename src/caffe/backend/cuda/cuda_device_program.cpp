@@ -1,8 +1,9 @@
-#include <boost/filesystem.hpp>
-#include "caffe/backend/cuda/cuda_device_program.hpp"
-#include "caffe/backend/cuda/cuda_device.hpp"
 #include <iostream>
 #include <fstream>
+#include <boost/filesystem.hpp>
+
+#include "caffe/backend/cuda/cuda_device_program.hpp"
+#include "caffe/backend/cuda/cuda_device.hpp"
 
 namespace caffe {
 
@@ -22,11 +23,6 @@ CudaDeviceProgram::~CudaDeviceProgram() {
 
 bool CudaDeviceProgram::Compile(bool load_cache, bool store_cache) {
 
-  nvrtcCreateProgram(cuda_program_.get(), src_.c_str(), NULL,
-                  static_cast<CudaDevice*>(this->device_)->get_header_count(),
-                  static_cast<CudaDevice*>(this->device_)->get_header_sources(),
-                  static_cast<CudaDevice*>(this->device_)->get_header_names());
-
   vector<const char*> build_opts;
 
   cudaDeviceProp prop;
@@ -42,48 +38,80 @@ bool CudaDeviceProgram::Compile(bool load_cache, bool store_cache) {
   if (this->device_->is_fast_unsafe_math()) {
     build_opts.push_back(fum_opt.c_str());
   }
-  nvrtcCompileProgram(*cuda_program_.get(), build_opts.size(), &build_opts[0]);
 
-  size_t ptxSize;
-  nvrtcGetPTXSize(*cuda_program_.get(), &ptxSize);
-  char *ptx = new char[ptxSize];
-  nvrtcGetPTX(*cuda_program_.get(), ptx);
+  // Pointer holding binary CUDA program
+  char* ptx = nullptr;
+  size_t ptx_size = 0;
+  bool loaded_from_cache = false;
+  string flags = this->device_->name() + arch_opt + fum_opt;
 
-  cuModuleLoadDataEx(cuda_module_.get(), ptx, 0, 0, 0);
+#ifdef USE_SQLITE
+  if (load_cache) {
+    // Try to load the kernel from cache
+    int64_t id = this->device_->get_database()->GetKernelInfo(identifier(),
+                                               flags.c_str(), flags.size(),
+                                               src_.c_str(), src_.size(),
+                                               &ptx_size);
+    if (id >= 0 && ptx_size > 0) {
+      ptx = new char[ptx_size];  // NOLINT
+      loaded_from_cache = this->device_->get_database()->LoadKernel(id, ptx);
+      if (!loaded_from_cache) {
+        delete ptx;  // NOLINT
+        ptx = nullptr;
+      }
+    }
+  }
+#endif  // USE_SQLITE
 
-  CUfunction kernel;
-  cuModuleGetFunction(&kernel, *cuda_module_.get(), "caffe_gpu_memset");
+  if (!loaded_from_cache) {
+    nvrtcCreateProgram(cuda_program_.get(), src_.c_str(), NULL,
+                  static_cast<CudaDevice*>(this->device_)->get_header_count(),
+                  static_cast<CudaDevice*>(this->device_)->get_header_sources(),
+                  static_cast<CudaDevice*>(this->device_)->get_header_names());
+
+    nvrtcCompileProgram(*cuda_program_.get(), build_opts.size(),
+                        &build_opts[0]);
+
+    nvrtcGetPTXSize(*cuda_program_.get(), &ptx_size);
+    ptx = new char[ptx_size];
+    nvrtcGetPTX(*cuda_program_.get(), ptx);
 
 #ifndef NDEBUG
-  string debug_path = ".caffe_debug";
-  const char* path = debug_path.c_str();
-  boost::filesystem::path dir(path);
-  boost::filesystem::create_directory(dir);
-
-  {
-    FILE* fp = fopen((".caffe_debug/" + string_identifier() + ".cu").c_str(),
-                     "wb");
-    fwrite(this->src_.c_str(), sizeof(char), this->src_.size(), fp);
-    fclose(fp);
-  }
-
-  {
-    size_t log_size;
-    nvrtcGetProgramLogSize(*cuda_program_.get(), &log_size);
-    vector<char> log(log_size);
-    nvrtcGetProgramLog(*cuda_program_.get(), log.data());
-
-    std::cout << "CUDA compile log:" << std::endl;
-    std::cout << log.data() << std::endl;
-
-    FILE* fp = fopen((".caffe_debug/" + string_identifier() + ".cuptx").c_str(),
-                     "wb");
-    fwrite(ptx, sizeof(char), ptxSize, fp);
-    fclose(fp);
-  }
+    string debug_path = ".caffe_debug";
+    const char* path = debug_path.c_str();
+    boost::filesystem::path dir(path);
+    boost::filesystem::create_directory(dir);
+    {
+      FILE* fp = fopen((".caffe_debug/"
+          + string_identifier() + ".cu").c_str(), "wb");
+      fwrite(this->src_.c_str(), sizeof(char), this->src_.size(), fp);
+      fclose(fp);
+    }
+    {
+      size_t log_size;
+      nvrtcGetProgramLogSize(*cuda_program_.get(), &log_size);
+      vector<char> log(log_size);
+      nvrtcGetProgramLog(*cuda_program_.get(), log.data());
+      std::cout << "CUDA compile log:" << std::endl;
+      std::cout << log.data() << std::endl;
+      FILE* fp = fopen((".caffe_debug/"
+          + string_identifier() + ".cuptx").c_str(), "wb");
+      fwrite(ptx, sizeof(char), ptx_size, fp);
+      fclose(fp);
+    }
 #endif  // NDEBUG
-  free(ptx);
+#ifdef USE_SQLITE
+    if (store_cache) {
+      this->device_->get_database()->StoreKernel(identifier(),
+                                                flags.c_str(), flags.size(),
+                                                src_.c_str(), src_.size(),
+                                                ptx, ptx_size);
+    }
+#endif  // USE_SQLITE
+  }
 
+  cuModuleLoadDataEx(cuda_module_.get(), ptx, 0, 0, 0);
+  delete ptx;  // NOLINT
   return true;
 }
 
@@ -155,6 +183,10 @@ string CudaDeviceProgram::setup() {
   ss << "#define uint16_t unsigned short" << std::endl;
   ss << "#define uint32_t unsigned int" << std::endl;
   ss << "#define uint64_t unsigned long" << std::endl;
+  ss << "#define uchar unsigned char" << std::endl;
+  ss << "#define ushort unsigned short" << std::endl;
+  ss << "#define uint unsigned int" << std::endl;
+  ss << "#define ulong unsigned long" << std::endl;
 
   ss << this->define_type<int_tp>("int_tp");
   ss << this->define_type<uint_tp>("uint_tp");
@@ -400,6 +432,49 @@ string CudaDeviceProgram::kernel_arg_type_uint32_t(uint64_t flags) {
 }
 string CudaDeviceProgram::kernel_arg_type_uint64_t(uint64_t flags) {
   return "uint64_t" + pointer_suffix(flags);
+}
+
+string CudaDeviceProgram::device_type_name_void() const {
+  return "void";
+}
+string CudaDeviceProgram::device_type_name_bool() const {
+  return "bool";
+}
+string CudaDeviceProgram::device_type_name_char() const {
+  return "char";
+}
+string CudaDeviceProgram::device_type_name_half() const {
+  return "half";
+}
+string CudaDeviceProgram::device_type_name_float() const {
+  return "float";
+}
+string CudaDeviceProgram::device_type_name_double() const {
+  return "double";
+}
+string CudaDeviceProgram::device_type_name_int8() const {
+  return "char";
+}
+string CudaDeviceProgram::device_type_name_int16() const {
+  return "short";
+}
+string CudaDeviceProgram::device_type_name_int32() const {
+  return "int";
+}
+string CudaDeviceProgram::device_type_name_int64() const {
+  return "long";
+}
+string CudaDeviceProgram::device_type_name_uint8() const {
+  return "uchar";
+}
+string CudaDeviceProgram::device_type_name_uint16() const {
+  return "ushort";
+}
+string CudaDeviceProgram::device_type_name_uint32() const {
+  return "uint";
+}
+string CudaDeviceProgram::device_type_name_uint64() const {
+  return "ulong";
 }
 
 #endif  // USE_CUDA

@@ -64,7 +64,7 @@ void PReLULayer<Dtype, MItype, MOtype>::GenerateProgram() {
     ss << this->device_program_->kernel_loop("uint_tp", "index", "n");
     ss << "int_tp c = (index / dim) % channels / div_factor;" << std::endl;
     ss << "out_diff[index] = in_diff[index]"
-       << " * ((in_data[index] > (Dtype)0) ? (Dtype)1 : (Dtype)0"
+       << " * (((in_data[index] > (Dtype)0) ? (Dtype)1 : (Dtype)0)"
        << " + ((in_data[index] <= (Dtype)0) ? (Dtype)1 : (Dtype)0)"
        << " * slope_data[c]);"
        << std::endl;
@@ -158,7 +158,7 @@ void PReLULayer<Dtype, MItype, MOtype>::Backward_gpu(
 
   // Propagate to param
   // Since to write bottom diff will affect top diff if top and bottom blobs
-  // are identical (in-place computaion), we first compute param backward to
+  // are identical (in-place computation), we first compute param backward to
   // keep top_diff unchanged.
   if (this->param_propagate_down_[0]) {
     vptr<Dtype> slope_diff = this->blobs_[0]->mutable_gpu_diff();

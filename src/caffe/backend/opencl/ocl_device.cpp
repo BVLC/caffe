@@ -64,6 +64,8 @@ void OclDevice::Init() {
     ctx.add_queue(ctx.devices()[0]);
   }
 
+  Device::Init();
+
   this->CreateMathProgram();
   this->CreateIm2ColProgram();
 }

@@ -15,7 +15,8 @@
 #ifdef USE_CUDA
 /* Test device */
 #define CUDA_TEST_DEVICE ${CUDA_TEST_DEVICE}
-
 #endif  // USE_CUDA
+
+#define CAFFE_STORAGE_PATH_OVERRIDE "${CAFFE_STORAGE_PATH_OVERRIDE}"
 
 #endif  // CAFFE_CONFIG_HPP_

@@ -9,7 +9,17 @@ namespace caffe {
 
 Device::Device() {}
 
-void Device::Init() {}
+void Device::Init() {
+#ifdef USE_SQLITE
+  database_ = std::make_shared<SQLiteHelper>(name() + "."
+                                             + backend_name(backend()));
+  database_->CreateTables();
+#endif
+}
+
+shared_ptr<SQLiteHelper> Device::get_database() {
+  return database_;
+}
 
 string Device::name() { return "CPU"; }
 
@@ -45,7 +55,6 @@ void Device::FreeMemHost(void* ptr) {
 }
 
 void Device::FreeMemDevice(vptr<void> ptr) {
-  NOT_IMPLEMENTED;
 }
 
 uint_tp Device::num_queues() {
