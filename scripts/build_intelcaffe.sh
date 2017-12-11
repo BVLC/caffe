@@ -6,6 +6,7 @@ function usage
     echo "Usage:"
     echo "  $script_name [--multinode] [--compiler icc/gcc] [--rebuild] "
     echo "               [--boost_root boost_install_dir] [--layer_timing]"
+    echo "               [--debug]"
     echo ""
     echo "  Parameters:"
     echo "    multinode:    specify it to build caffe for multinode. build for single"
@@ -18,6 +19,7 @@ function usage
     echo "                  boost in directory of caffe source and build it."
     echo "    layer_timing: build caffe for multinode with CAFFE_PER_LAYER_TIMINGS flag."
     echo "                  by default, the flag is NOT included for build."
+    echo "    debug:        build caffe with debug flag. by default, the option is off."
 }
 
 function check_dependency
@@ -47,6 +49,10 @@ function build_caffe_gcc
         if [ -f $mlslvars_sh ]; then
             source $mlslvars_sh
         fi
+    fi
+
+    if [ $debug -eq 1 ]; then
+        echo "DEBUG := 1" >> Makefile.config
     fi
 
     if [ $is_rebuild -eq 1 ]; then
@@ -95,6 +101,10 @@ function build_caffe_icc
         fi
     fi
 
+    if [ $debug -eq 1 ]; then
+        cmake_params+=" -DDEBUG=1"
+    fi
+
     build_dir=$root_dir/build
     if [ $is_rebuild -eq 1 ] && [ -d $build_dir ]; then
         rm -r $build_dir
@@ -123,6 +133,7 @@ function sync_caffe_dir
 
 root_dir=$(cd $(dirname $(dirname $0)); pwd)
 
+debug=0
 is_layer_timing=0
 boost_root=""
 is_rebuild=0
@@ -152,6 +163,9 @@ do
         --help)
             usage
             exit 0
+            ;;
+        --debug)
+            debug=1
             ;;
         *)
             echo "Unknown option: $key"

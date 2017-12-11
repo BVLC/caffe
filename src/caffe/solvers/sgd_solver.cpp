@@ -49,11 +49,15 @@ namespace caffe {
 #ifdef CAFFE_PER_LAYER_TIMINGS
 
 #define LAYER_UPDATE_TIMING_START() do { \
-  this->timer.Start(); \
+  if (this->net_->phase() == TRAIN) { \
+    this->net_->timer.Start(); \
+  } \
 }while(0)
 
 #define LAYER_UPDATE_TIMING_STOP(index) do { \
-  this->update_time_per_layer[index] += this->timer.MicroSeconds(); \
+  if (this->net_->phase() == TRAIN) { \
+    this->net_->update_time_per_layer[index] += this->net_->timer.MicroSeconds(); \
+  } \
 }while(0)
 
 #else

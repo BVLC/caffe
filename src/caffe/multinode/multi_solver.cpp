@@ -46,6 +46,53 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace caffe {
 
+#ifdef CAFFE_PER_LAYER_TIMINGS
+
+#define LAYER_TIMING_START() do { \
+  if (root_solver_->net()->phase() == TRAIN) { \
+    root_solver_->net()->timer.Start(); \
+  } \
+}while(0)
+
+#define LAYER_TIMING_STOP(name, index) do { \
+  if (root_solver_->net()->phase() == TRAIN) { \
+    root_solver_->net()->name##_time_per_layer[index] += root_solver_->net()->timer.MicroSeconds(); \
+  } \
+}while(0)
+
+#ifdef FW_OVERLAP_OPT
+#define LAYER_WAIT_TIMING_START() do { \
+  if (root_solver_->net()->phase() == TRAIN) { \
+    root_solver_->net()->wait_timer.Start(); \
+  } \
+}while(0)
+
+#define LAYER_WAIT_TIMING_STOP(layer_index) do { \
+  if (root_solver_->net()->phase() == TRAIN) { \
+    root_solver_->net()->waitcomm_time_per_layer[layer_index] += root_solver_->net()->wait_timer.MicroSeconds(); \
+  } \
+}while(0)
+
+#define LAYER_REMOVE_UPDATE_TIME(layer_i, layer_k) do { \
+  if (root_solver_->net()->phase() == TRAIN) { \
+    root_solver_->net()->waitcomm_time_per_layer[layer_i] -= root_solver_->net()->update_time_per_layer[layer_k]; \
+  } \
+} while (0)
+#endif
+
+#else
+
+#define LAYER_TIMING_START()
+#define LAYER_TIMING_STOP(name,index)
+
+#ifdef FW_OVERLAP_OPT
+#define LAYER_WAIT_TIMING_START()
+#define LAYER_WAIT_TIMING_STOP(index)
+#define LAYER_REMOVE_UPDATE_TIME(layer_i, layer_k)
+#endif
+
+#endif /* CAFFE_PER_LAYER_TIMINGS */
+
 
 template <typename Dtype>
 inline bool MultiSolver<Dtype>::IsSkipWaitGradient(int layer_id) {
