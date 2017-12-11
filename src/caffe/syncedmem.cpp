@@ -30,7 +30,7 @@ SyncedMemory::SyncedMemory(size_t size)
 SyncedMemory::~SyncedMemory() {
   check_device();
   if (cpu_ptr_ && own_cpu_data_) {
-    host_free(cpu_ptr_, size_);
+    host_free(cpu_ptr_);
   }
 
 #ifndef CPU_ONLY
@@ -44,7 +44,7 @@ inline void SyncedMemory::to_cpu() {
   check_device();
   switch (head_) {
   case UNINITIALIZED:
-    host_malloc(&cpu_ptr_, size_);
+    cpu_ptr_ = host_malloc(size_);
     caffe_memset(size_, 0, cpu_ptr_);
     head_ = HEAD_AT_CPU;
     own_cpu_data_ = true;
@@ -52,10 +52,11 @@ inline void SyncedMemory::to_cpu() {
   case HEAD_AT_GPU:
 #ifndef CPU_ONLY
     if (cpu_ptr_ == NULL) {
-      host_malloc(&cpu_ptr_, size_);
+      cpu_ptr_ = host_malloc(size_);
       own_cpu_data_ = true;
     }
-    CUDA_CHECK(cudaMemcpyAsync(cpu_ptr_, gpu_ptr_, size_, cudaMemcpyDefault, cudaStreamPerThread));  // NOLINT(caffe/alt_fn)
+    CUDA_CHECK(cudaMemcpyAsync(cpu_ptr_, gpu_ptr_, size_, cudaMemcpyDefault,
+                               cudaStreamPerThread)); // NOLINT(caffe/alt_fn)
     CUDA_CHECK(cudaStreamSynchronize(cudaStreamPerThread));
     //我們確信該線程的任務暫時完成，所以釋放一些顯存
     if (device_pool_.get()) {
@@ -88,7 +89,8 @@ inline void SyncedMemory::to_gpu() {
       gpu_ptr_ = gpu_malloc(size_);
       own_gpu_data_ = true;
     }
-    CUDA_CHECK(cudaMemcpyAsync(gpu_ptr_, cpu_ptr_, size_, cudaMemcpyDefault, cudaStreamPerThread));  // NOLINT(caffe/alt_fn)
+    CUDA_CHECK(cudaMemcpyAsync(gpu_ptr_, cpu_ptr_, size_, cudaMemcpyDefault,
+                               cudaStreamPerThread)); // NOLINT(caffe/alt_fn)
     head_ = SYNCED;
     break;
   case HEAD_AT_GPU:
@@ -110,7 +112,7 @@ void SyncedMemory::set_cpu_data(void *data) {
   check_device();
   CHECK(data);
   if (own_cpu_data_) {
-    host_free(cpu_ptr_, size_);
+    host_free(cpu_ptr_);
   }
   cpu_ptr_ = data;
   head_ = HEAD_AT_CPU;
@@ -190,14 +192,14 @@ void *SyncedMemory::gpu_malloc(size_t size) {
   if (device_pool_.get()) {
     ptr = device_pool_->alloc(size);
     if (ptr) {
-   //   mem_mutex.unlock();
+      // mem_mutex.unlock();
       return ptr;
     }
   }
 
   device_pool_.reset();
   CUDA_CHECK(cudaMalloc(&ptr, size));
- // mem_mutex.unlock();
+  // mem_mutex.unlock();
 
   return ptr;
 }
@@ -222,35 +224,46 @@ void SyncedMemory::gpu_free(void *data) {
 // The improvement in performance seems negligible in the single GPU case,
 // but might be more significant for parallel training. Most importantly,
 // it improved stability for large models on many GPUs.
-void SyncedMemory::host_malloc(void **ptr, size_t size) {
+void *SyncedMemory::host_malloc(size_t size) {
+  /*
+  if(!mem_mutex.try_lock()) {
+    throw std::runtime_error("concurrent update");
+  }
+  */
+  void *ptr = nullptr;
 #ifndef CPU_ONLY
   constexpr size_t pinned_memory_max_size = 128;
   if (Caffe::mode() == Caffe::GPU && size <= pinned_memory_max_size) {
     host_pool_ = Caffe::host_pool();
-    if (host_pool_.get()) {
-      *ptr = host_pool_->alloc(size);
-      if (*ptr) {
+    if (host_pool_) {
+      ptr = host_pool_->alloc(size);
+      if (ptr) {
         cpu_malloc_use_cuda_ = true;
-        return;
+        // mem_mutex.unlock();
+        return ptr;
       }
     }
     host_pool_.reset();
-    if (cudaMallocHost(ptr, size) == cudaSuccess) {
+    if (cudaMallocHost(&ptr, size) == cudaSuccess) {
+      CHECK(ptr) << "host allocation of size " << size << " failed";
       cpu_malloc_use_cuda_ = true;
-      return;
+      // mem_mutex.unlock();
+      return ptr;
     }
   }
 #endif
 #ifdef USE_MKL
-  *ptr = mkl_malloc(size ? size : 1, 64);
+  ptr = mkl_malloc(size ? size : 1, 64);
 #else
-  *ptr = malloc(size);
+  ptr = malloc(size);
 #endif
   cpu_malloc_use_cuda_ = false;
-  CHECK(*ptr) << "host allocation of size " << size << " failed";
+  CHECK(ptr) << "host allocation of size " << size << " failed";
+  // mem_mutex.unlock();
+  return ptr;
 }
 
-void SyncedMemory::host_free(void *ptr, size_t size) {
+void SyncedMemory::host_free(void *ptr) {
 #ifndef CPU_ONLY
   if (cpu_malloc_use_cuda_) {
     if (host_pool_.get()) {

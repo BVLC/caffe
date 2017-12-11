@@ -30,13 +30,12 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
 
   virtual void AddDatumVector(const vector<Datum>& datum_vector);
 #ifdef USE_OPENCV
-  virtual void AddMatVector(const vector<cv::Mat>& mat_vector,
-      const vector<int>& labels);
+  virtual void AddMatVector(const vector<cv::Mat>& mat_vector);
 #endif  // USE_OPENCV
 
   // Reset should accept const pointers, but can't, because the memory
   //  will be given to Blob, which is mutable
-  void Reset(Dtype* data, Dtype* label, int n);
+  void Reset(Dtype* data, int n);
   void set_batch_size(int new_size);
 
   int batch_size() { return batch_size_; }
@@ -50,11 +49,9 @@ class MemoryDataLayer : public BaseDataLayer<Dtype> {
 
   int batch_size_, channels_, height_, width_, size_;
   Dtype* data_;
-  Dtype* labels_;
   int n_;
   size_t pos_;
   Blob<Dtype> added_data_;
-  Blob<Dtype> added_label_;
   bool has_new_data_;
 };
 
