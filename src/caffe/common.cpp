@@ -57,7 +57,6 @@ void Caffe::set_device(int device_id) {
     if (Get().device_id_ == device_id) {
       return;
     }
-    std::cout << "device_id_=" << Get().device_id_ << std::endl;
     throw std::runtime_error("caffe thread has binded device");
   }
 

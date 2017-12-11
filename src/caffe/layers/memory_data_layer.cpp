@@ -27,8 +27,6 @@ void MemoryDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype> *> &bottom,
 
 template <typename Dtype>
 void MemoryDataLayer<Dtype>::AddDatumVector(const vector<Datum> &datum_vector) {
-  CHECK(!has_new_data_)
-      << "Can't add data until current data has been consumed.";
   size_t num = datum_vector.size();
   CHECK_GT(num, 0) << "There is no datum to add.";
   CHECK_EQ(num % batch_size_, 0)
@@ -39,15 +37,12 @@ void MemoryDataLayer<Dtype>::AddDatumVector(const vector<Datum> &datum_vector) {
   // num_images == batch_size_
   Dtype *top_data = added_data_.mutable_cpu_data();
   Reset(top_data, num);
-  has_new_data_ = true;
 }
 
 #ifdef USE_OPENCV
 template <typename Dtype>
 void MemoryDataLayer<Dtype>::AddMatVector(const vector<cv::Mat> &mat_vector) {
   size_t num = mat_vector.size();
-  CHECK(!has_new_data_)
-      << "Can't add mat until current data has been consumed.";
   CHECK_GT(num, 0) << "There is no mat to add";
   CHECK_EQ(num % batch_size_, 0)
       << "The added data must be a multiple of the batch size.";
@@ -56,7 +51,6 @@ void MemoryDataLayer<Dtype>::AddMatVector(const vector<cv::Mat> &mat_vector) {
   this->data_transformer_->Transform(mat_vector, &added_data_);
   Dtype *top_data = added_data_.mutable_cpu_data();
   Reset(top_data, num);
-  has_new_data_ = true;
 }
 #endif // USE_OPENCV
 
@@ -76,8 +70,6 @@ void MemoryDataLayer<Dtype>::Reset(Dtype *data, int n) {
 
 template <typename Dtype>
 void MemoryDataLayer<Dtype>::set_batch_size(int new_size) {
-  CHECK(!has_new_data_)
-      << "Can't change batch_size until current data has been consumed.";
   batch_size_ = new_size;
   added_data_.Reshape(batch_size_, channels_, height_, width_);
 }
@@ -85,12 +77,27 @@ void MemoryDataLayer<Dtype>::set_batch_size(int new_size) {
 template <typename Dtype>
 void MemoryDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype> *> &bottom,
                                          const vector<Blob<Dtype> *> &top) {
+  Forward_const_cpu(bottom,top);
+}
+
+template <typename Dtype>
+void MemoryDataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype> *> &bottom,
+                                         const vector<Blob<Dtype> *> &top) {
+  Forward_const_gpu(bottom,top);
+}
+
+template <typename Dtype>
+void MemoryDataLayer<Dtype>::Forward_const_cpu(const vector<Blob<Dtype> *> &bottom,
+                                         const vector<Blob<Dtype> *> &top) const {
   CHECK(data_) << "MemoryDataLayer needs to be initialized by calling Reset";
   top[0]->Reshape(batch_size_, channels_, height_, width_);
-  top[0]->set_cpu_data(data_ + pos_ * size_);
-  pos_ = (pos_ + batch_size_) % n_;
-  if (pos_ == 0)
-    has_new_data_ = false;
+  top[0]->set_cpu_data(data_ + batch_size_* size_);
+}
+
+template <typename Dtype>
+void MemoryDataLayer<Dtype>::Forward_const_gpu(const vector<Blob<Dtype> *> &bottom,
+                                         const vector<Blob<Dtype> *> &top) const {
+  Forward_const_cpu(bottom,top);
 }
 
 INSTANTIATE_CLASS(MemoryDataLayer);

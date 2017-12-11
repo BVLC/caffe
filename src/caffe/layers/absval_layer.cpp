@@ -16,6 +16,12 @@ void AbsValLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void AbsValLayer<Dtype>::Forward_cpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
+  Forward_const_cpu(bottom,top);
+}
+
+template <typename Dtype>
+void AbsValLayer<Dtype>::Forward_const_cpu(
+    const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) const {
   const int count = top[0]->count();
   Dtype* top_data = top[0]->mutable_cpu_data();
   caffe_abs(count, bottom[0]->cpu_data(), top_data);
