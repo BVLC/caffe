@@ -34,7 +34,6 @@ void MemoryDataLayer<Dtype>::AddDatumVector(const vector<Datum> &datum_vector) {
   added_data_.Reshape(num, channels_, height_, width_);
   // Apply data transformations (mirror, scale, crop...)
   this->data_transformer_->Transform(datum_vector, &added_data_);
-  // num_images == batch_size_
   Dtype *top_data = added_data_.mutable_cpu_data();
   Reset(top_data, num);
 }
@@ -64,8 +63,6 @@ void MemoryDataLayer<Dtype>::Reset(Dtype *data, int n) {
     LOG(WARNING) << this->type() << " does not transform array data on Reset()";
   }
   data_ = data;
-  n_ = n;
-  pos_ = 0;
 }
 
 template <typename Dtype>
@@ -77,29 +74,30 @@ void MemoryDataLayer<Dtype>::set_batch_size(int new_size) {
 template <typename Dtype>
 void MemoryDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype> *> &bottom,
                                          const vector<Blob<Dtype> *> &top) {
-  Forward_const_cpu(bottom,top);
+  Forward_const_cpu(bottom, top);
+}
+
+template <typename Dtype>
+void MemoryDataLayer<Dtype>::Forward_const_cpu(
+    const vector<Blob<Dtype> *> &bottom,
+    const vector<Blob<Dtype> *> &top) const {
+  CHECK(data_) << "MemoryDataLayer needs to be initialized by calling Reset";
+  top[0]->Reshape(batch_size_, channels_, height_, width_);
+  top[0]->set_cpu_data(data_);
 }
 
 template <typename Dtype>
 void MemoryDataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype> *> &bottom,
                                          const vector<Blob<Dtype> *> &top) {
-  Forward_const_gpu(bottom,top);
+  Forward_const_gpu(bottom, top);
 }
 
 template <typename Dtype>
-void MemoryDataLayer<Dtype>::Forward_const_cpu(const vector<Blob<Dtype> *> &bottom,
-                                         const vector<Blob<Dtype> *> &top) const {
-  CHECK(data_) << "MemoryDataLayer needs to be initialized by calling Reset";
-  top[0]->Reshape(batch_size_, channels_, height_, width_);
-  top[0]->set_cpu_data(data_ + batch_size_* size_);
+void MemoryDataLayer<Dtype>::Forward_const_gpu(
+    const vector<Blob<Dtype> *> &bottom,
+    const vector<Blob<Dtype> *> &top) const {
+  Forward_const_cpu(bottom, top);
 }
-
-template <typename Dtype>
-void MemoryDataLayer<Dtype>::Forward_const_gpu(const vector<Blob<Dtype> *> &bottom,
-                                         const vector<Blob<Dtype> *> &top) const {
-  Forward_const_cpu(bottom,top);
-}
-
 INSTANTIATE_CLASS(MemoryDataLayer);
 REGISTER_LAYER_CLASS(MemoryData);
 
