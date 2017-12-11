@@ -28,68 +28,83 @@ vector<int> LocalConvolutionLayer<Dtype>::compute_output_shape() const {
 }
 
 template <typename Dtype>
-void LocalConvolutionLayer<Dtype>::init_local_offset() {
+void LocalConvolutionLayer<Dtype>::init_local_offset(int bottom_width,
+                                                     int bottom_height) const {
   int h, w, offset_h, offset_w, symmetry_offset_h, symmetry_offset_w;
-  Blob<int> &idx_to_off = this->loc_idx_to_offset_;
-  int *idx_to_off_data = idx_to_off.mutable_cpu_data();
+
+  if (!this->loc_idx_to_offset_ptr_.get()) {
+    this->loc_idx_to_offset_ptr_.reset(new Blob<int>);
+    this->loc_idx_to_offset_ptr_->Reshape(this->local_region_num_h_,
+                                          this->local_region_num_w_, 2, 1);
+  }
+
+  int *idx_to_off_data = loc_idx_to_offset_ptr_->mutable_cpu_data();
   int loc_h = this->conv_input_shape_ptr_->cpu_data()[1];
   int loc_w = this->conv_input_shape_ptr_->cpu_data()[2];
   for (h = 0; h < this->local_region_num_h_ / 2; ++h) {
     offset_h = h * this->local_region_step_h_;
-    symmetry_offset_h = this->bottom_height_ - (offset_h + loc_h);
+    symmetry_offset_h = bottom_height - (offset_h + loc_h);
     for (w = 0; w < this->local_region_num_w_ / 2; ++w) {
       offset_w = w * this->local_region_step_w_;
-      symmetry_offset_w = this->bottom_width_ - (offset_w + loc_w);
-      idx_to_off_data[idx_to_off.offset(h, w, 0, 0)] = offset_h;
-      idx_to_off_data[idx_to_off.offset(h, w, 1, 0)] = offset_w;
+      symmetry_offset_w = bottom_width - (offset_w + loc_w);
+      idx_to_off_data[this->conv_input_shape_ptr_->offset(h, w, 0, 0)] =
+          offset_h;
+      idx_to_off_data[this->conv_input_shape_ptr_->offset(h, w, 1, 0)] =
+          offset_w;
 
-      idx_to_off_data[idx_to_off.offset(h, this->local_region_num_w_ - 1 - w, 0,
-                                        0)] = offset_h;
-      idx_to_off_data[idx_to_off.offset(h, this->local_region_num_w_ - 1 - w, 1,
-                                        0)] = symmetry_offset_w;
+      idx_to_off_data[this->conv_input_shape_ptr_->offset(
+          h, this->local_region_num_w_ - 1 - w, 0, 0)] = offset_h;
+      idx_to_off_data[this->conv_input_shape_ptr_->offset(
+          h, this->local_region_num_w_ - 1 - w, 1, 0)] = symmetry_offset_w;
 
-      idx_to_off_data[idx_to_off.offset(this->local_region_num_h_ - 1 - h, w, 0,
-                                        0)] = symmetry_offset_h;
-      idx_to_off_data[idx_to_off.offset(this->local_region_num_h_ - 1 - h, w, 1,
-                                        0)] = offset_w;
+      idx_to_off_data[this->conv_input_shape_ptr_->offset(
+          this->local_region_num_h_ - 1 - h, w, 0, 0)] = symmetry_offset_h;
+      idx_to_off_data[this->conv_input_shape_ptr_->offset(
+          this->local_region_num_h_ - 1 - h, w, 1, 0)] = offset_w;
 
-      idx_to_off_data[idx_to_off.offset(this->local_region_num_h_ - 1 - h,
-                                        this->local_region_num_w_ - 1 - w, 0,
-                                        0)] = symmetry_offset_h;
-      idx_to_off_data[idx_to_off.offset(this->local_region_num_h_ - 1 - h,
-                                        this->local_region_num_w_ - 1 - w, 1,
-                                        0)] = symmetry_offset_w;
+      idx_to_off_data[this->conv_input_shape_ptr_->offset(
+          this->local_region_num_h_ - 1 - h, this->local_region_num_w_ - 1 - w,
+          0, 0)] = symmetry_offset_h;
+      idx_to_off_data[this->conv_input_shape_ptr_->offset(
+          this->local_region_num_h_ - 1 - h, this->local_region_num_w_ - 1 - w,
+          1, 0)] = symmetry_offset_w;
     }
     if (local_region_num_w_ % 2) {
-      offset_w = (this->bottom_width_ - loc_w) / 2;
+      offset_w = (bottom_width - loc_w) / 2;
 
-      idx_to_off_data[idx_to_off.offset(h, w, 0, 0)] = offset_h;
-      idx_to_off_data[idx_to_off.offset(h, w, 1, 0)] = offset_w;
+      idx_to_off_data[this->conv_input_shape_ptr_->offset(h, w, 0, 0)] =
+          offset_h;
+      idx_to_off_data[this->conv_input_shape_ptr_->offset(h, w, 1, 0)] =
+          offset_w;
 
-      idx_to_off_data[idx_to_off.offset(this->local_region_num_h_ - 1 - h, w, 0,
-                                        0)] = symmetry_offset_h;
-      idx_to_off_data[idx_to_off.offset(this->local_region_num_h_ - 1 - h, w, 1,
-                                        0)] = offset_w;
+      idx_to_off_data[this->conv_input_shape_ptr_->offset(
+          this->local_region_num_h_ - 1 - h, w, 0, 0)] = symmetry_offset_h;
+      idx_to_off_data[this->conv_input_shape_ptr_->offset(
+          this->local_region_num_h_ - 1 - h, w, 1, 0)] = offset_w;
     }
   }
   if (this->local_region_num_h_ % 2) {
-    offset_h = (this->bottom_height_ - loc_h) / 2;
+    offset_h = (bottom_height - loc_h) / 2;
     for (w = 0; w < this->local_region_num_w_ / 2; ++w) {
       offset_w = w * this->local_region_step_w_;
-      symmetry_offset_w = this->bottom_width_ - (offset_w + loc_w);
+      symmetry_offset_w = bottom_width - (offset_w + loc_w);
 
-      idx_to_off_data[idx_to_off.offset(h, w, 0, 0)] = offset_h;
-      idx_to_off_data[idx_to_off.offset(h, w, 1, 0)] = offset_w;
+      idx_to_off_data[this->conv_input_shape_ptr_->offset(h, w, 0, 0)] =
+          offset_h;
+      idx_to_off_data[this->conv_input_shape_ptr_->offset(h, w, 1, 0)] =
+          offset_w;
 
-      idx_to_off_data[idx_to_off.offset(h, this->local_region_num_w_ - 1 - w, 0,
-                                        0)] = offset_h;
-      idx_to_off_data[idx_to_off.offset(h, this->local_region_num_w_ - 1 - w, 1,
-                                        0)] = symmetry_offset_w;
+      idx_to_off_data[this->conv_input_shape_ptr_->offset(
+          h, this->local_region_num_w_ - 1 - w, 0, 0)] = offset_h;
+      idx_to_off_data[this->conv_input_shape_ptr_->offset(
+          h, this->local_region_num_w_ - 1 - w, 1, 0)] = symmetry_offset_w;
     }
     if (this->local_region_num_w_ % 2) {
-      offset_w = (this->bottom_width_ - loc_w) / 2;
-      idx_to_off_data[idx_to_off.offset(h, w, 0, 0)] = offset_h;
-      idx_to_off_data[idx_to_off.offset(h, w, 1, 0)] = offset_w;
+      offset_w = (bottom_width - loc_w) / 2;
+      idx_to_off_data[this->conv_input_shape_ptr_->offset(h, w, 0, 0)] =
+          offset_h;
+      idx_to_off_data[this->conv_input_shape_ptr_->offset(h, w, 1, 0)] =
+          offset_w;
     }
   }
 }
@@ -270,7 +285,7 @@ void LocalConvolutionLayer<Dtype>::LayerSetUp(
   CHECK_EQ(this->num_output_ % this->group_, 0)
       << "Number of output should be multiples of group.";
 
-  //his->conv_out_channels_ = this->num_output_;
+  // his->conv_out_channels_ = this->num_output_;
   // this->conv_in_channels_ = this->channels_;
   this->L_ = this->local_region_num_w_ *
              this->local_region_num_h_; // number of local regions
@@ -301,9 +316,6 @@ void LocalConvolutionLayer<Dtype>::LayerSetUp(
       bias_filler->Fill(this->blobs_[1].get());
     }
   }
-
-  this->loc_idx_to_offset_.Reshape(this->local_region_num_h_,
-                                   this->local_region_num_w_, 2, 1);
 }
 
 template <typename Dtype>
@@ -317,17 +329,17 @@ void LocalConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype> *> &bottom,
       << "corresponding to (num, channels, height, width)";
 
   const int num = bottom[0]->num();
-  this->bottom_height_ = bottom[0]->height();
-  this->bottom_width_ = bottom[0]->width();
+  auto bottom_height = bottom[0]->height();
+  auto bottom_width = bottom[0]->width();
 
   // TODO: generalize to handle inputs of different shapes.
   for (int bottom_id = 1; bottom_id < bottom.size(); ++bottom_id) {
     CHECK_EQ(num, bottom[bottom_id]->num()) << "Inputs must have same num.";
     CHECK_EQ(this->channels_, bottom[bottom_id]->channels())
         << "Inputs must have same channels.";
-    CHECK_EQ(this->bottom_height_, bottom[0]->height())
+    CHECK_EQ(bottom_height, bottom[0]->height())
         << "Inputs must have same height.";
-    CHECK_EQ(this->bottom_width_, bottom[0]->width())
+    CHECK_EQ(bottom_width, bottom[0]->width())
         << "Inputs must have same width.";
   }
   // local region height and width
@@ -337,13 +349,14 @@ void LocalConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype> *> &bottom,
 
   conv_input_shape_data[0] = this->channels_;
   conv_input_shape_data[1] =
-      static_cast<int>(bottom_height_ * local_region_ratio_h_);
+      static_cast<int>(bottom_height * local_region_ratio_h_);
   conv_input_shape_data[2] =
-      static_cast<int>(bottom_width_ * local_region_ratio_w_);
+      static_cast<int>(bottom_width * local_region_ratio_w_);
 
   // Shape the tops.
-  //this->bottom_shape_ = &bottom[0]->shape();
-  this->bottom_shape_.reset(const_cast<std::vector<int>*>(&bottom[0]->shape()));
+  // this->bottom_shape_ = &bottom[0]->shape();
+  this->bottom_shape_.reset(
+      const_cast<std::vector<int> *>(&bottom[0]->shape()));
   auto output_shape = compute_output_shape();
   this->top_height_ = output_shape[0] * this->local_region_num_h_;
   this->top_width_ = output_shape[1] * this->local_region_num_w_;
@@ -352,7 +365,8 @@ void LocalConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype> *> &bottom,
     top[top_id]->Reshape(num, this->num_output_, this->top_height_,
                          this->top_width_);
   }
-  this->conv_out_spatial_dim_ptr_.reset(new int(output_shape[0] * output_shape[1]));
+  this->conv_out_spatial_dim_ptr_.reset(
+      new int(output_shape[0] * output_shape[1]));
 
   this->kernel_dim_ = this->channels_ * this->kernel_shape_.cpu_data()[0] *
                       this->kernel_shape_.cpu_data()[1] / this->group_;
@@ -361,8 +375,8 @@ void LocalConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype> *> &bottom,
   // overly large memory usage. In the special case of 1x1 convolution
   // it goes lazily unused to save memory.
 
-  this->col_buffer_ptr_.reset(new Blob<Dtype>(1, this->kernel_dim_ * this->group_,
-                            output_shape[0], output_shape[1]));
+  this->col_buffer_ptr_.reset(new Blob<Dtype>(
+      1, this->kernel_dim_ * this->group_, output_shape[0], output_shape[1]));
   // Set up the all ones "bias multiplier" for adding biases by BLAS
   if (this->bias_term_) {
     vector<int> bias_multiplier_shape(1, output_shape[0] * output_shape[1]);
@@ -374,12 +388,15 @@ void LocalConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype> *> &bottom,
   // create map of local region index to local region offset, the local regions'
   // offsets are central symmetry
   //  int h, w, offset_w, symmetry_offset_w, offset_h, symmetry_offset_h;
-  init_local_offset();
+  init_local_offset(bottom_width, bottom_height);
 
-  loc_bottom_buffer_.Reshape(this->L_, conv_input_shape_data[0],
-                             conv_input_shape_data[1],
-                             conv_input_shape_data[2]);
-  loc_top_buffer_.Reshape(this->L_, this->num_output_ , output_shape[0],
+  if (!loc_bottom_buffer_ptr_.get()) {
+    loc_bottom_buffer_ptr_.reset(new Blob<Dtype>);
+  }
+  loc_bottom_buffer_ptr_->Reshape(this->L_, conv_input_shape_data[0],
+                                  conv_input_shape_data[1],
+                                  conv_input_shape_data[2]);
+  loc_top_buffer_.Reshape(this->L_, this->num_output_, output_shape[0],
                           output_shape[1]);
 }
 
@@ -387,12 +404,10 @@ template <typename Dtype>
 void LocalConvolutionLayer<Dtype>::Forward_cpu(
     const vector<Blob<Dtype> *> &bottom, const vector<Blob<Dtype> *> &top) {
 
-  Dtype *loc_bottom_data = loc_bottom_buffer_.mutable_cpu_data();
+  Dtype *loc_bottom_data = loc_bottom_buffer_ptr_->mutable_cpu_data();
   Dtype *loc_top_data = loc_top_buffer_.mutable_cpu_data();
   const Dtype *weight = this->blobs_[0]->cpu_data();
 
-  const Blob<int> *idx_to_off = &this->loc_idx_to_offset_;
-  const int *idx_to_off_data = idx_to_off->cpu_data();
   const int num = bottom[0]->num();
 
   for (int i = 0; i < bottom.size(); i++) {
@@ -409,14 +424,19 @@ void LocalConvolutionLayer<Dtype>::Forward_cpu(
           int loc_num = lh * local_region_num_w_ + lw;
           const Dtype *loc_weight = weight + this->blobs_[0]->offset(loc_num);
           Dtype *loc_bottom =
-              loc_bottom_data + loc_bottom_buffer_.offset(loc_num);
+              loc_bottom_data + loc_bottom_buffer_ptr_->offset(loc_num);
           Dtype *loc_top = loc_top_data + loc_top_buffer_.offset(loc_num);
-          crop_loc_patch_cpu(single_bottom_data, bottom_w, bottom_h, bottom_c,
-                             this->conv_input_shape_ptr_->cpu_data()[2],
-                             this->conv_input_shape_ptr_->cpu_data()[1],
-                             idx_to_off_data[idx_to_off->offset(lh, lw, 1, 0)],
-                             idx_to_off_data[idx_to_off->offset(lh, lw, 0, 0)],
-                             loc_bottom);
+          crop_loc_patch_cpu(
+              single_bottom_data, bottom_w, bottom_h, bottom_c,
+              this->conv_input_shape_ptr_->cpu_data()[2],
+              this->conv_input_shape_ptr_->cpu_data()[1],
+              this->loc_idx_to_offset_ptr_
+                  ->cpu_data()[this->loc_idx_to_offset_ptr_->offset(lh, lw, 1,
+                                                                    0)],
+              this->loc_idx_to_offset_ptr_
+                  ->cpu_data()[this->loc_idx_to_offset_ptr_->offset(lh, lw, 0,
+                                                                    0)],
+              loc_bottom);
           this->forward_cpu_gemm(loc_bottom, loc_weight, loc_top, false);
           if (this->bias_term_) {
             const Dtype *bias =

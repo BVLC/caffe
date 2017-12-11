@@ -90,12 +90,11 @@ void LocalConvolutionLayer<Dtype>::realign_loc_conv_result_gpu(
 template <typename Dtype>
 void LocalConvolutionLayer<Dtype>::Forward_gpu(
     const vector<Blob<Dtype> *> &bottom, const vector<Blob<Dtype> *> &top) {
-  Dtype *loc_bottom_data = loc_bottom_buffer_.mutable_gpu_data();
+  Dtype *loc_bottom_data = loc_bottom_buffer_ptr_->mutable_gpu_data();
   Dtype *loc_top_data = loc_top_buffer_.mutable_gpu_data();
   const Dtype *weight = this->blobs_[0]->gpu_data();
 
-  const Blob<int> *idx_to_off = &this->loc_idx_to_offset_;
-  const int *idx_to_off_data = idx_to_off->cpu_data();
+  const int *idx_to_off_data = this->loc_idx_to_offset_ptr_->cpu_data();
 
   int loc_h = this->conv_input_shape_ptr_->cpu_data()[1];
   int loc_w = this->conv_input_shape_ptr_->cpu_data()[2];
@@ -114,12 +113,12 @@ void LocalConvolutionLayer<Dtype>::Forward_gpu(
           int loc_num = lh * local_region_num_w_ + lw;
           const Dtype *loc_weight = weight + this->blobs_[0]->offset(loc_num);
           Dtype *loc_bottom =
-              loc_bottom_data + loc_bottom_buffer_.offset(loc_num);
+              loc_bottom_data + loc_bottom_buffer_ptr_->offset(loc_num);
           Dtype *loc_top = loc_top_data + loc_top_buffer_.offset(loc_num);
           crop_loc_patch_gpu(
               single_bottom_data, bottom_w, bottom_h, bottom_c, loc_w, loc_h,
-              idx_to_off_data[idx_to_off->offset(lh, lw, 1, 0)],
-              idx_to_off_data[idx_to_off->offset(lh, lw, 0, 0)], loc_bottom);
+              idx_to_off_data[loc_idx_to_offset_ptr_->offset(lh, lw, 1, 0)],
+              idx_to_off_data[loc_idx_to_offset_ptr_->offset(lh, lw, 0, 0)], loc_bottom);
           this->forward_gpu_gemm(loc_bottom, loc_weight, loc_top);
           if (this->bias_term_) {
             const Dtype *bias =
