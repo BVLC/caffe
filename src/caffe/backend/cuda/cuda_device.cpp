@@ -39,6 +39,7 @@ void CudaDevice::Init() {
   max_local_size_ = prop.maxThreadsPerBlock;
 
   ReadHeaders();
+  Device::Init();
 
   this->CreateMathProgram();
   this->CreateIm2ColProgram();

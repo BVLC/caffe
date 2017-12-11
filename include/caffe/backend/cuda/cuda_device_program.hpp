@@ -60,6 +60,21 @@ class CudaDeviceProgram : public DeviceProgram {
   virtual string kernel_arg_type_uint32_t(uint64_t flags);
   virtual string kernel_arg_type_uint64_t(uint64_t flags);
 
+  virtual string device_type_name_void() const;
+  virtual string device_type_name_bool() const;
+  virtual string device_type_name_char() const;
+  virtual string device_type_name_half() const;
+  virtual string device_type_name_float() const;
+  virtual string device_type_name_double() const;
+  virtual string device_type_name_int8() const;
+  virtual string device_type_name_int16() const;
+  virtual string device_type_name_int32() const;
+  virtual string device_type_name_int64() const;
+  virtual string device_type_name_uint8() const;
+  virtual string device_type_name_uint16() const;
+  virtual string device_type_name_uint32() const;
+  virtual string device_type_name_uint64() const;
+
  private:
   shared_ptr<nvrtcProgram> cuda_program_;
   shared_ptr<CUmodule> cuda_module_;

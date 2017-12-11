@@ -368,10 +368,10 @@ string LibDNNConv<Dtype, MItype, MOtype>::generate_fw_defs() {
 
   // Definitions as on http://www.cedricnugteren.nl/tutorial.php?page=8
   // The tile-size in dimension M
-  this->program_->define("TSM", fw_tuner_->get_param<int>("WPTM")
+  ss << this->program_->define("TSM", fw_tuner_->get_param<int>("WPTM")
           * fw_tuner_->get_param<int>("workgroup_size_1"));
   // The tile-size in dimension N
-  this->program_->define("TSN", fw_tuner_->get_param<int>("WPTN")
+  ss << this->program_->define("TSN", fw_tuner_->get_param<int>("WPTN")
           * fw_tuner_->get_param<int>("workgroup_size_0"));
   // The tile-size in dimension K
   ss << this->program_->define("TSK", fw_tuner_->get_param<int>("TSK"));
@@ -769,7 +769,7 @@ string LibDNNConv<Dtype, MItype, MOtype>::generate_fw_kernels(string name) {
     ss << this->program_->global_ptr("Dtype", "Cptr")
        << " = im_out + v_C_off * batch;" << std::endl;
     if (bias_term_) {
-      ss << this->program_->global_ptr("Dtype", "Dptr") << " = bias;"
+      ss << this->program_->global_ptr("const Dtype", "Dptr") << " = bias;"
          << std::endl;
     }
   }
@@ -1507,17 +1507,12 @@ template<typename Dtype, typename MItype, typename MOtype>
 void LibDNNConv<Dtype, MItype, MOtype>::GenerateKernels() {
   this->program_ = this->dev_ptr_->CreateProgram();
 
-  std::cout << "Mark 1" << std::endl;
-
   stringstream ss;
   ss << this->program_->setup();
-  std::cout << "Mark 2" << std::endl;
   ss << this->program_->template define_vector_type<Dtype>("Dtype", 0, 16);
   ss << this->program_->template define_vector_type<MItype>("MItype", 0, 16);
   ss << this->program_->template define_vector_type<MOtype>("MOtype", 0, 16);
-  std::cout << "Mark 2.2" << std::endl;
   ss << this->program_->atomics();
-  std::cout << "Mark 3" << std::endl;
 
   ss << this->program_->vector_accessors();
   ss << generate_fw_defs();
@@ -1527,12 +1522,8 @@ void LibDNNConv<Dtype, MItype, MOtype>::GenerateKernels() {
   ss << generate_wg_defs();
   ss << generate_wg_kernels("conv_weights");
 
-  std::cout << "Mark 4" << std::endl;
-
   // Write complete kernel string
   this->program_->set_source(ss.str());
-  std::cout << "Mark 5" << std::endl;
-
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
@@ -1643,11 +1634,13 @@ void LibDNNConv<Dtype, MItype, MOtype>::Backward(bool prop_down_data,
       kernel->add_arg(&top_diff);
       kernel->add_arg(&bias_diff);
       kernel->add_arg(&weight_diff);
+      kernel->add_arg(&batch_size);
       kernel->Execute(group, local);
     } else {
       kernel->add_arg(&bottom_data);
       kernel->add_arg(&top_diff);
       kernel->add_arg(&weight_diff);
+      kernel->add_arg(&batch_size);
       kernel->Execute(group, local);
     }
   }

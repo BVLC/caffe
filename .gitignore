@@ -86,6 +86,9 @@ cmake_build
 build
 build_opencl
 build_cuda
+.build_opencl
+.build_cuda
+.build
 .build_debug/*
 .build_release/*
 distribute/*
@@ -114,10 +117,14 @@ LOG*
 CURRENT
 MANIFEST-*
 
-#Visual Studio files
+# Visual Studio files
 *.user
 *.suo
 *.sdf
 *.opensdf
 *.pdb
 *.props
+
+# Log files
+log.txt
+error.txt

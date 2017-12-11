@@ -45,7 +45,26 @@ class DeviceProgram {
   void set_source(string src);
   void add_source(string src);
 
+  int64_t identifier();
   string string_identifier();
+
+  template<typename Dtype>
+  string device_type_name();
+
+  virtual string device_type_name_void() const = 0;
+  virtual string device_type_name_bool() const = 0;
+  virtual string device_type_name_char() const = 0;
+  virtual string device_type_name_half() const = 0;
+  virtual string device_type_name_float() const = 0;
+  virtual string device_type_name_double() const = 0;
+  virtual string device_type_name_int8() const = 0;
+  virtual string device_type_name_int16() const = 0;
+  virtual string device_type_name_int32() const = 0;
+  virtual string device_type_name_int64() const = 0;
+  virtual string device_type_name_uint8() const = 0;
+  virtual string device_type_name_uint16() const = 0;
+  virtual string device_type_name_uint32() const = 0;
+  virtual string device_type_name_uint64() const = 0;
 
   template<typename Dtype>
   string atomic_add(string source, string operand);
@@ -93,7 +112,7 @@ class DeviceProgram {
   Device *device_;
   string src_;
   bool src_has_changed_;
-  string string_identifier_;
+  int64_t identifier_;
   std::map<string, KernelArgs> args_;
 
 };

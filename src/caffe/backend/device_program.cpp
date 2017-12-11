@@ -42,13 +42,14 @@ string DeviceProgram::vector_accessors() {
   for (int_tp i = 1; i <= 16; i *= 2) {
     for (int_tp j = 0; j < i; ++j) {
       if (i == 1) {
-        ss << "#define VEC_" << i << "_" << j << "(x)" << " x" << std::endl;
+        ss << "#define VEC_" << i << "_" << j << "(ELEM)"
+           << " ELEM" << std::endl;
       } else if (i < 8) {
-        ss << "#define VEC_" << i << "_" << j << "(x)" << " x." << elems4[j]
-           << std::endl;
+        ss << "#define VEC_" << i << "_" << j << "(ELEM)"
+           << " ELEM." << elems4[j] << std::endl;
       } else {
-        ss << "#define VEC_" << i << "_" << j << "(x)" << " x." << elems16[j]
-           << std::endl;
+        ss << "#define VEC_" << i << "_" << j << "(ELEM)"
+           << " ELEM." << elems16[j] << std::endl;
       }
     }
   }
@@ -172,13 +173,14 @@ template<typename Dtype>
 string DeviceProgram::define_vector_type(const char* name, int_tp from,
                                          int_tp to) {
   stringstream ss;
-  for (int_tp i = from; i <= to; i *= 2) {
-    if (i > 0) {
-      ss << this->define(name + std::to_string(i),
-                         safe_type_name<Dtype>() + std::to_string(i));
-    } else {
-      ss << this->define_type<Dtype>(name);
-    }
+  int_tp safe_from = 1;
+  if (from <= 0) {
+    ss << this->define_type<Dtype>(name);
+  }
+  safe_from = std::max(from, safe_from);
+  for (int_tp i = safe_from; i <= to; i *= 2) {
+    ss << this->define(name + std::to_string(i),
+                           this->device_type_name<Dtype>() + std::to_string(i));
   }
   return ss.str();
 }
@@ -214,13 +216,14 @@ template<typename Dtype>
 string DeviceProgram::define_vector_type(string name, int_tp from,
                                          int_tp to) {
   stringstream ss;
-  for (int_tp i = from; i <= to; i *= 2) {
-    if (i > 0) {
-      ss << this->define(name + std::to_string(i),
-                         safe_type_name<Dtype>() + std::to_string(i));
-    } else {
-      ss << this->define_type<Dtype>(name);
-    }
+  int_tp safe_from = 1;
+  if (from <= 0) {
+    ss << this->define_type<Dtype>(name);
+  }
+  safe_from = std::max(from, safe_from);
+  for (int_tp i = safe_from; i <= to; i *= 2) {
+    ss << this->define(name + std::to_string(i),
+                           this->device_type_name<Dtype>() + std::to_string(i));
   }
   return ss.str();
 }
@@ -351,13 +354,75 @@ KernelArg DeviceProgram::create_kernel_arg<uint64_t>(
 }
 
 string DeviceProgram::string_identifier() {
+  return hash_hex_string(identifier_);
+}
+
+int64_t DeviceProgram::identifier() {
   if (src_has_changed_) {
     vector<string> factors;
     factors.push_back(this->device_->name());
     factors.push_back(src_);
-    string_identifier_ = hash_hex_string(generate_hash(factors));
+    identifier_ = generate_hash(factors);
   }
-  return string_identifier_;
+  return identifier_;
 }
+
+template<>
+string DeviceProgram::device_type_name<void>() {
+  return device_type_name_void();
+}
+template<>
+string DeviceProgram::device_type_name<bool>() {
+  return device_type_name_bool();
+}
+template<>
+string DeviceProgram::device_type_name<char>() {
+  return device_type_name_char();
+}
+template<>
+string DeviceProgram::device_type_name<half_fp>() {
+  return device_type_name_half();
+}
+template<>
+string DeviceProgram::device_type_name<float>() {
+  return device_type_name_float();
+}
+template<>
+string DeviceProgram::device_type_name<double>() {
+  return device_type_name_double();
+}
+template<>
+string DeviceProgram::device_type_name<int8_t>() {
+  return device_type_name_int8();
+}
+template<>
+string DeviceProgram::device_type_name<int16_t>() {
+  return device_type_name_int16();
+}
+template<>
+string DeviceProgram::device_type_name<int32_t>() {
+  return device_type_name_int32();
+}
+template<>
+string DeviceProgram::device_type_name<int64_t>() {
+  return device_type_name_int64();
+}
+template<>
+string DeviceProgram::device_type_name<uint8_t>() {
+  return device_type_name_uint8();
+}
+template<>
+string DeviceProgram::device_type_name<uint16_t>() {
+  return device_type_name_uint16();
+}
+template<>
+string DeviceProgram::device_type_name<uint32_t>() {
+  return device_type_name_uint32();
+}
+template<>
+string DeviceProgram::device_type_name<uint64_t>() {
+  return device_type_name_uint64();
+}
+
 
 }  // namespace caffe

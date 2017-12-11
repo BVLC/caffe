@@ -1,3 +1,5 @@
+#include <iostream>
+#include <fstream>
 #include <boost/filesystem.hpp>
 
 #include "caffe/backend/opencl/ocl_device_program.hpp"
@@ -14,45 +16,145 @@ OclDeviceProgram::OclDeviceProgram(Device *dev) : DeviceProgram(dev) {
 bool OclDeviceProgram::Compile(bool load_cache, bool store_cache) {
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(
       this->device_->id());
+  cl_int err = 0;
 
   string build_opts = "";
-
   build_opts += "-cl-fast-relaxed-math -cl-mad-enable ";
-
   build_opts += "-cl-single-precision-constant ";
 
+  bool loaded_from_cache = false;
+  string flags = this->device_->name() + build_opts;
   ctx.build_options(build_opts);
 
-  ocl_program_ = ctx.add_program(src_.c_str(), "kernel_program");
+  vector<cl_device_id> device_ids(ctx.device_num());
+  clGetContextInfo(ctx.handle().get(), CL_CONTEXT_DEVICES,
+                   ctx.device_num() * sizeof(cl_device_id),
+                   &(device_ids[0]), nullptr);
+
+#ifdef USE_SQLITE
+  if (load_cache) {
+    size_t ptx_size = 0;
+    // Try to load the kernel from cache
+    int64_t id = this->device_->get_database()->GetKernelInfo(identifier(),
+                                               flags.c_str(), flags.size(),
+                                               src_.c_str(), src_.size(),
+                                               &ptx_size);
+    if (id >= 0 && ptx_size > 0) {
+      vector<char> ptx = vector<char>(ptx_size);  // NOLINT
+      loaded_from_cache = this->device_->get_database()->LoadKernel(id,
+                                                                    &(ptx[0]));
+      if (loaded_from_cache) {
+        vector<cl_int> status(ctx.device_num());
+        const unsigned char* ptx_ptr =
+            reinterpret_cast<unsigned char*>(&(ptx[0]));
+        cl_program cached_program = clCreateProgramWithBinary(
+            ctx.handle().get(), ctx.device_num(), &(device_ids[0]), &ptx_size,
+            &ptx_ptr, &(status[0]), &err);
+        for (size_t i = 0; i < ctx.device_num(); ++i) {
+          loaded_from_cache = loaded_from_cache && (status[i] == CL_SUCCESS);
+        }
+        if (err != CL_SUCCESS || !loaded_from_cache) {
+          LOG(WARNING) << "Failed to load OpenCL binary from cache ("
+                     << clGetErrorString(err) << ")" << std::endl;
+          loaded_from_cache = false;
+        } else {
+          err = clBuildProgram(cached_program, ctx.device_num(),
+                               &(device_ids[0]), ctx.build_options().c_str(),
+                               nullptr, nullptr);
+          if (err != CL_SUCCESS || !loaded_from_cache) {
+            LOG(WARNING) << "Failed to load OpenCL binary from cache ("
+                         << clGetErrorString(err) << ")" << std::endl;
+            loaded_from_cache = false;
+          }
+        }
+        if (loaded_from_cache) {
+          ocl_program_ = ctx.add_program(cached_program, string_identifier());
+        }
+      }
+    }
+  }
+#endif  // USE_SQLITE
+
+  if (!loaded_from_cache) {
+    size_t src_size = src_.size();
+    const char* src_ptr = src_.c_str();
+    cl_program compiled_program = clCreateProgramWithSource(ctx.handle().get(),
+                                       1, &src_ptr, &src_size, &err);
+    if (err != CL_SUCCESS) {
+      LOG(ERROR) << "Failed to compile OpenCL binary from code ("
+                 << clGetErrorString(err) << ")" << std::endl;
+    }
+    err = clBuildProgram(compiled_program, ctx.device_num(),
+                         &(device_ids[0]), ctx.build_options().c_str(),
+                         nullptr, nullptr);
+    if (err != CL_SUCCESS) {
+      LOG(ERROR) << "Failed to compile OpenCL binary from code ("
+                 << clGetErrorString(err) << ")" << std::endl;
+    }
+    ocl_program_ = ctx.add_program(compiled_program, string_identifier());
+
+    size_t len;
+    vector<size_t> ptx_sizes(ctx.devices().size());
+    clGetProgramInfo(ocl_program_.handle().get(),
+                     CL_PROGRAM_BINARY_SIZES, 0, NULL, &len);
+    clGetProgramInfo(ocl_program_.handle().get(),
+                     CL_PROGRAM_BINARY_SIZES, len, &(ptx_sizes[0]), NULL);
+
+    vector<char*> ptxs;
+    for (size_t i = 0; i < ctx.devices().size(); ++i) {
+      ptxs.push_back(new char[ptx_sizes[i]]);  // NOLINT
+    }
+    clGetProgramInfo(ocl_program_.handle().get(),
+                     CL_PROGRAM_BINARIES, 0, nullptr, &len);
+    clGetProgramInfo(ocl_program_.handle().get(),
+                     CL_PROGRAM_BINARIES, len, &(ptxs[0]), nullptr);
 
 #ifndef NDEBUG
-  string debug_path = ".caffe_debug";
-  const char* path = debug_path.c_str();
-  boost::filesystem::path dir(path);
-  boost::filesystem::create_directory(dir);
-
-  {
-    FILE* fp = fopen((".caffe_debug/" + string_identifier() + ".cl").c_str(),
-                     "wb");
-    fwrite(this->src_.c_str(), sizeof(char), this->src_.size(), fp);
-    fclose(fp);
-  }
-
-
-  {
-    size_t bin_sz;
-    clGetProgramInfo(ocl_program_.handle().get(),
-                     CL_PROGRAM_BINARY_SIZES, sizeof(size_t), &bin_sz, NULL);
-    unsigned char *bin = (unsigned char *)malloc(bin_sz);  // NOLINT
-    clGetProgramInfo(ocl_program_.handle().get(),
-                     CL_PROGRAM_BINARIES, sizeof(unsigned char *), &bin, NULL);
-    FILE* fp = fopen((".caffe_debug/" + string_identifier() + ".clptx").c_str(),
-                     "wb");
-    fwrite(bin, sizeof(char), bin_sz, fp);
-    fclose(fp);
-    free(bin);  // NOLINT
-  }
+    string debug_path = ".caffe_debug";
+    const char* path = debug_path.c_str();
+    boost::filesystem::path dir(path);
+    boost::filesystem::create_directory(dir);
+    {
+      FILE* fp = fopen((".caffe_debug/" + string_identifier() + ".cl").c_str(),
+                       "wb");
+      fwrite(this->src_.c_str(), sizeof(char), this->src_.size(), fp);
+      fclose(fp);
+    }
+    {
+      FILE* fp = fopen((".caffe_debug/" + string_identifier()
+                        + ".clptx").c_str(), "wb");
+      fwrite(ptxs[0], sizeof(char), ptx_sizes[0], fp);
+      fclose(fp);
+    }
 #endif  // NDEBUG
+#ifdef USE_SQLITE
+    if (store_cache) {
+      this->device_->get_database()->StoreKernel(identifier(),
+                                                flags.c_str(), flags.size(),
+                                                src_.c_str(), src_.size(),
+                                                ptxs[0], ptx_sizes[0]);
+    }
+#endif  // USE_SQLITE
+    for (size_t i = 0; i < ctx.devices().size(); ++i) {
+      delete[] ptxs[i];
+    }
+  }
+
+  vector<cl_kernel> kernels(1024);
+  cl_uint num_kernels;
+  err = clCreateKernelsInProgram(ocl_program_.handle().get(),
+                                 1024, &(kernels[0]), &num_kernels);
+  if (err != CL_SUCCESS) {
+    LOG(ERROR) << "Failed to load OpenCL kernels ("
+               << clGetErrorString(err) << ")" << std::endl;
+  } else {
+    for (cl_uint i = 0; i < num_kernels; ++i) {
+      vector<char> kernel_name(128);
+      err = clGetKernelInfo(kernels[i], CL_KERNEL_FUNCTION_NAME, 128,
+                            &(kernel_name[0]), NULL);
+      ocl_program_.add_kernel(kernels[i], string(&(kernel_name[0])));
+    }
+  }
 
   return true;
 }
@@ -378,6 +480,49 @@ string OclDeviceProgram::kernel_arg_type_uint32_t(uint64_t flags) {
 }
 string OclDeviceProgram::kernel_arg_type_uint64_t(uint64_t flags) {
   return "uint64_t" + pointer_suffix(flags);
+}
+
+string OclDeviceProgram::device_type_name_void() const {
+  return "void";
+}
+string OclDeviceProgram::device_type_name_bool() const {
+  return "bool";
+}
+string OclDeviceProgram::device_type_name_char() const {
+  return "char";
+}
+string OclDeviceProgram::device_type_name_half() const {
+  return "half";
+}
+string OclDeviceProgram::device_type_name_float() const {
+  return "float";
+}
+string OclDeviceProgram::device_type_name_double() const {
+  return "double";
+}
+string OclDeviceProgram::device_type_name_int8() const {
+  return "char";
+}
+string OclDeviceProgram::device_type_name_int16() const {
+  return "short";
+}
+string OclDeviceProgram::device_type_name_int32() const {
+  return "int";
+}
+string OclDeviceProgram::device_type_name_int64() const {
+  return "long";
+}
+string OclDeviceProgram::device_type_name_uint8() const {
+  return "uchar";
+}
+string OclDeviceProgram::device_type_name_uint16() const {
+  return "ushort";
+}
+string OclDeviceProgram::device_type_name_uint32() const {
+  return "uint";
+}
+string OclDeviceProgram::device_type_name_uint64() const {
+  return "ulong";
 }
 
 #endif  // USE_OPENCL

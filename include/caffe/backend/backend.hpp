@@ -17,6 +17,21 @@ enum Backend {
   BACKEND_CPU
 };
 
+inline string backend_name(Backend backend) {
+  switch(backend) {
+    case BACKEND_CPU:
+      return "cpu";
+    case BACKEND_CUDA:
+      return "cuda";
+    case BACKEND_OPENCL:
+      return "opencl";
+    case BACKEND_HIP:
+      return "hip";
+    default:
+      return "unknown";
+  }
+}
+
 typedef tuple<string, string, uint64_t>              KernelArg;
 typedef vector<KernelArg>                            KernelArgs;
 

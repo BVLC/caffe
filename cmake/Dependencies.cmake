@@ -98,6 +98,14 @@ if(USE_LEVELDB)
   list(APPEND Caffe_DEFINITIONS PUBLIC -DUSE_LEVELDB)
 endif()
 
+# ---[ SQLite
+if(USE_SQLITE)
+  find_package(SQLite REQUIRED)
+  list(APPEND Caffe_INCLUDE_DIRS PUBLIC ${SQLITE3_INCLUDE_DIRS})
+  list(APPEND Caffe_LINKER_LIBS PUBLIC ${SQLITE3_LIBRARIES})
+  list(APPEND Caffe_DEFINITIONS PUBLIC -DUSE_SQLITE)
+endif()
+
 # ---[ Snappy
 if(USE_LEVELDB)
   find_package(Snappy REQUIRED)

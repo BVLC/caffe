@@ -15,7 +15,14 @@
 #include "caffe/test/test_gradient_check_util.hpp"
 
 // Comparative check difference limit
-#define kappa 0.05
+#define KAPPA_HALF 0.05
+#define KAPPA_FLOAT 0.05
+#define KAPPA_DOUBLE 0.05
+
+#define EPS_HALF 3e-1
+#define EPS_FLOAT 1e-4
+#define EPS_DOUBLE 1e-4
+
 // Comparative check shape size limit
 #define element_limit 1000000
 
@@ -235,6 +242,17 @@ TYPED_TEST(LibDNNConvolutionLayerTest, TestSetupLibDNN) {
 }
 
 TYPED_TEST(LibDNNConvolutionLayerTest, TestSimpleConvolutionLibDNN) {
+  TypeParam eps = 0.0;
+  if (std::is_same<TypeParam, half_fp>::value) {
+    eps = EPS_HALF;
+  }
+  if (std::is_same<TypeParam, float>::value) {
+    eps = EPS_FLOAT;
+  }
+  if (std::is_same<TypeParam, double>::value) {
+    eps = EPS_DOUBLE;
+  }
+
   this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
   this->blob_top_vec_.push_back(this->blob_top_2_);
   LayerParameter layer_param;
@@ -258,18 +276,29 @@ TYPED_TEST(LibDNNConvolutionLayerTest, TestSimpleConvolutionLibDNN) {
   top_data = this->blob_top_->cpu_data();
   ref_top_data = this->ref_blob_top_->cpu_data();
   for (int_tp i = 0; i < this->blob_top_->count(); ++i) {
-    EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
+    EXPECT_NEAR(top_data[i], ref_top_data[i], eps);
   }
   libdnn_convtest(this->blob_bottom_2_, convolution_param, layer->blobs(),
       this->MakeReferenceTop(this->blob_top_2_));
   top_data = this->blob_top_2_->cpu_data();
   ref_top_data = this->ref_blob_top_->cpu_data();
   for (int_tp i = 0; i < this->blob_top_->count(); ++i) {
-    EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
+    EXPECT_NEAR(top_data[i], ref_top_data[i], eps);
   }
 }
 
 TYPED_TEST(LibDNNConvolutionLayerTest, TestSimpleConvolutionGroupLibDNN) {
+  TypeParam eps = 0.0;
+  if (std::is_same<TypeParam, half_fp>::value) {
+    eps = EPS_HALF;
+  }
+  if (std::is_same<TypeParam, float>::value) {
+    eps = EPS_FLOAT;
+  }
+  if (std::is_same<TypeParam, double>::value) {
+    eps = EPS_DOUBLE;
+  }
+
   LayerParameter layer_param;
   ConvolutionParameter* convolution_param =
       layer_param.mutable_convolution_param();
@@ -292,11 +321,22 @@ TYPED_TEST(LibDNNConvolutionLayerTest, TestSimpleConvolutionGroupLibDNN) {
   top_data = this->blob_top_->cpu_data();
   ref_top_data = this->ref_blob_top_->cpu_data();
   for (int_tp i = 0; i < this->blob_top_->count(); ++i) {
-    EXPECT_NEAR(top_data[i], ref_top_data[i], 1e-4);
+    EXPECT_NEAR(top_data[i], ref_top_data[i], eps);
   }
 }
 
 TYPED_TEST(LibDNNConvolutionLayerTest, TestSobelConvolutionLibDNN) {
+  TypeParam eps = 0.0;
+  if (std::is_same<TypeParam, half_fp>::value) {
+    eps = EPS_HALF;
+  }
+  if (std::is_same<TypeParam, float>::value) {
+    eps = EPS_FLOAT;
+  }
+  if (std::is_same<TypeParam, double>::value) {
+    eps = EPS_DOUBLE;
+  }
+
   // Test separable convolution by computing the Sobel operator
   // as a single filter then comparing the result
   // as the convolution of two rectangular filters.
@@ -386,7 +426,7 @@ TYPED_TEST(LibDNNConvolutionLayerTest, TestSobelConvolutionLibDNN) {
   const TypeParam* top_data = this->blob_top_->cpu_data();
   const TypeParam* sep_top_data = this->blob_top_2_->cpu_data();
   for (int_tp i = 0; i < this->blob_top_->count(); ++i) {
-    EXPECT_NEAR(top_data[i], sep_top_data[i], 1e-4);
+    EXPECT_NEAR(top_data[i], sep_top_data[i], eps);
   }
 }
 
@@ -628,6 +668,17 @@ class LibDNNComparativeConvTest : public GPUDeviceTest<TypeParam> {
   }
 
   bool TestForward(int_tp testIdx) {
+    TypeParam kappa = 0.0;
+    if (std::is_same<TypeParam, half_fp>::value) {
+      kappa = KAPPA_HALF;
+    }
+    if (std::is_same<TypeParam, float>::value) {
+      kappa = KAPPA_FLOAT;
+    }
+    if (std::is_same<TypeParam, double>::value) {
+      kappa = KAPPA_DOUBLE;
+    }
+
     std::cout << "==== Test Case " << testIdx << " ====" << std::endl;
 
     LayerParameter layer_param;
@@ -819,6 +870,17 @@ class LibDNNComparativeConvTest : public GPUDeviceTest<TypeParam> {
   }
 
   bool TestBackward(int_tp testIdx) {
+    TypeParam kappa = 0.0;
+    if (std::is_same<TypeParam, half_fp>::value) {
+      kappa = KAPPA_HALF;
+    }
+    if (std::is_same<TypeParam, float>::value) {
+      kappa = KAPPA_FLOAT;
+    }
+    if (std::is_same<TypeParam, double>::value) {
+      kappa = KAPPA_DOUBLE;
+    }
+
     std::cout << "==== Test Case " << testIdx << " ====" << std::endl;
 
     LayerParameter layer_param;
