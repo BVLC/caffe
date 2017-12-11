@@ -86,60 +86,6 @@ void LocalConvolutionLayer<Dtype>::realign_loc_conv_result_gpu(
   CUDA_POST_KERNEL_CHECK;
 }
 
-template <typename Dtype>
-__global__ void realign_bottoom_diff_kernel(
-    int count, const Dtype *loc_bottom_diff, int loc_region_h, int loc_region_w,
-    int loc_num_h, int loc_num_w, int channels, int dst_height, int dst_width,
-    const int *loc_idx_to_off_data, Dtype *dst_data) {
-  int loc_spatial_dim = loc_region_h * loc_region_w;
-  int loc_num = loc_num_h * loc_num_w;
-  int loc_step = channels * loc_spatial_dim;
-
-  CUDA_KERNEL_LOOP(index, count) {
-    int b_c = index / loc_spatial_dim;
-    int offset = index % loc_spatial_dim;
-    int loc_h = offset / loc_region_w;
-    int loc_w = offset % loc_region_w;
-
-    int loc_offset = b_c * loc_spatial_dim + loc_h * loc_region_w + loc_w;
-    int dst_c_offset = b_c * dst_height * dst_width;
-    for (int i = 0; i < loc_num; ++i) {
-      int loc_idx_h = i / loc_num_w;
-      int loc_idx_w = i % loc_num_w;
-
-      int src_idx = loc_offset + i * loc_step;
-      int loc_idx_to_off_index = (loc_idx_h * loc_num_w + loc_idx_w) * 2;
-      int dst_idx =
-          dst_c_offset +
-          (loc_idx_to_off_data[loc_idx_to_off_index] + loc_h) * dst_width +
-          loc_idx_to_off_data[loc_idx_to_off_index + 1] + loc_w;
-
-      dst_data[dst_idx] += loc_bottom_diff[src_idx];
-    }
-  }
-}
-
-/*
-template <typename Dtype>
-void LocalConvolutionLayer<Dtype>::realign_bottom_diff_gpu(
-    const Dtype *loc_bottom_diff_buffer, Dtype *bottom_diff) {
-  // We are going to launch channels * loc_region_h * loc_region_w kernels, each
-  // kernel responsible for  aligning  one local bottom diff per local region
-  int conv_input_h = this->conv_input_shape_.cpu_data()[1];
-  int conv_input_w = this->conv_input_shape_.cpu_data()[2];
-  int conv_input_c = this->conv_input_shape_.cpu_data()[0];
-  int num_kernels = conv_input_c * conv_input_h * conv_input_w;
-
-  realign_bottoom_diff_kernel<Dtype>
-      <<<CAFFE_GET_BLOCKS(num_kernels), CAFFE_CUDA_NUM_THREADS>>>(
-          num_kernels, loc_bottom_diff_buffer, conv_input_h, conv_input_w,
-          this->local_region_num_h_, this->local_region_num_w_, conv_input_c,
-          this->bottom_height_, this->bottom_width_,
-          this->loc_idx_to_offset_.gpu_data(), bottom_diff);
-
-  CUDA_POST_KERNEL_CHECK;
-}
-*/
 
 template <typename Dtype>
 void LocalConvolutionLayer<Dtype>::Forward_gpu(
