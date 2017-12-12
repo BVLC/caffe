@@ -74,6 +74,8 @@ void LocalConvolutionLayer<Dtype>::realign_loc_conv_result_gpu(
   // this->output_shape_[1]; //for realign_loc_conv_result_kernel()
 
   auto output_shape = compute_output_shape();
+  int top_height = output_shape[0] * this->local_region_num_h_;
+  int top_width = output_shape[1] * this->local_region_num_w_;
   int num_kernels = this->num_output_ * output_shape[0] *
                     output_shape[1] *
                     this->L_; // To get bigger size of Block
@@ -81,8 +83,8 @@ void LocalConvolutionLayer<Dtype>::realign_loc_conv_result_gpu(
       <<<CAFFE_GET_BLOCKS(num_kernels), CAFFE_CUDA_NUM_THREADS>>>(
           num_kernels, local_conv_data, this->local_region_num_h_,
           this->local_region_num_w_, output_shape[0],
-          output_shape[1], this->num_output_, this->top_height_,
-          this->top_width_, dst_data);
+          output_shape[1], this->num_output_,top_height,
+	  top_width, dst_data);
   CUDA_POST_KERNEL_CHECK;
 }
 
@@ -91,7 +93,7 @@ template <typename Dtype>
 void LocalConvolutionLayer<Dtype>::Forward_gpu(
     const vector<Blob<Dtype> *> &bottom, const vector<Blob<Dtype> *> &top) {
   Dtype *loc_bottom_data = loc_bottom_buffer_ptr_->mutable_gpu_data();
-  Dtype *loc_top_data = loc_top_buffer_.mutable_gpu_data();
+  Dtype *loc_top_data = loc_top_buffer_ptr_->mutable_gpu_data();
   const Dtype *weight = this->blobs_[0]->gpu_data();
 
   const int *idx_to_off_data = this->loc_idx_to_offset_ptr_->cpu_data();
@@ -114,7 +116,7 @@ void LocalConvolutionLayer<Dtype>::Forward_gpu(
           const Dtype *loc_weight = weight + this->blobs_[0]->offset(loc_num);
           Dtype *loc_bottom =
               loc_bottom_data + loc_bottom_buffer_ptr_->offset(loc_num);
-          Dtype *loc_top = loc_top_data + loc_top_buffer_.offset(loc_num);
+          Dtype *loc_top = loc_top_data + loc_top_buffer_ptr_->offset(loc_num);
           crop_loc_patch_gpu(
               single_bottom_data, bottom_w, bottom_h, bottom_c, loc_w, loc_h,
               idx_to_off_data[loc_idx_to_offset_ptr_->offset(lh, lw, 1, 0)],

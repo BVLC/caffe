@@ -114,7 +114,8 @@ void LocalConvolutionLayer<Dtype>::realign_loc_conv_result_cpu(
   int num_output = this->num_output_;
   auto output_shape = compute_output_shape();
   int height_out = output_shape[0], width_out = output_shape[1];
-  int top_height = this->top_height_, top_width = this->top_width_;
+  int top_height = output_shape[0] * this->local_region_num_h_;
+  int top_width = output_shape[1] * this->local_region_num_w_;
   int local_region_num_w = this->local_region_num_w_;
 
   int mStep = top_width;
@@ -358,16 +359,15 @@ void LocalConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype> *> &bottom,
       static_cast<int>(bottom_width * local_region_ratio_w_);
 
   // Shape the tops.
-  // this->bottom_shape_ = &bottom[0]->shape();
   this->bottom_shape_.reset(
       const_cast<std::vector<int> *>(&bottom[0]->shape()));
   auto output_shape = compute_output_shape();
-  this->top_height_ = output_shape[0] * this->local_region_num_h_;
-  this->top_width_ = output_shape[1] * this->local_region_num_w_;
+  int top_height = output_shape[0] * this->local_region_num_h_;
+  int top_width = output_shape[1] * this->local_region_num_w_;
 
   for (int top_id = 0; top_id < top.size(); ++top_id) {
-    top[top_id]->Reshape(num, this->num_output_, this->top_height_,
-                         this->top_width_);
+    top[top_id]->Reshape(num, this->num_output_, top_height,
+			 top_width);
   }
   this->conv_out_spatial_dim_ptr_.reset(
       new int(output_shape[0] * output_shape[1]));
@@ -400,7 +400,10 @@ void LocalConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype> *> &bottom,
   loc_bottom_buffer_ptr_->Reshape(this->L_, conv_input_shape_data[0],
                                   conv_input_shape_data[1],
                                   conv_input_shape_data[2]);
-  loc_top_buffer_.Reshape(this->L_, this->num_output_, output_shape[0],
+  if (!loc_top_buffer_ptr_.get()) {
+    loc_top_buffer_ptr_.reset(new Blob<Dtype>);
+  }
+  loc_top_buffer_ptr_->Reshape(this->L_, this->num_output_, output_shape[0],
                           output_shape[1]);
 }
 
@@ -409,7 +412,7 @@ void LocalConvolutionLayer<Dtype>::Forward_cpu(
     const vector<Blob<Dtype> *> &bottom, const vector<Blob<Dtype> *> &top) {
 
   Dtype *loc_bottom_data = loc_bottom_buffer_ptr_->mutable_cpu_data();
-  Dtype *loc_top_data = loc_top_buffer_.mutable_cpu_data();
+  Dtype *loc_top_data = loc_top_buffer_ptr_->mutable_cpu_data();
   const Dtype *weight = this->blobs_[0]->cpu_data();
 
   const int num = bottom[0]->num();
@@ -429,7 +432,7 @@ void LocalConvolutionLayer<Dtype>::Forward_cpu(
           const Dtype *loc_weight = weight + this->blobs_[0]->offset(loc_num);
           Dtype *loc_bottom =
               loc_bottom_data + loc_bottom_buffer_ptr_->offset(loc_num);
-          Dtype *loc_top = loc_top_data + loc_top_buffer_.offset(loc_num);
+          Dtype *loc_top = loc_top_data + loc_top_buffer_ptr_->offset(loc_num);
           crop_loc_patch_cpu(
               single_bottom_data, bottom_w, bottom_h, bottom_c,
               this->conv_input_shape_ptr_->cpu_data()[2],

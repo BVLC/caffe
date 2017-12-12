@@ -58,14 +58,12 @@ protected:
   float local_region_ratio_w_, local_region_ratio_h_;
   int local_region_num_w_, local_region_num_h_;
   int local_region_step_w_, local_region_step_h_;
-  int top_height_, top_width_;
   int L_;
-  mutable ::boost::thread_specific_ptr<Blob<int>>
-      loc_idx_to_offset_ptr_; // Blob saving the map from local region index
+  mutable ::boost::thread_specific_ptr<Blob<int>> loc_idx_to_offset_ptr_; // Blob saving the map from local region index
                               // to local region offset
 private:
   mutable ::boost::thread_specific_ptr<Blob<Dtype>> loc_bottom_buffer_ptr_;
-  Blob<Dtype> loc_top_buffer_;
+  mutable ::boost::thread_specific_ptr<Blob<Dtype>> loc_top_buffer_ptr_;
 };
 
 } // namespace caffe
