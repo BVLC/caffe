@@ -110,7 +110,7 @@ void LocalConvolutionLayer<Dtype>::init_local_offset(int bottom_width,
 }
 template <typename Dtype>
 void LocalConvolutionLayer<Dtype>::realign_loc_conv_result_cpu(
-    const Dtype *local_conv_data, Dtype *dst_data) {
+    const Dtype *local_conv_data, Dtype *dst_data) const {
   int num_output = this->num_output_;
   auto output_shape = compute_output_shape();
   int height_out = output_shape[0], width_out = output_shape[1];
@@ -144,7 +144,7 @@ void LocalConvolutionLayer<Dtype>::realign_loc_conv_result_cpu(
 template <typename Dtype>
 void LocalConvolutionLayer<Dtype>::crop_loc_patch_cpu(
     const Dtype *src, int src_w, int src_h, int src_c, int crop_width,
-    int crop_height, int w_off, int h_off, Dtype *local_patch_data) {
+    int crop_height, int w_off, int h_off, Dtype *local_patch_data) const {
   for (int c = 0; c < src_c; ++c) {
     for (int h = 0; h < crop_height; ++h) {
       for (int w = 0; w < crop_width; ++w) {
@@ -321,11 +321,18 @@ void LocalConvolutionLayer<Dtype>::LayerSetUp(
       */
     }
   }
+  this->kernel_dim_ = this->channels_ * this->kernel_shape_.cpu_data()[0] *
+                      this->kernel_shape_.cpu_data()[1] / this->group_;
 }
 
 template <typename Dtype>
 void LocalConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype> *> &bottom,
                                            const vector<Blob<Dtype> *> &top) {
+    Reshape_const(bottom,top);
+}
+template <typename Dtype>
+void LocalConvolutionLayer<Dtype>::Reshape_const(const vector<Blob<Dtype> *> &bottom,
+                                           const vector<Blob<Dtype> *> &top) const {
   CHECK_EQ(bottom[0]->channels(), this->channels_)
       << "Input size incompatible with"
          " weights.";
@@ -372,8 +379,6 @@ void LocalConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype> *> &bottom,
   this->conv_out_spatial_dim_ptr_.reset(
       new int(output_shape[0] * output_shape[1]));
 
-  this->kernel_dim_ = this->channels_ * this->kernel_shape_.cpu_data()[0] *
-                      this->kernel_shape_.cpu_data()[1] / this->group_;
 
   // The im2col result buffer will only hold one image at a time to avoid
   // overly large memory usage. In the special case of 1x1 convolution
@@ -410,6 +415,12 @@ void LocalConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype> *> &bottom,
 template <typename Dtype>
 void LocalConvolutionLayer<Dtype>::Forward_cpu(
     const vector<Blob<Dtype> *> &bottom, const vector<Blob<Dtype> *> &top) {
+  Forward_const_cpu(bottom,top);
+}
+
+template <typename Dtype>
+void LocalConvolutionLayer<Dtype>::Forward_const_cpu(
+    const vector<Blob<Dtype> *> &bottom, const vector<Blob<Dtype> *> &top) const {
 
   Dtype *loc_bottom_data = loc_bottom_buffer_ptr_->mutable_cpu_data();
   Dtype *loc_top_data = loc_top_buffer_ptr_->mutable_cpu_data();

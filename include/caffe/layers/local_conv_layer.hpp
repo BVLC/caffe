@@ -29,31 +29,29 @@ protected:
                           const vector<Blob<Dtype> *> &top);
   void Reshape(const vector<Blob<Dtype> *> &bottom,
                const vector<Blob<Dtype> *> &top);
-  /*
   void Reshape_const(const vector<Blob<Dtype> *> &bottom,
                const vector<Blob<Dtype> *> &top) const override;
-               */
   virtual void Forward_cpu(const vector<Blob<Dtype> *> &bottom,
                            const vector<Blob<Dtype> *> &top);
-  /*
   void Forward_const_cpu(const vector<Blob<Dtype> *> &bottom,
                            const vector<Blob<Dtype> *> &top) const override;
-                           */
   virtual void Forward_gpu(const vector<Blob<Dtype> *> &bottom,
                            const vector<Blob<Dtype> *> &top);
+  void Forward_const_gpu(const vector<Blob<Dtype> *> &bottom,
+                           const vector<Blob<Dtype> *> &top) const override;
   virtual inline bool reverse_dimensions() { return false; }
   virtual vector<int> compute_output_shape() const;
   void init_local_offset(int bottom_width, int bottom_height) const;
   void crop_loc_patch_cpu(const Dtype *src, int src_w, int src_h, int src_c,
                           int crop_width, int crop_height, int w_off, int h_off,
-                          Dtype *local_patch_data);
+                          Dtype *local_patch_data) const;
   void crop_loc_patch_gpu(const Dtype *src, int src_w, int src_h, int src_c,
                           int crop_width, int crop_height, int w_off, int h_off,
-                          Dtype *local_patch_data);
+                          Dtype *local_patch_data) const;
   void realign_loc_conv_result_cpu(const Dtype *local_conv_data,
-                                   Dtype *dst_data);
+                                   Dtype *dst_data) const;
   void realign_loc_conv_result_gpu(const Dtype *local_conv_data,
-                                   Dtype *dst_data);
+                                   Dtype *dst_data) const;
 
   float local_region_ratio_w_, local_region_ratio_h_;
   int local_region_num_w_, local_region_num_h_;

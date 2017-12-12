@@ -22,6 +22,13 @@ namespace caffe {
 template <typename Dtype>
 void FlipLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
+
+  Forward_const_gpu(bottom,top);
+}
+
+template <typename Dtype>
+void FlipLayer<Dtype>::Forward_const_gpu(const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) const {
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = top[0]->mutable_gpu_data();
   int num = bottom[0]->num();
@@ -34,6 +41,6 @@ void FlipLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 }
 
 
-INSTANTIATE_LAYER_GPU_FUNCS(FlipLayer);
+INSTANTIATE_LAYER_GPU_FUNCS_CONST(FlipLayer);
 
 }  // namespace caffe

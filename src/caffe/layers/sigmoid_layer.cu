@@ -15,6 +15,12 @@ __global__ void SigmoidForward(const int n, const Dtype* in, Dtype* out) {
 template <typename Dtype>
 void SigmoidLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
+  Forward_const_gpu(bottom,top);
+}
+
+template <typename Dtype>
+void SigmoidLayer<Dtype>::Forward_const_gpu(const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) const {
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = top[0]->mutable_gpu_data();
   const int count = bottom[0]->count();
@@ -30,7 +36,7 @@ void SigmoidLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 }
 
 
-INSTANTIATE_LAYER_GPU_FUNCS(SigmoidLayer);
+INSTANTIATE_LAYER_GPU_FUNCS_CONST(SigmoidLayer);
 
 
 }  // namespace caffe

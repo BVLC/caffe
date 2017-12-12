@@ -29,7 +29,7 @@ __global__ void crop_loc_patch_kernel(int count, const Dtype *src, int src_w,
 template <typename Dtype>
 void LocalConvolutionLayer<Dtype>::crop_loc_patch_gpu(
     const Dtype *src, int src_w, int src_h, int src_c, int crop_width,
-    int crop_height, int w_off, int h_off, Dtype *local_patch_data) {
+    int crop_height, int w_off, int h_off, Dtype *local_patch_data) const {
   // We are going to launch channels * crop_width * crop_height kernels, each
   // kernel responsible for  croping one element
   int num_kernels = src_c * crop_width * crop_height;
@@ -67,7 +67,7 @@ realign_loc_conv_result_kernel2(int count, const Dtype *local_conv_data,
 }
 template <typename Dtype>
 void LocalConvolutionLayer<Dtype>::realign_loc_conv_result_gpu(
-    const Dtype *local_conv_data, Dtype *dst_data) {
+    const Dtype *local_conv_data, Dtype *dst_data) const {
   // We are going to launch num_output * height_out * width_out kernels, each
   // kernel responsible for  copying  one local conv result per local region
   // int num_kernels = this->num_output_ * this->output_shape_[0] *
@@ -88,10 +88,15 @@ void LocalConvolutionLayer<Dtype>::realign_loc_conv_result_gpu(
   CUDA_POST_KERNEL_CHECK;
 }
 
-
 template <typename Dtype>
 void LocalConvolutionLayer<Dtype>::Forward_gpu(
     const vector<Blob<Dtype> *> &bottom, const vector<Blob<Dtype> *> &top) {
+  Forward_const_gpu(bottom,top);
+}
+
+template <typename Dtype>
+void LocalConvolutionLayer<Dtype>::Forward_const_gpu(
+    const vector<Blob<Dtype> *> &bottom, const vector<Blob<Dtype> *> &top) const {
   Dtype *loc_bottom_data = loc_bottom_buffer_ptr_->mutable_gpu_data();
   Dtype *loc_top_data = loc_top_buffer_ptr_->mutable_gpu_data();
   const Dtype *weight = this->blobs_[0]->gpu_data();
@@ -134,6 +139,6 @@ void LocalConvolutionLayer<Dtype>::Forward_gpu(
   }
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(LocalConvolutionLayer);
+INSTANTIATE_LAYER_GPU_FUNCS_CONST(LocalConvolutionLayer);
 
 } // namespace caffe
