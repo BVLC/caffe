@@ -15,6 +15,12 @@ __global__ void AxpyForward(const int count, const int spatial_dim,
 template <typename Dtype>
 void AxpyLayer<Dtype>::Forward_gpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
+  Forward_const_gpu(bottom,top);
+}
+
+template <typename Dtype>
+void AxpyLayer<Dtype>::Forward_const_gpu(
+    const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) const {
   const Dtype* scale_data = bottom[0]->gpu_data();
   const Dtype* x_data = bottom[1]->gpu_data();
   const Dtype* y_data = bottom[2]->gpu_data();
@@ -25,6 +31,6 @@ void AxpyLayer<Dtype>::Forward_gpu(
 }
 
 
-INSTANTIATE_LAYER_GPU_FUNCS(AxpyLayer);
+INSTANTIATE_LAYER_GPU_FUNCS_CONST(AxpyLayer);
 
 }  // namespace caffe

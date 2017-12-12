@@ -68,7 +68,6 @@ void SliceLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   CHECK_EQ(count, bottom[0]->count());
   if (top.size() == 1) {
     top[0]->ShareData(*bottom[0]);
-    //top[0]->ShareDiff(*bottom[0]);
   }
 }
 

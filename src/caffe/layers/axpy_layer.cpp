@@ -6,6 +6,12 @@ namespace caffe {
 template <typename Dtype>
 void AxpyLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
+  Reshape_const(bottom,top);
+}
+
+template <typename Dtype>
+void AxpyLayer<Dtype>::Reshape_const(const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) const {
   CHECK_EQ(bottom[0]->shape(0), bottom[1]->shape(0));
   CHECK_EQ(bottom[0]->shape(1), bottom[1]->shape(1));
   if (bottom[0]->num_axes() == 4) {
@@ -14,17 +20,17 @@ void AxpyLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   }
   CHECK(bottom[1]->shape() == bottom[2]->shape());  
   top[0]->ReshapeLike(*bottom[1]);
-  int spatial_dim = bottom[1]->count(2);
-  if (spatial_sum_multiplier_.count() < spatial_dim) {
-    spatial_sum_multiplier_.Reshape(vector<int>(1, spatial_dim));
-    caffe_set(spatial_dim, Dtype(1), 
-        spatial_sum_multiplier_.mutable_cpu_data());
-  }
 }
 
 template <typename Dtype>
 void AxpyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,  
     const vector<Blob<Dtype>*>& top) { 
+  Forward_const_cpu(bottom,top);
+}
+
+template <typename Dtype>
+void AxpyLayer<Dtype>::Forward_const_cpu(const vector<Blob<Dtype>*>& bottom,  
+    const vector<Blob<Dtype>*>& top) const { 
   int channel_dim = bottom[1]->channels();
   int spatial_dim = bottom[1]->count(2);
   const Dtype* scale_data = bottom[0]->cpu_data();

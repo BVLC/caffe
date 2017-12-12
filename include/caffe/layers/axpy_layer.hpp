@@ -23,6 +23,8 @@ class AxpyLayer: public Layer<Dtype> {
       const vector<Blob<Dtype>*>& top) {}
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
+  void Reshape_const(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) const override;
 
   virtual inline const char* type() const { return "Axpy"; }
   virtual inline int ExactNumBottomBlobs() const { return 3; }
@@ -40,8 +42,12 @@ class AxpyLayer: public Layer<Dtype> {
  */
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
+  void Forward_const_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) const override;
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
+  void Forward_const_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) const override;
 
   Blob<Dtype> spatial_sum_multiplier_;
 };
