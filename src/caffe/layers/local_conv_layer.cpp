@@ -305,15 +305,19 @@ void LocalConvolutionLayer<Dtype>::LayerSetUp(
     this->blobs_[0].reset(new Blob<Dtype>(
         this->L_, this->num_output_ * this->channels_ / this->group_,
         kernel_shape_data[0], kernel_shape_data[1]));
+    /*
     shared_ptr<Filler<Dtype>> weight_filler(
         GetFiller<Dtype>(loc_conv_param.weight_filler()));
     weight_filler->Fill(this->blobs_[0].get());
+    */
     // If necessary, initialize and fill the biases.
     if (this->bias_term_) {
       this->blobs_[1].reset(new Blob<Dtype>(this->L_, this->num_output_, 1, 1));
+      /*
       shared_ptr<Filler<Dtype>> bias_filler(
           GetFiller<Dtype>(loc_conv_param.bias_filler()));
       bias_filler->Fill(this->blobs_[1].get());
+      */
     }
   }
 }
