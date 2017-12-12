@@ -22,27 +22,42 @@ void NormalizeLayer<Dtype>::LayerSetUp(
 template <typename Dtype>
 void NormalizeLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
+  Reshape_const(bottom,top);
+}
+
+template <typename Dtype>
+void NormalizeLayer<Dtype>::Reshape_const(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) const {
   top[0]->Reshape(bottom[0]->num(), bottom[0]->channels(),
       bottom[0]->height(), bottom[0]->width());
-  squared_.Reshape(bottom[0]->num(), bottom[0]->channels(),
-    bottom[0]->height(), bottom[0]->width());
   if (top.size() == 2) {
     top[1]->Reshape(bottom[0]->num(), 1,
                     bottom[0]->height(), bottom[0]->width());
-  }
-  else {
-    norm_.Reshape(bottom[0]->num(), 1,
-                   bottom[0]->height(), bottom[0]->width());
   }
 }
 
 template <typename Dtype>
 void NormalizeLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
+  Forward_const_cpu(bottom,top);
+}
+
+template <typename Dtype>
+void NormalizeLayer<Dtype>::Forward_const_cpu(const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) const {
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = top[0]->mutable_cpu_data();
-  Dtype* square_data = squared_.mutable_cpu_data();
-  Dtype* norm_data = (top.size() == 2) ? top[1]->mutable_cpu_data() : norm_.mutable_cpu_data();
+  Blob<Dtype> squared,norm;
+  squared.Reshape(bottom[0]->num(), bottom[0]->channels(),
+      bottom[0]->height(), bottom[0]->width());
+  Dtype* square_data = squared.mutable_cpu_data();
+
+  if (top.size() != 2) {
+    norm.Reshape(bottom[0]->num(), 1,
+                   bottom[0]->height(), bottom[0]->width());
+  }
+
+  Dtype* norm_data = (top.size() == 2) ? top[1]->mutable_cpu_data() : norm.mutable_cpu_data();
   int num = bottom[0]->num();
   int channels = bottom[0]->channels();
   int spatial_dim = bottom[0]->height() * bottom[0]->width();

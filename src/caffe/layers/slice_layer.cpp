@@ -19,25 +19,36 @@ void SliceLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-void SliceLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {
+int SliceLayer<Dtype>::get_slice_axis(const vector<Blob<Dtype>*>& bottom) const {
+  int slice_axis;
   const int num_axes = bottom[0]->num_axes();
   const SliceParameter& slice_param = this->layer_param_.slice_param();
   if (slice_param.has_slice_dim()) {
-    slice_axis_ = static_cast<int>(slice_param.slice_dim());
+    slice_axis = static_cast<int>(slice_param.slice_dim());
     // Don't allow negative indexing for slice_dim, a uint32 -- almost
     // certainly unintended.
-    CHECK_GE(slice_axis_, 0) << "casting slice_dim from uint32 to int32 "
+    CHECK_GE(slice_axis, 0) << "casting slice_dim from uint32 to int32 "
         << "produced negative result; slice_dim must satisfy "
         << "0 <= slice_dim < " << kMaxBlobAxes;
-    CHECK_LT(slice_axis_, num_axes) << "slice_dim out of range.";
+    CHECK_LT(slice_axis, num_axes) << "slice_dim out of range.";
   } else {
-    slice_axis_ = bottom[0]->CanonicalAxisIndex(slice_param.axis());
+    slice_axis = bottom[0]->CanonicalAxisIndex(slice_param.axis());
   }
+  return slice_axis;
+}
+
+template <typename Dtype>
+void SliceLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  Reshape_const(bottom,top);
+}
+
+template <typename Dtype>
+void SliceLayer<Dtype>::Reshape_const(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top)  const { 
+  const int slice_axis=get_slice_axis(bottom);
   vector<int> top_shape = bottom[0]->shape();
-  const int bottom_slice_axis = bottom[0]->shape(slice_axis_);
-  num_slices_ = bottom[0]->count(0, slice_axis_);
-  slice_size_ = bottom[0]->count(slice_axis_ + 1);
+  const int bottom_slice_axis = bottom[0]->shape(slice_axis);
   int count = 0;
   if (slice_point_.size() != 0) {
     CHECK_EQ(slice_point_.size(), top.size() - 1);
@@ -51,7 +62,7 @@ void SliceLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     }
     slices.push_back(bottom_slice_axis - prev);
     for (int i = 0; i < top.size(); ++i) {
-      top_shape[slice_axis_] = slices[i];
+      top_shape[slice_axis] = slices[i];
       top[i]->Reshape(top_shape);
       count += top[i]->count();
     }
@@ -59,7 +70,7 @@ void SliceLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     CHECK_EQ(bottom_slice_axis % top.size(), 0)
         << "Number of top blobs (" << top.size() << ") should evenly "
         << "divide input slice axis (" << bottom_slice_axis << ")";
-    top_shape[slice_axis_] = bottom_slice_axis / top.size();
+    top_shape[slice_axis] = bottom_slice_axis / top.size();
     for (int i = 0; i < top.size(); ++i) {
       top[i]->Reshape(top_shape);
       count += top[i]->count();
@@ -74,18 +85,26 @@ void SliceLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void SliceLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
+  Forward_const_cpu(bottom,top);
+}
+template <typename Dtype>
+void SliceLayer<Dtype>::Forward_const_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) const  {
   if (top.size() == 1) { return; }
   int offset_slice_axis = 0;
   const Dtype* bottom_data = bottom[0]->cpu_data();
-  const int bottom_slice_axis = bottom[0]->shape(slice_axis_);
+  const int slice_axis=get_slice_axis(bottom);
+  const int bottom_slice_axis = bottom[0]->shape(slice_axis);
+  const int num_slices = bottom[0]->count(0, slice_axis);
+  const int slice_size = bottom[0]->count(slice_axis + 1);
   for (int i = 0; i < top.size(); ++i) {
     Dtype* top_data = top[i]->mutable_cpu_data();
-    const int top_slice_axis = top[i]->shape(slice_axis_);
-    for (int n = 0; n < num_slices_; ++n) {
-      const int top_offset = n * top_slice_axis * slice_size_;
+    const int top_slice_axis = top[i]->shape(slice_axis);
+    for (int n = 0; n < num_slices; ++n) {
+      const int top_offset = n * top_slice_axis * slice_size;
       const int bottom_offset =
-          (n * bottom_slice_axis + offset_slice_axis) * slice_size_;
-      caffe_copy(top_slice_axis * slice_size_,
+          (n * bottom_slice_axis + offset_slice_axis) * slice_size;
+      caffe_copy(top_slice_axis * slice_size,
           bottom_data + bottom_offset, top_data + top_offset);
     }
     offset_slice_axis += top_slice_axis;

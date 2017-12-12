@@ -24,6 +24,8 @@ class SliceLayer : public Layer<Dtype> {
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
+  void Reshape_const(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) const override;
 
   virtual inline const char* type() const { return "Slice"; }
   virtual inline int ExactNumBottomBlobs() const { return 1; }
@@ -32,13 +34,17 @@ class SliceLayer : public Layer<Dtype> {
  protected:
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
+  void Forward_const_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) const override;
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
+  void Forward_const_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) const override;
 
+  int get_slice_axis(const vector<Blob<Dtype>*>& bottom) const;
   int count_;
   int num_slices_;
   int slice_size_;
-  int slice_axis_;
   vector<int> slice_point_;
 };
 
