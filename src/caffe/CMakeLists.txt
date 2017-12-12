@@ -38,7 +38,9 @@ add_custom_command(
 
 # the data file has large constant expressions which cause the GCC/ICC take a very long time to build
 # use O1 to reduce the compilation time.
+if(NOT "${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
 set_source_files_properties(conv_layer_spatial_pretuned_data.cpp PROPERTIES COMPILE_FLAGS -O1)
+endif()
 
 # --[ Caffe library
 
