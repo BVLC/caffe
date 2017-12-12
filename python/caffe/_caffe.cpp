@@ -177,10 +177,11 @@ void Net_SetInputArrays(Net<Dtype>* net, bp::object data_obj,
     throw std::runtime_error("first dimensions of input arrays must be a"
         " multiple of batch size");
   }
-
+/*
   md_layer->Reset(static_cast<Dtype*>(PyArray_DATA(data_arr)),
       static_cast<Dtype*>(PyArray_DATA(labels_arr)),
       PyArray_DIMS(data_arr)[0]);
+      */
 }
 
 
