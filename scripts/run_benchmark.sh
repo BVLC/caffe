@@ -16,7 +16,7 @@ cpu_model="skx"
 unknown_cpu=0
 
 # specify default engine for running caffe benchmarks
-engine="MKLDNN"
+engine=""
 
 # default support single node
 numnodes=1
@@ -25,7 +25,10 @@ numnodes=1
 intelcaffe_log_file=""
 
 # specific script used to run intelcaffe 
-caffe_bin="./scripts/run_intelcaffe.sh"
+caffe_run_script="./scripts/run_intelcaffe.sh"
+
+# path of caffe binary
+caffe_bin=""
 
 # iterations to run benchmark
 iterations=100
@@ -37,11 +40,15 @@ host_file=""
 network="opa"
 tcp_netmask=""
 
+
+data_source="dummy"
+
 function usage
 {
     script_name=$0
     echo "Usage:"
     echo "   $script_name --topology network_topology [--hostfile host_file] [--network opa/tcp] [--netmask tcp_netmask]"
+    echo "                [--data_source lmdb/dummy] [--caffe_bin caffe_bin_path] [--engine engine]"
     echo ""
     echo "   Parameters:"
     echo "     topology: network topology used to benchmark, support alexnet, googlenet, googlenet_v2, resnet_50"
@@ -49,6 +56,10 @@ function usage
     echo "     hostfile: host_file needed in multinodes mode, should contain list of nodes ips or hostnames"
     echo "     network: opa(default), tcp, used in multinodes mode to specify the network type"
     echo "     netmask: only used if network is tcp, set as the net work card name within your network"
+    echo "     data_source: dummy(default), lmdb. data source for neural network."
+    echo "     caffe_bin_path: specify path of caffe binary."
+    echo "     engine: empty value(default), MKL2017 and MKLDNN. Default empty value"
+    echo "             is to use default engine in Intel Caffe."
     echo ""
 }
 
@@ -99,15 +110,31 @@ function detect_cpu
 function run_specific_model
 {
     if [ $numnodes -eq 1 ]; then
-        model_file="models/intel_optimized_models/${model}/${cpu_model}/train_val_dummydata.prototxt"
-        exec_command="${caffe_bin} --model_file ${model_file} --mode time --iteration ${iterations} --benchmark none"
+        if [ "$data_source" == "dummy" ]; then
+            model_file="models/intel_optimized_models/${model}/${cpu_model}/train_val_dummydata.prototxt"
+        else
+            model_file="models/intel_optimized_models/${model}/${cpu_model}/train_val.prototxt"
+        fi
+        exec_command="${caffe_run_script} --model_file ${model_file} --mode time --iteration ${iterations} --benchmark none"
     else
-        solver_file="models/intel_optimized_models/${model}/${cpu_model}/solver_dummydata.prototxt"
-        exec_command="${caffe_bin} --hostfile $host_file --solver $solver_file --network $network --benchmark none"
+        if [ "$data_source" == "dummy" ]; then
+            solver_file="models/intel_optimized_models/${model}/${cpu_model}/solver_dummydata.prototxt"
+        else
+            solver_file="models/intel_optimized_models/${model}/${cpu_model}/solver.prototxt"
+        fi
+
+        exec_command="${caffe_run_script} --hostfile $host_file --solver $solver_file --network $network --benchmark none"
         if [ $network == "tcp" ]; then
             exec_command+=" --netmask $tcp_netmask"
         fi
     fi 
+    
+    if [ "$engine" != "" ]; then
+        exec_command+=" --engine $engine"
+    fi
+    if [ "$caffe_bin" != "" ]; then
+        exec_command+=" --caffe_bin $caffe_bin"
+    fi
 
     # Result file to save detailed run intelcaffe results
     if [ $unknown_cpu -eq 0 ]; then
@@ -265,6 +292,18 @@ do
             ;;
         --netmask)
             tcp_netmask="$2"
+            shift
+            ;;
+        --engine)
+            engine="$2"
+            shift
+            ;;
+        --data_source)
+            data_source="$2"
+            shift
+            ;;
+        --caffe_bin)
+            caffe_bin=$2
             shift
             ;;
         *)

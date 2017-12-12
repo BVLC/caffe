@@ -55,6 +55,10 @@ function build_caffe_gcc
         echo "DEBUG := 1" >> Makefile.config
     fi
 
+    if [ "$boost_root" != "" ]; then
+        echo "BOOST_ROOT := $boost_root" >> Makefile.config
+    fi
+
     if [ $is_rebuild -eq 1 ]; then
         make clean
     fi

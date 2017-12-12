@@ -54,6 +54,8 @@ mpibench_param="allreduce"
 
 script_dir=$(dirname $0)
 
+caffe_bin=""
+
 function usage
 {
     script_name=$0
@@ -69,6 +71,7 @@ function usage
     echo "               [--output output_folder]"
     echo "               [--mpibench_bin mpibench_bin]"
     echo "               [--mpibench_param mpibench_param]"
+    echo "               [--caffe_bin  caffe_binary_path]"
     echo ""
     echo "  Parameters:"
     echo "    hostfile: host file includes list of nodes. Only used if you're running with multinode"
@@ -89,6 +92,8 @@ function usage
     echo "    output_folder: output folder for storing results"
     echo "    mpibench_bin: IMB-MPI1 (default). relative path of binary of mpi benchmark."
     echo "    mpibench_param: allreduce (default). parameter of mpi benchmark."
+    echo "    caffe_binary_path: path of caffe binary."
+    echo ""
 }
 
 declare -a cpu_list=("Intel Xeon E5-26xx (Broadwell)" "Intel Xeon Phi 72xx (Knights Landing)" 
@@ -335,7 +340,7 @@ function test_ssh_connection
 {
     host_file_=$1
     if [ "$host_file_" != "" ]; then
-        host_list=( `cat $host_file_ | sort | uniq ` )
+        host_list=( `cat $host_file_ | sort -V | uniq ` )
         for host in ${host_list[@]}
         do
             hostname=`ssh $host "hostname"`
@@ -349,7 +354,7 @@ function test_ssh_connection
 function get_model_fname
 {
     solver_file_=$1
-    model_file_=$(grep -w "net:" $solver_file_ | head -n 1 | awk -F ':' '{print $2}' | sed 's/\"//g')
+    model_file_=$(grep -w "net:" $solver_file_ | head -n 1 | awk -F ':' '{print $2}' | sed 's/\"//g' | sed 's/\r//g')
     echo "$(echo $model_file_)"
 }
 
@@ -357,14 +362,13 @@ function check_lmdb_files
 {
     model_file_=$1
     
-    lmdb_dirs=(ilsvrc12_train_lmdb ilsvrc12_val_lmdb) 
     is_missing_lmdb=0
+    lmdb_dirs=($(grep -w "source:" $model_file_ | sed 's/^ *//g' | grep -v "^#" | awk -F ' ' '{print $(NF)}' | sed 's/\"//g' | sed 's/\r//g'))
     for lmdb_dir in "${lmdb_dirs[@]}"
     do
-        data_source_dir=$(grep -w "$lmdb_dir" $model_file_ | head -n 1 | awk -F ' ' '{print $(NF)}' | sed 's/\"//g')
-        echo "    LMDB data source: $data_source_dir"
-        if [ ! -d $data_source_dir ]; then
-            echo "Error: LMDB data source doesn't exist ($data_source_dir)."
+        echo "    LMDB data source: $lmdb_dir"
+        if [ ! -d "$lmdb_dir" ]; then
+            echo "Error: LMDB data source doesn't exist ($lmdb_dir)."
             let is_missing_lmdb=1
         fi
     done
@@ -475,6 +479,14 @@ do
         --help)
             usage
             ;;
+        --engine)
+            engine=$2
+            shift
+            ;;
+        --caffe_bin)
+            caffe_bin=$2
+            shift
+            ;;
         *)
             echo "Unknown option: $key"
             usage
@@ -565,7 +577,7 @@ fi
 # Names to configfile, binary (executable) files #
 # Add check for host_file's existence to support single node
 if [[ $host_file != "" ]]; then
-    nodenames=( `cat $host_file | sort | uniq ` )
+    nodenames=( `cat $host_file | sort -V | uniq ` )
     if [ ${#nodenames[@]} -eq 0 ]; then
         echo "Error: empty host file! Exit."
         exit 0
@@ -601,7 +613,10 @@ if [ "${benchmark_mode}" != "none" ]; then
 fi
 
 if [ "${mode}" != "none" ]; then
-    caffe_bin="./build/tools/caffe"
+    if [ "$caffe_bin" == "" ]; then
+      caffe_bin="${root_dir}/build/tools/caffe"
+    fi
+
     check_dependency $caffe_bin
     if [ $? -ne 0 ]; then
         echo "Exit."
