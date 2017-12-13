@@ -11,37 +11,38 @@ caffe_default_properties(proto)
 list(INSERT Caffe_LINKER_LIBS 0 PUBLIC proto) # note, crucial to prepend!
 
 # ---[ Tools
-add_subdirectory(opencl/vendors/intel/tools)
+if(USE_GREENTEA)
+  add_subdirectory(opencl/vendors/intel/tools)
 
-file(GLOB PRETUNED_BINARY_ZIPS ${PROJECT_SOURCE_DIR}/src/caffe/opencl/vendors/intel/*.ptb.tgz)
-if(PRETUNED_BINARY_ZIPS)
-foreach(PRETUNED_BINARY_ZIP ${PRETUNED_BINARY_ZIPS})
-  get_filename_component(PRETUNED_BINARY_UNZIP ${PRETUNED_BINARY_ZIP} NAME_WE)
-  set(PRETUNED_BINARY_UNZIP ${CMAKE_CURRENT_BINARY_DIR}/${PRETUNED_BINARY_UNZIP}.ptb)
-  set(PRETUNED_BINARY_UNZIPS ${PRETUNED_BINARY_UNZIPS} ${PRETUNED_BINARY_UNZIP})
-  add_custom_command(
+  file(GLOB PRETUNED_BINARY_ZIPS ${PROJECT_SOURCE_DIR}/src/caffe/opencl/vendors/intel/*.ptb.tgz)
+  if(PRETUNED_BINARY_ZIPS)
+  foreach(PRETUNED_BINARY_ZIP ${PRETUNED_BINARY_ZIPS})
+    get_filename_component(PRETUNED_BINARY_UNZIP ${PRETUNED_BINARY_ZIP} NAME_WE)
+    set(PRETUNED_BINARY_UNZIP ${CMAKE_CURRENT_BINARY_DIR}/${PRETUNED_BINARY_UNZIP}.ptb)
+    set(PRETUNED_BINARY_UNZIPS ${PRETUNED_BINARY_UNZIPS} ${PRETUNED_BINARY_UNZIP})
+    add_custom_command(
       OUTPUT ${PRETUNED_BINARY_UNZIP}
       COMMAND echo unziping  ${PRETUNED_BINARY_ZIP} to ${CMAKE_CURRENT_BINARY_DIR}/
       COMMAND tar zxfm ${PRETUNED_BINARY_ZIP} -C ${CMAKE_CURRENT_BINARY_DIR}
       DEPENDS ${PRETUNED_BINARY_ZIP})
-endforeach()
-endif()
+  endforeach()
+  endif()
 
-file(GLOB PRETUNEDBINARY ${PROJECT_SOURCE_DIR}/src/caffe/opencl/vendors/intel/*.ptb)
-set(CONV_LAYER_SPATIAL_PRETUNED_DATA ${CMAKE_CURRENT_BINARY_DIR}/conv_layer_spatial_pretuned_data.cpp)
-add_custom_command(
+  file(GLOB PRETUNEDBINARY ${PROJECT_SOURCE_DIR}/src/caffe/opencl/vendors/intel/*.ptb)
+  set(CONV_LAYER_SPATIAL_PRETUNED_DATA ${CMAKE_CURRENT_BINARY_DIR}/conv_layer_spatial_pretuned_data.cpp)
+  add_custom_command(
     OUTPUT ${CONV_LAYER_SPATIAL_PRETUNED_DATA}
     COMMAND echo creating ${CONV_LAYER_SPATIAL_PRETUNED_DATA} with ${PRETUNEDBINARY} ${PRETUNED_BINARY_UNZIPS}
     COMMAND echo pretune_convert ${PRETUNEDBINARY} ${PRETUNED_BINARY_UNZIPS}
     COMMAND pretune_convert ${PRETUNEDBINARY} ${PRETUNED_BINARY_UNZIPS}
     DEPENDS pretune_convert ${PRETUNEDBINARY} ${PRETUNED_BINARY_UNZIPS})
 
-# the data file has large constant expressions which cause the GCC/ICC take a very long time to build
-# use O1 to reduce the compilation time.
-if(NOT "${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
-set_source_files_properties(conv_layer_spatial_pretuned_data.cpp PROPERTIES COMPILE_FLAGS -O1)
+  # the data file has large constant expressions which cause the GCC/ICC take a very long time to build
+  # use O1 to reduce the compilation time.
+  if(NOT "${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+    set_source_files_properties(conv_layer_spatial_pretuned_data.cpp PROPERTIES COMPILE_FLAGS -O1)
+  endif()
 endif()
-
 # --[ Caffe library
 
 # creates 'test_srcs', 'srcs', 'test_cuda', 'cuda' lists
