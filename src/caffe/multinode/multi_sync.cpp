@@ -55,8 +55,6 @@ MultiSync<Dtype>::MultiSync(shared_ptr<Solver<Dtype> > root_solver)
           distrib_bcast(NULL) {
   root_solver->param().set_disabled_update(true);
 
-  if (root_solver->iter() == 0)
-    root_solver->set_iter(1);
 
   layer_param_ids.resize(layers.size());
 #ifdef FW_OVERLAP_OPT

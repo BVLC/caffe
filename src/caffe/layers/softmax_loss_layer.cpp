@@ -70,6 +70,8 @@ void SoftmaxWithLossLayer<Dtype>::LayerSetUp(
   } else {
     normalization_ = this->layer_param_.loss_param().normalization();
   }
+
+  label_smoothing_ = this->layer_param_.loss_param().label_smoothing();
 }
 
 template <typename Dtype>
@@ -209,6 +211,7 @@ void SoftmaxWithLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     LOG(FATAL) << this->type()
                << " Layer cannot backpropagate to label inputs.";
   }
+
   if (propagate_down[0]) {
     if (bottom.size() == 3) {
         Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
@@ -216,6 +219,15 @@ void SoftmaxWithLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
         caffe_copy(prob_.count(), prob_data, bottom_diff);
         const Dtype* label = bottom[1]->cpu_data();
         int dim = prob_.count() / outer_num_;
+        float alpha = 1, beta = 0, ratio = 1;
+        if (label_smoothing_ != 0.0) {
+          alpha = 1 - label_smoothing_;
+          beta = label_smoothing_ / dim;
+          ratio = (alpha  + (dim - 1) * beta);
+          // for label true, alpha - yi (alpha + (N-1) * beta)
+          // for label false, beta - yj (alpha + (N-1) * beta)
+          caffe_cpu_axpby(bottom[0]->count(), Dtype(ratio), bottom_diff, Dtype(-beta), bottom_diff);
+        }
         Dtype weight_sum = Dtype(0);
         const Dtype* weights = bottom[2]->cpu_data();
         for (int i = 0; i < outer_num_; ++i) {
@@ -226,7 +238,8 @@ void SoftmaxWithLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
                 bottom_diff[i * dim + c * inner_num_ + j] = 0;
               }
             } else {
-              bottom_diff[i * dim + label_value * inner_num_ + j] -= 1;
+                bottom_diff[i * dim + label_value * inner_num_ + j] += (beta - alpha);
+
               for (int c = 0; c < bottom[0]->shape(1); ++c) {
                 bottom_diff[i * dim + c * inner_num_ + j] *= weights[i * inner_num_ + j];
               }
@@ -243,6 +256,15 @@ void SoftmaxWithLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
         caffe_copy(prob_.count(), prob_data, bottom_diff);
         const Dtype* label = bottom[1]->cpu_data();
         int dim = prob_.count() / outer_num_;
+        float alpha = 1, beta = 0, ratio = 1;
+        if (label_smoothing_ != 0.0) {
+          alpha = 1 - label_smoothing_;
+          beta = label_smoothing_ / dim;
+          ratio = (alpha  + (dim - 1) * beta);
+          // for label true, alpha - yi (alpha + (N-1) * beta)
+          // for label false, beta - yj (alpha + (N-1) * beta)
+          caffe_cpu_axpby(bottom[0]->count(), Dtype(ratio), bottom_diff, Dtype(-beta), bottom_diff);
+        }
         int count = 0;
         for (int i = 0; i < outer_num_; ++i) {
           for (int j = 0; j < inner_num_; ++j) {
@@ -252,7 +274,7 @@ void SoftmaxWithLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
                 bottom_diff[i * dim + c * inner_num_ + j] = 0;
               }
             } else {
-              bottom_diff[i * dim + label_value * inner_num_ + j] -= 1;
+                bottom_diff[i * dim + label_value * inner_num_ + j] += (beta - alpha);
               ++count;
             }
           }

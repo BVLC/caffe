@@ -40,6 +40,9 @@
 #include <map>
 #include "boost/thread/mutex.hpp"
 #include "caffe/multinode/mlsl.hpp"
+#ifdef ENABLE_WEIGHT_GRAD_COMPRESSION
+#include "caffe/util/compression_util.hpp"
+#endif
 
 namespace caffe {
   namespace mn {
@@ -67,6 +70,9 @@ namespace caffe {
               MLSL::Environment::GetEnv().Configure(config_str.c_str());
             }
           }
+#ifdef ENABLE_WEIGHT_GRAD_COMPRESSION
+          get_weight_grad_compress_info();
+#endif
         }
         ~initialize() {
           delete distrib_map;

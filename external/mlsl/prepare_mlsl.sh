@@ -7,7 +7,7 @@
 #
 FindLibrary()
 {
-# Find all the instances of the MKL libraries present in Caffe
+# Find all the instances of the MLSL libraries present in Caffe
   MLSL_LIBS=`find $1 -name libmlsl.so`
   #echo "[Debug][FindLibrary function] MLSL_LIBS: $MLSL_LIBS"
 
@@ -55,6 +55,26 @@ if [ -d $ABS_DST/$OLD_ARCHIVE_INSTALL_FOLDERNAME ]; then
   rm -rf $ABS_DST/$OLD_ARCHIVE_INSTALL_FOLDERNAME
   #echo "[Debug] Delete old l_mlsl_p_2017.0.014 folder!"
 fi
+}
+
+# Clean up the previous MLSL version
+CleanUpPreviousMLSL2017_1_016()
+{
+OLD_ARCHIVE_TARGZ=files.tar.gz
+OLD_ARCHIVE_BASENAME=l_mlsl_2017.1.016.tgz
+OLD_ARCHIVE_INSTALL_FOLDERNAME=l_mlsl_2017.1.016
+if [ -f $ABS_DST/$OLD_ARCHIVE_TARGZ ]; then
+  rm $ABS_DST/$OLD_ARCHIVE_TARGZ
+  #echo "[Debug] Delete old files.tar.gz!"
+fi
+if [ -f $ABS_DST/$OLD_ARCHIVE_BASENAME ]; then
+  rm $ABS_DST/$OLD_ARCHIVE_BASENAME
+  #echo "[Debug] Delete old l_mlsl_2017.1.016.tgz file!"
+fi
+if [ -d $ABS_DST/$OLD_ARCHIVE_INSTALL_FOLDERNAME ]; then 
+  rm -rf $ABS_DST/$OLD_ARCHIVE_INSTALL_FOLDERNAME
+  #echo "[Debug] Delete old l_mlsl_2017.1.016 folder!"
+fi
 } 
 
 # MLSL
@@ -66,17 +86,18 @@ ABS_DST=`readlink -f $DST`
 
 if [ -z $MLSL_ROOT ]; then
   CleanUpPreviousMLSL2017_0_014
+  CleanUpPreviousMLSL2017_1_016
 fi
-  
-VERSION_MATCH=20171016
-ARCHIVE_BASENAME=l_mlsl_2017.1.016.tgz
-ARCHIVE_INSTALL_FOLDERNAME=l_mlsl_2017.1.016
-#because the l_mlsl_2017.1.016.tgz will unpacked files.tar.gz and install.sh to the ARCHIVE_INSTALL_FOLDERNAME
+
+VERSION_MATCH=20172018
+ARCHIVE_BASENAME=l_mlsl_2017.2.018.tgz
+ARCHIVE_INSTALL_FOLDERNAME=l_mlsl_2017.2.018
+#because the l_mlsl_2017.2.018.tgz will unpacked files.tar.gz and install.sh to the ARCHIVE_INSTALL_FOLDERNAME
 #not unpacked to the DST folder (Different behavior against l_mlsl_p_2017.0.014.tgz)
-ARCHIVE_INSTALL_FOLDERNAME_TEMP=l_mlsl_2017.1.016_temp
+ARCHIVE_INSTALL_FOLDERNAME_TEMP=l_mlsl_2017.2.018_temp
 MLSL_CONTENT_DIR=`echo $ARCHIVE_BASENAME | rev | cut -d "." -f 2- | rev`
 #echo "[Debug] MLSL_CONTENT_DIR value: $MLSL_CONTENT_DIR"
-GITHUB_RELEASE_TAG=v2017.1-Preview
+GITHUB_RELEASE_TAG=v2017.2-Preview
 
 MLSLURL="https://github.com/01org/MLSL/releases/download/$GITHUB_RELEASE_TAG/$ARCHIVE_BASENAME"
 #echo "[Debug] MLSL_ROOT value: $MLSL_ROOT"
@@ -105,14 +126,14 @@ if [ -z $MLSL_ROOT ] || [ $VERSION_LINE -lt $VERSION_MATCH ]; then
       wget --no-check-certificate -P $DST $MLSLURL -O $DST/$ARCHIVE_BASENAME
       if [ ! -d $DST/$ARCHIVE_INSTALL_FOLDERNAME_TEMP ]; then
         mkdir $DST/$ARCHIVE_INSTALL_FOLDERNAME_TEMP
-        #echo "[Debug] Create l_mlsl_2017.1.016_temp folder for unpacking!"
+        #echo "[Debug] Create l_mlsl_2017.2.018_temp folder for unpacking!"
       fi
       tar -xzf $DST/$ARCHIVE_BASENAME -C $DST/$ARCHIVE_INSTALL_FOLDERNAME_TEMP
       #echo "[Debug] PWD value: $PWD"
       #install.sh did not support the relative path as the parameter
       bash $DST/$ARCHIVE_INSTALL_FOLDERNAME_TEMP/$ARCHIVE_INSTALL_FOLDERNAME/install.sh -s -d $ABS_DST/$ARCHIVE_INSTALL_FOLDERNAME
       rm -rf $DST/$ARCHIVE_INSTALL_FOLDERNAME_TEMP
-      #echo "[Debug] Remove l_mlsl_2017.1.016_temp folder for unpacking!"
+      #echo "[Debug] Remove l_mlsl_2017.2.018_temp folder for unpacking!"
     fi
     #else: version is just our expected version, no need to donload again, but need to set the MLSL_ROOT
     #do not change the value of MLSL_ROOT if MLSL_ROOT is set, but version is not given

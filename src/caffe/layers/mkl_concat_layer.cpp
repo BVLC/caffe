@@ -123,6 +123,26 @@ void MKLConcatLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void MKLConcatLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   const vector<Blob<Dtype>*>& top) {
+  bool has_spatial = (bottom[0]->shape().size() != 2);
+  if (has_spatial == false)
+  {
+#ifdef DEBUG
+      LOG(INFO) << "size of bottom blob: " << bottom[0]->shape().size();
+      LOG(INFO) << "size of top blob: " << top[0]->shape().size();
+      LOG(INFO) << "MKL concat layer only support 4D blob as input! Reshape the 2D input blob into 4D for calculation!";
+#endif
+      for (auto i = 0; i < num_concats_; i++)
+      {
+          vector<int> bottom_4D_shape;
+          int bottom_4D_height = 1;
+          int bottom_4D_width = 1;
+          bottom_4D_shape.push_back(bottom[i]->num());
+          bottom_4D_shape.push_back(bottom[i]->channels());
+          bottom_4D_shape.push_back(bottom_4D_height);
+          bottom_4D_shape.push_back(bottom_4D_width);
+          bottom[i]->Reshape(bottom_4D_shape, false);
+      }      
+  }
   if ((num_ == bottom[0]->num()) &&
        height_ == bottom[0]->height() &&
        width_ == bottom[0]->width()) {

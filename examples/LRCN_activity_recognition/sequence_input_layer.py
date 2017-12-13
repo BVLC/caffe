@@ -23,8 +23,8 @@ from threading import Thread
 import skimage.io
 import copy
 
-flow_frames = 'flow_images/'
-RGB_frames = 'frames/'
+flow_frames = '/home/link/flow_images/'
+RGB_frames = '/home/link/frames/'
 test_frames = 16 
 train_frames = 16
 test_buffer = 3
@@ -174,11 +174,11 @@ class videoRead(caffe.Layer):
     if self.flow:
       image_mean = [128, 128, 128]
 # TODO: No flow support in transformer currently
-#      self.transformer.set_is_flow('data_in', True)
+      self.transformer.set_is_flow('data_in', True)
     else:
       image_mean = [103.939, 116.779, 128.68]
 # TODO: No flow support in transformer currently
-#      self.transformer.set_is_flow('data_in', False)
+      self.transformer.set_is_flow('data_in', False)
     channel_mean = np.zeros((3,227,227))
     for channel_index, mean_val in enumerate(image_mean):
       channel_mean[channel_index, ...] = mean_val

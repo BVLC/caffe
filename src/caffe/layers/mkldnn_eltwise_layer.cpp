@@ -150,6 +150,9 @@ void MKLDNNEltwiseLayer<Dtype>::InitEltwiseFwd(const vector<Blob<Dtype>*>& botto
     shared_ptr<memory::desc> bottom_data_md, top_data_md;
 
     std::vector<memory::primitive_desc> bottom_data_mpd;
+    fwd_bottom_data.clear();
+    fwd_bottom_data_primitives_.clear();
+    fwd_bottom_data_primitives_at_.clear();
     for (auto i = 0; i < num_bottoms_; i++) 
     {
         fwd_bottom_data.push_back(boost::shared_ptr<MKLDNNData<Dtype> >());

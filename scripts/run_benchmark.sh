@@ -41,12 +41,12 @@ function usage
 {
     script_name=$0
     echo "Usage:"
-    echo "   $script_name --topology network_topology [--host_file host_file] [--network opa/tcp] [--netmask tcp_netmask]"
+    echo "   $script_name --topology network_topology [--hostfile host_file] [--network opa/tcp] [--netmask tcp_netmask]"
     echo ""
     echo "   Parameters:"
     echo "     topology: network topology used to benchmark, support alexnet, googlenet, googlenet_v2, resnet_50"
     echo "               , by specifying it as 'all', we run all supported topologies."
-    echo "     host_file: host_file needed in multinodes mode, should contain list of nodes ips or hostnames"
+    echo "     hostfile: host_file needed in multinodes mode, should contain list of nodes ips or hostnames"
     echo "     network: opa(default), tcp, used in multinodes mode to specify the network type"
     echo "     netmask: only used if network is tcp, set as the net work card name within your network"
     echo ""
@@ -84,7 +84,7 @@ function detect_cpu
         cpu_model="knm"
     elif [[ $model_string == *"72"* ]]; then
         cpu_model="knl"
-    elif [[ $model_string == *"8180"* ]]; then
+    elif [[ $model_string == *"8180"* ]] || [[ $model_string == *"8124"* ]]; then
         cpu_model="skx"
     elif [[ $model_string == *"6148"* ]]; then
         cpu_model="skx"
@@ -103,7 +103,10 @@ function run_specific_model
         exec_command="${caffe_bin} --model_file ${model_file} --mode time --iteration ${iterations} --benchmark none"
     else
         solver_file="models/intel_optimized_models/${model}/${cpu_model}/solver_dummydata.prototxt"
-        exec_command="${caffe_bin} --host $host_file --solver $solver_file --network $network --netmask $tcp_netmask --benchmark none"
+        exec_command="${caffe_bin} --hostfile $host_file --solver $solver_file --network $network --benchmark none"
+        if [ $network == "tcp" ]; then
+            exec_command+=" --netmask $tcp_netmask"
+        fi
     fi 
 
     # Result file to save detailed run intelcaffe results
@@ -112,7 +115,7 @@ function run_specific_model
     else
         result_log_file="result-unknown-${model}-`date +%Y%m%d%H%M%S`.log"
     fi
-    $exec_command > $result_log_file 2>&1
+    $exec_command 2>&1 | tee  $result_log_file
     obtain_intelcaffe_log $result_log_file
     calculate_images_per_second $intelcaffe_log_file 
 }
@@ -182,10 +185,10 @@ function obtain_batch_size
         echo "Error: log file $log_file does not exist..."
         exit 1
     fi
-    if [ $numnodes -eq 1 ]; then
-        batch_size=`cat $log_file | grep shape | sed -n "3, 1p" | awk '{print $(NF-4)}'`
-    else
-        batch_size=`cat $log_file | grep SetMinibatchSize | sed -n "1, 1p" | awk '{print $(NF)}'`
+    batch_size=`cat $log_file | grep shape | sed -n "3, 1p" | awk '{print $(NF-4)}'`
+    batch_size_opt=`cat $log_file | grep SetMinibatchSize | sed -n "1, 1p" | awk '{print $(NF)}'`
+    if [[ $batch_size_opt != "" ]]; then
+        batch_size=$batch_size_opt
     fi
     echo "batch size: $batch_size"
 }
@@ -244,7 +247,7 @@ if [[ $# -le 1 ]]; then
     exit 0
 fi
 
-while [[ $# -gt 1 ]]
+while [[ $# -ge 1 ]]
 do
     key="$1"
     case $key in 
@@ -252,7 +255,7 @@ do
             topology="$2"
             shift
             ;;
-        --host_file)
+        --hostfile)
             host_file="$2"
             shift
             ;;

@@ -64,6 +64,9 @@ class SGDSolver : public Solver<Dtype> {
   void PreSolve();
   Dtype GetWarmUpLR(int cur_iter, int warmup_iter, Dtype warmup_start_lr);
   Dtype GetLearningRate();
+  Dtype GetLocalRate(int param_id) const;
+
+  virtual void PrintLearningRate();
   virtual void ApplyUpdate();
   virtual void ApplyUpdate(int param_id);
   virtual void Normalize(int param_id);

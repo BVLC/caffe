@@ -135,6 +135,35 @@ cv::Mat ReadImageToCVMat(const string& filename,
 }
 
 cv::Mat ReadImageToCVMat(const string& filename,
+    const int height, const int width, const bool is_color,
+    const int min_height, const int min_width) {
+  cv::Mat cv_img;
+  int cv_read_flag = (is_color ? CV_LOAD_IMAGE_COLOR :
+    CV_LOAD_IMAGE_GRAYSCALE);
+  cv::Mat cv_img_origin = cv::imread(filename, cv_read_flag);
+  if (!cv_img_origin.data) {
+    LOG(ERROR) << "Could not open or find file " << filename;
+    return cv_img_origin;
+  }
+  if (height > 0 && width > 0) {
+    cv::resize(cv_img_origin, cv_img, cv::Size(width, height));
+  } else if (cv_img_origin.rows < min_height || cv_img_origin.cols < min_width){
+    bool resize_width = (min_width - cv_img_origin.cols > min_height - cv_img_origin.rows)
+                         ? true: false;
+    if (resize_width) {
+       int height_aspect_ratio = float(min_width)*(float(cv_img_origin.rows)/float(cv_img_origin.cols)) + 0.5;
+       cv::resize(cv_img_origin, cv_img, cv::Size(min_width, height_aspect_ratio));
+    } else {
+       int width_aspect_ratio = float(min_height)*(float(cv_img_origin.cols)/float(cv_img_origin.rows)) + 0.5;
+       cv::resize(cv_img_origin, cv_img, cv::Size(width_aspect_ratio , min_height));
+    }
+  } else {
+    cv_img = cv_img_origin;
+  }
+  return cv_img;
+}
+
+cv::Mat ReadImageToCVMat(const string& filename,
     const int height, const int width) {
   return ReadImageToCVMat(filename, height, width, true);
 }

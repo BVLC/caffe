@@ -76,6 +76,8 @@ USE_MKLDNN_AS_DEFAULT_ENGINE := 1
 # already. 
 # BOOST_ROOT := 
 
+# Use remove batch norm optimization to boost inferrence
+DISABLE_BN_FOLDING := 0
 # Intel(r) Machine Learning Scaling Library (uncomment to build
 # with MLSL for multi-node training)
 # USE_MLSL :=1
@@ -115,6 +117,8 @@ BLAS := mkl
 # MATLAB_DIR := /usr/local
 # MATLAB_DIR := /Applications/MATLAB_R2012b.app
 
+SERIAL_HDF5_INCLUDE := /usr/include/hdf5/serial/
+
 # NOTE: this is required only if you will compile the python interface.
 # We need to be able to find Python.h and numpy/arrayobject.h.
 PYTHON_INCLUDE := /usr/include/python2.7 \
@@ -143,7 +147,7 @@ PYTHON_LIB := /usr/lib
 # WITH_PYTHON_LAYER := 1
 
 # Whatever else you find you need goes here.
-INCLUDE_DIRS := $(PYTHON_INCLUDE) /usr/local/include
+INCLUDE_DIRS := $(PYTHON_INCLUDE) ${SERIAL_HDF5_INCLUDE} /usr/local/include
 LIBRARY_DIRS := $(PYTHON_LIB) /usr/local/lib /usr/lib
 
 # If Homebrew is installed at a non standard location (for example your home directory) and you use it for general dependencies

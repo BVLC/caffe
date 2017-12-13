@@ -85,7 +85,7 @@ class Blob {
    * an error; either Net::Forward or Net::Reshape need to be called to
    * propagate the new input shape to higher layers.
    */
-  void Reshape(const vector<int>& shape);
+  void Reshape(const vector<int>& shape, bool reinitialize = true);
   void Reshape(const BlobShape& shape);
   void ReshapeLike(const Blob& other);
   inline string shape_string() const {

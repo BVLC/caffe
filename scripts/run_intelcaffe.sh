@@ -6,7 +6,7 @@ benchmark_mode="none"
 numnodes=1
 
 
-# time/train/resume_train
+# time/train
 mode="train"
 
 # it's assigned by detect_cpu
@@ -22,6 +22,8 @@ tcp_netmask=""
 # specify number of MLSL ep servers in command
 num_mlsl_servers=-1
 
+debug="off"
+
 # parameters for caffe time
 iteration=0
 model_file=""
@@ -30,44 +32,60 @@ snapshot=""
 # parameters for training
 solver_file=""
 
+# weights for finetuning
+weight_file=""
+
+# number of OpenMP threads
+num_omp_threads=0
+
 # specify engine for running caffe
-engine="MKLDNN"
+engine=""
 
 #default numa node if needed
 numanode=0
 
+# pin internal threads to 2 CPU cores for reading data
+internal_thread_pin="on"
+
 result_dir=""
-debug="off"
+
 mpibench_bin="IMB-MPI1"
 mpibench_param="allreduce"
+
+script_dir=$(dirname $0)
 
 function usage
 {
     script_name=$0
     echo "Usage:"
-    echo "  $script_name [--host host_file] [--solver solver_file]"
+    echo "  $script_name [--hostfile host_file] [--solver solver_file]"
+    echo "               [--weights weight_file] [--num_omp_threads num_omp_threads]"
     echo "               [--network opa/tcp] [--netmask tcp_netmask] [--debug on/off]"
-    echo "               [--mode train/resume_train/time/none] [--benchmark all/qperf/mpi/none]"
+    echo "               [--mode train/time/none] [--benchmark all/qperf/mpi/none]"
     echo "               [--iteration iter] [--model_file deploy.prototxt]"
     echo "               [--snapshot snapshot.caffemodel]"
     echo "               [--num_mlsl_servers num_mlsl_servers]"
+    echo "               [--internal_thread_pin on/off]"
     echo "               [--output output_folder]"
     echo "               [--mpibench_bin mpibench_bin]"
     echo "               [--mpibench_param mpibench_param]"
     echo ""
     echo "  Parameters:"
-    echo "    host: host file includes list of nodes. Only used when you're running multinodes mode"
-    echo "    solver: need to be specified a solver file if mode is train/resume_train"
+    echo "    hostfile: host file includes list of nodes. Only used if you're running with multinode"
+    echo "    solver: need to be specified a solver file if mode is train"
+    echo "    weight_file: weight file for finetuning"
+    echo "    num_omp_threads: number of OpenMP threads"
     echo "    network: opa(default), tcp"
     echo "    netmask: only used if network is tcp"
     echo "    debug: off(default). MLSL debug information is outputed if it's on"
-    echo "    mode: train(default), resume_train, time, none(not to run caffe test)"
+    echo "    mode: train(default), time, none(not to run caffe test)"
     echo "    benchmark: none(disabled by default). Includes qperf, all-reduce performance"
     echo "      Dependency: user needs to install qperf, Intel MPI library (including IMB-MPI1);"
     echo "                  and add them in system path."
     echo "    iteration and model_file: only used if mode is time (caffe time)"
-    echo "    snapshot: only used if mode is resume_train"
+    echo "    snapshot: it's specified if train is resumed"
     echo "    num_mlsl_servers: number of MLSL ep servers"
+    echo "    internal_thread_pin: on(default). pin internal threads to 2 CPU cores for reading data."
     echo "    output_folder: output folder for storing results"
     echo "    mpibench_bin: IMB-MPI1 (default). relative path of binary of mpi benchmark."
     echo "    mpibench_param: allreduce (default). parameter of mpi benchmark."
@@ -84,7 +102,7 @@ function detect_cpu
         cpu_model="knm"
     elif [[ $model_string == *"72"* ]]; then
         cpu_model="knl"
-    elif [[ $model_string == *"8180"* ]]; then
+    elif [[ $model_string == *"8180"* ]] || [[ $model_string == *"8124"* ]]; then
         cpu_model="skx"
     elif [[ $model_string == *"6148"* ]]; then
         cpu_model="skx"
@@ -129,152 +147,6 @@ function check_dependency
 }
 
 
-function init_mpi_envs
-{
-    if [ ${numnodes} -eq 1 ]; then
-        return
-    fi
-
-    # IMPI configuration
-    if [ "$network" == "opa" ]; then
-        export I_MPI_FABRICS=tmi
-        export I_MPI_TMI_PROVIDER=psm2
-        if [ "$cpu_model" == "knl" ] || [ "$cpu_model" == "knm" ];  then
-            # PSM2 configuration
-            export PSM2_MQ_RNDV_HFI_WINDOW=2097152 # to workaround PSM2 bug in IFS 10.2 and 10.3
-            export PSM2_MQ_EAGER_SDMA_SZ=65536
-            export PSM2_MQ_RNDV_HFI_THRESH=200000
-            export HFI_NO_CPUAFFINITY=1
-            export I_MPI_DYNAMIC_CONNECTION=0
-            export I_MPI_SCALABLE_OPTIMIZATION=0
-            export I_MPI_PIN_MODE=lib 
-            export I_MPI_PIN_DOMAIN=node
-        fi
-         
-        export PSM2_IDENTIFY=1 # for debug
-    elif [ "$network" == "tcp" ]; then
-        export I_MPI_FABRICS=tcp
-        export I_MPI_TCP_NETMASK=$tcp_netmask
-    else
-        echo "Invalid network: $network"
-        exit 1
-    fi
-
-    export I_MPI_FALLBACK=0
-    export I_MPI_DEBUG=6
-}
-
-
-function clear_shm
-{
-    clear_command="rm -rf /dev/shm/*"
-    check_shm_command="df -h | grep shm"
-
-    # TODO: check if 40G is the minimum shm size?
-    min_shm_size=40
-    shm_unit="G"
-
-    for node in "${nodenames[@]}"
-    do
-        ssh ${node} "$clear_command"
-        shm_line=`ssh ${node} "$check_shm_command"`
-        shm_string=`echo $shm_line | awk -F ' ' '{print $(NF-2)}'`
-        unit="${shm_string:(-1)}"
-        shm_size=${shm_string::-1}
-        if [ "$unit" == "$shm_unit" ] && [ $shm_size -ge ${min_shm_size} ]; then
-            continue
-        else
-            echo "Warning: /dev/shm free size = ${shm_size}${unit}, on node: ${node}."
-            echo "       Better to larger than ${min_shm_size}${shm_unit}."
-            echo "       Please clean or enlarge the partition."
-        fi
-    done
-}
-
-function kill_zombie_processes
-{
-    kill_command="for process in ep_server caffe mpiexec.hydra; do for i in \$(ps -e | grep -w \$process | awk -F ' ' '{print \$1}'); do kill -9 \$i; echo \"\$process \$i killed.\"; done done"
-    for node in "${nodenames[@]}"
-    do
-        ssh ${node} "$kill_command"
-    done
-}
-
-function clear_envs
-{
-    clear_shm
-    kill_zombie_processes
-}
-
-function set_mlsl_vars
-{
-    if [ ${num_mlsl_servers} -eq -1 ]; then
-        if [ ${numnodes} -eq 1 ]; then
-            numservers=0
-        else
-            if [ "${cpu_model}" == "bdw" ] || [ "${cpu_model}" == "skx" ]; then
-                numservers=2
-            else
-                numservers=4
-            fi
-        fi
-    else
-        numservers=$((num_mlsl_servers))
-    fi
-
-    echo "MLSL_NUM_SERVERS: $numservers"
-    export MLSL_NUM_SERVERS=${numservers}
-
-    if [ ${numservers} -gt 0 ]; then
-        if [ "${cpu_model}" == "bdw" ] || [ "${cpu_model}" == "skx" ]; then
-            listep=6,7,8,9
-        else
-            listep=6,7,8,9,10,11,12,13
-        fi
-        export MLSL_SERVER_AFFINITY="${listep}"
-        echo "MLSL_SERVER_AFFINITY: ${listep}"
-    fi
-
-    # MLSL configuration
-    if [ "$debug" == "on" ]; then
-        export MLSL_LOG_LEVEL=3
-    else
-        export MLSL_LOG_LEVEL=0
-    fi
-}
-
-function set_env_vars
-{
-    set_mlsl_vars
-    init_mpi_envs
-
-    ppncpu=1
-    threadspercore=1
-
-    cores=`lscpu | grep "Core(s) per socket:" | awk '{print $4}'`
-    sockets=`lscpu | grep "Socket(s)" | awk  '{print $2}'`
-    maxcores=$((cores*sockets))
-
-    numthreads=$(((maxcores-numservers)*threadspercore))
-    numthreads_per_proc=$((numthreads/ppncpu))
-
-    export OMP_NUM_THREADS=${numthreads_per_proc}
-
-    # OMP configuration
-    # threadspercore=1
-    affinitystr="proclist=[0-5,$((5+numservers+1))-$((maxcores-1))],granularity=thread,explicit"
-    export KMP_HW_SUBSET=1t
-    export KMP_AFFINITY=$affinitystr
-    if [ "${cpu_model}" == "knl" ] || [ "${cpu_model}" == "knm" ]; then
-        export KMP_BLOCKTIME=10000000
-        export MKL_FAST_MEMORY_LIMIT=0
-        if [ ${numnodes} -eq 1 ]; then
-            affinitystr="compact,1,0,granularity=fine"
-            export KMP_AFFINITY=$affinitystr
-        fi
-    fi
-}
-
 function execute_command
 {
     local xeonbin_=$1
@@ -301,8 +173,6 @@ function execute_command
     fi
     log_file=$result_dir_/outputCluster-${cpu_model}-${numnodes}.txt
 
-    clear_envs
-
     sensors_bin="sensors"
     check_dependency $sensors_bin
     has_sensors=$?
@@ -310,7 +180,7 @@ function execute_command
         sensor_log_file=$result_dir_/sensors-${cpu_model}-${numnodes}-start.log
         $sensors_bin >$sensor_log_file
     fi
-    
+
     if [ ${numnodes} -eq 1 ]; then
         time GLOG_minloglevel=0 $exec_command 2>&1 | tee ${log_file}
     else
@@ -374,7 +244,12 @@ function run_mpi_bench
         return
     fi
 
+    mpi_iter=10
+    max_msglog=29
     xeonbin="$mpibench_bin $mpibench_param"
+    if [ "$mpibench_bin" == "IMB-MPI1" ] || [ "$mpibench_bin" == "IMB-NBC" ]; then
+        xeonbin+=" -msglog $max_msglog -iter $mpi_iter -iter_policy off"
+    fi
 
     mpibench_bin_bname=`basename $mpibench_bin`
 
@@ -428,7 +303,6 @@ function run_benchmark
         fi
 
         if [ "$benchmark_mode" == "all" ] || [ "$benchmark_mode" == "mpi" ]; then
-            set_env_vars
             run_mpi_bench
         fi
     fi
@@ -439,18 +313,81 @@ function run_caffe
     echo "Run caffe with ${numnodes} nodes..."
 
     if [ ${mode} == "time" ]; then
-        xeonbin="$caffe_bin time --iterations $iteration --model $model_file  -engine=$engine"
+        xeonbin="$caffe_bin time --iterations $iteration --model $model_file"
     else
-        xeonbin="$caffe_bin train --solver $solver_file -engine=$engine"
-        if [ ${mode} == "resume_train" ]; then
+        xeonbin="$caffe_bin train --solver $solver_file"
+        if [ "${snapshot}" != "" ]; then
             xeonbin+=" --snapshot=${snapshot}"
+        fi
+        if [ "${weight_file}" != "" ]; then
+            xeonbin+=" --weights ${weight_file}"
         fi
     fi
 
-    set_env_vars
+    if [ "${engine}" != "" ]; then
+        xeonbin+=" --engine=$engine"
+    fi
+
     execute_command "$xeonbin" $result_dir
 }
 
+function test_ssh_connection
+{
+    host_file_=$1
+    if [ "$host_file_" != "" ]; then
+        host_list=( `cat $host_file_ | sort | uniq ` )
+        for host in ${host_list[@]}
+        do
+            hostname=`ssh $host "hostname"`
+            # prompt user to input password and no password should be
+            # needed in the following commands
+            ssh $hostname "ls" >/dev/null
+        done
+    fi
+}
+
+function get_model_fname
+{
+    solver_file_=$1
+    model_file_=$(grep -w "net:" $solver_file_ | head -n 1 | awk -F ':' '{print $2}' | sed 's/\"//g')
+    echo "$(echo $model_file_)"
+}
+
+function check_lmdb_files
+{
+    model_file_=$1
+    
+    lmdb_dirs=(ilsvrc12_train_lmdb ilsvrc12_val_lmdb) 
+    is_missing_lmdb=0
+    for lmdb_dir in "${lmdb_dirs[@]}"
+    do
+        data_source_dir=$(grep -w "$lmdb_dir" $model_file_ | head -n 1 | awk -F ' ' '{print $(NF)}' | sed 's/\"//g')
+        echo "    LMDB data source: $data_source_dir"
+        if [ ! -d $data_source_dir ]; then
+            echo "Error: LMDB data source doesn't exist ($data_source_dir)."
+            let is_missing_lmdb=1
+        fi
+    done
+
+    if [ $is_missing_lmdb -eq 1 ]; then
+        echo ""
+        echo "Please follow the steps to create imagenet LMDB:"
+        echo "    1. Please download images from image-net.org website."
+        echo "    2. Execute script to download auxiliary data for training:"
+        echo "           ./data/ilsvrc12/get_ilsvrc_aux.sh"
+        echo "    3. update parameters in examples/imagenet/create_imagenet.sh"
+        echo "           TRAIN_DATA_ROOT and VALUE_DATA_ROOT: path of training and validation images from image-net.org"
+        echo "           RESIZE=true/false: resize to 256x256 if true"
+        echo "           ENCODE=true/false: LMDB is compressed if true"
+        echo "    4. Execute script to create lmdb for imagenet"
+        echo "           ./examples/imagenet/create_imagenet.sh"
+        echo ""
+        echo "See details in Intel Caffe github wiki:"
+        echo "    https://github.com/intel/caffe/wiki/How-to-create-Imagenet-LMDB"
+
+        exit -1
+    fi 
+}
 
 if [ $# -le 1 ]; then
     usage
@@ -459,7 +396,7 @@ fi
 
 root_dir=$(cd $(dirname $(dirname $0)); pwd)
 result_dir=${root_dir}/"result-`date +%Y%m%d%H%M%S`"
-while [[ $# -gt 1 ]]
+while [[ $# -ge 1 ]]
 do
     key="$1"
     case $key in
@@ -467,7 +404,7 @@ do
             solver_file="$2"
             shift
             ;;
-        --host)
+        --hostfile)
             host_file="$2"
             shift
             ;;
@@ -503,6 +440,18 @@ do
             snapshot=$2
             shift
             ;;
+        --weights)
+            weight_file=$2
+            shift
+            ;;
+        --num_omp_threads)
+            num_omp_threads=$2
+            shift
+            ;;
+        --internal_thread_pin)
+            internal_thread_pin=$2
+            shift
+            ;;
         --engine)
             engine=$2
             shift
@@ -523,6 +472,9 @@ do
             mpibench_param=$2
             shift
             ;;
+        --help)
+            usage
+            ;;
         *)
             echo "Unknown option: $key"
             usage
@@ -532,6 +484,8 @@ do
     shift
 done
 
+detect_cpu
+
 echo ""
 echo "CPUs with optimal settings:"
 for ((i=0; i<${#cpu_list[@]}; i++))
@@ -540,6 +494,7 @@ do
 done
 echo ""
 echo "Settings:"
+echo "    CPU: $cpu_model"
 echo "    Host file: $host_file"
 echo "    Running mode: $mode"
 echo "    Benchmark: $benchmark_mode"
@@ -550,7 +505,7 @@ echo "        -1: selected automatically according to CPU model."
 echo "            BDW/SKX: 2, KNL: 4"
 
 
-if [ "$mode" == "train" ] || [ "$mode" == "resume_train" ]; then
+if [ "$mode" == "train" ]; then
     if [ "$solver_file" == "" ]; then
         echo "Error: solver file is NOT specified."
         exit 1
@@ -562,17 +517,14 @@ if [ "$mode" == "train" ] || [ "$mode" == "resume_train" ]; then
 
     echo "    Solver file: $solver_file"
 
-    if [ "$mode" == "resume_train" ]; then
-        if [ "$snapshot" == "" ]; then
-            echo "Error: snapshot is NOT specified."
-            exit 1
-        fi
+    if [ "$snapshot" != "" ]; then
         if [ ! -f $snapshot ]; then
             echo "Error: snapshot file does NOT exist."
             exit 1
         fi
         echo "    Snapshot for resuming train: $snapshot"
     fi
+    model_file=$(get_model_fname $solver_file)
 fi
 
 if [ "$mode" == "time" ]; then
@@ -591,6 +543,14 @@ if [ "$mode" == "time" ]; then
     fi        
     echo "    Iteration for running caffe time: $iteration"
     echo "    Model file for running caffe time: $model_file"
+fi
+
+# check source data exists
+if [ "$model_file" != "" ]; then
+    grep "backend" $model_file | grep -i "LMDB"  >/dev/null
+    if [ $? -eq 0 ]; then
+        check_lmdb_files $model_file
+    fi
 fi
 
 echo "    Network: $network"
@@ -612,9 +572,9 @@ if [[ $host_file != "" ]]; then
     fi
     numnodes=${#nodenames[@]}
 fi
-echo "    Number of nodes: $numnodes"
 
-detect_cpu
+# test connection between nodes via ssh
+test_ssh_connection $host_file
 
 set_numa_node
 
@@ -622,6 +582,19 @@ if [ ! -d $result_dir ]; then
     echo "Create result directory: $result_dir"
     mkdir -p $result_dir
 fi
+
+env_params="--cpu $cpu_model --debug $debug --network $network --num_mlsl_servers $num_mlsl_servers"
+if [ "$network" == "tcp" ]; then
+    env_params+=" --netmask $tcp_netmask"
+fi
+if [ "$host_file" != "" ]; then
+    env_params+=" --hostfile $host_file"
+fi
+if [ ${num_omp_threads} -ne 0 ]; then
+    env_params+=" --num_omp_threads ${num_omp_threads}"
+fi
+
+source ${script_dir}/set_env.sh $env_params
 
 if [ "${benchmark_mode}" != "none" ]; then
     run_benchmark

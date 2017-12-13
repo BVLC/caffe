@@ -233,6 +233,7 @@ message CompileNetState {
 
 message MultinodeParameter {
   repeated MnModelParallelParameter model_parallel = 1;
+  optional MnParamGradCompressLayerTypeList compress_layer_type_list = 2;
 }
 
 message MnModelParallelParameter {
@@ -240,6 +241,10 @@ message MnModelParallelParameter {
   optional string layer_to = 2;
   optional uint32 num_nodes = 3;   // 0 means all nodes
   optional uint32 model_parts = 4; // 0 or >= num_nodes, means all nodes
+}
+
+message MnParamGradCompressLayerTypeList {
+  repeated string layer_type = 1;
 }
 
 message MultiPhaseSolverParameter {
@@ -254,7 +259,7 @@ message SolverBatchSizePair {
 // NOTE
 // Update the next available ID when you add a new SolverParameter field.
 //
-// SolverParameter next available ID: 50 (last added: warm_up_start_lr)
+// SolverParameter next available ID: 52 (last added: local_gw_ratio)
 message SolverParameter {
   //////////////////////////////////////////////////////////////////////////////
   // Specifying the train and test networks
@@ -415,6 +420,9 @@ message SolverParameter {
   optional string engine = 47 [default = ""];
   optional int32 warmup_iter = 48 [default = 0];
   optional float warmup_start_lr = 49 [default = 0];
+
+  optional bool local_lr_auto = 50 [default = false];
+  optional float local_gw_ratio = 51 [default = 0.001];
 }
 
 // A message that stores the solver snapshots
@@ -484,7 +492,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 156 (last added: spatial_dropout_param)
+// LayerParameter next available layer-specific ID: 157 (last added: mn_grad_compress_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -599,6 +607,7 @@ message LayerParameter {
   
   optional MultinodeLayerParameter multinode = 150;
   optional MnActivationParameter mn_activation_param = 151;
+  optional MnParamGradCompressParameter mn_grad_compress_param = 156;
 }
 
 message MultinodeLayerParameter {
@@ -618,6 +627,12 @@ message MnActivationParameter {
   // 0 or > num_nodes, means all nodes
   optional uint32 model_parts_out = 4 [default = 1];
   optional bool need_reduce = 5 [default = true];
+}
+
+
+
+message MnParamGradCompressParameter {
+  repeated bool param_grad_compress_enable = 1;
 }
 
 // Message that stores parameters used to apply transformation
@@ -657,6 +672,9 @@ message TransformationParameter {
   // Resize the input randomly
   optional RandomResizeParameter random_resize_param = 15;
   optional RandomAspectRatioParameter random_aspect_ratio_param = 16;
+
+    //will flip x flow if flow image input
+  optional bool flow = 17 [default = false];
 }
 
 message RandomResizeParameter {
@@ -828,6 +846,7 @@ message LossParameter {
   optional bool normalize = 2;
   // pre-fixed normalizer
   optional float pre_fixed_normalizer = 4 [default = 1];
+  optional float label_smoothing = 5 [default = 0.0];
 }
 
 // Messages that store parameters used by individual layer types follow, in
@@ -1311,6 +1330,10 @@ message ImageDataParameter {
   // It will also resize images if new_height or new_width are not zero.
   optional uint32 new_height = 9 [default = 0];
   optional uint32 new_width = 10 [default = 0];
+
+  optional uint32 min_height = 13 [default = 0];
+  optional uint32 min_width = 14 [default = 0];
+
   // Specify if the images are color or gray
   optional bool is_color = 11 [default = true];
   // DEPRECATED. See TransformationParameter. For data pre-processing, we can do

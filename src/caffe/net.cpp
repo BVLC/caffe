@@ -266,7 +266,8 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
         !layer_param.type().compare("HDF5Data")   ||
         !layer_param.type().compare("MemoryData") ||
         !layer_param.type().compare("Input") ||
-        !layer_param.type().compare("WindowData")) {
+        !layer_param.type().compare("WindowData") ||
+        !layer_param.type().compare("AnnotatedData")) {
 
         // FIXME: retrieve batch_size from top[0]->shape[0] when MLSL stuff will be moved from LayerSetUp
         //int batch_size = top_vecs_[layer_id][0]->shape(0);
@@ -284,6 +285,8 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
             batch_size = layer_param.memory_data_param().batch_size();
         else if (!layer_param.type().compare("WindowData"))
             batch_size = layer_param.window_data_param().batch_size();
+        else if (!layer_param.type().compare("AnnotatedData"))
+            batch_size = layer_param.data_param().batch_size();
         else if (!layer_param.type().compare("Input")
             && layer_param.input_param().shape(0).dim().size())
             batch_size = layer_param.input_param().shape(0).dim(0);
@@ -509,10 +512,13 @@ void Net<Dtype>::CompileNet(const NetParameter& param,
     NetParameter* param_compiled) {
 
   NetParameter param_temp0;
+#ifndef DISABLE_BN_FOLDING
   param_temp0.CopyFrom(param);
   param_temp0.clear_layer();
   RemoveBNScale<Dtype>(param, &param_temp0);
-
+#else
+  param_temp0 = param;
+#endif
   NetParameter param_temp;  // temporary compiled param
   param_temp.CopyFrom(param_temp0);
   param_temp.clear_layer();    // Remove layers
@@ -521,7 +527,6 @@ void Net<Dtype>::CompileNet(const NetParameter& param,
   NetParameter param_temp2;  // temporary compiled param
   param_temp2.CopyFrom(param_temp);
   param_temp2.clear_layer();   // Remove layers
-
   CompilationRuleTwo(param_temp, &param_temp2);
 
   param_compiled->CopyFrom(param_temp2);
@@ -623,6 +628,7 @@ template <typename Dtype>
 void Net<Dtype>::CompilationRuleTwo(const NetParameter& param,
                                     NetParameter* param_compiled) {
   std::set<std::string> layers_to_drop;
+  bool use_negative_slope = false;
   for (int i = 0; i < param.layer_size(); ++i) {
     LayerParameter* layer_param =
           (const_cast<NetParameter&>(param)).mutable_layer(i);
@@ -687,14 +693,14 @@ void Net<Dtype>::CompilationRuleTwo(const NetParameter& param,
                                           scale_top_blob_name.size(),
                                           scale_top_blob_name);
         }
-        // set relu flag in convolution
-        layer_param->mutable_convolution_param()->set_relu(true);
         float negative_slope1 =
                   consumer_layer_param.relu_param().negative_slope();
-        layer_param->mutable_convolution_param()->
-                    set_negative_slope(negative_slope1);
-
-        if(param.state().phase() == TRAIN) {
+        if (negative_slope1 != 0) {
+            use_negative_slope = true;
+        } else {
+            layer_param->mutable_convolution_param()->set_relu(true);
+        }
+        if(param.state().phase() == TRAIN && !use_negative_slope) {
           if(i+1 < param.layer_size()) {
             LayerParameter* relu_layer_param =
               (const_cast<NetParameter&>(param)).mutable_layer(i+1);
@@ -704,7 +710,7 @@ void Net<Dtype>::CompilationRuleTwo(const NetParameter& param,
       }
     }
 
-    if(param.state().phase() == TEST) {
+    if(param.state().phase() == TEST && !use_negative_slope) {
       if (layers_to_drop.find(layer_param->name()) != layers_to_drop.end()) {
         LOG_IF(INFO, Caffe::root_solver()) << "Dropped layer: "
                << layer_param->name() << std::endl;
