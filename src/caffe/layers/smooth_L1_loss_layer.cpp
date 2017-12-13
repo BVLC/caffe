@@ -98,10 +98,6 @@ void SmoothL1LossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   }
 }
 
-#ifdef CPU_ONLY
-STUB_GPU(SmoothL1LossLayer);
-#endif
-
 INSTANTIATE_CLASS(SmoothL1LossLayer);
 REGISTER_LAYER_CLASS(SmoothL1Loss);
 
