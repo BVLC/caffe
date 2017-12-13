@@ -5,12 +5,12 @@ set(Caffe_DEFINITIONS "")
 set(Caffe_COMPILE_OPTIONS "")
 
 # ---[ Boost
-#if(WIN32)
+if(WIN32)
   SET(BOOST_ROOT C:/local/boost_1_65_1)
   LINK_DIRECTORIES(C:/local/boost_1_65_1/lib64-msvc-14.1)
   SET(Boost_COMPILER "-vc141")
   SET(BOOST_LIBRARYDIR C:/local/boost_1_65_1/lib64-msvc-14.1)
-  #endif()
+endif()
 find_package(Boost REQUIRED COMPONENTS system filesystem thread)
 list(APPEND Caffe_INCLUDE_DIRS PRIVATE ${Boost_INCLUDE_DIRS})
 list(APPEND Caffe_LINKER_LIBS PRIVATE ${Boost_LIBRARIES})
@@ -84,13 +84,6 @@ else()
   get_target_property(DeepirAllocator_INCLUDE_DIRS DeepirAllocator INTERFACE_INCLUDE_DIRECTORIES)
   list(APPEND Caffe_INCLUDE_DIRS PRIVATE ${DeepirAllocator_INCLUDE_DIRS})
   list(APPEND Caffe_LINKER_LIBS PRIVATE DeepirAllocator)
-endif()
-
-if(USE_NCCL)
-  find_package(NCCL REQUIRED)
-  include_directories(SYSTEM ${NCCL_INCLUDE_DIR})
-  list(APPEND Caffe_LINKER_LIBS ${NCCL_LIBRARIES})
-  add_definitions(-DUSE_NCCL)
 endif()
 
 # ---[ OpenCV
