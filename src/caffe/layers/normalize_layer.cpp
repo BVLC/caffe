@@ -101,6 +101,7 @@ void NormalizeLayer<Dtype>::Forward_const_cpu(const vector<Blob<Dtype>*>& bottom
 
 #ifdef CPU_ONLY
 STUB_GPU(NormalizeLayer);
+STUB_GPU_FORWARD_CONST(NormalizeLayer,Forward_const);
 #endif
 
 INSTANTIATE_CLASS(NormalizeLayer);

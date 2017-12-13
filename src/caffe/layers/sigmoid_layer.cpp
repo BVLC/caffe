@@ -30,6 +30,7 @@ void SigmoidLayer<Dtype>::Forward_const_cpu(const vector<Blob<Dtype>*>& bottom,
 
 #ifdef CPU_ONLY
 STUB_GPU(SigmoidLayer);
+STUB_GPU_FORWARD_CONST(SigmoidLayer,Forward_const);
 #endif
 
 INSTANTIATE_CLASS(SigmoidLayer);

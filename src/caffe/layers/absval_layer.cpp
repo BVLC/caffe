@@ -30,6 +30,7 @@ void AbsValLayer<Dtype>::Forward_const_cpu(
 
 #ifdef CPU_ONLY
 STUB_GPU(AbsValLayer);
+STUB_GPU_FORWARD_CONST(AbsValLayer,Forward_const);
 #endif
 
 INSTANTIATE_CLASS(AbsValLayer);

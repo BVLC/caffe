@@ -50,6 +50,7 @@ void AxpyLayer<Dtype>::Forward_const_cpu(const vector<Blob<Dtype>*>& bottom,
 
 #ifdef CPU_ONLY
 STUB_GPU(AxpyLayer);
+STUB_GPU_FORWARD_CONST(AxpyLayer,Forward_const);
 #endif
 
 INSTANTIATE_CLASS(AxpyLayer);

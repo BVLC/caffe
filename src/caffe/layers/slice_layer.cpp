@@ -113,6 +113,7 @@ void SliceLayer<Dtype>::Forward_const_cpu(const vector<Blob<Dtype>*>& bottom,
 
 #ifdef CPU_ONLY
 STUB_GPU(SliceLayer);
+STUB_GPU_FORWARD_CONST(SliceLayer,Forward_const);
 #endif
 
 INSTANTIATE_CLASS(SliceLayer);

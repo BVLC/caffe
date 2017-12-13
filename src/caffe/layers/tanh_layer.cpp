@@ -28,6 +28,7 @@ void TanHLayer<Dtype>::Forward_const_cpu(const vector<Blob<Dtype>*>& bottom,
 
 #ifdef CPU_ONLY
 STUB_GPU(TanHLayer);
+STUB_GPU_FORWARD_CONST(TanHLayer,Forward_const);
 #endif
 
 INSTANTIATE_CLASS(TanHLayer);

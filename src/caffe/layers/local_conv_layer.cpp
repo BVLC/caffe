@@ -470,6 +470,7 @@ void LocalConvolutionLayer<Dtype>::Forward_const_cpu(
 
 #ifdef CPU_ONLY
 STUB_GPU(LocalConvolutionLayer);
+STUB_GPU_FORWARD_CONST(LocalConvolutionLayer,Forward_const);
 #endif
 
 INSTANTIATE_CLASS(LocalConvolutionLayer);

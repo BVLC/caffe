@@ -41,6 +41,7 @@ void DropoutLayer<Dtype>::Forward_const_cpu(const vector<Blob<Dtype>*>& bottom,
 
 #ifdef CPU_ONLY
 STUB_GPU(DropoutLayer);
+STUB_GPU_FORWARD_CONST(DropoutLayer,Forward_const);
 #endif
 
 INSTANTIATE_CLASS(DropoutLayer);

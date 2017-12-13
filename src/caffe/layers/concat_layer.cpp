@@ -96,6 +96,7 @@ void ConcatLayer<Dtype>::Forward_const_cpu(const vector<Blob<Dtype>*>& bottom,
 
 #ifdef CPU_ONLY
 STUB_GPU(ConcatLayer);
+STUB_GPU_FORWARD_CONST(ConcatLayer,Forward_const);
 #endif
 
 INSTANTIATE_CLASS(ConcatLayer);
