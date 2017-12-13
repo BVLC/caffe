@@ -37,13 +37,6 @@ class BaseDataLayer : public Layer<Dtype> {
  protected:
   TransformationParameter transform_param_;
   shared_ptr<DataTransformer<Dtype> > data_transformer_;
-  bool output_labels_;
-};
-
-template <typename Dtype>
-class Batch {
- public:
-  Blob<Dtype> data_, label_;
 };
 
 

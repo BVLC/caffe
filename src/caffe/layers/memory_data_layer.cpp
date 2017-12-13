@@ -25,19 +25,6 @@ void MemoryDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype> *> &bottom,
   added_data_.cpu_data();
 }
 
-template <typename Dtype>
-void MemoryDataLayer<Dtype>::AddDatumVector(const vector<Datum> &datum_vector) {
-  size_t num = datum_vector.size();
-  CHECK_GT(num, 0) << "There is no datum to add.";
-  CHECK_EQ(num % batch_size_, 0)
-      << "The added data must be a multiple of the batch size.";
-  added_data_.Reshape(num, channels_, height_, width_);
-  // Apply data transformations (mirror, scale, crop...)
-  this->data_transformer_->Transform(datum_vector, &added_data_);
-  Dtype *top_data = added_data_.mutable_cpu_data();
-  Reset(top_data, num);
-}
-
 #ifdef USE_OPENCV
 template <typename Dtype>
 void MemoryDataLayer<Dtype>::AddMatVector(const vector<cv::Mat> &mat_vector) {

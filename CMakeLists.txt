@@ -63,7 +63,7 @@ if(UNIX OR APPLE)
 endif()
 
 if(WIN32)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP /utf-8")
 endif()
 
 caffe_set_caffe_link()
