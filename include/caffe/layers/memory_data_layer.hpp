@@ -28,32 +28,24 @@ public:
   virtual inline int ExactNumTopBlobs() const { return 2; }
 
 #ifdef USE_OPENCV
-  virtual void AddMatVector(const vector<cv::Mat> &mat_vector);
+  virtual std::shared_ptr<Blob<Dtype>> FromMatVector(const vector<cv::Mat> &mat_vector);
 #endif // USE_OPENCV
 
-  // Reset should accept const pointers, but can't, because the memory
-  //  will be given to Blob, which is mutable
-  void Reset(Dtype *data, int n);
-  void set_batch_size(int new_size);
-
-  int batch_size() { return batch_size_; }
   int channels() { return channels_; }
   int height() { return height_; }
   int width() { return width_; }
 
 protected:
   virtual void Forward_gpu(const vector<Blob<Dtype> *> &bottom,
-                           const vector<Blob<Dtype> *> &top);
+                           const vector<Blob<Dtype> *> &top) {}
   void Forward_const_gpu(const vector<Blob<Dtype> *> &bottom,
-                         const vector<Blob<Dtype> *> &top) const override;
+                         const vector<Blob<Dtype> *> &top) const override {}
   virtual void Forward_cpu(const vector<Blob<Dtype> *> &bottom,
-                           const vector<Blob<Dtype> *> &top);
+                           const vector<Blob<Dtype> *> &top) {}
   void Forward_const_cpu(const vector<Blob<Dtype> *> &bottom,
-                         const vector<Blob<Dtype> *> &top) const override;
+                         const vector<Blob<Dtype> *> &top) const override {}
 
-  int batch_size_, channels_, height_, width_, size_;
-  Dtype *data_;
-  Blob<Dtype> added_data_;
+  int channels_, height_, width_, size_;
 };
 
 } // namespace caffe
