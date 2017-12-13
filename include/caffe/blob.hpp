@@ -185,9 +185,20 @@ class Blob {
    * @param reshape if false, require this Blob to be pre-shaped to the shape
    *        of other (and die otherwise); if true, Reshape this Blob to other's
    *        shape if necessary
-   */
   void CopyFrom(const Blob<Dtype>& source, bool copy_diff = false,
       bool reshape = false);
+   */
+
+  /**
+   * @brief Copy from a source Blob.
+   *
+   * @param source the Blob to copy from
+   * @param copy_diff if false, copy the data; if true, copy the diff
+   * @param reshape if false, require this Blob to be pre-shaped to the shape
+   *        of other (and die otherwise); if true, Reshape this Blob to other's
+   *        shape if necessary
+   */
+  void CopyFrom(const Blob<Dtype>& source);
 
   inline Dtype data_at(const int n, const int c, const int h,
       const int w) const {

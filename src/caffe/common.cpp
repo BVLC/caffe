@@ -7,7 +7,9 @@
 #include <process.h>
 #endif
 
+#ifndef CPU_ONLY
 #include <deepir/allocator/buddy_pool.hpp>
+#endif
 
 #include "caffe/common.hpp"
 

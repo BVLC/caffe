@@ -188,6 +188,26 @@ bool Blob<Dtype>::ShapeEquals(const BlobProto& other) {
 }
 
 template <typename Dtype>
+void Blob<Dtype>::CopyFrom(const Blob& source) {
+  if (source.count() != count_ || source.shape() != shape_) {
+      LOG(FATAL) << "Trying to copy blobs of different sizes.";
+  }
+  switch (Caffe::mode()) {
+  case Caffe::GPU:
+    caffe_copy(count_, source.gpu_data(),
+	static_cast<Dtype*>(data_->mutable_gpu_data()));
+    break;
+  case Caffe::CPU:
+    caffe_copy(count_, source.cpu_data(),
+	static_cast<Dtype*>(data_->mutable_cpu_data()));
+    break;
+  default:
+    LOG(FATAL) << "Unknown caffe mode.";
+  }
+}
+
+#ifdef gfdgfdgdf
+template <typename Dtype>
 void Blob<Dtype>::CopyFrom(const Blob& source, bool copy_diff, bool reshape) {
   if(copy_diff) {
     LOG(FATAL) << "No diff to copy.";
@@ -225,6 +245,7 @@ void Blob<Dtype>::CopyFrom(const Blob& source, bool copy_diff, bool reshape) {
     LOG(FATAL) << "Unknown caffe mode.";
   }
 }
+#endif
 
 template <typename Dtype>
 void Blob<Dtype>::FromProto(const BlobProto& proto, bool reshape) {
@@ -264,8 +285,10 @@ void Blob<Dtype>::FromProto(const BlobProto& proto, bool reshape) {
   }
 
   //強制讓網絡的參數同步到GPU
+#ifndef CPU_ONLY
   gpu_data();
   CUDA_CHECK(cudaStreamSynchronize(cudaStreamPerThread));
+#endif
 }
 
 INSTANTIATE_CLASS(Blob);
