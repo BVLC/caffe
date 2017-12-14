@@ -31,7 +31,7 @@ void TanHLayer<Dtype>::Forward_const_gpu(const vector<Blob<Dtype>*>& bottom,
       count, bottom_data, top_data);
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(TanHLayer);
+INSTANTIATE_LAYER_GPU_FUNCS_CONST(TanHLayer);
 
 
 }  // namespace caffe

@@ -19,7 +19,7 @@ void AbsValLayer<Dtype>::Forward_const_gpu(
   caffe_gpu_abs(count, bottom[0]->gpu_data(), top_data);
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(AbsValLayer);
+INSTANTIATE_LAYER_GPU_FUNCS_CONST(AbsValLayer);
 
 
 }  // namespace caffe
