@@ -888,7 +888,7 @@ template <typename Dtype>
 void Net<Dtype>::CompilationRuleFour(const NetParameter& param,
                                      NetParameter* param_compiled) {
   // only apply this rule for inference(TEST) phase
-  if (param.state().phase() != TEST) {
+  if (param.state().phase() != TEST || param.engine().compare("MKLDNN") != 0) {
     param_compiled->CopyFrom(param);
     return;
   }
@@ -897,7 +897,10 @@ void Net<Dtype>::CompilationRuleFour(const NetParameter& param,
   for (int i = 0; i < param.layer_size(); i++) {
     LayerParameter* layer_param =
         (const_cast<NetParameter&>(param)).mutable_layer(i);
-    if (layer_param->type().compare("Convolution") == 0) {
+    if (layer_param->type().compare("Convolution") == 0 
+        && (layer_param->has_engine() == false
+        || (layer_param->has_engine() == true
+        && layer_param->engine().compare("MKLDNN") ==0))) {
       std::vector<const LayerParameter*> child_layers_params;
       Net<Dtype>::GetBlobConsumers(child_layers_params, layer_param->top(0),
                                    param,
