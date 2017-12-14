@@ -37,7 +37,6 @@ void LocalConvolutionLayer<Dtype>::crop_loc_patch_gpu(
       <<<CAFFE_GET_BLOCKS(num_kernels), CAFFE_CUDA_NUM_THREADS>>>(
           num_kernels, src, src_w, src_h, src_c, crop_width, crop_height, w_off,
           h_off, local_patch_data);
-  CUDA_POST_KERNEL_CHECK;
 }
 
 template <typename Dtype>
@@ -85,7 +84,6 @@ void LocalConvolutionLayer<Dtype>::realign_loc_conv_result_gpu(
           this->local_region_num_w_, output_shape[0],
           output_shape[1], this->num_output_,top_height,
 	  top_width, dst_data);
-  CUDA_POST_KERNEL_CHECK;
 }
 
 template <typename Dtype>

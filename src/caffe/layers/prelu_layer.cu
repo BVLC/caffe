@@ -37,7 +37,6 @@ void PReLULayer<Dtype>::Forward_const_gpu(const vector<Blob<Dtype>*>& bottom,
   // NOLINT_NEXT_LINE(whitespace/operators)
   PReLUForward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
       count, channels, dim, bottom_data, top_data, slope_data, div_factor);
-  CUDA_POST_KERNEL_CHECK;
 }
 
 
