@@ -204,7 +204,6 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
       subengines = "MKLDNN:CPU";
     EngineParser ep(subengines);
     unsigned subEngineIndex = 0;
-    shared_ptr<convolution_relu_forward::primitive_desc> convReluFwd_pd = NULL;
     mkldnn::algorithm eligibleAlgorithms[2] = {conv_algorithm, algorithm::convolution_direct};
     convFwd_pd = NULL;
     mkldnn::primitive_attr attr;
