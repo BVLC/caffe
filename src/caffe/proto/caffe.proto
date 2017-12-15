@@ -412,6 +412,10 @@ message LayerParameter {
   optional LocalConvolutionParameter local_conv_param = 8266714;
   optional FlipParameter flip_param = 8266715;
   optional NormalizeParameter normalize_param = 8266716;
+  optional NormalizeParameter2 norm_param = 8266717;
+  optional PermuteParameter permute_param = 8266718;
+  optional PriorBoxParameter prior_box_param = 8266719;
+  optional DetectionOutputParameter detection_output_param = 8266720;
 }
 
 // Message that stores parameters used to apply transformation
@@ -1497,4 +1501,183 @@ message FlipParameter {
 message NormalizeParameter {
   optional string normalize_type = 1 [default = "L2"];
   optional bool rescale = 2 [default = false];
+}
+
+// Message that stores parameters used by NormalizeLayer
+message NormalizeParameter2 {
+  optional bool across_spatial = 1 [default = true];
+  // Initial value of scale. Default is 1.0 for all
+  optional FillerParameter scale_filler = 2;
+  // Whether or not scale parameters are shared across channels.
+  optional bool channel_shared = 3 [default = true];
+  // Epsilon for not dividing by zero while normalizing variance
+  optional float eps = 4 [default = 1e-10];
+}
+
+message PermuteParameter {
+  // The new orders of the axes of data. Notice it should be with
+  // in the same range as the input data, and it starts from 0.
+  // Do not provide repeated order.
+  repeated uint32 order = 1;
+}
+
+// Message that store parameters used by PriorBoxLayer
+message PriorBoxParameter {
+  // Encode/decode type.
+  enum CodeType {
+    CORNER = 1;
+    CENTER_SIZE = 2;
+    CORNER_SIZE = 3;
+  }
+  // Minimum box size (in pixels). Required!
+  repeated float min_size = 1;
+  // Maximum box size (in pixels). Required!
+  repeated float max_size = 2;
+  // Various of aspect ratios. Duplicate ratios will be ignored.
+  // If none is provided, we use default ratio 1.
+  repeated float aspect_ratio = 3;
+  // If true, will flip each aspect ratio.
+  // For example, if there is aspect ratio "r",
+  // we will generate aspect ratio "1.0/r" as well.
+  optional bool flip = 4 [default = true];
+  // If true, will clip the prior so that it is within [0, 1]
+  optional bool clip = 5 [default = false];
+  // Variance for adjusting the prior bboxes.
+  repeated float variance = 6;
+  // By default, we calculate img_height, img_width, step_x, step_y based on
+  // bottom[0] (feat) and bottom[1] (img). Unless these values are explicitely
+  // provided.
+  // Explicitly provide the img_size.
+  optional uint32 img_size = 7;
+  // Either img_size or img_h/img_w should be specified; not both.
+  optional uint32 img_h = 8;
+  optional uint32 img_w = 9;
+
+  // Explicitly provide the step size.
+  optional float step = 10;
+  // Either step or step_h/step_w should be specified; not both.
+  optional float step_h = 11;
+  optional float step_w = 12;
+
+  // Offset to the top left corner of each cell.
+  optional float offset = 13 [default = 0.5];
+}
+
+// Message that store parameters used by DetectionOutputLayer
+message DetectionOutputParameter {
+  // Number of classes to be predicted. Required!
+  optional uint32 num_classes = 1;
+  // If true, bounding box are shared among different classes.
+  optional bool share_location = 2 [default = true];
+  // Background label id. If there is no background class,
+  // set it as -1.
+  optional int32 background_label_id = 3 [default = 0];
+  // Parameters used for non maximum suppression.
+  optional NonMaximumSuppressionParameter nms_param = 4;
+  // Parameters used for saving detection results.
+  optional SaveOutputParameter save_output_param = 5;
+  // Type of coding method for bbox.
+  optional PriorBoxParameter.CodeType code_type = 6 [default = CORNER];
+  // If true, variance is encoded in target; otherwise we need to adjust the
+  // predicted offset accordingly.
+  optional bool variance_encoded_in_target = 8 [default = false];
+  // Number of total bboxes to be kept per image after nms step.
+  // -1 means keeping all bboxes after nms step.
+  optional int32 keep_top_k = 7 [default = -1];
+  // Only consider detections whose confidences are larger than a threshold.
+  // If not provided, consider all boxes.
+  optional float confidence_threshold = 9;
+  // If true, visualize the detection results.
+  optional bool visualize = 10 [default = false];
+  // The threshold used to visualize the detection results.
+  optional float visualize_threshold = 11;
+  // If provided, save outputs to video file.
+  optional string save_file = 12;
+}
+
+message NonMaximumSuppressionParameter {
+  // Threshold to be used in nms.
+  optional float nms_threshold = 1 [default = 0.3];
+  // Maximum number of results to be kept.
+  optional int32 top_k = 2;
+  // Parameter for adaptive nms.
+  optional float eta = 3 [default = 1.0];
+}
+
+message SaveOutputParameter {
+  // Output directory. If not empty, we will save the results.
+  optional string output_directory = 1;
+  // Output name prefix.
+  optional string output_name_prefix = 2;
+  // Output format.
+  //    VOC - PASCAL VOC output format.
+  //    COCO - MS COCO output format.
+  optional string output_format = 3;
+  // If you want to output results, must also provide the following two files.
+  // Otherwise, we will ignore saving results.
+  // label map file.
+  optional string label_map_file = 4;
+  // A file which contains a list of names and sizes with same order
+  // of the input DB. The file is in the following format:
+  //    name height width
+  //    ...
+  optional string name_size_file = 5;
+  // Number of test images. It can be less than the lines specified in
+  // name_size_file. For example, when we only want to evaluate on part
+  // of the test images.
+  optional uint32 num_test_image = 6;
+  // The resize parameter used in saving the data.
+  optional ResizeParameter resize_param = 7;
+}
+
+// Message that stores parameters used by data transformer for resize policy
+message ResizeParameter {
+  //Probability of using this resize policy
+  optional float prob = 1 [default = 1];
+
+  enum Resize_mode {
+    WARP = 1;
+    FIT_SMALL_SIZE = 2;
+    FIT_LARGE_SIZE_AND_PAD = 3;
+  }
+  optional Resize_mode resize_mode = 2 [default = WARP];
+  optional uint32 height = 3 [default = 0];
+  optional uint32 width = 4 [default = 0];
+  // A parameter used to update bbox in FIT_SMALL_SIZE mode.
+  optional uint32 height_scale = 8 [default = 0];
+  optional uint32 width_scale = 9 [default = 0];
+
+  enum Pad_mode {
+    CONSTANT = 1;
+    MIRRORED = 2;
+    REPEAT_NEAREST = 3;
+  }
+  // Padding mode for BE_SMALL_SIZE_AND_PAD mode and object centering
+  optional Pad_mode pad_mode = 5 [default = CONSTANT];
+  // if specified can be repeated once (would fill all the channels)
+  // or can be repeated the same number of times as channels
+  // (would use it them to the corresponding channel)
+  repeated float pad_value = 6;
+
+  enum Interp_mode { //Same as in OpenCV
+    LINEAR = 1;
+    AREA = 2;
+    NEAREST = 3;
+    CUBIC = 4;
+    LANCZOS4 = 5;
+  }
+  //interpolation for for resizing
+  repeated Interp_mode interp_mode = 7;
+}
+
+// The normalized bounding box [0, 1] w.r.t. the input image size.
+message NormalizedBBox {
+  optional float xmin = 1;
+  optional float ymin = 2;
+  optional float xmax = 3;
+  optional float ymax = 4;
+  optional int32 label = 5;
+  optional bool difficult = 6;
+  optional float score = 7;
+  optional float size = 8;
 }
