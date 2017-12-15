@@ -425,4 +425,38 @@ string DeviceProgram::device_type_name<uint64_t>() {
 }
 
 
+template<>
+string DeviceProgram::convert_type<char>(int_tp vec_len, string src_val) {
+  return convert_type_char(vec_len, src_val);
+}
+template<>
+string DeviceProgram::convert_type<half_fp>(int_tp vec_len, string src_val) {
+  return convert_type_half(vec_len, src_val);
+}
+template<>
+string DeviceProgram::convert_type<float>(int_tp vec_len, string src_val) {
+  return convert_type_float(vec_len, src_val);
+}
+template<>
+string DeviceProgram::convert_type<double>(int_tp vec_len, string src_val) {
+  return convert_type_double(vec_len, src_val);
+}
+template<>
+string DeviceProgram::convert_type<int8_t>(int_tp vec_len, string src_val) {
+  return convert_type_int8(vec_len, src_val);
+}
+template<>
+string DeviceProgram::convert_type<int16_t>(int_tp vec_len, string src_val) {
+  return convert_type_int16(vec_len, src_val);
+}
+template<>
+string DeviceProgram::convert_type<int32_t>(int_tp vec_len, string src_val) {
+  return convert_type_int32(vec_len, src_val);
+}
+template<>
+string DeviceProgram::convert_type<int64_t>(int_tp vec_len, string src_val) {
+  return convert_type_int64(vec_len, src_val);
+}
+
+
 }  // namespace caffe

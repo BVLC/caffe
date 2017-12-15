@@ -397,8 +397,7 @@ Dtype Blob<Dtype>::asum_diff() const {
 
 template<typename Dtype>
 Dtype Blob<Dtype>::sumsq_data() const {
-  Dtype sumsq;
-  Dtype gpu_sumsq;
+  Dtype sumsq = 0;
   const Dtype* data;
   vptr<const Dtype> gpu_vptr_data;
   if (!data_) {
@@ -414,8 +413,8 @@ Dtype Blob<Dtype>::sumsq_data() const {
     case SyncedMemory::SYNCED: {
 #ifndef CPU_ONLY
       gpu_vptr_data = gpu_data();
-      device_->dot<Dtype>(count_, gpu_vptr_data, gpu_vptr_data, &gpu_sumsq);
-      sumsq = gpu_sumsq;
+      device_->template dot<Dtype>(count_, gpu_vptr_data, gpu_vptr_data,
+                                   &sumsq);
 #else
       NO_GPU;
 #endif

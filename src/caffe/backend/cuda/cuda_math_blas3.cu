@@ -21,64 +21,64 @@ namespace caffe {
 
 #ifdef USE_CUDA
 
-void CudaDevice::gemm_half(const CBLAS_TRANSPOSE trans_a,
-                           const CBLAS_TRANSPOSE trans_b,
-                           const uint_tp m, const uint_tp n, const uint_tp k,
+void CudaDevice::gemm_half(const CBLAS_TRANSPOSE trans_A,
+                           const CBLAS_TRANSPOSE trans_B,
+                           const uint_tp M, const uint_tp N, const uint_tp K,
                            const half_fp alpha,
-                           vptr<const half_fp> a,
-                           vptr<const half_fp> b,
+                           vptr<const half_fp> A,
+                           vptr<const half_fp> B,
                            const half_fp beta,
-                           vptr<half_fp> c) {
+                           vptr<half_fp> C) {
   // Note that cublas follows fortran order.
-  int_tp lda = (trans_a == CblasNoTrans) ? k : m;
-  int_tp ldb = (trans_b == CblasNoTrans) ? n : k;
+  int_tp lda = (trans_A == CblasNoTrans) ? K : M;
+  int_tp ldb = (trans_B == CblasNoTrans) ? N : K;
   cublasOperation_t cuTransA =
-      (trans_a == CblasNoTrans) ? CUBLAS_OP_N : CUBLAS_OP_T;
+      (trans_A == CblasNoTrans) ? CUBLAS_OP_N : CUBLAS_OP_T;
   cublasOperation_t cuTransB =
-      (trans_b == CblasNoTrans) ? CUBLAS_OP_N : CUBLAS_OP_T;
+      (trans_B == CblasNoTrans) ? CUBLAS_OP_N : CUBLAS_OP_T;
   CUBLAS_CHECK(cublasHgemm(Caffe::cublas_handle(), cuTransB, cuTransA,
-                      n, m, k, reinterpret_cast<const half*>(&alpha),
-                      reinterpret_cast<const half*>(b.get_cuda_ptr()),
-                      ldb, reinterpret_cast<const half*>(a.get_cuda_ptr()),
+                      N, M, K, reinterpret_cast<const half*>(&alpha),
+                      reinterpret_cast<const half*>(B.get_cuda_ptr()),
+                      ldb, reinterpret_cast<const half*>(A.get_cuda_ptr()),
                       lda, reinterpret_cast<const half*>(&beta),
-                      reinterpret_cast<half*>(c.get_cuda_ptr()), n));
+                      reinterpret_cast<half*>(C.get_cuda_ptr()), N));
 }
 
-void CudaDevice::gemm_float(const CBLAS_TRANSPOSE trans_a,
-                            const CBLAS_TRANSPOSE trans_b,
-                            const uint_tp m, const uint_tp n, const uint_tp k,
-                            const float alpha, vptr<const float> a,
-                            vptr<const float> b, const float beta,
-                            vptr<float> c) {
+void CudaDevice::gemm_float(const CBLAS_TRANSPOSE trans_A,
+                            const CBLAS_TRANSPOSE trans_B,
+                            const uint_tp M, const uint_tp N, const uint_tp K,
+                            const float alpha, vptr<const float> A,
+                            vptr<const float> B, const float beta,
+                            vptr<float> C) {
   // Note that cublas follows fortran order.
-  int_tp lda = (trans_a == CblasNoTrans) ? k : m;
-  int_tp ldb = (trans_b == CblasNoTrans) ? n : k;
+  int_tp lda = (trans_A == CblasNoTrans) ? K : M;
+  int_tp ldb = (trans_B == CblasNoTrans) ? N : K;
   cublasOperation_t cuTransA =
-      (trans_a == CblasNoTrans) ? CUBLAS_OP_N : CUBLAS_OP_T;
+      (trans_A == CblasNoTrans) ? CUBLAS_OP_N : CUBLAS_OP_T;
   cublasOperation_t cuTransB =
-      (trans_b == CblasNoTrans) ? CUBLAS_OP_N : CUBLAS_OP_T;
+      (trans_B == CblasNoTrans) ? CUBLAS_OP_N : CUBLAS_OP_T;
   CUBLAS_CHECK(cublasSgemm(Caffe::cublas_handle(), cuTransB, cuTransA,
-                      n, m, k, &alpha, b.get_cuda_ptr(),
-                      ldb, a.get_cuda_ptr(), lda, &beta, c.get_cuda_ptr(), n));
+                      N, M, K, &alpha, B.get_cuda_ptr(),
+                      ldb, A.get_cuda_ptr(), lda, &beta, C.get_cuda_ptr(), N));
 }
 
-void CudaDevice::gemm_double(const CBLAS_TRANSPOSE trans_a,
-                             const CBLAS_TRANSPOSE trans_b,
-                             const uint_tp m, const uint_tp n, const uint_tp k,
-                             const double alpha, vptr<const double> a,
-                             vptr<const double> b, const double beta,
-                             vptr<double> c) {
+void CudaDevice::gemm_double(const CBLAS_TRANSPOSE trans_A,
+                             const CBLAS_TRANSPOSE trans_B,
+                             const uint_tp M, const uint_tp N, const uint_tp K,
+                             const double alpha, vptr<const double> A,
+                             vptr<const double> B, const double beta,
+                             vptr<double> C) {
   // Note that cublas follows fortran order.
-  int_tp lda = (trans_a == CblasNoTrans) ? k : m;
-  int_tp ldb = (trans_b == CblasNoTrans) ? n : k;
+  int_tp lda = (trans_A == CblasNoTrans) ? K : M;
+  int_tp ldb = (trans_B == CblasNoTrans) ? N : K;
   cublasOperation_t cuTransA =
-      (trans_a == CblasNoTrans) ? CUBLAS_OP_N : CUBLAS_OP_T;
+      (trans_A == CblasNoTrans) ? CUBLAS_OP_N : CUBLAS_OP_T;
   cublasOperation_t cuTransB =
-      (trans_b == CblasNoTrans) ? CUBLAS_OP_N : CUBLAS_OP_T;
+      (trans_B == CblasNoTrans) ? CUBLAS_OP_N : CUBLAS_OP_T;
   CUBLAS_CHECK(cublasDgemm(Caffe::cublas_handle(), cuTransB, cuTransA,
-                           n, m, k, &alpha, b.get_cuda_ptr(),
-                           ldb, a.get_cuda_ptr(), lda, &beta,
-                           c.get_cuda_ptr(), n));
+                           N, M, K, &alpha, B.get_cuda_ptr(),
+                           ldb, A.get_cuda_ptr(), lda, &beta,
+                           C.get_cuda_ptr(), N));
 }
 
 

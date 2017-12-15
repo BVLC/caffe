@@ -525,6 +525,47 @@ string OclDeviceProgram::device_type_name_uint64() const {
   return "ulong";
 }
 
+string OclDeviceProgram::convert_type_char(int_tp vec_len,
+                                           string src_val) const {
+  return "convert_char" + (vec_len > 0 ? std::to_string(vec_len) : "")
+      + "_sat(" + src_val + ")";
+}
+string OclDeviceProgram::convert_type_half(int_tp vec_len,
+                                           string src_val) const {
+  return "convert_half" + (vec_len > 0 ? std::to_string(vec_len) : "")
+      + "(" + src_val + ")";
+}
+string OclDeviceProgram::convert_type_float(int_tp vec_len,
+                                            string src_val) const {
+  return "convert_float" + (vec_len > 0 ? std::to_string(vec_len) : "")
+      + "(" + src_val + ")";
+}
+string OclDeviceProgram::convert_type_double(int_tp vec_len,
+                                             string src_val) const {
+  return "convert_double" + (vec_len > 0 ? std::to_string(vec_len) : "")
+      + "(" + src_val + ")";
+}
+string OclDeviceProgram::convert_type_int8(int_tp vec_len,
+                                           string src_val) const {
+  return "convert_char" + (vec_len > 0 ? std::to_string(vec_len) : "")
+      + "(" + src_val + ")";
+}
+string OclDeviceProgram::convert_type_int16(int_tp vec_len,
+                                            string src_val) const {
+   return "convert_short" + (vec_len > 0 ? std::to_string(vec_len) : "")
+       + "(" + src_val + ")";
+ }
+string OclDeviceProgram::convert_type_int32(int_tp vec_len,
+                                            string src_val) const {
+   return "convert_int" + (vec_len > 0 ? std::to_string(vec_len) : "")
+       + "(" + src_val + ")";
+ }
+string OclDeviceProgram::convert_type_int64(int_tp vec_len,
+                                            string src_val) const {
+   return "convert_long" + (vec_len > 0 ? std::to_string(vec_len) : "")
+       + "(" + src_val + ")";
+ }
+
 #endif  // USE_OPENCL
 
 }

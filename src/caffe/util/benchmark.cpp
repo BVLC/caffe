@@ -51,7 +51,7 @@ void Timer::Start() {
       if (Caffe::GetDefaultDevice()->backend() == BACKEND_OPENCL) {
         float arg = 0;
         static_cast<OclDevice*>(Caffe::GetDefaultDevice())->ocl_null_kernel(arg,
-                                                                start_gpu_cl_);
+                                                                &start_gpu_cl_);
       }
 #endif
 #else
@@ -78,7 +78,7 @@ void Timer::Stop() {
       if (Caffe::GetDefaultDevice()->backend() == BACKEND_OPENCL) {
         float arg = 0;
         static_cast<OclDevice*>(Caffe::GetDefaultDevice())->ocl_null_kernel(arg,
-                                                                stop_gpu_cl_);
+                                                                 &stop_gpu_cl_);
       }
 #endif
 #else

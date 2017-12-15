@@ -1,10 +1,11 @@
 #ifndef CAFFE_UTIL_TYPE_UTILS_HPP_
 #define CAFFE_UTIL_TYPE_UTILS_HPP_
 
+#include <limits>
+
 #include "caffe/common.hpp"
 #include "caffe/definitions.hpp"
 #include "caffe/proto/caffe.pb.h"
-
 
 namespace caffe {
 
@@ -225,6 +226,77 @@ inline bool is_float_type() {
       || std::is_same<Dtype, float>::value
       || std::is_same<Dtype, double>::value;
 }
+
+template<typename T>
+inline double type_max_val() {
+  LOG(FATAL) << "Unknown type" << std::endl;
+  return 0.0;  // Unreachable
+}
+
+template<>
+inline double type_max_val<half_fp>() {
+  return static_cast<double>(HALF_MAX);
+}
+template<>
+inline double type_max_val<float>() {
+  return static_cast<double>(std::numeric_limits<float>::max());
+}
+template<>
+inline double type_max_val<double>() {
+  return static_cast<double>(std::numeric_limits<double>::max());
+}
+template<>
+inline double type_max_val<int8_t>() {
+  return static_cast<double>(std::numeric_limits<int8_t>::max());
+}
+template<>
+inline double type_max_val<int16_t>() {
+  return static_cast<double>(std::numeric_limits<int16_t>::max());
+}
+template<>
+inline double type_max_val<int32_t>() {
+  return static_cast<double>(std::numeric_limits<int32_t>::max());
+}
+template<>
+inline double type_max_val<int64_t>() {
+  return static_cast<double>(std::numeric_limits<int64_t>::max());
+}
+
+template<typename T>
+inline double type_min_val() {
+  LOG(FATAL) << "Unknown type" << std::endl;
+  return 0.0;  // Unreachable
+}
+
+template<>
+inline double type_min_val<half_fp>() {
+  return static_cast<double>(HALF_MIN);
+}
+template<>
+inline double type_min_val<float>() {
+  return -static_cast<double>(std::numeric_limits<float>::max());
+}
+template<>
+inline double type_min_val<double>() {
+  return -static_cast<double>(std::numeric_limits<double>::max());
+}
+template<>
+inline double type_min_val<int8_t>() {
+  return -static_cast<double>(std::numeric_limits<int8_t>::max());
+}
+template<>
+inline double type_min_val<int16_t>() {
+  return -static_cast<double>(std::numeric_limits<int16_t>::max());
+}
+template<>
+inline double type_min_val<int32_t>() {
+  return -static_cast<double>(std::numeric_limits<int32_t>::max());
+}
+template<>
+inline double type_min_val<int64_t>() {
+  return -static_cast<double>(std::numeric_limits<int64_t>::max());
+}
+
 
 }  // namespace caffe
 

@@ -42,6 +42,8 @@ class ContrastiveLossLayer : public LossLayer<Dtype, MItype, MOtype> {
       : LossLayer<Dtype, MItype, MOtype>(param), diff_() {}
   virtual void LayerSetUp(const vector<Blob<MItype>*>& bottom,
       const vector<Blob<MOtype>*>& top);
+  virtual void Reshape(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
 
   virtual inline int_tp ExactNumBottomBlobs() const { return 3; }
   virtual inline const char* type() const { return "ContrastiveLoss"; }

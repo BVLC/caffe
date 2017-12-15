@@ -461,8 +461,8 @@ void OclDevice::dot_float(const uint_tp n, vptr<const float> x,
         y.get_ocl_mem(), offY, incY,
         &queue));
 
-    shared_ptr<ocl_dev_ptr<float>> oclptrZ
-                                = std::make_shared<ocl_dev_ptr<float>>(Z, offZ);
+    shared_ptr<ocl_dev_ptr<float> > oclptrZ
+                               = std::make_shared<ocl_dev_ptr<float> >(Z, offZ);
     vptr<float> vptrZ(oclptrZ);
     this->memcpy(sizeof(float), vptr<void>(vptrZ), out);
     clReleaseMemObject(Z);
@@ -549,10 +549,10 @@ void OclDevice::dot_double(const uint_tp n, vptr<const double> x,
         y.get_ocl_mem(), offY, incY,
         &queue));
 
-    shared_ptr<ocl_dev_ptr<float>> oclptrZ
-                                = std::make_shared<ocl_dev_ptr<float>>(Z, offZ);
-    vptr<float> vptrZ(oclptrZ);
-    this->memcpy(sizeof(float), vptr<void>(vptrZ), out);
+    shared_ptr<ocl_dev_ptr<double> > oclptrZ
+                              = std::make_shared<ocl_dev_ptr<double> >(Z, offZ);
+    vptr<double> vptrZ(oclptrZ);
+    this->memcpy(sizeof(double), vptr<void>(vptrZ), out);
     clReleaseMemObject(Z);
 
 #else  // default (ViennaCL)
@@ -771,7 +771,7 @@ void OclDevice::asum_double(const uint_tp n, vptr<const double> x, double* y) {
     shared_ptr<ocl_dev_ptr<double> > oclptrZ
                       = std::make_shared<ocl_dev_ptr<double> >(Z, offZ);
     vptr<double> vptrZ(oclptrZ);
-    this->memcpy(sizeof(half_fp), vptr<void>(vptrZ), y);
+    this->memcpy(sizeof(double), vptr<void>(vptrZ), y);
     clReleaseMemObject(Z);
 
 #else  // default (ViennaCL)
