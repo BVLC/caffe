@@ -356,6 +356,19 @@ class Net {
 #ifdef USE_MLSL
   std::vector<double> startcomm_time_per_layer;
   std::vector<double> waitcomm_time_per_layer;
+
+  std::vector<double> startcomm_start_time_per_layer;
+  std::vector<double> waitcomm_start_time_per_layer;
+  std::vector<double> startcomm_stop_time_per_layer;
+  std::vector<double> waitcomm_stop_time_per_layer;
+
+#ifdef FW_OVERLAP_OPT
+  std::vector<double> first_waitcomm_start_time_per_layer;
+  std::vector<double> first_waitcomm_stop_time_per_layer;
+  std::vector<double> first_update_start_time_per_layer;
+  std::vector<double> first_update_stop_time_per_layer;
+#endif
+
 #endif
 
   std::vector<double> forward_time_per_layer_total;
@@ -367,12 +380,22 @@ class Net {
   std::vector<double> waitcomm_time_per_layer_total;
 #endif
 
+  std::vector<double> forward_start_time_per_layer;
+  std::vector<double> backward_start_time_per_layer;
+  std::vector<double> update_start_time_per_layer;
+
+  std::vector<double> forward_stop_time_per_layer;
+  std::vector<double> backward_stop_time_per_layer;
+  std::vector<double> update_stop_time_per_layer;
+
   void InitTimers();
   void ResetTimers();
   void PrintTimers(bool printTotal);
 
-#endif /* CAFFE_PER_LAYER_TIMINGS */
+  void PrintPayloadSize();
+  void SaveTimeline();
 
+#endif /* CAFFE_PER_LAYER_TIMINGS */
 
  protected:
   // Helpers for Init.
