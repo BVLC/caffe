@@ -1,6 +1,9 @@
 #ifndef CAFFE_LIBDNN_LIBDNN_BLAS_HPP_
 #define CAFFE_LIBDNN_LIBDNN_BLAS_HPP_
 
+#ifdef USE_LIBDNN
+
+#include <unordered_map>
 #include "caffe/libdnn/libdnn.hpp"
 
 namespace caffe {
@@ -20,24 +23,51 @@ class LibDNNBlas : public LibDNN<Dtype, MItype, MOtype> {
              vptr<MOtype> y);
 
   // BLAS 2
-  void gemv(const CBLAS_TRANSPOSE trans_a, const uint_tp m, const uint_tp n,
-            const Dtype alpha, vptr<const MItype> a, vptr<const MItype> x,
-            const Dtype beta, vptr<MOtype> y);
+  void gemv(const CBLAS_TRANSPOSE trans_A, const uint_tp M, const uint_tp N,
+            const Dtype alpha, vptr<const MItype> A, vptr<const MItype> X,
+            const Dtype beta, vptr<MOtype> Y);
 
   // BLAS 3
-  void gemm(const CBLAS_TRANSPOSE trans_a, const CBLAS_TRANSPOSE trans_b,
-            const uint_tp m, const uint_tp n, const uint_tp k,
-            const Dtype alpha, vptr<const MItype> a, vptr<const MItype> b,
-            const Dtype beta, vptr<MOtype> c);
+  void gemm(const CBLAS_TRANSPOSE trans_A, const CBLAS_TRANSPOSE trans_B,
+            const uint_tp M, const uint_tp N, const uint_tp K,
+            const Dtype alpha, vptr<const MItype> A, vptr<const MItype> B,
+            const Dtype beta, vptr<MOtype> C);
 
  private:
-  shared_ptr<DeviceProgram> GetProgram(string identifier);
+  size_t get_id(string identifier);
 
+  string generate_axpy_kernel();
+  string axpy_string_identifier();
+
+  string generate_scal_kernel();
+  string scal_string_identifier();
+
+  string generate_dot_kernel();
+  string dot_string_identifier();
+
+  string generate_asum_kernel();
+  string asum_string_identifier();
+
+  string generate_scale_kernel();
+  string scale_string_identifier();
+
+  string generate_gemv_kernel();
+  string gemv_string_identifier();
+
+  string generate_gemm_kernel();
+  string gemm_string_identifier();
+
+  std::mutex program_mutex_;
+  vector<bool> program_ready_;
+  vector<shared_ptr<LibDNNTuner> > program_tuners_;
   vector<shared_ptr<DeviceProgram> > programs_;
-  std::map<string, size_t> program_map_;
+  std::unordered_map<string, size_t> program_map_;
 };
 
 
 }  // namespace caffe
+
+
+#endif  // USE_LIBDNN
 
 #endif  // CAFFE_LIBDNN_LIBDNN_BLAS_HPP_

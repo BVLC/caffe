@@ -178,15 +178,15 @@ string CudaDeviceProgram::setup() {
   ss << "#define int8_t char" << std::endl;
   ss << "#define int16_t short" << std::endl;
   ss << "#define int32_t int" << std::endl;
-  ss << "#define int64_t long" << std::endl;
+  ss << "#define int64_t long long" << std::endl;
   ss << "#define uint8_t unsigned char" << std::endl;
   ss << "#define uint16_t unsigned short" << std::endl;
   ss << "#define uint32_t unsigned int" << std::endl;
-  ss << "#define uint64_t unsigned long" << std::endl;
+  ss << "#define uint64_t unsigned long long" << std::endl;
   ss << "#define uchar unsigned char" << std::endl;
   ss << "#define ushort unsigned short" << std::endl;
   ss << "#define uint unsigned int" << std::endl;
-  ss << "#define ulong unsigned long" << std::endl;
+  ss << "#define ulonglong unsigned long long" << std::endl;
 
   ss << this->define_type<int_tp>("int_tp");
   ss << this->define_type<uint_tp>("uint_tp");
@@ -462,7 +462,7 @@ string CudaDeviceProgram::device_type_name_int32() const {
   return "int";
 }
 string CudaDeviceProgram::device_type_name_int64() const {
-  return "long";
+  return "longlong";
 }
 string CudaDeviceProgram::device_type_name_uint8() const {
   return "uchar";
@@ -474,7 +474,40 @@ string CudaDeviceProgram::device_type_name_uint32() const {
   return "uint";
 }
 string CudaDeviceProgram::device_type_name_uint64() const {
-  return "ulong";
+  return "ulonglong";
+}
+
+string CudaDeviceProgram::convert_type_char(int_tp vec_len,
+                                            string src_val) const {
+  return "((char" + std::to_string(vec_len) + ")(" + src_val + "))";
+}
+string CudaDeviceProgram::convert_type_half(int_tp vec_len,
+                                            string src_val) const {
+  return "((half" + std::to_string(vec_len) + ")(" + src_val + "))";
+}
+string CudaDeviceProgram::convert_type_float(int_tp vec_len,
+                                             string src_val) const {
+  return "((float" + std::to_string(vec_len) + ")(" + src_val + "))";
+}
+string CudaDeviceProgram::convert_type_double(int_tp vec_len,
+                                              string src_val) const {
+  return "((double" + std::to_string(vec_len) + ")(" + src_val + "))";
+}
+string CudaDeviceProgram::convert_type_int8(int_tp vec_len,
+                                            string src_val) const {
+  return "((char" + std::to_string(vec_len) + ")(" + src_val + "))";
+}
+string CudaDeviceProgram::convert_type_int16(int_tp vec_len,
+                                             string src_val) const {
+  return "((short" + std::to_string(vec_len) + ")(" + src_val + "))";
+}
+string CudaDeviceProgram::convert_type_int32(int_tp vec_len,
+                                             string src_val) const {
+  return "((int" + std::to_string(vec_len) + ")(" + src_val + "))";
+}
+string CudaDeviceProgram::convert_type_int64(int_tp vec_len,
+                                             string src_val) const {
+  return "((longlong" + std::to_string(vec_len) + ")(" + src_val + "))";
 }
 
 #endif  // USE_CUDA

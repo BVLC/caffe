@@ -42,7 +42,7 @@ class OclDevice : public Device {
   virtual bool CheckZeroCopy(vptr<const void> gpu_ptr, void* cpu_ptr,
                              uint_tp size);
 
-  void ocl_null_kernel(float arg, cl_event event);
+  void ocl_null_kernel(float arg, cl_event* event);
 
   virtual void memcpy(const uint_tp n, vptr<const void> x, vptr<void> y);
   virtual void memcpy(const uint_tp n, const void* x, vptr<void> y);

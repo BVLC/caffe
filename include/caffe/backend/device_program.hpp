@@ -15,8 +15,7 @@ class DeviceProgram {
   virtual bool Compile(bool load_cache, bool store_cache) = 0;
   virtual shared_ptr<DeviceKernel> GetKernel(string name) = 0;
 
-  virtual string function(string name,
-          vector<KernelArg> args) = 0;
+  virtual string function(string name, vector<KernelArg> args) = 0;
   virtual string kernel_loop(string type, string index, string n) = 0;
   virtual string setup() = 0;
   virtual string atomics() = 0;
@@ -49,7 +48,7 @@ class DeviceProgram {
   string string_identifier();
 
   template<typename Dtype>
-  string device_type_name();
+  string device_type_name() const;
 
   virtual string device_type_name_void() const = 0;
   virtual string device_type_name_bool() const = 0;
@@ -65,6 +64,18 @@ class DeviceProgram {
   virtual string device_type_name_uint16() const = 0;
   virtual string device_type_name_uint32() const = 0;
   virtual string device_type_name_uint64() const = 0;
+
+  template<typename Dtype>
+  string convert_type(int_tp vec_len, string src_val) const;
+
+  virtual string convert_type_char(int_tp vec_len, string src_val) const = 0;
+  virtual string convert_type_half(int_tp vec_len, string src_val) const = 0;
+  virtual string convert_type_float(int_tp vec_len, string src_val) const = 0;
+  virtual string convert_type_double(int_tp vec_len, string src_val) const = 0;
+  virtual string convert_type_int8(int_tp vec_len, string src_val) const = 0;
+  virtual string convert_type_int16(int_tp vec_len, string src_val) const = 0;
+  virtual string convert_type_int32(int_tp vec_len, string src_val) const = 0;
+  virtual string convert_type_int64(int_tp vec_len, string src_val) const = 0;
 
   template<typename Dtype>
   string atomic_add(string source, string operand);
@@ -114,7 +125,6 @@ class DeviceProgram {
   bool src_has_changed_;
   int64_t identifier_;
   std::map<string, KernelArgs> args_;
-
 };
 
 }

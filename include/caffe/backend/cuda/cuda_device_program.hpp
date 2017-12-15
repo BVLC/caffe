@@ -75,6 +75,15 @@ class CudaDeviceProgram : public DeviceProgram {
   virtual string device_type_name_uint32() const;
   virtual string device_type_name_uint64() const;
 
+  virtual string convert_type_char(int_tp vec_len, string src_val) const;
+  virtual string convert_type_half(int_tp vec_len, string src_val) const;
+  virtual string convert_type_float(int_tp vec_len, string src_val) const;
+  virtual string convert_type_double(int_tp vec_len, string src_val) const;
+  virtual string convert_type_int8(int_tp vec_len, string src_val) const;
+  virtual string convert_type_int16(int_tp vec_len, string src_val) const;
+  virtual string convert_type_int32(int_tp vec_len, string src_val) const;
+  virtual string convert_type_int64(int_tp vec_len, string src_val) const;
+
  private:
   shared_ptr<nvrtcProgram> cuda_program_;
   shared_ptr<CUmodule> cuda_module_;

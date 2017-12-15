@@ -958,7 +958,7 @@ string LibDNNConv<Dtype, MItype, MOtype>::generate_fw_kernels(string name) {
   ss << "}" << std::endl;   // M-N-Guard
   ss << "}" << std::endl;   // For (N)
   ss << "}" << std::endl;   // For (M)
-  ss << "}" << std::endl;   // Scoping for c registers
+  ss << "}" << std::endl;   // Scoping for C registers
 
   // Kernel
   ss << "}" << std::endl;

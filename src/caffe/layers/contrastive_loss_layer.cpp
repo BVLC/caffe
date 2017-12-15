@@ -26,6 +26,17 @@ void ContrastiveLossLayer<Dtype, MItype, MOtype>::LayerSetUp(
   summer_vec_.Reshape(bottom[0]->channels(), 1, 1, 1);
   for (int_tp i = 0; i < bottom[0]->channels(); ++i)
     summer_vec_.mutable_cpu_data()[i] = Dtype(1);
+  this->Reshape(bottom, top);
+}
+
+template<typename Dtype, typename MItype, typename MOtype>
+void ContrastiveLossLayer<Dtype, MItype, MOtype>::Reshape(
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
+
+  if (Caffe::mode() == Caffe::GPU && this->device_program_.get() == nullptr) {
+    this->GenerateProgram();
+  }
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
