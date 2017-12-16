@@ -254,6 +254,10 @@ void Caffe::set_random_seed(const size_t seed, device* device_context) {
   Get().random_generator_.reset(new RNG(seed));
 }
 
+void Caffe::SetDevices(std::vector<int> device_ids) {
+  NO_GPU;
+}
+
 void Caffe::SetDevice(const int device_id) {
   NO_GPU;
 }
@@ -324,6 +328,7 @@ Caffe::~Caffe() {
   // Make sure all device contexts and
   // dependent memory blocks are freed properly
   if (this == global_instance_) {
+      first.store(true);
       devices_.clear();
   }
 #ifdef USE_CUDA
