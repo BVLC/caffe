@@ -16,7 +16,7 @@ namespace caffe {
 
 template<typename Dtype, typename MItype, typename MOtype>
 class LibDNNDeconvolutionLayer
-    : public DeconvolutionLayer<Dtype, MItype, MOtype> {
+    : public BaseConvolutionLayer<Dtype, MItype, MOtype> {
  public:
   explicit LibDNNDeconvolutionLayer(const LayerParameter& param)
       : DeconvolutionLayer<Dtype, MItype, MOtype>(param) {}
@@ -35,10 +35,11 @@ class LibDNNDeconvolutionLayer
   virtual void Backward_gpu(const vector<Blob<MOtype>*>& top,
       const vector<bool>& propagate_down,
       const vector<Blob<MItype>*>& bottom);
-
+  virtual inline bool reverse_dimensions() { return true; }
+  virtual void compute_output_shape();
 
  private:
-  shared_ptr<LibDNNDeconv<Dtype, MItype, MOtype> > libdnn_;
+  shared_ptr<LibDNNDeconv<MItype, MOtype> > libdnn_;
 };
 
 }  // namespace caffe

@@ -11,9 +11,9 @@
 
 namespace caffe {
 
-template<typename Dtype, typename MItype, typename MOtype>
-LibDNNPool<Dtype, MItype, MOtype>::LibDNNPool(LibDNNPoolConfig config)
-        : LibDNN<Dtype, MItype, MOtype>(config.dev_ptr)  {
+template<typename MItype, typename MOtype>
+LibDNNPool<MItype, MOtype>::LibDNNPool(LibDNNPoolConfig config)
+        : LibDNN<MItype, MOtype>(config.dev_ptr)  {
   config_ = config;
   this->fast_unsafe_math_ = config.fast_unsafe_math;
   int_tp dims = config.in_shape.size();
@@ -51,18 +51,18 @@ LibDNNPool<Dtype, MItype, MOtype>::LibDNNPool(LibDNNPoolConfig config)
   this->CompileKernels();
 }
 
-template<typename Dtype, typename MItype, typename MOtype>
-const LibDNNPoolConfig LibDNNPool<Dtype, MItype, MOtype>::get_config() {
+template<typename MItype, typename MOtype>
+const LibDNNPoolConfig LibDNNPool<MItype, MOtype>::get_config() {
   return config_;
 }
 
 
-template<typename Dtype, typename MItype, typename MOtype>
-string LibDNNPool<Dtype, MItype, MOtype>::string_identifier() {
+template<typename MItype, typename MOtype>
+string LibDNNPool<MItype, MOtype>::string_identifier() {
   stringstream ss;
   ss << "POOL_";
   // Type names
-  ss << safe_type_name<Dtype>() << "_";
+  ss << safe_type_name<MItype>() << "_";
   ss << safe_type_name<MItype>() << "_";
   ss << safe_type_name<MOtype>() << "_";
   switch (pool_method_) {
@@ -126,8 +126,8 @@ string LibDNNPool<Dtype, MItype, MOtype>::string_identifier() {
   return ss.str();
 }
 
-template<typename Dtype, typename MItype, typename MOtype>
-string LibDNNPool<Dtype, MItype, MOtype>::generate_fw_defs() {
+template<typename MItype, typename MOtype>
+string LibDNNPool<MItype, MOtype>::generate_fw_defs() {
   stringstream ss;
 
   // Number of spatial axes
@@ -163,8 +163,8 @@ string LibDNNPool<Dtype, MItype, MOtype>::generate_fw_defs() {
 }
 
 
-template<typename Dtype, typename MItype, typename MOtype>
-string LibDNNPool<Dtype, MItype, MOtype>::generate_bw_defs() {
+template<typename MItype, typename MOtype>
+string LibDNNPool<MItype, MOtype>::generate_bw_defs() {
   stringstream ss;
 
   // Number of spatial axes
@@ -198,12 +198,12 @@ string LibDNNPool<Dtype, MItype, MOtype>::generate_bw_defs() {
   return ss.str();
 }
 
-template<typename Dtype, typename MItype, typename MOtype>
-string LibDNNPool<Dtype, MItype, MOtype>::generate_fw_kernels(string name,
+template<typename MItype, typename MOtype>
+string LibDNNPool<MItype, MOtype>::generate_fw_kernels(string name,
                                                               bool test_mode) {
   stringstream ss;
 #ifdef USE_HALF
-  if (std::is_same<Dtype, half_fp>::value) {
+  if (std::is_same<MItype, half_fp>::value) {
     ss << "#define DTYPE_MAX HALF_MAX" << std::endl;
     ss << "#define DTYPE_MIN HALF_MIN" << std::endl;
   } else {
@@ -222,7 +222,7 @@ string LibDNNPool<Dtype, MItype, MOtype>::generate_fw_kernels(string name,
                                   KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_RESTRICT));
   if (pool_method_ == LIBDNN_POOLING_METHOD_MAX) {
     if (use_top_mask_) {
-      args.push_back(this->program_->template create_kernel_arg<Dtype>(
+      args.push_back(this->program_->template create_kernel_arg<MItype>(
           "top_mask", KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_RESTRICT));
     } else {
       args.push_back(this->program_->template create_kernel_arg<int_tp>(
@@ -230,7 +230,7 @@ string LibDNNPool<Dtype, MItype, MOtype>::generate_fw_kernels(string name,
     }
   }
   if (pool_method_ == LIBDNN_POOLING_METHOD_STO && !test_mode) {
-    args.push_back(this->program_->template create_kernel_arg<Dtype>(
+    args.push_back(this->program_->template create_kernel_arg<MItype>(
              "rand_idx", KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_RESTRICT));
   }
   args.push_back(this->program_->template create_kernel_arg<int_tp>(
@@ -264,29 +264,29 @@ string LibDNNPool<Dtype, MItype, MOtype>::generate_fw_kernels(string name,
 
   if (pool_method_ == LIBDNN_POOLING_METHOD_MAX) {
     if (use_top_mask_) {
-      ss << this->program_->global_ptr("Dtype", "mask_ptr") << " = top_mask + "
+      ss << this->program_->global_ptr("MItype", "mask_ptr") << " = top_mask + "
          << this->program_->global_id(1) << " * v_imso;" << std::endl;
     } else {
       ss << this->program_->global_ptr("int_tp", "mask_ptr") << " = mask + "
          << this->program_->global_id(1) << " * v_imso;"  << std::endl;
     }
-    ss << "Dtype val = -DTYPE_MAX;" << std::endl;
+    ss << "MItype val = -DTYPE_MAX;" << std::endl;
     ss << "int_tp maxidx = -1;" << std::endl;
   }
 
   if (pool_method_ == LIBDNN_POOLING_METHOD_AVE) {
-    ss << "Dtype val = 0;" << std::endl;
+    ss << "MItype val = 0;" << std::endl;
   }
 
   if (pool_method_ == LIBDNN_POOLING_METHOD_STO) {
     if (test_mode) {
-      ss << "Dtype cumsum = DTYPE_MIN;" << std::endl;
-      ss << "Dtype cumvalues = 0;" << std::endl;
+      ss << "MItype cumsum = DTYPE_MIN;" << std::endl;
+      ss << "MItype cumvalues = 0;" << std::endl;
     } else {
-      ss << this->program_->global_ptr("Dtype", "rand_ptr") << " = rand_idx + "
+      ss << this->program_->global_ptr("MItype", "rand_ptr") << " = rand_idx + "
          << this->program_->global_id(1) << " * v_imso;" << std::endl;
-      ss << "Dtype val = 0;" << std::endl;
-      ss << "Dtype cumsum = 0;" << std::endl;
+      ss << "MItype val = 0;" << std::endl;
+      ss << "MItype cumsum = 0;" << std::endl;
       ss << "int_tp stoidx = -1;" << std::endl;
     }
   }
@@ -309,7 +309,7 @@ string LibDNNPool<Dtype, MItype, MOtype>::generate_fw_kernels(string name,
        sto_idx < ((pool_method_ == LIBDNN_POOLING_METHOD_STO && !test_mode)
        ? 2 : 1); ++sto_idx) {
     if (pool_method_ == LIBDNN_POOLING_METHOD_STO && sto_idx == 1) {
-      ss << "Dtype thres = rand_ptr[out_idx] * cumsum;" << std::endl;
+      ss << "MItype thres = rand_ptr[out_idx] * cumsum;" << std::endl;
       ss << "cumsum = 0;" << std::endl;
     }
     // Loop over the kernel
@@ -433,18 +433,18 @@ string LibDNNPool<Dtype, MItype, MOtype>::generate_fw_kernels(string name,
 
   // Write out the pooling result
   if (pool_method_ == LIBDNN_POOLING_METHOD_AVE) {
-    ss << "out_ptr[out_idx] = val / ((Dtype)ave);" << std::endl;
+    ss << "out_ptr[out_idx] = val / ((MItype)ave);" << std::endl;
   }
   if (pool_method_ == LIBDNN_POOLING_METHOD_MAX) {
     ss << "out_ptr[out_idx] = val;" << std::endl;
-    ss << "mask_ptr[out_idx] = (Dtype)maxidx;" << std::endl;
+    ss << "mask_ptr[out_idx] = (MItype)maxidx;" << std::endl;
   }
   if (pool_method_ == LIBDNN_POOLING_METHOD_STO) {
     if (test_mode) {
       ss << "out_ptr[out_idx] = cumvalues / cumsum;" << std::endl;
     } else {
       ss << "out_ptr[out_idx] = val;" << std::endl;
-      ss << "rand_ptr[out_idx] = (Dtype)stoidx;" << std::endl;
+      ss << "rand_ptr[out_idx] = (MItype)stoidx;" << std::endl;
     }
   }
 
@@ -452,22 +452,22 @@ string LibDNNPool<Dtype, MItype, MOtype>::generate_fw_kernels(string name,
   return ss.str();
 }
 
-template<typename Dtype, typename MItype, typename MOtype>
-string LibDNNPool<Dtype, MItype, MOtype>::generate_fwtr_kernels(string name) {
+template<typename MItype, typename MOtype>
+string LibDNNPool<MItype, MOtype>::generate_fwtr_kernels(string name) {
   stringstream ss;
   ss << generate_fw_kernels(name, false);
   return ss.str();
 }
 
-template<typename Dtype, typename MItype, typename MOtype>
-string LibDNNPool<Dtype, MItype, MOtype>::generate_fwte_kernels(string name) {
+template<typename MItype, typename MOtype>
+string LibDNNPool<MItype, MOtype>::generate_fwte_kernels(string name) {
   stringstream ss;
   ss << generate_fw_kernels(name, true);
   return ss.str();
 }
 
-template<typename Dtype, typename MItype, typename MOtype>
-string LibDNNPool<Dtype, MItype, MOtype>::generate_bw_kernels(string name) {
+template<typename MItype, typename MOtype>
+string LibDNNPool<MItype, MOtype>::generate_bw_kernels(string name) {
   stringstream ss;
 
   KernelArgs args;
@@ -486,7 +486,7 @@ string LibDNNPool<Dtype, MItype, MOtype>::generate_bw_kernels(string name) {
     }
   }
   if (pool_method_ == LIBDNN_POOLING_METHOD_STO) {
-    args.push_back(this->program_->template create_kernel_arg<Dtype>("rand_idx",
+    args.push_back(this->program_->template create_kernel_arg<MItype>("rand_idx",
              KERNEL_ARG_CONST | KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_RESTRICT));
   }
   args.push_back(this->program_->template create_kernel_arg<int_tp>("channels",
@@ -542,7 +542,7 @@ string LibDNNPool<Dtype, MItype, MOtype>::generate_bw_kernels(string name) {
     }
 
     if (pool_method_ == LIBDNN_POOLING_METHOD_STO) {
-      ss << this->program_->global_ptr("const Dtype", "rand_ptr")
+      ss << this->program_->global_ptr("const MItype", "rand_ptr")
          << " = rand_idx + " << this->program_->global_id(1)
          << " * v_imso + in_idx;" << std::endl;
     }
@@ -558,14 +558,14 @@ string LibDNNPool<Dtype, MItype, MOtype>::generate_bw_kernels(string name) {
                                    kernel_shape_.end(),
                                     1, std::multiplies<int_tp>());
       ss << "int_tp ave = " << ave << ";" << std::endl;
-      ss << "Dtype val = in_ptr[0];" << std::endl;
+      ss << "MItype val = in_ptr[0];" << std::endl;
     }
 
     for (int_tp ave_idx = 0;
          ave_idx < ((pool_method_ == LIBDNN_POOLING_METHOD_AVE)
          ? 2 : 0); ++ave_idx) {
       if (ave_idx == 1) {
-        ss << "val /= ((Dtype)ave);" << std::endl;
+        ss << "val /= ((MItype)ave);" << std::endl;
       }
       // Loop over the kernel
       bool incremented;
@@ -710,7 +710,7 @@ string LibDNNPool<Dtype, MItype, MOtype>::generate_bw_kernels(string name) {
     }
 
     if (pool_method_ == LIBDNN_POOLING_METHOD_STO) {
-      ss << this->program_->global_ptr("const Dtype", "rand_ptr")
+      ss << this->program_->global_ptr("const MItype", "rand_ptr")
          << " = rand_idx + " << this->program_->global_id(1) << " * v_imso;"
          << std::endl;
     }
@@ -736,7 +736,7 @@ string LibDNNPool<Dtype, MItype, MOtype>::generate_bw_kernels(string name) {
       ss << "int_tp av_end[" << num_axes_ << "];" << std::endl;
     }
     // ss << "printf(\"%f\\N\", (float)ave);" << std::endl;
-    ss << "Dtype gradient = 0.0;" << std::endl;
+    ss << "MItype gradient = 0.0;" << std::endl;
     ss << "bool incremented;" << std::endl;
     ss << "do {" << std::endl;
     ss << "int_tp offset = 0;" << std::endl;
@@ -788,7 +788,7 @@ string LibDNNPool<Dtype, MItype, MOtype>::generate_bw_kernels(string name) {
     }
     ss << "gradient += in_ptr[offset]";
     if (pool_method_ == LIBDNN_POOLING_METHOD_AVE) {
-      ss << " / (Dtype)ave;" << std::endl;
+      ss << " / (MItype)ave;" << std::endl;
     } else {
       ss << ";" << std::endl;
     }
@@ -816,13 +816,13 @@ string LibDNNPool<Dtype, MItype, MOtype>::generate_bw_kernels(string name) {
   return ss.str();
 }
 
-template<typename Dtype, typename MItype, typename MOtype>
-void LibDNNPool<Dtype, MItype, MOtype>::GenerateKernels() {
+template<typename MItype, typename MOtype>
+void LibDNNPool<MItype, MOtype>::GenerateKernels() {
   this->program_ = this->dev_ptr_->CreateProgram();
 
   stringstream ss;
   ss << this->program_->setup();
-  ss << this->program_->template define_vector_type<Dtype>("Dtype", 0, 16);
+  ss << this->program_->template define_vector_type<MItype>("MItype", 0, 16);
   ss << this->program_->template define_vector_type<MItype>("MItype", 0, 16);
   ss << this->program_->template define_vector_type<MOtype>("MOtype", 0, 16);
   ss << this->program_->atomics();
@@ -836,17 +836,17 @@ void LibDNNPool<Dtype, MItype, MOtype>::GenerateKernels() {
   this->program_->set_source(ss.str());
 }
 
-template<typename Dtype, typename MItype, typename MOtype>
-bool LibDNNPool<Dtype, MItype, MOtype>::CompileKernels() {
+template<typename MItype, typename MOtype>
+bool LibDNNPool<MItype, MOtype>::CompileKernels() {
   return this->program_->Compile(true, true);
 }
 
-template<typename Dtype, typename MItype, typename MOtype>
-void LibDNNPool<Dtype, MItype, MOtype>::Forward(
+template<typename MItype, typename MOtype>
+void LibDNNPool<MItype, MOtype>::Forward(
               vptr<const MItype> bottom_data, vptr<MOtype> top_data,
               int_tp channels, int_tp batch_size,
               bool test_mode, vptr<int_tp> mask,
-              vptr<MOtype> top_mask, vptr<Dtype> rand_idx) {
+              vptr<MOtype> top_mask, vptr<MItype> rand_idx) {
   int_tp imsi = std::accumulate(im_in_shape_.begin(), im_in_shape_.end(),
                                 1, std::multiplies<int_tp>());
   int_tp imso = std::accumulate(im_out_shape_.begin(), im_out_shape_.end(),
@@ -901,12 +901,12 @@ void LibDNNPool<Dtype, MItype, MOtype>::Forward(
   }
 }
 
-template<typename Dtype, typename MItype, typename MOtype>
-void LibDNNPool<Dtype, MItype, MOtype>::Backward(
+template<typename MItype, typename MOtype>
+void LibDNNPool<MItype, MOtype>::Backward(
                       vptr<const MOtype> top_diff, vptr<MItype> bottom_diff,
                       int_tp channels, int_tp batch_size,
                       vptr<const int_tp> mask, vptr<const MOtype> top_mask,
-                      vptr<const Dtype> rand_idx) {
+                      vptr<const MItype> rand_idx) {
   int_tp ims = batch_size * channels;
   for (int_tp i = 0; i < im_in_shape_.size(); ++i) {
     ims *= im_in_shape_[i];
@@ -975,9 +975,7 @@ void LibDNNPool<Dtype, MItype, MOtype>::Backward(
   }
 }
 
-INSTANTIATE_CLASS_3T_GUARDED(LibDNNPool, (half_fp), (half_fp), (half_fp));
-INSTANTIATE_CLASS_3T_GUARDED(LibDNNPool, (float), (float), (float));
-INSTANTIATE_CLASS_3T_GUARDED(LibDNNPool, (double), (double), (double));
+INSTANTIATE_CLASS_2T_GUARDED(LibDNNPool, PROTO_TYPES, PROTO_TYPES);
 
 }  // namespace caffe
 

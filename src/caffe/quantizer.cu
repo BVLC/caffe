@@ -1,4 +1,7 @@
 #include "caffe/quantizer.hpp"
+#include "caffe/backend/device.hpp"
+#include "caffe/backend/device_program.hpp"
+#include "caffe/backend/device_kernel.hpp"
 
 namespace caffe {
 
@@ -7,8 +10,8 @@ void Quantizer<MItype, MOtype>::GenerateKernels() {
   this->program_ = this->device_->CreateProgram();
   stringstream ss;
   ss << this->program_->setup();
-  ss << this->program_->define_type<MItype>(MItype);
-  ss << this->program_->define_type<MOtype>(MOtype);
+  ss << this->program_->template define_type<MItype>("MItype");
+  ss << this->program_->template define_type<MOtype>("MOtype");
 
   {
     KernelArgs args;
@@ -26,7 +29,7 @@ void Quantizer<MItype, MOtype>::GenerateKernels() {
                                                              KERNEL_ARG_CONST));
     }
     ss << this->program_->function("quantizer_forward", args);
-    ss << this->program_->kernel_loop("uint_tp", 'i', 'n');
+    ss << this->program_->kernel_loop("uint_tp", "i", "n");
     ss << "out[i] = " << fw_scale_term(0, "scal", "in[i]") << std::endl;
     ss << "}" << std::endl;
     ss << "}" << std::endl;
@@ -48,7 +51,7 @@ void Quantizer<MItype, MOtype>::GenerateKernels() {
                                                              KERNEL_ARG_CONST));
     }
     ss << this->program_->function("quantizer_backward", args);
-    ss << this->program_->kernel_loop("uint_tp", 'i', 'n');
+    ss << this->program_->kernel_loop("uint_tp", "i", "n");
     ss << "out[i] = " << bw_scale_term(0, "scal", "in[i]") << std::endl;
     ss << "}" << std::endl;
     ss << "}" << std::endl;
@@ -67,7 +70,7 @@ void Quantizer<MItype, MOtype>::Forward_gpu(size_t n, vptr<const MItype> input,
   MOtype scal_after = fw_scale_after_cast_val();
 
   shared_ptr<DeviceKernel> kernel =
-                          this->device_program_->GetKernel("quantizer_forward");
+                          this->program_->GetKernel("quantizer_forward");
   kernel->add_arg(&n);
   kernel->add_arg(&input);
   kernel->add_arg(&output);
@@ -94,7 +97,7 @@ void Quantizer<MItype, MOtype>::Backward_gpu(size_t n, vptr<const MOtype> input,
   MItype scal_after = bw_scale_after_cast_val();
 
   shared_ptr<DeviceKernel> kernel =
-                         this->device_program_->GetKernel("quantizer_backward");
+                                this->program_->GetKernel("quantizer_backward");
   kernel->add_arg(&n);
   kernel->add_arg(&input);
   kernel->add_arg(&output);
@@ -161,6 +164,6 @@ void Quantizer<MItype, MOtype>::Backward_gpu(Blob<MOtype>* input,
 }
 
 
-INSTANTIATE_CLASS_2T(Quantizer, VARIANT_TYPES, VARIANT_TYPES)
+INSTANTIATE_CLASS_2T(Quantizer, PROTO_TYPES, PROTO_TYPES)
 
 }  // namespace caffe

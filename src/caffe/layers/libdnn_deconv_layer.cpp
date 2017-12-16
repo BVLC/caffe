@@ -8,10 +8,28 @@
 namespace caffe {
 
 template<typename Dtype, typename MItype, typename MOtype>
+void DeconvolutionLayer<Dtype, MItype, MOtype>::compute_output_shape() {
+  const int_tp* kernel_shape_data = this->kernel_shape_.cpu_data();
+  const int_tp* stride_data = this->stride_.cpu_data();
+  const int_tp* pad_data = this->pad_.cpu_data();
+  const int_tp* dilation_data = this->dilation_.cpu_data();
+  this->output_shape_.clear();
+  for (int_tp i = 0; i < this->num_spatial_axes_; ++i) {
+    // i + 1 to skip channel axis
+    const int_tp input_dim = this->input_shape(i + 1);
+    const int_tp kernel_extent = dilation_data[i] * (kernel_shape_data[i] - 1)
+        + 1;
+    const int_tp output_dim = stride_data[i] * (input_dim - 1)
+        + kernel_extent - 2 * pad_data[i];
+    this->output_shape_.push_back(output_dim);
+  }
+}
+
+template<typename Dtype, typename MItype, typename MOtype>
 void LibDNNDeconvolutionLayer<Dtype, MItype, MOtype>::LayerSetUp(
     const vector<Blob<MItype>*>& bottom,
     const vector<Blob<MOtype>*>& top) {
-  DeconvolutionLayer<Dtype, MItype, MOtype>::LayerSetUp(bottom, top);
+  BaseConvolutionLayer<Dtype, MItype, MOtype>::LayerSetUp(bottom, top);
   this->use_colbuffer_ = false;
   Reshape(bottom, top);
 }
@@ -21,7 +39,7 @@ void LibDNNDeconvolutionLayer<Dtype, MItype, MOtype>::Reshape(
     const vector<Blob<MItype>*>& bottom,
     const vector<Blob<MOtype>*>& top) {
   this->use_colbuffer_ = false;
-  DeconvolutionLayer<Dtype, MItype, MOtype>::Reshape(bottom, top);
+  BaseConvolutionLayer<Dtype, MItype, MOtype>::Reshape(bottom, top);
 
   bool shapes_changed = false;
   if (libdnn_.get() != nullptr) {
@@ -85,8 +103,8 @@ void LibDNNDeconvolutionLayer<Dtype, MItype, MOtype>::Reshape(
       config.bwalgo = LIBDNN_CONVOLUTION_BW_ALGO_IM2COL;
     }
 
-    LibDNNDeconv<Dtype, MItype, MOtype>* libdnn =
-        new LibDNNDeconv<Dtype, MItype, MOtype>(config);
+    LibDNNDeconv<MItype, MOtype>* libdnn =
+        new LibDNNDeconv<MItype, MOtype>(config);
 
     libdnn_.reset(libdnn);
   }
@@ -168,12 +186,20 @@ void LibDNNDeconvolutionLayer<Dtype, MItype, MOtype>::Tune(
 }
 
 
-INSTANTIATE_CLASS_3T_GUARDED(LibDNNDeconvolutionLayer,
-                             (half_fp), (half_fp), (half_fp));
-INSTANTIATE_CLASS_3T_GUARDED(LibDNNDeconvolutionLayer,
-                             (float), (float), (float));
-INSTANTIATE_CLASS_3T_GUARDED(LibDNNDeconvolutionLayer,
-                             (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(LibDNNDeconvolutionLayer, (half_fp), PROTO_TYPES,
+                             PROTO_TYPES);
+INSTANTIATE_CLASS_3T_GUARDED(LibDNNDeconvolutionLayer, (float), PROTO_TYPES,
+                             PROTO_TYPES);
+INSTANTIATE_CLASS_3T_GUARDED(LibDNNDeconvolutionLayer, (double), PROTO_TYPES,
+                             PROTO_TYPES);
+INSTANTIATE_CLASS_3T_GUARDED(LibDNNDeconvolutionLayer, (int8_t), PROTO_TYPES,
+                             PROTO_TYPES);
+INSTANTIATE_CLASS_3T_GUARDED(LibDNNDeconvolutionLayer, (int16_t), PROTO_TYPES,
+                             PROTO_TYPES);
+INSTANTIATE_CLASS_3T_GUARDED(LibDNNDeconvolutionLayer, (int32_t), PROTO_TYPES,
+                             PROTO_TYPES);
+INSTANTIATE_CLASS_3T_GUARDED(LibDNNDeconvolutionLayer, (int64_t), PROTO_TYPES,
+                             PROTO_TYPES);
 
 }   // namespace caffe
 

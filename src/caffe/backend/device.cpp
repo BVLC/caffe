@@ -21,6 +21,7 @@ shared_ptr<SQLiteHelper> Device::get_database() {
   return database_;
 }
 
+
 string Device::name() { return "CPU"; }
 
 void Device::MallocMemHost(void** ptr, uint_tp size) {
@@ -227,13 +228,11 @@ template shared_ptr<Blob<uint32_t> > Device::Buffer(vector<int_tp> shape,
 template shared_ptr<Blob<uint64_t> > Device::Buffer(vector<int_tp> shape,
                                                    int_tp* lock_id);
 
-
 void Device::unlock_buffer(int_tp* lock_id) {
   if (*lock_id < buffer_mutex_.size()) {
     buffer_mutex_[*lock_id]->unlock();
   }
   *lock_id = -1;
 }
-
 
 }  // namespace caffe

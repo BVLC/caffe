@@ -15,6 +15,7 @@
 #include "caffe/backend/vptr.hpp"
 #include "caffe/trait_helper.hpp"
 #include "caffe/util/type_utils.hpp"
+#include "caffe/trait_helper.hpp"
 
 #ifdef USE_SQLITE
 #include "caffe/util/db_sqlite.hpp"
@@ -39,7 +40,9 @@ enum DeviceCapability {
 #ifdef USE_LIBDNN
 // Forward declare LibDNN
 class LibDNNBase;
-template<typename Dtype, typename MItype, typename MOtype>
+template<typename MItype, typename MOtype>
+class LibDNN;
+template<typename MItype, typename MOtype>
 class LibDNNBlas;
 #endif  // USE_LIBDNN
 
@@ -52,6 +55,29 @@ class Device {
   Backend backend() const;
   uint_tp id() const;
   uint_tp list_id() const;
+
+#ifdef USE_LIBDNN
+  template<typename MItype, typename MOtype>
+  typename std::enable_if<proto_type_is_same<MItype>::value
+                       && proto_type_is_same<MOtype>::value,
+    shared_ptr<LibDNNBlas<MItype, MOtype> > >::type
+  GetLibDNNBlas() {
+    libdnn_lock_.lock();
+    size_t data_id = data_type_index<MItype>()
+                   + data_type_index<MOtype>() * (PROTO_DATA_INDEX_MAX + 1);
+    std::unordered_map<size_t, size_t>::iterator it =
+                                                 libdnn_blas_map_.find(data_id);
+    if (it == libdnn_blas_map_.end()) {
+      size_t id = libdnn_blas_.size();
+      libdnn_blas_map_[data_id] = id;
+      libdnn_blas_.push_back(
+          std::make_shared<LibDNNBlas<MItype, MOtype> >(this));
+    }
+    libdnn_lock_.unlock();
+    return static_cast<LibDNNBlas<MItype, MOtype> >(
+      libdnn_blas_[libdnn_blas_map_[data_id]]);
+  }
+#endif  // USE_LIBDNN
 
   template<typename Dtype>
   shared_ptr<Blob<Dtype> > Buffer(vector<int_tp> shape, int_tp* lock_id);
@@ -89,11 +115,6 @@ class Device {
   virtual void FreeMemDevice(vptr<void> ptr);
   virtual bool CheckZeroCopy(vptr<const void> gpu_ptr, void* cpu_ptr,
                              uint_tp size);
-
-#ifdef USE_LIBDNN
-  template<typename Dtype, typename MItype, typename MOtype>
-  shared_ptr<LibDNNBlas<Dtype, MItype, MOtype>> GetLibDNNBlas();
-#endif
 
   void null_kernel(float arg);
 
@@ -461,8 +482,9 @@ class Device {
   vector<shared_ptr<DeviceProgram> > math_programs_;
   vector<shared_ptr<DeviceProgram> > im2col_programs_;
 #ifdef USE_LIBDNN
-  vector<shared_ptr<LibDNNBase>> libdnn_blas_;
-  std::map<string, size_t> libdnn_blas_map_;
+  std::mutex libdnn_lock_;
+  vector<shared_ptr<LibDNNBase> > libdnn_blas_;
+  std::unordered_map<size_t, size_t> libdnn_blas_map_;
 #endif  // USE_LIBDNN
 
 #ifdef USE_SQLITE

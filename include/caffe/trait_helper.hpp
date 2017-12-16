@@ -155,6 +155,18 @@ struct non_const_is_same {
       std::is_same<Dtype, void>::value;
 };
 
+template<typename Dtype>
+struct proto_type_is_same {
+  constexpr static bool value =
+      std::is_same<Dtype, int8_t>::value ||
+      std::is_same<Dtype, int16_t>::value ||
+      std::is_same<Dtype, int32_t>::value ||
+      std::is_same<Dtype, int64_t>::value ||
+      std::is_same<Dtype, half_fp>::value ||
+      std::is_same<Dtype, float>::value ||
+      std::is_same<Dtype, double>::value;
+};
+
 
 }  // namespace caffe
 

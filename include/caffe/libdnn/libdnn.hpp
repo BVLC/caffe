@@ -12,34 +12,36 @@
 
 namespace caffe {
 
-enum LibDNNAccumulatePrecision {
+typedef enum {
   LIBDNN_ACCUMULATE_PREC_NATIVE = 0,
   LIBDNN_ACCUMULATE_PREC_8 = 1,
   LIBDNN_ACCUMULATE_PREC_16 = 2,
   LIBDNN_ACCUMULATE_PREC_32 = 3,
   LIBDNN_ACCUMULATE_PREC_64 = 4
-};
+} libdnnAccumulatePrecision_t;
 
 class LibDNNBase {
-
-};
-
-template<typename Dtype, typename MItype, typename MOtype>
-class LibDNN : public LibDNNBase {
  protected:
-  explicit LibDNN(Device* dev_ptr);
-  virtual void GenerateKernels() = 0;
-  virtual bool CompileKernels() = 0;
-  virtual string string_identifier() = 0;
-  string generate_gemm_core(shared_ptr<LibDNNTuner> tuner, bool dterm,
-                            LibDNNAccumulatePrecision prec);
-  string generate_accreg_init(shared_ptr<LibDNNTuner> tuner, bool dterm,
-                              bool load, bool beta_term,
-                              LibDNNAccumulatePrecision prec);
+  LibDNNBase(Device* dev_ptr);
 
   Device* dev_ptr_;
   shared_ptr<DeviceProgram> program_;
   bool fast_unsafe_math_;
+};
+
+template<typename MItype, typename MOtype>
+class LibDNN : public LibDNNBase {
+ protected:
+  LibDNN(Device* dev_ptr);
+  virtual void GenerateKernels() = 0;
+  virtual bool CompileKernels() = 0;
+  virtual string string_identifier() = 0;
+  string generate_gemm_core(shared_ptr<LibDNNTuner> tuner, bool dterm,
+                            bool alpha_term,
+                            libdnnAccumulatePrecision_t prec);
+  string generate_accreg_init(shared_ptr<LibDNNTuner> tuner, bool dterm,
+                              bool load, bool beta_term,
+                              libdnnAccumulatePrecision_t prec);
 };
 
 }  // namespace caffe

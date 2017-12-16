@@ -23,6 +23,7 @@ class QuantizerBase {
  public:
   QuantizerMode get_mode() const;
   void set_mode(QuantizerMode mode);
+  string get_mode_string();
 
   virtual void GenerateKernels() = 0;
   virtual void Forward_cpu(size_t n, const void* input, void* output) = 0;
@@ -32,12 +33,18 @@ class QuantizerBase {
   virtual void Backward_gpu(size_t n, vptr<const void> input,
                             vptr<void> output) = 0;
 
-  virtual string get_forward_scale_term(string scale_var, string src_val) = 0;
-  virtual string get_backward_scale_term(string scale_var, string src_val) = 0;
+  virtual bool fw_scale_divide() const = 0;
+  virtual bool bw_scale_divide() const = 0;
+  virtual bool fw_scale_before_cast() const = 0;
+  virtual bool bw_scale_before_cast() const = 0;
+
+  virtual string fw_scale_term(int_tp vec_len, string scale_var,
+                               string src_val) const = 0;
+  virtual string bw_scale_term(int_tp vec_len, string scale_var,
+                               string src_val) const = 0;
 
  protected:
   explicit QuantizerBase(QuantizerParameter& param);
- private:
   QuantizerParameter quant_param_;
   shared_ptr<DeviceProgram> program_;
   bool program_ready_;
@@ -84,10 +91,10 @@ class Quantizer : public QuantizerBase {
   void Forward_gpu(size_t n, vptr<const MItype> input, vptr<MOtype> output);
   void Backward_gpu(size_t n, vptr<const MOtype> input, vptr<MItype> output);
 
-  bool fw_scale_divide() const;
-  bool bw_scale_divide() const;
-  bool fw_scale_before_cast() const;
-  bool bw_scale_before_cast() const;
+  virtual bool fw_scale_divide() const;
+  virtual bool bw_scale_divide() const;
+  virtual bool fw_scale_before_cast() const;
+  virtual bool bw_scale_before_cast() const;
 
   MItype fw_scale_before_cast_val() const;
   MOtype fw_scale_after_cast_val() const;

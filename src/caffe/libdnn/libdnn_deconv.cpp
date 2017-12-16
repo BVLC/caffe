@@ -11,11 +11,16 @@
 
 namespace caffe {
 
-template<typename Dtype, typename MItype, typename MOtype>
-LibDNNDeconv<Dtype, MItype, MOtype>::LibDNNDeconv(LibDNNDeconvConfig config)
-      : LibDNNConv<Dtype, MItype, MOtype>(config.dev_ptr) {
-  config_ = config;
-  this->dev_ptr_ = config.dev_ptr;
+template<typename MItype, typename MOtype>
+LibDNNDeconv<MItype, MOtype>::LibDNNDeconv(LibDNNDeconvConfig config)
+      : LibDNNConv<MItype, MOtype>(config.dev_ptr) {
+  this->config_ = config;
+  this->program_ = this->dev_ptr_->CreateProgram();
+  this->in_quant_ = std::static_pointer_cast<Quantizer<MItype, MItype> >(
+                                                               config.in_quant);
+  this->out_quant_ = std::static_pointer_cast<Quantizer<MItype, MOtype> >(
+                                                              config.out_quant);
+  this->prec_ = config.prec;
   this->bias_term_ = config.bias_term;
   this->bias_multiplier_ = config.bias_term ? 1.0 : 0.0;
   this->fast_unsafe_math_ = config.fast_unsafe_math;
@@ -220,17 +225,17 @@ LibDNNDeconv<Dtype, MItype, MOtype>::LibDNNDeconv(LibDNNDeconvConfig config)
   this->CompileKernels();
 }
 
-template<typename Dtype, typename MItype, typename MOtype>
-const LibDNNDeconvConfig LibDNNDeconv<Dtype, MItype, MOtype>::get_config() {
+template<typename MItype, typename MOtype>
+const LibDNNDeconvConfig LibDNNDeconv<MItype, MOtype>::get_config() {
   return config_;
 }
 
-template<typename Dtype, typename MItype, typename MOtype>
-string LibDNNDeconv<Dtype, MItype, MOtype>::string_identifier() {
+template<typename MItype, typename MOtype>
+string LibDNNDeconv<MItype, MOtype>::string_identifier() {
   stringstream ss;
   ss << "DECONV_";
   // Type names
-  ss << safe_type_name<Dtype>() << "_";
+  ss << safe_type_name<MItype>() << "_";
   ss << safe_type_name<MItype>() << "_";
   ss << safe_type_name<MOtype>() << "_";
   // Device name
@@ -286,8 +291,8 @@ string LibDNNDeconv<Dtype, MItype, MOtype>::string_identifier() {
   return ss.str();
 }
 
-template<typename Dtype, typename MItype, typename MOtype>
-string LibDNNDeconv<Dtype, MItype, MOtype>::generate_bw_defs() {
+template<typename MItype, typename MOtype>
+string LibDNNDeconv<MItype, MOtype>::generate_bw_defs() {
   stringstream ss;
 
   // Number of spatial axes
@@ -417,8 +422,8 @@ string LibDNNDeconv<Dtype, MItype, MOtype>::generate_bw_defs() {
   return ss.str();
 }
 
-template<typename Dtype, typename MItype, typename MOtype>
-string LibDNNDeconv<Dtype, MItype, MOtype>::generate_fw_defs() {
+template<typename MItype, typename MOtype>
+string LibDNNDeconv<MItype, MOtype>::generate_fw_defs() {
   stringstream ss;
 
   // Number of spatial axes
@@ -583,8 +588,8 @@ string LibDNNDeconv<Dtype, MItype, MOtype>::generate_fw_defs() {
   return ss.str();
 }
 
-template<typename Dtype, typename MItype, typename MOtype>
-string LibDNNDeconv<Dtype, MItype, MOtype>::generate_wg_defs() {
+template<typename MItype, typename MOtype>
+string LibDNNDeconv<MItype, MOtype>::generate_wg_defs() {
   stringstream ss;
 
   // Number of spatial axes
@@ -736,8 +741,8 @@ string LibDNNDeconv<Dtype, MItype, MOtype>::generate_wg_defs() {
   return ss.str();
 }
 
-template<typename Dtype, typename MItype, typename MOtype>
-string LibDNNDeconv<Dtype, MItype, MOtype>::generate_bw_kernels(string name) {
+template<typename MItype, typename MOtype>
+string LibDNNDeconv<MItype, MOtype>::generate_bw_kernels(string name) {
   stringstream ss;
 
   int wptn = this->bw_tuner_->template get_param<int>("WPTN");
@@ -749,20 +754,20 @@ string LibDNNDeconv<Dtype, MItype, MOtype>::generate_bw_kernels(string name) {
   int tsn = wptn * rtsn;
   int vwm = this->bw_tuner_->template get_param<int>("VWM");
   int vwn = this->bw_tuner_->template get_param<int>("VWN");
-  int lpta = (tsm * tsk) / (rtsm * rtsn);
-  int lptb = (tsn * tsk) / (rtsm * rtsn);
+  // int lpta = (tsm * tsk) / (rtsm * rtsn);
+  // int lptb = (tsn * tsk) / (rtsm * rtsn);
 
   // Forward kernel
   KernelArgs args;
-  args.push_back(this->program_->template create_kernel_arg<Dtype>("im_in",
+  args.push_back(this->program_->template create_kernel_arg<MItype>("im_in",
                KERNEL_ARG_CONST | KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_RESTRICT));
-  args.push_back(this->program_->template create_kernel_arg<Dtype>("wg",
+  args.push_back(this->program_->template create_kernel_arg<MItype>("wg",
                KERNEL_ARG_CONST | KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_RESTRICT));
   if (this->bias_term_) {
-    args.push_back(this->program_->template create_kernel_arg<Dtype>("bias",
+    args.push_back(this->program_->template create_kernel_arg<MItype>("bias",
                KERNEL_ARG_CONST | KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_RESTRICT));
   }
-  args.push_back(this->program_->template create_kernel_arg<Dtype>("im_out",
+  args.push_back(this->program_->template create_kernel_arg<MItype>("im_out",
                                   KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_RESTRICT));
   ss << this->program_->function(name, args);
 
@@ -782,12 +787,12 @@ string LibDNNDeconv<Dtype, MItype, MOtype>::generate_bw_kernels(string name) {
 
   // Local tile memory
   // Asub for loading weights & shuffling the output
-  ss << "volatile " << this->program_->local_mem("Dtype",
+  ss << "volatile " << this->program_->local_mem("MItype",
                       "Asub[" + std::to_string(tsm) + "]"
                       + "[" + std::to_string(tsk) + " + v_pad_A]") << ";"
                     << std::endl;
   // Bsub for loading the input image and shuffling the output image
-  ss << "volatile " << this->program_->local_mem("Dtype",
+  ss << "volatile " << this->program_->local_mem("MItype",
                       "Bsub[" + std::to_string(tsk) + "]"
                       + "[" + std::to_string(tsn) + " + v_pad_B]") << ";"
                     << std::endl;
@@ -801,24 +806,25 @@ string LibDNNDeconv<Dtype, MItype, MOtype>::generate_bw_kernels(string name) {
   }
 
   if (this->group_ > 1) {
-    ss << this->program_->global_ptr("const Dtype", "Aptr")
+    ss << this->program_->global_ptr("const MItype", "Aptr")
        << " = wg + group * (M * K);" << std::endl;
-    ss << this->program_->global_ptr("const Dtype", "Bptr")
+    ss << this->program_->global_ptr("const MItype", "Bptr")
        << " = im_in + v_B_off * batch + group * (v_B_off / v_g);" << std::endl;
-    ss << this->program_->global_ptr("Dtype", "Cptr")
+    ss << this->program_->global_ptr("MItype", "Cptr")
        << " = im_out + v_C_off * batch + group * (M * N);" << std::endl;
   } else {
-    ss << this->program_->global_ptr("const Dtype", "Aptr") << " = wg;"
+    ss << this->program_->global_ptr("const MItype", "Aptr") << " = wg;"
        << std::endl;
-    ss << this->program_->global_ptr("const Dtype", "Bptr")
+    ss << this->program_->global_ptr("const MItype", "Bptr")
        << " = im_in + v_B_off * batch;" << std::endl;
-    ss << this->program_->global_ptr("Dtype", "Cptr")
+    ss << this->program_->global_ptr("MItype", "Cptr")
        << " = im_out + v_C_off * batch;" << std::endl;
   }
 
   // Initialize the accumulation registers
   ss << "{" << std::endl;  // Scoping for C registers
-  ss << this->generate_accreg_init(this->bw_tuner_, false, false);
+  ss << this->generate_accreg_init(this->bw_tuner_, false, false, false,
+                                   this->prec_);
 
   ss << "{" << std::endl;  // Scoping for load & compute block
   // Loop over all tiles
@@ -910,7 +916,8 @@ string LibDNNDeconv<Dtype, MItype, MOtype>::generate_bw_kernels(string name) {
   // Synchronize to make sure the tile is loaded
   ss << this->program_->local_barrier() << std::endl;
 
-  ss << this->generate_gemm_core(this->bw_tuner_, false) << std::endl;
+  ss << this->generate_gemm_core(this->bw_tuner_, false, false, this->prec_)
+     << std::endl;
 
   // Synchronize before loading the next tile
   ss << this->program_->local_barrier() << std::endl;
@@ -930,7 +937,7 @@ string LibDNNDeconv<Dtype, MItype, MOtype>::generate_bw_kernels(string name) {
      << std::endl;
   ss << "if (globalRow < M && globalCol < N) {" << std::endl;
   ss << "Cptr[globalRow * N + globalCol] = "
-     << "((Dtype*)(&(Creg[wm][wn/VWN])))[wn%VWN];" << std::endl;
+     << "((MItype*)(&(Creg[wm][wn/VWN])))[wn%VWN];" << std::endl;
   ss << "}" << std::endl;   // M-N-Guard
   ss << "}" << std::endl;   // For (N)
   ss << "}" << std::endl;   // For (M)
@@ -942,8 +949,8 @@ string LibDNNDeconv<Dtype, MItype, MOtype>::generate_bw_kernels(string name) {
   return ss.str();
 }
 
-template<typename Dtype, typename MItype, typename MOtype>
-string LibDNNDeconv<Dtype, MItype, MOtype>::generate_wg_kernels(string name) {
+template<typename MItype, typename MOtype>
+string LibDNNDeconv<MItype, MOtype>::generate_wg_kernels(string name) {
   stringstream ss;
 
   int wptn = this->wg_tuner_->template get_param<int>("WPTN");
@@ -955,20 +962,20 @@ string LibDNNDeconv<Dtype, MItype, MOtype>::generate_wg_kernels(string name) {
   int tsn = wptn * rtsn;
   int vwm = this->wg_tuner_->template get_param<int>("VWM");
   int vwn = this->wg_tuner_->template get_param<int>("VWN");
-  int lpta = (tsm * tsk) / (rtsm * rtsn);
-  int lptb = (tsn * tsk) / (rtsm * rtsn);
+  // int lpta = (tsm * tsk) / (rtsm * rtsn);
+  // int lptb = (tsn * tsk) / (rtsm * rtsn);
 
   // Weight kernel
   KernelArgs wg_args;
-  wg_args.push_back(this->program_->template create_kernel_arg<Dtype>("im_in",
+  wg_args.push_back(this->program_->template create_kernel_arg<MItype>("im_in",
                KERNEL_ARG_CONST | KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_RESTRICT));
-  wg_args.push_back(this->program_->template create_kernel_arg<Dtype>("im_out",
+  wg_args.push_back(this->program_->template create_kernel_arg<MItype>("im_out",
                KERNEL_ARG_CONST | KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_RESTRICT));
   if (this->bias_term_) {
-    wg_args.push_back(this->program_->template create_kernel_arg<Dtype>("bias",
+    wg_args.push_back(this->program_->template create_kernel_arg<MItype>("bias",
                                   KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_RESTRICT));
   }
-  wg_args.push_back(this->program_->template create_kernel_arg<Dtype>("wg",
+  wg_args.push_back(this->program_->template create_kernel_arg<MItype>("wg",
                                   KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_RESTRICT));
   wg_args.push_back(this->program_->template create_kernel_arg<int_tp>(
                                                "batch_size", KERNEL_ARG_CONST));
@@ -989,10 +996,10 @@ string LibDNNDeconv<Dtype, MItype, MOtype>::generate_wg_kernels(string name) {
      << std::endl;
 
   // Local tile memory
-  ss << "volatile " << this->program_->local_mem("Dtype", "Asub["
+  ss << "volatile " << this->program_->local_mem("MItype", "Asub["
                        + std::to_string(tsm) + "][" + std::to_string(tsk)
                        + " + v_pad_A]") << ";" << std::endl;
-  ss << "volatile " << this->program_->local_mem("Dtype", "Bsub["
+  ss << "volatile " << this->program_->local_mem("MItype", "Bsub["
                        + std::to_string(tsk) + "][" + std::to_string(tsn)
                        + " + v_pad_B]") << ";" << std::endl;
 
@@ -1007,24 +1014,25 @@ string LibDNNDeconv<Dtype, MItype, MOtype>::generate_wg_kernels(string name) {
   }
 
   if (this->group_ > 1) {
-    ss << this->program_->global_ptr("const Dtype", "Aptr")
+    ss << this->program_->global_ptr("const MItype", "Aptr")
        << " = im_in + batch * v_A_off + group * (v_A_off / v_g);" << std::endl;
-    ss << this->program_->global_ptr("const Dtype", "Bptr")
+    ss << this->program_->global_ptr("const MItype", "Bptr")
        << " = im_out + batch * v_B_off + group * (v_B_off / v_g);" << std::endl;
-    ss << this->program_->global_ptr("Dtype", "Cptr")
+    ss << this->program_->global_ptr("MItype", "Cptr")
        << " = wg + group * (M * N);" << std::endl;
   } else {
-    ss << this->program_->global_ptr("const Dtype", "Aptr")
+    ss << this->program_->global_ptr("const MItype", "Aptr")
        << " = im_in + batch * v_A_off;" << std::endl;
-    ss << this->program_->global_ptr("const Dtype", "Bptr")
+    ss << this->program_->global_ptr("const MItype", "Bptr")
        << " = im_out + batch * v_B_off;" << std::endl;
-    ss << this->program_->global_ptr("Dtype", "Cptr") << " = wg;" << std::endl;
+    ss << this->program_->global_ptr("MItype", "Cptr") << " = wg;" << std::endl;
   }
 
   // Initialize the accumulation registers
   ss << "{" << std::endl;  // Scoping for C registers
   ss << this->generate_accreg_init(this->wg_tuner_, false,
-                            this->wgalgo_ == LIBDNN_CONVOLUTION_WG_ALGO_DIRECT);
+                             this->wgalgo_ == LIBDNN_CONVOLUTION_WG_ALGO_DIRECT,
+                             false, this->prec_);
 
   ss << "{" << std::endl;  // Scoping for load & compute block
   if (this->wgalgo_ == LIBDNN_CONVOLUTION_WG_ALGO_DIRECT) {
@@ -1124,7 +1132,8 @@ string LibDNNDeconv<Dtype, MItype, MOtype>::generate_wg_kernels(string name) {
   // Synchronize to make sure the tile is loaded
   ss << this->program_->local_barrier() << std::endl;
 
-  ss << this->generate_gemm_core(this->wg_tuner_, false) << std::endl;
+  ss << this->generate_gemm_core(this->wg_tuner_, false, false, this->prec_)
+     << std::endl;
 
   // Synchronize before loading the next tile
   ss << this->program_->local_barrier() << std::endl;
@@ -1153,11 +1162,11 @@ string LibDNNDeconv<Dtype, MItype, MOtype>::generate_wg_kernels(string name) {
   ss << "if (globalRow < M && globalCol < N) {" << std::endl;
   if (this->wgalgo_ == LIBDNN_CONVOLUTION_WG_ALGO_DIRECT) {
     ss << "Cptr[globalRow * N + globalCol] = "
-       << "((Dtype*)(&(Creg[wm][wn/VWN])))[wn%VWN];" << std::endl;
+       << "((MItype*)(&(Creg[wm][wn/VWN])))[wn%VWN];" << std::endl;
   }
   if (this->wgalgo_ == LIBDNN_CONVOLUTION_WG_ALGO_ATOMIC) {
     ss << "caffe_gpu_atomic_add(&(Cptr[globalRow * N + globalCol]), "
-       << "((Dtype*)(&(Creg[wm][wn/VWN])))[wn%VWN]);" << std::endl;
+       << "((MItype*)(&(Creg[wm][wn/VWN])))[wn%VWN]);" << std::endl;
   }
   ss << "}" << std::endl;   // M-N-Guard
   ss << "}" << std::endl;   // For (N)
@@ -1170,15 +1179,15 @@ string LibDNNDeconv<Dtype, MItype, MOtype>::generate_wg_kernels(string name) {
 
   // Bias kernel
   KernelArgs b_args;
-  b_args.push_back(this->program_->template create_kernel_arg<Dtype>("im_in",
+  b_args.push_back(this->program_->template create_kernel_arg<MItype>("im_in",
                KERNEL_ARG_CONST | KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_RESTRICT));
-  b_args.push_back(this->program_->template create_kernel_arg<Dtype>("im_out",
+  b_args.push_back(this->program_->template create_kernel_arg<MItype>("im_out",
                KERNEL_ARG_CONST | KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_RESTRICT));
   if (this->bias_term_) {
-    b_args.push_back(this->program_->template create_kernel_arg<Dtype>("bias",
+    b_args.push_back(this->program_->template create_kernel_arg<MItype>("bias",
                                   KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_RESTRICT));
   }
-  b_args.push_back(this->program_->template create_kernel_arg<Dtype>("wg",
+  b_args.push_back(this->program_->template create_kernel_arg<MItype>("wg",
                                   KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_RESTRICT));
   b_args.push_back(this->program_->template create_kernel_arg<int_tp>(
                                                "batch_size", KERNEL_ARG_CONST));
@@ -1199,7 +1208,7 @@ string LibDNNDeconv<Dtype, MItype, MOtype>::generate_wg_kernels(string name) {
      << std::endl;
 
   // Local tile memory
-  ss << "volatile " << this->program_->local_mem("Dtype", "Asub["
+  ss << "volatile " << this->program_->local_mem("MItype", "Asub["
                        + std::to_string(tsm) + "][" + std::to_string(tsk)
                        + " + v_pad_A]") << ";" << std::endl;
 
@@ -1212,14 +1221,14 @@ string LibDNNDeconv<Dtype, MItype, MOtype>::generate_wg_kernels(string name) {
   }
 
   if (this->group_ > 1) {
-    ss << this->program_->global_ptr("const Dtype", "Aptr")
+    ss << this->program_->global_ptr("const MItype", "Aptr")
        << " = im_out + batch * v_B_off + group * (v_B_off / v_g);" << std::endl;
-    ss << this->program_->global_ptr("Dtype", "Dptr")
+    ss << this->program_->global_ptr("MItype", "Dptr")
        << " = bias + group * (v_fout / v_g);" << std::endl;
   } else {
-    ss << this->program_->global_ptr("const Dtype", "Aptr")
+    ss << this->program_->global_ptr("const MItype", "Aptr")
        << " = im_out + batch * v_B_off;" << std::endl;
-    ss << this->program_->global_ptr("Dtype", "Dptr") << " = bias;"
+    ss << this->program_->global_ptr("MItype", "Dptr") << " = bias;"
        << std::endl;
   }
 
@@ -1228,7 +1237,7 @@ string LibDNNDeconv<Dtype, MItype, MOtype>::generate_wg_kernels(string name) {
 
   bool unroll = this->wg_tuner_->template get_param<bool>("vector_unroll");
 
-  ss << "Dtype" << vwm << " Dreg[WPTM/VWM];" << std::endl;
+  ss << "MItype" << vwm << " Dreg[WPTM/VWM];" << std::endl;
 
   // Initialize the accumulation registers
   if (this->wgalgo_ == LIBDNN_CONVOLUTION_WG_ALGO_DIRECT) {
@@ -1237,7 +1246,7 @@ string LibDNNDeconv<Dtype, MItype, MOtype>::generate_wg_kernels(string name) {
     ss << "for (int_tp wm=0; wm<WPTM; ++wm) {" << std::endl;
     ss << "int_tp globalRow = offM + tidm + wm * RTSM;"
        << std::endl;
-    ss << "((Dtype*)(&(Dreg[wm/VWM])))[wm%VWM] = Dptr[globalRow];"
+    ss << "((MItype*)(&(Dreg[wm/VWM])))[wm%VWM] = Dptr[globalRow];"
        << std::endl;
     ss << "}" << std::endl;
   } else {
@@ -1286,7 +1295,7 @@ string LibDNNDeconv<Dtype, MItype, MOtype>::generate_wg_kernels(string name) {
   // Synchronize to make sure the tile is loaded
   ss << this->program_->local_barrier() << std::endl;
 
-  ss << "Dtype" << vwm << " Areg;" << std::endl;
+  ss << "MItype" << vwm << " Areg;" << std::endl;
   // Loop over the values of A single tile
   ss << "#pragma unroll 1" << std::endl;
   ss << "for (int_tp kt = 0; kt < TSK; kt += TSK_UNROLL) {" << std::endl;
@@ -1339,12 +1348,12 @@ string LibDNNDeconv<Dtype, MItype, MOtype>::generate_wg_kernels(string name) {
      << std::endl;
   ss << "if (tidn == 0 && offN == 0 && globalRow < MB) {" << std::endl;
   if (this->wgalgo_ == LIBDNN_CONVOLUTION_WG_ALGO_DIRECT) {
-    ss << "Dptr[globalRow] = ((Dtype*)(&(Dreg[wm/VWM])))[wm%VWM];"
+    ss << "Dptr[globalRow] = ((MItype*)(&(Dreg[wm/VWM])))[wm%VWM];"
        << std::endl;
   }
   if (this->wgalgo_ == LIBDNN_CONVOLUTION_WG_ALGO_ATOMIC) {
     ss << "caffe_gpu_atomic_add(&(Dptr[globalRow]), "
-       << "((Dtype*)(&(Dreg[wm/VWM])))[wm%VWM]);" << std::endl;
+       << "((MItype*)(&(Dreg[wm/VWM])))[wm%VWM]);" << std::endl;
   }
   ss << "}" << std::endl;
   ss << "}" << std::endl;   // For (M)
@@ -1356,8 +1365,8 @@ string LibDNNDeconv<Dtype, MItype, MOtype>::generate_wg_kernels(string name) {
   return ss.str();
 }
 
-template<typename Dtype, typename MItype, typename MOtype>
-string LibDNNDeconv<Dtype, MItype, MOtype>::generate_fw_kernels(string name) {
+template<typename MItype, typename MOtype>
+string LibDNNDeconv<MItype, MOtype>::generate_fw_kernels(string name) {
   stringstream ss;
 
   int wptn = this->fw_tuner_->template get_param<int>("WPTN");
@@ -1374,15 +1383,15 @@ string LibDNNDeconv<Dtype, MItype, MOtype>::generate_fw_kernels(string name) {
 
   // Backward kernel
   KernelArgs args;
-  args.push_back(this->program_->template create_kernel_arg<Dtype>("im_out",
+  args.push_back(this->program_->template create_kernel_arg<MItype>("im_out",
                KERNEL_ARG_CONST | KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_RESTRICT));
-  args.push_back(this->program_->template create_kernel_arg<Dtype>("wg",
+  args.push_back(this->program_->template create_kernel_arg<MItype>("wg",
                KERNEL_ARG_CONST | KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_RESTRICT));
   if (this->bias_term_) {
-    args.push_back(this->program_->template create_kernel_arg<Dtype>("bias",
+    args.push_back(this->program_->template create_kernel_arg<MItype>("bias",
                KERNEL_ARG_CONST | KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_RESTRICT));
   }
-  args.push_back(this->program_->template create_kernel_arg<Dtype>("im_in",
+  args.push_back(this->program_->template create_kernel_arg<MItype>("im_in",
                                   KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_RESTRICT));
   ss << this->program_->function(name, args);
 
@@ -1402,12 +1411,12 @@ string LibDNNDeconv<Dtype, MItype, MOtype>::generate_fw_kernels(string name) {
 
   // Local tile memory
   // Asub for loading weights & shuffling the output
-  ss << "volatile " << this->program_->local_mem("Dtype",
+  ss << "volatile " << this->program_->local_mem("MItype",
                       "Asub[" + std::to_string(tsm) + "]"
                       + "[" + std::to_string(tsk) + " + v_pad_A]") << ";"
                     << std::endl;
   // Bsub for loading the input image and shuffling the output image
-  ss << "volatile " << this->program_->local_mem("Dtype",
+  ss << "volatile " << this->program_->local_mem("MItype",
                       "Bsub[" + std::to_string(tsk) + "]"
                       + "[" + std::to_string(tsn) + " + v_pad_B]") << ";"
                     << std::endl;
@@ -1423,25 +1432,25 @@ string LibDNNDeconv<Dtype, MItype, MOtype>::generate_fw_kernels(string name) {
   }
 
   if (this->group_ > 1) {
-    ss << this->program_->global_ptr("const Dtype", "Aptr")
+    ss << this->program_->global_ptr("const MItype", "Aptr")
        << " = wg + group * (v_A_off / (v_g * v_g));" << std::endl;
-    ss << this->program_->global_ptr("const Dtype", "Bptr")
+    ss << this->program_->global_ptr("const MItype", "Bptr")
        << "= im_out + v_B_off * batch + group * (v_B_off / v_g);" << std::endl;
-    ss << this->program_->global_ptr("Dtype", "Cptr")
+    ss << this->program_->global_ptr("MItype", "Cptr")
        << " = im_in + v_C_off * batch + group * (v_C_off / v_g);" << std::endl;
     if (this->bias_term_) {
-      ss << this->program_->global_ptr("const Dtype", "Dptr")
+      ss << this->program_->global_ptr("const MItype", "Dptr")
          << " = bias + group * (v_fout / v_g);" << std::endl;
     }
   } else {
-    ss << this->program_->global_ptr("const Dtype", "Aptr") << " = wg;"
+    ss << this->program_->global_ptr("const MItype", "Aptr") << " = wg;"
        << std::endl;
-    ss << this->program_->global_ptr("const Dtype", "Bptr")
+    ss << this->program_->global_ptr("const MItype", "Bptr")
        << " = im_out + v_B_off * batch;" << std::endl;
-    ss << this->program_->global_ptr("Dtype", "Cptr")
+    ss << this->program_->global_ptr("MItype", "Cptr")
        << " = im_in + v_C_off * batch;" << std::endl;
     if (this->bias_term_) {
-      ss << this->program_->global_ptr("const Dtype", "Dptr") << " = bias;"
+      ss << this->program_->global_ptr("const MItype", "Dptr") << " = bias;"
          << std::endl;
     }
   }
@@ -1449,7 +1458,8 @@ string LibDNNDeconv<Dtype, MItype, MOtype>::generate_fw_kernels(string name) {
 
   // Initialize the accumulation registers
   ss << "{" << std::endl;  // Scoping for C registers
-  ss << this->generate_accreg_init(this->fw_tuner_, false, false);
+  ss << this->generate_accreg_init(this->fw_tuner_, false, false, false,
+                                   this->prec_);
 
   ss << "{" << std::endl;  // Scoping for load & compute block
   // Loop over all tiles
@@ -1570,7 +1580,8 @@ string LibDNNDeconv<Dtype, MItype, MOtype>::generate_fw_kernels(string name) {
   // Synchronize to make sure the tile is loaded
   ss << this->program_->local_barrier() << std::endl;
 
-  ss << this->generate_gemm_core(this->fw_tuner_, false) << std::endl;
+  ss << this->generate_gemm_core(this->fw_tuner_, false, false, this->prec_)
+     << std::endl;
 
   // Synchronize before loading the next tile
   ss << this->program_->local_barrier() << std::endl;
@@ -1584,7 +1595,7 @@ string LibDNNDeconv<Dtype, MItype, MOtype>::generate_fw_kernels(string name) {
   ss << "for (int_tp wm=0; wm<WPTM; ++wm) {" << std::endl;
   ss << "int_tp globalRow = offM + tidm + wm * RTSM;" <<std::endl;
   if (this->bias_term_) {
-    ss << "Dtype biasval = Dptr[globalRow];" << std::endl;
+    ss << "MItype biasval = Dptr[globalRow];" << std::endl;
   }
   ss << "#pragma unroll" << std::endl;
   ss << "for (int_tp wn=0; wn<WPTN; ++wn) {" << std::endl;
@@ -1594,10 +1605,10 @@ string LibDNNDeconv<Dtype, MItype, MOtype>::generate_fw_kernels(string name) {
     ss << "if (globalRow < M && globalCol < N) {" << std::endl;
     ss << "Cptr[globalRow * N + globalCol] = ";
     if (this->bias_term_) {
-      ss << "((Dtype*)(&(Creg[wm][wn/VWN])))[wn%VWN]"
+      ss << "((MItype*)(&(Creg[wm][wn/VWN])))[wn%VWN]"
          << " + v_bmul * biasval;" << std::endl;
     } else {
-      ss << "((Dtype*)(&(Creg[wm][wn/VWN])))[wn%VWN];" << std::endl;
+      ss << "((MItype*)(&(Creg[wm][wn/VWN])))[wn%VWN];" << std::endl;
     }
     ss << "}" << std::endl;
   }
@@ -1645,7 +1656,7 @@ string LibDNNDeconv<Dtype, MItype, MOtype>::generate_fw_kernels(string name) {
 
     ss << "if (in_range) {" << std::endl;
     ss << "caffe_gpu_atomic_add(&(Cptr[tiledIndex]), "
-       << "((Dtype*)(&(Creg[wm][wn/VWN])))[wn%VWN]);" << std::endl;
+       << "((MItype*)(&(Creg[wm][wn/VWN])))[wn%VWN]);" << std::endl;
     ss << "}" << std::endl;
   }
 
@@ -1659,15 +1670,15 @@ string LibDNNDeconv<Dtype, MItype, MOtype>::generate_fw_kernels(string name) {
   return ss.str();
 }
 
-template<typename Dtype, typename MItype, typename MOtype>
-void LibDNNDeconv<Dtype, MItype, MOtype>::GenerateKernels() {
+template<typename MItype, typename MOtype>
+void LibDNNDeconv<MItype, MOtype>::GenerateKernels() {
   this->program_ = this->dev_ptr_->CreateProgram();
 
   stringstream ss;
   ss << this->program_->setup();
-  ss << this->program_->template define_vector_type<Dtype>("Dtype", 0, 16);
-  ss << this->program_->template define_vector_type<Dtype>("MItype", 0, 16);
-  ss << this->program_->template define_vector_type<Dtype>("MOtype", 0, 16);
+  ss << this->program_->template define_vector_type<MItype>("MItype", 0, 16);
+  ss << this->program_->template define_vector_type<MItype>("MItype", 0, 16);
+  ss << this->program_->template define_vector_type<MItype>("MOtype", 0, 16);
   ss << this->program_->atomics();
   ss << generate_fw_defs();
   ss << generate_fw_kernels("deconv_forward");
@@ -1680,15 +1691,15 @@ void LibDNNDeconv<Dtype, MItype, MOtype>::GenerateKernels() {
   this->program_->set_source(ss.str());
 }
 
-template<typename Dtype, typename MItype, typename MOtype>
-bool LibDNNDeconv<Dtype, MItype, MOtype>::CompileKernels() {
+template<typename MItype, typename MOtype>
+bool LibDNNDeconv<MItype, MOtype>::CompileKernels() {
   return this->program_->Compile(true, true);
 }
 
-template<typename Dtype, typename MItype, typename MOtype>
-void LibDNNDeconv<Dtype, MItype, MOtype>::Forward(
-    vptr<const MItype> bottom_data, vptr<const Dtype> weight,
-    vptr<const Dtype> bias, vptr<MOtype> top_data, int_tp batch_size) {
+template<typename MItype, typename MOtype>
+void LibDNNDeconv<MItype, MOtype>::Forward(
+    vptr<const MItype> bottom_data, vptr<const MItype> weight,
+    vptr<const MItype> bias, vptr<MOtype> top_data, int_tp batch_size) {
   int fw_wptn = this->fw_tuner_->template get_param<int>("WPTN");
   int fw_wptm = this->fw_tuner_->template get_param<int>("WPTM");
   int fw_wgs0 = this->fw_tuner_->template get_param<int>("workgroup_size_0");
@@ -1726,12 +1737,12 @@ void LibDNNDeconv<Dtype, MItype, MOtype>::Forward(
   }
 }
 
-template<typename Dtype, typename MItype, typename MOtype>
-void LibDNNDeconv<Dtype, MItype, MOtype>::Backward(
+template<typename MItype, typename MOtype>
+void LibDNNDeconv<MItype, MOtype>::Backward(
                        bool prop_down_data, bool prop_down_weights,
                        vptr<const MOtype> top_data, vptr<const MOtype> top_diff,
-                       vptr<const Dtype> weight, vptr<Dtype> weight_diff,
-                       vptr<const Dtype> bias, vptr<Dtype> bias_diff,
+                       vptr<const MItype> weight, vptr<MItype> weight_diff,
+                       vptr<const MItype> bias, vptr<MItype> bias_diff,
                        vptr<const MItype> bottom_data, vptr<MItype> bottom_diff,
                        int_tp batch_size) {
 
@@ -1827,11 +1838,11 @@ void LibDNNDeconv<Dtype, MItype, MOtype>::Backward(
   }
 }
 
-template<typename Dtype, typename MItype, typename MOtype>
-void LibDNNDeconv<Dtype, MItype, MOtype>::Tune(
+template<typename MItype, typename MOtype>
+void LibDNNDeconv<MItype, MOtype>::Tune(
                   vptr<MOtype> top_data, vptr<MOtype> top_diff,
-                  vptr<Dtype> weight, vptr<Dtype> weight_diff,
-                  vptr<Dtype> bias, vptr<Dtype> bias_diff,
+                  vptr<MItype> weight, vptr<MItype> weight_diff,
+                  vptr<MItype> bias, vptr<MItype> bias_diff,
                   vptr<MItype> bottom_data, vptr<MItype> bottom_diff,
                   int_tp batch_size) {
   // Autotune forward kernel
@@ -1917,9 +1928,7 @@ void LibDNNDeconv<Dtype, MItype, MOtype>::Tune(
   this->wg_tuner_->Tune(LIBDNN_TUNER_METHOD_ANNEALING);
 }
 
-INSTANTIATE_CLASS_3T(LibDNNDeconv, (half_fp), (half_fp), (half_fp));
-INSTANTIATE_CLASS_3T(LibDNNDeconv, (float), (float), (float));
-INSTANTIATE_CLASS_3T(LibDNNDeconv, (double), (double), (double));
+INSTANTIATE_CLASS_2T_GUARDED(LibDNNDeconv, PROTO_TYPES, PROTO_TYPES);
 
 }  // namespace caffe
 

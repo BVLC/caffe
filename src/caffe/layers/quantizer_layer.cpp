@@ -63,7 +63,6 @@ void QuantizerLayer<Dtype, MItype, MOtype>::Backward_gpu(
 STUB_GPU(QuantizerLayer);
 #endif  // CPU_ONLY
 
-// TODO: Add all types
 INSTANTIATE_CLASS_3T_GUARDED(QuantizerLayer, (half_fp), (half_fp), PROTO_TYPES);
 INSTANTIATE_CLASS_3T_GUARDED(QuantizerLayer, (float), (float), PROTO_TYPES);
 INSTANTIATE_CLASS_3T_GUARDED(QuantizerLayer, (double), (double), PROTO_TYPES);
@@ -72,7 +71,6 @@ INSTANTIATE_CLASS_3T_GUARDED(QuantizerLayer, (int16_t), (int16_t), PROTO_TYPES);
 INSTANTIATE_CLASS_3T_GUARDED(QuantizerLayer, (int32_t), (int32_t), PROTO_TYPES);
 INSTANTIATE_CLASS_3T_GUARDED(QuantizerLayer, (int64_t), (int64_t), PROTO_TYPES);
 
-// TODO: Add all types
 REGISTER_LAYER_CLASS(Quantizer);
 REGISTER_LAYER_CLASS_INST(Quantizer, (half_fp), (half_fp), PROTO_TYPES);
 REGISTER_LAYER_CLASS_INST(Quantizer, (float), (float), PROTO_TYPES);

@@ -15,7 +15,8 @@
 namespace caffe {
 
 template<typename Dtype, typename MItype, typename MOtype>
-class LibDNNConvolutionLayer : public ConvolutionLayer<Dtype, MItype, MOtype> {
+class LibDNNConvolutionLayer :
+    public BaseConvolutionLayer<Dtype, MItype, MOtype> {
  public:
   explicit LibDNNConvolutionLayer(const LayerParameter& param)
       : ConvolutionLayer<Dtype, MItype, MOtype>(param) {}
@@ -38,7 +39,7 @@ class LibDNNConvolutionLayer : public ConvolutionLayer<Dtype, MItype, MOtype> {
 
 
  private:
-  shared_ptr<LibDNNConv<Dtype, MItype, MOtype> > libdnn_;
+  shared_ptr<LibDNNConv<MItype, MOtype> > libdnn_;
 };
 
 }  // namespace caffe

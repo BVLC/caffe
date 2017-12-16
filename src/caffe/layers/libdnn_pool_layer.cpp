@@ -93,8 +93,8 @@ void LibDNNPoolingLayer<Dtype, MItype, MOtype>::Reshape(
       config.bwalgo = LIBDNN_POOLING_BW_ALGO_DIRECT;
     }
 
-    LibDNNPool<Dtype, MItype, MOtype>* libdnn =
-        new LibDNNPool<Dtype, MItype, MOtype>(config);
+    LibDNNPool<MItype, MOtype>* libdnn =
+        new LibDNNPool<MItype, MOtype>(config);
 
     libdnn_.reset(libdnn);
   }
@@ -177,7 +177,7 @@ void LibDNNPoolingLayer<Dtype, MItype, MOtype>::Backward_gpu(
       break;
   }
 
-  this->device_->set(count, Dtype(0.), bottom_diff);
+  this->device_->set(count, (MItype)0, bottom_diff);
 
   libdnn_.get()->Backward(top_diff,
                           bottom_diff,
@@ -186,12 +186,20 @@ void LibDNNPoolingLayer<Dtype, MItype, MOtype>::Backward_gpu(
                           mask, top_mask, rand_idx);
 }
 
-INSTANTIATE_CLASS_3T_GUARDED(LibDNNPoolingLayer,
-                             (half_fp), (half_fp), (half_fp));
-INSTANTIATE_CLASS_3T_GUARDED(LibDNNPoolingLayer,
-                             (float), (float), (float));
-INSTANTIATE_CLASS_3T_GUARDED(LibDNNPoolingLayer,
-                             (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(LibDNNPoolingLayer, (half_fp), (half_fp),
+                             PROTO_TYPES);
+INSTANTIATE_CLASS_3T_GUARDED(LibDNNPoolingLayer, (float), (float),
+                             PROTO_TYPES);
+INSTANTIATE_CLASS_3T_GUARDED(LibDNNPoolingLayer, (double), (double),
+                             PROTO_TYPES);
+INSTANTIATE_CLASS_3T_GUARDED(LibDNNPoolingLayer, (int8_t), (int8_t),
+                             PROTO_TYPES);
+INSTANTIATE_CLASS_3T_GUARDED(LibDNNPoolingLayer, (int16_t), (int16_t),
+                             PROTO_TYPES);
+INSTANTIATE_CLASS_3T_GUARDED(LibDNNPoolingLayer, (int32_t), (int32_t),
+                             PROTO_TYPES);
+INSTANTIATE_CLASS_3T_GUARDED(LibDNNPoolingLayer, (int64_t), (int64_t),
+                             PROTO_TYPES);
 
 }   // namespace caffe
 #endif  // USE_LIBDNN

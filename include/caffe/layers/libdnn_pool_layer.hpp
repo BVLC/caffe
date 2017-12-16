@@ -34,7 +34,7 @@ class LibDNNPoolingLayer : public PoolingLayer<Dtype, MItype, MOtype> {
       const vector<Blob<MItype>*>& bottom);
 
  private:
-  shared_ptr<LibDNNPool<Dtype, MItype, MOtype> > libdnn_;
+  shared_ptr<LibDNNPool<MItype, MOtype> > libdnn_;
 };
 
 }  // namespace caffe
