@@ -23,11 +23,19 @@ void LibDNNPoolingLayer<Dtype>::Reshape(
 
   bool shapes_changed = false;
   if (libdnn_.get() != nullptr) {
-    shapes_changed = shapes_changed || (libdnn_.get()->get_config().in_shape
-        != bottom[0]->shape());
-    shapes_changed = shapes_changed || (libdnn_.get()->get_config().out_shape
-        != top[0]->shape());
+    auto &libdnn_in_sh = libdnn_.get()->get_config().in_shape;
+    auto &libdnn_out_sh = libdnn_.get()->get_config().out_shape;
+    auto &new_in_sh = bottom[0]->shape();
+    auto &new_out_sh = top[0]->shape();
+    bool in_eq = libdnn_in_sh.size() == new_in_sh.size()
+                 && libdnn_in_sh[0] >= new_in_sh[0] 
+                 && std::equal(libdnn_in_sh.begin()+1,libdnn_in_sh.end(),new_in_sh.begin()+1);
+    bool out_eq = libdnn_out_sh.size() == new_out_sh.size()
+                 && libdnn_out_sh[0] >= new_out_sh[0] 
+                 && std::equal(libdnn_out_sh.begin()+1,libdnn_out_sh.end(),new_out_sh.begin()+1);
+    shapes_changed = !in_eq || !out_eq;
   }
+
 
   if (libdnn_.get() == nullptr || shapes_changed) {
     int_tp* kernel_shape_data = this->kernel_shape_.mutable_cpu_data();
