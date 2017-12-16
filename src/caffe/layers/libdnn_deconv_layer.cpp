@@ -43,16 +43,18 @@ void LibDNNDeconvolutionLayer<Dtype, MItype, MOtype>::Reshape(
 
   bool shapes_changed = false;
   if (libdnn_.get() != nullptr) {
-    auto &libdnn_in_sh = libdnn_.get()->get_config().in_shape;
-    auto &libdnn_out_sh = libdnn_.get()->get_config().out_shape;
-    auto &new_in_sh = bottom[0]->shape();
-    auto &new_out_sh = top[0]->shape();
+    vector<int_tp>& libdnn_in_sh = libdnn_.get()->get_config().in_shape;
+    vector<int_tp>& libdnn_out_sh = libdnn_.get()->get_config().out_shape;
+    vector<int_tp>& new_in_sh = bottom[0]->shape();
+    vector<int_tp>& new_out_sh = top[0]->shape();
     bool in_eq = libdnn_in_sh.size() == new_in_sh.size()
                  && libdnn_in_sh[0] >= new_in_sh[0] 
-                 && std::equal(libdnn_in_sh.begin()+1,libdnn_in_sh.end(),new_in_sh.begin()+1);
+                 && std::equal(libdnn_in_sh.begin() + 1,
+                               libdnn_in_sh.end(), new_in_sh.begin() + 1);
     bool out_eq = libdnn_out_sh.size() == new_out_sh.size()
                  && libdnn_out_sh[0] >= new_out_sh[0] 
-                 && std::equal(libdnn_out_sh.begin()+1,libdnn_out_sh.end(),new_out_sh.begin()+1);
+                 && std::equal(libdnn_out_sh.begin() + 1,
+                               libdnn_out_sh.end(),new_out_sh.begin() + 1);
     shapes_changed = !in_eq || !out_eq;
   }
 
@@ -193,19 +195,19 @@ void LibDNNDeconvolutionLayer<Dtype, MItype, MOtype>::Tune(
 }
 
 
-INSTANTIATE_CLASS_3T_GUARDED(LibDNNDeconvolutionLayer, (half_fp), PROTO_TYPES,
+INSTANTIATE_CLASS_3T_GUARDED(LibDNNDeconvolutionLayer, (half_fp), (half_fp),
                              PROTO_TYPES);
-INSTANTIATE_CLASS_3T_GUARDED(LibDNNDeconvolutionLayer, (float), PROTO_TYPES,
+INSTANTIATE_CLASS_3T_GUARDED(LibDNNDeconvolutionLayer, (float), (float),
                              PROTO_TYPES);
-INSTANTIATE_CLASS_3T_GUARDED(LibDNNDeconvolutionLayer, (double), PROTO_TYPES,
+INSTANTIATE_CLASS_3T_GUARDED(LibDNNDeconvolutionLayer, (double), (double),
                              PROTO_TYPES);
-INSTANTIATE_CLASS_3T_GUARDED(LibDNNDeconvolutionLayer, (int8_t), PROTO_TYPES,
+INSTANTIATE_CLASS_3T_GUARDED(LibDNNDeconvolutionLayer, (int8_t), (int8_t),
                              PROTO_TYPES);
-INSTANTIATE_CLASS_3T_GUARDED(LibDNNDeconvolutionLayer, (int16_t), PROTO_TYPES,
+INSTANTIATE_CLASS_3T_GUARDED(LibDNNDeconvolutionLayer, (int16_t), (int16_t),
                              PROTO_TYPES);
-INSTANTIATE_CLASS_3T_GUARDED(LibDNNDeconvolutionLayer, (int32_t), PROTO_TYPES,
+INSTANTIATE_CLASS_3T_GUARDED(LibDNNDeconvolutionLayer, (int32_t), (int32_t),
                              PROTO_TYPES);
-INSTANTIATE_CLASS_3T_GUARDED(LibDNNDeconvolutionLayer, (int64_t), PROTO_TYPES,
+INSTANTIATE_CLASS_3T_GUARDED(LibDNNDeconvolutionLayer, (int64_t), (int64_t),
                              PROTO_TYPES);
 
 }   // namespace caffe

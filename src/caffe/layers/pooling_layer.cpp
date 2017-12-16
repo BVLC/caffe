@@ -446,8 +446,19 @@ void PoolingLayer<Dtype, MItype, MOtype>::Backward_cpu(
 STUB_GPU(PoolingLayer);
 #endif
 
-INSTANTIATE_CLASS_3T_GUARDED(PoolingLayer, (half_fp), (half_fp), (half_fp));
-INSTANTIATE_CLASS_3T_GUARDED(PoolingLayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T_GUARDED(PoolingLayer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(PoolingLayer, (half_fp), (half_fp),
+                             PROTO_TYPES);
+INSTANTIATE_CLASS_3T_GUARDED(PoolingLayer, (float), (float),
+                             PROTO_TYPES);
+INSTANTIATE_CLASS_3T_GUARDED(PoolingLayer, (double), (double),
+                             PROTO_TYPES);
+INSTANTIATE_CLASS_3T_GUARDED(PoolingLayer, (int8_t), (int8_t),
+                             PROTO_TYPES);
+INSTANTIATE_CLASS_3T_GUARDED(PoolingLayer, (int16_t), (int16_t),
+                             PROTO_TYPES);
+INSTANTIATE_CLASS_3T_GUARDED(PoolingLayer, (int32_t), (int32_t),
+                             PROTO_TYPES);
+INSTANTIATE_CLASS_3T_GUARDED(PoolingLayer, (int64_t), (int64_t),
+                             PROTO_TYPES);
 
 }    // namespace caffe

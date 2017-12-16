@@ -7,7 +7,7 @@
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
 
-#include "caffe/layers/base_conv_layer.hpp"
+#include "caffe/layers/caffe_conv_layer.hpp"
 
 namespace caffe {
 
