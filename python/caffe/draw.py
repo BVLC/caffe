@@ -244,7 +244,7 @@ def get_pydot_graph(caffe_net, rankdir, margin, page, pagesize, size, label_edge
     return pydot_graph
 
 
-def draw_net(caffe_net, rankdir, margin, page, pagesize, size, ext='png', phase=None):
+def draw_net(caffe_net, rankdir, margin='', page='', pagesize='', size='', ext='png', phase=None):
     """Draws a caffe net and returns the image string encoded using the given
     extension.
 
