@@ -1,3 +1,7 @@
+#include <cmath>
+#include <algorithm>
+
+#include "caffe/backend/device.hpp"
 #include "caffe/quantizer.hpp"
 #include "caffe/util/type_utils.hpp"
 
@@ -16,6 +20,22 @@ QuantizerMode QuantizerBase::get_mode() const {
 void QuantizerBase::set_mode(QuantizerMode mode) {
   mode_ = mode;
   program_ready_ = false;
+}
+
+string QuantizerBase::get_mode_string() {
+  switch (mode_) {
+    case QUANTIZER_MODE_PASSIVE:
+      return "passive";
+      break;
+    case QUANTIZER_MODE_OBSERVE:
+      return "observe";
+    case QUANTIZER_MODE_ACTIVE:
+      return "active";
+    case QUANTIZER_MODE_ACTIVE_OBSERVE:
+      return "active_observe";
+    default:
+      return "unknown";
+  }
 }
 
 template<typename MItype, typename MOtype>
@@ -280,9 +300,9 @@ template<typename MItype, typename MOtype>
 MItype Quantizer<MItype, MOtype>::fw_scale_before_cast_val() const {
   double val = 0.0;
   if (this->fw_scale_divide()) {
-    val = max(abs(max_in_), abs(min_in_)) / max(abs(max_out_), abs(min_out_));
+    val = std::max(std::abs(max_in_), std::abs(min_in_)) / std::max(std::abs(max_out_), std::abs(min_out_));
   } else {
-    val = max(abs(max_out_), abs(min_out_) / max(abs(max_in_), abs(min_in_)));
+    val = std::max(std::abs(max_out_), std::abs(min_out_) / std::max(std::abs(max_in_), std::abs(min_in_)));
   }
   return static_cast<MItype>(val);
 }
@@ -291,9 +311,11 @@ template<typename MItype, typename MOtype>
 MOtype Quantizer<MItype, MOtype>::fw_scale_after_cast_val() const {
   double val = 0.0;
   if (this->fw_scale_divide()) {
-    val = max(abs(max_in_), abs(min_in_)) / max(abs(max_out_), abs(min_out_));
+    val = std::max(std::abs(max_in_), std::abs(min_in_))
+        / std::max(std::abs(max_out_), std::abs(min_out_));
   } else {
-    val = max(abs(max_out_), abs(min_out_) / max(abs(max_in_), abs(min_in_)));
+    val = std::max(std::abs(max_out_), std::abs(min_out_)
+        / std::max(std::abs(max_in_), std::abs(min_in_)));
   }
   return static_cast<MOtype>(val);
 }
@@ -302,9 +324,11 @@ template<typename MItype, typename MOtype>
 MOtype Quantizer<MItype, MOtype>::bw_scale_before_cast_val() const {
   double val = 0.0;
   if (this->fw_scale_divide()) {
-    val = max(abs(max_out_), abs(min_out_) / max(abs(max_in_), abs(min_in_)));
+    val = std::max(std::abs(max_out_), std::abs(min_out_)
+        / std::max(std::abs(max_in_), std::abs(min_in_)));
   } else {
-    val = max(abs(max_in_), abs(min_in_)) / max(abs(max_out_), abs(min_out_));
+    val = std::max(std::abs(max_in_), std::abs(min_in_))
+        / std::max(std::abs(max_out_), std::abs(min_out_));
   }
   return static_cast<MOtype>(val);
 }
@@ -313,9 +337,11 @@ template<typename MItype, typename MOtype>
 MItype Quantizer<MItype, MOtype>::bw_scale_after_cast_val() const {
   double val = 0.0;
   if (this->fw_scale_divide()) {
-    val = max(abs(max_out_), abs(min_out_) / max(abs(max_in_), abs(min_in_)));
+    val = std::max(std::abs(max_out_), std::abs(min_out_)
+        / std::max(std::abs(max_in_), std::abs(min_in_)));
   } else {
-    val = max(abs(max_in_), abs(min_in_)) / max(abs(max_out_), abs(min_out_));
+    val = std::max(std::abs(max_in_), std::abs(min_in_))
+        / std::max(std::abs(max_out_), std::abs(min_out_));
   }
   return static_cast<MItype>(val);
 }
@@ -338,9 +364,11 @@ string  Quantizer<MItype, MOtype>::fw_scale_term(int_tp vec_len,
     }
   }
   if (this->fw_scale_before_cast()) {
-    return "(" + program_->convert_type(vec_len, src_val + tmp) + ")";
+    return "(" + program_->template convert_type<MOtype>(vec_len,
+                                                         src_val + tmp) + ")";
   } else {
-    return "(" + program_->convert_type(vec_len, src_val) + tmp + ")";
+    return "(" + program_->template convert_type<MOtype>(vec_len,
+                                                         src_val) + tmp + ")";
   }
 }
 
@@ -361,14 +389,16 @@ string  Quantizer<MItype, MOtype>::bw_scale_term(int_tp vec_len,
     }
   }
   if (this->bw_scale_before_cast()) {
-    return "(" + program_->convert_type(vec_len, src_val + tmp) + ")";
+    return "(" + program_->template convert_type<MItype>(vec_len,
+                                                         src_val + tmp) + ")";
   } else {
-    return "(" + program_->convert_type(vec_len, src_val) + tmp + ")";
+    return "(" + program_->template convert_type<MItype>(vec_len,
+                                                         src_val) + tmp + ")";
   }
 }
 
 
-INSTANTIATE_CLASS_2T(Quantizer, VARIANT_TYPES, VARIANT_TYPES)
+INSTANTIATE_CLASS_2T(Quantizer, PROTO_TYPES, PROTO_TYPES)
 
 
 }  // namespace caffe

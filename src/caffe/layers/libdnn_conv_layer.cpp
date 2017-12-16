@@ -84,8 +84,8 @@ void LibDNNConvolutionLayer<Dtype, MItype, MOtype>::Reshape(
       config.bwalgo = LIBDNN_CONVOLUTION_BW_ALGO_IM2COL;
     }
 
-    LibDNNConv<Dtype, MItype, MOtype>* libdnn =
-        new LibDNNConv<Dtype, MItype, MOtype>(config);
+    LibDNNConv<MItype, MOtype>* libdnn =
+        new LibDNNConv<MItype, MOtype>(config);
 
     libdnn_.reset(libdnn);
   }
@@ -166,12 +166,20 @@ void LibDNNConvolutionLayer<Dtype, MItype, MOtype>::Tune(
                       batch_size);
 }
 
-INSTANTIATE_CLASS_3T_GUARDED(LibDNNConvolutionLayer,
-                             (half_fp), (half_fp), (half_fp));
-INSTANTIATE_CLASS_3T_GUARDED(LibDNNConvolutionLayer,
-                             (float), (float), (float));
-INSTANTIATE_CLASS_3T_GUARDED(LibDNNConvolutionLayer,
-                             (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(LibDNNConvolutionLayer, (half_fp), (half_fp),
+                             PROTO_TYPES);
+INSTANTIATE_CLASS_3T_GUARDED(LibDNNConvolutionLayer, (float), (float),
+                             PROTO_TYPES);
+INSTANTIATE_CLASS_3T_GUARDED(LibDNNConvolutionLayer, (double), (double),
+                             PROTO_TYPES);
+INSTANTIATE_CLASS_3T_GUARDED(LibDNNConvolutionLayer, (int8_t), (int8_t),
+                             PROTO_TYPES);
+INSTANTIATE_CLASS_3T_GUARDED(LibDNNConvolutionLayer, (int16_t), (int16_t),
+                             PROTO_TYPES);
+INSTANTIATE_CLASS_3T_GUARDED(LibDNNConvolutionLayer, (int32_t), (int32_t),
+                             PROTO_TYPES);
+INSTANTIATE_CLASS_3T_GUARDED(LibDNNConvolutionLayer, (int64_t), (int64_t),
+                             PROTO_TYPES);
 
 }   // namespace caffe
 #endif  // USE_LIBDNN

@@ -3,6 +3,9 @@
 
 #ifdef USE_LIBDNN
 
+#include "caffe/definitions.hpp"
+#include "caffe/common.hpp"
+#include "caffe/quantizer.hpp"
 #include "caffe/libdnn/libdnn.hpp"
 #include "caffe/libdnn/libdnn_tuner.hpp"
 
@@ -64,27 +67,28 @@ struct LibDNNConvConfig {
       LIBDNN_CONVOLUTION_WG_ALGO_ATOMIC;
   libdnnConvolutionBackwardAlgo_t bwalgo =
       LIBDNN_CONVOLUTION_BW_ALGO_COL2IM_ATOMIC;
-  std::function<void*(void**, const uint_tp, const int_tp)>
-      memory_allocator = nullptr;
+  shared_ptr<QuantizerBase> in_quant;
+  shared_ptr<QuantizerBase> out_quant;
+  libdnnAccumulatePrecision_t prec = LIBDNN_ACCUMULATE_PREC_NATIVE;
 };
 
-template<typename Dtype, typename MItype, typename MOtype>
-class LibDNNConv : public LibDNN<Dtype, MItype, MOtype> {
+template<typename MItype, typename MOtype>
+class LibDNNConv : public LibDNN<MItype, MOtype> {
  public:
   explicit LibDNNConv(LibDNNConvConfig config);
-  void Forward(vptr<const MItype> bottom_data, vptr<const Dtype> weight,
-               vptr<const Dtype> bias,
+  void Forward(vptr<const MItype> bottom_data, vptr<const MItype> weight,
+               vptr<const MItype> bias,
                vptr<MOtype> top_data, int_tp batch_size);
   void Backward(bool prop_down_data, bool prop_down_weights,
                 vptr<const MOtype> top_data, vptr<const MOtype> top_diff,
-                vptr<const Dtype> weight, vptr<Dtype> weight_diff,
-                vptr<const Dtype> bias, vptr<Dtype> bias_diff,
+                vptr<const MItype> weight, vptr<MItype> weight_diff,
+                vptr<const MItype> bias, vptr<MItype> bias_diff,
                 vptr<const MItype> bottom_data, vptr<MItype> bottom_diff,
                 int_tp batch_size);
 
   void Tune(vptr<MOtype> top_data, vptr<MOtype> top_diff,
-            vptr<Dtype> weight, vptr<Dtype> weight_diff,
-            vptr<Dtype> bias, vptr<Dtype> bias_diff,
+            vptr<MItype> weight, vptr<MItype> weight_diff,
+            vptr<MItype> bias, vptr<MItype> bias_diff,
             vptr<MItype> bottom_data, vptr<MItype> bottom_diff,
             int_tp batch_size);
 
@@ -147,9 +151,13 @@ class LibDNNConv : public LibDNN<Dtype, MItype, MOtype> {
   bool bias_backward_;
   bool bias_term_;
   bool skip_range_check_;
-  Dtype bias_multiplier_;
+  MItype bias_multiplier_;
   libdnnConvolutionWeightAlgo_t wgalgo_;
   libdnnConvolutionBackwardAlgo_t bwalgo_;
+
+  shared_ptr<Quantizer<MItype, MItype> > in_quant_;
+  shared_ptr<Quantizer<MItype, MOtype> > out_quant_;
+  libdnnAccumulatePrecision_t prec_;
 
  private:
   LibDNNConvConfig config_;
@@ -180,27 +188,28 @@ struct LibDNNDeconvConfig {
       LIBDNN_CONVOLUTION_WG_ALGO_ATOMIC;
   libdnnConvolutionBackwardAlgo_t bwalgo =
       LIBDNN_CONVOLUTION_BW_ALGO_COL2IM_ATOMIC;
-  std::function<void*(void**, const uint_tp, const int_tp)>
-      memory_allocator = nullptr;
+  shared_ptr<QuantizerBase> in_quant;
+  shared_ptr<QuantizerBase> out_quant;
+  libdnnAccumulatePrecision_t prec = LIBDNN_ACCUMULATE_PREC_NATIVE;
 };
 
-template<typename Dtype, typename MItype, typename MOtype>
-class LibDNNDeconv : public LibDNNConv<Dtype, MItype, MOtype> {
+template<typename MItype, typename MOtype>
+class LibDNNDeconv : public LibDNNConv<MItype, MOtype> {
  public:
   explicit LibDNNDeconv(LibDNNDeconvConfig config);
-  void Forward(vptr<const MItype> bottom_data, vptr<const Dtype> weight,
-               vptr<const Dtype> bias,
+  void Forward(vptr<const MItype> bottom_data, vptr<const MItype> weight,
+               vptr<const MItype> bias,
                vptr<MOtype> top_data, int_tp batch_size);
   void Backward(bool prop_down_data, bool prop_down_weights,
                 vptr<const MOtype> top_data, vptr<const MOtype> top_diff,
-                vptr<const Dtype> weight, vptr<Dtype> weight_diff,
-                vptr<const Dtype> bias, vptr<Dtype> bias_diff,
+                vptr<const MItype> weight, vptr<MItype> weight_diff,
+                vptr<const MItype> bias, vptr<MItype> bias_diff,
                 vptr<const MItype> bottom_data, vptr<MItype> bottom_diff,
                 int_tp batch_size);
 
   void Tune(vptr<MOtype> top_data, vptr<MOtype> top_diff,
-            vptr<Dtype> weight, vptr<Dtype> weight_diff,
-            vptr<Dtype> bias, vptr<Dtype> bias_diff,
+            vptr<MItype> weight, vptr<MItype> weight_diff,
+            vptr<MItype> bias, vptr<MItype> bias_diff,
             vptr<MItype> bottom_data, vptr<MItype> bottom_diff,
             int_tp batch_size);
 
@@ -229,26 +238,26 @@ class LibDNNDeconv : public LibDNNConv<Dtype, MItype, MOtype> {
 };
 
 #ifdef USE_INTEL_SPATIAL
-template<typename Dtype, typename MItype, typename MOtype>
-class LibDNNConvSpatial : public LibDNNConv<Dtype, MItype, MOtype> {
+template<typename MItype, typename MOtype>
+class LibDNNConvSpatial : public LibDNNConv<MItype, MOtype> {
  public:
   explicit LibDNNConvSpatial(LibDNNConvConfig config);
-  void Forward(vptr<const MItype> bottom_data, vptr<const Dtype> weight,
-               vptr<const Dtype> bias,
+  void Forward(vptr<const MItype> bottom_data, vptr<const MItype> weight,
+               vptr<const MItype> bias,
                vptr<MOtype> top_data, int_tp batch_size);
-  void ForwardBenchmark(vptr<const MItype> bottom_data, vptr<const Dtype> weight,
-               vptr<const Dtype> bias,
+  void ForwardBenchmark(vptr<const MItype> bottom_data, vptr<const MItype> weight,
+               vptr<const MItype> bias,
                vptr<MOtype> top_data, int_tp batch_size);
   void Backward(bool prop_down_data, bool prop_down_weights,
                 vptr<const MOtype> top_data, const vptr<MOtype> top_diff,
-                vptr<const Dtype> weight, Dtype* weight_diff,
-                vptr<const Dtype> bias, vptr<Dtype> bias_diff,
+                vptr<const MItype> weight, MItype* weight_diff,
+                vptr<const MItype> bias, vptr<MItype> bias_diff,
                 vptr<const MItype> bottom_data, vptr<MItype> bottom_diff,
                 int_tp batch_size);
 
   void Tune(vptr<MOtype> top_data, vptr<MOtype> top_diff,
-            vptr<const Dtype> weight, Dtype* weight_diff,
-            vptr<const Dtype> bias, vptr<Dtype> bias_diff,
+            vptr<const MItype> weight, MItype* weight_diff,
+            vptr<const MItype> bias, vptr<MItype> bias_diff,
             vptr<const MItype> bottom_data, vptr<MItype> bottom_diff,
             int_tp batch_size);
 
@@ -298,50 +307,50 @@ class LibDNNConvSpatial : public LibDNNConv<Dtype, MItype, MOtype> {
 
   void GenerateHelperKernels();
   viennacl::ocl::program compile_fw_kernel();
-  void calculate_verify_data(const Dtype* bottom,
-                             const Dtype* w,
-                             vptr<const Dtype> bias,
-                             Dtype* verify_data);
+  void calculate_verify_data(const MItype* bottom,
+                             const MItype* w,
+                             vptr<const MItype> bias,
+                             MItype* verify_data);
 
-  virtual void setup_convolution(const Dtype *bottom,
-                                 const Dtype *top,
-                                 const Dtype *verify_blob);
-  virtual void create_convolution_kernel(const Dtype *bottom,
-                                         const Dtype *top,
+  virtual void setup_convolution(const MItype *bottom,
+                                 const MItype *top,
+                                 const MItype *verify_blob);
+  virtual void create_convolution_kernel(const MItype *bottom,
+                                         const MItype *top,
                                          int_tp kernelType,
                                          int_tp blockWidth,
                                          int_tp blockHeight,
                                          int_tp blockDepth);
-  virtual bool setup_IDLF(const Dtype *bottom,
-                          const Dtype *top, int_tp blockWidth,
+  virtual bool setup_IDLF(const MItype *bottom,
+                          const MItype *top, int_tp blockWidth,
                           int_tp blockHeight,
                           int_tp blockDepth);
-  virtual bool create_basic_kernel(const Dtype *bottom,
-                                   const Dtype *top,
+  virtual bool create_basic_kernel(const MItype *bottom,
+                                   const MItype *top,
                                    int_tp blockWidth,
                                    int_tp blockHeight,
                                    int_tp blockDepth);
-  virtual bool create_gemm_like_conv_kernel(const Dtype *bottom,
-                                   const Dtype *top,
+  virtual bool create_gemm_like_conv_kernel(const MItype *bottom,
+                                   const MItype *top,
                                    int_tp blockWidth,
                                    int_tp blockHeight,
                                    int_tp blockDepth);
-  virtual cl_int convolve(const Dtype *bottom,
-                          const Dtype *top, int_tp index,
+  virtual cl_int convolve(const MItype *bottom,
+                          const MItype *top, int_tp index,
                           int_tp numImages,
                           kernelConfig* config);
-  virtual float timed_convolve(const Dtype *bottom,
-                               const Dtype *top, int_tp index,
+  virtual float timed_convolve(const MItype *bottom,
+                               const MItype *top, int_tp index,
                                int_tp numImages,
                                kernelConfig* config);
-  virtual bool verify_result(const Dtype *bottom,
-                             const Dtype *top, int_tp index,
-                             int_tp numImages, const Dtype *verify_blob,
+  virtual bool verify_result(const MItype *bottom,
+                             const MItype *top, int_tp index,
+                             int_tp numImages, const MItype *verify_blob,
                              kernelConfig* config);
-  virtual bool tune_local_size(const Dtype *bottom,
-                               const Dtype *top, kernelConfig*);
-  virtual void swizzleWeights(const Dtype *bottom,
-                              const Dtype *top,
+  virtual bool tune_local_size(const MItype *bottom,
+                               const MItype *top, kernelConfig*);
+  virtual void swizzleWeights(const MItype *bottom,
+                              const MItype *top,
                               int_tp swizzle_factor,
                               bool interleave = false);
   virtual void generate_key();
@@ -350,34 +359,34 @@ class LibDNNConvSpatial : public LibDNNConv<Dtype, MItype, MOtype> {
                                             int_tp blockDepth);
   virtual void calculate_global_size(int_tp batch, int_tp* workItemOutput,
                                      size_t* localSizes, size_t* globalSizes);
-  void load_cached_kernels(const Dtype *bottom,
-                           const Dtype *top);
-  void SetUp(const Dtype *bottom,
-             const Dtype *top, caffe::Backend backend);
-  void setBufferKernelArg(const Dtype *bottom,
-                          const Dtype *top,
+  void load_cached_kernels(const MItype *bottom,
+                           const MItype *top);
+  void SetUp(const MItype *bottom,
+             const MItype *top, caffe::Backend backend);
+  void setBufferKernelArg(const MItype *bottom,
+                          const MItype *top,
                           viennacl::ocl::kernel *cl_kernel,
                           const cl_uint &argIdx,
                           viennacl::ocl::context *ctx,
                           cl_mem buffer, size_t offset,
                           size_t size, bool readOnly,
                           bool preserved);
-  void cleanTmpSubBuffers(const Dtype *bottom,
-                          const Dtype *top);
+  void cleanTmpSubBuffers(const MItype *bottom,
+                          const MItype *top);
   std::map<std::tuple<cl_mem, size_t, size_t>, cl_mem> subBufferMap;
   vector<cl_mem> tmpSubBuffers;
   vptr<const MItype> bottom_data_;
   vptr<MOtype> top_data_;
-  vptr<Dtype> col_data_;
-  vptr<const Dtype> weight_;
+  vptr<MItype> col_data_;
+  vptr<const MItype> weight_;
   uint64_t prev_weight_seq_id_;
-  vptr<Dtype> swizzled_weights;
+  vptr<MItype> swizzled_weights;
   int_tp weight_offset;
   int_tp col_offset;
   int_tp top_offset;
   int_tp output_h_, output_w_;
   int_tp padded_height_, padded_width_;
-  vptr<const Dtype> bias_;
+  vptr<const MItype> bias_;
   int_tp bias_offset_;
   int_tp bottom_index_;
 
@@ -405,7 +414,7 @@ class LibDNNConvSpatial : public LibDNNConv<Dtype, MItype, MOtype> {
   string kernel_name_;
   stringstream cache_path_;
 
-  Dtype *swizzled_weights_;
+  MItype *swizzled_weights_;
 
   int_tp kernel_index_;
   int_tp kernel_uid_;
@@ -431,7 +440,7 @@ class LibDNNConvSpatial : public LibDNNConv<Dtype, MItype, MOtype> {
   string options_;
 
   LibDNNConvConfig config_;
-  shared_ptr<LibDNNConv<Dtype, MItype, MOtype> > libdnn_conv_;
+  shared_ptr<LibDNNConv<MItype, MOtype> > libdnn_conv_;
 };
 #endif
 

@@ -23,7 +23,8 @@ void DeconvolutionLayer<Dtype, MItype, MOtype>::compute_output_shape() {
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void DeconvolutionLayer<Dtype, MItype, MOtype>::Forward_cpu(const vector<Blob<MItype>*>& bottom,
+void DeconvolutionLayer<Dtype, MItype, MOtype>::Forward_cpu(
+      const vector<Blob<MItype>*>& bottom,
       const vector<Blob<MOtype>*>& top) {
   const Dtype* weight = this->blobs_[0]->cpu_data();
   for (int_tp i = 0; i < bottom.size(); ++i) {

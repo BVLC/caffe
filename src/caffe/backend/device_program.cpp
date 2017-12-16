@@ -368,93 +368,101 @@ int64_t DeviceProgram::identifier() {
 }
 
 template<>
-string DeviceProgram::device_type_name<void>() {
+string DeviceProgram::device_type_name<void>() const {
   return device_type_name_void();
 }
 template<>
-string DeviceProgram::device_type_name<bool>() {
+string DeviceProgram::device_type_name<bool>() const {
   return device_type_name_bool();
 }
 template<>
-string DeviceProgram::device_type_name<char>() {
+string DeviceProgram::device_type_name<char>() const {
   return device_type_name_char();
 }
 template<>
-string DeviceProgram::device_type_name<half_fp>() {
+string DeviceProgram::device_type_name<half_fp>() const {
   return device_type_name_half();
 }
 template<>
-string DeviceProgram::device_type_name<float>() {
+string DeviceProgram::device_type_name<float>() const {
   return device_type_name_float();
 }
 template<>
-string DeviceProgram::device_type_name<double>() {
+string DeviceProgram::device_type_name<double>() const {
   return device_type_name_double();
 }
 template<>
-string DeviceProgram::device_type_name<int8_t>() {
+string DeviceProgram::device_type_name<int8_t>() const {
   return device_type_name_int8();
 }
 template<>
-string DeviceProgram::device_type_name<int16_t>() {
+string DeviceProgram::device_type_name<int16_t>() const {
   return device_type_name_int16();
 }
 template<>
-string DeviceProgram::device_type_name<int32_t>() {
+string DeviceProgram::device_type_name<int32_t>() const {
   return device_type_name_int32();
 }
 template<>
-string DeviceProgram::device_type_name<int64_t>() {
+string DeviceProgram::device_type_name<int64_t>() const {
   return device_type_name_int64();
 }
 template<>
-string DeviceProgram::device_type_name<uint8_t>() {
+string DeviceProgram::device_type_name<uint8_t>() const {
   return device_type_name_uint8();
 }
 template<>
-string DeviceProgram::device_type_name<uint16_t>() {
+string DeviceProgram::device_type_name<uint16_t>() const {
   return device_type_name_uint16();
 }
 template<>
-string DeviceProgram::device_type_name<uint32_t>() {
+string DeviceProgram::device_type_name<uint32_t>() const {
   return device_type_name_uint32();
 }
 template<>
-string DeviceProgram::device_type_name<uint64_t>() {
+string DeviceProgram::device_type_name<uint64_t>() const {
   return device_type_name_uint64();
 }
 
 
 template<>
-string DeviceProgram::convert_type<char>(int_tp vec_len, string src_val) {
+string DeviceProgram::convert_type<char>(int_tp vec_len,
+                                         string src_val) const {
   return convert_type_char(vec_len, src_val);
 }
 template<>
-string DeviceProgram::convert_type<half_fp>(int_tp vec_len, string src_val) {
+string DeviceProgram::convert_type<half_fp>(int_tp vec_len,
+                                            string src_val) const {
   return convert_type_half(vec_len, src_val);
 }
 template<>
-string DeviceProgram::convert_type<float>(int_tp vec_len, string src_val) {
+string DeviceProgram::convert_type<float>(int_tp vec_len,
+                                          string src_val) const {
   return convert_type_float(vec_len, src_val);
 }
 template<>
-string DeviceProgram::convert_type<double>(int_tp vec_len, string src_val) {
+string DeviceProgram::convert_type<double>(int_tp vec_len,
+                                           string src_val) const {
   return convert_type_double(vec_len, src_val);
 }
 template<>
-string DeviceProgram::convert_type<int8_t>(int_tp vec_len, string src_val) {
+string DeviceProgram::convert_type<int8_t>(int_tp vec_len,
+                                           string src_val) const {
   return convert_type_int8(vec_len, src_val);
 }
 template<>
-string DeviceProgram::convert_type<int16_t>(int_tp vec_len, string src_val) {
+string DeviceProgram::convert_type<int16_t>(int_tp vec_len,
+                                            string src_val) const {
   return convert_type_int16(vec_len, src_val);
 }
 template<>
-string DeviceProgram::convert_type<int32_t>(int_tp vec_len, string src_val) {
+string DeviceProgram::convert_type<int32_t>(int_tp vec_len,
+                                            string src_val) const {
   return convert_type_int32(vec_len, src_val);
 }
 template<>
-string DeviceProgram::convert_type<int64_t>(int_tp vec_len, string src_val) {
+string DeviceProgram::convert_type<int64_t>(int_tp vec_len,
+                                            string src_val) const {
   return convert_type_int64(vec_len, src_val);
 }
 

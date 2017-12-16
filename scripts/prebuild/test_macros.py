@@ -8,6 +8,8 @@ if (len(sys.argv) > 1):
 header = open(path + '/test_macros.hpp', 'w')
 
 var_types = proto_types.keys()
+# Temporary fix, restrict for now
+var_types = ['half_fp', 'float', 'double']
 
 header.write('namespace caffe {\n')
 

@@ -3,6 +3,9 @@
 
 #ifdef USE_LIBDNN
 
+#include "caffe/common.hpp"
+#include "caffe/definitions.hpp"
+#include "caffe/quantizer.hpp"
 #include "caffe/libdnn/libdnn.hpp"
 
 namespace caffe {
@@ -44,18 +47,18 @@ struct LibDNNPoolConfig {
       memory_allocator = nullptr;
 };
 
-template<typename Dtype, typename MItype, typename MOtype>
-class LibDNNPool : public LibDNN<Dtype, MItype, MOtype> {
+template<typename MItype, typename MOtype>
+class LibDNNPool : public LibDNN<MItype, MOtype> {
  public:
   explicit LibDNNPool(LibDNNPoolConfig config);
   void Forward(vptr<const MItype> bottom_data, vptr<MOtype> top_data,
                int_tp channels, int_tp batch_size,
                bool test_mode, vptr<int_tp> mask,
-               vptr<MOtype> top_mask, vptr<Dtype> rand_idx);
+               vptr<MOtype> top_mask, vptr<MItype> rand_idx);
   void Backward(vptr<const MOtype> top_diff, vptr<MItype> bottom_diff,
                 int_tp channels, int_tp batch_size,
                 vptr<const int_tp> mask, vptr<const MOtype> top_mask,
-                vptr<const Dtype> rand_idx);
+                vptr<const MItype> rand_idx);
 
   const LibDNNPoolConfig get_config();
 
@@ -89,13 +92,16 @@ class LibDNNPool : public LibDNN<Dtype, MItype, MOtype> {
 
   // Working memory for stochastic and max pooling
   int_tp* mask_ = nullptr;
-  Dtype* rand_idx_ = nullptr;
+  MItype* rand_idx_ = nullptr;
 
   // Compile and method flags
   bool skip_range_check_;
   libdnnPoolingMethod_t pool_method_;
   libdnnPoolingBackwardAlgo_t bwalgo_;
   bool use_top_mask_;
+
+  shared_ptr<Quantizer<MItype, MItype> > in_quant_;
+  shared_ptr<Quantizer<MItype, MOtype> > out_quant_;
 };
 
 }  // namespace caffe
