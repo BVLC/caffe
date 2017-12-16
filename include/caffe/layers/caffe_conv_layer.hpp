@@ -8,6 +8,8 @@
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/im2col.hpp"
 
+#include "caffe/layers/base_conv_layer.hpp"
+
 namespace caffe {
 
 /**
@@ -18,7 +20,7 @@ template<typename Dtype, typename MItype, typename MOtype>
 class CaffeConvolutionLayer : public Layer<Dtype, MItype, MOtype> {
  public:
   explicit CaffeConvolutionLayer(const LayerParameter& param)
-      : BaseConvolutionLayer<Dtype, MItype, MOtype>(param), col_buffer_lock_id_(-1) {
+      : BaseConvolutionLayer<Dtype, MItype, MOtype>(param) {
   }
 
  protected:
@@ -164,8 +166,6 @@ class CaffeConvolutionLayer : public Layer<Dtype, MItype, MOtype> {
   bool use_skernel_;
 
   Blob<Dtype> col_buffer_;
-  shared_ptr<Blob<Dtype> > shared_col_buffer_;
-  int_tp col_buffer_lock_id_;
   Blob<Dtype> bias_multiplier_;
 };
 

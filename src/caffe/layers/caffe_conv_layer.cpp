@@ -1,6 +1,15 @@
+#include <algorithm>
+#include <vector>
+
+#include "caffe/filler.hpp"
+#include "caffe/layers/caffe_conv_layer.hpp"
+#include "caffe/util/im2col.hpp"
+#include "caffe/util/math_functions.hpp"
+
+namespace caffe {
 
 template<typename Dtype, typename MItype, typename MOtype>
-void BaseConvolutionLayer<Dtype, MItype, MOtype>::forward_cpu_gemm(
+void CaffeConvolutionLayer<Dtype, MItype, MOtype>::forward_cpu_gemm(
                                                    const Dtype* input,
                                                    const Dtype* weights,
                                                    Dtype* output,
@@ -22,7 +31,7 @@ void BaseConvolutionLayer<Dtype, MItype, MOtype>::forward_cpu_gemm(
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void BaseConvolutionLayer<Dtype, MItype, MOtype>::forward_cpu_bias(
+void CaffeConvolutionLayer<Dtype, MItype, MOtype>::forward_cpu_bias(
                                                    Dtype* output,
                                                    const Dtype* bias) {
   caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num_output_,
@@ -31,7 +40,7 @@ void BaseConvolutionLayer<Dtype, MItype, MOtype>::forward_cpu_bias(
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void BaseConvolutionLayer<Dtype, MItype, MOtype>::backward_cpu_gemm(
+void CaffeConvolutionLayer<Dtype, MItype, MOtype>::backward_cpu_gemm(
                                                     const Dtype* output,
                                                     const Dtype* weights,
                                                     Dtype* input) {
@@ -52,7 +61,7 @@ void BaseConvolutionLayer<Dtype, MItype, MOtype>::backward_cpu_gemm(
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void BaseConvolutionLayer<Dtype, MItype, MOtype>::weight_cpu_gemm(
+void CaffeConvolutionLayer<Dtype, MItype, MOtype>::weight_cpu_gemm(
                                                   const Dtype* input,
                                                   const Dtype* output,
                                                   Dtype* weights) {
@@ -71,7 +80,7 @@ void BaseConvolutionLayer<Dtype, MItype, MOtype>::weight_cpu_gemm(
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void BaseConvolutionLayer<Dtype, MItype, MOtype>::backward_cpu_bias(
+void CaffeConvolutionLayer<Dtype, MItype, MOtype>::backward_cpu_bias(
                                                     Dtype* bias,
                                                     const Dtype* input) {
   caffe_cpu_gemv<Dtype>(CblasNoTrans, num_output_, out_spatial_dim_, 1., input,
@@ -81,7 +90,7 @@ void BaseConvolutionLayer<Dtype, MItype, MOtype>::backward_cpu_bias(
 #ifndef CPU_ONLY
 
 template<typename Dtype, typename MItype, typename MOtype>
-void BaseConvolutionLayer<Dtype, MItype, MOtype>::forward_gpu_gemm(
+void CaffeConvolutionLayer<Dtype, MItype, MOtype>::forward_gpu_gemm(
                                                    vptr<const Dtype> input,
                                                    const uint_tp input_off,
                                                    vptr<const Dtype> weights,
@@ -107,7 +116,7 @@ void BaseConvolutionLayer<Dtype, MItype, MOtype>::forward_gpu_gemm(
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void BaseConvolutionLayer<Dtype, MItype, MOtype>::forward_gpu_bias(
+void CaffeConvolutionLayer<Dtype, MItype, MOtype>::forward_gpu_bias(
                                                    vptr<Dtype> output,
                                                    const uint_tp output_off,
                                                    vptr<const Dtype> bias) {
@@ -118,7 +127,7 @@ void BaseConvolutionLayer<Dtype, MItype, MOtype>::forward_gpu_bias(
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void BaseConvolutionLayer<Dtype, MItype, MOtype>::backward_gpu_gemm(
+void CaffeConvolutionLayer<Dtype, MItype, MOtype>::backward_gpu_gemm(
                                                     vptr<const Dtype> output,
                                                     const uint_tp output_off,
                                                     vptr<const Dtype> weights,
@@ -142,7 +151,7 @@ void BaseConvolutionLayer<Dtype, MItype, MOtype>::backward_gpu_gemm(
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void BaseConvolutionLayer<Dtype, MItype, MOtype>::weight_gpu_gemm(
+void CaffeConvolutionLayer<Dtype, MItype, MOtype>::weight_gpu_gemm(
                                                   vptr<const Dtype> input,
                                                   const uint_tp input_off,
                                                   vptr<const Dtype> output,
@@ -165,7 +174,7 @@ void BaseConvolutionLayer<Dtype, MItype, MOtype>::weight_gpu_gemm(
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void BaseConvolutionLayer<Dtype, MItype, MOtype>::backward_gpu_bias(
+void CaffeConvolutionLayer<Dtype, MItype, MOtype>::backward_gpu_bias(
                                                     vptr<Dtype> bias,
                                                     vptr<const Dtype> input,
                                                     const uint_tp input_off) {
@@ -176,7 +185,7 @@ void BaseConvolutionLayer<Dtype, MItype, MOtype>::backward_gpu_bias(
 
 template<typename Dtype, typename MItype, typename MOtype>
 shared_ptr<Blob<Dtype> >
-          BaseConvolutionLayer<Dtype, MItype, MOtype>::col_buffer() {
+          CaffeConvolutionLayer<Dtype, MItype, MOtype>::col_buffer() {
   if (col_buffer_lock_id_ == -1) {
     shared_col_buffer_ = this->device_->template Buffer<Dtype>(
                                        col_buffer_shape_, &col_buffer_lock_id_);
@@ -185,7 +194,7 @@ shared_ptr<Blob<Dtype> >
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void BaseConvolutionLayer<Dtype, MItype, MOtype>::unlock_col_buffer() {
+void CaffeConvolutionLayer<Dtype, MItype, MOtype>::unlock_col_buffer() {
   if (not (col_buffer_lock_id_ == -1)) {
     shared_col_buffer_ = nullptr;
     this->device_->unlock_buffer(&col_buffer_lock_id_);
@@ -194,3 +203,12 @@ void BaseConvolutionLayer<Dtype, MItype, MOtype>::unlock_col_buffer() {
 
 
 #endif  // !CPU_ONLY
+
+INSTANTIATE_CLASS_3T_GUARDED(CaffeConvolutionLayer, (half_fp), (half_fp),
+                             (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(CaffeConvolutionLayer, (float), (float),
+                             (double));
+INSTANTIATE_CLASS_3T_GUARDED(CaffeConvolutionLayer, (double), (double),
+                             (double));
+
+}  // namespace caffe

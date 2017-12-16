@@ -81,6 +81,8 @@ class BaseConvolutionLayer : public Layer<Dtype, MItype, MOtype> {
   bool is_1x1_;
   bool force_nd_im2col_;
   bool use_colbuffer_;
+  shared_ptr<Blob<Dtype> > shared_col_buffer_;
+  int_tp col_buffer_lock_id_;
 };
 
 }  // namespace caffe

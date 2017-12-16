@@ -11,10 +11,8 @@ template<typename Dtype, typename MItype, typename MOtype>
 void LibDNNConvolutionLayer<Dtype, MItype, MOtype>::LayerSetUp(
     const vector<Blob<MItype>*>& bottom,
     const vector<Blob<MOtype>*>& top) {
-  ConvolutionLayer<Dtype, MItype, MOtype>::LayerSetUp(bottom, top);
+  BaseConvolutionLayer<Dtype, MItype, MOtype>::LayerSetUp(bottom, top);
   this->use_colbuffer_ = false;
-
-
   Reshape(bottom, top);
 }
 
@@ -22,23 +20,23 @@ template<typename Dtype, typename MItype, typename MOtype>
 void LibDNNConvolutionLayer<Dtype, MItype, MOtype>::Reshape(
     const vector<Blob<MItype>*>& bottom,
     const vector<Blob<MOtype>*>& top) {
-
   this->use_colbuffer_ = false;
-
-  ConvolutionLayer<Dtype, MItype, MOtype>::Reshape(bottom, top);
+  BaseConvolutionLayer<Dtype, MItype, MOtype>::Reshape(bottom, top);
 
   bool shapes_changed = false;
   if (libdnn_.get() != nullptr) {
-    auto &libdnn_in_sh = libdnn_.get()->get_config().in_shape;
-    auto &libdnn_out_sh = libdnn_.get()->get_config().out_shape;
-    auto &new_in_sh = bottom[0]->shape();
-    auto &new_out_sh = top[0]->shape();
+    vector<int_tp>& libdnn_in_sh = libdnn_.get()->get_config().in_shape;
+    vector<int_tp>& libdnn_out_sh = libdnn_.get()->get_config().out_shape;
+    vector<int_tp>& new_in_sh = bottom[0]->shape();
+    vector<int_tp>& new_out_sh = top[0]->shape();
     bool in_eq = libdnn_in_sh.size() == new_in_sh.size()
                  && libdnn_in_sh[0] >= new_in_sh[0] 
-                 && std::equal(libdnn_in_sh.begin()+1,libdnn_in_sh.end(),new_in_sh.begin()+1);
+                 && std::equal(libdnn_in_sh.begin() + 1,
+                               libdnn_in_sh.end(), new_in_sh.begin() + 1);
     bool out_eq = libdnn_out_sh.size() == new_out_sh.size()
                  && libdnn_out_sh[0] >= new_out_sh[0] 
-                 && std::equal(libdnn_out_sh.begin()+1,libdnn_out_sh.end(),new_out_sh.begin()+1);
+                 && std::equal(libdnn_out_sh.begin() + 1,
+                               libdnn_out_sh.end(),new_out_sh.begin() + 1);
     shapes_changed = !in_eq || !out_eq;
   }
 
