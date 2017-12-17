@@ -19,7 +19,9 @@ class LibDNNConvolutionLayer :
     public BaseConvolutionLayer<Dtype, MItype, MOtype> {
  public:
   explicit LibDNNConvolutionLayer(const LayerParameter& param)
-      : ConvolutionLayer<Dtype, MItype, MOtype>(param) {}
+      : BaseConvolutionLayer<Dtype, MItype, MOtype>(param) {
+    this->deconvolution_ = false;
+  }
   virtual void LayerSetUp(const vector<Blob<MItype>*>& bottom,
       const vector<Blob<MOtype>*>& top);
   virtual void Reshape(const vector<Blob<MItype>*>& bottom,
@@ -31,12 +33,21 @@ class LibDNNConvolutionLayer :
                     int_tp batch_size);
 
  protected:
+  virtual void Forward_cpu(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top) {
+    NOT_IMPLEMENTED;
+  }
+  virtual void Backward_cpu(const vector<Blob<MOtype>*>& top,
+      const vector<bool>& propagate_down,
+      const vector<Blob<MItype>*>& bottom) {
+    NOT_IMPLEMENTED;
+  }
+
   virtual void Forward_gpu(const vector<Blob<MItype>*>& bottom,
       const vector<Blob<MOtype>*>& top);
   virtual void Backward_gpu(const vector<Blob<MOtype>*>& top,
       const vector<bool>& propagate_down,
       const vector<Blob<MItype>*>& bottom);
-
 
  private:
   shared_ptr<LibDNNConv<MItype, MOtype> > libdnn_;

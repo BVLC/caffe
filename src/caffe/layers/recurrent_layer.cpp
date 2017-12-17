@@ -154,7 +154,7 @@ void RecurrentLayer<Dtype, MItype, MOtype>::LayerSetUp(
       LOG(INFO) << "Adding parameter " << i << ": "
                 << unrolled_net_->param_display_names()[i];
       this->blobs_.push_back(
-          std::static_pointer_cast<Blob<Dtype> >(unrolled_net_->params()[i]));
+          static_pointer_cast<Blob<Dtype> >(unrolled_net_->params()[i]));
     }
   }
   // Check that param_propagate_down is set for all of the parameters in the

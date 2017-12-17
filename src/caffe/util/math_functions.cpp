@@ -287,17 +287,12 @@ template void caffe_cpu_copy<uint32_t>(const int_tp n, const uint32_t* X,
                                      uint32_t* Y);
 template void caffe_cpu_copy<uint64_t>(const int_tp n, const uint64_t* X,
                                      uint64_t* Y);
-#ifdef USE_HALF
 template void caffe_cpu_copy<half_fp>(const int_tp n,
                                       const half_fp* X, half_fp* Y);
-#endif  // USE_HALF
-#ifdef USE_SINGLE
-template void caffe_cpu_copy<float>(const int_tp n, const float* X, float* Y);
-#endif  // USE_SINGLE
-#ifdef USE_DOUBLE
+template void caffe_cpu_copy<float>(const int_tp n, const float* X,
+                                    float* Y);
 template void caffe_cpu_copy<double>(const int_tp n, const double* X,
                                      double* Y);
-#endif  // USE_DOUBLE
 
 template<typename Dtype>
 void caffe_copy(const int_tp n, const Dtype* X, Dtype* Y) {

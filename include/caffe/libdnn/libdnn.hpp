@@ -33,15 +33,13 @@ template<typename MItype, typename MOtype>
 class LibDNN : public LibDNNBase {
  protected:
   LibDNN(Device* dev_ptr);
-  virtual void GenerateKernels() = 0;
-  virtual bool CompileKernels() = 0;
-  virtual string string_identifier() = 0;
-  string generate_gemm_core(shared_ptr<LibDNNTuner> tuner, bool dterm,
-                            bool alpha_term,
-                            libdnnAccumulatePrecision_t prec);
   string generate_accreg_init(shared_ptr<LibDNNTuner> tuner, bool dterm,
                               bool load, bool beta_term,
                               libdnnAccumulatePrecision_t prec);
+  string generate_gemm_core(shared_ptr<LibDNNTuner> tuner, bool dterm,
+                            bool alpha_term,
+                            libdnnAccumulatePrecision_t prec);
+
 };
 
 }  // namespace caffe

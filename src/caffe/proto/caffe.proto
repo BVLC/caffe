@@ -81,8 +81,24 @@ message QuantizerParameter {
   optional DataType input_data_type = 2 [default = FLOAT];
   optional DataType output_data_type = 3 [default = FLOAT];
   
-    // Parameters for device abstraction
-  optional int64 device = 4 [default = -1];
+  optional double observed_max = 4;
+  optional double observed_min = 5;
+  
+  optional double max_in = 6;
+  optional double min_in = 7;
+  optional double max_out = 8;
+  optional double min_out = 9;
+  
+  enum QuantizerMode {
+  	PASSIVE = 0;
+  	OBSERVE = 1;
+  	ACTIVE = 2;
+  	ACTIVE_OBSERVE = 3;
+  }
+  optional QuantizerMode mode = 10 [default = PASSIVE];
+  
+  // Parameters for device abstraction
+  optional int64 device = 11 [default = -1];
 }
 
 message NetParameter {

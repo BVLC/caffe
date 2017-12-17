@@ -20,6 +20,8 @@ using caffe::Net;
 using std::string;
 using std::vector;
 using std::shared_ptr;
+using std::make_shared;
+using std::static_pointer_cast;
 
 namespace db = caffe::db;
 
@@ -143,7 +145,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
     feature_extraction_net->Forward();
     for (int_tp i = 0; i < num_features; ++i) {
       const shared_ptr<Blob<Dtype> > feature_blob =
-        std::static_pointer_cast<Blob<Dtype> >(
+        static_pointer_cast<Blob<Dtype> >(
             feature_extraction_net->blob_by_name(blob_names[i]));
       int_tp batch_size = feature_blob->shape(0);
       int_tp dim_features = feature_blob->count() / batch_size;

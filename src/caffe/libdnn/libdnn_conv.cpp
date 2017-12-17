@@ -21,9 +21,9 @@ LibDNNConv<MItype, MOtype>::LibDNNConv(LibDNNConvConfig config)
       : LibDNN<MItype, MOtype>(config.dev_ptr) {
   this->config_ = config;
   this->program_ = this->dev_ptr_->CreateProgram();
-  this->in_quant_ = std::static_pointer_cast<Quantizer<MItype, MItype> >(
+  this->in_quant_ = static_pointer_cast<Quantizer<MItype, MItype> >(
                                                                config.in_quant);
-  this->out_quant_ = std::static_pointer_cast<Quantizer<MItype, MOtype> >(
+  this->out_quant_ = static_pointer_cast<Quantizer<MItype, MOtype> >(
                                                               config.out_quant);
   this->prec_ = config.prec;
   this->bias_term_ = config.bias_term;

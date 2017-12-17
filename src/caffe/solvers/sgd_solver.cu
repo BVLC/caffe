@@ -71,6 +71,6 @@ template void sgd_update_gpu<double>(Device* dev,
                  double local_rate);
 #endif  // USE_DOUBLE
 
-INSTANTIATE_CLASS_1T(SGDSolver, (half_fp)(float)(double))
+INSTANTIATE_CLASS_1T_GUARDED(SGDSolver, (half_fp)(float)(double))
 
 }  // namespace caffe

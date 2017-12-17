@@ -9,8 +9,6 @@
 
 namespace caffe {
 
-#ifdef USE_HALF
-
 template<>
 void caffe_rng_uniform<half_fp>(const int_tp n,
                              const half_fp a, const half_fp b,
@@ -48,41 +46,113 @@ void caffe_rng_gaussian<half_fp>(const int_tp n,
 }
 
 template<>
-void caffe_rng_bernoulli<half_fp, unsigned int>(const int_tp n,
-                                    const half_fp p, unsigned int* r) {
+void caffe_rng_gaussian<int8_t>(const int_tp n,
+                         const int8_t a, const int8_t sigma,
+                         int8_t* r) {
   // FIXME
   CHECK_GE(n, 0);
   CHECK(r);
-  CHECK_GE(p, 0);
-  CHECK_LE(p, 1);
-  float f_p = p;
-  boost::bernoulli_distribution<float> random_distribution(f_p);
+  CHECK_GT(sigma, 0);
+  float fsigma = sigma;
+  float fa = a;
+  boost::normal_distribution<float> random_distribution(fa, fsigma);
   boost::variate_generator<caffe::rng_t*,
-  boost::bernoulli_distribution<float>> variate_generator(
-      caffe_rng(), random_distribution);
+    boost::normal_distribution<float>> variate_generator(
+        caffe_rng(), random_distribution);
   for (int_tp i = 0; i < n; ++i) {
-    r[i] = static_cast<unsigned int>(variate_generator());
-  }
-}
-template<>
-void caffe_rng_bernoulli<half_fp, int>(const int_tp n,
-                                             const half_fp p, int* r) {
-  // FIXME
-  CHECK_GE(n, 0);
-  CHECK(r);
-  CHECK_GE(p, 0);
-  CHECK_LE(p, 1);
-  float f_p = p;
-  boost::bernoulli_distribution<float> random_distribution(f_p);
-  boost::variate_generator<caffe::rng_t*,
-  boost::bernoulli_distribution<float>> variate_generator(
-      caffe_rng(), random_distribution);
-  for (int_tp i = 0; i < n; ++i) {
-    r[i] = static_cast<int>(variate_generator());
+    r[i] = variate_generator();
   }
 }
 
-#endif  // USE_HALF
+template<>
+void caffe_rng_gaussian<int16_t>(const int_tp n,
+                         const int16_t a, const int16_t sigma,
+                         int16_t* r) {
+  CHECK_GE(n, 0);
+  CHECK(r);
+  CHECK_GT(sigma, 0);
+  float fsigma = sigma;
+  float fa = a;
+  boost::normal_distribution<float> random_distribution(fa, fsigma);
+  boost::variate_generator<caffe::rng_t*,
+    boost::normal_distribution<float>> variate_generator(
+        caffe_rng(), random_distribution);
+  for (int_tp i = 0; i < n; ++i) {
+    r[i] = variate_generator();
+  }
+}
+
+template<>
+void caffe_rng_gaussian<int32_t>(const int_tp n,
+                         const int32_t a, const int32_t sigma,
+                         int32_t* r) {
+  CHECK_GE(n, 0);
+  CHECK(r);
+  CHECK_GT(sigma, 0);
+  float fsigma = sigma;
+  float fa = a;
+  boost::normal_distribution<float> random_distribution(fa, fsigma);
+  boost::variate_generator<caffe::rng_t*,
+    boost::normal_distribution<float>> variate_generator(
+        caffe_rng(), random_distribution);
+  for (int_tp i = 0; i < n; ++i) {
+    r[i] = variate_generator();
+  }
+}
+
+template<>
+void caffe_rng_gaussian<int64_t>(const int_tp n,
+                         const int64_t a, const int64_t sigma,
+                         int64_t* r) {
+  CHECK_GE(n, 0);
+  CHECK(r);
+  CHECK_GT(sigma, 0);
+  float fsigma = sigma;
+  float fa = a;
+  boost::normal_distribution<float> random_distribution(fa, fsigma);
+  boost::variate_generator<caffe::rng_t*,
+    boost::normal_distribution<float>> variate_generator(
+        caffe_rng(), random_distribution);
+  for (int_tp i = 0; i < n; ++i) {
+    r[i] = variate_generator();
+  }
+}
+
+template<>
+void caffe_rng_bernoulli<half_fp, int32_t>(const int_tp n,
+                                    const half_fp p, int32_t* r) {
+  // FIXME
+  CHECK_GE(n, 0);
+  CHECK(r);
+  CHECK_GE(p, 0);
+  CHECK_LE(p, 1);
+  float f_p = p;
+  boost::bernoulli_distribution<float> random_distribution(f_p);
+  boost::variate_generator<caffe::rng_t*,
+  boost::bernoulli_distribution<float> > variate_generator(
+      caffe_rng(), random_distribution);
+  for (int_tp i = 0; i < n; ++i) {
+    r[i] = static_cast<int32_t>(variate_generator());
+  }
+}
+
+template<>
+void caffe_rng_bernoulli<half_fp, uint32_t>(const int_tp n,
+                                             const half_fp p, uint32_t* r) {
+  // FIXME
+  CHECK_GE(n, 0);
+  CHECK(r);
+  CHECK_GE(p, 0);
+  CHECK_LE(p, 1);
+  float f_p = p;
+  boost::bernoulli_distribution<float> random_distribution(f_p);
+  boost::variate_generator<caffe::rng_t*,
+  boost::bernoulli_distribution<float>> variate_generator(
+      caffe_rng(), random_distribution);
+  for (int_tp i = 0; i < n; ++i) {
+    r[i] = static_cast<uint32_t>(variate_generator());
+  }
+}
 
 uint_tp caffe_rng_rand() {
   return (*caffe_rng())();
@@ -99,7 +169,8 @@ float caffe_nextafter(const float b);
 template
 double caffe_nextafter(const double b);
 
-void caffe_rng_uniform(const uint_tp n, uint8_t* r) {
+template<>
+void caffe_rng_uniform<uint8_t>(const uint_tp n, uint8_t* r) {
   CHECK_GE(n, 0);
   CHECK(r);
   boost::uniform_int<uint8_t> random_distribution(
@@ -112,7 +183,8 @@ void caffe_rng_uniform(const uint_tp n, uint8_t* r) {
   }
 }
 
-void caffe_rng_uniform(const uint_tp n, uint16_t* r) {
+template<>
+void caffe_rng_uniform<uint16_t>(const uint_tp n, uint16_t* r) {
   CHECK_GE(n, 0);
   CHECK(r);
   boost::uniform_int<uint16_t> random_distribution(
@@ -125,7 +197,8 @@ void caffe_rng_uniform(const uint_tp n, uint16_t* r) {
   }
 }
 
-void caffe_rng_uniform(const uint_tp n, uint32_t* r) {
+template<>
+void caffe_rng_uniform<uint32_t>(const uint_tp n, uint32_t* r) {
   CHECK_GE(n, 0);
   CHECK(r);
   boost::uniform_int<uint32_t> random_distribution(
@@ -138,7 +211,8 @@ void caffe_rng_uniform(const uint_tp n, uint32_t* r) {
   }
 }
 
-void caffe_rng_uniform(const uint_tp n, uint64_t* r) {
+template<>
+void caffe_rng_uniform<uint64_t>(const uint_tp n, uint64_t* r) {
   CHECK_GE(n, 0);
   CHECK(r);
   boost::uniform_int<uint64_t> random_distribution(
@@ -158,20 +232,26 @@ void caffe_rng_uniform(const int_tp n, const Dtype a, const Dtype b, Dtype* r) {
   CHECK_LE(a, b);
   boost::uniform_real<Dtype> random_distribution(a, caffe_nextafter<Dtype>(b));
   boost::variate_generator<caffe::rng_t*,
-  boost::uniform_real<Dtype>> variate_generator(
+  boost::uniform_real<Dtype> > variate_generator(
       caffe_rng(), random_distribution);
   for (int_tp i = 0; i < n; ++i) {
     r[i] = variate_generator();
   }
 }
 
-template
-void caffe_rng_uniform<float>(const int_tp n, const float a, const float b,
-                              float* r);
+template void caffe_rng_uniform<float>(const int_tp n, const float a,
+                                       const float b, float* r);
+template void caffe_rng_uniform<double>(const int_tp n, const double a,
+                                        const double b, double* r);
+template void caffe_rng_uniform<int8_t>(const int_tp n, const int8_t a,
+                                        const int8_t b, int8_t* r);
+template void caffe_rng_uniform<int16_t>(const int_tp n, const int16_t a,
+                                        const int16_t b, int16_t* r);
+template void caffe_rng_uniform<int32_t>(const int_tp n, const int32_t a,
+                                        const int32_t b, int32_t* r);
+template void caffe_rng_uniform<int64_t>(const int_tp n, const int64_t a,
+                                        const int64_t b, int64_t* r);
 
-template
-void caffe_rng_uniform<double>(const int_tp n, const double a, const double b,
-                               double* r);
 
 template<typename Dtype>
 void caffe_rng_gaussian(const int_tp n, const Dtype a, const Dtype sigma,
@@ -181,7 +261,7 @@ void caffe_rng_gaussian(const int_tp n, const Dtype a, const Dtype sigma,
   CHECK_GT(sigma, 0);
   boost::normal_distribution<Dtype> random_distribution(a, sigma);
   boost::variate_generator<caffe::rng_t*,
-  boost::normal_distribution<Dtype>> variate_generator(
+  boost::normal_distribution<Dtype> > variate_generator(
       caffe_rng(), random_distribution);
   for (int_tp i = 0; i < n; ++i) {
     r[i] = variate_generator();
@@ -204,14 +284,13 @@ void caffe_rng_bernoulli(const int_tp n, const Dtype p, Itype* r) {
   CHECK_LE(p, 1);
   boost::bernoulli_distribution<Dtype> random_distribution(p);
   boost::variate_generator<caffe::rng_t*,
-  boost::bernoulli_distribution<Dtype>> variate_generator(
+  boost::bernoulli_distribution<Dtype> > variate_generator(
       caffe_rng(), random_distribution);
   for (int_tp i = 0; i < n; ++i) {
     r[i] = static_cast<Itype>(variate_generator());
   }
 }
 
-#ifdef USE_HALF
 template void caffe_rng_bernoulli<half_fp, int8_t>(const int_tp n,
                                   const half_fp p, int8_t* r);
 template void caffe_rng_bernoulli<half_fp, int16_t>(const int_tp n,
@@ -228,7 +307,6 @@ template void caffe_rng_bernoulli<half_fp, uint32_t>(const int_tp n,
                                   const half_fp p, uint32_t* r);
 template void caffe_rng_bernoulli<half_fp, uint64_t>(const int_tp n,
                                   const half_fp p, uint64_t* r);
-#endif  // USE_HALF
 
 template void caffe_rng_bernoulli<float, int8_t>(const int_tp n,
                                   const float p, int8_t* r);
@@ -247,7 +325,6 @@ template void caffe_rng_bernoulli<float, uint32_t>(const int_tp n,
 template void caffe_rng_bernoulli<float, uint64_t>(const int_tp n,
                                   const float p, uint64_t* r);
 
-#ifdef USE_DOUBLE
 template void caffe_rng_bernoulli<double, int8_t>(const int_tp n,
                                   const double p, int8_t* r);
 template void caffe_rng_bernoulli<double, int16_t>(const int_tp n,
@@ -264,7 +341,73 @@ template void caffe_rng_bernoulli<double, uint32_t>(const int_tp n,
                                   const double p, uint32_t* r);
 template void caffe_rng_bernoulli<double, uint64_t>(const int_tp n,
                                   const double p, uint64_t* r);
-#endif  // USE_DOUBLE
 
+template void caffe_rng_bernoulli<int8_t, int8_t>(const int_tp n,
+                                  const int8_t p, int8_t* r);
+template void caffe_rng_bernoulli<int8_t, int16_t>(const int_tp n,
+                                  const int8_t p, int16_t* r);
+template void caffe_rng_bernoulli<int8_t, int32_t>(const int_tp n,
+                                  const int8_t p, int32_t* r);
+template void caffe_rng_bernoulli<int8_t, int64_t>(const int_tp n,
+                                  const int8_t p, int64_t* r);
+template void caffe_rng_bernoulli<int8_t, uint8_t>(const int_tp n,
+                                  const int8_t p, uint8_t* r);
+template void caffe_rng_bernoulli<int8_t, uint16_t>(const int_tp n,
+                                  const int8_t p, uint16_t* r);
+template void caffe_rng_bernoulli<int8_t, uint32_t>(const int_tp n,
+                                  const int8_t p, uint32_t* r);
+template void caffe_rng_bernoulli<int8_t, uint64_t>(const int_tp n,
+                                  const int8_t p, uint64_t* r);
+
+template void caffe_rng_bernoulli<int16_t, int8_t>(const int_tp n,
+                                  const int16_t p, int8_t* r);
+template void caffe_rng_bernoulli<int16_t, int16_t>(const int_tp n,
+                                  const int16_t p, int16_t* r);
+template void caffe_rng_bernoulli<int16_t, int32_t>(const int_tp n,
+                                  const int16_t p, int32_t* r);
+template void caffe_rng_bernoulli<int16_t, int64_t>(const int_tp n,
+                                  const int16_t p, int64_t* r);
+template void caffe_rng_bernoulli<int16_t, uint8_t>(const int_tp n,
+                                  const int16_t p, uint8_t* r);
+template void caffe_rng_bernoulli<int16_t, uint16_t>(const int_tp n,
+                                  const int16_t p, uint16_t* r);
+template void caffe_rng_bernoulli<int16_t, uint32_t>(const int_tp n,
+                                  const int16_t p, uint32_t* r);
+template void caffe_rng_bernoulli<int16_t, uint64_t>(const int_tp n,
+                                  const int16_t p, uint64_t* r);
+
+template void caffe_rng_bernoulli<int32_t, int8_t>(const int_tp n,
+                                  const int32_t p, int8_t* r);
+template void caffe_rng_bernoulli<int32_t, int16_t>(const int_tp n,
+                                  const int32_t p, int16_t* r);
+template void caffe_rng_bernoulli<int32_t, int32_t>(const int_tp n,
+                                  const int32_t p, int32_t* r);
+template void caffe_rng_bernoulli<int32_t, int64_t>(const int_tp n,
+                                  const int32_t p, int64_t* r);
+template void caffe_rng_bernoulli<int32_t, uint8_t>(const int_tp n,
+                                  const int32_t p, uint8_t* r);
+template void caffe_rng_bernoulli<int32_t, uint16_t>(const int_tp n,
+                                  const int32_t p, uint16_t* r);
+template void caffe_rng_bernoulli<int32_t, uint32_t>(const int_tp n,
+                                  const int32_t p, uint32_t* r);
+template void caffe_rng_bernoulli<int32_t, uint64_t>(const int_tp n,
+                                  const int32_t p, uint64_t* r);
+
+template void caffe_rng_bernoulli<int64_t, int8_t>(const int_tp n,
+                                  const int64_t p, int8_t* r);
+template void caffe_rng_bernoulli<int64_t, int16_t>(const int_tp n,
+                                  const int64_t p, int16_t* r);
+template void caffe_rng_bernoulli<int64_t, int32_t>(const int_tp n,
+                                  const int64_t p, int32_t* r);
+template void caffe_rng_bernoulli<int64_t, int64_t>(const int_tp n,
+                                  const int64_t p, int64_t* r);
+template void caffe_rng_bernoulli<int64_t, uint8_t>(const int_tp n,
+                                  const int64_t p, uint8_t* r);
+template void caffe_rng_bernoulli<int64_t, uint16_t>(const int_tp n,
+                                  const int64_t p, uint16_t* r);
+template void caffe_rng_bernoulli<int64_t, uint32_t>(const int_tp n,
+                                  const int64_t p, uint32_t* r);
+template void caffe_rng_bernoulli<int64_t, uint64_t>(const int_tp n,
+                                  const int64_t p, uint64_t* r);
 
 }  // namespace caffe

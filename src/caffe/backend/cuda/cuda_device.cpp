@@ -106,7 +106,7 @@ vptr<void> CudaDevice::MallocMemDevice(uint_tp size, void** ptr,
   CUDA_CHECK(cudaMalloc(&gpu_ptr, size));
   cudaSetDevice(initial_device);
   CHECK_NE(zero_copy, true) << "Zero-copy not supported on CUDA.";
-  return vptr<void>(std::make_shared<cuda_dev_ptr<void> >(gpu_ptr));
+  return vptr<void>(make_shared<cuda_dev_ptr<void> >(gpu_ptr));
 }
 
 void CudaDevice::FreeMemDevice(vptr<void> ptr) {
@@ -174,7 +174,7 @@ void CudaDevice::get_threads(const vector<size_t>* work_size,
 }
 
 shared_ptr<DeviceProgram> CudaDevice::CreateProgram() {
-  return std::make_shared<CudaDeviceProgram>(this);
+  return make_shared<CudaDeviceProgram>(this);
 }
 
 bool CudaDevice::CheckVendor(string vendor) {

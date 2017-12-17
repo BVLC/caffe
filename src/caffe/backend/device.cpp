@@ -11,7 +11,7 @@ Device::Device() {}
 
 void Device::Init() {
 #ifdef USE_SQLITE
-  database_ = std::make_shared<SQLiteHelper>(name() + "."
+  database_ = make_shared<SQLiteHelper>(name() + "."
                                              + backend_name(backend()));
   database_->CreateTables();
 #endif
@@ -163,7 +163,7 @@ void Device::reset_peak_memory_usage() {
 template<typename Dtype>
 shared_ptr<Blob<Dtype> > Device::Buffer(vector<int_tp> shape, int_tp* lock_id) {
   CHECK(lock_id);
-  shared_ptr<Blob<Dtype> > blob = std::make_shared<Blob<Dtype> >(this);
+  shared_ptr<Blob<Dtype> > blob = make_shared<Blob<Dtype> >(this);
   vector<int_tp> buffer_shape(1, safe_sizeof<Dtype>());
   for(size_t i = 0; i < shape.size(); ++i) {
     buffer_shape[0] *= shape[i];
@@ -182,8 +182,8 @@ shared_ptr<Blob<Dtype> > Device::Buffer(vector<int_tp> shape, int_tp* lock_id) {
   // No buffers available, create a new one
   if (buffer_id == -1) {
     buffer_id = buffers_.size();
-    buffers_.push_back(std::make_shared<Blob<int8_t> >(this));
-    buffer_mutex_.push_back(std::make_shared<std::mutex>());
+    buffers_.push_back(make_shared<Blob<int8_t> >(this));
+    buffer_mutex_.push_back(make_shared<std::mutex>());
     buffer_mutex_[buffer_id]->lock();
   }
 

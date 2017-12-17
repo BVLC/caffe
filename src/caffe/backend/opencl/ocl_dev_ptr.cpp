@@ -402,243 +402,243 @@ ocl_dev_ptr<Dtype, typename const_enable_if<Dtype>::type>
 template<typename Dtype>
 shared_ptr<dev_ptr<bool> > ocl_dev_ptr<Dtype,
   typename non_const_enable_if<Dtype>::type>::instance(bool* dummy) {
-  return std::make_shared<ocl_dev_ptr<bool> >(*this);
+  return make_shared<ocl_dev_ptr<bool> >(*this);
 }
 
 template<typename Dtype>
 shared_ptr<dev_ptr<char> > ocl_dev_ptr<Dtype,
   typename non_const_enable_if<Dtype>::type>::instance(char* dummy) {
-  return std::make_shared<ocl_dev_ptr<char> >(*this);
+  return make_shared<ocl_dev_ptr<char> >(*this);
 }
 
 template<typename Dtype>
 shared_ptr<dev_ptr<int8_t> > ocl_dev_ptr<Dtype,
   typename non_const_enable_if<Dtype>::type>::instance(int8_t* dummy) {
-  return std::make_shared<ocl_dev_ptr<int8_t> >(*this);
+  return make_shared<ocl_dev_ptr<int8_t> >(*this);
 }
 
 template<typename Dtype>
 shared_ptr<dev_ptr<int16_t> > ocl_dev_ptr<Dtype,
   typename non_const_enable_if<Dtype>::type>::instance(int16_t* dummy) {
-  return std::make_shared<ocl_dev_ptr<int16_t> >(*this);
+  return make_shared<ocl_dev_ptr<int16_t> >(*this);
 }
 
 template<typename Dtype>
 shared_ptr<dev_ptr<int32_t> > ocl_dev_ptr<Dtype,
   typename non_const_enable_if<Dtype>::type>::instance(int32_t* dummy) {
-  return std::make_shared<ocl_dev_ptr<int32_t> >(*this);
+  return make_shared<ocl_dev_ptr<int32_t> >(*this);
 }
 
 template<typename Dtype>
 shared_ptr<dev_ptr<int64_t> > ocl_dev_ptr<Dtype,
   typename non_const_enable_if<Dtype>::type>::instance(int64_t* dummy) {
-  return std::make_shared<ocl_dev_ptr<int64_t> >(*this);
+  return make_shared<ocl_dev_ptr<int64_t> >(*this);
 }
 
 template<typename Dtype>
 shared_ptr<dev_ptr<uint8_t> > ocl_dev_ptr<Dtype,
   typename non_const_enable_if<Dtype>::type>::instance(uint8_t* dummy) {
-  return std::make_shared<ocl_dev_ptr<uint8_t> >(*this);
+  return make_shared<ocl_dev_ptr<uint8_t> >(*this);
 }
 
 template<typename Dtype>
 shared_ptr<dev_ptr<uint16_t> > ocl_dev_ptr<Dtype,
   typename non_const_enable_if<Dtype>::type>::instance(uint16_t* dummy) {
-  return std::make_shared<ocl_dev_ptr<uint16_t> >(*this);
+  return make_shared<ocl_dev_ptr<uint16_t> >(*this);
 }
 
 template<typename Dtype>
 shared_ptr<dev_ptr<uint32_t> > ocl_dev_ptr<Dtype,
   typename non_const_enable_if<Dtype>::type>::instance(uint32_t* dummy) {
-  return std::make_shared<ocl_dev_ptr<uint32_t> >(*this);
+  return make_shared<ocl_dev_ptr<uint32_t> >(*this);
 }
 
 template<typename Dtype>
 shared_ptr<dev_ptr<uint64_t> > ocl_dev_ptr<Dtype,
   typename non_const_enable_if<Dtype>::type>::instance(uint64_t* dummy) {
-  return std::make_shared<ocl_dev_ptr<uint64_t> >(*this);
+  return make_shared<ocl_dev_ptr<uint64_t> >(*this);
 }
 
 template<typename Dtype>
 shared_ptr<dev_ptr<half_fp> > ocl_dev_ptr<Dtype,
   typename non_const_enable_if<Dtype>::type>::instance(
       half_fp* dummy) {
-  return std::make_shared<ocl_dev_ptr<half_fp> >(*this);
+  return make_shared<ocl_dev_ptr<half_fp> >(*this);
 }
 
 template<typename Dtype>
 shared_ptr<dev_ptr<float> > ocl_dev_ptr<Dtype,
   typename non_const_enable_if<Dtype>::type>::instance(float* dummy) {
-  return std::make_shared<ocl_dev_ptr<float> >(*this);
+  return make_shared<ocl_dev_ptr<float> >(*this);
 }
 
 template<typename Dtype>
 shared_ptr<dev_ptr<double> > ocl_dev_ptr<Dtype,
   typename non_const_enable_if<Dtype>::type>::instance(double* dummy) {
-  return std::make_shared<ocl_dev_ptr<double> >(*this);
+  return make_shared<ocl_dev_ptr<double> >(*this);
 }
 
 template<typename Dtype>
 shared_ptr<dev_ptr<void> > ocl_dev_ptr<Dtype,
   typename non_const_enable_if<Dtype>::type>::instance(void* dummy) {
-  return std::make_shared<ocl_dev_ptr<void> >(*this);
+  return make_shared<ocl_dev_ptr<void> >(*this);
 }
 
 
 template<typename Dtype>
 shared_ptr<dev_ptr<const bool> > ocl_dev_ptr<Dtype,
   typename const_enable_if<Dtype>::type>::instance(const bool* dummy) {
-  return std::make_shared<ocl_dev_ptr<const bool> >(*this);
+  return make_shared<ocl_dev_ptr<const bool> >(*this);
 }
 template<typename Dtype>
 shared_ptr<dev_ptr<const bool> > ocl_dev_ptr<Dtype,
   typename non_const_enable_if<Dtype>::type>::instance(const bool* dummy) {
-  return std::make_shared<ocl_dev_ptr<const bool> >(*this);
+  return make_shared<ocl_dev_ptr<const bool> >(*this);
 }
 
 template<typename Dtype>
 shared_ptr<dev_ptr<const char> > ocl_dev_ptr<Dtype,
   typename const_enable_if<Dtype>::type>::instance(const char* dummy) {
-  return std::make_shared<ocl_dev_ptr<const char> >(*this);
+  return make_shared<ocl_dev_ptr<const char> >(*this);
 }
 template<typename Dtype>
 shared_ptr<dev_ptr<const char> > ocl_dev_ptr<Dtype,
   typename non_const_enable_if<Dtype>::type>::instance(const char* dummy) {
-  return std::make_shared<ocl_dev_ptr<const char> >(*this);
+  return make_shared<ocl_dev_ptr<const char> >(*this);
 }
 
 template<typename Dtype>
 shared_ptr<dev_ptr<const int8_t> > ocl_dev_ptr<Dtype,
   typename const_enable_if<Dtype>::type>::instance(const int8_t* dummy) {
-  return std::make_shared<ocl_dev_ptr<const int8_t> >(*this);
+  return make_shared<ocl_dev_ptr<const int8_t> >(*this);
 }
 template<typename Dtype>
 shared_ptr<dev_ptr<const int8_t> > ocl_dev_ptr<Dtype,
   typename non_const_enable_if<Dtype>::type>::instance(const int8_t* dummy) {
-  return std::make_shared<ocl_dev_ptr<const int8_t> >(*this);
+  return make_shared<ocl_dev_ptr<const int8_t> >(*this);
 }
 
 template<typename Dtype>
 shared_ptr<dev_ptr<const int16_t> > ocl_dev_ptr<Dtype,
   typename const_enable_if<Dtype>::type>::instance(const int16_t* dummy) {
-  return std::make_shared<ocl_dev_ptr<const int16_t> >(*this);
+  return make_shared<ocl_dev_ptr<const int16_t> >(*this);
 }
 template<typename Dtype>
 shared_ptr<dev_ptr<const int16_t> > ocl_dev_ptr<Dtype,
   typename non_const_enable_if<Dtype>::type>::instance(const int16_t* dummy) {
-  return std::make_shared<ocl_dev_ptr<const int16_t> >(*this);
+  return make_shared<ocl_dev_ptr<const int16_t> >(*this);
 }
 
 template<typename Dtype>
 shared_ptr<dev_ptr<const int32_t> > ocl_dev_ptr<Dtype,
   typename const_enable_if<Dtype>::type>::instance(const int32_t* dummy) {
-  return std::make_shared<ocl_dev_ptr<const int32_t> >(*this);
+  return make_shared<ocl_dev_ptr<const int32_t> >(*this);
 }
 template<typename Dtype>
 shared_ptr<dev_ptr<const int32_t> > ocl_dev_ptr<Dtype,
   typename non_const_enable_if<Dtype>::type>::instance(const int32_t* dummy) {
-  return std::make_shared<ocl_dev_ptr<const int32_t> >(*this);
+  return make_shared<ocl_dev_ptr<const int32_t> >(*this);
 }
 
 template<typename Dtype>
 shared_ptr<dev_ptr<const int64_t> > ocl_dev_ptr<Dtype,
   typename const_enable_if<Dtype>::type>::instance(const int64_t* dummy) {
-  return std::make_shared<ocl_dev_ptr<const int64_t> >(*this);
+  return make_shared<ocl_dev_ptr<const int64_t> >(*this);
 }
 template<typename Dtype>
 shared_ptr<dev_ptr<const int64_t> > ocl_dev_ptr<Dtype,
   typename non_const_enable_if<Dtype>::type>::instance(const int64_t* dummy) {
-  return std::make_shared<ocl_dev_ptr<const int64_t> >(*this);
+  return make_shared<ocl_dev_ptr<const int64_t> >(*this);
 }
 
 template<typename Dtype>
 shared_ptr<dev_ptr<const uint8_t> > ocl_dev_ptr<Dtype,
   typename const_enable_if<Dtype>::type>::instance(const uint8_t* dummy) {
-  return std::make_shared<ocl_dev_ptr<const uint8_t> >(*this);
+  return make_shared<ocl_dev_ptr<const uint8_t> >(*this);
 }
 template<typename Dtype>
 shared_ptr<dev_ptr<const uint8_t> > ocl_dev_ptr<Dtype,
   typename non_const_enable_if<Dtype>::type>::instance(const uint8_t* dummy) {
-  return std::make_shared<ocl_dev_ptr<const uint8_t> >(*this);
+  return make_shared<ocl_dev_ptr<const uint8_t> >(*this);
 }
 
 template<typename Dtype>
 shared_ptr<dev_ptr<const uint16_t> > ocl_dev_ptr<Dtype,
   typename const_enable_if<Dtype>::type>::instance(const uint16_t* dummy) {
-  return std::make_shared<ocl_dev_ptr<const uint16_t> >(*this);
+  return make_shared<ocl_dev_ptr<const uint16_t> >(*this);
 }
 template<typename Dtype>
 shared_ptr<dev_ptr<const uint16_t> > ocl_dev_ptr<Dtype,
   typename non_const_enable_if<Dtype>::type>::instance(const uint16_t* dummy) {
-  return std::make_shared<ocl_dev_ptr<const uint16_t> >(*this);
+  return make_shared<ocl_dev_ptr<const uint16_t> >(*this);
 }
 
 template<typename Dtype>
 shared_ptr<dev_ptr<const uint32_t> > ocl_dev_ptr<Dtype,
   typename const_enable_if<Dtype>::type>::instance(const uint32_t* dummy) {
-  return std::make_shared<ocl_dev_ptr<const uint32_t> >(*this);
+  return make_shared<ocl_dev_ptr<const uint32_t> >(*this);
 }
 template<typename Dtype>
 shared_ptr<dev_ptr<const uint32_t> > ocl_dev_ptr<Dtype,
   typename non_const_enable_if<Dtype>::type>::instance(const uint32_t* dummy) {
-  return std::make_shared<ocl_dev_ptr<const uint32_t> >(*this);
+  return make_shared<ocl_dev_ptr<const uint32_t> >(*this);
 }
 
 template<typename Dtype>
 shared_ptr<dev_ptr<const uint64_t> > ocl_dev_ptr<Dtype,
   typename const_enable_if<Dtype>::type>::instance(const uint64_t* dummy) {
-  return std::make_shared<ocl_dev_ptr<const uint64_t> >(*this);
+  return make_shared<ocl_dev_ptr<const uint64_t> >(*this);
 }
 template<typename Dtype>
 shared_ptr<dev_ptr<const uint64_t> > ocl_dev_ptr<Dtype,
   typename non_const_enable_if<Dtype>::type>::instance(const uint64_t* dummy) {
-  return std::make_shared<ocl_dev_ptr<const uint64_t> >(*this);
+  return make_shared<ocl_dev_ptr<const uint64_t> >(*this);
 }
 
 template<typename Dtype>
 shared_ptr<dev_ptr<const half_fp> > ocl_dev_ptr<Dtype,
   typename const_enable_if<Dtype>::type>::instance(
       const half_fp* dummy) {
-  return std::make_shared<ocl_dev_ptr<const half_fp> >(*this);
+  return make_shared<ocl_dev_ptr<const half_fp> >(*this);
 }
 template<typename Dtype>
 shared_ptr<dev_ptr<const half_fp> > ocl_dev_ptr<Dtype,
   typename non_const_enable_if<Dtype>::type>::instance(
       const half_fp* dummy) {
-  return std::make_shared<ocl_dev_ptr<const half_fp> >(*this);
+  return make_shared<ocl_dev_ptr<const half_fp> >(*this);
 }
 
 template<typename Dtype>
 shared_ptr<dev_ptr<const float> > ocl_dev_ptr<Dtype,
   typename const_enable_if<Dtype>::type>::instance(const float* dummy) {
-  return std::make_shared<ocl_dev_ptr<const float> >(*this);
+  return make_shared<ocl_dev_ptr<const float> >(*this);
 }
 template<typename Dtype>
 shared_ptr<dev_ptr<const float> > ocl_dev_ptr<Dtype,
   typename non_const_enable_if<Dtype>::type>::instance(const float* dummy) {
-  return std::make_shared<ocl_dev_ptr<const float> >(*this);
+  return make_shared<ocl_dev_ptr<const float> >(*this);
 }
 
 template<typename Dtype>
 shared_ptr<dev_ptr<const double> > ocl_dev_ptr<Dtype,
   typename const_enable_if<Dtype>::type>::instance(const double* dummy) {
-  return std::make_shared<ocl_dev_ptr<const double> >(*this);
+  return make_shared<ocl_dev_ptr<const double> >(*this);
 }
 template<typename Dtype>
 shared_ptr<dev_ptr<const double> > ocl_dev_ptr<Dtype,
   typename non_const_enable_if<Dtype>::type>::instance(const double* dummy) {
-  return std::make_shared<ocl_dev_ptr<const double> >(*this);
+  return make_shared<ocl_dev_ptr<const double> >(*this);
 }
 
 template<typename Dtype>
 shared_ptr<dev_ptr<const void> > ocl_dev_ptr<Dtype,
   typename const_enable_if<Dtype>::type>::instance(const void* dummy) {
-  return std::make_shared<ocl_dev_ptr<const void> >(*this);
+  return make_shared<ocl_dev_ptr<const void> >(*this);
 }
 template<typename Dtype>
 shared_ptr<dev_ptr<const void> > ocl_dev_ptr<Dtype,
   typename non_const_enable_if<Dtype>::type>::instance(const void* dummy) {
-  return std::make_shared<ocl_dev_ptr<const void> >(*this);
+  return make_shared<ocl_dev_ptr<const void> >(*this);
 }
 
 

@@ -71,7 +71,7 @@ void OclDevice::Init() {
 }
 
 shared_ptr<DeviceProgram> OclDevice::CreateProgram() {
-  return std::make_shared<OclDeviceProgram>(this);
+  return make_shared<OclDeviceProgram>(this);
 }
 
 
@@ -154,7 +154,7 @@ vptr<void> OclDevice::MallocMemDevice(uint_tp size, void** ptr,
   }
   CHECK_EQ(0, err) << "OpenCL buffer allocation of size "
                    << size << " failed.";
-  return vptr<void>(std::make_shared<ocl_dev_ptr<void> >(gpu_ptr));
+  return vptr<void>(make_shared<ocl_dev_ptr<void> >(gpu_ptr));
 }
 
 void OclDevice::FreeMemDevice(vptr<void> ptr) {
@@ -373,7 +373,7 @@ void OclDevice::ocl_null_kernel(float arg, cl_event* event) {
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(
       Caffe::GetDefaultDevice()->id());
   shared_ptr<OclDeviceKernel> ocl_dev_kernel =
-      std::static_pointer_cast<OclDeviceKernel>(
+      static_pointer_cast<OclDeviceKernel>(
           this->math_programs_[AUX_DATA_INDEX]
                                ->GetKernel("caffe_gpu_null_kernel"));
   viennacl::ocl::kernel kernel = ocl_dev_kernel->get_ocl_kernel();

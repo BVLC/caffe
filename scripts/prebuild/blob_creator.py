@@ -24,7 +24,7 @@ for i in range(0, len(var_types)):
     if var_types[i] in variant_enable_flags.keys():
         header.write('#if defined(' + variant_enable_flags[var_types[i]] + ')\n')
     header.write('case ' + proto_types[var_types[i]] + ': {\n')
-    header.write('return std::make_shared<Blob<' + var_types[i] + '> >();\n')
+    header.write('return make_shared<Blob<' + var_types[i] + '> >();\n')
     header.write('}\n')  # case
     if var_types[i] in variant_enable_flags.keys():
         header.write('#endif\n')

@@ -3,16 +3,20 @@
 
 #ifdef USE_LIBDNN
 
+#include <boost/thread.hpp>
+#include <boost/thread/locks.hpp>
+#include <boost/thread/shared_mutex.hpp>
 #include <unordered_map>
+
 #include "caffe/common.hpp"
 #include "caffe/definitions.hpp"
 #include "caffe/quantizer.hpp"
 #include "caffe/libdnn/libdnn.hpp"
-
 namespace caffe {
 
 template<typename MItype, typename MOtype>
 class LibDNNBlas : public LibDNN<MItype, MOtype> {
+ public:
   explicit LibDNNBlas(Device* dev_ptr);
 
   // BLAS 1
@@ -27,8 +31,11 @@ class LibDNNBlas : public LibDNN<MItype, MOtype> {
 
   // BLAS 2
   void gemv(const CBLAS_TRANSPOSE trans_A, const uint_tp M, const uint_tp N,
-            const MItype alpha, vptr<const MItype> A, vptr<const MItype> X,
-            const MItype beta, vptr<MOtype> Y);
+            const MItype alpha, vptr<const MItype> A, vptr<const MItype> x,
+            const MItype beta, vptr<MOtype> y,
+            libdnnAccumulatePrecision_t prec,
+            shared_ptr<Quantizer<MItype, MItype> > in_quantizer,
+            shared_ptr<Quantizer<MItype, MOtype> > out_quantizer);
 
   // BLAS 3
   void gemm(const CBLAS_TRANSPOSE trans_A, const CBLAS_TRANSPOSE trans_B,
@@ -39,7 +46,8 @@ class LibDNNBlas : public LibDNN<MItype, MOtype> {
             shared_ptr<Quantizer<MItype, MOtype> > out_quantizer);
 
  private:
-  size_t get_id(string identifier);
+  int_tp get_id(string identifier);
+  int_tp get_id_or_new(string identifier);
 
   string generate_axpy_source();
   string axpy_string_identifier();
@@ -56,8 +64,19 @@ class LibDNNBlas : public LibDNN<MItype, MOtype> {
   string generate_scale_source();
   string scale_string_identifier();
 
-  string generate_gemv_source();
-  string gemv_string_identifier();
+  string generate_gemv_source(
+         shared_ptr<DeviceProgram> program, shared_ptr<LibDNNTuner> tuner,
+         bool trans_A, const uint_tp M, const uint_tp N, bool alpha_term,
+         bool beta_term, libdnnAccumulatePrecision_t prec,
+         shared_ptr<Quantizer<MItype, MItype> > in_quantizer,
+         shared_ptr<Quantizer<MItype, MOtype> > out_quantize);
+  string gemv_string_identifier(const CBLAS_TRANSPOSE trans_A,
+         const uint_tp M, const uint_tp N, bool alpha_term, bool beta_term,
+         libdnnAccumulatePrecision_t prec,
+         shared_ptr<Quantizer<MItype, MItype> > in_quantizer,
+         shared_ptr<Quantizer<MItype, MOtype> > out_quantizer);
+  void initialize_gemv_tuner(shared_ptr<DeviceProgram> program,
+         shared_ptr<LibDNNTuner> tuner);
 
   string generate_gemm_source(shared_ptr<DeviceProgram> program,
          shared_ptr<LibDNNTuner> tuner, bool trans_A, bool trans_B,
@@ -74,7 +93,7 @@ class LibDNNBlas : public LibDNN<MItype, MOtype> {
   void initialize_gemm_tuner(shared_ptr<DeviceProgram> program,
          shared_ptr<LibDNNTuner> tuner);
 
-  std::mutex program_mutex_;
+  boost::shared_mutex program_mutex_;
   vector<bool> program_ready_;
   vector<shared_ptr<LibDNNTuner> > program_tuners_;
   vector<shared_ptr<DeviceProgram> > programs_;

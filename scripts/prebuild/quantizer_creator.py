@@ -29,7 +29,7 @@ for i in range(0, len(var_types)):
         if var_types[j] in variant_enable_flags.keys():
             header.write('#if defined(' + variant_enable_flags[var_types[j]] + ')\n')
         header.write('case ' + proto_types[var_types[j]] + ': {\n')
-        header.write('std::make_shared<Quantizer<' + var_types[i]  + ', ' + var_types[j] + '> >(quant_param);\n')
+        header.write('make_shared<Quantizer<' + var_types[i]  + ', ' + var_types[j] + '> >(quant_param);\n')
         header.write('}\n')  # case
         if var_types[j] in variant_enable_flags.keys():
             header.write('#endif\n')

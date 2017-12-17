@@ -5,24 +5,6 @@
 namespace caffe {
 
 template<typename Dtype, typename MItype, typename MOtype>
-void ConvolutionLayer<Dtype, MItype, MOtype>::compute_output_shape() {
-  const int_tp* kernel_shape_data = this->kernel_shape_.cpu_data();
-  const int_tp* stride_data = this->stride_.cpu_data();
-  const int_tp* pad_data = this->pad_.cpu_data();
-  const int_tp* dilation_data = this->dilation_.cpu_data();
-  this->output_shape_.clear();
-  for (int_tp i = 0; i < this->num_spatial_axes_; ++i) {
-    // i + 1 to skip channel axis
-    const int_tp input_dim = this->input_shape(i + 1);
-    const int_tp kernel_extent = dilation_data[i] * (kernel_shape_data[i] - 1)
-        + 1;
-    const int_tp output_dim = (input_dim + 2 * pad_data[i] - kernel_extent)
-        / stride_data[i] + 1;
-    this->output_shape_.push_back(output_dim);
-  }
-}
-
-template<typename Dtype, typename MItype, typename MOtype>
 void ConvolutionLayer<Dtype, MItype, MOtype>::Forward_cpu(
                                           const vector<Blob<MItype>*>& bottom,
                                           const vector<Blob<MOtype>*>& top) {

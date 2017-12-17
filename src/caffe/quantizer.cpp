@@ -8,9 +8,79 @@
 namespace caffe {
 
 QuantizerBase::QuantizerBase(QuantizerParameter& param)
-  : quant_param_(param), program_ready_(false) {
-  device_ = Caffe::GetDevice(quant_param_.device(), true);
-  program_ = device_->CreateProgram();
+  : param_(param), program_ready_(false) {
+  this->device_ = Caffe::GetDevice(param_.device(), true);
+}
+
+QuantizerBase::QuantizerBase(Device* dev_ptr)
+  : param_(), program_ready_(false) {
+  this->device_ = dev_ptr;
+}
+
+void QuantizerBase::update_param(QuantizerParameter& param) {
+  this->param_ = param;
+  this->program_ready_ = false;
+  switch (this->param_.mode()) {
+    case QuantizerParameter_QuantizerMode_PASSIVE:
+      this->mode_ = QUANTIZER_MODE_PASSIVE;
+      break;
+    case QuantizerParameter_QuantizerMode_OBSERVE:
+      this->mode_ = QUANTIZER_MODE_OBSERVE;
+      break;
+    case QuantizerParameter_QuantizerMode_ACTIVE:
+      this->mode_ = QUANTIZER_MODE_ACTIVE;
+      break;
+    case QuantizerParameter_QuantizerMode_ACTIVE_OBSERVE:
+      this->mode_ = QUANTIZER_MODE_ACTIVE_OBSERVE;
+      break;
+    default:
+      this->mode_ = QUANTIZER_MODE_PASSIVE;
+      break;
+  }
+  if (this->param_.has_observed_max()) {
+    this->observed_max_ = param_.observed_max();
+  }
+  if (this->param_.has_observed_min()) {
+    this->observed_min_ = param_.observed_min();
+  }
+  if (this->param_.has_max_in()) {
+    this->max_in_ = param_.max_in();
+  }
+  if (this->param_.has_min_in()) {
+    this->min_in_ = param_.min_in();
+  }
+  if (this->param_.has_max_out()) {
+    this->max_out_ = param_.max_out();
+  }
+  if (this->param_.has_min_out()) {
+    this->min_out_ = param_.min_out();
+  }
+}
+
+QuantizerParameter QuantizerBase::get_param() const {
+  return param_;
+}
+
+template<typename MItype, typename MOtype>
+void Quantizer<MItype, MOtype>::init() {
+  this->program_ = this->device_->CreateProgram();
+
+  this->observed_max_ = type_min_val<double>();
+  this->observed_min_ = type_max_val<double>();
+
+  this->min_in_ = type_min_val<MItype>();
+  this->max_in_ = type_max_val<MItype>();
+  this->min_out_ = type_min_val<MOtype>();
+  this->max_out_ = type_max_val<MOtype>();
+  if (std::is_same<MItype, MOtype>::value) {
+    this->mode_ = QUANTIZER_MODE_PASSIVE;
+  } else {
+    if (is_float_type<MItype>() && is_float_type<MOtype>()) {
+      this->mode_ = QUANTIZER_MODE_PASSIVE;
+    } else {
+      this->mode_ = QUANTIZER_MODE_ACTIVE;
+    }
+  }
 }
 
 QuantizerMode QuantizerBase::get_mode() const {
@@ -41,21 +111,15 @@ string QuantizerBase::get_mode_string() {
 template<typename MItype, typename MOtype>
 Quantizer<MItype, MOtype>::Quantizer(QuantizerParameter& param)
   : QuantizerBase(param) {
-  min_in_ = type_min_val<MItype>();
-  max_in_ = type_max_val<MItype>();
-  min_out_ = type_min_val<MOtype>();
-  max_out_ = type_max_val<MOtype>();
-  if (std::is_same<MItype, MOtype>::value) {
-    mode_ = QUANTIZER_MODE_PASSIVE;
-  } else {
-    if (is_float_type<MItype>() && is_float_type<MOtype>()) {
-      mode_ = QUANTIZER_MODE_PASSIVE;
-    } else {
-      mode_ = QUANTIZER_MODE_ACTIVE;
-    }
-  }
+  init();
+  update_param(param_);
 }
 
+template<typename MItype, typename MOtype>
+Quantizer<MItype, MOtype>::Quantizer(Device* dev_ptr)
+  : QuantizerBase(dev_ptr) {
+  init();
+}
 
 
 template<typename MItype, typename MOtype>

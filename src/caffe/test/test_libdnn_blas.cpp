@@ -12,7 +12,7 @@
 namespace caffe {
 
 template <typename TypeParam>
-class GemmTest : public ::testing::Test {};
+class LibDNNGemmTest : public ::testing::Test {};
 
 TYPED_TEST_CASE(LibDNNGemmTest, TestDtypesFloat);
 
@@ -37,11 +37,11 @@ TYPED_TEST(LibDNNGemmTest, TestGemmCPUGPU) {
     EXPECT_EQ(C.cpu_data()[i], result[i]);
   }
 
-  dc->get_libdnn_blas<float,float,float>()->gemm(CblasNoTrans, CblasNoTrans,
+  dc->GetLibDNNBlas<TypeParam, TypeParam>()->gemm(CblasNoTrans, CblasNoTrans,
               2, 4, 3, 1., A.gpu_data(), B.gpu_data(), 0., C.mutable_gpu_data(),
               LIBDNN_ACCUMULATE_PREC_NATIVE,
-              std::make_shared<Quantizer<float, float> >(dc)
-              std::make_shared<Quantizer<float, float> >(dc));
+              make_shared<Quantizer<TypeParam, TypeParam> >(dc),
+              make_shared<Quantizer<TypeParam, TypeParam> >(dc));
 
   for (int_tp i = 0; i < 8; ++i) {
     EXPECT_EQ(C.cpu_data()[i], result[i]);
@@ -56,11 +56,11 @@ TYPED_TEST(LibDNNGemmTest, TestGemmCPUGPU) {
     EXPECT_EQ(C.cpu_data()[i], result[i]);
   }
 
-  dc->get_libdnn_blas<float,float,float>()->gemm(CblasNoTrans, CblasNoTrans,
+  dc->GetLibDNNBlas<TypeParam, TypeParam>()->gemm(CblasTrans, CblasNoTrans,
               2, 4, 3, 1., A.gpu_data(), B.gpu_data(), 0., C.mutable_gpu_data(),
               LIBDNN_ACCUMULATE_PREC_NATIVE,
-              std::make_shared<Quantizer<float, float> >(dc)
-              std::make_shared<Quantizer<float, float> >(dc));
+              make_shared<Quantizer<TypeParam, TypeParam> >(dc),
+              make_shared<Quantizer<TypeParam, TypeParam> >(dc));
 
   for (int_tp i = 0; i < 8; ++i) {
     EXPECT_EQ(C.cpu_data()[i], result[i]);
@@ -75,11 +75,11 @@ TYPED_TEST(LibDNNGemmTest, TestGemmCPUGPU) {
     EXPECT_EQ(C.cpu_data()[i], result[i]);
   }
 
-  dc->get_libdnn_blas<float,float,float>()->gemm(CblasNoTrans, CblasNoTrans,
+  dc->GetLibDNNBlas<TypeParam, TypeParam>()->gemm(CblasTrans, CblasTrans,
               2, 4, 3, 1., A.gpu_data(), B.gpu_data(), 0., C.mutable_gpu_data(),
               LIBDNN_ACCUMULATE_PREC_NATIVE,
-              std::make_shared<Quantizer<float, float> >(dc)
-              std::make_shared<Quantizer<float, float> >(dc));
+              make_shared<Quantizer<TypeParam, TypeParam> >(dc),
+              make_shared<Quantizer<TypeParam, TypeParam> >(dc));
 
   for (int_tp i = 0; i < 8; ++i) {
     EXPECT_EQ(C.cpu_data()[i], result[i]);
@@ -94,17 +94,17 @@ TYPED_TEST(LibDNNGemmTest, TestGemmCPUGPU) {
     EXPECT_EQ(C.cpu_data()[i], result[i]);
   }
 
-  dc->get_libdnn_blas<float,float,float>()->gemm(CblasNoTrans, CblasNoTrans,
+  dc->GetLibDNNBlas<TypeParam, TypeParam>()->gemm(CblasNoTrans, CblasTrans,
               2, 4, 3, 1., A.gpu_data(), B.gpu_data(), 0., C.mutable_gpu_data(),
               LIBDNN_ACCUMULATE_PREC_NATIVE,
-              std::make_shared<Quantizer<float, float> >(dc)
-              std::make_shared<Quantizer<float, float> >(dc));
+              make_shared<Quantizer<TypeParam, TypeParam> >(dc),
+              make_shared<Quantizer<TypeParam, TypeParam> >(dc));
 
   for (int_tp i = 0; i < 8; ++i) {
     EXPECT_EQ(C.cpu_data()[i], result[i]);
   }
 }
 
-
+} // namespace caffe
 
 #endif  // USE_LIBDNN

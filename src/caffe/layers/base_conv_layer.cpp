@@ -7,6 +7,41 @@
 namespace caffe {
 
 template<typename Dtype, typename MItype, typename MOtype>
+void BaseConvolutionLayer<Dtype, MItype, MOtype>::compute_output_shape() {
+  const int_tp* kernel_shape_data = this->kernel_shape_.cpu_data();
+  const int_tp* stride_data = this->stride_.cpu_data();
+  const int_tp* pad_data = this->pad_.cpu_data();
+  const int_tp* dilation_data = this->dilation_.cpu_data();
+  this->output_shape_.clear();
+  if (this->deconvolution_) {
+    for (int_tp i = 0; i < this->num_spatial_axes_; ++i) {
+      // i + 1 to skip channel axis
+      const int_tp input_dim = this->input_shape(i + 1);
+      const int_tp kernel_extent = dilation_data[i] * (kernel_shape_data[i] - 1)
+          + 1;
+      const int_tp output_dim = stride_data[i] * (input_dim - 1)
+          + kernel_extent - 2 * pad_data[i];
+      this->output_shape_.push_back(output_dim);
+    }
+  } else {
+    for (int_tp i = 0; i < this->num_spatial_axes_; ++i) {
+      // i + 1 to skip channel axis
+      const int_tp input_dim = this->input_shape(i + 1);
+      const int_tp kernel_extent = dilation_data[i] * (kernel_shape_data[i] - 1)
+          + 1;
+      const int_tp output_dim = (input_dim + 2 * pad_data[i] - kernel_extent)
+          / stride_data[i] + 1;
+      this->output_shape_.push_back(output_dim);
+    }
+  }
+}
+
+template<typename Dtype, typename MItype, typename MOtype>
+bool BaseConvolutionLayer<Dtype, MItype, MOtype>::reverse_dimensions() {
+  return deconvolution_;
+}
+
+template<typename Dtype, typename MItype, typename MOtype>
 void BaseConvolutionLayer<Dtype, MItype, MOtype>::LayerSetUp(
             const vector<Blob<MItype>*>& bottom,
             const vector<Blob<MOtype>*>& top) {
@@ -204,7 +239,7 @@ void BaseConvolutionLayer<Dtype, MItype, MOtype>::Reshape(
   }
   // Shape the tops.
   bottom_shape_ = &bottom[0]->shape();
-  compute_output_shape();
+  this->compute_output_shape();
   vector<int_tp> top_shape(bottom[0]->shape().begin(),
                         bottom[0]->shape().begin() + channel_axis_);
   top_shape.push_back(num_output_);
@@ -267,6 +302,28 @@ void BaseConvolutionLayer<Dtype, MItype, MOtype>::Reshape(
     }
   }
 }
+
+#ifndef CPU ONLY
+
+template<typename Dtype, typename MItype, typename MOtype>
+shared_ptr<Blob<Dtype> >
+                     BaseConvolutionLayer<Dtype, MItype, MOtype>::col_buffer() {
+  if (col_buffer_lock_id_ == -1) {
+    shared_col_buffer_ = this->device_->template Buffer<Dtype>(
+                                       col_buffer_shape_, &col_buffer_lock_id_);
+  }
+  return shared_col_buffer_;
+}
+
+template<typename Dtype, typename MItype, typename MOtype>
+void BaseConvolutionLayer<Dtype, MItype, MOtype>::unlock_col_buffer() {
+  if (not (col_buffer_lock_id_ == -1)) {
+    shared_col_buffer_ = nullptr;
+    this->device_->unlock_buffer(&col_buffer_lock_id_);
+  }
+}
+
+#endif  // !CPU_ONLY
 
 
 INSTANTIATE_CLASS_3T_GUARDED(BaseConvolutionLayer, (half_fp), (half_fp),

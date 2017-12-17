@@ -35,7 +35,9 @@ template<typename Dtype, typename MItype, typename MOtype>
 class CuDNNConvolutionLayer : public ConvolutionLayer<Dtype, MItype, MOtype> {
  public:
   explicit CuDNNConvolutionLayer(const LayerParameter& param)
-      : ConvolutionLayer<Dtype, MItype, MOtype>(param), handles_setup_(false) {}
+      : ConvolutionLayer<Dtype, MItype, MOtype>(param), handles_setup_(false) {
+    this->deconvoluton_ = false;
+  }
   virtual void LayerSetUp(const vector<Blob<MItype>*>& bottom,
       const vector<Blob<MOtype>*>& top);
   virtual void Reshape(const vector<Blob<MItype>*>& bottom,

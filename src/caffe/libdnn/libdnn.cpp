@@ -53,7 +53,7 @@ string LibDNN<MItype, MOtype>::generate_gemm_core(
       break;
   }
 
-  // Temporary registers for a and b
+  // Temporary registers for A and B
   ss << "MItype" << vwm << " Areg;" << std::endl;
   ss << "MItype" << vwn << " Breg[WPTN/VWN];" << std::endl;
 

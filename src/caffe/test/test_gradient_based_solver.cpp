@@ -244,19 +244,19 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
     net.Forward();
     ASSERT_TRUE(net.has_blob("data"));
     const Blob<Dtype>& data =
-        *(std::static_pointer_cast<Blob<Dtype> >(net.blob_by_name("data")));
+        *(static_pointer_cast<Blob<Dtype> >(net.blob_by_name("data")));
     ASSERT_TRUE(net.has_blob("targets"));
     const Blob<Dtype>& targets =
-        *(std::static_pointer_cast<Blob<Dtype> >(net.blob_by_name("targets")));
+        *(static_pointer_cast<Blob<Dtype> >(net.blob_by_name("targets")));
     ASSERT_TRUE(net.has_layer("innerprod"));
     const vector<shared_ptr<BlobBase > >& param_blobs = net.layer_by_name(
         "innerprod")->blob_bases();
     const int num_param_blobs = 2;
     ASSERT_EQ(num_param_blobs, param_blobs.size());
     const Blob<Dtype>& weights =
-        *(std::static_pointer_cast<Blob<Dtype> >(param_blobs[0]));
+        *(static_pointer_cast<Blob<Dtype> >(param_blobs[0]));
     const Blob<Dtype>& bias =
-        *(std::static_pointer_cast<Blob<Dtype> >(param_blobs[1]));
+        *(static_pointer_cast<Blob<Dtype> >(param_blobs[1]));
     ASSERT_EQ(D * n, data.count());
     ASSERT_EQ(n, targets.count());
     ASSERT_EQ(D, weights.count());
@@ -381,7 +381,7 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
         "innerprod")->blob_bases();
     ASSERT_EQ(2, param_blobs.size());
     const Blob<Dtype>& solver_updated_weights =
-        *(std::static_pointer_cast<Blob<Dtype> >(param_blobs[0]));
+        *(static_pointer_cast<Blob<Dtype> >(param_blobs[0]));
     ASSERT_EQ(D, solver_updated_weights.count());
     const double kPrecision = 1e-2;
     const double kMinPrecision = 1e-7;
@@ -396,7 +396,7 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
       EXPECT_NEAR(expected_updated_weight, solver_updated_weight, error_margin);
     }
     const Blob<Dtype>& solver_updated_bias_blob =
-        *(std::static_pointer_cast<Blob<Dtype> >(param_blobs[1]));
+        *(static_pointer_cast<Blob<Dtype> >(param_blobs[1]));
     ASSERT_EQ(1, solver_updated_bias_blob.count());
     const Dtype expected_updated_bias = updated_bias.cpu_data()[0];
     const Dtype solver_updated_bias = solver_updated_bias_blob.cpu_data()[0];
@@ -444,7 +444,7 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
     for (int i = 0; i < param_blobs.size(); ++i) {
       noaccum_params[i].reset(new Blob<Dtype>());
       noaccum_params[i]->CopyFrom(
-          *(std::static_pointer_cast<Blob<Dtype> >(param_blobs[i])),
+          *(static_pointer_cast<Blob<Dtype> >(param_blobs[i])),
               false, true);
     }
     // Solve by equivalent accumulation of gradients over divided batches.
@@ -458,7 +458,7 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
     for (int i = 0; i < D; ++i) {
       const Dtype expected_param = noaccum_params[0]->cpu_data()[i];
       const Dtype accum_param =
-         std::static_pointer_cast<Blob<Dtype> >(accum_params[0])->cpu_data()[i];
+         static_pointer_cast<Blob<Dtype> >(accum_params[0])->cpu_data()[i];
       const Dtype error_margin = std::max(
           kMinPrecision,
           kPrecision * std::min(fabs(expected_param), fabs(accum_param)));
@@ -467,7 +467,7 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
     ASSERT_EQ(1, accum_params[1]->count());
     const Dtype expected_bias = noaccum_params[1]->cpu_data()[0];
     const Dtype accum_bias =
-         std::static_pointer_cast<Blob<Dtype> >(accum_params[1])->cpu_data()[0];
+         static_pointer_cast<Blob<Dtype> >(accum_params[1])->cpu_data()[0];
     const Dtype error_margin = std::max(
         kMinPrecision,
         kPrecision * std::min(fabs(expected_bias), fabs(accum_bias)));

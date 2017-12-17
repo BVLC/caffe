@@ -23,6 +23,30 @@ void Device::rng_uniform(const uint_tp n, const double a,
 }
 
 template<>
+void Device::rng_uniform(const uint_tp n, const int8_t a,
+                                const int8_t b, vptr<int8_t> r) {
+  this->rng_uniform_int8(n, a, b, r);
+}
+
+template<>
+void Device::rng_uniform(const uint_tp n, const int16_t a,
+                                const int16_t b, vptr<int16_t> r) {
+  this->rng_uniform_int16(n, a, b, r);
+}
+
+template<>
+void Device::rng_uniform(const uint_tp n, const int32_t a,
+                                const int32_t b, vptr<int32_t> r) {
+  this->rng_uniform_int32(n, a, b, r);
+}
+
+template<>
+void Device::rng_uniform(const uint_tp n, const int64_t a,
+                                const int64_t b, vptr<int64_t> r) {
+  this->rng_uniform_int64(n, a, b, r);
+}
+
+template<>
 void Device::rng_gaussian(const uint_tp n, const half_fp mu,
                   const half_fp sigma, vptr<half_fp> r) {
   this->rng_gaussian_half(n, mu, sigma, r);
@@ -207,6 +231,34 @@ void Device::rng_uniform_double(const uint_tp n, const double a,
   vector<double> random(n);  // NOLINT
   caffe_rng_uniform(n, a, b, &random[0]);
   this->memcpy(sizeof(double) * n, &random[0], vptr<void>(r));
+}
+
+void Device::rng_uniform_int8(const uint_tp n, const int8_t a,
+                                   const int8_t b, vptr<int8_t> r) {
+  vector<int8_t> random(n);  // NOLINT
+  caffe_rng_uniform(n, a, b, &random[0]);
+  this->memcpy(sizeof(int8_t) * n, &random[0], vptr<void>(r));
+}
+
+void Device::rng_uniform_int16(const uint_tp n, const int16_t a,
+                                   const int16_t b, vptr<int16_t> r) {
+  vector<int16_t> random(n);  // NOLINT
+  caffe_rng_uniform(n, a, b, &random[0]);
+  this->memcpy(sizeof(int16_t) * n, &random[0], vptr<void>(r));
+}
+
+void Device::rng_uniform_int32(const uint_tp n, const int32_t a,
+                                   const int32_t b, vptr<int32_t> r) {
+  vector<int32_t> random(n);  // NOLINT
+  caffe_rng_uniform(n, a, b, &random[0]);
+  this->memcpy(sizeof(int32_t) * n, &random[0], vptr<void>(r));
+}
+
+void Device::rng_uniform_int64(const uint_tp n, const int64_t a,
+                                   const int64_t b, vptr<int64_t> r) {
+  vector<int64_t> random(n);  // NOLINT
+  caffe_rng_uniform(n, a, b, &random[0]);
+  this->memcpy(sizeof(int64_t) * n, &random[0], vptr<void>(r));
 }
 
 void Device::rng_gaussian_half(const uint_tp n, const half_fp mu,
