@@ -62,11 +62,9 @@ void PermuteLayer<Dtype>::Forward_const_gpu(
     Dtype *top_data = top[0]->mutable_gpu_data();
     int count = top[0]->count();
     const int *permute_order = permute_order_.gpu_data();
-    const int *new_steps = new_steps.gpu_data();
-    const int *old_steps = old_steps.gpu_data();
     // NOLINT_NEXT_LINE(whitespace/operators)
     PermuteKernel<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
-        count, bottom_data, permute_order, old_steps, new_steps,
+        count, bottom_data, permute_order, old_steps.gpu_data(), new_steps.gpu_data(),
         num_axes_, top_data);
     CUDA_POST_KERNEL_CHECK;
   } else {

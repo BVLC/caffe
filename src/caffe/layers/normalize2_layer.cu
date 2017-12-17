@@ -5,7 +5,7 @@
 #include "thrust/device_vector.h"
 
 #include "caffe/filler.hpp"
-#include "caffe/layers/normalize_layer.hpp"
+#include "caffe/layers/normalize2_layer.hpp"
 #include "caffe/util/math_functions.hpp"
 
 namespace caffe {
