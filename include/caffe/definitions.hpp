@@ -66,6 +66,8 @@ using std::string;
 using std::stringstream;
 using std::vector;
 using std::shared_ptr;
+using std::make_shared;
+using std::static_pointer_cast;
 using boost::variant;
 
 }

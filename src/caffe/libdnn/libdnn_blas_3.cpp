@@ -18,7 +18,7 @@ void LibDNNBlas<MItype, MOtype>::initialize_gemm_tuner(
     tuner->add_set_param <int_tp>("workgroup_size_" + std::to_string(id),
                                       16, workgroup_sizes);
   }
-  // TSK
+
   tuner->add_range_param<int_tp>("TSK", 8, 1, 32, 1);
   tuner->add_range_param<int_tp>("TSK_UNROLL", 1, 1, 16, 1);
   tuner->add_range_param<int_tp>("WPTM", 4, 4, 16, 4);
@@ -81,21 +81,27 @@ string LibDNNBlas<MItype, MOtype>::generate_gemm_source(
     shared_ptr<Quantizer<MItype, MOtype> > out_quantizer) {
   stringstream ss;
 
+  ss << program->setup();
+  ss << program->atomics();
+  ss << program->template define_vector_type<MItype>("MItype", 0, 16);
+  ss << program->template define_vector_type<MOtype>("MOtype", 0, 16);
+  ss << program->vector_accessors();
+
   string accreg_type = "MItype";
   switch (prec) {
     case LIBDNN_ACCUMULATE_PREC_NATIVE:
       break;
     case LIBDNN_ACCUMULATE_PREC_8:
-      accreg_type = this->program_->template device_type_name<int8_t>();
+      accreg_type = program->template device_type_name<int8_t>();
       break;
     case LIBDNN_ACCUMULATE_PREC_16:
-      accreg_type = this->program_->template device_type_name<int16_t>();
+      accreg_type = program->template device_type_name<int16_t>();
       break;
     case LIBDNN_ACCUMULATE_PREC_32:
-      accreg_type = this->program_->template device_type_name<int32_t>();
+      accreg_type = program->template device_type_name<int32_t>();
       break;
     case LIBDNN_ACCUMULATE_PREC_64:
-      accreg_type = this->program_->template device_type_name<int64_t>();
+      accreg_type = program->template device_type_name<int64_t>();
       break;
     default:
       break;
@@ -113,72 +119,106 @@ string LibDNNBlas<MItype, MOtype>::generate_gemm_source(
   int lpta = (tsm * tsk) / (rtsm * rtsn);
   int lptb = (tsn * tsk) / (rtsm * rtsn);
 
-  ss << program->setup();
-  ss << program->atomics();
-  ss << program->template define_vector_type<MItype>(
-      program->template device_type_name<MItype>(), 0, 16);
-  ss << program->template define_vector_type<MItype>(
-      program->template device_type_name<MItype>(), 0, 16);
-  ss << program->template define_vector_type<MOtype>(
-      program->template device_type_name<MOtype>(), 0, 16);
-  ss << program->vector_accessors();
 
   // GEMM definitions
-  ss << this->program_->define("M", M);
-  ss << this->program_->define("N", N);
-  ss << this->program_->define("K", K);
+  ss << program->define("M", M);
+  ss << program->define("N", N);
+  ss << program->define("K", K);
 
   // Local memory padding
-  ss << this->program_->define("v_pad_A", tuner->get_param<int>("lmem_pad_A"));
-  ss << this->program_->define("v_pad_B", tuner->get_param<int>("lmem_pad_B"));
+  ss << program->define("v_pad_A", tuner->get_param<int>("lmem_pad_A"));
+  ss << program->define("v_pad_B", tuner->get_param<int>("lmem_pad_B"));
+
+  // The tile-size in dimension M
+  ss << program->define("TSM", tuner->get_param<int>("WPTM")
+          * tuner->get_param<int>("workgroup_size_1"));
+  // The tile-size in dimension N
+  ss << program->define("TSN", tuner->get_param<int>("WPTN")
+          * tuner->get_param<int>("workgroup_size_0"));
+  // The tile-size in dimension K
+  ss << program->define("TSK", tuner->get_param<int>("TSK"));
+  // TSK unrolling
+  ss << program->define("TSK_UNROLL",
+                         tuner->get_param<int>("TSK_UNROLL"));
+  // The work-per-thread in dimension M
+  ss << program->define("WPTM", tuner->get_param<int>("WPTM"));
+  ss << program->define("VWM", tuner->get_param<int>("VWM"));
+  // The work-per-thread in dimension N
+  ss << program->define("WPTN", tuner->get_param<int>("WPTN"));
+  ss << program->define("VWN", tuner->get_param<int>("VWN"));
+  // The reduced tile-size in dimension M
+  ss << program->define("RTSM",
+                         tuner->get_param<int>("workgroup_size_1"));
+  // The reduced tile-size in dimension N
+  ss << program->define("RTSN",
+                         tuner->get_param<int>("workgroup_size_0"));
+  // Loads-per-thread for A
+  ss << program->define("LPTA", "((TSK*TSM)/(RTSM*RTSN))");
+  // Loads-per-thread for B
+  ss << program->define("LPTB", "((TSK*TSN)/(RTSM*RTSN))");
+
+  // Num tiles needs to be next higher even integer
+  // (due to some quirky bug in AMD OpenCL 2.0 on Windows)
+  ss << program->define("v_num_tiles", "(((K - 1)/(TSK*2) + 1)*2)");
 
   KernelArgs args;
   if (alpha_term) {
-    args.push_back(this->program_->template create_kernel_arg<MItype>("alpha",
+    args.push_back(program->template create_kernel_arg<MItype>("alpha",
                                                              KERNEL_ARG_CONST));
   }
-  args.push_back(this->program_->template create_kernel_arg<MItype>("A",
+  args.push_back(program->template create_kernel_arg<MItype>("A",
                KERNEL_ARG_RESTRICT | KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_CONST));
-  args.push_back(this->program_->template create_kernel_arg<MItype>("B",
+  args.push_back(program->template create_kernel_arg<MItype>("B",
                KERNEL_ARG_RESTRICT | KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_CONST));
   if (beta_term) {
-    args.push_back(this->program_->template create_kernel_arg<MItype>("beta",
+    args.push_back(program->template create_kernel_arg<MItype>("beta",
                                                              KERNEL_ARG_CONST));
   }
-  args.push_back(this->program_->template create_kernel_arg<MOtype>("C",
+  args.push_back(program->template create_kernel_arg<MOtype>("C",
                                   KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_RESTRICT));
-  ss << this->program_->function("libdnn_gemm", args);
+  ss << program->function("libdnn_gemm", args);
+
+  ss << program->global_ptr("const MItype", "Aptr") << " = A;"
+     << std::endl;
+  ss << program->global_ptr("const MItype", "Bptr")<< " = B;"
+     << std::endl;
+  ss << program->global_ptr("MOtype", "Cptr")<< " = C;"
+     << std::endl;
 
   // Thread identifiers
   // Local row ID (max: RTSM=TSM/WPTM)
-  ss << "const int_tp tidn = " << this->program_->local_id(0) << ";"
+  ss << "const int_tp tidn = " << program->local_id(0) << ";"
      << std::endl;
   // Local col ID (max: RTSN=TSN/WPTN)
-  ss << "const int_tp tidm = " << this->program_->local_id(1) << ";"
+  ss << "const int_tp tidm = " << program->local_id(1) << ";"
      << std::endl;
   // Work-group offset
-  ss << "const int_tp offN = TSN * " << this->program_->group_id(0) << ";"
+  ss << "const int_tp offN = TSN * " << program->group_id(0) << ";"
      << std::endl;
   // Work-group offset
-  ss << "const int_tp offM = TSM * " << this->program_->group_id(1) << ";"
+  ss << "const int_tp offM = TSM * " << program->group_id(1) << ";"
      << std::endl;
 
   // Local tile memory
-  // Asub for loading weights & shuffling the output
-  ss << "volatile " << this->program_->local_mem("MItype",
+  // Asub
+  ss << "volatile " << program->local_mem("MItype",
                       "Asub[" + std::to_string(tsm) + "]"
                       + "[" + std::to_string(tsk) + " + v_pad_A]") << ";"
                     << std::endl;
-  // Bsub for loading the input image and shuffling the output image
-  ss << "volatile " << this->program_->local_mem("MItype",
+  // Bsub
+  ss << "volatile " << program->local_mem("MItype",
                       "Bsub[" + std::to_string(tsk) + "]"
                       + "[" + std::to_string(tsn) + " + v_pad_B]") << ";"
                     << std::endl;
 
   // Initialize the accumulation registers
   ss << "{" << std::endl;  // Scoping for C registers
-  ss << this->generate_accreg_init(tuner, false, beta_term, beta_term,
-                                   prec);
+  ss << this->generate_accreg_init(tuner, false, beta_term, beta_term, prec);
+
+  ss << "{" << std::endl;  // Scoping for load & compute block
+  // Loop over all tiles
+  ss << "#pragma unroll 1" << std::endl;
+  ss << "for (int_tp t = 0; t < v_num_tiles; ++t) {" << std::endl;
 
   // Load one tile of A into local memory
   ss << "{" << std::endl;  // Scoping for loading A
@@ -226,9 +266,12 @@ string LibDNNBlas<MItype, MOtype>::generate_gemm_source(
   ss << "}" << std::endl;  // LPTB
   ss << "}" << std::endl;  // Scoping for loading B
 
-  ss << this->program_->local_barrier() << std::endl;
+  // Synchronize to make sure the tile is loaded
+  ss << program->local_barrier() << std::endl;
+
   ss << this->generate_gemm_core(tuner, false, alpha_term, prec);
-  ss << this->program_->local_barrier() << std::endl;
+
+  ss << program->local_barrier() << std::endl;
 
   // Loop over all tiles
   ss << "}" << std::endl;
@@ -309,40 +352,53 @@ void LibDNNBlas<MItype, MOtype>::gemm(
                const MItype beta, vptr<MOtype> C, libdnnAccumulatePrecision_t prec,
                shared_ptr<Quantizer<MItype, MItype> > in_quantizer,
                shared_ptr<Quantizer<MItype, MOtype> > out_quantizer) {
-  program_mutex_.lock();
   bool alpha_term = alpha != (MItype)1;
   bool beta_term = beta != (MItype)0;
 
-  size_t id = get_id(gemm_string_identifier(trans_A, trans_B, M, N, K,
+  string identifier = gemm_string_identifier(trans_A, trans_B, M, N, K,
                                             alpha_term, beta_term, prec,
-                                            in_quantizer, out_quantizer));
+                                            in_quantizer, out_quantizer);
+
+  int_tp id = get_id(identifier);
+  if (id < 0) {
+    id = get_id_or_new(identifier);
+  }
   shared_ptr<LibDNNTuner> tuner = program_tuners_[id];
   shared_ptr<DeviceProgram> program = programs_[id];
-
-
+  boost::shared_lock<boost::shared_mutex> lock(program_mutex_);
   if (!program_ready_[id]) {
-    initialize_gemm_tuner(program, tuner);
-    stringstream ss;
-    ss << generate_gemm_source(program, tuner,
-                               trans_A == CblasNoTrans, trans_B == CblasTrans,
-                               M, N, K, alpha_term, beta_term, prec,
-                               in_quantizer, out_quantizer);
-    program->set_source(ss.str());
-    program->Compile(true, true);
+    lock.unlock();
+    // Compiling new kernel has to lock the program lock exclusively
+    boost::unique_lock<boost::shared_mutex> ulock(program_mutex_);
+    if (!program_ready_[id]) {
+      initialize_gemm_tuner(program, tuner);
+      stringstream ss;
+      ss << generate_gemm_source(program, tuner,
+                                 trans_A == CblasTrans, trans_B == CblasTrans,
+                                 M, N, K, alpha_term, beta_term, prec,
+                                 in_quantizer, out_quantizer);
+      program->set_source(ss.str());
+      program->Compile(true, true);
+      program_ready_[id] = true;
+    }
+    ulock.unlock();
   }
-  shared_ptr<DeviceKernel> kernel = this->program_->GetKernel("libdnn_gemm");
+  lock.unlock();
 
-  int_tp fw_wptn = tuner->get_param<int>("WPTN");
-  int_tp fw_wptm = tuner->get_param<int>("WPTM");
-  int_tp fw_wgs0 = tuner->get_param<int>("workgroup_size_0");
-  int_tp fw_wgs1 = tuner->get_param<int>("workgroup_size_1");
-  int_tp fw_div_N = fw_wptn * fw_wgs0;
-  int_tp fw_div_M = fw_wptm * fw_wgs1;
+  // Non-exclusive execute
+  shared_ptr<DeviceKernel> kernel = program->GetKernel("libdnn_gemm");
 
-  vector<size_t> group = {((N - 1) / fw_div_N + 1),
-                          ((M - 1) / fw_div_M + 1),
+  size_t wptn = tuner->get_param<int>("WPTN");
+  size_t wptm = tuner->get_param<int>("WPTM");
+  size_t wgs0 = tuner->get_param<int>("workgroup_size_0");
+  size_t wgs1 = tuner->get_param<int>("workgroup_size_1");
+  size_t div_N = wptn * wgs0;
+  size_t div_M = wptm * wgs1;
+
+  vector<size_t> group = {((N - 1) / div_N + 1),
+                          ((M - 1) / div_M + 1),
                           1};
-  vector<size_t> local = {fw_wgs0, fw_wgs1, 1};
+  vector<size_t> local = {wgs0, wgs1, 1};
 
   if (alpha_term) {
     kernel->add_arg(&alpha);
@@ -354,7 +410,6 @@ void LibDNNBlas<MItype, MOtype>::gemm(
   }
   kernel->add_arg(&C);
   kernel->Execute(group, local);
-  program_mutex_.unlock();
 }
 
 INSTANTIATE_CLASS_2T_GUARDED(LibDNNBlas, PROTO_TYPES, PROTO_TYPES);

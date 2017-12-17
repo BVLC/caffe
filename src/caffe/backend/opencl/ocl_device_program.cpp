@@ -176,7 +176,7 @@ shared_ptr<DeviceKernel> OclDeviceProgram::GetKernel(string name) {
     std::cout << i << " flags: " << std::get<2>(args[i]) << std::endl;
   }*/
 
-  return std::make_shared<OclDeviceKernel>(device_, kernel, args);
+  return make_shared<OclDeviceKernel>(device_, kernel, args);
 }
 
 string OclDeviceProgram::function(string name, KernelArgs args) {

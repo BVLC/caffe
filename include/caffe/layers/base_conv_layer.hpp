@@ -46,9 +46,9 @@ class BaseConvolutionLayer : public Layer<Dtype, MItype, MOtype> {
   }
   // reverse_dimensions should return true iff we are implementing deconv, so
   // that conv helpers know which dimensions are which.
-  virtual bool reverse_dimensions() = 0;
+  bool reverse_dimensions();
   // Compute height_out_ and width_out_ from other parameters.
-  virtual void compute_output_shape() = 0;
+  void compute_output_shape();
 
   /// @brief The spatial dimensions of a filter kernel.
   Blob<int_tp> kernel_shape_;
@@ -81,8 +81,22 @@ class BaseConvolutionLayer : public Layer<Dtype, MItype, MOtype> {
   bool is_1x1_;
   bool force_nd_im2col_;
   bool use_colbuffer_;
+  bool deconvolution_;
+
+  Blob<Dtype> col_buffer_;
+  Blob<Dtype> bias_multiplier_;
   shared_ptr<Blob<Dtype> > shared_col_buffer_;
   int_tp col_buffer_lock_id_;
+
+  int_tp conv_out_channels_;
+  int_tp conv_in_channels_;
+  int_tp conv_out_spatial_dim_;
+  int_tp kernel_dim_;
+  int_tp col_offset_;
+  int_tp output_offset_;
+  int_tp num_kernels_im2col_;
+  int_tp num_kernels_col2im_;
+  bool use_skernel_;
 };
 
 }  // namespace caffe

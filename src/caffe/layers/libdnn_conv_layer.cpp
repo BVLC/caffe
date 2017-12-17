@@ -25,10 +25,10 @@ void LibDNNConvolutionLayer<Dtype, MItype, MOtype>::Reshape(
 
   bool shapes_changed = false;
   if (libdnn_.get() != nullptr) {
-    vector<int_tp>& libdnn_in_sh = libdnn_.get()->get_config().in_shape;
-    vector<int_tp>& libdnn_out_sh = libdnn_.get()->get_config().out_shape;
-    vector<int_tp>& new_in_sh = bottom[0]->shape();
-    vector<int_tp>& new_out_sh = top[0]->shape();
+    vector<int_tp> libdnn_in_sh = libdnn_.get()->get_config().in_shape;
+    vector<int_tp> libdnn_out_sh = libdnn_.get()->get_config().out_shape;
+    const vector<int_tp>& new_in_sh = bottom[0]->shape();
+    const vector<int_tp>& new_out_sh = top[0]->shape();
     bool in_eq = libdnn_in_sh.size() == new_in_sh.size()
                  && libdnn_in_sh[0] >= new_in_sh[0] 
                  && std::equal(libdnn_in_sh.begin() + 1,

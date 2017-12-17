@@ -7,7 +7,7 @@
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
 
-#include "caffe/layers/base_conv_layer.hpp"
+#include "caffe/layers/caffe_conv_layer.hpp"
 
 namespace caffe {
 
@@ -29,7 +29,7 @@ namespace caffe {
  */
 template<typename Dtype, typename MItype, typename MOtype>
 class ConvolutionLayer
-    : public BaseConvolutionLayer<Dtype, MItype, MOtype> {
+    : public CaffeConvolutionLayer<Dtype, MItype, MOtype> {
  public:
   /**
    * @param param provides ConvolutionParameter convolution_param,
@@ -64,7 +64,7 @@ class ConvolutionLayer
    *    kernels + stream parallelism) engines.
    */
   explicit ConvolutionLayer(const LayerParameter& param)
-      : BaseConvolutionLayer<Dtype, MItype, MOtype>(param) {
+      : CaffeConvolutionLayer<Dtype, MItype, MOtype>(param) {
   }
 
   virtual inline const char* type() const {
@@ -96,10 +96,6 @@ class ConvolutionLayer
   virtual void Backward_gpu(const vector<Blob<MOtype>*>& top,
                             const vector<bool>& propagate_down,
                             const vector<Blob<MItype>*>& bottom);
-  virtual inline bool reverse_dimensions() {
-    return false;
-  }
-  virtual void compute_output_shape();
 };
 
 }  // namespace caffe

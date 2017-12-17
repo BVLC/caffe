@@ -17,7 +17,8 @@ namespace caffe {
  *        ConvolutionLayer and DeconvolutionLayer.
  */
 template<typename Dtype, typename MItype, typename MOtype>
-class CaffeConvolutionLayer : public Layer<Dtype, MItype, MOtype> {
+class CaffeConvolutionLayer
+    : public BaseConvolutionLayer<Dtype, MItype, MOtype> {
  public:
   explicit CaffeConvolutionLayer(const LayerParameter& param)
       : BaseConvolutionLayer<Dtype, MItype, MOtype>(param) {
@@ -51,122 +52,88 @@ class CaffeConvolutionLayer : public Layer<Dtype, MItype, MOtype> {
                          const uint_tp input_off);
 #endif
 
-  // reverse_dimensions should return true iff we are implementing deconv, so
-  // that conv helpers know which dimensions are which.
-  virtual bool reverse_dimensions() = 0;
-  // Compute height_out_ and width_out_ from other parameters.
-  virtual void compute_output_shape() = 0;
-
-  /// @brief The spatial dimensions of a filter kernel.
-  Blob<int_tp> kernel_shape_;
-  /// @brief The spatial dimensions of the stride.
-  Blob<int_tp> stride_;
-  /// @brief The spatial dimensions of the padding.
-  Blob<int_tp> pad_;
-  /// @brief The spatial dimensions of the dilation.
-  Blob<int_tp> dilation_;
-  /// @brief The spatial dimensions of the convolution input.
-  Blob<int_tp> conv_input_shape_;
-  /// @brief The spatial dimensions of the col_buffer.
-  vector<int_tp> col_buffer_shape_;
-  /// @brief The spatial dimensions of the output.
-  vector<int_tp> output_shape_;
-  const vector<int_tp>* bottom_shape_;
-
-  int_tp num_spatial_axes_;
-  int_tp bottom_dim_;
-  int_tp top_dim_;
-
-  int_tp channel_axis_;
-  int_tp num_;
-  int_tp channels_;
-  int_tp group_;
-  int_tp out_spatial_dim_;
-  int_tp weight_offset_;
-  int_tp num_output_;
-  bool bias_term_;
-  bool is_1x1_;
-  bool force_nd_im2col_;
-  bool use_colbuffer_;
-
  private:
   // wrap im2col/col2im so we don't have to remember the (long) argument lists
   inline void conv_im2col_cpu(const Dtype* data, Dtype* col_buff) {
-    if (!force_nd_im2col_ && num_spatial_axes_ == 2) {
-      im2col_cpu(data, conv_in_channels_,
-          conv_input_shape_.cpu_data()[1], conv_input_shape_.cpu_data()[2],
-          kernel_shape_.cpu_data()[0], kernel_shape_.cpu_data()[1],
-          pad_.cpu_data()[0], pad_.cpu_data()[1],
-          stride_.cpu_data()[0], stride_.cpu_data()[1],
-          dilation_.cpu_data()[0], dilation_.cpu_data()[1], col_buff);
+    if (!this->force_nd_im2col_ && this->num_spatial_axes_ == 2) {
+      im2col_cpu(data, this->conv_in_channels_,
+          this->conv_input_shape_.cpu_data()[1],
+          this->conv_input_shape_.cpu_data()[2],
+          this->kernel_shape_.cpu_data()[0],
+          this->kernel_shape_.cpu_data()[1],
+          this->pad_.cpu_data()[0],
+          this->pad_.cpu_data()[1],
+          this->stride_.cpu_data()[0],
+          this->stride_.cpu_data()[1],
+          this->dilation_.cpu_data()[0],
+          this->dilation_.cpu_data()[1], col_buff);
     } else {
-      im2col_nd_cpu(data, num_spatial_axes_, conv_input_shape_.cpu_data(),
-          col_buffer_shape_.data(), kernel_shape_.cpu_data(),
-          pad_.cpu_data(), stride_.cpu_data(), dilation_.cpu_data(), col_buff);
+      im2col_nd_cpu(data, this->num_spatial_axes_,
+          this->conv_input_shape_.cpu_data(),
+          this->col_buffer_shape_.data(),
+          this->kernel_shape_.cpu_data(),
+          this->pad_.cpu_data(), this->stride_.cpu_data(),
+          this->dilation_.cpu_data(), col_buff);
     }
   }
   inline void conv_col2im_cpu(const Dtype* col_buff, Dtype* data) {
-    if (!force_nd_im2col_ && num_spatial_axes_ == 2) {
-      col2im_cpu(col_buff, conv_in_channels_,
-          conv_input_shape_.cpu_data()[1], conv_input_shape_.cpu_data()[2],
-          kernel_shape_.cpu_data()[0], kernel_shape_.cpu_data()[1],
-          pad_.cpu_data()[0], pad_.cpu_data()[1],
-          stride_.cpu_data()[0], stride_.cpu_data()[1],
-          dilation_.cpu_data()[0], dilation_.cpu_data()[1], data);
+    if (!this->force_nd_im2col_ && this->num_spatial_axes_ == 2) {
+      col2im_cpu(col_buff, this->conv_in_channels_,
+          this->conv_input_shape_.cpu_data()[1],
+          this->conv_input_shape_.cpu_data()[2],
+          this->kernel_shape_.cpu_data()[0],
+          this->kernel_shape_.cpu_data()[1],
+          this->pad_.cpu_data()[0], this->pad_.cpu_data()[1],
+          this->stride_.cpu_data()[0], this->stride_.cpu_data()[1],
+          this->dilation_.cpu_data()[0], this->dilation_.cpu_data()[1], data);
     } else {
-      col2im_nd_cpu(col_buff, num_spatial_axes_, conv_input_shape_.cpu_data(),
-          col_buffer_shape_.data(), kernel_shape_.cpu_data(),
-          pad_.cpu_data(), stride_.cpu_data(), dilation_.cpu_data(), data);
+      col2im_nd_cpu(col_buff, this->num_spatial_axes_,
+          this->conv_input_shape_.cpu_data(),
+          this->col_buffer_shape_.data(), this->kernel_shape_.cpu_data(),
+          this->pad_.cpu_data(), this->stride_.cpu_data(),
+          this->dilation_.cpu_data(), data);
     }
   }
 
 #ifndef CPU_ONLY
   inline void conv_im2col_gpu(vptr<const Dtype> data, vptr<Dtype> col_buff) {
-    if (!force_nd_im2col_ && num_spatial_axes_ == 2) {
-      this->device_->im2col(data, conv_in_channels_,
-          conv_input_shape_.cpu_data()[1], conv_input_shape_.cpu_data()[2],
-          kernel_shape_.cpu_data()[0], kernel_shape_.cpu_data()[1],
-          pad_.cpu_data()[0], pad_.cpu_data()[1],
-          stride_.cpu_data()[0], stride_.cpu_data()[1],
-          dilation_.cpu_data()[0], dilation_.cpu_data()[1], col_buff);
+    if (!this->force_nd_im2col_ && this->num_spatial_axes_ == 2) {
+      this->device_->im2col(data, this->conv_in_channels_,
+          this->conv_input_shape_.cpu_data()[1],
+          this->conv_input_shape_.cpu_data()[2],
+          this->kernel_shape_.cpu_data()[0], this->kernel_shape_.cpu_data()[1],
+          this->pad_.cpu_data()[0], this->pad_.cpu_data()[1],
+          this->stride_.cpu_data()[0], this->stride_.cpu_data()[1],
+          this->dilation_.cpu_data()[0],
+          this->dilation_.cpu_data()[1], col_buff);
     } else {
-      this->device_->im2col_nd(data, num_spatial_axes_, num_kernels_im2col_,
-          conv_input_shape_.gpu_data(), col_buffer_.gpu_shape(),
-          kernel_shape_.gpu_data(), pad_.gpu_data(),
-          stride_.gpu_data(), dilation_.gpu_data(), col_buff);
+      this->device_->im2col_nd(data, this->num_spatial_axes_,
+          this->num_kernels_im2col_,
+          this->conv_input_shape_.gpu_data(),
+          this->col_buffer_.gpu_shape(),
+          this->kernel_shape_.gpu_data(), this->pad_.gpu_data(),
+          this->stride_.gpu_data(), this->dilation_.gpu_data(), col_buff);
     }
   }
 
   inline void conv_col2im_gpu(vptr<const Dtype> col_buff, vptr<Dtype> data) {
-    if (!force_nd_im2col_ && num_spatial_axes_ == 2) {
-      this->device_->col2im(col_buff, conv_in_channels_,
-          conv_input_shape_.cpu_data()[1], conv_input_shape_.cpu_data()[2],
-          kernel_shape_.cpu_data()[0], kernel_shape_.cpu_data()[1],
-          pad_.cpu_data()[0], pad_.cpu_data()[1],
-          stride_.cpu_data()[0], stride_.cpu_data()[1],
-          dilation_.cpu_data()[0], dilation_.cpu_data()[1], data);
+    if (!this->force_nd_im2col_ && this->num_spatial_axes_ == 2) {
+      this->device_->col2im(col_buff, this->conv_in_channels_,
+          this->conv_input_shape_.cpu_data()[1],
+          this->conv_input_shape_.cpu_data()[2],
+          this->kernel_shape_.cpu_data()[0], this->kernel_shape_.cpu_data()[1],
+          this->pad_.cpu_data()[0], this->pad_.cpu_data()[1],
+          this->stride_.cpu_data()[0], this->stride_.cpu_data()[1],
+          this->dilation_.cpu_data()[0], this->dilation_.cpu_data()[1], data);
     } else {
-      this->device_->col2im_nd(col_buff, num_spatial_axes_,
-          num_kernels_col2im_, conv_input_shape_.gpu_data(),
-          col_buffer_.gpu_shape(), kernel_shape_.gpu_data(), pad_.gpu_data(),
-          stride_.gpu_data(), dilation_.gpu_data(), data);
+      this->device_->col2im_nd(col_buff, this->num_spatial_axes_,
+          this->num_kernels_col2im_, this->conv_input_shape_.gpu_data(),
+          this->col_buffer_.gpu_shape(),
+          this->kernel_shape_.gpu_data(), this->pad_.gpu_data(),
+          this->stride_.gpu_data(), this->dilation_.gpu_data(), data);
     }
   }
 #endif  // !CPU_ONLY
-
-  int_tp num_kernels_im2col_;
-  int_tp num_kernels_col2im_;
-  int_tp conv_out_channels_;
-  int_tp conv_in_channels_;
-  int_tp conv_out_spatial_dim_;
-  int_tp kernel_dim_;
-  int_tp col_offset_;
-  int_tp output_offset_;
-
-  bool use_skernel_;
-
-  Blob<Dtype> col_buffer_;
-  Blob<Dtype> bias_multiplier_;
 };
 
 

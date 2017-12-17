@@ -355,7 +355,7 @@ void OclDevice::dot_half(const uint_tp n, vptr<const half_fp> x,
 
 
   shared_ptr<ocl_dev_ptr<half_fp> > oclptr_gpuout
-                    = std::make_shared<ocl_dev_ptr<half_fp> >(gpuout);
+                    = make_shared<ocl_dev_ptr<half_fp> >(gpuout);
   vptr<half_fp> vptr_gpuout(oclptr_gpuout);
   this->memcpy(sizeof(half_fp), vptr<void>(vptr_gpuout), out);
 
@@ -383,7 +383,7 @@ void OclDevice::dot_half(const uint_tp n, vptr<const half_fp> x,
       &queue));
 
   shared_ptr<ocl_dev_ptr<half_fp> > oclptrZ
-                    = std::make_shared<ocl_dev_ptr<half_fp> >(Z, offZ);
+                    = make_shared<ocl_dev_ptr<half_fp> >(Z, offZ);
   vptr<half_fp> vptrZ(oclptrZ);
   this->memcpy(sizeof(half_fp), vptr<void>(vptrZ), out);
   clReleaseMemObject(Z);
@@ -435,7 +435,7 @@ void OclDevice::dot_float(const uint_tp n, vptr<const float> x,
             offY, 1, scratch, 1, &queue, 0, NULL, NULL));
 
     shared_ptr<ocl_dev_ptr<float> > oclptr_gpuout
-                                = std::make_shared<ocl_dev_ptr<float> >(gpuout);
+                                = make_shared<ocl_dev_ptr<float> >(gpuout);
     vptr<float> vptr_gpuout(oclptr_gpuout);
     this->memcpy(sizeof(float), vptr<void>(vptr_gpuout), out);
     clReleaseMemObject(gpuout);
@@ -462,7 +462,7 @@ void OclDevice::dot_float(const uint_tp n, vptr<const float> x,
         &queue));
 
     shared_ptr<ocl_dev_ptr<float> > oclptrZ
-                               = std::make_shared<ocl_dev_ptr<float> >(Z, offZ);
+                               = make_shared<ocl_dev_ptr<float> >(Z, offZ);
     vptr<float> vptrZ(oclptrZ);
     this->memcpy(sizeof(float), vptr<void>(vptrZ), out);
     clReleaseMemObject(Z);
@@ -523,7 +523,7 @@ void OclDevice::dot_double(const uint_tp n, vptr<const double> x,
             offY, 1, scratch, 1, &queue, 0, NULL, NULL));
 
     shared_ptr<ocl_dev_ptr<double> > oclptr_gpuout
-                               = std::make_shared<ocl_dev_ptr<double> >(gpuout);
+                               = make_shared<ocl_dev_ptr<double> >(gpuout);
     vptr<double> vptr_gpuout(oclptr_gpuout);
     this->memcpy(sizeof(double), vptr<void>(vptr_gpuout), out);
     clReleaseMemObject(gpuout);
@@ -550,7 +550,7 @@ void OclDevice::dot_double(const uint_tp n, vptr<const double> x,
         &queue));
 
     shared_ptr<ocl_dev_ptr<double> > oclptrZ
-                              = std::make_shared<ocl_dev_ptr<double> >(Z, offZ);
+                              = make_shared<ocl_dev_ptr<double> >(Z, offZ);
     vptr<double> vptrZ(oclptrZ);
     this->memcpy(sizeof(double), vptr<void>(vptrZ), out);
     clReleaseMemObject(Z);
@@ -595,7 +595,7 @@ void OclDevice::asum_half(const uint_tp n, vptr<const half_fp> x,
           scratch, 1, &queue, 0, NULL, NULL));
 
   shared_ptr<ocl_dev_ptr<half_fp> > oclptr_gpuout
-                     = std::make_shared<ocl_dev_ptr<half_fp> >(gpuout);
+                     = make_shared<ocl_dev_ptr<half_fp> >(gpuout);
   vptr<half_fp> vptr_gpuout(oclptr_gpuout);
   this->memcpy(sizeof(half_fp), vptr<void>(vptr_gpuout), out);
 
@@ -621,7 +621,7 @@ void OclDevice::asum_half(const uint_tp n, vptr<const half_fp> x,
       &queue));
 
   shared_ptr<ocl_dev_ptr<half_fp> > oclptrZ
-                    = std::make_shared<ocl_dev_ptr<half_fp> >(Z, offZ);
+                    = make_shared<ocl_dev_ptr<half_fp> >(Z, offZ);
   vptr<half_fp> vptrZ(oclptrZ);
   this->memcpy(sizeof(half_fp), vptr<void>(vptrZ), y);
 
@@ -665,7 +665,7 @@ void OclDevice::asum_float(const uint_tp n, vptr<const float> x, float* y) {
             scratch, 1, &queue, 0, NULL, NULL));
 
     shared_ptr<ocl_dev_ptr<float> > oclptr_gpuout
-                                = std::make_shared<ocl_dev_ptr<float> >(gpuout);
+                                = make_shared<ocl_dev_ptr<float> >(gpuout);
     vptr<float> vptr_gpuout(oclptr_gpuout);
     this->memcpy(sizeof(float), vptr<void>(vptr_gpuout), out);
 
@@ -691,7 +691,7 @@ void OclDevice::asum_float(const uint_tp n, vptr<const float> x, float* y) {
         &queue));
 
     shared_ptr<ocl_dev_ptr<float> > oclptrZ
-                    = std::make_shared<ocl_dev_ptr<float> >(Z, offZ);
+                    = make_shared<ocl_dev_ptr<float> >(Z, offZ);
     vptr<float> vptrZ(oclptrZ);
     this->memcpy(sizeof(float), vptr<void>(vptrZ), y);
     clReleaseMemObject(Z);
@@ -743,7 +743,7 @@ void OclDevice::asum_double(const uint_tp n, vptr<const double> x, double* y) {
             scratch, 1, &queue, 0, NULL, NULL));
 
     shared_ptr<ocl_dev_ptr<double> > oclptr_gpuout
-                               = std::make_shared<ocl_dev_ptr<double> >(gpuout);
+                               = make_shared<ocl_dev_ptr<double> >(gpuout);
     vptr<double> vptr_gpuout(oclptr_gpuout);
     this->memcpy(sizeof(double), vptr<void>(vptr_gpuout), out);
 
@@ -769,7 +769,7 @@ void OclDevice::asum_double(const uint_tp n, vptr<const double> x, double* y) {
         &queue));
 
     shared_ptr<ocl_dev_ptr<double> > oclptrZ
-                      = std::make_shared<ocl_dev_ptr<double> >(Z, offZ);
+                      = make_shared<ocl_dev_ptr<double> >(Z, offZ);
     vptr<double> vptrZ(oclptrZ);
     this->memcpy(sizeof(double), vptr<void>(vptrZ), y);
     clReleaseMemObject(Z);

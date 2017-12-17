@@ -912,16 +912,9 @@ void Blob<Dtype>::Clear() {
   }
 }
 
-INSTANTIATE_CLASS_1T(Blob, (float));
-#ifdef USE_HALF
-INSTANTIATE_CLASS_1T(Blob, (half_fp));
-#endif  // USE_HALF
-#ifdef USE_DOUBLE
-INSTANTIATE_CLASS_1T(Blob, (double));
-#endif  // USE_DOUBLE
+INSTANTIATE_CLASS_1T(Blob, (half_fp)(float)(double));
 INSTANTIATE_CLASS_1T(Blob, (int8_t)(int16_t)(int32_t)(int64_t));
 INSTANTIATE_CLASS_1T(Blob, (uint8_t)(uint16_t)(uint32_t)(uint64_t));
-
 
 }  // namespace caffe
 

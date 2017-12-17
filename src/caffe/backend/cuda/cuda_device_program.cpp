@@ -11,8 +11,8 @@ namespace caffe {
 
 CudaDeviceProgram::CudaDeviceProgram(Device* dev) : DeviceProgram(dev),
     cuda_program_(nullptr), cuda_module_(nullptr) {
-  cuda_program_ = std::make_shared<nvrtcProgram>();
-  cuda_module_ = std::make_shared<CUmodule>();
+  cuda_program_ = make_shared<nvrtcProgram>();
+  cuda_module_ = make_shared<CUmodule>();
 }
 
 CudaDeviceProgram::~CudaDeviceProgram() {
@@ -117,7 +117,7 @@ bool CudaDeviceProgram::Compile(bool load_cache, bool store_cache) {
 
 
 shared_ptr<DeviceKernel> CudaDeviceProgram::GetKernel(string name) {
-  shared_ptr<CUfunction> kernel = std::make_shared<CUfunction>();
+  shared_ptr<CUfunction> kernel = make_shared<CUfunction>();
   CHECK(cuda_module_.get()) << "CUDA module invalid.";
   cuModuleGetFunction(kernel.get(), *cuda_module_.get(), name.c_str());
   CHECK(kernel.get()) << "Loading CUDA kernel " << name << " failed.";
@@ -131,7 +131,7 @@ shared_ptr<DeviceKernel> CudaDeviceProgram::GetKernel(string name) {
     args = pos->second;
   }
 
-  return std::make_shared<CudaDeviceKernel>(device_, kernel, args);
+  return make_shared<CudaDeviceKernel>(device_, kernel, args);
 }
 
 string CudaDeviceProgram::function(string name,

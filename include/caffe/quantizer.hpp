@@ -25,6 +25,9 @@ class QuantizerBase {
   void set_mode(QuantizerMode mode);
   string get_mode_string();
 
+  void update_param(QuantizerParameter& param);
+  QuantizerParameter get_param() const;
+
   virtual void GenerateKernels() = 0;
   virtual void Forward_cpu(size_t n, const void* input, void* output) = 0;
   virtual void Backward_cpu(size_t n, const void* input, void* output) = 0;
@@ -45,7 +48,8 @@ class QuantizerBase {
 
  protected:
   explicit QuantizerBase(QuantizerParameter& param);
-  QuantizerParameter quant_param_;
+  explicit QuantizerBase(Device* dev_ptr);
+  QuantizerParameter param_;
   shared_ptr<DeviceProgram> program_;
   bool program_ready_;
   Device* device_;
@@ -65,6 +69,7 @@ template<typename MItype, typename MOtype>
 class Quantizer : public QuantizerBase {
  public:
   explicit Quantizer(QuantizerParameter& param);
+  explicit Quantizer(Device* dev_ptr);
 
   virtual void GenerateKernels();
 
@@ -105,6 +110,8 @@ class Quantizer : public QuantizerBase {
                                string src_val) const;
   virtual string bw_scale_term(int_tp vec_len, string scale_var,
                                string src_val) const;
+ private:
+  void init();
 };
 
 }  // namespace caffe

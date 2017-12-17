@@ -27,6 +27,7 @@ using caffe::Layer;
 using caffe::Solver;
 using caffe::Timer;
 using caffe::Device;
+using caffe::vptr;
 
 using std::string;
 using std::ostringstream;
@@ -503,60 +504,6 @@ int time() {
 }
 RegisterBrewFunction(time);
 
-
-int autotune() {
-  CHECK_GT(FLAGS_model.size(), 0) << "Need a model definition to time.";
-
-  vector<int> gpus;
-  get_gpus(&gpus);
-  if (gpus.size() == 0) {
-    LOG(INFO) << "Use CPU.";
-    Caffe::set_mode(Caffe::CPU);
-  } else {
-#ifndef CPU_ONLY
-    // Load all devices that will be used
-    Caffe::SetDevices(gpus);
-
-    ostringstream s;
-    for (int_tp i = 0; i < gpus.size(); ++i) {
-      s << (i ? ", " : "") << gpus[i];
-    }
-    LOG(INFO) << "Using GPUs " << s.str();
-    // Initialize the first device
-    Caffe::SetDevice(gpus[0]);
-    Caffe::set_mode(Caffe::GPU);
-    Caffe::set_solver_count(gpus.size());
-#endif  // !CPU_ONLY
-  }
-
-  caffe::SignalHandler signal_handler(
-        GetRequestedAction(FLAGS_sigint_effect),
-        GetRequestedAction(FLAGS_sighup_effect));
-
-  Net<half_fp> net(FLAGS_model, caffe::TRAIN, Caffe::GetDefaultDevice());
-
-  for (int i = 0; i < net.layers().size(); ++i) {
-#ifdef USE_LIBDNN
-    shared_ptr<caffe::LibDNNConvolutionLayer<half_fp> > layer =
-        boost::dynamic_pointer_cast<caffe::LibDNNConvolutionLayer<half_fp> >
-                (net.layers()[i]);
-    if (layer.get() != nullptr) {
-      half_fp* top_data = net.top_vecs()[i][0]->mutable_gpu_data();
-      half_fp* top_diff = net.top_vecs()[i][0]->mutable_gpu_diff();
-      half_fp* bottom_data = net.top_vecs()[i][0]->mutable_gpu_data();
-      half_fp* bottom_diff = net.top_vecs()[i][0]->mutable_gpu_diff();
-      int_tp batch_size = net.top_vecs()[i][0]->shape(0);
-      layer->Tune(top_data, top_diff, bottom_data, bottom_diff, batch_size);
-    }
-#endif  // USE_LIBDNN
-  }
-  return 0;
-}
-RegisterBrewFunction(autotune);
-
-
-
-
 int main(int argc, char** argv) {
   // Print output to stderr (while still logging).
   FLAGS_alsologtostderr = 1;
@@ -569,8 +516,7 @@ int main(int argc, char** argv) {
       "  train           train or finetune a model\n"
       "  test            score a model\n"
       "  device_query    show GPU diagnostic information\n"
-      "  time            benchmark model execution time"
-      "  autotune        autotune a model");
+      "  time            benchmark model execution time");
   // Run tool or show usage.
   caffe::GlobalInit(&argc, &argv);
   if (argc == 2) {

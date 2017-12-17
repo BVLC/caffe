@@ -18,7 +18,7 @@ template<typename Dtype, typename MItype, typename MOtype>
 void CuDNNConvolutionLayer<Dtype, MItype, MOtype>::LayerSetUp(
     const vector<Blob<MItype>*>& bottom,
     const vector<Blob<MOtype>*>& top) {
-  ConvolutionLayer<Dtype, MItype, MOtype>::LayerSetUp(bottom, top);
+  BaseConvolutionLayer<Dtype, MItype, MOtype>::LayerSetUp(bottom, top);
 
   this->use_colbuffer_ = false;
 

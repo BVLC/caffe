@@ -71,10 +71,10 @@ class Device {
       size_t id = libdnn_blas_.size();
       libdnn_blas_map_[data_id] = id;
       libdnn_blas_.push_back(
-          std::make_shared<LibDNNBlas<MItype, MOtype> >(this));
+          make_shared<LibDNNBlas<MItype, MOtype> >(this));
     }
     libdnn_lock_.unlock();
-    return static_cast<LibDNNBlas<MItype, MOtype> >(
+    return static_pointer_cast<LibDNNBlas<MItype, MOtype> >(
       libdnn_blas_[libdnn_blas_map_[data_id]]);
   }
 #endif  // USE_LIBDNN
@@ -354,18 +354,23 @@ class Device {
   virtual void rng_uniform_half(const uint_tp n, const half_fp a,
                         const half_fp b, vptr<half_fp> r);
 
-  virtual void rng_uniform_float(const uint_tp n, const float a, const float b,
-                                 vptr<float> r);
-
+  virtual void rng_uniform_float(const uint_tp n, const float a,
+                                 const float b, vptr<float> r);
   virtual void rng_uniform_double(const uint_tp n, const double a,
                                   const double b, vptr<double> r);
+  virtual void rng_uniform_int8(const uint_tp n, const int8_t a,
+                                 const int8_t b, vptr<int8_t> r);
+  virtual void rng_uniform_int16(const uint_tp n, const int16_t a,
+                                 const int16_t b, vptr<int16_t> r);
+  virtual void rng_uniform_int32(const uint_tp n, const int32_t a,
+                                 const int32_t b, vptr<int32_t> r);
+  virtual void rng_uniform_int64(const uint_tp n, const int64_t a,
+                                 const int64_t b, vptr<int64_t> r);
 
   virtual void rng_gaussian_half(const uint_tp n, const half_fp mu,
-                    const half_fp sigma, vptr<half_fp> r);
-
+                                 const half_fp sigma, vptr<half_fp> r);
   virtual void rng_gaussian_float(const uint_tp n, const float mu,
                                   const float sigma, vptr<float> r);
-
   virtual void rng_gaussian_double(const uint_tp n, const double mu,
                                    const double sigma, vptr<double> r);
 

@@ -52,7 +52,7 @@ class NetTest : public MultiDeviceTest<TypeParam> {
     const bool kReshape = true;
     for (int_tp i = 0; i < net_blobs.size(); ++i) {
       (*blobs_copy)[i].reset(new Blob<Dtype>());
-      (*blobs_copy)[i]->CopyFrom(*(std::static_pointer_cast<Blob<Dtype>>(
+      (*blobs_copy)[i]->CopyFrom(*(static_pointer_cast<Blob<Dtype>>(
                                  net_blobs[i])), copy_diff, kReshape);
     }
   }
@@ -66,7 +66,7 @@ class NetTest : public MultiDeviceTest<TypeParam> {
     const bool kReshape = true;
     for (int_tp i = 0; i < net_params.size(); ++i) {
       (*params_copy)[i].reset(new Blob<Dtype>());
-      (*params_copy)[i]->CopyFrom(*(std::static_pointer_cast<Blob<Dtype>>(
+      (*params_copy)[i]->CopyFrom(*(static_pointer_cast<Blob<Dtype>>(
                                  net_params[i])), copy_diff, kReshape);
     }
   }
@@ -977,7 +977,7 @@ TYPED_TEST(NetTest, TestLossWeight) {
       ASSERT_EQ(blob_grads[j]->count(), weighted_blobs[j]->count());
       for (int_tp k = 0; k < blob_grads[j]->count(); ++k) {
         EXPECT_NEAR(blob_grads[j]->cpu_diff()[k] * kLossWeights[i],
-                    std::static_pointer_cast<Blob<Dtype> >(
+                    static_pointer_cast<Blob<Dtype> >(
                         weighted_blobs[j])->cpu_diff()[k], error_margin);
       }
     }
@@ -988,7 +988,7 @@ TYPED_TEST(NetTest, TestLossWeight) {
       ASSERT_EQ(param_grads[j]->count(), weighted_params[j]->count());
       for (int_tp k = 0; k < param_grads[j]->count(); ++k) {
         EXPECT_NEAR(param_grads[j]->cpu_diff()[k] * kLossWeights[i],
-                    std::static_pointer_cast<Blob<Dtype>>(
+                    static_pointer_cast<Blob<Dtype>>(
                         weighted_params[j])->cpu_diff()[k], error_margin);
       }
     }
@@ -1008,7 +1008,7 @@ TYPED_TEST(NetTest, TestLossWeightMidNet) {
   const bool kReshape = true;
   Blob<Dtype> data_grad;
   data_grad.CopyFrom(
-    *(std::static_pointer_cast<Blob<Dtype> >(this->net_->blob_by_name("data"))),
+    *(static_pointer_cast<Blob<Dtype> >(this->net_->blob_by_name("data"))),
     kCopyDiff, kReshape);
   // Check that the loss is non-trivial, otherwise the test doesn't prove much.
   const Dtype kMinLossAbsValue = 1e-2;
@@ -1026,7 +1026,7 @@ TYPED_TEST(NetTest, TestLossWeightMidNet) {
     EXPECT_NEAR(loss * kLossWeights[i], weighted_loss, error_margin)
         << "loss weight = " << kLossWeights[i];
     const shared_ptr<Blob<Dtype> >& weighted_blob =
-       std::static_pointer_cast<Blob<Dtype> >(this->net_->blob_by_name("data"));
+       static_pointer_cast<Blob<Dtype> >(this->net_->blob_by_name("data"));
     ASSERT_EQ(data_grad.count(), weighted_blob->count());
     for (int_tp j = 0; j < data_grad.count(); ++j) {
       EXPECT_NEAR(data_grad.cpu_diff()[j] * kLossWeights[i],
@@ -1089,7 +1089,7 @@ TYPED_TEST(NetTest, TestComboLossWeight) {
       const Dtype grad_diff_2 = blob_grads_loss_2[j]->cpu_diff()[k] -
                                 blob_grads[j]->cpu_diff()[k];
       const Dtype grad_diff_3 =
-          std::static_pointer_cast<Blob<Dtype> >(blob_grads_loss_3[j])
+          static_pointer_cast<Blob<Dtype> >(blob_grads_loss_3[j])
           ->cpu_diff()[k] - blob_grads[j]->cpu_diff()[k];
       if (grad_should_change) {
         // Test non-triviality.
@@ -1137,7 +1137,7 @@ TYPED_TEST(NetTest, TestComboLossWeight) {
       const Dtype grad_diff_2 = blob_grads_loss_2[j]->cpu_diff()[k] -
                                     blob_grads[j]->cpu_diff()[k];
       const Dtype grad_diff_3 =
-          std::static_pointer_cast<Blob<Dtype> >(blob_grads_midnet_loss_3[j])
+          static_pointer_cast<Blob<Dtype> >(blob_grads_midnet_loss_3[j])
           ->cpu_diff()[k] - blob_grads[j]->cpu_diff()[k];
       if (grad_should_change) {
         // Test non-triviality.
@@ -1395,7 +1395,7 @@ TYPED_TEST(NetTest, TestParamPropagateDown) {
   for (int_tp i = 0; i < num_params; ++i) {
     const Dtype param_asum =
        caffe_cpu_asum(params[i]->count(),
-                 std::static_pointer_cast<Blob<Dtype> >(params[i])->cpu_diff());
+                 static_pointer_cast<Blob<Dtype> >(params[i])->cpu_diff());
     param_asums[i] = param_asum;
     EXPECT_GT(param_asum, kNonZeroTestMin);
   }
@@ -1413,7 +1413,7 @@ TYPED_TEST(NetTest, TestParamPropagateDown) {
   for (int_tp i = 0; i < num_params; ++i) {
     const Dtype param_asum =
        caffe_cpu_asum(params2[i]->count(),
-                std::static_pointer_cast<Blob<Dtype> >(params2[i])->cpu_diff());
+                static_pointer_cast<Blob<Dtype> >(params2[i])->cpu_diff());
     EXPECT_FLOAT_EQ(param_asum, param_asums[i]);
   }
 
@@ -1430,7 +1430,7 @@ TYPED_TEST(NetTest, TestParamPropagateDown) {
   for (int_tp i = 0; i < num_params; ++i) {
     const Dtype param_asum =
        caffe_cpu_asum(params3[i]->count(),
-                std::static_pointer_cast<Blob<Dtype> >(params3[i])->cpu_diff());
+                static_pointer_cast<Blob<Dtype> >(params3[i])->cpu_diff());
     if (i == 1 || i == 2) {
       EXPECT_FLOAT_EQ(0, param_asum);
     } else {
@@ -1450,7 +1450,7 @@ TYPED_TEST(NetTest, TestParamPropagateDown) {
   for (int_tp i = 0; i < num_params; ++i) {
     const Dtype param_asum =
        caffe_cpu_asum(params4[i]->count(),
-                std::static_pointer_cast<Blob<Dtype> >(params4[i])->cpu_diff());
+                static_pointer_cast<Blob<Dtype> >(params4[i])->cpu_diff());
     if (i == 0 || i == 3) {
       EXPECT_FLOAT_EQ(0, param_asum);
     } else {
@@ -1469,7 +1469,7 @@ TYPED_TEST(NetTest, TestFromTo) {
   this->net_->Forward();
   this->net_->Backward();
   data.CopyFrom(
-    *(std::static_pointer_cast<Blob<Dtype> >(this->net_->blob_by_name("data"))),
+    *(static_pointer_cast<Blob<Dtype> >(this->net_->blob_by_name("data"))),
     true, true);
   const Dtype *loss_ptr =
       static_cast<Blob<Dtype>*>(this->net_->output_blobs()[0])->cpu_data();
@@ -1491,7 +1491,7 @@ TYPED_TEST(NetTest, TestFromTo) {
     this->net_->BackwardFrom(i - 1);
     for (int_tp j = 0; j < data.count(); ++j) {
       EXPECT_EQ(data.cpu_diff()[j],
-        std::static_pointer_cast<Blob<Dtype> >(this->net_->blob_by_name("data"))
+        static_pointer_cast<Blob<Dtype> >(this->net_->blob_by_name("data"))
                 ->cpu_diff()[j]);
     }
   }
@@ -2433,7 +2433,7 @@ TYPED_TEST(NetTest, TestReshape) {
 
   this->InitReshapableNet();
   shared_ptr<Blob<Dtype> > input_blob =
-      std::static_pointer_cast<Blob<Dtype> >(this->net_->blob_by_name("data"));
+      static_pointer_cast<Blob<Dtype> >(this->net_->blob_by_name("data"));
   Blob<Dtype>* output_blob =
       static_cast<Blob<Dtype>*>(this->net_->output_blobs()[0]);
   input_blob->Reshape(blob1.num(), blob1.channels(), blob1.height(),

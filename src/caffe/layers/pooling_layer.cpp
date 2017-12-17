@@ -245,18 +245,18 @@ void PoolingLayer<Dtype, MItype, MOtype>::Forward_cpu(
   int_tp pooled_height_ = pooled_size_.cpu_data()[0];
   int_tp pooled_width_ = pooled_size_.cpu_data()[1];
 
-  const Dtype* bottom_data = bottom[0]->cpu_data();
-  Dtype* top_data = top[0]->mutable_cpu_data();
+  const MItype* bottom_data = bottom[0]->cpu_data();
+  MOtype* top_data = top[0]->mutable_cpu_data();
   const int_tp top_count = top[0]->count();
   // We'll output the mask to top[1] if it's of size >1.
   const bool use_top_mask = top.size() > 1;
   int_tp* mask = NULL;  // suppress warnings about uninitalized variables
-  Dtype* top_mask = NULL;
+  MOtype* top_mask = NULL;
   // Different pooling methods. We explicitly do the switch outside the for
   // loop to save time, although this results in more code.
 
   Dtype maxVal = FLT_MAX;
-  if (std::is_same<Dtype, half_fp>::value) {
+  if (std::is_same<MOtype, half_fp>::value) {
     maxVal = HALF_MAX;
   }
   switch (this->layer_param_.pooling_param().pool()) {
@@ -264,12 +264,12 @@ void PoolingLayer<Dtype, MItype, MOtype>::Forward_cpu(
     // Initialize
     if (use_top_mask) {
       top_mask = top[1]->mutable_cpu_data();
-      caffe_set(top_count, Dtype(-1), top_mask);
+      caffe_set(top_count, MOtype(-1), top_mask);
     } else {
       mask = max_idx_.mutable_cpu_data();
       caffe_set(top_count, (int_tp)-1, mask);
     }
-    caffe_set(top_count, Dtype(-maxVal), top_data);
+    caffe_set(top_count, MOtype(-maxVal), top_data);
     // The main loop
     for (int_tp n = 0; n < bottom[0]->num(); ++n) {
       for (int_tp c = 0; c < channels_; ++c) {
@@ -368,15 +368,15 @@ void PoolingLayer<Dtype, MItype, MOtype>::Backward_cpu(
   if (!propagate_down[0]) {
     return;
   }
-  const Dtype* top_diff = top[0]->cpu_diff();
-  Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
+  const MOtype* top_diff = top[0]->cpu_diff();
+  MItype* bottom_diff = bottom[0]->mutable_cpu_diff();
   // Different pooling methods. We explicitly do the switch outside the for
   // loop to save time, although this results in more codes.
   caffe_set(bottom[0]->count(), Dtype(0), bottom_diff);
   // We'll output the mask to top[1] if it's of size >1.
   const bool use_top_mask = top.size() > 1;
   const int_tp* mask = NULL;  // suppress warnings about uninitialized variables
-  const Dtype* top_mask = NULL;
+  const MOtype* top_mask = NULL;
   switch (this->layer_param_.pooling_param().pool()) {
   case PoolingParameter_PoolMethod_MAX:
     // The main loop

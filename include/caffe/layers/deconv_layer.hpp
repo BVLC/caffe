@@ -26,10 +26,12 @@ namespace caffe {
  *   stride results in upsampling rather than downsampling).
  */
 template<typename Dtype, typename MItype, typename MOtype>
-class DeconvolutionLayer : public BaseConvolutionLayer<Dtype, MItype, MOtype> {
+class DeconvolutionLayer : public CaffeConvolutionLayer<Dtype, MItype, MOtype> {
  public:
   explicit DeconvolutionLayer(const LayerParameter& param)
-      : CaffeConvolutionLayer<Dtype, MItype, MOtype>(param) {}
+      : CaffeConvolutionLayer<Dtype, MItype, MOtype>(param) {
+    this->deconvolution_ = true;
+  }
 
   virtual inline const char* type() const { return "Deconvolution"; }
 
@@ -44,8 +46,6 @@ class DeconvolutionLayer : public BaseConvolutionLayer<Dtype, MItype, MOtype> {
   virtual void Backward_gpu(const vector<Blob<MOtype>*>& top,
       const vector<bool>& propagate_down,
       const vector<Blob<MItype>*>& bottom);
-  virtual inline bool reverse_dimensions() { return true; }
-  virtual void compute_output_shape();
 };
 
 }  // namespace caffe
