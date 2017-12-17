@@ -391,18 +391,15 @@ std::map<std::string, std::shared_ptr<Blob<Dtype>>> Net<Dtype>::ForwardConst(
     }
     //   std::cout << "go layer " << layers_[i]->type() << std::endl;
 
-    //layers_[i]->Reshape_const(bottom, top);
-    layers_[i]->Reshape(bottom, top);
+    layers_[i]->Reshape_const(bottom, top);
 
     switch (mode) {
 
     case Caffe::CPU:
-      //layers_[i]->Forward_const_cpu(bottom, top);
-      layers_[i]->Forward_cpu(bottom, top);
+      layers_[i]->Forward_const_cpu(bottom, top);
       break;
     case Caffe::GPU:
-      //layers_[i]->Forward_const_gpu(bottom, top);
-      layers_[i]->Forward_gpu(bottom, top);
+      layers_[i]->Forward_const_gpu(bottom, top);
       break;
     default:
       LOG(FATAL) << "Unknown caffe mode.";

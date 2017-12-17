@@ -98,10 +98,6 @@ protected:
 
   int bias_offset_;
 
-  /*
-  mutable ::boost::thread_specific_ptr<void> workspaceData{
-      [](void *ptr) { SyncedMemory::gpu_free(ptr); }};
-      */
   mutable ::boost::thread_specific_ptr<Blob<int>> workspaceData;
 };
 #endif

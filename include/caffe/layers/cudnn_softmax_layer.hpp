@@ -20,21 +20,36 @@ template <typename Dtype>
 class CuDNNSoftmaxLayer : public SoftmaxLayer<Dtype> {
  public:
   explicit CuDNNSoftmaxLayer(const LayerParameter& param)
-      : SoftmaxLayer<Dtype>(param), handles_setup_(false) {}
+      : SoftmaxLayer<Dtype>(param) {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
+  void Reshape_const(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) const override;
   virtual ~CuDNNSoftmaxLayer();
 
  protected:
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
+  void Forward_const_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) const override;
 
   bool handles_setup_;
-  cudnnHandle_t             handle_;
-  cudnnTensorDescriptor_t bottom_desc_;
-  cudnnTensorDescriptor_t top_desc_;
+  mutable ::boost::thread_specific_ptr<cudnnHandle_t> handle_ptr_{
+      [](cudnnHandle_t *handle) {
+	  cudnnDestroy(*handle);
+      }};
+
+  mutable ::boost::thread_specific_ptr<cudnnTensorDescriptor_t>
+      bottom_desc_ptr_{[](cudnnTensorDescriptor_t *desc) {
+          cudnnDestroyTensorDescriptor(*desc);
+      }};
+
+  mutable ::boost::thread_specific_ptr<cudnnTensorDescriptor_t>
+      top_desc_ptr_{[](cudnnTensorDescriptor_t *desc) {
+          cudnnDestroyTensorDescriptor(*desc);
+      }};
 };
 #endif
 
