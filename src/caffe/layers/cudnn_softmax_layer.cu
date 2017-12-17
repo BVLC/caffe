@@ -52,7 +52,7 @@ void CuDNNSoftmaxLayer<Dtype>::Forward_const_gpu(const vector<Blob<Dtype> *> &bo
       cudnn::dataType<Dtype>::zero, *top_desc_ptr_, top_data));
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(CuDNNSoftmaxLayer);
+INSTANTIATE_LAYER_GPU_FUNCS_CONST(CuDNNSoftmaxLayer);
 
 } // namespace caffe
 #endif
