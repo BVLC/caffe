@@ -1,6 +1,7 @@
 #ifndef CAFFE_CUDNN_SOFTMAX_LAYER_HPP_
 #define CAFFE_CUDNN_SOFTMAX_LAYER_HPP_
 
+#include <boost/thread/tss.hpp>
 #include <vector>
 
 #include "caffe/blob.hpp"

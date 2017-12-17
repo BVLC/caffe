@@ -47,7 +47,7 @@ void CuDNNSoftmaxLayer<Dtype>::Forward_const_gpu(const vector<Blob<Dtype> *> &bo
   }
 
   CUDNN_CHECK(cudnnSoftmaxForward(
-      handle_, CUDNN_SOFTMAX_ACCURATE, CUDNN_SOFTMAX_MODE_CHANNEL,
+      handle_ptr_.get(), CUDNN_SOFTMAX_ACCURATE, CUDNN_SOFTMAX_MODE_CHANNEL,
       cudnn::dataType<Dtype>::one, *bottom_desc_ptr_, bottom_data,
       cudnn::dataType<Dtype>::zero, *top_desc_ptr_, top_data));
 }
