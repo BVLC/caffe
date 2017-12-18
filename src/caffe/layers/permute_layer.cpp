@@ -6,9 +6,9 @@
 namespace caffe {
 
 template <typename Dtype>
-void Permute(const int count, Dtype *bottom_data,
-             const int *permute_order, const int *old_steps,
-             const int *new_steps, const int num_axes, Dtype *top_data) {
+void Permute(const int count, Dtype *bottom_data, const int *permute_order,
+             const int *old_steps, const int *new_steps, const int num_axes,
+             Dtype *top_data) {
   for (int i = 0; i < count; ++i) {
     int old_idx = 0;
     int idx = i;
@@ -17,7 +17,7 @@ void Permute(const int count, Dtype *bottom_data,
       old_idx += (idx / new_steps[j]) * old_steps[order];
       idx %= new_steps[j];
     }
-      top_data[i] = bottom_data[old_idx];
+    top_data[i] = bottom_data[old_idx];
   }
 }
 
@@ -65,7 +65,6 @@ void PermuteLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype> *> &bottom,
   top[0]->Reshape(top_shape);
 }
 
-
 template <typename Dtype>
 void PermuteLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype> *> &bottom,
                                       const vector<Blob<Dtype> *> &top) {
@@ -84,9 +83,9 @@ void PermuteLayer<Dtype>::Forward_const_cpu(
     new_steps.Reshape(num_axes_, 1, 1, 1);
     for (int i = 0; i < num_axes_; ++i) {
       if (i == num_axes_ - 1) {
-	old_steps.mutable_cpu_data()[i] = 1;
+        old_steps.mutable_cpu_data()[i] = 1;
       } else {
-	old_steps.mutable_cpu_data()[i] = bottom[0]->count(i + 1);
+        old_steps.mutable_cpu_data()[i] = bottom[0]->count(i + 1);
       }
       top_shape.push_back(bottom[0]->shape(permute_order_.cpu_data()[i]));
     }
@@ -94,9 +93,9 @@ void PermuteLayer<Dtype>::Forward_const_cpu(
 
     for (int i = 0; i < num_axes_; ++i) {
       if (i == num_axes_ - 1) {
-	new_steps.mutable_cpu_data()[i] = 1;
+        new_steps.mutable_cpu_data()[i] = 1;
       } else {
-	new_steps.mutable_cpu_data()[i] = top[0]->count(i + 1);
+        new_steps.mutable_cpu_data()[i] = top[0]->count(i + 1);
       }
     }
 
@@ -104,7 +103,7 @@ void PermuteLayer<Dtype>::Forward_const_cpu(
     Dtype *top_data = top[0]->mutable_cpu_data();
     const int top_count = top[0]->count();
     const int *permute_order = permute_order_.cpu_data();
-    Permute(top_count, bottom_data, permute_order,old_steps.cpu_data(),
+    Permute(top_count, bottom_data, permute_order, old_steps.cpu_data(),
             new_steps.cpu_data(), num_axes_, top_data);
   } else {
     // If there is no need to permute, we share data to save memory.

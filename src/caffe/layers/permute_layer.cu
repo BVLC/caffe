@@ -9,9 +9,9 @@ namespace caffe {
 
 template <typename Dtype>
 __global__ void PermuteKernel(const int nthreads, Dtype *const bottom_data,
-			      const int *permute_order,
-                              const int *old_steps, const int *new_steps,
-                              const int num_axes, Dtype *const top_data) {
+                              const int *permute_order, const int *old_steps,
+                              const int *new_steps, const int num_axes,
+                              Dtype *const top_data) {
   CUDA_KERNEL_LOOP(index, nthreads) {
     int temp_idx = index;
     int old_idx = 0;
@@ -42,9 +42,9 @@ void PermuteLayer<Dtype>::Forward_const_gpu(
     new_steps.Reshape(num_axes_, 1, 1, 1);
     for (int i = 0; i < num_axes_; ++i) {
       if (i == num_axes_ - 1) {
-	old_steps.mutable_cpu_data()[i] = 1;
+        old_steps.mutable_cpu_data()[i] = 1;
       } else {
-	old_steps.mutable_cpu_data()[i] = bottom[0]->count(i + 1);
+        old_steps.mutable_cpu_data()[i] = bottom[0]->count(i + 1);
       }
       top_shape.push_back(bottom[0]->shape(permute_order_.cpu_data()[i]));
     }
@@ -52,9 +52,9 @@ void PermuteLayer<Dtype>::Forward_const_gpu(
 
     for (int i = 0; i < num_axes_; ++i) {
       if (i == num_axes_ - 1) {
-	new_steps.mutable_cpu_data()[i] = 1;
+        new_steps.mutable_cpu_data()[i] = 1;
       } else {
-	new_steps.mutable_cpu_data()[i] = top[0]->count(i + 1);
+        new_steps.mutable_cpu_data()[i] = top[0]->count(i + 1);
       }
     }
 
@@ -64,9 +64,8 @@ void PermuteLayer<Dtype>::Forward_const_gpu(
     const int *permute_order = permute_order_.gpu_data();
     // NOLINT_NEXT_LINE(whitespace/operators)
     PermuteKernel<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
-        count, bottom_data, permute_order, old_steps.gpu_data(), new_steps.gpu_data(),
-        num_axes_, top_data);
-    CUDA_POST_KERNEL_CHECK;
+        count, bottom_data, permute_order, old_steps.gpu_data(),
+        new_steps.gpu_data(), num_axes_, top_data);
   } else {
     // If there is no need to permute, we share data to save memory.
     top[0]->ShareData(*bottom[0]);

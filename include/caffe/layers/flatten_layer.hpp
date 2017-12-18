@@ -42,16 +42,6 @@ class FlattenLayer : public Layer<Dtype> {
    */
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
-
-  /**
-   * @brief Computes the error gradient w.r.t. the concatenate inputs.
-   *
-   * @param top output Blob vector (length 1), providing the error gradient with
-   *        respect to the outputs
-   * @param propagate_down see Layer::Backward.
-   * @param bottom input Blob vector (length K), into which the top error
-   *        gradient is (virtually) copied
-   */
 };
 
 }  // namespace caffe
