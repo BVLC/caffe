@@ -278,7 +278,7 @@ class Layer : public LayerBase {
     for (size_t i = 0; i < bottom.size(); ++i) {
       cast_bottom.push_back(static_cast<Blob<MItype>*>(bottom[i]));
     }
-    for (size_t i = 0; i < bottom.size(); ++i) {
+    for (size_t i = 0; i < top.size(); ++i) {
       cast_top.push_back(static_cast<Blob<MOtype>*>(top[i]));
     }
     SetUp(cast_bottom, cast_top);
