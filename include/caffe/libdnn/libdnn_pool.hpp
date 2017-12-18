@@ -43,8 +43,7 @@ struct LibDNNPoolConfig {
   libdnnPoolingMethod_t pool_method = LIBDNN_POOLING_METHOD_MAX;
   libdnnPoolingBackwardAlgo_t bwalgo = LIBDNN_POOLING_BW_ALGO_ATOMIC;
   bool global_pooling = false;
-  std::function<void*(void**, const uint_tp, const int_tp)>
-      memory_allocator = nullptr;
+  shared_ptr<QuantizerBase> quant;
 };
 
 template<typename MItype, typename MOtype>
@@ -100,8 +99,7 @@ class LibDNNPool : public LibDNN<MItype, MOtype> {
   libdnnPoolingBackwardAlgo_t bwalgo_;
   bool use_top_mask_;
 
-  shared_ptr<Quantizer<MItype, MItype> > in_quant_;
-  shared_ptr<Quantizer<MItype, MOtype> > out_quant_;
+  shared_ptr<Quantizer<MItype, MItype> > quant_;
 };
 
 }  // namespace caffe

@@ -113,27 +113,33 @@ string LibDNN<MItype, MOtype>::generate_gemm_core(
           break;
         case LIBDNN_ACCUMULATE_PREC_NATIVE:
         default:
-          ss << "Areg * v_bmul;" << std::endl;
+          ss << "Areg * v_bmul";
           break;
       }
+      ss << ";" << std::endl;
     }
   }
   ss << "#pragma unroll" << std::endl;
   ss << "for (int_tp wn = 0; wn < WPTN / VWN; ++wn) {" << std::endl;
   if (unroll) {
-    for (int n = 0; n < vwn; ++n) {
-      for (int m = 0; m < vwm; ++m) {
+    for (int_tp n = 0; n < vwn; ++n) {
+      for (int_tp m = 0; m < vwm; ++m) {
         ss << "VEC_" << vwn << "_" << n << "(Creg[wm * VWM + " << m << "][wn])"
            << " += ";
         if (prec != LIBDNN_ACCUMULATE_PREC_NATIVE) {
           ss << "(" << accreg_type << ")";
         }
-        ss << "(VEC_" << vwm << "_" << m << "(Areg)" << " * VEC_" << vwn
+        if (alpha_term) {
+          ss << "(alpha *";
+        } else {
+          ss << "(";
+        }
+        ss << "VEC_" << vwm << "_" << m << "(Areg)" << " * VEC_" << vwn
            << "_" << n << "(Breg[wn]));" << std::endl;
       }
     }
   } else {
-    for (int m = 0; m < vwm; ++m) {
+    for (int_tp m = 0; m < vwm; ++m) {
       ss << "Creg[wm * VWM + " << m << "][wn] += ";
       stringstream src_term;
       if (alpha_term) {
@@ -142,7 +148,7 @@ string LibDNN<MItype, MOtype>::generate_gemm_core(
         src_term << "(";
       }
       src_term << " * VEC_"<< vwm << "_" << m << "(Areg)"
-               << " * (Breg[wn]));" << std::endl;
+               << " * (Breg[wn]))" << std::endl;
       switch (prec) {
         case LIBDNN_ACCUMULATE_PREC_8:
           ss << this->program_->template convert_type<int8_t>(vwn,
@@ -162,7 +168,7 @@ string LibDNN<MItype, MOtype>::generate_gemm_core(
           break;
         case LIBDNN_ACCUMULATE_PREC_NATIVE:
         default:
-          ss << src_term.str() << std::endl;
+          ss << src_term.str() << ";" << std::endl;
           break;
       }
     }

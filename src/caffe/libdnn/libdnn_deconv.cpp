@@ -16,10 +16,8 @@ LibDNNDeconv<MItype, MOtype>::LibDNNDeconv(LibDNNDeconvConfig config)
       : LibDNNConv<MItype, MOtype>(config.dev_ptr) {
   this->config_ = config;
   this->program_ = this->dev_ptr_->CreateProgram();
-  this->in_quant_ = static_pointer_cast<Quantizer<MItype, MItype> >(
-                                                               config.in_quant);
-  this->out_quant_ = static_pointer_cast<Quantizer<MItype, MOtype> >(
-                                                              config.out_quant);
+  this->quant_ = static_pointer_cast<Quantizer<MItype, MItype> >(
+                                                               config.quant);
   this->prec_ = config.prec;
   this->bias_term_ = config.bias_term;
   this->bias_multiplier_ = config.bias_term ? 1.0 : 0.0;
