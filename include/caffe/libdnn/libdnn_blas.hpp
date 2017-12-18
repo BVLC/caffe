@@ -34,16 +34,14 @@ class LibDNNBlas : public LibDNN<MItype, MOtype> {
             const MItype alpha, vptr<const MItype> A, vptr<const MItype> x,
             const MItype beta, vptr<MOtype> y,
             libdnnAccumulatePrecision_t prec,
-            shared_ptr<Quantizer<MItype, MItype> > in_quantizer,
-            shared_ptr<Quantizer<MItype, MOtype> > out_quantizer);
+            shared_ptr<Quantizer<MItype, MOtype> > quantizer);
 
   // BLAS 3
   void gemm(const CBLAS_TRANSPOSE trans_A, const CBLAS_TRANSPOSE trans_B,
             const uint_tp M, const uint_tp N, const uint_tp K,
             const MItype alpha, vptr<const MItype> A, vptr<const MItype> B,
             const MItype beta, vptr<MOtype> C, libdnnAccumulatePrecision_t prec,
-            shared_ptr<Quantizer<MItype, MItype> > in_quantizer,
-            shared_ptr<Quantizer<MItype, MOtype> > out_quantizer);
+            shared_ptr<Quantizer<MItype, MOtype> > quantizer);
 
  private:
   int_tp get_id(string identifier);
@@ -68,13 +66,11 @@ class LibDNNBlas : public LibDNN<MItype, MOtype> {
          shared_ptr<DeviceProgram> program, shared_ptr<LibDNNTuner> tuner,
          bool trans_A, const uint_tp M, const uint_tp N, bool alpha_term,
          bool beta_term, libdnnAccumulatePrecision_t prec,
-         shared_ptr<Quantizer<MItype, MItype> > in_quantizer,
-         shared_ptr<Quantizer<MItype, MOtype> > out_quantize);
+         shared_ptr<Quantizer<MItype, MOtype> > quantizer);
   string gemv_string_identifier(const CBLAS_TRANSPOSE trans_A,
          const uint_tp M, const uint_tp N, bool alpha_term, bool beta_term,
          libdnnAccumulatePrecision_t prec,
-         shared_ptr<Quantizer<MItype, MItype> > in_quantizer,
-         shared_ptr<Quantizer<MItype, MOtype> > out_quantizer);
+         shared_ptr<Quantizer<MItype, MOtype> > quantizer);
   void initialize_gemv_tuner(shared_ptr<DeviceProgram> program,
          shared_ptr<LibDNNTuner> tuner);
 
@@ -82,14 +78,12 @@ class LibDNNBlas : public LibDNN<MItype, MOtype> {
          shared_ptr<LibDNNTuner> tuner, bool trans_A, bool trans_B,
          const uint_tp M, const uint_tp N, const uint_tp K,
          bool alpha_term, bool beta_term, libdnnAccumulatePrecision_t prec,
-         shared_ptr<Quantizer<MItype, MItype> > in_quantizer,
-         shared_ptr<Quantizer<MItype, MOtype> > out_quantizer);
+         shared_ptr<Quantizer<MItype, MOtype> > quantizer);
   string gemm_string_identifier(const CBLAS_TRANSPOSE trans_A,
          const CBLAS_TRANSPOSE trans_B, const uint_tp M, const uint_tp N,
          const uint_tp K, bool alpha_term, bool beta_term,
          libdnnAccumulatePrecision_t prec,
-         shared_ptr<Quantizer<MItype, MItype> > in_quantizer,
-         shared_ptr<Quantizer<MItype, MOtype> > out_quantizer);
+         shared_ptr<Quantizer<MItype, MOtype> > quantizer);
   void initialize_gemm_tuner(shared_ptr<DeviceProgram> program,
          shared_ptr<LibDNNTuner> tuner);
 

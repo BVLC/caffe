@@ -412,7 +412,7 @@ MItype Quantizer<MItype, MOtype>::bw_scale_after_cast_val() const {
 
 
 template<typename MItype, typename MOtype>
-string  Quantizer<MItype, MOtype>::fw_scale_term(int_tp vec_len,
+string Quantizer<MItype, MOtype>::fw_scale_term(int_tp vec_len,
                                                  string scale_var,
                                                  string src_val) const {
   string tmp = "";
@@ -422,9 +422,9 @@ string  Quantizer<MItype, MOtype>::fw_scale_term(int_tp vec_len,
     }
   } else {
     if (this->fw_scale_divide()) {
-      tmp = "/ scale_var";
+      tmp = "/ " + scale_var;
     } else {
-      tmp = "* scale_var";
+      tmp = "* " + scale_var;
     }
   }
   if (this->fw_scale_before_cast()) {
@@ -437,7 +437,7 @@ string  Quantizer<MItype, MOtype>::fw_scale_term(int_tp vec_len,
 }
 
 template<typename MItype, typename MOtype>
-string  Quantizer<MItype, MOtype>::bw_scale_term(int_tp vec_len,
+string Quantizer<MItype, MOtype>::bw_scale_term(int_tp vec_len,
                                                  string scale_var,
                                                  string src_val) const {
   string tmp = "";
@@ -447,9 +447,9 @@ string  Quantizer<MItype, MOtype>::bw_scale_term(int_tp vec_len,
     }
   } else {
     if (this->bw_scale_divide()) {
-      tmp = "/ scale_var";
+      tmp = "/ " + scale_var;
     } else {
-      tmp = "* scale_var";
+      tmp = "* " + scale_var;
     }
   }
   if (this->bw_scale_before_cast()) {

@@ -77,12 +77,10 @@ string LibDNNBlas<MItype, MOtype>::generate_gemm_source(
     const uint_tp M, const uint_tp N, const uint_tp K,
     bool alpha_term, bool beta_term,
     libdnnAccumulatePrecision_t prec,
-    shared_ptr<Quantizer<MItype, MItype> > in_quantizer,
-    shared_ptr<Quantizer<MItype, MOtype> > out_quantizer) {
+    shared_ptr<Quantizer<MItype, MOtype> > quantizer) {
   stringstream ss;
 
   ss << program->setup();
-  ss << program->atomics();
   ss << program->template define_vector_type<MItype>("MItype", 0, 16);
   ss << program->template define_vector_type<MOtype>("MOtype", 0, 16);
   ss << program->vector_accessors();
@@ -238,7 +236,7 @@ string LibDNNBlas<MItype, MOtype>::generate_gemm_source(
   }
   ss << std::endl;
   ss << "} else {" << std::endl;  // M-K-Guard
-  ss << "Asub[row][col] = (MItype)0.0;" << std::endl;
+  ss << "Asub[row][col] = (MItype)0;" << std::endl;
   ss << "}" << std::endl;
   ss << "}" << std::endl;  // LPTA
   ss << "}" << std::endl;  // Scoping for loading A
@@ -288,8 +286,8 @@ string LibDNNBlas<MItype, MOtype>::generate_gemm_source(
      << std::endl;
   ss << "if (globalRow < M && globalCol < N) {" << std::endl;
   ss << "Cptr[globalRow * N + globalCol] = ";
-  if (prec != LIBDNN_ACCUMULATE_PREC_NATIVE) {
-    ss << "(MItype)";
+  if (!(prec == LIBDNN_ACCUMULATE_PREC_NATIVE)) {
+    ss << "(MOtype)";
   }
   ss << "(((" << accreg_type << "*)(&(Creg[wm][wn/VWN])))[wn%VWN]);"
      << std::endl;
@@ -308,8 +306,7 @@ string LibDNNBlas<MItype, MOtype>::gemm_string_identifier(
     const CBLAS_TRANSPOSE trans_A, const CBLAS_TRANSPOSE trans_B,
     const uint_tp M, const uint_tp N, const uint_tp K,
     bool alpha_term, bool beta_term, libdnnAccumulatePrecision_t prec,
-    shared_ptr<Quantizer<MItype, MItype> > in_quantizer,
-    shared_ptr<Quantizer<MItype, MOtype> > out_quantizer) {
+    shared_ptr<Quantizer<MItype, MOtype> > quantizer) {
   stringstream ss;
   ss << "gemm_";
   ss << (trans_A == CblasNoTrans ? "TA_" : "NTA_");
@@ -339,8 +336,7 @@ string LibDNNBlas<MItype, MOtype>::gemm_string_identifier(
     default:
       break;
   }
-  ss << "iq_" << in_quantizer->get_mode_string() << "_";
-  ss << "oq_" << out_quantizer->get_mode_string();
+  ss << "q_" << quantizer->get_mode_string();
   return ss.str();
 }
 
@@ -349,15 +345,15 @@ void LibDNNBlas<MItype, MOtype>::gemm(
                const CBLAS_TRANSPOSE trans_A, const CBLAS_TRANSPOSE trans_B,
                const uint_tp M, const uint_tp N, const uint_tp K,
                const MItype alpha, vptr<const MItype> A, vptr<const MItype> B,
-               const MItype beta, vptr<MOtype> C, libdnnAccumulatePrecision_t prec,
-               shared_ptr<Quantizer<MItype, MItype> > in_quantizer,
-               shared_ptr<Quantizer<MItype, MOtype> > out_quantizer) {
+               const MItype beta, vptr<MOtype> C,
+               libdnnAccumulatePrecision_t prec,
+               shared_ptr<Quantizer<MItype, MOtype> > quantizer) {
   bool alpha_term = alpha != (MItype)1;
   bool beta_term = beta != (MItype)0;
 
   string identifier = gemm_string_identifier(trans_A, trans_B, M, N, K,
                                             alpha_term, beta_term, prec,
-                                            in_quantizer, out_quantizer);
+                                            quantizer);
 
   int_tp id = get_id(identifier);
   if (id < 0) {
@@ -376,12 +372,13 @@ void LibDNNBlas<MItype, MOtype>::gemm(
       ss << generate_gemm_source(program, tuner,
                                  trans_A == CblasTrans, trans_B == CblasTrans,
                                  M, N, K, alpha_term, beta_term, prec,
-                                 in_quantizer, out_quantizer);
+                                 quantizer);
       program->set_source(ss.str());
       program->Compile(true, true);
       program_ready_[id] = true;
     }
     ulock.unlock();
+    lock.lock();
   }
   lock.unlock();
 
