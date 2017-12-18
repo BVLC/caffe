@@ -597,7 +597,7 @@ void OclDevice::asum_half(const uint_tp n, vptr<const half_fp> x,
   shared_ptr<ocl_dev_ptr<half_fp> > oclptr_gpuout
                      = make_shared<ocl_dev_ptr<half_fp> >(gpuout);
   vptr<half_fp> vptr_gpuout(oclptr_gpuout);
-  this->memcpy(sizeof(half_fp), vptr<void>(vptr_gpuout), out);
+  this->memcpy(sizeof(half_fp), vptr<void>(vptr_gpuout), y);
 
   clReleaseMemObject(gpuout);
   clReleaseMemObject(scratch);
@@ -661,13 +661,13 @@ void OclDevice::asum_float(const uint_tp n, vptr<const float> x, float* y) {
         n * sizeof(float), NULL, &err);
 
     OPENCL_CL_BLAS_CHECK(
-        half_float::halfsSasum(n, gpuout, 0, x.get_ocl_mem(), offX, 1,
+        clblasSasum(n, gpuout, 0, x.get_ocl_mem(), offX, 1,
             scratch, 1, &queue, 0, NULL, NULL));
 
     shared_ptr<ocl_dev_ptr<float> > oclptr_gpuout
                                 = make_shared<ocl_dev_ptr<float> >(gpuout);
     vptr<float> vptr_gpuout(oclptr_gpuout);
-    this->memcpy(sizeof(float), vptr<void>(vptr_gpuout), out);
+    this->memcpy(sizeof(float), vptr<void>(vptr_gpuout), y);
 
     clReleaseMemObject(gpuout);
     clReleaseMemObject(scratch);
@@ -745,7 +745,7 @@ void OclDevice::asum_double(const uint_tp n, vptr<const double> x, double* y) {
     shared_ptr<ocl_dev_ptr<double> > oclptr_gpuout
                                = make_shared<ocl_dev_ptr<double> >(gpuout);
     vptr<double> vptr_gpuout(oclptr_gpuout);
-    this->memcpy(sizeof(double), vptr<void>(vptr_gpuout), out);
+    this->memcpy(sizeof(double), vptr<void>(vptr_gpuout), y);
 
     clReleaseMemObject(gpuout);
     clReleaseMemObject(scratch);

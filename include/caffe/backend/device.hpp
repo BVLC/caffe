@@ -21,6 +21,10 @@
 #include "caffe/util/db_sqlite.hpp"
 #endif
 
+#ifdef USE_LIBDNN
+#include <unordered_map>
+#endif
+
 namespace caffe {
 
 enum DeviceCapability {
