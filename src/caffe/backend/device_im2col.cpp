@@ -366,9 +366,7 @@ string create_source(Device* dev,
     ss << "break;  // for (int_tp i = 0; i < num_axes; ++i)" << std::endl;
     ss << "}" << std::endl;
     ss << "}" << std::endl;
-    ss << "if (done) {" << std::endl;
-    ss << "continue;" << std::endl;  // CUDA_KERNEL_LOOP(index, n)
-    ss << "}" << std::endl;
+    ss << "if (!done) {" << std::endl;
     // Loop over the col to compute the output val.
     ss << "Dtype val = (Dtype)0.0;" << std::endl;
     ss << "bool incremented = true;" << std::endl;
@@ -414,6 +412,7 @@ string create_source(Device* dev,
     ss << "}" << std::endl;  // for (int_tp i = num_axes - 1; i >= 0; --i)
     ss << "} while (incremented);" << std::endl;
     ss << "data_im[index] = val;" << std::endl;
+    ss << "}" << std::endl;  // !done
     ss << "}" << std::endl;  // KERNEL_LOOP(index, n)
     ss << "}" << std::endl;
   }
@@ -444,13 +443,13 @@ void Device::CreateIm2ColProgram() {
         ss << "#ifdef HALF_SUPPORT_AVAILABLE" << std::endl;
         ss << create_source<half_fp>(this, this->im2col_programs_[i]);
         ss << "#endif  // HALF_SUPPORT_AVAILABLE" << std::endl;
-#endif
+#endif  // USE_HALF
         break;
       }
       case FLOAT_DATA_INDEX: {
 #ifdef USE_SINGLE
         ss << create_source<float>(this, this->im2col_programs_[i]);
-#endif
+#endif  // USE_FLOAT
         break;
       }
       case DOUBLE_DATA_INDEX: {
@@ -458,19 +457,31 @@ void Device::CreateIm2ColProgram() {
         ss << "#ifdef DOUBLE_SUPPORT_AVAILABLE" << std::endl;
         ss << create_source<double>(this, this->im2col_programs_[i]);
         ss << "#endif  // DOUBLE_SUPPORT_AVAILABLE" << std::endl;
-#endif
+#endif  // USE_DOUBLE
         break;
       }
       case INT8_DATA_INDEX: {
+#ifdef USE_INT_QUANT_8
+        ss << create_source<int8_t>(this, this->im2col_programs_[i]);
+#endif  // USE_INT_QUANT_8
         break;
       }
       case INT16_DATA_INDEX: {
+#ifdef USE_INT_QUANT_16
+        ss << create_source<int16_t>(this, this->im2col_programs_[i]);
+#endif  // USE_INT_QUANT_16
         break;
       }
       case INT32_DATA_INDEX: {
+#ifdef USE_INT_QUANT_32
+        ss << create_source<int32_t>(this, this->im2col_programs_[i]);
+#endif  // USE_INT_QUANT_32
         break;
       }
       case INT64_DATA_INDEX: {
+#ifdef USE_INT_QUANT_64
+        ss << create_source<int64_t>(this, this->im2col_programs_[i]);
+#endif  // USE_INT_QUANT_64
         break;
       }
     }

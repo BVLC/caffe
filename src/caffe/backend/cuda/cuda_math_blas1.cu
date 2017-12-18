@@ -136,5 +136,5 @@ void CudaDevice::scale_double(const uint_tp n, const double alpha,
                            1));
 }
 
-#endif  // USE_CUDA
 }  // namespace caffe
+#endif  // USE_CUDA

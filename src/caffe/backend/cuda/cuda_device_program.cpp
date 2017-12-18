@@ -22,6 +22,10 @@ CudaDeviceProgram::~CudaDeviceProgram() {
 }
 
 bool CudaDeviceProgram::Compile(bool load_cache, bool store_cache) {
+  // Don't compile empty programs with no function declarations
+  if (this->args_.size() == 0) {
+    return true;
+  }
 
   vector<const char*> build_opts;
 

@@ -17,7 +17,8 @@ template<typename Dtype, typename MItype, typename MOtype>
 class BaseConvolutionLayer : public Layer<Dtype, MItype, MOtype> {
  public:
   explicit BaseConvolutionLayer(const LayerParameter& param)
-      : Layer<Dtype, MItype, MOtype>(param), col_buffer_lock_id_(-1) {
+      : Layer<Dtype, MItype, MOtype>(param), col_buffer_lock_id_(-1),
+        deconvolution_(false){
   }
   virtual void LayerSetUp(const vector<Blob<MItype>*>& bottom,
                           const vector<Blob<MOtype>*>& top);
