@@ -118,17 +118,22 @@ public:
 
 private:
 #ifndef CPU_ONLY
-  cublasHandle_t cublas_handle_;
+  cublasHandle_t cublas_handle_{nullptr};
   std::shared_ptr<deepir::allocator::buddy_pool> host_pool_;
   std::shared_ptr<deepir::allocator::buddy_pool> device_pool_;
+#ifdef USE_CUDNN
+  cudnnHandle_t            cudnn_handle_{nullptr};
+  cudnnTensorDescriptor_t bottom_desc_{nullptr};
+  cudnnTensorDescriptor_t top_desc_{nullptr};
+#endif
 #endif
 
-  Brew mode_;
-  int device_id_;
+  Brew mode_{Caffe::CPU};
+  int device_id_{-1};
 
 private:
   // The private constructor to avoid duplicate instantiation.
-  Caffe();
+  Caffe()=default;
 
   DISABLE_COPY_AND_ASSIGN(Caffe);
 };

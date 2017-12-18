@@ -28,9 +28,8 @@ Caffe &Caffe::Get() {
 
 #ifdef CPU_ONLY // CPU-only Caffe.
 
-Caffe::Caffe() : mode_(Caffe::CPU), device_id_(-1) {}
 
-Caffe::~Caffe() {}
+Caffe::~Caffe() =default;
 
 void Caffe::set_device(int device_id) {
   if (device_id >= 0) {
@@ -42,7 +41,6 @@ void Caffe::set_device(int device_id) {
 
 #else // Normal GPU + CPU Caffe.
 
-Caffe::Caffe() : cublas_handle_(NULL), mode_(Caffe::CPU), device_id_(-1) {}
 
 Caffe::~Caffe() {
   if (cublas_handle_)
