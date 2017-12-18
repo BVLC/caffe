@@ -350,7 +350,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 150 (last added: recurrent_param)
+// LayerParameter next available layer-specific ID: 150 (last added: moe_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -364,7 +364,7 @@ message LayerParameter {
   // The train / test phase for computation.
   optional Phase phase = 10;
   
-  optional int64 quantizer_index = 149 [default = 0];
+  optional int64 quantizer_index = 15 [default = 0];
 
   // The amount of weight to assign each top blob in the objective.
   // Each layer assigns a default value, usually of either 0 or 1,
@@ -461,6 +461,7 @@ message LayerParameter {
   optional WindowDataParameter window_data_param = 129;
   optional MergeCropParameter mergecrop_param = 147;
   optional AffinityParameter affinity_param = 148;
+  optional MOEParameter moe_param = 149;
 }
 
 // Message that stores parameters used to apply transformation
@@ -1047,6 +1048,12 @@ message RecurrentParameter {
   // blobs.  The number of additional bottom/top blobs required depends on the
   // recurrent architecture -- e.g., 1 for RNNs, 2 for LSTMs.
   optional bool expose_hidden = 5 [default = false];
+}
+
+message MOEParameter {
+  optional NetParameter gating_net = 1;
+  repeated NetParameter expert_net = 2;
+  repeated int64 expert_instances = 3;
 }
 
 // Message that stores parameters used by ReductionLayer

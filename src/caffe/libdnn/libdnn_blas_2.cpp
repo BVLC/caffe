@@ -201,15 +201,15 @@ string LibDNNBlas<MItype, MOtype>::generate_gemv_source(
       if (unroll || mode == 1) {
         for (int n = 0; n < vwn; ++n) {
           if (mode == 1) {
-            ss << "if (tidn * WPTN + offN + " << n << " < N) {" << std::endl;
+            ss << "if (wn + t * WPTN + offN + " << n << " < N) {" << std::endl;
           }
           if (trans_A) {
             ss << "VEC_" << vwn << "_" << n << "(Areg[wm][wn])"
-               << " = A[(tidn * WPTN + offN + " << n << ") * M + wm + offM];"
+               << " = A[(wn + t * WPTN + offN + " << n << ") * M + wm + offM];"
                << std::endl;
           } else {
             ss << "VEC_" << vwn << "_" << n << "(Areg[wm][wn])"
-               << " = A[tidn * WPTN + offN + " << n << " + (wm + offM) * N];"
+               << " = A[wn + t * WPTN + offN + " << n << " + (wm + offM) * N];"
                << std::endl;
           }
           if (mode == 1) {
@@ -221,10 +221,10 @@ string LibDNNBlas<MItype, MOtype>::generate_gemv_source(
         }
       } else {
         if (trans_A) {
-          ss << "Areg[wm][wn] = A[(tidn * WPTN + wn) * M + (wm + offM)]"
+          ss << "Areg[wm][wn] = A[(wn + t * WPTN) * M + (wm + offM)]"
              << std::endl;
         } else {
-          ss << "Areg[wm][wn] = A[tidn * WPTN + wn + (wm + offM) * N]"
+          ss << "Areg[wm][wn] = A[wn + t * WPTN + (wm + offM) * N]"
              << std::endl;
         }
       }
@@ -394,7 +394,7 @@ void LibDNNBlas<MItype, MOtype>::gemv(
     // Compiling new kernel has to lock the program lock exclusively
     boost::unique_lock<boost::shared_mutex> ulock(program_mutex_);
     if (!program_ready_[id]) {
-      initialize_gemm_tuner(program, tuner);
+      initialize_gemv_tuner(program, tuner);
       stringstream ss;
       ss << generate_gemv_source(program, tuner,
                                  trans_A == CblasTrans,

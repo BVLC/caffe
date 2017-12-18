@@ -186,7 +186,8 @@ void RecurrentLayer<Dtype, MItype, MOtype>::LayerSetUp(
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void RecurrentLayer<Dtype, MItype, MOtype>::Reshape(const vector<Blob<MItype>*>& bottom,
+void RecurrentLayer<Dtype, MItype, MOtype>::Reshape(
+      const vector<Blob<MItype>*>& bottom,
       const vector<Blob<MOtype>*>& top) {
   CHECK_GE(bottom[0]->num_axes(), 2)
       << "bottom[0] must have at least 2 axes -- (#timesteps, #streams, ...)";
@@ -248,7 +249,8 @@ void RecurrentLayer<Dtype, MItype, MOtype>::Reset() {
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void RecurrentLayer<Dtype, MItype, MOtype>::Forward_cpu(const vector<Blob<MItype>*>& bottom,
+void RecurrentLayer<Dtype, MItype, MOtype>::Forward_cpu(
+    const vector<Blob<MItype>*>& bottom,
     const vector<Blob<MOtype>*>& top) {
   // Hacky fix for test time: reshare all the internal shared blobs, which may
   // currently point to a stale owner blob that was dropped when Solver::Test

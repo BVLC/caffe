@@ -1,3 +1,5 @@
+#ifdef USE_CUDA
+
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
@@ -11,28 +13,11 @@
 #include "caffe/backend/cuda/caffe_cuda.hpp"
 #include "caffe/backend/cuda/cuda_dev_ptr.hpp"
 
-#ifdef USE_CUDA
 #include <thrust/device_vector.h>
 #include <thrust/functional.h>  // thrust::plus
 #include <thrust/reduce.h>
-#endif  // USE_CUDA
 
 namespace caffe {
-
-#ifdef USE_CUDA
-
-void CudaDevice::gemv_half(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
-                           const uint_tp n, const half_fp alpha,
-                           vptr<const half_fp> a,
-                           vptr<const half_fp> x,
-                           const half_fp beta,
-                           vptr<half_fp> y) {
-#ifdef USE_HALF
-  NOT_IMPLEMENTED;  // TODO
-#else  // USE_HALF
-  NOT_IMPLEMENTED;
-#endif  // USE_HALF
-}
 
 void CudaDevice::gemv_float(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
                             const uint_tp n, const float alpha,
@@ -58,7 +43,5 @@ void CudaDevice::gemv_double(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
                            n, x.get_cuda_ptr(), 1, &beta, y.get_cuda_ptr(), 1));
 }
 
-
 #endif  // USE_CUDA
-
-}
+}  // namespace caffe

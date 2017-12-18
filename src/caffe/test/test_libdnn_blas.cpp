@@ -19,7 +19,7 @@
 #define KAPPA_FLOAT 0.05
 #define KAPPA_DOUBLE 0.05
 
-#define EPS_HALF 1e-0
+#define EPS_HALF 5e-1
 #define EPS_FLOAT 1e-4
 #define EPS_DOUBLE 1e-4
 
@@ -278,8 +278,8 @@ TYPED_TEST(LibDNNBlasTest, TestGemvComparativeCPUGPU) {
   std::random_device rdev;
   std::mt19937 rngen(rdev());
 
-  std::uniform_int_distribution<int_tp> dimsRand(1, 32);
-  std::uniform_int_distribution<int_tp> boolRand(0, 0);
+  std::uniform_int_distribution<int_tp> dimsRand(1, 256);
+  std::uniform_int_distribution<int_tp> boolRand(0, 1);
   std::uniform_int_distribution<int_tp> factorRand(-25, 25);
 
   for (int_tp testIdx = 0; testIdx < 25; ++testIdx) {

@@ -1,5 +1,10 @@
 #include "caffe/backend/device.hpp"
 #include "caffe/util/type_utils.hpp"
+#include "caffe/quantizer.hpp"
+
+#ifdef USE_LIBDNN  // USE_LIBDNN
+#include "caffe/libdnn/libdnn_blas.hpp"
+#endif  // USE_LIBDNN
 
 namespace caffe {
 
@@ -211,48 +216,59 @@ template<typename Dtype>
 typename std::enable_if<signed_integer_is_same<Dtype>::value, void>::type
 Device::dot(const uint_tp n, vptr<const Dtype> x, vptr<const Dtype> y,
             Dtype *out) {
-  shared_ptr<DeviceKernel> kernel
-      = math_programs_[data_type_index<Dtype>()]
-                       ->GetKernel("caffe_gpu_dot");
-
-  int_tp buffer_id = -1;
-  vptr<Dtype> gpu_out = this->Buffer<Dtype>(vector<int_tp>(1), &buffer_id)
-      ->mutable_gpu_data();
-
-  kernel->add_arg(&n);
-  kernel->add_arg(&x);
-  kernel->add_arg(&y);
-  kernel->add_arg(&gpu_out);
-
-  vector<size_t> work_size(1, n);
-  vector<size_t> group(1, 1);
-  vector<size_t> local(1, 1);
-  kernel->Execute(group, local);
-
-  this->template copy<Dtype>(1, gpu_out, out);
-  this->unlock_buffer(&buffer_id);
+  NOT_IMPLEMENTED;
 }
 
-template void Device::dot(const uint_tp n, vptr<const int8_t> x,
-                          vptr<const int8_t> y, int8_t *out);
-template void Device::dot(const uint_tp n, vptr<const int16_t> x,
-                          vptr<const int16_t> y, int16_t *out);
-template void Device::dot(const uint_tp n, vptr<const int32_t> x,
-                          vptr<const int32_t> y, int32_t *out);
-template void Device::dot(const uint_tp n, vptr<const int64_t> x,
-                          vptr<const int64_t> y, int64_t *out);
+template<> void Device::dot(const uint_tp n, vptr<const int8_t> x,
+                          vptr<const int8_t> y, int8_t *out) {
+#if defined(USE_LIBDNN) && defined(USE_INT_QUANT_8)
+  this->template GetLibDNNBlas<int8_t, int8_t>()->dot(n, x, y, out,
+                                 LIBDNN_ACCUMULATE_PREC_NATIVE,
+                                 make_shared<Quantizer<int8_t, int8_t> >(this));
+#else  // USE_LIBDNN
+  NOT_IMPLEMENTED;
+#endif  // USE_LIBDNN
+}
+template<> void Device::dot(const uint_tp n, vptr<const int16_t> x,
+                          vptr<const int16_t> y, int16_t *out) {
+#if defined(USE_LIBDNN) && defined(USE_INT_QUANT_16)
+  this->template GetLibDNNBlas<int16_t, int16_t>()->dot(n, x, y, out,
+                               LIBDNN_ACCUMULATE_PREC_NATIVE,
+                               make_shared<Quantizer<int16_t, int16_t> >(this));
+#else  // USE_LIBDNN
+  NOT_IMPLEMENTED;
+#endif  // USE_LIBDNN
+}
+template<> void Device::dot(const uint_tp n, vptr<const int32_t> x,
+                          vptr<const int32_t> y, int32_t *out) {
+#if defined(USE_LIBDNN) && defined(USE_INT_QUANT_32)
+  this->template GetLibDNNBlas<int32_t, int32_t>()->dot(n, x, y, out,
+                               LIBDNN_ACCUMULATE_PREC_NATIVE,
+                               make_shared<Quantizer<int32_t, int32_t> >(this));
+#else  // USE_LIBDNN
+  NOT_IMPLEMENTED;
+#endif  // USE_LIBDNN
+}
+template<> void Device::dot(const uint_tp n, vptr<const int64_t> x,
+                          vptr<const int64_t> y, int64_t *out) {
+#if defined(USE_LIBDNN) && defined(USE_INT_QUANT_64)
+  this->template GetLibDNNBlas<int64_t, int64_t>()->dot(n, x, y, out,
+                               LIBDNN_ACCUMULATE_PREC_NATIVE,
+                               make_shared<Quantizer<int64_t, int64_t> >(this));
+#else  // USE_LIBDNN
+  NOT_IMPLEMENTED;
+#endif  // USE_LIBDNN
+}
 
 template<>
 void Device::asum(const uint_tp n, vptr<const half_fp> x,
                        half_fp* y) {
   this->asum_half(n, x, y);
 }
-
 template<>
 void Device::asum(const uint_tp n, vptr<const float> x, float* y) {
   this->asum_float(n, x, y);
 }
-
 template<>
 void Device::asum(const uint_tp n, vptr<const double> x, double* y) {
   this->asum_double(n, x, y);
@@ -263,33 +279,26 @@ void Device::scal(const uint_tp n, const half_fp alpha,
                        vptr<half_fp> x) {
   this->scal_half(n, alpha, x);
 }
-
 template<>
 void Device::scal(const uint_tp n, const float alpha, vptr<float> x) {
   this->scal_float(n, alpha, x);
-
 }
-
 template<>
 void Device::scal(const uint_tp n, const double alpha, vptr<double> x) {
   this->scal_double(n, alpha, x);
 }
-
 template<>
 void Device::scal(const uint_tp n, const int8_t alpha, vptr<int8_t> x) {
   this->scal_int8(n, alpha, x);
 }
-
 template<>
 void Device::scal(const uint_tp n, const int16_t alpha, vptr<int16_t> x) {
   this->scal_int16(n, alpha, x);
 }
-
 template<>
 void Device::scal(const uint_tp n, const int32_t alpha, vptr<int32_t> x) {
   this->scal_int32(n, alpha, x);
 }
-
 template<>
 void Device::scal(const uint_tp n, const int64_t alpha, vptr<int64_t> x) {
   this->scal_int64(n, alpha, x);
@@ -300,13 +309,11 @@ void Device::scale(const uint_tp n, const half_fp alpha,
                    vptr<const half_fp> x, vptr<half_fp> y) {
   this->scale_half(n, alpha, x, y);
 }
-
 template<>
 void Device::scale(const uint_tp n, const float alpha, vptr<const float> x,
                    vptr<float> y) {
   this->scale_float(n, alpha, x, y);
 }
-
 template<>
 void Device::scale(const uint_tp n, const double alpha,
                    vptr<const double> x, vptr<double> y) {

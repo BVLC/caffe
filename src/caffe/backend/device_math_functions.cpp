@@ -605,27 +605,6 @@ string create_source(Device* dev, shared_ptr<DeviceProgram> program) {
     ss << "}" << std::endl;
   }
 
-  // Dot
-  // TODO: Better implementation
-  {
-    KernelArgs args;
-    args.push_back(program->create_kernel_arg<uint_tp>("n",
-                      KERNEL_ARG_CONST));
-    args.push_back(program->create_kernel_arg<Dtype>("x",
-                      KERNEL_ARG_CONST | KERNEL_ARG_GLOBAL_MEM
-                      | KERNEL_ARG_MEM_OFFSET));
-    args.push_back(program->create_kernel_arg<Dtype>("y",
-                      KERNEL_ARG_CONST | KERNEL_ARG_GLOBAL_MEM
-                      | KERNEL_ARG_MEM_OFFSET));
-    args.push_back(program->create_kernel_arg<Dtype>("out",
-                      KERNEL_ARG_NONE));
-    ss << program->function("caffe_gpu_dot", args);
-    ss << program->kernel_loop("uint_tp", "index", "n");
-    ss << "out += x[index] * y[index];" << std::endl;
-    ss << "}" << std::endl;
-    ss << "}" << std::endl;
-  }
-
   return ss.str();
 }
 
