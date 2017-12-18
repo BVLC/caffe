@@ -30,7 +30,6 @@ void CuDNNTanHLayer<Dtype>::Forward_const_gpu(const vector<Blob<Dtype>*>& bottom
   }
   cudnn::setTensor4dDesc<Dtype>(top_desc_ptr_.get(), N, K, H, W);
 
-
   if (!activ_desc_ptr_.get()) {
     activ_desc_ptr_.reset(new cudnnActivationDescriptor_t{});
     cudnn::createActivationDescriptor<Dtype>(activ_desc_ptr_.get(), CUDNN_ACTIVATION_TANH);
