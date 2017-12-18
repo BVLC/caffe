@@ -16,12 +16,6 @@ void CuDNNPoolingLayer<Dtype>::Forward_const_gpu(
     const vector<Blob<Dtype> *> &bottom,
     const vector<Blob<Dtype> *> &top) const {
 
-  if (!handle_ptr_.get()) {
-    handle_ptr_.reset(new cudnnHandle_t{});
-    CUDNN_CHECK(cudnnCreate(handle_ptr_.get()));
-    CUDNN_CHECK(cudnnSetStream(*handle_ptr_, cudaStreamPerThread));
-  }
-
   if (!bottom_desc_ptr_.get()) {
     bottom_desc_ptr_.reset(new cudnnTensorDescriptor_t{});
     cudnn::createTensor4dDesc<Dtype>(bottom_desc_ptr_.get());
@@ -54,7 +48,7 @@ void CuDNNPoolingLayer<Dtype>::Forward_const_gpu(
                                 pooled_width);
 
   CUDNN_CHECK(cudnnPoolingForward(
-      *handle_ptr_, *pooling_desc_ptr_, cudnn::dataType<Dtype>::one,
+      Caffe::cudnn_handle(), *pooling_desc_ptr_, cudnn::dataType<Dtype>::one,
       *bottom_desc_ptr_, bottom_data, cudnn::dataType<Dtype>::zero,
       *top_desc_ptr_, top_data));
 }

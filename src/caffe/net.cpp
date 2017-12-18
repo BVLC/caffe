@@ -389,7 +389,6 @@ std::map<std::string, std::shared_ptr<Blob<Dtype>>> Net<Dtype>::ForwardConst(
     for (auto const &ptr : top_blobs[i]) {
       top.push_back(ptr.get());
     }
-    //   std::cout << "go layer " << layers_[i]->type() << std::endl;
 
     layers_[i]->Reshape_const(bottom, top);
 

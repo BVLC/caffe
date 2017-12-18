@@ -48,7 +48,7 @@ void CuDNNSoftmaxLayer<Dtype>::Forward_const_gpu(
   cudnn::setTensor4dDesc<Dtype>(top_desc_ptr_.get(), N, K, H, W);
 
   CUDNN_CHECK(cudnnSoftmaxForward(
-     Caffe::cudnn_handle(), CUDNN_SOFTMAX_ACCURATE, CUDNN_SOFTMAX_MODE_CHANNEL,
+      Caffe::cudnn_handle(), CUDNN_SOFTMAX_ACCURATE, CUDNN_SOFTMAX_MODE_CHANNEL,
       cudnn::dataType<Dtype>::one, *bottom_desc_ptr_, bottom_data,
       cudnn::dataType<Dtype>::zero, *top_desc_ptr_, top_data));
 }

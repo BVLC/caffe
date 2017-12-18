@@ -1,6 +1,7 @@
 #ifndef CAFFE_CUDNN_RELU_LAYER_HPP_
 #define CAFFE_CUDNN_RELU_LAYER_HPP_
 
+#include <boost/thread/tss.hpp>
 #include <vector>
 
 #include "caffe/blob.hpp"
@@ -16,29 +17,40 @@ namespace caffe {
 /**
  * @brief CuDNN acceleration of ReLULayer.
  */
-template <typename Dtype>
-class CuDNNReLULayer : public ReLULayer<Dtype> {
- public:
-  explicit CuDNNReLULayer(const LayerParameter& param)
-      : ReLULayer<Dtype>(param), handles_setup_(false) {}
-  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
-  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
-  virtual ~CuDNNReLULayer();
+template <typename Dtype> class CuDNNReLULayer : public ReLULayer<Dtype> {
+public:
+  explicit CuDNNReLULayer(const LayerParameter &param)
+      : ReLULayer<Dtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<Dtype> *> &bottom,
+                          const vector<Blob<Dtype> *> &top);
+  virtual void Reshape(const vector<Blob<Dtype> *> &bottom,
+                       const vector<Blob<Dtype> *> &top);
+  void Reshape_const(const vector<Blob<Dtype> *> &bottom,
+                     const vector<Blob<Dtype> *> &top) const override;
+  virtual ~CuDNNReLULayer() = default;
 
- protected:
-  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
+protected:
+  virtual void Forward_gpu(const vector<Blob<Dtype> *> &bottom,
+                           const vector<Blob<Dtype> *> &top);
+  void Forward_const_gpu(const vector<Blob<Dtype> *> &bottom,
+                         const vector<Blob<Dtype> *> &top) const override;
 
-  bool handles_setup_;
-  cudnnHandle_t             handle_;
-  cudnnTensorDescriptor_t bottom_desc_;
-  cudnnTensorDescriptor_t top_desc_;
-  cudnnActivationDescriptor_t activ_desc_;
+  mutable ::boost::thread_specific_ptr<cudnnTensorDescriptor_t>
+      bottom_desc_ptr_{[](cudnnTensorDescriptor_t *desc) {
+        cudnnDestroyTensorDescriptor(*desc);
+      }};
+
+  mutable ::boost::thread_specific_ptr<cudnnTensorDescriptor_t> top_desc_ptr_{
+      [](cudnnTensorDescriptor_t *desc) {
+        cudnnDestroyTensorDescriptor(*desc);
+      }};
+  mutable ::boost::thread_specific_ptr<cudnnActivationDescriptor_t>
+      activ_desc_ptr_{[](cudnnActivationDescriptor_t *desc) {
+        cudnnDestroyActivationDescriptor(*desc);
+      }};
 };
 #endif
 
-}  // namespace caffe
+} // namespace caffe
 
-#endif  // CAFFE_CUDNN_RELU_LAYER_HPP_
+#endif // CAFFE_CUDNN_RELU_LAYER_HPP_

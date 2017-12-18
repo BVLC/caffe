@@ -14,9 +14,8 @@ void CuDNNSoftmaxLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype> *> &bottom,
 }
 
 template <typename Dtype>
-void CuDNNSoftmaxLayer<Dtype>::Reshape(
-    const vector<Blob<Dtype> *> &bottom,
-    const vector<Blob<Dtype> *> &top) {
+void CuDNNSoftmaxLayer<Dtype>::Reshape(const vector<Blob<Dtype> *> &bottom,
+                                       const vector<Blob<Dtype> *> &top) {
   CuDNNSoftmaxLayer<Dtype>::Reshape_const(bottom, top);
 }
 

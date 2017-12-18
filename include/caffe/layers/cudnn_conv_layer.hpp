@@ -54,14 +54,14 @@ protected:
   mutable ::boost::thread_specific_ptr<vector<cudnnHandle_t>> handle_ptr_{
       [](vector<cudnnHandle_t> *handles) {
         for (int i = 0; i < handles->size(); i++) {
-	  cudnnDestroy((*handles)[i]);
+          cudnnDestroy((*handles)[i]);
         }
       }};
 
   mutable ::boost::thread_specific_ptr<vector<cudaStream_t>> stream_ptr_{
       [](vector<cudaStream_t> *streams) {
         for (int i = 0; i < streams->size(); i++) {
-	  cudaStreamDestroy((*streams)[i]);
+          cudaStreamDestroy((*streams)[i]);
         }
       }};
       */
@@ -85,11 +85,10 @@ protected:
         cudnnDestroyTensorDescriptor(*desc);
       }};
 
-  mutable ::boost::thread_specific_ptr<cudnnFilterDescriptor_t> filter_desc_ptr_{
-      [](cudnnFilterDescriptor_t *desc) {
+  mutable ::boost::thread_specific_ptr<cudnnFilterDescriptor_t>
+      filter_desc_ptr_{[](cudnnFilterDescriptor_t *desc) {
         cudnnDestroyFilterDescriptor(*desc);
       }};
-
 
   mutable ::boost::thread_specific_ptr<vector<cudnnConvolutionDescriptor_t>>
       conv_descs_ptr_{[](vector<cudnnConvolutionDescriptor_t> *descs) {
