@@ -43,5 +43,5 @@ void CudaDevice::gemv_double(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
                            n, x.get_cuda_ptr(), 1, &beta, y.get_cuda_ptr(), 1));
 }
 
-#endif  // USE_CUDA
 }  // namespace caffe
+#endif  // USE_CUDA

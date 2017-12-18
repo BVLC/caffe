@@ -14,6 +14,11 @@ OclDeviceProgram::OclDeviceProgram(Device *dev) : DeviceProgram(dev) {
 }
 
 bool OclDeviceProgram::Compile(bool load_cache, bool store_cache) {
+  // Don't compile empty programs with no function declarations
+  if (this->args_.size() == 0) {
+    return true;
+  }
+
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(
       this->device_->id());
   cl_int err = 0;
