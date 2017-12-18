@@ -5,8 +5,6 @@
 #include <utility>
 #include <vector>
 
-#include "boost/filesystem.hpp"
-#include "boost/foreach.hpp"
 
 #include "caffe/layers/detection_output_layer.hpp"
 
@@ -200,7 +198,6 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
   }
 
   int count = 0;
-  boost::filesystem::path output_directory(output_directory_);
   for (int i = 0; i < num; ++i) {
     const map<int, vector<float> >& conf_scores = all_conf_scores[i];
     const LabelBBox& decode_bboxes = all_decode_bboxes[i];
@@ -222,13 +219,6 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
       const vector<NormalizedBBox>& bboxes =
           decode_bboxes.find(loc_label)->second;
       vector<int>& indices = it->second;
-      /*
-      if (need_save_) {
-        CHECK(label_to_name_.find(label) != label_to_name_.end())
-          << "Cannot find label: " << label << " in the label map.";
-        CHECK_LT(name_count_, names_.size());
-      }
-      */
       for (int j = 0; j < indices.size(); ++j) {
         int idx = indices[j];
         top_data[count * 7] = i;
@@ -239,41 +229,6 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
         top_data[count * 7 + 4] = bbox.ymin();
         top_data[count * 7 + 5] = bbox.xmax();
         top_data[count * 7 + 6] = bbox.ymax();
-	/*
-        if (need_save_) {
-          NormalizedBBox out_bbox;
-          OutputBBox(bbox, sizes_[name_count_], has_resize_, resize_param_,
-                     &out_bbox);
-          float score = top_data[count * 7 + 2];
-          float xmin = out_bbox.xmin();
-          float ymin = out_bbox.ymin();
-          float xmax = out_bbox.xmax();
-          float ymax = out_bbox.ymax();
-          ptree pt_xmin, pt_ymin, pt_width, pt_height;
-          pt_xmin.put<float>("", round(xmin * 100) / 100.);
-          pt_ymin.put<float>("", round(ymin * 100) / 100.);
-          pt_width.put<float>("", round((xmax - xmin) * 100) / 100.);
-          pt_height.put<float>("", round((ymax - ymin) * 100) / 100.);
-
-          ptree cur_bbox;
-          cur_bbox.push_back(std::make_pair("", pt_xmin));
-          cur_bbox.push_back(std::make_pair("", pt_ymin));
-          cur_bbox.push_back(std::make_pair("", pt_width));
-          cur_bbox.push_back(std::make_pair("", pt_height));
-
-          ptree cur_det;
-          cur_det.put("image_id", names_[name_count_]);
-          if (output_format_ == "ILSVRC") {
-            cur_det.put<int>("category_id", label);
-          } else {
-            cur_det.put("category_id", label_to_name_[label].c_str());
-          }
-          cur_det.add_child("bbox", cur_bbox);
-          cur_det.put<float>("score", score);
-
-          detections_.push_back(std::make_pair("", cur_det));
-        }
-	*/
         ++count;
       }
     }

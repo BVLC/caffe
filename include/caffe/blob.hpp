@@ -177,17 +177,6 @@ class Blob {
     }
     return offset;
   }
-  /**
-   * @brief Copy from a source Blob.
-   *
-   * @param source the Blob to copy from
-   * @param copy_diff if false, copy the data; if true, copy the diff
-   * @param reshape if false, require this Blob to be pre-shaped to the shape
-   *        of other (and die otherwise); if true, Reshape this Blob to other's
-   *        shape if necessary
-  void CopyFrom(const Blob<Dtype>& source, bool copy_diff = false,
-      bool reshape = false);
-   */
 
   /**
    * @brief Copy from a source Blob.
@@ -237,22 +226,11 @@ class Blob {
    * shared_ptr calls its destructor when reset with the "=" operator.
    */
   void ShareData(const Blob& other);
-  /**
-   * @brief Set the diff_ shared_ptr to point to the SyncedMemory holding the
-   *        diff_ of Blob other -- useful in Layer%s which simply perform a copy
-   *        in their Forward pass.
-   *
-   * This deallocates the SyncedMemory holding this Blob's diff_, as
-   * shared_ptr calls its destructor when reset with the "=" operator.
-   */
-  void ShareDiff(const Blob& other) {
-  }
 
   bool ShapeEquals(const BlobProto& other);
 
  protected:
   shared_ptr<SyncedMemory> data_;
-//  shared_ptr<SyncedMemory> diff_;
   shared_ptr<SyncedMemory> shape_data_;
   vector<int> shape_;
   int count_;

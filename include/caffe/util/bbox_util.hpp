@@ -20,39 +20,15 @@
 
 namespace caffe {
 
-  //typedef EmitConstraint_EmitType EmitType;
 typedef PriorBoxParameter_CodeType CodeType;
-//typedef MultiBoxLossParameter_MatchType MatchType;
-//typedef MultiBoxLossParameter_LocLossType LocLossType;
-//typedef MultiBoxLossParameter_ConfLossType ConfLossType;
-//typedef MultiBoxLossParameter_MiningType MiningType;
 
 typedef map<int, vector<NormalizedBBox> > LabelBBox;
-// Function used to sort NormalizedBBox, stored in STL container (e.g. vector),
-// in ascend order based on the score value.
-bool SortBBoxAscend(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2);
-
-// Function used to sort NormalizedBBox, stored in STL container (e.g. vector),
-// in descend order based on the score value.
-bool SortBBoxDescend(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2);
-
-// Function sued to sort pair<float, T>, stored in STL container (e.g. vector)
-// in descend order based on the score (first) value.
-template <typename T>
-bool SortScorePairAscend(const pair<float, T>& pair1,
-                         const pair<float, T>& pair2);
 
 // Function sued to sort pair<float, T>, stored in STL container (e.g. vector)
 // in descend order based on the score (first) value.
 template <typename T>
 bool SortScorePairDescend(const pair<float, T>& pair1,
                           const pair<float, T>& pair2);
-
-// Generate unit bbox [0, 0, 1, 1]
-NormalizedBBox UnitBBox();
-
-// Check if a bbox is cross boundary or not.
-bool IsCrossBoundaryBBox(const NormalizedBBox& bbox);
 
 // Compute the intersection between two bboxes.
 void IntersectBBox(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2,
@@ -101,7 +77,7 @@ template <typename Dtype>
 Dtype JaccardOverlap(const Dtype* bbox1, const Dtype* bbox2);
 
 // Compute the coverage of bbox1 by bbox2.
-float BBoxCoverage(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2);
+//float BBoxCoverage(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2);
 
 // Encode a bbox according to a prior bbox.
 void EncodeBBox(const NormalizedBBox& prior_bbox,
@@ -109,11 +85,6 @@ void EncodeBBox(const NormalizedBBox& prior_bbox,
     const bool encode_variance_in_target, const NormalizedBBox& bbox,
     NormalizedBBox* encode_bbox);
 
-// Check if a bbox meet emit constraint w.r.t. src_bbox.
-/*
-bool MeetEmitConstraint(const NormalizedBBox& src_bbox,
-    const NormalizedBBox& bbox, const EmitConstraint& emit_constraint);
-    */
 
 // Decode a bbox according to a prior bbox.
 void DecodeBBox(const NormalizedBBox& prior_bbox,
@@ -142,23 +113,6 @@ void DecodeBBoxesAll(const vector<LabelBBox>& all_loc_pred,
 int CountNumMatches(const vector<map<int, vector<int> > >& all_match_indices,
                     const int num);
 
-
-// Retrieve bounding box ground truth from gt_data.
-//    gt_data: 1 x 1 x num_gt x 7 blob.
-//    num_gt: the number of ground truth.
-//    background_label_id: the label for background class which is used to do
-//      santity check so that no ground truth contains it.
-//    all_gt_bboxes: stores ground truth for each image. Label of each bbox is
-//      stored in NormalizedBBox.
-template <typename Dtype>
-void GetGroundTruth(const Dtype* gt_data, const int num_gt,
-      const int background_label_id, const bool use_difficult_gt,
-      map<int, vector<NormalizedBBox> >* all_gt_bboxes);
-// Store ground truth bboxes of same label in a group.
-template <typename Dtype>
-void GetGroundTruth(const Dtype* gt_data, const int num_gt,
-      const int background_label_id, const bool use_difficult_gt,
-      map<int, LabelBBox>* all_gt_bboxes);
 
 // Get location predictions from loc_data.
 //    loc_data: num x num_preds_per_class * num_loc_classes * 4 blob.
@@ -309,24 +263,6 @@ void ApplyNMSFast(const Dtype* bboxes, const Dtype* scores, const int num,
       const float score_threshold, const float nms_threshold,
       const float eta, const int top_k, vector<int>* indices);
 
-// Compute cumsum of a set of pairs.
-void CumSum(const vector<pair<float, int> >& pairs, vector<int>* cumsum);
-
-// Compute average precision given true positive and false positive vectors.
-//    tp: contains pairs of scores and true positive.
-//    num_pos: number of positives.
-//    fp: contains pairs of scores and false positive.
-//    ap_version: different ways of computing Average Precision.
-//      Check https://sanchom.wordpress.com/tag/average-precision/ for details.
-//      11point: the 11-point interpolated average precision. Used in VOC2007.
-//      MaxIntegral: maximally interpolated AP. Used in VOC2012/ILSVRC.
-//      Integral: the natural integral of the precision-recall curve.
-//    prec: stores the computed precisions.
-//    rec: stores the computed recalls.
-//    ap: the computed Average Precision.
-void ComputeAP(const vector<pair<float, int> >& tp, const int num_pos,
-               const vector<pair<float, int> >& fp, const string ap_version,
-               vector<float>* prec, vector<float>* rec, float* ap);
 
 #ifndef CPU_ONLY  // GPU
 template <typename Dtype>
@@ -364,10 +300,6 @@ void ComputeOverlappedByIdxGPU(const int nthreads,
           const Dtype* bbox_data, const Dtype overlap_threshold,
           const int* idx, const int num_idx, bool* overlapped_data);
 
-template <typename Dtype>
-void ApplyNMSGPU(const Dtype* bbox_data, const Dtype* conf_data,
-          const int num_bboxes, const float confidence_threshold,
-          const int top_k, const float nms_threshold, vector<int>* indices);
 
 template <typename Dtype>
 void GetDetectionsGPU(const Dtype* bbox_data, const Dtype* conf_data,
@@ -376,15 +308,6 @@ void GetDetectionsGPU(const Dtype* bbox_data, const Dtype* conf_data,
 
 #endif  // !CPU_ONLY
 
-#ifdef USE_OPENCV
-vector<cv::Scalar> GetColors(const int n);
-
-template <typename Dtype>
-void VisualizeBBox(const vector<cv::Mat>& images, const Blob<Dtype>* detections,
-                   const float threshold, const vector<cv::Scalar>& colors,
-                   const map<int, string>& label_to_display_name,
-                   const string& save_file);
-#endif  // USE_OPENCV
 
 }  // namespace caffe
 
