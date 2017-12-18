@@ -2952,6 +2952,8 @@ TEST_F(SolverTypeUpgradeTest, TestSimple) {
   for (int i = 0; i < 6; ++i) {
     const string& input_proto =
         "net: 'examples/mnist/lenet_train_test.prototxt' "
+        "weights: 'examples/mnist/lenet_train_test1.caffemodel' "
+        "weights: 'examples/mnist/lenet_train_test2.caffemodel' "
         "test_iter: 100 "
         "test_interval: 500 "
         "base_lr: 0.01 "
@@ -2968,6 +2970,8 @@ TEST_F(SolverTypeUpgradeTest, TestSimple) {
         "solver_type: " + std::string(old_type_vec[i]) + " ";
     const string& expected_output_proto =
         "net: 'examples/mnist/lenet_train_test.prototxt' "
+        "weights: 'examples/mnist/lenet_train_test1.caffemodel' "
+        "weights: 'examples/mnist/lenet_train_test2.caffemodel' "
         "test_iter: 100 "
         "test_interval: 500 "
         "base_lr: 0.01 "
