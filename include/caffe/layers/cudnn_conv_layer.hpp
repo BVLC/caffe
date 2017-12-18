@@ -50,6 +50,7 @@ protected:
 
   bool handles_setup_;
 
+  /*
   mutable ::boost::thread_specific_ptr<vector<cudnnHandle_t>> handle_ptr_{
       [](vector<cudnnHandle_t> *handles) {
         for (int i = 0; i < handles->size(); i++) {
@@ -63,6 +64,7 @@ protected:
 	  cudaStreamDestroy((*streams)[i]);
         }
       }};
+      */
 
   mutable ::boost::thread_specific_ptr<vector<cudnnTensorDescriptor_t>>
       bottom_descs_ptr_{[](vector<cudnnTensorDescriptor_t> *descs) {

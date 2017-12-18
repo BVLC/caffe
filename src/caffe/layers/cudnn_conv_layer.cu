@@ -76,22 +76,17 @@ void CuDNNConvolutionLayer<Dtype>::Forward_const_gpu(
     }
   }
 
+  /*
   if (!handle_ptr_.get()) {
     handle_ptr_.reset(new vector<cudnnHandle_t>(this->group_, {}));
 
-    /*
-    if (!stream_ptr_.get()) {
-      stream_ptr_.reset(new vector<cudaStream_t>(this->group_, {}));
-    }
-    */
 
     for (int g = 0; g < this->group_; g++) {
       CUDNN_CHECK(cudnnCreate(&(*handle_ptr_)[g]));
       CUDNN_CHECK(cudnnSetStream((*handle_ptr_)[g], cudaStreamPerThread));
-      //     CUDA_CHECK(cudaStreamCreate(&(*stream_ptr_)[g]));
-      // CUDNN_CHECK(cudnnSetStream((*handle_ptr_)[g], (*stream_ptr_)[g]));
     }
   }
+  */
 
   if (!filter_desc_ptr_.get()) {
     // Create filter descriptor.
@@ -118,12 +113,14 @@ void CuDNNConvolutionLayer<Dtype>::Forward_const_gpu(
                                      pad_h, pad_w, stride_h, stride_w);
     // choose forward and backward algorithms + workspace(s)
     CUDNN_CHECK(cudnnGetConvolutionForwardAlgorithm(
-        (*handle_ptr_)[0], (*bottom_descs_ptr_)[i], *filter_desc_ptr_,
+	  //(*handle_ptr_)[0]
+	Caffe::cudnn_handle(), (*bottom_descs_ptr_)[i], *filter_desc_ptr_,
         (*conv_descs_ptr_)[i], (*top_descs_ptr_)[i],
         CUDNN_CONVOLUTION_FWD_PREFER_FASTEST, 0, &fwd_algo_[i]));
 
     CUDNN_CHECK(cudnnGetConvolutionForwardWorkspaceSize(
-        (*handle_ptr_)[0], (*bottom_descs_ptr_)[i], *filter_desc_ptr_,
+	  //(*handle_ptr_)[0]
+	Caffe::cudnn_handle(), (*bottom_descs_ptr_)[i], *filter_desc_ptr_,
         (*conv_descs_ptr_)[i], (*top_descs_ptr_)[i], fwd_algo_[i],
         &(workspace_fwd_sizes_[i])));
   }
@@ -185,7 +182,8 @@ void CuDNNConvolutionLayer<Dtype>::Forward_const_gpu(
 
       // Filters.
       CUDNN_CHECK(cudnnConvolutionForward(
-          (*handle_ptr_)[g], cudnn::dataType<Dtype>::one,
+	    //(*handle_ptr_)[g]
+	  Caffe::cudnn_handle(), cudnn::dataType<Dtype>::one,
           (*bottom_descs_ptr_)[i], bottom_data + bottom_offset * g,
           *filter_desc_ptr_, weight + weight_offset * g, (*conv_descs_ptr_)[i],
           fwd_algo_[i], workspace, workspace_fwd_sizes_[i],
@@ -196,7 +194,8 @@ void CuDNNConvolutionLayer<Dtype>::Forward_const_gpu(
       if (this->bias_term_) {
         const Dtype *bias_data = this->blobs_[1]->gpu_data();
         CUDNN_CHECK(cudnnAddTensor(
-            (*handle_ptr_)[g], cudnn::dataType<Dtype>::one, (*bias_desc_ptr_),
+	      //(*handle_ptr_)[g],
+	   Caffe::cudnn_handle(), cudnn::dataType<Dtype>::one, (*bias_desc_ptr_),
             bias_data + bias_offset_ * g, cudnn::dataType<Dtype>::one,
             (*top_descs_ptr_)[i], top_data + top_offset * g));
       }

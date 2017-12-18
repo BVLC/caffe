@@ -36,10 +36,12 @@ class CuDNNSoftmaxLayer : public SoftmaxLayer<Dtype> {
   void Forward_const_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) const override;
 
+  /*
   mutable ::boost::thread_specific_ptr<cudnnHandle_t> handle_ptr_{
       [](cudnnHandle_t *handle) {
 	  cudnnDestroy(*handle);
       }};
+      */
 
   mutable ::boost::thread_specific_ptr<cudnnTensorDescriptor_t>
       bottom_desc_ptr_{[](cudnnTensorDescriptor_t *desc) {

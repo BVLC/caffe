@@ -20,11 +20,13 @@ void CuDNNSoftmaxLayer<Dtype>::Forward_const_gpu(
   const Dtype *bottom_data = bottom[0]->gpu_data();
   Dtype *top_data = top[0]->mutable_gpu_data();
 
+  /*
   if (!handle_ptr_.get()) {
     handle_ptr_.reset(new cudnnHandle_t{});
     CUDNN_CHECK(cudnnCreate(handle_ptr_.get()));
     CUDNN_CHECK(cudnnSetStream(*handle_ptr_, cudaStreamPerThread));
   }
+  */
 
   auto softmax_axis_ =
       bottom[0]->CanonicalAxisIndex(this->layer_param_.softmax_param().axis());
@@ -46,7 +48,7 @@ void CuDNNSoftmaxLayer<Dtype>::Forward_const_gpu(
   cudnn::setTensor4dDesc<Dtype>(top_desc_ptr_.get(), N, K, H, W);
 
   CUDNN_CHECK(cudnnSoftmaxForward(
-      *handle_ptr_, CUDNN_SOFTMAX_ACCURATE, CUDNN_SOFTMAX_MODE_CHANNEL,
+     Caffe::cudnn_handle(), CUDNN_SOFTMAX_ACCURATE, CUDNN_SOFTMAX_MODE_CHANNEL,
       cudnn::dataType<Dtype>::one, *bottom_desc_ptr_, bottom_data,
       cudnn::dataType<Dtype>::zero, *top_desc_ptr_, top_data));
 }

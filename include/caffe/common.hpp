@@ -1,8 +1,8 @@
 #ifndef CAFFE_COMMON_HPP_
 #define CAFFE_COMMON_HPP_
 
-#include <memory>
 #include <glog/logging.h>
+#include <memory>
 
 #include <climits>
 #include <cmath>
@@ -109,6 +109,10 @@ public:
     return Get().device_pool_;
   }
 
+#ifdef USE_CUDNN
+  inline static cudnnHandle_t  cudnn_handle() { return Get().cudnn_handle_; }
+#endif
+
 #endif
 
   // Returns the mode: running on CPU or GPU.
@@ -122,7 +126,7 @@ private:
   std::shared_ptr<deepir::allocator::buddy_pool> host_pool_;
   std::shared_ptr<deepir::allocator::buddy_pool> device_pool_;
 #ifdef USE_CUDNN
-  cudnnHandle_t            cudnn_handle_{nullptr};
+  cudnnHandle_t cudnn_handle_{nullptr};
   cudnnTensorDescriptor_t bottom_desc_{nullptr};
   cudnnTensorDescriptor_t top_desc_{nullptr};
 #endif
@@ -133,7 +137,7 @@ private:
 
 private:
   // The private constructor to avoid duplicate instantiation.
-  Caffe()=default;
+  Caffe() = default;
 
   DISABLE_COPY_AND_ASSIGN(Caffe);
 };

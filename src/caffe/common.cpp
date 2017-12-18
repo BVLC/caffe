@@ -72,6 +72,11 @@ void Caffe::set_device(int device_id) {
     CUBLAS_CHECK(cublasSetStream(Get().cublas_handle_, cudaStreamPerThread));
   }
 
+#ifdef USE_CUDNN
+  CUDNN_CHECK(cudnnCreate(&Get().cudnn_handle_));
+  CUDNN_CHECK(cudnnSetStream(Get().cudnn_handle_, cudaStreamPerThread));
+#endif
+
   Get().host_pool_ = std::make_shared<deepir::allocator::buddy_pool>(
       deepir::allocator::buddy_pool::alloc_location::host);
   Get().device_pool_ = std::make_shared<deepir::allocator::buddy_pool>(
