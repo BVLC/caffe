@@ -1,3 +1,4 @@
+#ifdef USE_CUDA
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
@@ -11,26 +12,11 @@
 #include "caffe/backend/cuda/caffe_cuda.hpp"
 #include "caffe/backend/cuda/cuda_dev_ptr.hpp"
 
-#ifdef USE_CUDA
 #include <thrust/device_vector.h>
 #include <thrust/functional.h>  // thrust::plus
 #include <thrust/reduce.h>
-#endif  // USE_CUDA
 
 namespace caffe {
-
-#ifdef USE_CUDA
-
-void CudaDevice::axpy_half(const uint_tp n,
-                       const half_fp alpha,
-                       vptr<const half_fp> x,
-                       vptr<half_fp> y) {
-#ifdef USE_HALF
-  NOT_IMPLEMENTED;  // TODO
-#else  // USE_HALF
-  NOT_IMPLEMENTED;
-#endif  // USE_HALF
-}
 
 void CudaDevice::axpy_float(const uint_tp n, const float alpha,
                             vptr<const float> x, vptr<float> y) {
@@ -64,15 +50,6 @@ void CudaDevice::axpby_double(const uint_tp n, const double alpha,
                               const double beta, vptr<double> y) {
   this->scal_double(n, beta, y);
   this->axpy_double(n, alpha, x, y);
-}
-
-void CudaDevice::scal_half(const uint_tp n, const half_fp alpha,
-                           vptr<half_fp> x) {
-#ifdef USE_HALF
-  NOT_IMPLEMENTED;  // TODO
-#else  // USE_HALF
-  NOT_IMPLEMENTED;
-#endif  // USE_HALF
 }
 
 void CudaDevice::scal_float(const uint_tp n, const float alpha,
@@ -121,16 +98,6 @@ void CudaDevice::scal_str<double>(const int_tp n, const double alpha,
   CUBLAS_CHECK(cublasSetStream(Caffe::cublas_handle(), initial_stream));
 }
 
-void CudaDevice::dot_half(const uint_tp n, vptr<const half_fp> x,
-                          vptr<const half_fp> y,
-                          half_fp* out) {
-#ifdef USE_HALF
-  NOT_IMPLEMENTED;  // TODO
-#else  // USE_HALF
-  NOT_IMPLEMENTED;
-#endif  // USE_HALF
-}
-
 void CudaDevice::dot_float(const uint_tp n, vptr<const float> x,
                            vptr<const float> y, float* out) {
   CUBLAS_CHECK(cublasSdot(Caffe::cublas_handle(), n, x.get_cuda_ptr(), 1,
@@ -143,15 +110,6 @@ void CudaDevice::dot_double(const uint_tp n, vptr<const double> x,
                           y.get_cuda_ptr(), 1, out));
 }
 
-void CudaDevice::asum_half(const uint_tp n, vptr<const half_fp> x,
-                           half_fp *y) {
-#ifdef USE_HALF
-  NOT_IMPLEMENTED;  // TODO
-#else  // USE_HALF
-  NOT_IMPLEMENTED;
-#endif  // USE_HALF
-}
-
 void CudaDevice::asum_float(const uint_tp n, vptr<const float> x, float* y) {
   CUBLAS_CHECK(cublasSasum(Caffe::cublas_handle(), n, x.get_cuda_ptr(),
                            1, y));
@@ -160,16 +118,6 @@ void CudaDevice::asum_float(const uint_tp n, vptr<const float> x, float* y) {
 void CudaDevice::asum_double(const uint_tp n, vptr<const double> x, double* y) {
   CUBLAS_CHECK(cublasDasum(Caffe::cublas_handle(), n, x.get_cuda_ptr(),
                            1, y));
-}
-
-void CudaDevice::scale_half(const uint_tp n, const half_fp alpha,
-                            vptr<const half_fp> x,
-                            vptr<half_fp> y) {
-#ifdef USE_HALF
-  NOT_IMPLEMENTED;  // TODO
-#else  // USE_HALF
-  NOT_IMPLEMENTED;
-#endif  // USE_HALF
 }
 
 void CudaDevice::scale_float(const uint_tp n, const float alpha,
@@ -188,7 +136,5 @@ void CudaDevice::scale_double(const uint_tp n, const double alpha,
                            1));
 }
 
-
 #endif  // USE_CUDA
-
-}
+}  // namespace caffe

@@ -158,6 +158,11 @@ inline void OclDeviceKernel::set_arg_helper(uint_tp idx, cl_mem mem,
   if ((flags & KERNEL_ARG_MEM_OFFSET) == KERNEL_ARG_MEM_OFFSET) {
     clSetKernelArg(this->ocl_kernel_.handle().get(), curr_arg_idx + 1,
                    safe_sizeof<uint_tp>(), &off);
+  } else {
+    // Require kernel to either have support for memory offset, or
+    // keep the virtual pointer offset at 0 to avoid side effects.
+    CHECK(off == 0) << "Kernel does not support memory offset, but "
+                    << "the virtual pointer has a non-zero offset.";
   }
   this->arg_idx_ = std::max(idx + 1, this->arg_idx_);
 }

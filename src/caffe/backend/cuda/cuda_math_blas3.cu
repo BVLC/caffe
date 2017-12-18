@@ -1,3 +1,4 @@
+#ifdef USE_CUDA
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
@@ -11,15 +12,11 @@
 #include "caffe/backend/cuda/caffe_cuda.hpp"
 #include "caffe/backend/cuda/cuda_dev_ptr.hpp"
 
-#ifdef USE_CUDA
 #include <thrust/device_vector.h>
 #include <thrust/functional.h>  // thrust::plus
 #include <thrust/reduce.h>
-#endif  // USE_CUDA
 
 namespace caffe {
-
-#ifdef USE_CUDA
 
 void CudaDevice::gemm_half(const CBLAS_TRANSPOSE trans_A,
                            const CBLAS_TRANSPOSE trans_B,
@@ -83,6 +80,4 @@ void CudaDevice::gemm_double(const CBLAS_TRANSPOSE trans_A,
 
 
 #endif  // USE_CUDA
-
-
-}
+}  // namespace caffe

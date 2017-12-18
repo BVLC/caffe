@@ -20,14 +20,20 @@ class LibDNNBlas : public LibDNN<MItype, MOtype> {
   explicit LibDNNBlas(Device* dev_ptr);
 
   // BLAS 1
-  void axpy(const uint_tp n, const MItype alpha, vptr<const MItype> x,
-            vptr<MOtype> y);
-  void scal(const uint_tp n, const MItype alpha, vptr<MItype> x);
+  void axpby(const uint_tp n, const MItype alpha, vptr<const MItype> x,
+             const MOtype beta, vptr<MOtype> y,
+             shared_ptr<Quantizer<MItype, MOtype> > quantizer);
+  void scal(const uint_tp n, const MItype alpha, vptr<MItype> x,
+            shared_ptr<Quantizer<MItype, MOtype> > quantizer);
   void dot(const uint_tp n, vptr<const MItype> x, vptr<const MItype> y,
-           MOtype* out);
-  void asum(const uint_tp n, vptr<MItype> x, MOtype* y);
+           MOtype* out,
+           libdnnAccumulatePrecision_t prec,
+           shared_ptr<Quantizer<MItype, MOtype> > quantizer);
+  void asum(const uint_tp n, vptr<MItype> x, MOtype* y,
+            libdnnAccumulatePrecision_t prec,
+            shared_ptr<Quantizer<MItype, MOtype> > quantizer);
   void scale(const uint_tp n, const MItype alpha, vptr<const MItype> x,
-             vptr<MOtype> y);
+             vptr<MOtype> y, shared_ptr<Quantizer<MItype, MOtype> > quantizer);
 
   // BLAS 2
   void gemv(const CBLAS_TRANSPOSE trans_A, const uint_tp M, const uint_tp N,
@@ -47,20 +53,33 @@ class LibDNNBlas : public LibDNN<MItype, MOtype> {
   int_tp get_id(string identifier);
   int_tp get_id_or_new(string identifier);
 
-  string generate_axpy_source();
-  string axpy_string_identifier();
+  string generate_scale_source(shared_ptr<DeviceProgram> program,
+                              shared_ptr<LibDNNTuner> tuner,
+                              shared_ptr<Quantizer<MItype, MOtype> > quantizer);
+  string scale_string_identifier(
+                              shared_ptr<Quantizer<MItype, MOtype> > quantizer);
 
-  string generate_scal_source();
-  string scal_string_identifier();
+  string generate_axpby_source(shared_ptr<DeviceProgram> program,
+                              shared_ptr<LibDNNTuner> tuner,
+                              shared_ptr<Quantizer<MItype, MOtype> > quantizer);
+  string axpby_string_identifier(
+                              shared_ptr<Quantizer<MItype, MOtype> > quantizer);
 
-  string generate_dot_source();
-  string dot_string_identifier();
+  string generate_dot_source(shared_ptr<DeviceProgram> program,
+                             shared_ptr<LibDNNTuner> tuner,
+                             libdnnAccumulatePrecision_t prec,
+                             shared_ptr<Quantizer<MItype, MOtype> > quantizer);
+  string dot_string_identifier(libdnnAccumulatePrecision_t prec,
+                              shared_ptr<Quantizer<MItype, MOtype> > quantizer);
 
-  string generate_asum_source();
-  string asum_string_identifier();
+  string generate_asum_source(shared_ptr<DeviceProgram> program,
+                              shared_ptr<LibDNNTuner> tuner,
+                              libdnnAccumulatePrecision_t prec,
+                              shared_ptr<Quantizer<MItype, MOtype> > quantizer);
+  string asum_string_identifier(libdnnAccumulatePrecision_t prec,
+                              shared_ptr<Quantizer<MItype, MOtype> > quantizer);
 
-  string generate_scale_source();
-  string scale_string_identifier();
+
 
   string generate_gemv_source(
          shared_ptr<DeviceProgram> program, shared_ptr<LibDNNTuner> tuner,

@@ -169,13 +169,26 @@ shared_ptr<Blob<Dtype> > Device::Buffer(vector<int_tp> shape, int_tp* lock_id) {
     buffer_shape[0] *= shape[i];
   }
 
+  // Classify buffers by their log-size to pick reasonable sized buffers from
+  // the existing ones (or create a new one otherwise)
+  size_t log_size = static_cast<size_t>(std::floor(
+                    std::log2(static_cast<double>(buffer_shape[0]))));
+  size_t min_size = static_cast<size_t>(
+                    std::exp(static_cast<double>(log_size)));
+  size_t max_size = static_cast<size_t>(
+                    std::exp(static_cast<double>(log_size + 1)));
+
   // Ensure the thread safety of this function
   buffer_vec_mutex_.lock();
   size_t buffer_id = -1;
   for (size_t i = 0; i < buffers_.size(); ++i) {
-    if (buffer_mutex_[i]->try_lock()) {
-      buffer_id = i;
-      break;
+    // Do not use buffers that are disproportionally different in size
+    if (buffers_[i]->byte_count() >= min_size &&
+        buffers_[i]->byte_count() <= max_size) {
+      if (buffer_mutex_[i]->try_lock()) {
+        buffer_id = i;
+        break;
+      }
     }
   }
 
