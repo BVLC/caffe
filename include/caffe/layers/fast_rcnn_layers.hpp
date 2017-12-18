@@ -54,37 +54,6 @@ class ROIPoolingLayer : public Layer<Dtype> {
 };
 
 template <typename Dtype>
-class SmoothL1LossLayer : public LossLayer<Dtype> {
- public:
-  explicit SmoothL1LossLayer(const LayerParameter& param)
-      : LossLayer<Dtype>(param), diff_() {}
-  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
-  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
-
-  virtual inline const char* type() const { return "SmoothL1Loss"; }
-
-  virtual inline int ExactNumBottomBlobs() const { return -1; }
-  virtual inline int MinBottomBlobs() const { return 2; }
-  virtual inline int MaxBottomBlobs() const { return 4; }
-
-
- protected:
-  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
-  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
-
-
-  Blob<Dtype> diff_;
-  Blob<Dtype> errors_;
-  Blob<Dtype> ones_;
-  bool has_weights_;
-  Dtype sigma2_;
-};
-
-template <typename Dtype>
 class ProposalLayer : public Layer<Dtype> {
  public:
   explicit ProposalLayer(const LayerParameter& param)
