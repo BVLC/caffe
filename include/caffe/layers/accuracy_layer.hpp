@@ -7,8 +7,6 @@
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
 
-#include "caffe/layers/loss_layer.hpp"
-
 namespace caffe {
 
 /**
