@@ -7,6 +7,12 @@ namespace caffe {
 template <typename Dtype>
 void FlattenLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
+  Reshape_const(bottom,top);
+}
+
+template <typename Dtype>
+void FlattenLayer<Dtype>::Reshape_const(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) const {
   CHECK_NE(top[0], bottom[0]) << this->type() << " Layer does not "
       "allow in-place computation.";
   const int start_axis = bottom[0]->CanonicalAxisIndex(
@@ -27,10 +33,16 @@ void FlattenLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 }
 
 template <typename Dtype>
-void FlattenLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {
+void FlattenLayer<Dtype>::Forward_const_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) const {
   bottom[0]->cpu_data();
   top[0]->ShareData(*bottom[0]);
+}
+
+template <typename Dtype>
+void FlattenLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  Forward_const_cpu(bottom,top);
 }
 
 INSTANTIATE_CLASS(FlattenLayer);

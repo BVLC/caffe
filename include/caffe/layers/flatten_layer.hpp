@@ -26,6 +26,8 @@ class FlattenLayer : public Layer<Dtype> {
       : Layer<Dtype>(param) {}
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
+  void Reshape_const(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) const;
 
   virtual inline const char* type() const { return "Flatten"; }
   virtual inline int ExactNumBottomBlobs() const { return 1; }
@@ -42,6 +44,16 @@ class FlattenLayer : public Layer<Dtype> {
    */
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
+  void Forward_const_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) const override;
+  void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) override {
+    Forward_cpu(bottom,top);
+  }
+  void Forward_const_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) const override {
+    Forward_const_cpu(bottom,top);
+  }
 };
 
 }  // namespace caffe

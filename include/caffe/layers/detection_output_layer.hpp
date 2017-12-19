@@ -31,6 +31,8 @@ class DetectionOutputLayer : public Layer<Dtype> {
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
+  void Reshape_const(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) const override;
 
   virtual inline const char* type() const { return "DetectionOutput"; }
   virtual inline int MinBottomBlobs() const { return 3; }
@@ -55,8 +57,12 @@ class DetectionOutputLayer : public Layer<Dtype> {
    */
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
+  void Forward_const_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) const override;
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
+  void Forward_const_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) const override;
 
   int num_classes_;
   bool share_location_;
@@ -68,13 +74,11 @@ class DetectionOutputLayer : public Layer<Dtype> {
   float confidence_threshold_;
 
   int num_;
-  int num_priors_;
 
   float nms_threshold_;
   int top_k_;
   float eta_;
 
-  vector<string> names_;
   vector<pair<int, int> > sizes_;
   int num_test_image_;
   int name_count_;
@@ -82,9 +86,6 @@ class DetectionOutputLayer : public Layer<Dtype> {
   ResizeParameter resize_param_;
 
 
-  Blob<Dtype> bbox_preds_;
-  Blob<Dtype> bbox_permute_;
-  Blob<Dtype> conf_permute_;
 };
 
 }  // namespace caffe

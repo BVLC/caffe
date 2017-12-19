@@ -30,7 +30,13 @@ void ReshapeLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 
 template <typename Dtype>
 void ReshapeLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
-    const vector<Blob<Dtype>*>& top) {
+    const vector<Blob<Dtype>*>& top){
+  Reshape_const(bottom,top);
+}
+
+template <typename Dtype>
+void ReshapeLayer<Dtype>::Reshape_const(const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) const{
   const int input_start_axis = this->layer_param_.reshape_param().axis();
   const int start_axis = (input_start_axis >= 0) ? input_start_axis :
       bottom[0]->num_axes() + input_start_axis + 1;
@@ -87,7 +93,6 @@ void ReshapeLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   CHECK_EQ(top[0]->count(), bottom[0]->count())
       << "output count must match input count";
   top[0]->ShareData(*bottom[0]);
-  //top[0]->ShareDiff(*bottom[0]);
 }
 
 INSTANTIATE_CLASS(ReshapeLayer);

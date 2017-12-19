@@ -8,6 +8,12 @@ namespace caffe {
 template <typename Dtype>
 void ReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
+  Forward_const_cpu(bottom,top);
+}
+
+template <typename Dtype>
+void ReLULayer<Dtype>::Forward_const_cpu(const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) const {
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = top[0]->mutable_cpu_data();
   const int count = bottom[0]->count();

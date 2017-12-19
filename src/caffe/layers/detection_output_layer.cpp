@@ -37,37 +37,19 @@ void DetectionOutputLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     top_k_ = detection_output_param.nms_param().top_k();
   }
 
-
-
   name_count_ = 0;
-  bbox_preds_.ReshapeLike(*(bottom[0]));
-  if (!share_location_) {
-    bbox_permute_.ReshapeLike(*(bottom[0]));
-  }
-  conf_permute_.ReshapeLike(*(bottom[1]));
 }
 
 template <typename Dtype>
 void DetectionOutputLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
+  Reshape_const(bottom,top);
+}
+
+template <typename Dtype>
+void DetectionOutputLayer<Dtype>::Reshape_const(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) const {
   CHECK_EQ(bottom[0]->num(), bottom[1]->num());
-  if (bbox_preds_.num() != bottom[0]->num() ||
-      bbox_preds_.count(1) != bottom[0]->count(1)) {
-    bbox_preds_.ReshapeLike(*(bottom[0]));
-  }
-  if (!share_location_ && (bbox_permute_.num() != bottom[0]->num() ||
-      bbox_permute_.count(1) != bottom[0]->count(1))) {
-    bbox_permute_.ReshapeLike(*(bottom[0]));
-  }
-  if (conf_permute_.num() != bottom[1]->num() ||
-      conf_permute_.count(1) != bottom[1]->count(1)) {
-    conf_permute_.ReshapeLike(*(bottom[1]));
-  }
-  num_priors_ = bottom[2]->height() / 4;
-  CHECK_EQ(num_priors_ * num_loc_classes_ * 4, bottom[0]->channels())
-      << "Number of priors must match number of location predictions.";
-  CHECK_EQ(num_priors_ * num_classes_, bottom[1]->channels())
-      << "Number of priors must match number of confidence predictions.";
   // num() and channels() are 1.
   vector<int> top_shape(2, 1);
   // Since the number of bboxes to be kept is unknown before nms, we manually
@@ -82,26 +64,38 @@ void DetectionOutputLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void DetectionOutputLayer<Dtype>::Forward_cpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
+  Forward_const_cpu(bottom,top);
+}
+
+template <typename Dtype>
+void DetectionOutputLayer<Dtype>::Forward_const_cpu(
+    const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) const {
   const Dtype* loc_data = bottom[0]->cpu_data();
   const Dtype* conf_data = bottom[1]->cpu_data();
   const Dtype* prior_data = bottom[2]->cpu_data();
   const int num = bottom[0]->num();
 
+  int num_priors = bottom[2]->height() / 4;
+  CHECK_EQ(num_priors * num_loc_classes_ * 4, bottom[0]->channels())
+      << "Number of priors must match number of location predictions.";
+  CHECK_EQ(num_priors * num_classes_, bottom[1]->channels())
+      << "Number of priors must match number of confidence predictions.";
+
   // Retrieve all location predictions.
   vector<LabelBBox> all_loc_preds;
-  GetLocPredictions(loc_data, num, num_priors_, num_loc_classes_,
+  GetLocPredictions(loc_data, num, num_priors, num_loc_classes_,
                     share_location_, &all_loc_preds);
 
   // Retrieve all confidences.
   vector<map<int, vector<float> > > all_conf_scores;
-  GetConfidenceScores(conf_data, num, num_priors_, num_classes_,
+  GetConfidenceScores(conf_data, num, num_priors, num_classes_,
                       &all_conf_scores);
 
   // Retrieve all prior bboxes. It is same within a batch since we assume all
   // images in a batch are of same dimension.
   vector<NormalizedBBox> prior_bboxes;
   vector<vector<float> > prior_variances;
-  GetPriorBBoxes(prior_data, num_priors_, &prior_bboxes, &prior_variances);
+  GetPriorBBoxes(prior_data, num_priors, &prior_bboxes, &prior_variances);
 
   // Decode all loc predictions to bboxes.
   vector<LabelBBox> all_decode_bboxes;

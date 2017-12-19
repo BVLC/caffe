@@ -102,6 +102,12 @@ void PriorBoxLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void PriorBoxLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
+  Reshape_const(bottom,top);
+}
+
+template <typename Dtype>
+void PriorBoxLayer<Dtype>::Reshape_const(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) const {
   const int layer_width = bottom[0]->width();
   const int layer_height = bottom[0]->height();
   vector<int> top_shape(3, 1);
@@ -119,6 +125,12 @@ void PriorBoxLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void PriorBoxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
+  Forward_const_cpu(bottom,top);
+}
+
+template <typename Dtype>
+void PriorBoxLayer<Dtype>::Forward_const_cpu(const vector<Blob<Dtype>*>& bottom,
+    const vector<Blob<Dtype>*>& top) const {
   const int layer_width = bottom[0]->width();
   const int layer_height = bottom[0]->height();
   int img_width, img_height;

@@ -286,8 +286,10 @@ void Blob<Dtype>::FromProto(const BlobProto& proto, bool reshape) {
 
   //強制讓網絡的參數同步到GPU
 #ifndef CPU_ONLY
-  gpu_data();
-  CUDA_CHECK(cudaStreamSynchronize(cudaStreamPerThread));
+  if (Caffe::mode() != Caffe::CPU) {
+    gpu_data();
+    CUDA_CHECK(cudaStreamSynchronize(cudaStreamPerThread));
+  }
 #endif
 }
 
