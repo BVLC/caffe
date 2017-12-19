@@ -133,6 +133,7 @@ void Normalize2Layer<Dtype>::Forward_const_cpu(const vector<Blob<Dtype>*>& botto
 
 #ifdef CPU_ONLY
 STUB_GPU(Normalize2Layer);
+STUB_GPU_FORWARD_CONST(Normalize2Layer,Forward_const);
 #endif
 
 INSTANTIATE_CLASS(Normalize2Layer);
