@@ -94,7 +94,6 @@ void Normalize2Layer<Dtype>::Forward_const_cpu(const vector<Blob<Dtype>*>& botto
   buffer.Reshape(1,1,1,dim);
   Dtype* buffer_data = buffer.mutable_cpu_data();
   for (int n = 0; n < num; ++n) {
-    std::cout<<"dim="<<dim<<" count="<<bottom[0]->count()<<std::endl;
     caffe_sqr<Dtype>(dim, bottom_data, buffer_data);
     if (across_spatial_) {
       // add eps to avoid overflow
