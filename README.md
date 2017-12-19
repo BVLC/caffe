@@ -346,3 +346,7 @@ Open a Git Bash console on Windows and do the following instructions to build bo
   scripts\build_win.cmd
   ```
   Please be noted that, after the building finished successfully, before you try to run the application, you need to copy the dl.dll (dlfcn) and isaac.dll (isaac) into the same directory or put them into a system directory.
+
+# Intel OTC Security Notice
+
+Please report any security issues following the procedure described in http://01.org/security
