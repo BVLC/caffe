@@ -573,19 +573,24 @@ void Net<Dtype>::CompileNet(const NetParameter& param,
   param_temp2.clear_layer();   // Remove layers
   CompilationRuleTwo(param_temp, &param_temp2);
 
-#ifdef DISABLE_CONV_SUM_FUSION
-  param_compiled->CopyFrom(param_temp2);
-  param_compiled->clear_layer();    // Remove layers
-  CompilationRuleThree(param_temp2, param_compiled);
-#else
-  NetParameter param_temp3;
+  NetParameter param_temp3;  // temporary compiled param
   param_temp3.CopyFrom(param_temp2);
-  param_temp3.clear_layer();
-  CompilationRuleThree(param_temp2, &param_temp3);
+  param_temp3.clear_layer();   // Remove layers
+  CompilationRuleFuseBnRelu(param_temp2, &param_temp3);
 
+#ifdef DISABLE_CONV_SUM_FUSION
   param_compiled->CopyFrom(param_temp3);
+  param_compiled->clear_layer();    // Remove layers
+  CompilationRuleThree(param_temp3, param_compiled);
+#else
+  NetParameter param_temp4;
+  param_temp4.CopyFrom(param_temp3);
+  param_temp4.clear_layer();
+  CompilationRuleThree(param_temp3, &param_temp4);
+
+  param_compiled->CopyFrom(param_temp4);
   param_compiled->clear_layer();
-  CompilationRuleFour(param_temp3, param_compiled);
+  CompilationRuleFour(param_temp4, param_compiled);
 #endif 
 }
 
@@ -950,6 +955,94 @@ void Net<Dtype>::CompilationRuleFour(const NetParameter& param,
   }
 
   return;
+}
+
+template <typename Dtype>
+void Net<Dtype>::CompilationRuleFuseBnRelu(const NetParameter& param,
+                                    NetParameter* param_compiled) {
+
+  std::set<std::string> layers_to_drop;
+  for (int i = 0; i < param.layer_size(); ++i) {
+    LayerParameter* layer_param =
+          (const_cast<NetParameter&>(param)).mutable_layer(i);
+    bool layer_included = true;
+
+    // Optimization rule BnRelu:
+    // - If we are having engine MKLDNN and Relu layer within a model
+    // and input bottom comes from  BatchNorm of engine MKLDNN
+    // then we can remove Relu layer
+    // and rename BatchNorm top blob after deleted Relu's top
+    // If current layer is BatchNorm of MKLDNN engine..
+    if (((layer_param->type().compare("BatchNorm") == 0) &&
+         ((layer_param->batch_norm_param().engine() == BatchNormParameter_Engine_MKLDNN) ||
+          ((layer_param->batch_norm_param().engine() == BatchNormParameter_Engine_DEFAULT) &&
+           (layer_param->has_engine() == false)  &&
+           (param.engine().compare("MKLDNN") == 0)) ||
+          (param.engine() == "" && layer_param->engine().compare("MKLDNN") == 0)))) {
+      std::vector<const LayerParameter*> consumer_layer_params;
+      GetBlobConsumers(consumer_layer_params,
+                       layer_param->top(0),
+                       param,
+                       i+1 < param.layer_size() ? i+1 : i);
+      const LayerParameter& consumer_layer_param =
+                                    consumer_layer_params.size() > 0 ?
+                                    *(consumer_layer_params[0]) : *layer_param;
+      // Consumer layer of blob produced by BN
+      // has to be Relu layer with one Input Blob
+
+      if ((consumer_layer_param.type().compare("ReLU") == 0) &&
+          ((consumer_layer_param.relu_param().engine() == ReLUParameter_Engine_MKLDNN) ||
+           ((consumer_layer_param.relu_param().engine() == ReLUParameter_Engine_DEFAULT) &&
+            (consumer_layer_param.engine().compare(0, 6, "MKLDNN") == 0 &&
+             consumer_layer_param.engine().find(":DLA", 6) == string::npos)) ||
+           ((consumer_layer_param.relu_param().engine() == ReLUParameter_Engine_DEFAULT) &&
+            (consumer_layer_param.engine() == "") &&
+            (param.engine().compare(0, 6, "MKLDNN") == 0 &&
+             param.engine().find(":DLA", 6) == string::npos))) &&
+             !consumer_layer_param.relu_param().negative_slope()) {
+             // negative_slope should be zero
+        string& batchnorm_top_blob_name =
+            const_cast<string&>(layer_param->top(0));
+
+        if(param.state().phase() == TEST) {
+          const string& relu_top_blob_name = consumer_layer_param.top(0);
+          // Mark Consumer layer (its name) as the one marked for dropping
+          layers_to_drop.insert(consumer_layer_param.name());
+
+          // Replace BatchNorm top name with ReLU top name
+          batchnorm_top_blob_name.resize(relu_top_blob_name.size());
+          batchnorm_top_blob_name.replace(0,
+                                          relu_top_blob_name.size(),
+                                          relu_top_blob_name);
+        }
+        // set relu flag in BN
+        layer_param->mutable_batch_norm_param()->set_relu(true);
+
+        if(param.state().phase() == TRAIN) {
+          if(i+1 < param.layer_size()) {
+            LayerParameter* relu_layer_param =
+              (const_cast<NetParameter&>(param)).mutable_layer(i+1);
+            relu_layer_param->mutable_relu_param()->set_fuse(true);
+            // LOG(INFO) <<  "Bn + Relu fused." << std::endl;
+          }
+        }
+      }
+    }
+
+    if(param.state().phase() == TEST) {
+      if (layers_to_drop.find(layer_param->name()) != layers_to_drop.end()) {
+        LOG_IF(INFO, Caffe::root_solver()) << "Dropped layer: "
+               << layer_param->name() << std::endl;
+        layer_included = false;
+        // Remove dropped layer from the list of layers to be dropped
+        layers_to_drop.erase(layers_to_drop.find(layer_param->name()));
+      }
+    }
+
+    if (layer_included) {
+      param_compiled->add_layer()->CopyFrom(*layer_param);
+    }
+  }
 }
 
 template <typename Dtype>

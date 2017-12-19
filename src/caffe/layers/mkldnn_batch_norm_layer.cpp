@@ -234,9 +234,20 @@ void MKLDNNBatchNormLayer<Dtype>::InitBatchNorm(const vector<Blob<Dtype>*>& bott
     EngineParser ep(subengines);
     unsigned subEngineIndex = 0;
     BatchNormFwd_pd = NULL;
+    bool relu = this->layer_param_.batch_norm_param().relu();
+    mkldnn::primitive_attr attr;
+    mkldnn::post_ops ops;
+    if (relu) {
+        ops.append_eltwise(1.f, eltwise_relu, 0.f, 0.f);
+        attr.set_post_ops(ops);
+    }
     for(; subEngineIndex < ep.getNumberOfSubEngines(); subEngineIndex++) {
       try {
-        BatchNormFwd_pd.reset(new batch_normalization_forward::primitive_desc(BatchNormFwd_desc,
+        if (relu)
+            BatchNormFwd_pd.reset(new batch_normalization_forward::primitive_desc(BatchNormFwd_desc, attr,
+                ep.getMKLDNNSubEngine(subEngineIndex)));
+        else
+            BatchNormFwd_pd.reset(new batch_normalization_forward::primitive_desc(BatchNormFwd_desc,
                 ep.getMKLDNNSubEngine(subEngineIndex)));
       }
       catch(...) {

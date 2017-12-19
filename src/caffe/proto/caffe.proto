@@ -933,6 +933,7 @@ message BatchNormParameter {
   optional FillerParameter bias_filler = 8; // The filler for the bias
   // Batch size used for statistics, 0 would use the batch size of bottom blob
   optional uint32 stats_batch_size = 9 [default = 0];
+  optional bool relu = 10 [default = false];
 }
 
 message SplitParameter {
