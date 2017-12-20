@@ -48,21 +48,22 @@ namespace caffe {
 
 #ifdef CAFFE_PER_LAYER_TIMINGS
 
-#define LAYER_UPDATE_TIMING_START() do { \
-  if (this->net_->phase() == TRAIN) { \
-    this->net_->timer.Start(); \
+#define LAYER_UPDATE_TIMING_START(index) do { \
+  if (this->net()->phase() == TRAIN) { \
+    this->net()->update_start_time_per_layer[index] = this->net()->timer.Duration(); \
   } \
 }while(0)
 
 #define LAYER_UPDATE_TIMING_STOP(index) do { \
-  if (this->net_->phase() == TRAIN) { \
-    this->net_->update_time_per_layer[index] += this->net_->timer.MicroSeconds(); \
+  if (this->net()->phase() == TRAIN) { \
+    this->net()->update_stop_time_per_layer[index] = this->net()->timer.Duration(); \
+    this->net()->update_time_per_layer[index] += (this->net()->update_stop_time_per_layer[index] - this->net()->update_start_time_per_layer[index]); \
   } \
 }while(0)
 
 #else
 
-#define LAYER_UPDATE_TIMING_START()
+#define LAYER_UPDATE_TIMING_START(index)
 #define LAYER_UPDATE_TIMING_STOP(index)
 
 #endif
@@ -225,7 +226,7 @@ void SGDSolver<Dtype>::ApplyUpdate() {
 #endif
   for (int i=0; i<this->net_->layers().size(); i++) {
     const std::vector<int> param_ids = this->net_->get_layer_learnable_param_ids(i);
-    LAYER_UPDATE_TIMING_START();
+    LAYER_UPDATE_TIMING_START(i);
     for (int param_id = 0; param_id < param_ids.size(); ++param_id) {
       ApplyUpdate(param_ids[param_id]);
     }

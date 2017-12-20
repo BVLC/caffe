@@ -122,6 +122,7 @@ void Solver<Dtype>::Init(const SolverParameter& param) {
   }
   iter_ = 0;
   current_step_ = 0;
+
 }
 
 template <typename Dtype>
@@ -352,6 +353,7 @@ void Solver<Dtype>::Step(int iters) {
     iter_time += iter_timer.MilliSeconds();
 
 #ifdef CAFFE_PER_LAYER_TIMINGS
+    net_->SaveTimeline();
     net_->PrintTimers(false);
     net_->ResetTimers();
 
@@ -383,6 +385,7 @@ void Solver<Dtype>::Step(int iters) {
 #ifdef CAFFE_PER_LAYER_TIMINGS
   net_->ResetTimers();
   net_->PrintTimers(true);
+  net_->PrintPayloadSize();
 #endif
 }
 
