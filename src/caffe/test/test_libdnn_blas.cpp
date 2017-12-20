@@ -41,11 +41,11 @@ TYPED_TEST(LibDNNBlasTest, TestGemmCPUGPU) {
   TypeParam B_reshape_data[12] = {1, 5, 9, 2, 6, 10, 3, 7, 11, 4, 8, 12};
   TypeParam result[8] = {38, 44, 50, 56, 83, 98, 113, 128};
 
-  caffe_cpu_copy(6, data, A.mutable_cpu_data());
-  caffe_cpu_copy(12, data, B.mutable_cpu_data());
+  caffe_copy(6, data, A.mutable_cpu_data());
+  caffe_copy(12, data, B.mutable_cpu_data());
 
   // [1, 2, 3; 4 5 6] * [1, 2, 3, 4; 5, 6, 7, 8; 9, 10, 11, 12];
-  caffe_cpu_gemm<TypeParam>(CblasNoTrans, CblasNoTrans, 2, 4, 3, 1.,
+  caffe_gemm<TypeParam>(CblasNoTrans, CblasNoTrans, 2, 4, 3, 1.,
       A.cpu_data(), B.cpu_data(), 0., C.mutable_cpu_data());
   for (int_tp i = 0; i < 8; ++i) {
     EXPECT_EQ(C.cpu_data()[i], result[i]);
@@ -62,8 +62,8 @@ TYPED_TEST(LibDNNBlasTest, TestGemmCPUGPU) {
 
   // Test when we have a transposed A
   A.Reshape(1, 1, 3, 2);
-  caffe_cpu_copy(6, A_reshape_data, A.mutable_cpu_data());
-  caffe_cpu_gemm<TypeParam>(CblasTrans, CblasNoTrans, 2, 4, 3, 1.,
+  caffe_copy(6, A_reshape_data, A.mutable_cpu_data());
+  caffe_gemm<TypeParam>(CblasTrans, CblasNoTrans, 2, 4, 3, 1.,
       A.cpu_data(), B.cpu_data(), 0., C.mutable_cpu_data());
   for (int_tp i = 0; i < 8; ++i) {
     EXPECT_EQ(C.cpu_data()[i], result[i]);
@@ -80,8 +80,8 @@ TYPED_TEST(LibDNNBlasTest, TestGemmCPUGPU) {
 
   // Test when we have a transposed A and a transposed B too
   B.Reshape(1, 1, 4, 3);
-  caffe_cpu_copy(12, B_reshape_data, B.mutable_cpu_data());
-  caffe_cpu_gemm<TypeParam>(CblasTrans, CblasTrans, 2, 4, 3, 1.,
+  caffe_copy(12, B_reshape_data, B.mutable_cpu_data());
+  caffe_gemm<TypeParam>(CblasTrans, CblasTrans, 2, 4, 3, 1.,
       A.cpu_data(), B.cpu_data(), 0., C.mutable_cpu_data());
   for (int_tp i = 0; i < 8; ++i) {
     EXPECT_EQ(C.cpu_data()[i], result[i]);
@@ -98,8 +98,8 @@ TYPED_TEST(LibDNNBlasTest, TestGemmCPUGPU) {
 
   // Test when we have a transposed B
   A.Reshape(1, 1, 2, 3);
-  caffe_cpu_copy(6, data, A.mutable_cpu_data());
-  caffe_cpu_gemm<TypeParam>(CblasNoTrans, CblasTrans, 2, 4, 3, 1.,
+  caffe_copy(6, data, A.mutable_cpu_data());
+  caffe_gemm<TypeParam>(CblasNoTrans, CblasTrans, 2, 4, 3, 1.,
       A.cpu_data(), B.cpu_data(), 0., C.mutable_cpu_data());
   for (int_tp i = 0; i < 8; ++i) {
     EXPECT_EQ(C.cpu_data()[i], result[i]);
@@ -192,7 +192,7 @@ TYPED_TEST(LibDNNBlasTest, TestGemmComparativeCPUGPU) {
                 LIBDNN_ACCUMULATE_PREC_NATIVE,
                 make_shared<Quantizer<TypeParam, TypeParam> >(dc));
 
-    caffe_cpu_gemm<TypeParam>(
+    caffe_gemm<TypeParam>(
                 trans_A, trans_B,
                 M, N, K,
                 has_alpha ? alpha_val: (TypeParam)1.,
@@ -221,11 +221,11 @@ TYPED_TEST(LibDNNBlasTest, TestGemvCPUGPU) {
   TypeParam result_2[2] = {14, 32};
   TypeParam result_3[3] = {9, 12, 15};
 
-  caffe_cpu_copy(6, data, A.mutable_cpu_data());
-  caffe_cpu_copy(3, data, x.mutable_cpu_data());
+  caffe_copy(6, data, A.mutable_cpu_data());
+  caffe_copy(3, data, x.mutable_cpu_data());
 
 
-  caffe_cpu_gemv<TypeParam>(CblasNoTrans, 2, 3, 1., A.cpu_data(),
+  caffe_gemv<TypeParam>(CblasNoTrans, 2, 3, 1., A.cpu_data(),
       x.cpu_data(), 0., y.mutable_cpu_data());
   for (int_tp i = 0; i < 2; ++i) {
     EXPECT_EQ(y.cpu_data()[i], result_2[i]);
@@ -242,8 +242,8 @@ TYPED_TEST(LibDNNBlasTest, TestGemvCPUGPU) {
   }
 
   // Test transpose case
-  caffe_cpu_copy(2, data, y.mutable_cpu_data());
-  caffe_cpu_gemv<TypeParam>(CblasTrans, 2, 3, 1., A.cpu_data(),
+  caffe_copy(2, data, y.mutable_cpu_data());
+  caffe_gemv<TypeParam>(CblasTrans, 2, 3, 1., A.cpu_data(),
       y.cpu_data(), 0., x.mutable_cpu_data());
   for (int_tp i = 0; i < 3; ++i) {
     EXPECT_EQ(x.cpu_data()[i], result_3[i]);
@@ -333,7 +333,7 @@ TYPED_TEST(LibDNNBlasTest, TestGemvComparativeCPUGPU) {
                 LIBDNN_ACCUMULATE_PREC_NATIVE,
                 make_shared<Quantizer<TypeParam, TypeParam> >(dc));
 
-    caffe_cpu_gemv<TypeParam>(
+    caffe_gemv<TypeParam>(
                 trans_A,
                 M, N,
                 has_alpha ? alpha_val: (TypeParam)1.,

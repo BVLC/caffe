@@ -29,7 +29,7 @@ class LibDNNBlas : public LibDNN<MItype, MOtype> {
            MOtype* out,
            libdnnAccumulatePrecision_t prec,
            shared_ptr<Quantizer<MItype, MOtype> > quantizer);
-  void asum(const uint_tp n, vptr<MItype> x, MOtype* y,
+  void asum(const uint_tp n, vptr<const MItype> x, MOtype* y,
             libdnnAccumulatePrecision_t prec,
             shared_ptr<Quantizer<MItype, MOtype> > quantizer);
   void scale(const uint_tp n, const MItype alpha, vptr<const MItype> x,

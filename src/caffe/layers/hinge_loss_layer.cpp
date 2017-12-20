@@ -16,7 +16,7 @@ void HingeLossLayer<Dtype, MItype, MOtype>::Forward_cpu(const vector<Blob<MItype
   int_tp count = bottom[0]->count();
   int_tp dim = count / num;
 
-  caffe_cpu_copy(count, bottom_data, bottom_diff);
+  caffe_copy(count, bottom_data, bottom_diff);
   for (int_tp i = 0; i < num; ++i) {
     bottom_diff[i * dim + static_cast<int_tp>(label[i])] *= -1;
   }
@@ -29,10 +29,10 @@ void HingeLossLayer<Dtype, MItype, MOtype>::Forward_cpu(const vector<Blob<MItype
   Dtype* loss = top[0]->mutable_cpu_data();
   switch (this->layer_param_.hinge_loss_param().norm()) {
   case HingeLossParameter_Norm_L1:
-    loss[0] = caffe_cpu_asum(count, bottom_diff) / num;
+    loss[0] = caffe_asum(count, bottom_diff) / num;
     break;
   case HingeLossParameter_Norm_L2:
-    loss[0] = caffe_cpu_dot(count, bottom_diff, bottom_diff) / num;
+    loss[0] = caffe_dot(count, bottom_diff, bottom_diff) / num;
     break;
   default:
     LOG(FATAL) << "Unknown Norm";
@@ -60,7 +60,7 @@ void HingeLossLayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob<MOtyp
     const Dtype loss_weight = top[0]->cpu_diff()[0];
     switch (this->layer_param_.hinge_loss_param().norm()) {
     case HingeLossParameter_Norm_L1:
-      caffe_cpu_sign(count, bottom_diff, bottom_diff);
+      caffe_sign(count, bottom_diff, bottom_diff);
       caffe_scal(count, Dtype(loss_weight / num), bottom_diff);
       break;
     case HingeLossParameter_Norm_L2:

@@ -53,7 +53,7 @@ void AdaGradSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
                 this->update_[param_id]->mutable_cpu_data());
 
       // scale and copy
-      caffe_cpu_axpby(net_params[param_id]->count(), local_rate,
+      caffe_axpby(net_params[param_id]->count(), local_rate,
                       this->update_[param_id]->cpu_data(), Dtype(0),
                       cpu_diff);
 

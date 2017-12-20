@@ -1,3 +1,5 @@
+#ifdef USE_CUDA
+
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
@@ -13,15 +15,12 @@
 #include "caffe/backend/cuda/caffe_cuda.hpp"
 #include "caffe/backend/cuda/cuda_dev_ptr.hpp"
 
-#ifdef USE_CUDA
 #include <thrust/device_vector.h>
 #include <thrust/functional.h>  // thrust::plus
 #include <thrust/reduce.h>
-#endif  // USE_CUDA
 
 namespace caffe {
 
-#ifdef USE_CUDA
 
 void CudaDevice::rng_uniform(const uint_tp n, vptr<uint32_t> r) {
   CURAND_CHECK(curandGenerate(Caffe::curand_generator(), r.get_cuda_ptr(), n));
@@ -32,6 +31,7 @@ void CudaDevice::rng_uniform(const uint_tp n, vptr<uint64_t> r) {
                    reinterpret_cast<unsigned long long*>(r.get_cuda_ptr()), n));
 }
 
+#ifdef USE_SINGLE
 void CudaDevice::rng_uniform_float(const uint_tp n, const float a,
                                     float b,
                                     vptr<float> r) {
@@ -45,7 +45,15 @@ void CudaDevice::rng_uniform_float(const uint_tp n, const float a,
     CudaDevice::add_scalar(n, a, r);
   }
 }
+void CudaDevice::rng_gaussian_float(const uint_tp n, const float mu,
+                                     const float sigma, vptr<float> r) {
+  CURAND_CHECK(
+      curandGenerateNormal(Caffe::curand_generator(), r.get_cuda_ptr(),
+                           n, mu, sigma));
+}
+#endif  // USE_SINGLE
 
+#ifdef USE_DOUBLE
 void CudaDevice::rng_uniform_double(const uint_tp n, const double a,
                                     const double b,
                                     vptr<double> r) {
@@ -59,22 +67,14 @@ void CudaDevice::rng_uniform_double(const uint_tp n, const double a,
     CudaDevice::add_scalar(n, a, r);
   }
 }
-
-
-void CudaDevice::rng_gaussian_float(const uint_tp n, const float mu,
-                                     const float sigma, vptr<float> r) {
-  CURAND_CHECK(
-      curandGenerateNormal(Caffe::curand_generator(), r.get_cuda_ptr(),
-                           n, mu, sigma));
-}
-
 void CudaDevice::rng_gaussian_double(const uint_tp n, const double mu,
                                       const double sigma, vptr<double> r) {
   CURAND_CHECK(
       curandGenerateNormalDouble(Caffe::curand_generator(), r.get_cuda_ptr(),
                                  n, mu, sigma));
 }
+#endif  // USE_DOUBLE
 
-#endif  // USE_CUDA
 
 }  // namespace caffe
+#endif  // USE_CUDA

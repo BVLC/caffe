@@ -58,12 +58,12 @@ void AdamSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
       }
 
       // update m <- \beta_1 m_{t-1} + (1-\beta_1)g_t
-      caffe_cpu_axpby(n, Dtype(Dtype(1)-beta1), cpu_diff, beta1,
+      caffe_axpby(n, Dtype(Dtype(1)-beta1), cpu_diff, beta1,
           val_m->mutable_cpu_data());
 
       // update v <- \beta_2 m_{t-1} + (1-\beta_2)g_t^2
       caffe_mul(n, cpu_diff, cpu_diff, val_t->mutable_cpu_data());
-      caffe_cpu_axpby(n, Dtype(Dtype(1)-beta2),
+      caffe_axpby(n, Dtype(Dtype(1)-beta2),
           val_t->cpu_data(), beta2,
           val_v->mutable_cpu_data());
 
@@ -73,7 +73,7 @@ void AdamSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
       caffe_div(n, val_m->cpu_data(), val_t->cpu_data(),
                 val_t->mutable_cpu_data());
 
-      caffe_cpu_scale(n, Dtype(local_rate*correction), val_t->cpu_data(),
+      caffe_scale(n, Dtype(local_rate*correction), val_t->cpu_data(),
           cpu_diff);
 
       if (net_params[param_id]->data_type() != proto_data_type<Dtype>()) {

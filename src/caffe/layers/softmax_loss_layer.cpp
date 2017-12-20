@@ -137,7 +137,7 @@ void SoftmaxWithLossLayer<Dtype, MItype, MOtype>::Backward_cpu(
   if (propagate_down[0]) {
     Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
     const Dtype* prob_data = prob_.cpu_data();
-    caffe_cpu_copy(prob_.count(), prob_data, bottom_diff);
+    caffe_copy(prob_.count(), prob_data, bottom_diff);
     const Dtype* label = bottom[1]->cpu_data();
     int_tp dim = prob_.count() / outer_num_;
     int_tp count = 0;

@@ -1,3 +1,5 @@
+#ifdef USE_OPENCL
+
 #include "caffe/backend/opencl/ocl_device.hpp"
 #include "caffe/util/math_functions.hpp"
 
@@ -10,11 +12,9 @@
 
 namespace caffe {
 
-#ifdef USE_OPENCL
+  // TODO: GPU RNG for OpenCL
 
-
-
-
-#endif  // USE_OPENCL
 
 }  // namespace caffe
+
+#endif  // USE_OPENCL

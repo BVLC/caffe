@@ -39,7 +39,7 @@ void LogLayer<Dtype, MItype, MOtype>::Forward_cpu(const vector<Blob<MItype>*>& b
   if (input_scale_ == Dtype(1) && input_shift_ == Dtype(0)) {
     caffe_log(count, bottom_data, top_data);
   } else {
-    caffe_cpu_copy(count, bottom_data, top_data);
+    caffe_copy(count, bottom_data, top_data);
     if (input_scale_ != Dtype(1)) {
       caffe_scal(count, input_scale_, top_data);
     }
@@ -61,7 +61,7 @@ void LogLayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob<MOtype>*>& 
   const Dtype* bottom_data = bottom[0]->cpu_data();
   const Dtype* top_diff = top[0]->cpu_diff();
   Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
-  caffe_cpu_copy(count, bottom_data, bottom_diff);
+  caffe_copy(count, bottom_data, bottom_diff);
   if (input_scale_ != Dtype(1)) {
     caffe_scal(count, input_scale_, bottom_diff);
   }

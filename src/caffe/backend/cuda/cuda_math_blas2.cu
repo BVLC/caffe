@@ -19,6 +19,7 @@
 
 namespace caffe {
 
+#ifdef USE_SINGLE
 void CudaDevice::gemv_float(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
                             const uint_tp n, const float alpha,
                             vptr<const float> a,
@@ -30,7 +31,9 @@ void CudaDevice::gemv_float(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
                            n, m, &alpha, a.get_cuda_ptr(),
                            n, x.get_cuda_ptr(), 1, &beta, y.get_cuda_ptr(), 1));
 }
+#endif  // USE_SINGLE
 
+#ifdef USE_DOUBLE
 void CudaDevice::gemv_double(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
                              const uint_tp n, const double alpha,
                              vptr<const double> a,
@@ -42,6 +45,7 @@ void CudaDevice::gemv_double(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
                            n, m, &alpha, a.get_cuda_ptr(),
                            n, x.get_cuda_ptr(), 1, &beta, y.get_cuda_ptr(), 1));
 }
+#endif  // USE_DOUBLE
 
 }  // namespace caffe
 #endif  // USE_CUDA

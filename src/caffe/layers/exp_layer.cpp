@@ -36,7 +36,7 @@ void ExpLayer<Dtype, MItype, MOtype>::Forward_cpu(const vector<Blob<MItype>*>& b
   if (inner_scale_ == Dtype(1)) {
     caffe_exp(count, bottom_data, top_data);
   } else {
-    caffe_cpu_scale(count, inner_scale_, bottom_data, top_data);
+    caffe_scale(count, inner_scale_, bottom_data, top_data);
     caffe_exp(count, top_data, top_data);
   }
   if (outer_scale_ != Dtype(1)) {

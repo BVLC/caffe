@@ -140,7 +140,7 @@ void LRNLayer<Dtype, MItype, MOtype>::CrossChannelForward_cpu(
     }
     for (int_tp c = 1; c < channels_; ++c) {
       // copy previous scale
-      caffe_cpu_copy<Dtype>(height_ * width_,
+      caffe_copy<Dtype>(height_ * width_,
                         scale_data + scale_.offset(n, c - 1),
                         scale_data + scale_.offset(n, c));
       // add head

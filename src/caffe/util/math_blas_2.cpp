@@ -10,7 +10,7 @@
 namespace caffe {
 
 template<>
-void caffe_cpu_gemv<half_fp>(const CBLAS_TRANSPOSE trans_A,
+void caffe_gemv<half_fp>(const CBLAS_TRANSPOSE trans_A,
                    const int_tp M, const int_tp N, const half_fp alpha,
                    const half_fp* a, const half_fp* x,
                    const half_fp beta, half_fp* y) {
@@ -32,14 +32,14 @@ void caffe_cpu_gemv<half_fp>(const CBLAS_TRANSPOSE trans_A,
 }
 
 template<>
-void caffe_cpu_gemv<float>(const CBLAS_TRANSPOSE trans_A, const int_tp m,
+void caffe_gemv<float>(const CBLAS_TRANSPOSE trans_A, const int_tp m,
                            const int_tp n, const float alpha, const float* a,
                            const float* x, const float beta, float* y) {
   cblas_sgemv(CblasRowMajor, trans_A, m, n, alpha, a, n, x, 1, beta, y, 1);
 }
 
 template<>
-void caffe_cpu_gemv<double>(const CBLAS_TRANSPOSE trans_A, const int_tp m,
+void caffe_gemv<double>(const CBLAS_TRANSPOSE trans_A, const int_tp m,
                             const int_tp n, const double alpha, const double* a,
                             const double* x, const double beta, double* y) {
   cblas_dgemv(CblasRowMajor, trans_A, m, n, alpha, a, n, x, 1, beta, y, 1);

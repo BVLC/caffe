@@ -46,21 +46,21 @@ inline int next_mix_of_235(int value) {
   return (value+1);
 }
 
-template <typename Dtype> void* caffe_cpu_fft_malloc(int n);
-template <typename Dtype> void  caffe_cpu_fft_free(void* p);
-template <typename Dtype> void* caffe_cpu_fft_plan_dft_r2c_2d(int n0, int n1,
+template <typename Dtype> void* caffe_fft_malloc(int n);
+template <typename Dtype> void  caffe_fft_free(void* p);
+template <typename Dtype> void* caffe_fft_plan_dft_r2c_2d(int n0, int n1,
     Dtype *in, std::complex<Dtype> *out, unsigned flags);
-template <typename Dtype> void* caffe_cpu_fft_plan_dft_c2r_2d(int n0, int n1,
+template <typename Dtype> void* caffe_fft_plan_dft_c2r_2d(int n0, int n1,
     std::complex<Dtype> *in, Dtype *out, unsigned flags);
-template <typename Dtype> void* caffe_cpu_fft_plan_many_dft_r2c(int rank,
+template <typename Dtype> void* caffe_fft_plan_many_dft_r2c(int rank,
     const int *n, int howmany, Dtype *in, const int *inemded, int istride,
     int idist, std::complex<Dtype> *out, const int *onembed, int ostride,
     int odist, unsigned flags);
-template <typename Dtype> void caffe_cpu_fft_destroy_plan(void* plan);
-template <typename Dtype> void caffe_cpu_fft_execute(const void* plan);
-template <typename Dtype> void caffe_cpu_fft_execute_dft_r2c(const void* plan,
+template <typename Dtype> void caffe_fft_destroy_plan(void* plan);
+template <typename Dtype> void caffe_fft_execute(const void* plan);
+template <typename Dtype> void caffe_fft_execute_dft_r2c(const void* plan,
     Dtype *in, std::complex<Dtype> *out);
-template <typename Dtype> void caffe_cpu_fft_execute_dft_c2r(const void* plan,
+template <typename Dtype> void caffe_fft_execute_dft_c2r(const void* plan,
     std::complex<Dtype> *in, Dtype  *out);
 
 // --- GPU ---

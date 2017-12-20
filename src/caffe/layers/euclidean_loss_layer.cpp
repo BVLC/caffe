@@ -26,7 +26,7 @@ void EuclideanLossLayer<Dtype, MItype, MOtype>::Forward_cpu(
     caffe_mul<Dtype>(count, diff_.mutable_cpu_data(), bottom[2]->cpu_data(),
                      diff_.mutable_cpu_data());
   }
-  Dtype dot = caffe_cpu_dot(count, diff_.cpu_data(), diff_.cpu_data());
+  Dtype dot = caffe_dot(count, diff_.cpu_data(), diff_.cpu_data());
   Dtype loss = dot / static_cast<Dtype>(bottom[0]->count(0)) / Dtype(2);
   top[0]->mutable_cpu_data()[0] = loss;
 }
@@ -41,7 +41,7 @@ void EuclideanLossLayer<Dtype, MItype, MOtype>::Backward_cpu(
       const Dtype sign = (i == 0) ? 1 : -1;
       const Dtype alpha = sign * top[0]->cpu_diff()[0]
           / static_cast<Dtype>(bottom[0]->count(0));
-      caffe_cpu_axpby(bottom[i]->count(),     // count
+      caffe_axpby(bottom[i]->count(),     // count
           alpha,                              // alpha
           diff_.cpu_data(),                   // a
           Dtype(0),                           // beta

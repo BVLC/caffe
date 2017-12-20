@@ -39,7 +39,7 @@ void RMSPropSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
           this->update_[param_id]->mutable_cpu_data());
 
       // update history
-      caffe_cpu_axpby(net_params[param_id] -> count(),
+      caffe_axpby(net_params[param_id] -> count(),
           Dtype(1-rms_decay), this->update_[param_id]->cpu_data(),
           rms_decay, this->history_[param_id]-> mutable_cpu_data());
 
@@ -56,7 +56,7 @@ void RMSPropSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
           this->update_[param_id]->mutable_cpu_data());
 
       // scale and copy
-      caffe_cpu_axpby(net_params[param_id]->count(), local_rate,
+      caffe_axpby(net_params[param_id]->count(), local_rate,
           this->update_[param_id]->cpu_data(), Dtype(0), cpu_diff);
 
       if (net_params[param_id]->data_type() != proto_data_type<Dtype>()) {

@@ -265,12 +265,7 @@ class Device {
   void rng_bernoulli(const uint_tp n, const Dtype p, vptr<uint64_t> r);
 
   template<typename Dtype>
-  typename std::enable_if<float_is_same<Dtype>::value, void>::type
-  dot(const uint_tp n, vptr<const Dtype> x, vptr<const Dtype> y,
-           Dtype* out);
-  template<typename Dtype>
-  typename std::enable_if<signed_integer_is_same<Dtype>::value, void>::type
-  dot(const uint_tp n, vptr<const Dtype> x, vptr<const Dtype> y,
+  void dot(const uint_tp n, vptr<const Dtype> x, vptr<const Dtype> y,
            Dtype* out);
 
   template<typename Dtype>
@@ -287,10 +282,10 @@ class Device {
              vptr<Dtype> y);
 
  protected:
-
   void CreateMathProgram();
   void CreateIm2ColProgram();
 
+#ifdef USE_HALF
   virtual void gemm_half
                 (const CBLAS_TRANSPOSE trans_a, const CBLAS_TRANSPOSE trans_b,
                  const uint_tp m, const uint_tp n, const uint_tp k,
@@ -298,86 +293,29 @@ class Device {
                  vptr<const half_fp> b,
                  const half_fp beta,
                  vptr<half_fp> c);
-
-  virtual void gemm_float
-                (const CBLAS_TRANSPOSE trans_a, const CBLAS_TRANSPOSE trans_b,
-                 const uint_tp m, const uint_tp n, const uint_tp k,
-                 const float alpha, vptr<const float> a,
-                 vptr<const float> b,
-                 const float beta, vptr<float> c);
-
-  virtual void gemm_double
-                (const CBLAS_TRANSPOSE trans_a, const CBLAS_TRANSPOSE trans_b,
-                 const uint_tp m, const uint_tp n, const uint_tp k,
-                 const double alpha, vptr<const double> a,
-                 vptr<const double> b,
-                 const double beta, vptr<double> c);
-
   virtual void gemv_half
                 (const CBLAS_TRANSPOSE trans_a, const uint_tp m,
                  const uint_tp n, const half_fp alpha,
                  vptr<const half_fp> a,
                  vptr<const half_fp> x, const half_fp beta,
                  vptr<half_fp> y);
-
-  virtual void gemv_float
-                (const CBLAS_TRANSPOSE trans_a, const uint_tp m,
-                 const uint_tp n, const float alpha,
-                 vptr<const float> a,
-                 vptr<const float> x, const float beta,
-                 vptr<float> y);
-
-  virtual void gemv_double
-                (const CBLAS_TRANSPOSE trans_a, const uint_tp m,
-                 const uint_tp n, const double alpha,
-                 vptr<const double> a,
-                 vptr<const double> x, const double beta,
-                 vptr<double> y);
-
   virtual void axpy_half(const uint_tp n,
                          const half_fp alpha,
                          vptr<const half_fp> x,
                          vptr<half_fp> y);
-
-  virtual void axpy_float(const uint_tp n, const float alpha,
-                          vptr<const float> x, vptr<float> y);
-
-  virtual void axpy_double(const uint_tp n, const double alpha,
-                          vptr<const double> x, vptr<double> y);
-
   virtual void axpby_half(const uint_tp n, const half_fp alpha,
-                     vptr<const half_fp> x,
-                     const half_fp beta, vptr<half_fp> y);
-
-  virtual void axpby_float(const uint_tp n, const float alpha,
-                   vptr<const float> x, const float beta, vptr<float> y);
-
-  virtual void axpby_double(const uint_tp n, const double alpha,
-                   vptr<const double> x, const double beta, vptr<double> y);
+                    vptr<const half_fp> x, const half_fp beta, vptr<half_fp> y);
+  virtual void dot_half(const uint_tp n, vptr<const half_fp> x,
+                        vptr<const half_fp> y, half_fp *out);
+  virtual void asum_half(const uint_tp n, vptr<const half_fp> x, half_fp* y);
+  virtual void scale_half(const uint_tp n, const half_fp alpha,
+                          vptr<const half_fp> x, vptr<half_fp> y);
+  virtual void scal_half(const uint_tp n, const half_fp alpha, vptr<half_fp> x);
 
   virtual void rng_uniform_half(const uint_tp n, const half_fp a,
-                        const half_fp b, vptr<half_fp> r);
-
-  virtual void rng_uniform_float(const uint_tp n, const float a,
-                                 const float b, vptr<float> r);
-  virtual void rng_uniform_double(const uint_tp n, const double a,
-                                  const double b, vptr<double> r);
-  virtual void rng_uniform_int8(const uint_tp n, const int8_t a,
-                                 const int8_t b, vptr<int8_t> r);
-  virtual void rng_uniform_int16(const uint_tp n, const int16_t a,
-                                 const int16_t b, vptr<int16_t> r);
-  virtual void rng_uniform_int32(const uint_tp n, const int32_t a,
-                                 const int32_t b, vptr<int32_t> r);
-  virtual void rng_uniform_int64(const uint_tp n, const int64_t a,
-                                 const int64_t b, vptr<int64_t> r);
-
+                                const half_fp b, vptr<half_fp> r);
   virtual void rng_gaussian_half(const uint_tp n, const half_fp mu,
                                  const half_fp sigma, vptr<half_fp> r);
-  virtual void rng_gaussian_float(const uint_tp n, const float mu,
-                                  const float sigma, vptr<float> r);
-  virtual void rng_gaussian_double(const uint_tp n, const double mu,
-                                   const double sigma, vptr<double> r);
-
   virtual void rng_bernoulli_half(const uint_tp n, const half_fp p,
                                   vptr<int8_t> r);
   virtual void rng_bernoulli_half(const uint_tp n, const half_fp p,
@@ -394,6 +332,36 @@ class Device {
                                   vptr<uint32_t> r);
   virtual void rng_bernoulli_half(const uint_tp n, const half_fp p,
                                   vptr<uint64_t> r);
+#endif  // USE_HALF
+
+#ifdef USE_SINGLE
+  virtual void gemm_float
+                (const CBLAS_TRANSPOSE trans_a, const CBLAS_TRANSPOSE trans_b,
+                 const uint_tp m, const uint_tp n, const uint_tp k,
+                 const float alpha, vptr<const float> a,
+                 vptr<const float> b,
+                 const float beta, vptr<float> c);
+  virtual void gemv_float
+                (const CBLAS_TRANSPOSE trans_a, const uint_tp m,
+                 const uint_tp n, const float alpha,
+                 vptr<const float> a,
+                 vptr<const float> x, const float beta,
+                 vptr<float> y);
+  virtual void axpy_float(const uint_tp n, const float alpha,
+                          vptr<const float> x, vptr<float> y);
+  virtual void axpby_float(const uint_tp n, const float alpha,
+                          vptr<const float> x, const float beta, vptr<float> y);
+  virtual void dot_float(const uint_tp n, vptr<const float> x,
+                         vptr<const float> y, float *out);
+  virtual void asum_float(const uint_tp n, vptr<const float> x, float* y);
+  virtual void scale_float(const uint_tp n, const float alpha,
+                          vptr<const float> x, vptr<float> y);
+  virtual void scal_float(const uint_tp n, const float alpha, vptr<float> x);
+
+  virtual void rng_uniform_float(const uint_tp n, const float a,
+                                 const float b, vptr<float> r);
+  virtual void rng_gaussian_float(const uint_tp n, const float mu,
+                                  const float sigma, vptr<float> r);
   virtual void rng_bernoulli_float(const uint_tp n, const float p,
                                    vptr<int8_t> r);
   virtual void rng_bernoulli_float(const uint_tp n, const float p,
@@ -410,6 +378,37 @@ class Device {
                                    vptr<uint32_t> r);
   virtual void rng_bernoulli_float(const uint_tp n, const float p,
                                    vptr<uint64_t> r);
+#endif  // USE_SINGLE
+
+#ifdef USE_DOUBLE
+  virtual void gemm_double
+                (const CBLAS_TRANSPOSE trans_a, const CBLAS_TRANSPOSE trans_b,
+                 const uint_tp m, const uint_tp n, const uint_tp k,
+                 const double alpha, vptr<const double> a,
+                 vptr<const double> b,
+                 const double beta, vptr<double> c);
+  virtual void gemv_double
+                (const CBLAS_TRANSPOSE trans_a, const uint_tp m,
+                 const uint_tp n, const double alpha,
+                 vptr<const double> a,
+                 vptr<const double> x, const double beta,
+                 vptr<double> y);
+  virtual void axpy_double(const uint_tp n, const double alpha,
+                          vptr<const double> x, vptr<double> y);
+  virtual void axpby_double(const uint_tp n, const double alpha,
+                       vptr<const double> x, const double beta, vptr<double> y);
+  virtual void dot_double(const uint_tp n, vptr<const double> x,
+                          vptr<const double> y, double *out);
+  virtual void asum_double(const uint_tp n, vptr<const double> x, double* y);
+  virtual void scale_double(const uint_tp n, const double alpha,
+                            vptr<const double> x, vptr<double> y);
+  virtual void scal_double(const uint_tp n, const double alpha,
+                           vptr<double> x);
+
+  virtual void rng_uniform_double(const uint_tp n, const double a,
+                                  const double b, vptr<double> r);
+  virtual void rng_gaussian_double(const uint_tp n, const double mu,
+                                   const double sigma, vptr<double> r);
   virtual void rng_bernoulli_double(const uint_tp n, const double p,
                                     vptr<int8_t> r);
   virtual void rng_bernoulli_double(const uint_tp n, const double p,
@@ -426,52 +425,132 @@ class Device {
                                     vptr<uint32_t> r);
   virtual void rng_bernoulli_double(const uint_tp n, const double p,
                                     vptr<uint64_t> r);
+#endif  // USE_DOUBLE
 
-  virtual void dot_half(const uint_tp n, vptr<const half_fp> x,
-                     vptr<const half_fp> y, half_fp *out);
-  virtual void dot_float(const uint_tp n, vptr<const float> x,
-                         vptr<const float> y, float *out);
-  virtual void dot_double(const uint_tp n, vptr<const double> x,
-                          vptr<const double> y, double *out);
+#ifdef USE_INT_QUANT_8
+  virtual void gemm_int8
+                (const CBLAS_TRANSPOSE trans_a, const CBLAS_TRANSPOSE trans_b,
+                 const uint_tp m, const uint_tp n, const uint_tp k,
+                 const int8_t alpha, vptr<const int8_t> a,
+                 vptr<const int8_t> b,
+                 const int8_t beta,
+                 vptr<int8_t> c);
+  virtual void gemv_int8
+                (const CBLAS_TRANSPOSE trans_a, const uint_tp m,
+                 const uint_tp n, const int8_t alpha,
+                 vptr<const int8_t> a,
+                 vptr<const int8_t> x, const int8_t beta,
+                 vptr<int8_t> y);
+  virtual void axpy_int8(const uint_tp n,
+                         const int8_t alpha,
+                         vptr<const int8_t> x,
+                         vptr<int8_t> y);
+  virtual void axpby_int8(const uint_tp n, const int8_t alpha,
+                    vptr<const int8_t> x, const int8_t beta, vptr<int8_t> y);
+  virtual void dot_int8(const uint_tp n, vptr<const int8_t> x,
+                        vptr<const int8_t> y, int8_t *out);
+  virtual void asum_int8(const uint_tp n, vptr<const int8_t> x, int8_t* y);
+  virtual void scale_int8(const uint_tp n, const int8_t alpha,
+                          vptr<const int8_t> x, vptr<int8_t> y);
+  virtual void scal_int8(const uint_tp n, const int8_t alpha, vptr<int8_t> x);
+  virtual void rng_uniform_int8(const uint_tp n, const int8_t a,
+                                 const int8_t b, vptr<int8_t> r);
 
-  virtual void asum_half(const uint_tp n, vptr<const half_fp> x,
-                         half_fp* y);
+#endif  // USE_INT_QUANT_8
 
-  virtual void asum_float(const uint_tp n, vptr<const float> x, float* y);
-
-  virtual void asum_double(const uint_tp n, vptr<const double> x,
-                           double* y);
-
-  virtual void scal_half(const uint_tp n, const half_fp alpha,
-                         vptr<half_fp> x);
-
-  virtual void scal_float(const uint_tp n, const float alpha,
-                         vptr<float> x);
-
-  virtual void scal_double(const uint_tp n, const double alpha,
-                         vptr<double> x);
-
-  virtual void scal_int8(const uint_tp n, const int8_t alpha,
-                         vptr<int8_t> x);
-
+#ifdef USE_INT_QUANT_16
+  virtual void gemm_int16
+                (const CBLAS_TRANSPOSE trans_a, const CBLAS_TRANSPOSE trans_b,
+                 const uint_tp m, const uint_tp n, const uint_tp k,
+                 const int16_t alpha, vptr<const int16_t> a,
+                 vptr<const int16_t> b,
+                 const int16_t beta,
+                 vptr<int16_t> c);
+  virtual void gemv_int16
+                (const CBLAS_TRANSPOSE trans_a, const uint_tp m,
+                 const uint_tp n, const int16_t alpha,
+                 vptr<const int16_t> a,
+                 vptr<const int16_t> x, const int16_t beta,
+                 vptr<int16_t> y);
+  virtual void axpy_int16(const uint_tp n,
+                         const int16_t alpha,
+                         vptr<const int16_t> x,
+                         vptr<int16_t> y);
+  virtual void axpby_int16(const uint_tp n, const int16_t alpha,
+                    vptr<const int16_t> x, const int16_t beta, vptr<int16_t> y);
+  virtual void dot_int16(const uint_tp n, vptr<const int16_t> x,
+                        vptr<const int16_t> y, int16_t *out);
+  virtual void asum_int16(const uint_tp n, vptr<const int16_t> x, int16_t* y);
+  virtual void scale_int16(const uint_tp n, const int16_t alpha,
+                          vptr<const int16_t> x, vptr<int16_t> y);
   virtual void scal_int16(const uint_tp n, const int16_t alpha,
                           vptr<int16_t> x);
+  virtual void rng_uniform_int16(const uint_tp n, const int16_t a,
+                                 const int16_t b, vptr<int16_t> r);
+#endif  // USE_INT_QUANT_16
 
+#ifdef USE_INT_QUANT_32
+  virtual void gemm_int32
+                (const CBLAS_TRANSPOSE trans_a, const CBLAS_TRANSPOSE trans_b,
+                 const uint_tp m, const uint_tp n, const uint_tp k,
+                 const int32_t alpha, vptr<const int32_t> a,
+                 vptr<const int32_t> b,
+                 const int32_t beta,
+                 vptr<int32_t> c);
+  virtual void gemv_int32
+                (const CBLAS_TRANSPOSE trans_a, const uint_tp m,
+                 const uint_tp n, const int32_t alpha,
+                 vptr<const int32_t> a,
+                 vptr<const int32_t> x, const int32_t beta,
+                 vptr<int32_t> y);
+  virtual void axpy_int32(const uint_tp n,
+                         const int32_t alpha,
+                         vptr<const int32_t> x,
+                         vptr<int32_t> y);
+  virtual void axpby_int32(const uint_tp n, const int32_t alpha,
+                    vptr<const int32_t> x, const int32_t beta, vptr<int32_t> y);
+  virtual void dot_int32(const uint_tp n, vptr<const int32_t> x,
+                        vptr<const int32_t> y, int32_t *out);
+  virtual void asum_int32(const uint_tp n, vptr<const int32_t> x, int32_t* y);
+  virtual void scale_int32(const uint_tp n, const int32_t alpha,
+                          vptr<const int32_t> x, vptr<int32_t> y);
   virtual void scal_int32(const uint_tp n, const int32_t alpha,
                           vptr<int32_t> x);
+  virtual void rng_uniform_int32(const uint_tp n, const int32_t a,
+                                 const int32_t b, vptr<int32_t> r);
+#endif  // USE_INT_QUANT_32
 
+#ifdef USE_INT_QUANT_64
+  virtual void gemm_int64
+                (const CBLAS_TRANSPOSE trans_a, const CBLAS_TRANSPOSE trans_b,
+                 const uint_tp m, const uint_tp n, const uint_tp k,
+                 const int64_t alpha, vptr<const int64_t> a,
+                 vptr<const int64_t> b,
+                 const int64_t beta,
+                 vptr<int64_t> c);
+  virtual void gemv_int64
+                (const CBLAS_TRANSPOSE trans_a, const uint_tp m,
+                 const uint_tp n, const int64_t alpha,
+                 vptr<const int64_t> a,
+                 vptr<const int64_t> x, const int64_t beta,
+                 vptr<int64_t> y);
+  virtual void axpy_int64(const uint_tp n,
+                         const int64_t alpha,
+                         vptr<const int64_t> x,
+                         vptr<int64_t> y);
+  virtual void axpby_int64(const uint_tp n, const int64_t alpha,
+                    vptr<const int64_t> x, const int64_t beta, vptr<int64_t> y);
+  virtual void dot_int64(const uint_tp n, vptr<const int64_t> x,
+                        vptr<const int64_t> y, int64_t *out);
+  virtual void asum_int64(const uint_tp n, vptr<const int64_t> x, int64_t* y);
+  virtual void scale_int64(const uint_tp n, const int64_t alpha,
+                          vptr<const int64_t> x, vptr<int64_t> y);
   virtual void scal_int64(const uint_tp n, const int64_t alpha,
                           vptr<int64_t> x);
+  virtual void rng_uniform_int64(const uint_tp n, const int64_t a,
+                                 const int64_t b, vptr<int64_t> r);
+#endif  // USE_INT_QUANT_64
 
-  virtual void scale_half(const uint_tp n, const half_fp alpha,
-                          vptr<const half_fp> x,
-                          vptr<half_fp> y);
-
-  virtual void scale_float(const uint_tp n, const float alpha,
-                           vptr<const float> x, vptr<float> y);
-
-  virtual void scale_double(const uint_tp n, const double alpha,
-                            vptr<const double> x, vptr<double> y);
 
   int_tp current_queue_id_;
   size_t max_local_size_;

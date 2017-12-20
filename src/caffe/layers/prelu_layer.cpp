@@ -81,7 +81,7 @@ void PReLULayer<Dtype, MItype, MOtype>::Forward_cpu(const vector<Blob<MItype>*>&
 
   // For in-place computation
   if (bottom[0] == top[0]) {
-    caffe_cpu_copy(count, bottom_data, bottom_memory_.mutable_cpu_data());
+    caffe_copy(count, bottom_data, bottom_memory_.mutable_cpu_data());
   }
 
   // if channel_shared, channel index in the following computation becomes

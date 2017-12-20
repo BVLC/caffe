@@ -200,7 +200,7 @@ class MergeCropLayerTest : public GPUDeviceTest<TypeParam> {
     layer.SetUp(blob_bottom_vec_, blob_top_vec_);
 
     layer.Forward(blob_bottom_vec_, blob_top_vec_);
-    caffe_cpu_copy<TypeParam>(blob_top_->count(), blob_top_->cpu_data(),
+    caffe_copy<TypeParam>(blob_top_->count(), blob_top_->cpu_data(),
                           blob_top_->mutable_cpu_diff());
 
     vector<bool> propagate_down(blob_bottom_vec_.size(), true);

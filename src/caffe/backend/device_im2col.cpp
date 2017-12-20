@@ -449,7 +449,7 @@ void Device::CreateIm2ColProgram() {
       case FLOAT_DATA_INDEX: {
 #ifdef USE_SINGLE
         ss << create_source<float>(this, this->im2col_programs_[i]);
-#endif  // USE_FLOAT
+#endif  // USE_SINGLE
         break;
       }
       case DOUBLE_DATA_INDEX: {

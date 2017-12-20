@@ -28,7 +28,7 @@ void PowerLayer<Dtype, MItype, MOtype>::Forward_cpu(const vector<Blob<MItype>*>&
     return;
   }
   const Dtype* bottom_data = bottom[0]->cpu_data();
-  caffe_cpu_copy(count, bottom_data, top_data);
+  caffe_copy(count, bottom_data, top_data);
   if (scale_ != Dtype(1)) {
     caffe_scal(count, scale_, top_data);
   }
@@ -58,7 +58,7 @@ void PowerLayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob<MOtype>*>
         // Special case for Y = (shift + scale * X)^2
         //     -> dy/dx = 2 * scale * (shift + scale * X)
         //              = diff_scale * shift + diff_scale * scale * X
-        caffe_cpu_axpby(count, Dtype(diff_scale_ * scale_), bottom_data,
+        caffe_axpby(count, Dtype(diff_scale_ * scale_), bottom_data,
             Dtype(0), bottom_diff);
         if (shift_ != Dtype(0)) {
           caffe_add_scalar(count, Dtype(diff_scale_ * shift_), bottom_diff);
@@ -72,7 +72,7 @@ void PowerLayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob<MOtype>*>
         caffe_div(count, top_data, bottom_data, bottom_diff);
         caffe_scal(count, power_, bottom_diff);
       } else {
-        caffe_cpu_copy(count, bottom_data, bottom_diff);
+        caffe_copy(count, bottom_data, bottom_diff);
         if (scale_ != Dtype(1)) {
           caffe_scal(count, scale_, bottom_diff);
         }

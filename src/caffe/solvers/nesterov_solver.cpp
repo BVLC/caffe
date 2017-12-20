@@ -31,22 +31,22 @@ void NesterovSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
       }
 
       // save history momentum for stepping back
-      caffe_cpu_copy(net_params[param_id]->count(),
+      caffe_copy(net_params[param_id]->count(),
                  this->history_[param_id]->cpu_data(),
                  this->update_[param_id]->mutable_cpu_data());
 
       // update history
-      caffe_cpu_axpby(net_params[param_id]->count(), local_rate,
+      caffe_axpby(net_params[param_id]->count(), local_rate,
                       cpu_diff, momentum,
                       this->history_[param_id]->mutable_cpu_data());
 
       // compute update: step back then over step
-      caffe_cpu_axpby(net_params[param_id]->count(), Dtype(Dtype(1) + momentum),
+      caffe_axpby(net_params[param_id]->count(), Dtype(Dtype(1) + momentum),
                       this->history_[param_id]->cpu_data(), Dtype(-momentum),
                       this->update_[param_id]->mutable_cpu_data());
 
       // copy
-      caffe_cpu_copy(net_params[param_id]->count(),
+      caffe_copy(net_params[param_id]->count(),
                  this->update_[param_id]->cpu_data(),
                  cpu_diff);
 

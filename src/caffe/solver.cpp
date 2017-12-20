@@ -540,7 +540,7 @@ void Solver<Dtype>::UpdateSmoothedLoss(Dtype loss, int_tp start_iter,
   }
 }
 
-INSTANTIATE_CLASS_1T(Solver, (half_fp)(float)(double));
+INSTANTIATE_CLASS_1T_GUARDED(Solver, (half_fp)(float)(double));
 
 }  // namespace caffe
 

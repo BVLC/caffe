@@ -18,6 +18,7 @@
 
 namespace caffe {
 
+#ifdef USE_HALF
 void CudaDevice::gemm_half(const CBLAS_TRANSPOSE trans_A,
                            const CBLAS_TRANSPOSE trans_B,
                            const uint_tp M, const uint_tp N, const uint_tp K,
@@ -40,7 +41,9 @@ void CudaDevice::gemm_half(const CBLAS_TRANSPOSE trans_A,
                       lda, reinterpret_cast<const half*>(&beta),
                       reinterpret_cast<half*>(C.get_cuda_ptr()), N));
 }
+#endif  // USE_HALF
 
+#ifdef USE_SINGLE
 void CudaDevice::gemm_float(const CBLAS_TRANSPOSE trans_A,
                             const CBLAS_TRANSPOSE trans_B,
                             const uint_tp M, const uint_tp N, const uint_tp K,
@@ -58,7 +61,9 @@ void CudaDevice::gemm_float(const CBLAS_TRANSPOSE trans_A,
                       N, M, K, &alpha, B.get_cuda_ptr(),
                       ldb, A.get_cuda_ptr(), lda, &beta, C.get_cuda_ptr(), N));
 }
+#endif  // USE_SINGLE
 
+#ifdef USE_DOUBLE
 void CudaDevice::gemm_double(const CBLAS_TRANSPOSE trans_A,
                              const CBLAS_TRANSPOSE trans_B,
                              const uint_tp M, const uint_tp N, const uint_tp K,
@@ -77,6 +82,7 @@ void CudaDevice::gemm_double(const CBLAS_TRANSPOSE trans_A,
                            ldb, A.get_cuda_ptr(), lda, &beta,
                            C.get_cuda_ptr(), N));
 }
+#endif  // USE_DOUBLE
 
 }  // namespace caffe
 #endif  // USE_CUDA

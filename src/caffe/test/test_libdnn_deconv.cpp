@@ -336,7 +336,7 @@ class LibDNNComparativeDeconvTest : public GPUDeviceTest<TypeParam> {
     ref_layer.SetUp(this->blob_bottom_vec_ref_, this->blob_top_vec_ref_);
 
     for (int_tp i = 0; i < layer.blobs().size(); ++i) {
-      caffe_cpu_copy(layer.blobs()[i]->count(),
+      caffe_copy(layer.blobs()[i]->count(),
                      layer.blobs()[i]->cpu_data(),
                      ref_layer.blobs()[i]->mutable_cpu_data());
     }
@@ -344,7 +344,7 @@ class LibDNNComparativeDeconvTest : public GPUDeviceTest<TypeParam> {
     caffe_rng_uniform(blob_bottom_->count(), (TypeParam)-5.0, (TypeParam)5.0,
                       blob_bottom_->mutable_cpu_data());
 
-    caffe_cpu_copy(blob_bottom_->count(), blob_bottom_->cpu_data(),
+    caffe_copy(blob_bottom_->count(), blob_bottom_->cpu_data(),
                    blob_bottom_ref_->mutable_cpu_data());
 
     caffe_set(blob_top_->count(),
@@ -523,7 +523,7 @@ class LibDNNComparativeDeconvTest : public GPUDeviceTest<TypeParam> {
     ref_layer.SetUp(this->blob_bottom_vec_ref_, this->blob_top_vec_ref_);
 
     for (int_tp i = 0; i < layer.blobs().size(); ++i) {
-      caffe_cpu_copy(layer.blobs()[i]->count(),
+      caffe_copy(layer.blobs()[i]->count(),
                      layer.blobs()[i]->cpu_data(),
                      ref_layer.blobs()[i]->mutable_cpu_data());
     }
@@ -531,13 +531,13 @@ class LibDNNComparativeDeconvTest : public GPUDeviceTest<TypeParam> {
     caffe_rng_uniform(blob_top_->count(), (TypeParam)-5.0, (TypeParam)5.0,
                       blob_top_->mutable_cpu_diff());
 
-    caffe_cpu_copy(blob_top_->count(), blob_top_->cpu_diff(),
+    caffe_copy(blob_top_->count(), blob_top_->cpu_diff(),
                    blob_top_ref_->mutable_cpu_diff());
 
     caffe_rng_uniform(blob_bottom_->count(), (TypeParam)-5.0, (TypeParam)5.0,
                       blob_bottom_->mutable_cpu_data());
 
-    caffe_cpu_copy(blob_bottom_->count(), blob_bottom_->cpu_data(),
+    caffe_copy(blob_bottom_->count(), blob_bottom_->cpu_data(),
                    blob_bottom_ref_->mutable_cpu_data());
 
 

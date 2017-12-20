@@ -1,10 +1,10 @@
+#ifdef USE_OPENCL
 #include "caffe/backend/opencl/ocl_math.hpp"
 #include "caffe/backend/opencl/caffe_opencl.hpp"
 
 namespace caffe {
 
-#ifdef USE_OPENCL
-
+#ifdef USE_HALF
 void OclDevice::gemm_half(const CBLAS_TRANSPOSE trans_a,
                             const CBLAS_TRANSPOSE trans_b,
                             const uint_tp m, const uint_tp n, const uint_tp k,
@@ -13,7 +13,6 @@ void OclDevice::gemm_half(const CBLAS_TRANSPOSE trans_a,
                             vptr<const half_fp> b,
                             const half_fp beta,
                             vptr<half_fp> c) {
-#if defined(USE_HALF)
   uint_tp offA = a.get_ocl_off();
   uint_tp offB = b.get_ocl_off();
   uint_tp offC = c.get_ocl_off();
@@ -59,11 +58,11 @@ void OclDevice::gemm_half(const CBLAS_TRANSPOSE trans_a,
 #else  // default (ViennaCL)
   NOT_IMPLEMENTED;
 #endif  // clBLAS, CLBlast, or default (ViennaCL)
-#else  // USE_HALF
-  NOT_IMPLEMENTED;
-#endif // USE_HALF
 }
+#endif  // USE_HALF
 
+
+#ifdef USE_SINGLE
 void OclDevice::gemm_float(const CBLAS_TRANSPOSE trans_a,
                            const CBLAS_TRANSPOSE trans_b,
                            const uint_tp m, const uint_tp n, const uint_tp k,
@@ -88,7 +87,7 @@ void OclDevice::gemm_float(const CBLAS_TRANSPOSE trans_a,
         CL_MAP_READ | CL_MAP_WRITE,
         sizeof(float) * offC, sizeof(float) * m * n, 0, NULL, NULL, NULL));
 
-    caffe_cpu_gemm<float>(trans_a, trans_b, m, n, k, alpha, Aptr, Bptr, beta,
+    caffe_gemm<float>(trans_a, trans_b, m, n, k, alpha, Aptr, Bptr, beta,
                           Cptr);
 
     clEnqueueUnmapMemObject(ctx.get_queue().handle().get(), a.get_ocl_mem(),
@@ -193,7 +192,10 @@ void OclDevice::gemm_float(const CBLAS_TRANSPOSE trans_a,
 #endif  // clBLAS, CLBlast, or default (ViennaCL)
   }
 }
+#endif  // USE_SINGLE
 
+
+#ifdef USE_DOUBLE
 void OclDevice::gemm_double(const CBLAS_TRANSPOSE trans_a,
                             const CBLAS_TRANSPOSE trans_b,
                             const uint_tp m, const uint_tp n, const uint_tp k,
@@ -218,7 +220,7 @@ void OclDevice::gemm_double(const CBLAS_TRANSPOSE trans_a,
         CL_MAP_READ | CL_MAP_WRITE,
         sizeof(double) * offC, sizeof(double) * m * n, 0, NULL, NULL, NULL));
 
-    caffe_cpu_gemm<double>(trans_a, trans_b, m, n, k, alpha, Aptr, Bptr, beta,
+    caffe_gemm<double>(trans_a, trans_b, m, n, k, alpha, Aptr, Bptr, beta,
                           Cptr);
 
     clEnqueueUnmapMemObject(ctx.get_queue().handle().get(), a.get_ocl_mem(),
@@ -323,7 +325,7 @@ void OclDevice::gemm_double(const CBLAS_TRANSPOSE trans_a,
 #endif  // clBLAS, CLBlast, or default (ViennaCL)
   }
 }
-
-#endif  // USE_OPENCL
+#endif  // USE_DOUBLE
 
 }  // namespace caffe
+#endif  // USE_OPENCL

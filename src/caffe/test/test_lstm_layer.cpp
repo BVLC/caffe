@@ -144,7 +144,7 @@ TYPED_TEST(LSTMLayerTest, TestForward) {
   const Dtype kEpsilon = 1e-5
     * std::is_same<Dtype, half_fp>::value ? 100 : 1;
   for (int t = 0; t < kNumTimesteps; ++t) {
-    caffe_cpu_copy(bottom_count, bottom_copy.cpu_data() + t * bottom_count,
+    caffe_copy(bottom_count, bottom_copy.cpu_data() + t * bottom_count,
                this->blob_bottom_.mutable_cpu_data());
     for (int n = 0; n < num; ++n) {
       this->blob_bottom_cont_.mutable_cpu_data()[n] = t > 0;
@@ -165,7 +165,7 @@ TYPED_TEST(LSTMLayerTest, TestForward) {
   layer.reset(new LSTMLayer<Dtype, Dtype, Dtype>(this->layer_param_));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   for (int t = 0; t < kNumTimesteps; ++t) {
-    caffe_cpu_copy(bottom_count, bottom_copy.cpu_data() + t * bottom_count,
+    caffe_copy(bottom_count, bottom_copy.cpu_data() + t * bottom_count,
                this->blob_bottom_.mutable_cpu_data());
     for (int n = 0; n < num; ++n) {
       this->blob_bottom_cont_.mutable_cpu_data()[n] = 0;
