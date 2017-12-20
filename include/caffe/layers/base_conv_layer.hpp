@@ -42,8 +42,6 @@ protected:
   void forward_gpu_gemm(const Dtype *col_input, const Dtype *weights,
                         Dtype *output, bool skip_im2col = false) const;
   void forward_gpu_bias(Dtype *output, const Dtype *bias) const;
-  void weight_gpu_gemm(const Dtype *col_input, const Dtype *output,
-                       Dtype *weights);
 #endif
 
   /// @brief The spatial dimensions of the input.
