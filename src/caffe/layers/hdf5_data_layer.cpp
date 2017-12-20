@@ -169,7 +169,7 @@ void HDF5DataLayer<Dtype, MItype, MOtype>::Forward_cpu(const vector<Blob<MItype>
     }
     for (int_tp j = 0; j < this->layer_param_.top_size(); ++j) {
       int_tp data_dim = top[j]->count() / top[j]->shape(0);
-      caffe_cpu_copy(data_dim,
+      caffe_copy(data_dim,
           &hdf_blobs_[j]->cpu_data()[data_permutation_[current_row_]
             * data_dim], &top[j]->mutable_cpu_data()[i * data_dim]);
     }

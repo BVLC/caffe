@@ -126,7 +126,7 @@ void EltwiseLayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob<MOtype>
           for (int_tp j = 0; j < bottom.size(); ++j) {
             if (i == j) { continue; }
             if (!initialized) {
-              caffe_cpu_copy(count, bottom[j]->cpu_data(), bottom_diff);
+              caffe_copy(count, bottom[j]->cpu_data(), bottom_diff);
               initialized = true;
             } else {
               caffe_mul(count, bottom[j]->cpu_data(), bottom_diff,
@@ -140,9 +140,9 @@ void EltwiseLayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob<MOtype>
         break;
       case EltwiseParameter_EltwiseOp_SUM:
         if (coeffs_[i] == Dtype(1)) {
-          caffe_cpu_copy(count, top_diff, bottom_diff);
+          caffe_copy(count, top_diff, bottom_diff);
         } else {
-          caffe_cpu_scale(count, coeffs_[i], top_diff, bottom_diff);
+          caffe_scale(count, coeffs_[i], top_diff, bottom_diff);
         }
         break;
       case EltwiseParameter_EltwiseOp_MAX:

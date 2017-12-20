@@ -10,7 +10,7 @@
 namespace caffe {
 
 template<>
-void caffe_cpu_gemm<half_fp>(const CBLAS_TRANSPOSE trans_A,
+void caffe_gemm<half_fp>(const CBLAS_TRANSPOSE trans_A,
                           const CBLAS_TRANSPOSE trans_B, const int_tp M,
                           const int_tp N, const int_tp K,
                           const half_fp alpha,
@@ -40,7 +40,7 @@ void caffe_cpu_gemm<half_fp>(const CBLAS_TRANSPOSE trans_A,
 }
 
 template<>
-void caffe_cpu_gemm<float>(const CBLAS_TRANSPOSE trans_A,
+void caffe_gemm<float>(const CBLAS_TRANSPOSE trans_A,
                            const CBLAS_TRANSPOSE trans_B, const int_tp M,
                            const int_tp N, const int_tp K, const float alpha,
                            const float* A, const float* B, const float beta,
@@ -52,7 +52,7 @@ void caffe_cpu_gemm<float>(const CBLAS_TRANSPOSE trans_A,
 }
 
 template<>
-void caffe_cpu_gemm<double>(const CBLAS_TRANSPOSE trans_A,
+void caffe_gemm<double>(const CBLAS_TRANSPOSE trans_A,
                             const CBLAS_TRANSPOSE trans_B, const int_tp M,
                             const int_tp N, const int_tp K, const double alpha,
                             const double* A, const double* B, const double beta,

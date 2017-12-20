@@ -1394,7 +1394,7 @@ TYPED_TEST(NetTest, TestParamPropagateDown) {
   vector<Dtype> param_asums(params.size());
   for (int_tp i = 0; i < num_params; ++i) {
     const Dtype param_asum =
-       caffe_cpu_asum(params[i]->count(),
+       caffe_asum(params[i]->count(),
                  static_pointer_cast<Blob<Dtype> >(params[i])->cpu_diff());
     param_asums[i] = param_asum;
     EXPECT_GT(param_asum, kNonZeroTestMin);
@@ -1412,7 +1412,7 @@ TYPED_TEST(NetTest, TestParamPropagateDown) {
   ASSERT_EQ(num_params, params2.size());
   for (int_tp i = 0; i < num_params; ++i) {
     const Dtype param_asum =
-       caffe_cpu_asum(params2[i]->count(),
+       caffe_asum(params2[i]->count(),
                 static_pointer_cast<Blob<Dtype> >(params2[i])->cpu_diff());
     EXPECT_FLOAT_EQ(param_asum, param_asums[i]);
   }
@@ -1429,7 +1429,7 @@ TYPED_TEST(NetTest, TestParamPropagateDown) {
   ASSERT_EQ(num_params, params3.size());
   for (int_tp i = 0; i < num_params; ++i) {
     const Dtype param_asum =
-       caffe_cpu_asum(params3[i]->count(),
+       caffe_asum(params3[i]->count(),
                 static_pointer_cast<Blob<Dtype> >(params3[i])->cpu_diff());
     if (i == 1 || i == 2) {
       EXPECT_FLOAT_EQ(0, param_asum);
@@ -1449,7 +1449,7 @@ TYPED_TEST(NetTest, TestParamPropagateDown) {
   ASSERT_EQ(num_params, params4.size());
   for (int_tp i = 0; i < num_params; ++i) {
     const Dtype param_asum =
-       caffe_cpu_asum(params4[i]->count(),
+       caffe_asum(params4[i]->count(),
                 static_pointer_cast<Blob<Dtype> >(params4[i])->cpu_diff());
     if (i == 0 || i == 3) {
       EXPECT_FLOAT_EQ(0, param_asum);

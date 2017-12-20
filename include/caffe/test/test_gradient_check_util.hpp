@@ -135,7 +135,7 @@ void GradientChecker<Dtype>::CheckGradientSingle(
     Dtype* computed_gradients = computed_gradient_blobs[blob_id]
         ->mutable_cpu_data();
 
-    caffe_cpu_copy(count, diff, computed_gradients);
+    caffe_copy(count, diff, computed_gradients);
   }
   // Compute derivative of top w.r.t. each bottom and parameter input using
   // finite differencing.
@@ -259,7 +259,7 @@ Dtype GradientChecker<Dtype>::GetObjAndGradient(const Layer<Dtype, Dtype, Dtype>
         loss += top_blob_data[j] * top_blob_data[j];
       }
       // set the diff: simply the data.
-      caffe_cpu_copy(top_blob->count(), top_blob_data, top_blob_diff);
+      caffe_copy(top_blob->count(), top_blob_data, top_blob_diff);
     }
     loss /= 2.;
   } else {

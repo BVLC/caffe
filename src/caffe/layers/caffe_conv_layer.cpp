@@ -22,7 +22,7 @@ void CaffeConvolutionLayer<Dtype, MItype, MOtype>::forward_cpu_gemm(
     col_buff = this->col_buffer_.cpu_data();
   }
   for (int_tp g = 0; g < this->group_; ++g) {
-    caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans,
+    caffe_gemm<Dtype>(CblasNoTrans, CblasNoTrans,
           this->conv_out_channels_ / this->group_, this->conv_out_spatial_dim_,
           this->kernel_dim_, (Dtype) 1., weights + this->weight_offset_ * g,
           col_buff + this->col_offset_ * g, (Dtype) 0.,
@@ -34,7 +34,7 @@ template<typename Dtype, typename MItype, typename MOtype>
 void CaffeConvolutionLayer<Dtype, MItype, MOtype>::forward_cpu_bias(
                                                    Dtype* output,
                                                    const Dtype* bias) {
-  caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, this->num_output_,
+  caffe_gemm<Dtype>(CblasNoTrans, CblasNoTrans, this->num_output_,
                         this->out_spatial_dim_, 1, (Dtype) 1., bias,
                         this->bias_multiplier_.cpu_data(), (Dtype) 1., output);
 }
@@ -49,7 +49,7 @@ void CaffeConvolutionLayer<Dtype, MItype, MOtype>::backward_cpu_gemm(
     col_buff = input;
   }
   for (int_tp g = 0; g < this->group_; ++g) {
-    caffe_cpu_gemm<Dtype>(CblasTrans, CblasNoTrans, this->kernel_dim_,
+    caffe_gemm<Dtype>(CblasTrans, CblasNoTrans, this->kernel_dim_,
           this->conv_out_spatial_dim_, this->conv_out_channels_ / this->group_,
           (Dtype) 1., weights + this->weight_offset_ * g,
           output + this->output_offset_ * g, (Dtype) 0.,
@@ -71,7 +71,7 @@ void CaffeConvolutionLayer<Dtype, MItype, MOtype>::weight_cpu_gemm(
     col_buff = this->col_buffer_.cpu_data();
   }
   for (int_tp g = 0; g < this->group_; ++g) {
-    caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasTrans,
+    caffe_gemm<Dtype>(CblasNoTrans, CblasTrans,
           this->conv_out_channels_ / this->group_,
           this->kernel_dim_, this->conv_out_spatial_dim_, (Dtype) 1.,
           output + this->output_offset_ * g,
@@ -84,7 +84,7 @@ template<typename Dtype, typename MItype, typename MOtype>
 void CaffeConvolutionLayer<Dtype, MItype, MOtype>::backward_cpu_bias(
                                                     Dtype* bias,
                                                     const Dtype* input) {
-  caffe_cpu_gemv<Dtype>(CblasNoTrans, this->num_output_,
+  caffe_gemv<Dtype>(CblasNoTrans, this->num_output_,
                         this->out_spatial_dim_, 1., input,
                         this->bias_multiplier_.cpu_data(), 1., bias);
 }

@@ -1096,6 +1096,6 @@ shared_ptr<QuantizerBase> Net<Dtype>::GetQuantizer(size_t index, DataType in,
   }
 }
 
-INSTANTIATE_CLASS_1T(Net, (half_fp)(float)(double));
+INSTANTIATE_CLASS_1T_GUARDED(Net, (half_fp)(float)(double));
 
 }  // namespace caffe

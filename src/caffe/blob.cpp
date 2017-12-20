@@ -12,6 +12,240 @@
 
 namespace caffe {
 
+// GPU AXPY helper
+inline void gpu_axpy(Device* dev, const uint_tp n, const half_fp alpha,
+                        vptr<const half_fp> x, vptr<half_fp> y) {
+#ifdef USE_HALF
+  dev->template axpy<half_fp>(n, alpha, x, y);
+#else  // USE_HALF
+  NOT_IMPLEMENTED;
+#endif  // USE_HALF
+}
+inline void gpu_axpy(Device* dev, const uint_tp n, const float alpha,
+                        vptr<const float> x, vptr<float> y) {
+#ifdef USE_SINGLE
+  dev->template axpy<float>(n, alpha, x, y);
+#else  // USE_SINGLE
+  NOT_IMPLEMENTED;
+#endif  // USE_SINGLE
+}
+inline void gpu_axpy(Device* dev, const uint_tp n, const double alpha,
+                        vptr<const double> x, vptr<double> y) {
+#ifdef USE_DOUBLE
+  dev->template axpy<double>(n, alpha, x, y);
+#else  // USE_DOUBLE
+  NOT_IMPLEMENTED;
+#endif  // USE_DOUBLE
+}
+inline void gpu_axpy(Device* dev, const uint_tp n, const int8_t alpha,
+                        vptr<const int8_t> x, vptr<int8_t> y) {
+#ifdef USE_INT_QUANT_8
+  dev->template axpy<int8_t>(n, alpha, x, y);
+#else  // SE_INT_QUANT_8
+  NOT_IMPLEMENTED;
+#endif  // SE_INT_QUANT_8
+}
+inline void gpu_axpy(Device* dev, const uint_tp n, const int16_t alpha,
+                        vptr<const int16_t> x, vptr<int16_t> y) {
+#ifdef USE_INT_QUANT_16
+  dev->template axpy<int16_t>(n, alpha, x, y);
+#else  // USE_INT_QUANT_16
+  NOT_IMPLEMENTED;
+#endif  // USE_INT_QUANT_16
+}
+inline void gpu_axpy(Device* dev, const uint_tp n, const int32_t alpha,
+                        vptr<const int32_t> x, vptr<int32_t> y) {
+#ifdef USE_INT_QUANT_32
+  dev->template axpy<int32_t>(n, alpha, x, y);
+#else  // USE_INT_QUANT_32
+  NOT_IMPLEMENTED;
+#endif  // USE_INT_QUANT_32
+}
+inline void gpu_axpy(Device* dev, const uint_tp n, const int64_t alpha,
+                        vptr<const int64_t> x, vptr<int64_t> y) {
+#ifdef USE_INT_QUANT_64
+  dev->template axpy<int64_t>(n, alpha, x, y);
+#else  // USE_INT_QUANT_64
+  NOT_IMPLEMENTED;
+#endif  // USE_INT_QUANT_64
+}
+
+// GPU DOT helper
+inline void gpu_dot(Device* dev, const uint_tp n,
+                   vptr<const half_fp> x, vptr<const half_fp> y, half_fp* out) {
+#ifdef USE_HALF
+  dev->template dot<half_fp>(n, x, y, out);
+#else  // USE_HALF
+  NOT_IMPLEMENTED;
+#endif  // USE_HALF
+}
+inline void gpu_dot(Device* dev, const uint_tp n,
+                    vptr<const float> x, vptr<const float> y, float* out) {
+#ifdef USE_SINGLE
+  dev->template dot<float>(n, x, y, out);
+#else  // USE_SINGLE
+  NOT_IMPLEMENTED;
+#endif  // USE_SINGLE
+}
+inline void gpu_dot(Device* dev, const uint_tp n,
+                    vptr<const double> x, vptr<const double> y, double* out) {
+#ifdef USE_DOUBLE
+  dev->template dot<double>(n, x, y, out);
+#else  // USE_DOUBLE
+  NOT_IMPLEMENTED;
+#endif  // USE_DOUBLE
+}
+inline void gpu_dot(Device* dev, const uint_tp n,
+                    vptr<const int8_t> x, vptr<const int8_t> y, int8_t* out) {
+#ifdef USE_INT_QUANT_8
+  dev->template dot<int8_t>(n, x, y, out);
+#else  // SE_INT_QUANT_8
+  NOT_IMPLEMENTED;
+#endif  // SE_INT_QUANT_8
+}
+inline void gpu_dot(Device* dev, const uint_tp n,
+                   vptr<const int16_t> x, vptr<const int16_t> y, int16_t* out) {
+#ifdef USE_INT_QUANT_16
+  dev->template dot<int16_t>(n, x, y, out);
+#else  // USE_INT_QUANT_16
+  NOT_IMPLEMENTED;
+#endif  // USE_INT_QUANT_16
+}
+inline void gpu_dot(Device* dev, const uint_tp n,
+                   vptr<const int32_t> x, vptr<const int32_t> y, int32_t* out) {
+#ifdef USE_INT_QUANT_32
+  dev->template dot<int32_t>(n, x, y, out);
+#else  // USE_INT_QUANT_32
+  NOT_IMPLEMENTED;
+#endif  // USE_INT_QUANT_32
+}
+inline void gpu_dot(Device* dev, const uint_tp n,
+                   vptr<const int64_t> x, vptr<const int64_t> y, int64_t* out) {
+#ifdef USE_INT_QUANT_64
+  dev->template dot<int64_t>(n, x, y, out);
+#else  // USE_INT_QUANT_64
+  NOT_IMPLEMENTED;
+#endif  // USE_INT_QUANT_64
+}
+
+// GPU ASUM helper
+inline void gpu_asum(Device* dev, const uint_tp n,
+                    vptr<const half_fp> x, half_fp* out) {
+#ifdef USE_HALF
+  dev->template asum<half_fp>(n, x, out);
+#else  // USE_HALF
+  NOT_IMPLEMENTED;
+#endif  // USE_HALF
+}
+inline void gpu_asum(Device* dev, const uint_tp n,
+                    vptr<const float> x, float* out) {
+#ifdef USE_SINGLE
+  dev->template asum<float>(n, x, out);
+#else  // USE_SINGLE
+  NOT_IMPLEMENTED;
+#endif  // USE_SINGLE
+}
+inline void gpu_asum(Device* dev, const uint_tp n,
+                    vptr<const double> x, double* out) {
+#ifdef USE_DOUBLE
+  dev->template asum<double>(n, x, out);
+#else  // USE_DOUBLE
+  NOT_IMPLEMENTED;
+#endif  // USE_DOUBLE
+}
+inline void gpu_asum(Device* dev, const uint_tp n,
+                    vptr<const int8_t> x, int8_t* out) {
+#ifdef USE_INT_QUANT_8
+  dev->template asum<int8_t>(n, x, out);
+#else  // SE_INT_QUANT_8
+  NOT_IMPLEMENTED;
+#endif  // SE_INT_QUANT_8
+}
+inline void gpu_asum(Device* dev, const uint_tp n,
+                   vptr<const int16_t> x, int16_t* out) {
+#ifdef USE_INT_QUANT_16
+  dev->template asum<int16_t>(n, x, out);
+#else  // USE_INT_QUANT_16
+  NOT_IMPLEMENTED;
+#endif  // USE_INT_QUANT_16
+}
+inline void gpu_asum(Device* dev, const uint_tp n,
+                   vptr<const int32_t> x, int32_t* out) {
+#ifdef USE_INT_QUANT_32
+  dev->template asum<int32_t>(n, x, out);
+#else  // USE_INT_QUANT_32
+  NOT_IMPLEMENTED;
+#endif  // USE_INT_QUANT_32
+}
+inline void gpu_asum(Device* dev, const uint_tp n,
+                   vptr<const int64_t> x, int64_t* out) {
+#ifdef USE_INT_QUANT_64
+  dev->template asum<int64_t>(n, x, out);
+#else  // USE_INT_QUANT_64
+  NOT_IMPLEMENTED;
+#endif  // USE_INT_QUANT_64
+}
+
+
+// GPU AXPY helper
+inline void gpu_scal(Device* dev, const uint_tp n, const half_fp alpha,
+                     vptr<half_fp> x) {
+#ifdef USE_HALF
+  dev->template scal<half_fp>(n, alpha, x);
+#else  // USE_HALF
+  NOT_IMPLEMENTED;
+#endif  // USE_HALF
+}
+inline void gpu_scal(Device* dev, const uint_tp n, const float alpha,
+                     vptr<float> x) {
+#ifdef USE_SINGLE
+  dev->template scal<float>(n, alpha, x);
+#else  // USE_SINGLE
+  NOT_IMPLEMENTED;
+#endif  // USE_SINGLE
+}
+inline void gpu_scal(Device* dev, const uint_tp n, const double alpha,
+                     vptr<double> x) {
+#ifdef USE_DOUBLE
+  dev->template scal<double>(n, alpha, x);
+#else  // USE_DOUBLE
+  NOT_IMPLEMENTED;
+#endif  // USE_DOUBLE
+}
+inline void gpu_scal(Device* dev, const uint_tp n, const int8_t alpha,
+                     vptr<int8_t> x) {
+#ifdef USE_INT_QUANT_8
+  dev->template scal<int8_t>(n, alpha, x);
+#else  // SE_INT_QUANT_8
+  NOT_IMPLEMENTED;
+#endif  // SE_INT_QUANT_8
+}
+inline void gpu_scal(Device* dev, const uint_tp n, const int16_t alpha,
+                     vptr<int16_t> x) {
+#ifdef USE_INT_QUANT_16
+  dev->template scal<int16_t>(n, alpha, x);
+#else  // USE_INT_QUANT_16
+  NOT_IMPLEMENTED;
+#endif  // USE_INT_QUANT_16
+}
+inline void gpu_scal(Device* dev, const uint_tp n, const int32_t alpha,
+                     vptr<int32_t> x) {
+#ifdef USE_INT_QUANT_32
+  dev->template scal<int32_t>(n, alpha, x);
+#else  // USE_INT_QUANT_32
+  NOT_IMPLEMENTED;
+#endif  // USE_INT_QUANT_32
+}
+inline void gpu_scal(Device* dev, const uint_tp n, const int64_t alpha,
+                     vptr<int64_t> x) {
+#ifdef USE_INT_QUANT_64
+  dev->template axpy<int64_t>(n, alpha, x, y);
+#else  // USE_INT_QUANT_64
+  NOT_IMPLEMENTED;
+#endif  // USE_INT_QUANT_64
+}
+
+
 template<typename Dtype>
 bool Blob<Dtype>::Reshape(const int_tp num, const int_tp channels,
                           const int_tp height, const int_tp width) {
@@ -240,8 +474,8 @@ void Blob<Dtype>::Update() {
     case SyncedMemory::SYNCED: {
 #ifndef CPU_ONLY
       // perform computation on GPU
-      device_->axpy<Dtype>(count_, Dtype(-1), diff_->gpu_data(),
-                           data_->mutable_gpu_data());
+      gpu_axpy(device_, count_, Dtype(-1), diff_->gpu_data(),
+               data_->mutable_gpu_data());
 #else
       NO_GPU;
 #endif
@@ -252,18 +486,6 @@ void Blob<Dtype>::Update() {
   }
 }
 
-template<> void Blob<int8_t>::Update() {
-  NOT_IMPLEMENTED;
-}
-template<> void Blob<int16_t>::Update() {
-  NOT_IMPLEMENTED;
-}
-template<> void Blob<int32_t>::Update() {
-  NOT_IMPLEMENTED;
-}
-template<> void Blob<int64_t>::Update() {
-  NOT_IMPLEMENTED;
-}
 template<> void Blob<uint8_t>::Update() {
   NOT_IMPLEMENTED;
 }
@@ -277,22 +499,32 @@ template<> void Blob<uint64_t>::Update() {
   NOT_IMPLEMENTED;
 }
 
-template<> int8_t Blob<int8_t>::asum_data() const {
-  NOT_IMPLEMENTED;
+template<typename Dtype>
+Dtype Blob<Dtype>::asum_data() const {
+  if (!data_) {
+    return (Dtype)0;
+  }
+  switch (data_->head()) {
+    case SyncedMemory::HEAD_AT_CPU:
+      return caffe_asum(count_, cpu_data());
+    case SyncedMemory::HEAD_AT_GPU:
+    case SyncedMemory::SYNCED: {
+#ifndef CPU_ONLY
+      Dtype asum;
+      gpu_asum(device_, count_, gpu_data(), &asum);
+      return asum;
+#else
+      NO_GPU;
+#endif
+    }
+    case SyncedMemory::UNINITIALIZED:
+      return 0;
+    default:
+      LOG(FATAL)<< "Unknown SyncedMemory head state: " << data_->head();
+  }
   return 0;
 }
-template<> int16_t Blob<int16_t>::asum_data() const {
-  NOT_IMPLEMENTED;
-  return 0;
-}
-template<> int32_t Blob<int32_t>::asum_data() const {
-  NOT_IMPLEMENTED;
-  return 0;
-}
-template<> int64_t Blob<int64_t>::asum_data() const {
-  NOT_IMPLEMENTED;
-  return 0;
-}
+
 template<> uint8_t Blob<uint8_t>::asum_data() const {
   NOT_IMPLEMENTED;
   return 0;
@@ -311,18 +543,18 @@ template<> uint64_t Blob<uint64_t>::asum_data() const {
 }
 
 template<typename Dtype>
-Dtype Blob<Dtype>::asum_data() const {
-  if (!data_) {
-    return (Dtype)0;
+Dtype Blob<Dtype>::asum_diff() const {
+  if (!diff_) {
+    return 0;
   }
-  switch (data_->head()) {
+  switch (diff_->head()) {
     case SyncedMemory::HEAD_AT_CPU:
-      return caffe_cpu_asum(count_, cpu_data());
+      return caffe_asum(count_, cpu_diff());
     case SyncedMemory::HEAD_AT_GPU:
     case SyncedMemory::SYNCED: {
 #ifndef CPU_ONLY
       Dtype asum;
-      device_->asum<Dtype>(count_, gpu_data(), &asum);
+      gpu_asum(device_, count_, gpu_diff(), &asum);
       return asum;
 #else
       NO_GPU;
@@ -331,27 +563,11 @@ Dtype Blob<Dtype>::asum_data() const {
     case SyncedMemory::UNINITIALIZED:
       return 0;
     default:
-      LOG(FATAL)<< "Unknown SyncedMemory head state: " << data_->head();
-  }
+      LOG(FATAL)<< "Unknown SyncedMemory head state: " << diff_->head();
+    }
   return 0;
 }
 
-template<> int8_t Blob<int8_t>::asum_diff() const {
-  NOT_IMPLEMENTED;
-  return 0;
-}
-template<> int16_t Blob<int16_t>::asum_diff() const {
-  NOT_IMPLEMENTED;
-  return 0;
-}
-template<> int32_t Blob<int32_t>::asum_diff() const {
-  NOT_IMPLEMENTED;
-  return 0;
-}
-template<> int64_t Blob<int64_t>::asum_diff() const {
-  NOT_IMPLEMENTED;
-  return 0;
-}
 template<> uint8_t Blob<uint8_t>::asum_diff() const {
   NOT_IMPLEMENTED;
   return 0;
@@ -370,32 +586,6 @@ template<> uint64_t Blob<uint64_t>::asum_diff() const {
 }
 
 template<typename Dtype>
-Dtype Blob<Dtype>::asum_diff() const {
-  if (!diff_) {
-    return 0;
-  }
-  switch (diff_->head()) {
-    case SyncedMemory::HEAD_AT_CPU:
-      return caffe_cpu_asum(count_, cpu_diff());
-    case SyncedMemory::HEAD_AT_GPU:
-    case SyncedMemory::SYNCED: {
-#ifndef CPU_ONLY
-      Dtype asum;
-      device_->asum<Dtype>(count_, gpu_diff(), &asum);
-      return asum;
-#else
-      NO_GPU;
-#endif
-    }
-    case SyncedMemory::UNINITIALIZED:
-      return 0;
-    default:
-      LOG(FATAL)<< "Unknown SyncedMemory head state: " << diff_->head();
-    }
-  return 0;
-}
-
-template<typename Dtype>
 Dtype Blob<Dtype>::sumsq_data() const {
   Dtype sumsq = 0;
   const Dtype* data;
@@ -406,15 +596,14 @@ Dtype Blob<Dtype>::sumsq_data() const {
   switch (data_->head()) {
     case SyncedMemory::HEAD_AT_CPU: {
       data = cpu_data();
-      sumsq = caffe_cpu_dot(count_, data, data);
+      sumsq = caffe_dot(count_, data, data);
       break;
     }
     case SyncedMemory::HEAD_AT_GPU:
     case SyncedMemory::SYNCED: {
 #ifndef CPU_ONLY
       gpu_vptr_data = gpu_data();
-      device_->template dot<Dtype>(count_, gpu_vptr_data, gpu_vptr_data,
-                                   &sumsq);
+      gpu_dot(device_, count_, gpu_vptr_data, gpu_vptr_data, &sumsq);
 #else
       NO_GPU;
 #endif
@@ -428,22 +617,6 @@ Dtype Blob<Dtype>::sumsq_data() const {
   return sumsq;
 }
 
-template<> int8_t Blob<int8_t>::sumsq_data() const {
-  NOT_IMPLEMENTED;
-  return 0;
-}
-template<> int16_t Blob<int16_t>::sumsq_data() const {
-  NOT_IMPLEMENTED;
-  return 0;
-}
-template<> int32_t Blob<int32_t>::sumsq_data() const {
-  NOT_IMPLEMENTED;
-  return 0;
-}
-template<> int64_t Blob<int64_t>::sumsq_data() const {
-  NOT_IMPLEMENTED;
-  return 0;
-}
 template<> uint8_t Blob<uint8_t>::sumsq_data() const {
   NOT_IMPLEMENTED;
   return 0;
@@ -473,14 +646,14 @@ Dtype Blob<Dtype>::sumsq_diff() const {
   switch (diff_->head()) {
     case SyncedMemory::HEAD_AT_CPU: {
       diff = cpu_diff();
-      sumsq = caffe_cpu_dot(count_, diff, diff);
+      sumsq = caffe_dot(count_, diff, diff);
       break;
     }
     case SyncedMemory::HEAD_AT_GPU:
     case SyncedMemory::SYNCED: {
 #ifndef CPU_ONLY
       gpu_vptr_diff = gpu_diff();
-      device_->dot<Dtype>(count_, gpu_vptr_diff, gpu_vptr_diff, &gpu_sumsq);
+      gpu_dot(device_, count_, gpu_vptr_diff, gpu_vptr_diff, &gpu_sumsq);
       sumsq = gpu_sumsq;
 #else
       NO_GPU;
@@ -495,22 +668,6 @@ Dtype Blob<Dtype>::sumsq_diff() const {
   return sumsq;
 }
 
-template<> int8_t Blob<int8_t>::sumsq_diff() const {
-  NOT_IMPLEMENTED;
-  return 0;
-}
-template<> int16_t Blob<int16_t>::sumsq_diff() const {
-  NOT_IMPLEMENTED;
-  return 0;
-}
-template<> int32_t Blob<int32_t>::sumsq_diff() const {
-  NOT_IMPLEMENTED;
-  return 0;
-}
-template<> int64_t Blob<int64_t>::sumsq_diff() const {
-  NOT_IMPLEMENTED;
-  return 0;
-}
 template<> uint8_t Blob<uint8_t>::sumsq_diff() const {
   NOT_IMPLEMENTED;
   return 0;
@@ -545,7 +702,7 @@ void Blob<Dtype>::scale_data(Dtype scale_factor) {
     case SyncedMemory::SYNCED: {
 #ifndef CPU_ONLY
       gpu_data = mutable_gpu_data();
-      device_->scal<Dtype>(count_, scale_factor, gpu_data);
+      gpu_scal(device_, count_, scale_factor, gpu_data);
       return;
 #else
       NO_GPU;
@@ -558,35 +715,15 @@ void Blob<Dtype>::scale_data(Dtype scale_factor) {
     }
   }
 
-template<> void Blob<int8_t>::scale_data(int8_t scale_factor) {
-  NOT_IMPLEMENTED;
-}
-
-template<> void Blob<int16_t>::scale_data(int16_t scale_factor) {
-  NOT_IMPLEMENTED;
-}
-
-template<> void Blob<int32_t>::scale_data(int32_t scale_factor) {
-  NOT_IMPLEMENTED;
-}
-
-template<> void Blob<int64_t>::scale_data(int64_t scale_factor) {
-  NOT_IMPLEMENTED;
-}
-
-
 template<> void Blob<uint8_t>::scale_data(uint8_t scale_factor) {
   NOT_IMPLEMENTED;
 }
-
 template<> void Blob<uint16_t>::scale_data(uint16_t scale_factor) {
   NOT_IMPLEMENTED;
 }
-
 template<> void Blob<uint32_t>::scale_data(uint32_t scale_factor) {
   NOT_IMPLEMENTED;
 }
-
 template<> void Blob<uint64_t>::scale_data(uint64_t scale_factor) {
   NOT_IMPLEMENTED;
 }
@@ -608,7 +745,7 @@ void Blob<Dtype>::scale_diff(Dtype scale_factor) {
     case SyncedMemory::SYNCED: {
 #ifndef CPU_ONLY
       gpu_vptr_diff = mutable_gpu_diff();
-      device_->scal<Dtype>(count_, scale_factor, gpu_vptr_diff);
+      gpu_scal(device_, count_, scale_factor, gpu_vptr_diff);
       return;
 #else
       NO_GPU;
@@ -621,34 +758,15 @@ void Blob<Dtype>::scale_diff(Dtype scale_factor) {
   }
 }
 
-template<> void Blob<int8_t>::scale_diff(int8_t scale_factor) {
-  NOT_IMPLEMENTED;
-}
-
-template<> void Blob<int16_t>::scale_diff(int16_t scale_factor) {
-  NOT_IMPLEMENTED;
-}
-
-template<> void Blob<int32_t>::scale_diff(int32_t scale_factor) {
-  NOT_IMPLEMENTED;
-}
-
-template<> void Blob<int64_t>::scale_diff(int64_t scale_factor) {
-  NOT_IMPLEMENTED;
-}
-
 template<> void Blob<uint8_t>::scale_diff(uint8_t scale_factor) {
   NOT_IMPLEMENTED;
 }
-
 template<> void Blob<uint16_t>::scale_diff(uint16_t scale_factor) {
   NOT_IMPLEMENTED;
 }
-
 template<> void Blob<uint32_t>::scale_diff(uint32_t scale_factor) {
   NOT_IMPLEMENTED;
 }
-
 template<> void Blob<uint64_t>::scale_diff(uint64_t scale_factor) {
   NOT_IMPLEMENTED;
 }
@@ -696,10 +814,10 @@ void Blob<Dtype>::CopyFrom(const Blob& source, bool copy_diff, bool reshape) {
     }
     case Caffe::CPU: {
       if (copy_diff) {
-        caffe_cpu_copy(count_, source.cpu_diff(),
+        caffe_copy(count_, source.cpu_diff(),
             static_cast<Dtype*>(diff_->mutable_cpu_data()));
       } else {
-        caffe_cpu_copy(count_, source.cpu_data(),
+        caffe_copy(count_, source.cpu_data(),
             static_cast<Dtype*>(data_->mutable_cpu_data()));
       }
       break;
@@ -820,11 +938,6 @@ void Blob<Dtype>::ToProto(BlobProto* proto, bool write_diff) const {
     const char* diff_vec = reinterpret_cast<const char*>(cpu_diff());
     proto->set_packed_data(diff_vec, byte_count());
   }
-}
-
-template<>
-void Blob<bool>::ToProto(BlobProto* proto, bool write_diff) const {
-  NOT_IMPLEMENTED;
 }
 
 template<typename Dtype>

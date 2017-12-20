@@ -54,13 +54,13 @@ void ReductionLayer<Dtype, MItype, MOtype>::Forward_cpu(
     switch (op_) {
     case ReductionParameter_ReductionOp_SUM:
     case ReductionParameter_ReductionOp_MEAN:
-      *top_data = caffe_cpu_dot(dim_, mult_data, bottom_data);
+      *top_data = caffe_dot(dim_, mult_data, bottom_data);
       break;
     case ReductionParameter_ReductionOp_ASUM:
-      *top_data = caffe_cpu_asum(dim_, bottom_data);
+      *top_data = caffe_asum(dim_, bottom_data);
       break;
     case ReductionParameter_ReductionOp_SUMSQ:
-      *top_data = caffe_cpu_dot(dim_, bottom_data, bottom_data);
+      *top_data = caffe_dot(dim_, bottom_data, bottom_data);
       break;
     default:
       LOG(FATAL) << "Unknown reduction op: "
@@ -106,11 +106,11 @@ void ReductionLayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob<MOtyp
       caffe_set(dim_, bottom_coeff, bottom_diff);
       break;
     case ReductionParameter_ReductionOp_ASUM:
-      caffe_cpu_sign(dim_, bottom_data, bottom_diff);
+      caffe_sign(dim_, bottom_data, bottom_diff);
       caffe_scal(dim_, bottom_coeff, bottom_diff);
       break;
     case ReductionParameter_ReductionOp_SUMSQ:
-      caffe_cpu_scale(dim_, Dtype(2 * bottom_coeff), bottom_data, bottom_diff);
+      caffe_scale(dim_, Dtype(2 * bottom_coeff), bottom_data, bottom_diff);
       break;
     default:
       LOG(FATAL) << "Unknown reduction op: "

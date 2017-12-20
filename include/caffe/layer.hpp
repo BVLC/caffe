@@ -599,7 +599,7 @@ inline Dtype Layer<Dtype, MItype, MOtype>::Forward(
         const int_tp count = top[top_id]->count();
         const MOtype* data = top[top_id]->cpu_data();
         const MOtype* loss_weights = top[top_id]->cpu_diff();
-        loss += caffe_cpu_dot(count, data, loss_weights);
+        loss += caffe_dot(count, data, loss_weights);
       }
       break;
     case Caffe::GPU:

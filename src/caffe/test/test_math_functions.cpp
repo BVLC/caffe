@@ -62,14 +62,14 @@ TYPED_TEST(CPUMathFunctionsTest, TestAsum) {
   for (int_tp i = 0; i < n; ++i) {
     std_asum += std::fabs(X[i]);
   }
-  TypeParam cpu_asum = caffe_cpu_asum<TypeParam>(n, X);
+  TypeParam cpu_asum = caffe_asum<TypeParam>(n, X);
   EXPECT_LT((cpu_asum - std_asum) / std_asum, 1e-2);
 }
 
 TYPED_TEST(CPUMathFunctionsTest, TestSign) {
   int_tp n = this->blob_bottom_->count();
   const TypeParam* X = this->blob_bottom_->cpu_data();
-  caffe_cpu_sign<TypeParam>(n, X, this->blob_bottom_->mutable_cpu_diff());
+  caffe_sign<TypeParam>(n, X, this->blob_bottom_->mutable_cpu_diff());
   const TypeParam* signs = this->blob_bottom_->cpu_diff();
   for (int_tp i = 0; i < n; ++i) {
     EXPECT_EQ(signs[i], X[i] > 0 ? 1 : (X[i] < 0 ? -1 : 0));
@@ -79,7 +79,7 @@ TYPED_TEST(CPUMathFunctionsTest, TestSign) {
 TYPED_TEST(CPUMathFunctionsTest, TestSgnbit) {
   int_tp n = this->blob_bottom_->count();
   const TypeParam* X = this->blob_bottom_->cpu_data();
-  caffe_cpu_sgnbit<TypeParam>(n, X, this->blob_bottom_->mutable_cpu_diff());
+  caffe_sgnbit<TypeParam>(n, X, this->blob_bottom_->mutable_cpu_diff());
   const TypeParam* signbits = this->blob_bottom_->cpu_diff();
   for (int_tp i = 0; i < n; ++i) {
     EXPECT_EQ(signbits[i], X[i] < 0 ? 1 : 0);
@@ -100,7 +100,7 @@ TYPED_TEST(CPUMathFunctionsTest, TestScale) {
   int_tp n = this->blob_bottom_->count();
   TypeParam alpha = this->blob_bottom_->cpu_diff()[caffe_rng_rand() %
                                                    this->blob_bottom_->count()];
-  caffe_cpu_scale<TypeParam>(n, alpha, this->blob_bottom_->cpu_data(),
+  caffe_scale<TypeParam>(n, alpha, this->blob_bottom_->cpu_data(),
                              this->blob_bottom_->mutable_cpu_diff());
   const TypeParam* scaled = this->blob_bottom_->cpu_diff();
   const TypeParam* X = this->blob_bottom_->cpu_data();
@@ -113,7 +113,7 @@ TYPED_TEST(CPUMathFunctionsTest, TestCopy) {
   const int_tp n = this->blob_bottom_->count();
   const TypeParam* bottom_data = this->blob_bottom_->cpu_data();
   TypeParam* top_data = this->blob_top_->mutable_cpu_data();
-  caffe_cpu_copy(n, bottom_data, top_data);
+  caffe_copy(n, bottom_data, top_data);
   for (int_tp i = 0; i < n; ++i) {
     EXPECT_EQ(bottom_data[i], top_data[i]);
   }

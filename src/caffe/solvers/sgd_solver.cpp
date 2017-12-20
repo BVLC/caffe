@@ -241,7 +241,7 @@ void SGDSolver<Dtype>::Regularize(int param_id) {
                      cpu_data,
                      cpu_diff);
         } else if (regularization_type == "L1") {
-          caffe_cpu_sign(net_params[param_id]->count(),
+          caffe_sign(net_params[param_id]->count(),
                          cpu_data,
                          temp_[param_id]->mutable_cpu_data());
           caffe_axpy(net_params[param_id]->count(), local_decay,
@@ -334,9 +334,9 @@ void SGDSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
         net_params[param_id]->cpu_diff(cpu_diff);
       }
 
-      caffe_cpu_axpby(net_params[param_id]->count(), local_rate, cpu_diff,
+      caffe_axpby(net_params[param_id]->count(), local_rate, cpu_diff,
                       momentum, history_[param_id]->mutable_cpu_data());
-      caffe_cpu_copy(net_params[param_id]->count(),
+      caffe_copy(net_params[param_id]->count(),
                      history_[param_id]->cpu_data(), cpu_diff);
 
       if (net_params[param_id]->data_type() != proto_data_type<Dtype>()) {

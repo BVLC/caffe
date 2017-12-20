@@ -317,7 +317,7 @@ string LibDNNBlas<MItype, MOtype>::generate_asum_source(
 
 
 template<typename MItype, typename MOtype>
-void LibDNNBlas<MItype, MOtype>::asum(const uint_tp n, vptr<MItype> x,
+void LibDNNBlas<MItype, MOtype>::asum(const uint_tp n, vptr<const MItype> x,
           MOtype* y, libdnnAccumulatePrecision_t prec,
           shared_ptr<Quantizer<MItype, MOtype> > quantizer) {
   string identifier = asum_string_identifier(prec, quantizer);

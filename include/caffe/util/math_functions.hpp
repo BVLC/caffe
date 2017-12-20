@@ -15,28 +15,26 @@ namespace caffe {
 // Caffe gemm provides a simpler interface to the gemm functions, with the
 // limitation that the data has to be contiguous in memory.
 template<typename Dtype>
-void caffe_cpu_gemm(const CBLAS_TRANSPOSE trans_a, const CBLAS_TRANSPOSE trans_b,
+void caffe_gemm(const CBLAS_TRANSPOSE trans_a, const CBLAS_TRANSPOSE trans_b,
                     const int_tp m, const int_tp n, const int_tp k,
                     const Dtype alpha, const Dtype* a, const Dtype* b,
                     const Dtype beta, Dtype* c);
 
 template<typename Dtype>
-void caffe_cpu_gemv(const CBLAS_TRANSPOSE trans_a, const int_tp m,
+void caffe_gemv(const CBLAS_TRANSPOSE trans_a, const int_tp m,
                     const int_tp n, const Dtype alpha, const Dtype* a,
                     const Dtype* X, const Dtype beta, Dtype* Y);
 
 template<typename Dtype>
-void caffe_axpy(const int_tp n, const Dtype alpha, const Dtype* X, Dtype* Y);
+void caffe_axpy(const int_tp n, const Dtype alpha, const Dtype* X,
+                    Dtype* Y);
 
 template<typename Dtype>
-void caffe_cpu_axpby(const int_tp n, const Dtype alpha, const Dtype* X,
+void caffe_axpby(const int_tp n, const Dtype alpha, const Dtype* X,
                      const Dtype beta, Dtype* Y);
 
 template<typename Dtype>
-void caffe_cpu_copy(const int_tp n, const Dtype* X, Dtype* Y);
-
-template<typename Dtype>
-void caffe_copy(const int_tp n, const Dtype *X, Dtype *Y);
+void caffe_copy(const int_tp n, const Dtype* X, Dtype* Y);
 
 template<typename Dtype>
 void caffe_set(const int_tp n, const Dtype alpha, Dtype *X);
@@ -101,19 +99,19 @@ void caffe_abs(const int_tp n, const Dtype* a, Dtype* Y);
 
 template<typename Dtype>
 typename std::enable_if<float_is_same<Dtype>::value, Dtype>::type
-caffe_cpu_dot(const int_tp n, const Dtype* X, const Dtype* Y);
+caffe_dot(const int_tp n, const Dtype* X, const Dtype* Y);
 
 template<typename Dtype>
 typename std::enable_if<signed_integer_is_same<Dtype>::value, Dtype>::type
-caffe_cpu_dot(const int_tp n, const Dtype* X, const Dtype* Y);
+caffe_dot(const int_tp n, const Dtype* X, const Dtype* Y);
 
 template<typename Dtype>
-Dtype caffe_cpu_strided_dot(const int_tp n, const Dtype* X, const int_tp incx,
+Dtype caffe_strided_dot(const int_tp n, const Dtype* X, const int_tp incx,
                             const Dtype* Y, const int_tp incy);
 
 // Returns the sum of the absolute values of the elements of vector X
 template<typename Dtype>
-Dtype caffe_cpu_asum(const int_tp n, const Dtype* X);
+Dtype caffe_asum(const int_tp n, const Dtype* X);
 
 // the branchless, type-safe version from
 // http://stackoverflow.com/questions/1903954/is-there-a-standard-sign-function-signum-sgn-in-c-c
@@ -130,7 +128,7 @@ inline int8_t caffe_sign(Dtype val) {
 // So they have to be pasted here temporarily.
 #define DEFINE_CAFFE_CPU_UNARY_FUNC(name, operation) \
   template<typename Dtype> \
-  void caffe_cpu_##name(const int_tp n, const Dtype* X, Dtype* Y) { \
+  void caffe_##name(const int_tp n, const Dtype* X, Dtype* Y) { \
     CHECK_GT(n, 0); CHECK(X); CHECK(Y); \
     for (int_tp i = 0; i < n; ++i) { \
       operation; \
@@ -150,7 +148,7 @@ DEFINE_CAFFE_CPU_UNARY_FUNC(sgnbit, \
 DEFINE_CAFFE_CPU_UNARY_FUNC(fabs, Y[i] = std::fabs(X[i]))
 
 template<typename Dtype>
-void caffe_cpu_scale(const int_tp n, const Dtype alpha, const Dtype *X,
+void caffe_scale(const int_tp n, const Dtype alpha, const Dtype *X,
                      Dtype* Y);
 
 }  // namespace caffe
