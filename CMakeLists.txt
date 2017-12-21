@@ -106,7 +106,7 @@ endif()
 #add_subdirectory(src/gtest)
 add_subdirectory(src/caffe)
 #add_subdirectory(tools)
-#add_subdirectory(python)
+add_subdirectory(python)
 
 # ---[ Linter target
 add_custom_target(lint COMMAND ${CMAKE_COMMAND} -P ${PROJECT_SOURCE_DIR}/cmake/lint.cmake)
