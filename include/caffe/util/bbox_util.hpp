@@ -176,25 +176,6 @@ void GetMaxScoreIndex(const vector<float>& scores, const float threshold,
       const int top_k, vector<pair<float, int> >* score_index_vec);
 
 // Do non maximum suppression given bboxes and scores.
-//    bboxes: a set of bounding boxes.
-//    scores: a set of corresponding confidences.
-//    threshold: the threshold used in non maximum suppression.
-//    top_k: if not -1, keep at most top_k picked indices.
-//    reuse_overlaps: if true, use and update overlaps; otherwise, always
-//      compute overlap.
-//    overlaps: a temp place to optionally store the overlaps between pairs of
-//      bboxes if reuse_overlaps is true.
-//    indices: the kept indices of bboxes after nms.
-void ApplyNMS(const vector<NormalizedBBox>& bboxes, const vector<float>& scores,
-      const float threshold, const int top_k, const bool reuse_overlaps,
-      map<int, map<int, float> >* overlaps, vector<int>* indices);
-
-void ApplyNMS(const vector<NormalizedBBox>& bboxes, const vector<float>& scores,
-      const float threshold, const int top_k, vector<int>* indices);
-
-void ApplyNMS(const bool* overlapped, const int num, vector<int>* indices);
-
-// Do non maximum suppression given bboxes and scores.
 // Inspired by Piotr Dollar's NMS implementation in EdgeBox.
 // https://goo.gl/jV3JYS
 //    bboxes: a set of bounding boxes.
