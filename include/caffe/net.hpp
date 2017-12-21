@@ -62,8 +62,6 @@ class Net {
   inline vector<shared_ptr<Layer<Dtype> > >& mutable_layers() {
     return layers_;
   }
-  /// @brief returns the phase: TRAIN or TEST
-  inline Phase phase() const { return phase_; }
 
   bool has_blob(const string& blob_name) const;
   const shared_ptr<Blob<Dtype> > blob_by_name(const string& blob_name) const;
