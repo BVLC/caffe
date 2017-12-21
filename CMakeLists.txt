@@ -47,9 +47,6 @@ include(cmake/ConfigGen.cmake)
 caffe_option(CPU_ONLY  "Build Caffe without CUDA support" OFF) # TODO: rename to USE_CUDA
 caffe_option(USE_CUDNN "Build Caffe with cuDNN library support" ON IF NOT CPU_ONLY)
 caffe_option(BUILD_SHARED_LIBS "Build shared libraries" ON)
-caffe_option(BUILD_python "Build Python wrapper" OFF)
-set(python_version "2" CACHE STRING "Specify which Python version to use")
-caffe_option(BUILD_python_layer "Build the Caffe Python layer" OFF)
 caffe_option(USE_OPENCV "Build with OpenCV support" ON)
 caffe_option(USE_OPENMP "Link with OpenMP (when your BLAS wants OpenMP and you get linker errors)" OFF)
 
@@ -105,17 +102,9 @@ endif()
 # ---[ Subdirectories
 #add_subdirectory(src/gtest)
 add_subdirectory(src/caffe)
-#add_subdirectory(tools)
-add_subdirectory(python)
 
 # ---[ Linter target
 add_custom_target(lint COMMAND ${CMAKE_COMMAND} -P ${PROJECT_SOURCE_DIR}/cmake/lint.cmake)
-
-# ---[ pytest target
-if(BUILD_python)
-  add_custom_target(pytest COMMAND python${python_version} -m unittest discover -s caffe/test WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/python )
-  add_dependencies(pytest pycaffe)
-endif()
 
 # ---[ uninstall target
 configure_file(
