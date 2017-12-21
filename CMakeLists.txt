@@ -82,7 +82,6 @@ configure_file(cmake/Templates/caffe_config.h.in "${PROJECT_BINARY_DIR}/caffe_co
 set(Caffe_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
 set(Caffe_SRC_DIR ${PROJECT_SOURCE_DIR}/src)
 include_directories(${PROJECT_BINARY_DIR})
-include_directories(//opt/pkgs/cub)
 
 # ---[ Includes & defines for CUDA
 
@@ -104,10 +103,10 @@ if(HAVE_CUDA)
 endif()
 
 # ---[ Subdirectories
-add_subdirectory(src/gtest)
+#add_subdirectory(src/gtest)
 add_subdirectory(src/caffe)
 #add_subdirectory(tools)
-add_subdirectory(python)
+#add_subdirectory(python)
 
 # ---[ Linter target
 add_custom_target(lint COMMAND ${CMAKE_COMMAND} -P ${PROJECT_SOURCE_DIR}/cmake/lint.cmake)
