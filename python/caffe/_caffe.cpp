@@ -57,6 +57,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/layers/python_layer.hpp"
 #include "caffe/sgd_solvers.hpp"
 
+#ifdef USE_MLSL
+#include "caffe/multinode/mlsl.hpp"
+#endif
+
 // Temporary solution for numpy < 1.7 versions: old macro, no promises.
 // You're strongly advised to upgrade to >= 1.7.
 #ifndef NPY_ARRAY_C_CONTIGUOUS
@@ -88,6 +92,37 @@ const int NPY_DTYPE = NPY_FLOAT32;
 // Selecting mode.
 void set_mode_cpu() { Caffe::set_mode(Caffe::CPU); }
 void set_mode_gpu() { Caffe::set_mode(Caffe::GPU); }
+
+#ifdef USE_MLSL
+void InitMultinode() {
+  int argc = 0;
+  char **argv = NULL;
+  mn::init(&argc, &argv);
+}
+#endif
+
+int NodeId() {
+#if USE_MLSL
+  return mn::get_node_id();
+#else
+  return 0;
+#endif
+}
+
+int NumNodes() {
+#if USE_MLSL
+  return mn::get_nodes_count();
+#else
+  return 1;
+#endif
+}
+
+void Barrier() {
+#if USE_MLSL
+  mn::Distribution * distrib = mn::get_distrib();
+  distrib->barrier<MLSL::GT_DATA>();
+#endif
+}
 
 void InitLog() {
   ::google::InitGoogleLogging("");
@@ -343,6 +378,13 @@ BOOST_PYTHON_MODULE(_caffe) {
   // in Python
 
   bp::scope().attr("__version__") = AS_STRING(CAFFE_VERSION);
+
+#ifdef USE_MLSL
+  InitMultinode();
+#endif
+  bp::def("_node_id", &NodeId);
+  bp::def("_num_nodes", &NumNodes);
+  bp::def("_barrier", &Barrier);
 
   // Caffe utility functions
   bp::def("init_log", &InitLog);
