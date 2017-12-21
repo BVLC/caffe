@@ -44,7 +44,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
 
   const int crop_size = param_.crop_size();
   const Dtype scale = param_.scale();
-  const bool do_mirror = param_.mirror() ;//&& Rand(2);
+  const bool do_mirror = param_.mirror();
   const bool has_mean_file = param_.has_mean_file();
   const bool has_uint8 = data.size() > 0;
   const bool has_mean_values = mean_values_.size() > 0;
@@ -79,15 +79,8 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
   if (crop_size) {
     height = crop_size;
     width = crop_size;
-    // We only do random crop when we do training.
-    /*
-    if (phase_ == TRAIN) {
-      h_off = Rand(datum_height - crop_size + 1);
-      w_off = Rand(datum_width - crop_size + 1);
-    } else */ {
-      h_off = (datum_height - crop_size) / 2;
-      w_off = (datum_width - crop_size) / 2;
-    }
+    h_off = (datum_height - crop_size) / 2;
+    w_off = (datum_width - crop_size) / 2;
   }
 
   Dtype datum_element;
@@ -241,7 +234,7 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
   CHECK(cv_img.depth() == CV_8U) << "Image data type must be unsigned byte";
 
   const Dtype scale = param_.scale();
-  const bool do_mirror = param_.mirror() ;//&& Rand(2);
+  const bool do_mirror = param_.mirror();
   const bool has_mean_file = param_.has_mean_file();
   const bool has_mean_values = mean_values_.size() > 0;
 
@@ -273,15 +266,8 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
   if (crop_size) {
     CHECK_EQ(crop_size, height);
     CHECK_EQ(crop_size, width);
-    // We only do random crop when we do training.
-    /*
-    if (phase_ == TRAIN) {
-      h_off = Rand(img_height - crop_size + 1);
-      w_off = Rand(img_width - crop_size + 1);
-    } else */ {
-      h_off = (img_height - crop_size) / 2;
-      w_off = (img_width - crop_size) / 2;
-    }
+    h_off = (img_height - crop_size) / 2;
+    w_off = (img_width - crop_size) / 2;
     cv::Rect roi(w_off, h_off, crop_size, crop_size);
     cv_cropped_img = cv_img(roi);
   } else {
@@ -356,7 +342,7 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
 
 
   const Dtype scale = param_.scale();
-  const bool do_mirror = param_.mirror() ;//&& Rand(2);
+  const bool do_mirror = param_.mirror();
   const bool has_mean_file = param_.has_mean_file();
   const bool has_mean_values = mean_values_.size() > 0;
 
@@ -365,15 +351,8 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
   if (crop_size) {
     CHECK_EQ(crop_size, height);
     CHECK_EQ(crop_size, width);
-    // We only do random crop when we do training.
-    /*
-    if (phase_ == TRAIN) {
-      h_off = Rand(input_height - crop_size + 1);
-      w_off = Rand(input_width - crop_size + 1);
-    } else */ {
-      h_off = (input_height - crop_size) / 2;
-      w_off = (input_width - crop_size) / 2;
-    }
+    h_off = (input_height - crop_size) / 2;
+    w_off = (input_width - crop_size) / 2;
   } else {
     CHECK_EQ(input_height, height);
     CHECK_EQ(input_width, width);

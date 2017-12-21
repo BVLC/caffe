@@ -149,7 +149,6 @@ template <typename Dtype> void Net<Dtype>::Init(const NetParameter &in_param) {
   for (size_t layer_id = 0; layer_id < layer_names_.size(); ++layer_id) {
     layer_names_index_[layer_names_[layer_id]] = layer_id;
   }
-  debug_info_ = param.debug_info();
   LOG(INFO) << "Network initialization done.";
 
   blobs_.clear();
@@ -409,13 +408,6 @@ std::map<std::string, std::shared_ptr<Blob<Dtype>>> Net<Dtype>::ForwardConst(
   }
 
   return output_blobs;
-}
-
-
-template <typename Dtype> void Net<Dtype>::Reshape() {
-  for (int i = 0; i < layers_.size(); ++i) {
-    layers_[i]->Reshape(bottom_vecs_[i], top_vecs_[i]);
-  }
 }
 
 template <typename Dtype>

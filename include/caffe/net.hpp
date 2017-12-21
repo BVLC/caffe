@@ -34,19 +34,6 @@ class Net {
 
   std::map<std::string,std::shared_ptr<Blob<Dtype>>> ForwardConst(std::map<std::string,std::shared_ptr<Blob<Dtype>>> & input_blobs,const std::set<std::string> &output_blob_names,int gpu_no);
 
-  /**
-   * @brief Reshape all layers from bottom to top.
-   *
-   * This is useful to propagate changes to layer sizes without running
-   * a forward pass, e.g. to compute output feature size.
-   */
-  void Reshape();
-
-  /**
-   * @brief For an already initialized net, implicitly copies (i.e., using no
-   *        additional memory) the pre-trained layers from another Net.
-   */
-  void ShareTrainedLayersWith(const Net* other);
   // For an already initialized net, CopyTrainedLayersFrom() copies the already
   // trained layers from another net parameter instance.
   /**
@@ -83,8 +70,6 @@ class Net {
   bool has_layer(const string& layer_name) const;
   const shared_ptr<Layer<Dtype> > layer_by_name(const string& layer_name) const;
 
-  void set_debug_info(const bool value) { debug_info_ = value; }
-
   // Helpers for Init.
   /**
    * @brief Remove layers that the user specified should be excluded given the current
@@ -106,12 +91,7 @@ class Net {
   int AppendBottom(const NetParameter& param, const int layer_id,
                    const int bottom_id, set<string>* available_blobs,
                    map<string, int>* blob_name_to_idx);
-  /// @brief Append a new parameter blob to the net.
-  void AppendParam(const NetParameter& param, const int layer_id,
-                   const int param_id);
 
-  /// @brief Helper for displaying debug info in Forward.
-  void ForwardDebugInfo(const int layer_id) const;
 
   /// @brief The network name
   string name_;
@@ -136,8 +116,6 @@ class Net {
   vector<vector<int> > top_id_vecs_;
   vector<vector<string> > top_blob_names_;
   size_t memory_used_;
-  /// Whether to compute and display debug info for the net.
-  bool debug_info_;
 
 
 DISABLE_COPY_AND_ASSIGN(Net);
