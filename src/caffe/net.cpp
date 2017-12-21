@@ -754,6 +754,7 @@ void Net<Dtype>::CompilationRuleTwo(const NetParameter& param,
             use_negative_slope = true;
         } else {
             layer_param->mutable_convolution_param()->set_relu(true);
+            layer_param->mutable_convolution_param()->set_negative_slope(0);
         }
         if(param.state().phase() == TRAIN && !use_negative_slope) {
           if(i+1 < param.layer_size()) {
