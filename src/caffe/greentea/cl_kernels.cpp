@@ -8957,7 +8957,7 @@ static std::string cl_kernel_names[] = {
     "solvers",   // NOLINT
     "tile"   // NOLINT
 };
-viennacl::ocl::program & RegisterCommonKernels(viennacl::ocl::context *ctx) {
+viennacl::ocl::program & RegisterCommonKernels(viennacl::ocl::context *ctx, std::string options) {
   std::stringstream ss;
   for (int i = 0; i < cl_kernels.size(); ++i) {
     if (cl_kernel_names[i] == std::string("common")) {
@@ -8968,14 +8968,13 @@ viennacl::ocl::program & RegisterCommonKernels(viennacl::ocl::context *ctx) {
   }
   std::string kernel_string = ss.str();
   const char* kernel_program = kernel_string.c_str();
-  string options;
   ctx->build_options(options);
   viennacl::ocl::program &program = ctx->add_program(kernel_program,
       "common_kernel_program");
   return program;
 }
 template <typename Dtype>
-viennacl::ocl::program & RegisterKernels(viennacl::ocl::context *ctx) {
+viennacl::ocl::program & RegisterKernels(viennacl::ocl::context *ctx, std::string options) {
   std::stringstream ss;
   std::stringstream int64_base_atomics;
   int64_base_atomics << "\n\n";  // NOLINT
@@ -9073,20 +9072,9 @@ viennacl::ocl::program & RegisterKernels(viennacl::ocl::context *ctx) {
   }
   std::string kernel_string = ss.str();
   const char* kernel_program = kernel_string.c_str();
-  string options;
 #ifdef USE_FFT
-  options = " -DFFT ";
+  options += " -DFFT ";
 #endif
-#ifdef HAS_HALF_SUPPORT
-  options += " -DHAS_HALF_SUPPORT ";
-#endif
-  if(ctx->devices()[0].extensions().find("cl_intel_subgroups")!= std::string::npos) {
-    options += " -DHAS_INTEL_SUBGROUPS ";
-  }
-  bool is_beignet = ctx->devices()[0].opencl_c_version().find("beignet")
-                    != std::string::npos;
-  if (!is_beignet)
-    options += (" -cl-no-subgroup-ifp ");
   ctx->build_options(options);
   viennacl::ocl::program &program = ctx->add_program(kernel_program,
       "kernel_program");
@@ -9094,12 +9082,12 @@ viennacl::ocl::program & RegisterKernels(viennacl::ocl::context *ctx) {
 }
 #ifdef HAS_HALF_SUPPORT
 template
-viennacl::ocl::program & RegisterKernels<half>(viennacl::ocl::context *ctx);
+viennacl::ocl::program & RegisterKernels<half>(viennacl::ocl::context *ctx, std::string options);
 #endif
 template
-viennacl::ocl::program & RegisterKernels<float>(viennacl::ocl::context *ctx);
+viennacl::ocl::program & RegisterKernels<float>(viennacl::ocl::context *ctx, std::string options);
 template
-viennacl::ocl::program & RegisterKernels<double>(viennacl::ocl::context *ctx);
+viennacl::ocl::program & RegisterKernels<double>(viennacl::ocl::context *ctx, std::string options);
 template<typename Dtype>
 viennacl::ocl::program & submit_conv_spatial_program(
 viennacl::ocl::context *ctx, string name, string options) {
@@ -9156,13 +9144,6 @@ viennacl::ocl::context *ctx, string name, string options) {
         ss << cl_kernels[i][j] << "\n\n";
       }
     }
-  }
-  bool is_beignet = ctx->devices()[0].opencl_c_version().find("beignet")
-                    != std::string::npos;
-  if (!is_beignet)
-    options += (" -cl-no-subgroup-ifp ");
-  if(ctx->devices()[0].extensions().find("cl_intel_subgroups")!= std::string::npos) {
-    options += " -DHAS_INTEL_SUBGROUPS ";
   }
   ctx->build_options(options);
   viennacl::ocl::program &program = ctx->add_program(ss.str(), name);

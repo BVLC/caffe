@@ -61,6 +61,30 @@ void device::Init() {
     workgroup_sizes_[1] = temp[1];
     workgroup_sizes_[2] = temp[2];
 
+    if(ctx.devices()[0].extensions().find("cl_intel_subgroups")!= std::string::npos) {
+
+      extra_build_options_ += " -DHAS_INTEL_SUBGROUPS ";
+
+      const char *dummy_src = "__kernel void foo() {} ";
+      size_t source_size = 1;
+      int err;
+      cl_program temp = clCreateProgramWithSource(ctx.handle().get(), 1,
+                                                  (const char **)&dummy_src,
+                                                  &source_size, &err);
+      const char * options = "  -cl-no-subgroup-ifp ";
+      err = clBuildProgram(temp, 0, NULL, options, NULL, NULL);
+
+      if (err == CL_SUCCESS) {
+        extra_build_options_ += " -cl-no-subgroup-ifp ";
+      }
+      if (temp) {
+        clReleaseProgram(temp);
+      }
+    }
+#ifdef HAS_HALF_SUPPORT
+    extra_build_options_ += " -DHAS_HALF_SUPPORT ";
+#endif
+
 #ifdef DISABLE_DEVICE_HOST_UNIFIED_MEMORY
     host_unified_ = false;
     LOG(INFO) << "CL_DEVICE_HOST_UNIFIED_MEMORY: disabled";
@@ -77,7 +101,8 @@ void device::Init() {
       ctx.add_queue(ctx.devices()[0]);
     }
     common_ocl_program_ = RegisterCommonKernels(
-      &(viennacl::ocl::get_context(static_cast<uint64_t>(id_))));
+      &(viennacl::ocl::get_context(static_cast<uint64_t>(id_))),
+      extra_build_options_);
 #endif  // USE_GREENTEA
   }
 #endif  // !CPU_ONLY
@@ -302,7 +327,8 @@ template <>
 viennacl::ocl::program &device::program<half>() {
   if (!fp16_program_ready_) {
     fp16_ocl_program_ = RegisterKernels<half>(
-      &(viennacl::ocl::get_context(static_cast<uint64_t>(id_))));
+      &(viennacl::ocl::get_context(static_cast<uint64_t>(id_))),
+      extra_build_options_);
     fp16_program_ready_ = true;
   }
   return fp16_ocl_program_;
@@ -313,7 +339,8 @@ template <>
 viennacl::ocl::program &device::program<float>() {
   if (!fp32_program_ready_) {
     fp32_ocl_program_ = RegisterKernels<float>(
-      &(viennacl::ocl::get_context(static_cast<uint64_t>(id_))));
+      &(viennacl::ocl::get_context(static_cast<uint64_t>(id_))),
+      extra_build_options_);
     fp32_program_ready_ = true;
   }
   return fp32_ocl_program_;
@@ -328,7 +355,8 @@ template <>
 viennacl::ocl::program &device::program<double>() {
   if (!fp64_program_ready_) {
     fp64_ocl_program_ = RegisterKernels<double>(
-      &(viennacl::ocl::get_context(static_cast<uint64_t>(id_))));
+      &(viennacl::ocl::get_context(static_cast<uint64_t>(id_))),
+      extra_build_options_);
     fp64_program_ready_ = true;
   }
   return fp64_ocl_program_;

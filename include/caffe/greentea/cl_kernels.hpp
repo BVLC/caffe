@@ -11,9 +11,9 @@
 #include "viennacl/ocl/device.hpp"
 #include "viennacl/ocl/platform.hpp"
 namespace caffe {
-viennacl::ocl::program & RegisterCommonKernels(viennacl::ocl::context *ctx);
+viennacl::ocl::program & RegisterCommonKernels(viennacl::ocl::context *ctx, std::string options);
 template <typename Dtype>
-viennacl::ocl::program & RegisterKernels(viennacl::ocl::context *ctx);
+viennacl::ocl::program & RegisterKernels(viennacl::ocl::context *ctx, std::string options);
 template <typename Dtype>
 viennacl::ocl::program & submit_conv_spatial_program(
 viennacl::ocl::context *ctx, string name, string options);

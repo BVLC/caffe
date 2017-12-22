@@ -57,6 +57,7 @@ class device {
   bool CheckCapability(std::string cap);
   bool CheckVendor(std::string vendor);
   bool CheckType(std::string type);
+  std::string get_extra_build_options(void) { return extra_build_options_; }
 
  private:
   int current_queue_id_;
@@ -79,6 +80,7 @@ class device {
   bool fp64_program_ready_;
   viennacl::ocl::program fp64_ocl_program_;
   viennacl::ocl::program common_ocl_program_;
+  std::string extra_build_options_;
 #endif  // USE_GREENTEA
 };
 }  // namespace caffe

@@ -41,9 +41,9 @@ echo "#endif  // DISABLE_DOUBLE_SUPPORT" >> $SOURCE
 
 echo "namespace caffe {" >> $SOURCE
 
-echo "viennacl::ocl::program & RegisterCommonKernels(viennacl::ocl::context *ctx);" >> $HEADER
+echo "viennacl::ocl::program & RegisterCommonKernels(viennacl::ocl::context *ctx, std::string options);" >> $HEADER
 echo "template <typename Dtype>" >> $HEADER
-echo "viennacl::ocl::program & RegisterKernels(viennacl::ocl::context *ctx);" >> $HEADER
+echo "viennacl::ocl::program & RegisterKernels(viennacl::ocl::context *ctx, std::string options);" >> $HEADER
 echo "template <typename Dtype>" >> $HEADER
 echo "viennacl::ocl::program & submit_conv_spatial_program(" >> $HEADER
 echo "viennacl::ocl::context *ctx, string name, string options);" >> $HEADER
@@ -128,7 +128,7 @@ do
 done
 echo "};" >> $SOURCE
 
-echo "viennacl::ocl::program & RegisterCommonKernels(viennacl::ocl::context *ctx) {" >> $SOURCE
+echo "viennacl::ocl::program & RegisterCommonKernels(viennacl::ocl::context *ctx, std::string options) {" >> $SOURCE
 echo "  std::stringstream ss;" >> $SOURCE
 echo "  for (int i = 0; i < cl_kernels.size(); ++i) {" >> $SOURCE
 echo "    if (cl_kernel_names[i] == std::string(\"common\")) {" >> $SOURCE
@@ -139,7 +139,6 @@ echo "    }" >> $SOURCE
 echo "  }" >> $SOURCE
 echo "  std::string kernel_string = ss.str();" >> $SOURCE
 echo "  const char* kernel_program = kernel_string.c_str();" >> $SOURCE
-echo "  string options;" >> $SOURCE
 echo "  ctx->build_options(options);" >> $SOURCE
 echo "  viennacl::ocl::program &program = ctx->add_program(kernel_program," >> $SOURCE
 echo "      \"common_kernel_program\");" >> $SOURCE
@@ -147,7 +146,7 @@ echo "  return program;" >> $SOURCE
 echo "}" >> $SOURCE
 
 echo "template <typename Dtype>" >> $SOURCE
-echo "viennacl::ocl::program & RegisterKernels(viennacl::ocl::context *ctx) {" >> $SOURCE
+echo "viennacl::ocl::program & RegisterKernels(viennacl::ocl::context *ctx, std::string options) {" >> $SOURCE
 echo "  std::stringstream ss;" >> $SOURCE
 echo "  std::stringstream int64_base_atomics;" >> $SOURCE
 echo "  int64_base_atomics << \"\\n\\n\";  // NOLINT" >> $SOURCE
@@ -267,20 +266,9 @@ echo "  }" >> $SOURCE
 
 echo "  std::string kernel_string = ss.str();" >> $SOURCE
 echo "  const char* kernel_program = kernel_string.c_str();" >> $SOURCE
-echo "  string options;" >> $SOURCE
 echo "#ifdef USE_FFT" >> $SOURCE
-echo "  options = \" -DFFT \";" >> $SOURCE
+echo "  options += \" -DFFT \";" >> $SOURCE
 echo "#endif" >> $SOURCE
-echo "#ifdef HAS_HALF_SUPPORT" >> $SOURCE
-echo "  options += \" -DHAS_HALF_SUPPORT \";" >> $SOURCE
-echo "#endif" >> $SOURCE
-echo "  if(ctx->devices()[0].extensions().find(\"cl_intel_subgroups\")!= std::string::npos) {" >> $SOURCE
-echo "    options += \" -DHAS_INTEL_SUBGROUPS \";" >> $SOURCE
-echo "  }" >> $SOURCE
-echo "  bool is_beignet = ctx->devices()[0].opencl_c_version().find(\"beignet\")" >> $SOURCE
-echo "                    != std::string::npos;" >> $SOURCE
-echo "  if (!is_beignet)" >> $SOURCE
-echo "    options += (\" -cl-no-subgroup-ifp \");" >> $SOURCE
 echo "  ctx->build_options(options);" >> $SOURCE
 echo "  viennacl::ocl::program &program = ctx->add_program(kernel_program," >> $SOURCE
 echo "      \"kernel_program\");" >> $SOURCE
@@ -288,12 +276,12 @@ echo "  return program;" >> $SOURCE
 echo "}" >> $SOURCE
 echo "#ifdef HAS_HALF_SUPPORT" >> $SOURCE
 echo "template" >> $SOURCE
-echo "viennacl::ocl::program & RegisterKernels<half>(viennacl::ocl::context *ctx);" >> $SOURCE
+echo "viennacl::ocl::program & RegisterKernels<half>(viennacl::ocl::context *ctx, std::string options);" >> $SOURCE
 echo "#endif" >> $SOURCE
 echo "template" >> $SOURCE
-echo "viennacl::ocl::program & RegisterKernels<float>(viennacl::ocl::context *ctx);" >> $SOURCE
+echo "viennacl::ocl::program & RegisterKernels<float>(viennacl::ocl::context *ctx, std::string options);" >> $SOURCE
 echo "template" >> $SOURCE
-echo "viennacl::ocl::program & RegisterKernels<double>(viennacl::ocl::context *ctx);" >> $SOURCE
+echo "viennacl::ocl::program & RegisterKernels<double>(viennacl::ocl::context *ctx, std::string options);" >> $SOURCE
 echo "template<typename Dtype>" >> $SOURCE
 echo "viennacl::ocl::program & submit_conv_spatial_program(" >> $SOURCE
 echo "viennacl::ocl::context *ctx, string name, string options) {" >> $SOURCE
@@ -352,13 +340,6 @@ echo "      for (int j = 0; j < cl_kernels[i].size(); ++j) {" >> $SOURCE
 echo "        ss << cl_kernels[i][j] << \"\n\n\";" >> $SOURCE
 echo "      }" >> $SOURCE
 echo "    }" >> $SOURCE
-echo "  }" >> $SOURCE
-echo "  bool is_beignet = ctx->devices()[0].opencl_c_version().find(\"beignet\")" >> $SOURCE
-echo "                    != std::string::npos;" >> $SOURCE
-echo "  if (!is_beignet)" >> $SOURCE
-echo "    options += (\" -cl-no-subgroup-ifp \");" >> $SOURCE
-echo "  if(ctx->devices()[0].extensions().find(\"cl_intel_subgroups\")!= std::string::npos) {" >> $SOURCE
-echo "    options += \" -DHAS_INTEL_SUBGROUPS \";" >> $SOURCE
 echo "  }" >> $SOURCE
 echo "  ctx->build_options(options);" >> $SOURCE
 echo "  viennacl::ocl::program &program = ctx->add_program(ss.str(), name);" >> $SOURCE

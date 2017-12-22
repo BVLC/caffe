@@ -661,6 +661,8 @@ void ConvolutionLayerSpatial<Dtype>::buildKernels(void) {
     if (IsFusedWithPReLU()) {
       optionsString << " -DFUSED_CONV_PRELU=1";
     }
+
+    optionsString << this->device_->get_extra_build_options();
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(this->device_->id());
     try {
       submit_conv_spatial_program<Dtype>(&ctx, config->kernelName,
