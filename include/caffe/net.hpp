@@ -312,15 +312,7 @@ class Net {
   */
   static void CompilationRuleFour(const NetParameter& param,
                              NetParameter* param_compiled);
-
-  /**
-  * @brief This is rule that analyze layer if it is of type MKLDNNReLU and if that is the case
-  *        and previous layer which serves as input layer to MKLDNNReLU Layer is MKLDNNBN
-  *        then MKLDNNReLU layer can be dropped
-  */
-  static void CompilationRuleFuseBnRelu(const NetParameter& param,
-                                 NetParameter* param_compiled);
-
+  
   /**
    * @brief If find "Conv--BN--Scale" in current network, merge BN and Scale layer into Convolution
    * layers, this optimization only works in caffe TEST phase now.
