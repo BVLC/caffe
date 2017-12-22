@@ -28,8 +28,7 @@ Caffe &Caffe::Get() {
 
 #ifdef CPU_ONLY // CPU-only Caffe.
 
-
-Caffe::~Caffe() =default;
+Caffe::~Caffe() = default;
 
 void Caffe::set_device(int device_id) {
   if (device_id >= 0) {
@@ -41,10 +40,14 @@ void Caffe::set_device(int device_id) {
 
 #else // Normal GPU + CPU Caffe.
 
-
 Caffe::~Caffe() {
   if (cublas_handle_)
     CUBLAS_CHECK(cublasDestroy(cublas_handle_));
+#ifdef USE_CUDNN
+  if (cublas_handle_) {
+    CUDNN_CHECK(cudnnDestroy(cudnn_handle_));
+  }
+#endif
 }
 
 void Caffe::set_device(int device_id) {

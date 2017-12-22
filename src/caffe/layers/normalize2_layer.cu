@@ -13,10 +13,9 @@ namespace caffe {
 // divid a matrix with vector
 template <typename Dtype>
 __global__ void DivBsx(const int nthreads, const Dtype* A,
-    const Dtype* v, const int rows, const int cols, Dtype* B) {
+    const Dtype* v, const int cols, Dtype* B) {
   CUDA_KERNEL_LOOP(index, nthreads) {
     int c = index % cols;
-    int r = (index / cols) % rows;
     B[index] = A[index] / v[c];
   }
 }
@@ -26,7 +25,6 @@ __global__ void MulBsx(const int nthreads, const Dtype* A,
     const Dtype* v, const int rows, const int cols,
     Dtype* B) {
   CUDA_KERNEL_LOOP(index, nthreads) {
-    int c = index % cols;
     int r = (index / cols) % rows;
     B[index] = A[index] * v[r];
   }
@@ -85,7 +83,7 @@ void Normalize2Layer<Dtype>::Forward_const_gpu(const vector<Blob<Dtype>*>& botto
       // scale the layer
       // NOLINT_NEXT_LINE(whitespace/operators)
       DivBsx<Dtype> <<<CAFFE_GET_BLOCKS(dim), CAFFE_CUDA_NUM_THREADS>>>(
-          dim, bottom_data, norm_data, channels, spatial_dim,
+          dim, bottom_data, norm_data, spatial_dim,
           top_data);
       CUDA_POST_KERNEL_CHECK;
       norm_data += spatial_dim;
