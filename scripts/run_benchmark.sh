@@ -90,20 +90,27 @@ function calculate_numnodes
 
 function detect_cpu
 {
+    # detect cpu model
     model_string=`lscpu | grep "Model name" | awk -F ':' '{print $2}'`
-    if [[ $model_string == *"7235"* ]] || [[ $model_string == *"7285"* ]] || [[ $model_string == *"7295"* ]]; then
-        cpu_model="knm"
-    elif [[ $model_string == *"72"* ]]; then
-        cpu_model="knl"
-    elif [[ $model_string == *"8180"* ]] || [[ $model_string == *"8124"* ]]; then
-        cpu_model="skx"
-    elif [[ $model_string == *"6148"* ]]; then
-        cpu_model="skx"
-    elif [[ $model_string == *"E5-26"* ]]; then
-        cpu_model="bdw"
+    if [[ $model_string == *"Phi"* ]]; then
+        if [[ $model_string =~ 72(1|3|5|9)0 ]]; then
+            cpu_model="knl"
+        elif [[ $model_string == *"72"* ]]; then
+            cpu_model="knm"
+        else
+            unknown_cpu=1
+            echo "Can't detect which cpu model currently using, will use default settings, which may not be the optimal one."
+        fi
     else
-        unknown_cpu=1
-        echo "Can't detect which cpu model currently using, will use default settings, which may not be the optimal one."
+        model_num=`echo $model_string | awk '{print $4}'`
+        if [[ $model_num =~ ^[8|6|5|4|3]1 ]]; then
+            cpu_model="skx"
+        elif [[ $model_num =~ ^E5-[4|2|1]6|^E7-[8|4]8|^E3-12|^D[-]?15 ]]; then
+            cpu_model="bdw"
+        else
+            unknown_cpu=1
+            echo "Can't detect which cpu model currently using, will use default settings, which may not be the optimal one."
+        fi
     fi
 }
 
