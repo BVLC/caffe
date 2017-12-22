@@ -565,6 +565,8 @@ int time() {
   // have huge variance in some machines.
   int warmup_iterations = 5;
   for (int j = 0; j < warmup_iterations; ++j) {
+    if (j == warmup_iterations - 1)
+      PERFORMANCE_START_RESETTING_MONITOR();
     for (int i = 0; i < layers.size(); ++i) {
       layers[i]->Forward(bottom_vecs[i], top_vecs[i]);
     }
@@ -575,6 +577,8 @@ int time() {
       }
     }
   }
+
+  PERFORMANCE_STOP_RESETTING_MONITOR();
 
   LOG(INFO) << "*** Benchmark begins ***";
   LOG(INFO) << "Testing for " << FLAGS_iterations << " iterations.";

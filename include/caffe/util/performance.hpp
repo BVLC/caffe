@@ -77,6 +77,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   performance::monitor.EnableMeasurements(); \
   performance::monitor.MarkAsInitialized();
 
+#define PERFORMANCE_START_RESETTING_MONITOR() \
+  performance::monitor.StartResetting();
+
+#define PERFORMANCE_STOP_RESETTING_MONITOR() \
+  performance::monitor.StopResetting();
+
 #define PERFORMANCE_MEASUREMENT_END_MKL(prefix)       \
   do {                                                \
     static char name[256];                            \
@@ -117,6 +123,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define PERFORMANCE_MEASUREMENT_END_ID(id_name)
 #define PERFORMANCE_CREATE_MONITOR()
 #define PERFORMANCE_INIT_MONITOR()
+#define PERFORMANCE_START_RESETTING_MONITOR()
+#define PERFORMANCE_STOP_RESETTING_MONITOR()
 #define PERFORMANCE_MEASUREMENT_END_MKL(prefix)
 #define PERFORMANCE_MEASUREMENT_END_MKL_DETAILED(prefix, suffix)
 #define PERFORMANCE_MKL_NAME_DETAILED(prefix, suffix)
@@ -426,6 +434,7 @@ namespace performance {
     Map event_name_id_map_;
 
     bool are_measurements_enabled_;
+    bool resetting_;
 
     NameVector event_names_;
     PreciseTime total_non_mkl_time_;
@@ -579,6 +588,7 @@ namespace performance {
 
    public:
     Monitor() {
+      resetting_ = false;
       events_.reserve(64);
 
       PreciseTime::Calibrate();
@@ -607,6 +617,9 @@ namespace performance {
       total_init_time_ = PreciseTime::GetProcessTime() - total_process_time_;
     }
 
+    void StartResetting() { resetting_ = true; }
+    void StopResetting() { resetting_ = false; }
+
     unsigned GetEventIdByName(const char *event_name) {
       if (!are_measurements_enabled_)
         return PERFORMANCE_EVENT_ID_UNSET;
@@ -622,8 +635,12 @@ namespace performance {
     }
 
     void UpdateEventById(unsigned event_id, const Measurement &measurement) {
-      if (are_measurements_enabled_)
-        events_[event_id].Update(measurement);
+      if (are_measurements_enabled_) {
+        if (resetting_)
+          events_[event_id] = Event();
+        else
+          events_[event_id].Update(measurement);
+      }
     }
   };
 
