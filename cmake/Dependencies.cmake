@@ -17,26 +17,6 @@ find_package(Boost REQUIRED COMPONENTS thread)
 list(APPEND Caffe_INCLUDE_DIRS PRIVATE ${Boost_INCLUDE_DIRS})
 list(APPEND Caffe_LINKER_LIBS PRIVATE ${Boost_LIBRARIES})
 
-# ---[ Threads
-find_package(Threads REQUIRED)
-list(APPEND Caffe_LINKER_LIBS PRIVATE ${CMAKE_THREAD_LIBS_INIT})
-
-# ---[ OpenMP
-if(USE_OPENMP)
-  # Ideally, this should be provided by the BLAS library IMPORTED target. However,
-  # nobody does this, so we need to link to OpenMP explicitly and have the maintainer
-  # to flick the switch manually as needed.
-  #
-  # Moreover, OpenMP package does not provide an IMPORTED target as well, and the
-  # suggested way of linking to OpenMP is to append to CMAKE_{C,CXX}_FLAGS.
-  # However, this naïve method will force any user of Caffe to add the same kludge
-  # into their buildsystem again, so we put these options into per-target PUBLIC
-  # compile options and link flags, so that they will be exported properly.
-  find_package(OpenMP REQUIRED)
-  list(APPEND Caffe_LINKER_LIBS PRIVATE ${OpenMP_CXX_FLAGS})
-  list(APPEND Caffe_COMPILE_OPTIONS PRIVATE ${OpenMP_CXX_FLAGS})
-endif()
-
 # ---[ Google-glog
 if (WIN32)
   if("${CMAKE_GENERATOR}" MATCHES "(Win64|IA64)")
