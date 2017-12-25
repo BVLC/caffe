@@ -578,6 +578,8 @@ void MKLDNNConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top
                                                 , const vector<Blob<Dtype>*>& bottom)
 {
     VLOG(1) << "MKLDNNConvolutionLayer<Dtype>::Backward_cpu: " << this->layer_param_.name();
+    bool top_diff_is_prv = (const_cast<Dtype*>(top[0]->prv_diff()) != NULL);
+
     if( convBwdData_pd == NULL || this->reshape)
         InitConvolutionBwd(top, propagate_down, bottom);
     if (propagate_down[0]) {
@@ -636,6 +638,13 @@ void MKLDNNConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top
         PERFORMANCE_MEASUREMENT_END_ID(perf_id_bw_);
     }
     if (this->param_propagate_down(0)) {
+        // We have to sync top diff to cpu explicitly. This is used to make
+        // bwdw_top_diff->sync_before_read() have chance to get coverted data as
+        // bwdd_top_diff->sync_before_read() have updated top diff's prv_data
+        // to self. This issue only happens when MKLDNN conv layer is followed
+        // by a CAFFE layer and conversion is needed.
+        if (!top_diff_is_prv && propagate_down[0])
+          top[0]->mutable_cpu_diff();
         // making reorders if needed.
         bwdw_top_diff->sync_before_read();
         bwdw_bottom_data->sync_before_read();

@@ -387,13 +387,13 @@ private:
     void InitReLUBwd(const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down
                                 , const vector<Blob<Dtype>*>& bottom);
 
-    shared_ptr<MKLDNNData<Dtype> > fwd_top_data, fwd_bottom_data;
+    shared_ptr<MKLDNNData<Dtype> > fwd_top_data, fwd_bottom_data, bwd_bottom_data;
     shared_ptr<MKLDNNDiff<Dtype> > bwd_top_diff, bwd_bottom_diff;
     shared_ptr<relu_forward::primitive_desc> reluFwd_pd;
     shared_ptr<relu_backward::primitive_desc> reluBwd_pd;
     MKLDNNPrimitive<Dtype> reluFwd, reluBwd;
     shared_ptr<memory> fwd_top_data_memory, bwd_bottom_diff_memory;
-    shared_ptr<primitive> fwd_bottom_data_primitive, bwd_top_diff_primitive;
+    shared_ptr<primitive> fwd_bottom_data_primitive, bwd_top_diff_primitive, bwd_bottom_data_primitive;
     int32_t num_, width_, height_, channels_;
 
     PERFORMANCE_EVENT_ID_DECL(perf_id_fw_);
