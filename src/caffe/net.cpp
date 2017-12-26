@@ -2249,3 +2249,13 @@ void Net<Dtype>::PrintPayloadSize() {
 INSTANTIATE_CLASS(Net);
 
 }  // namespace caffe
+
+#if defined(FOUNDED_MLSL_ROOT)
+#define DEF_MLSL(str) \
+const char *mlsl_root = #str; 
+
+__attribute__((constructor)) void lib_ctor()  {
+    DEF_MLSL(FOUNDED_MLSL_ROOT);
+    setenv("MLSL_ROOT", mlsl_root, 0);
+}
+#endif
