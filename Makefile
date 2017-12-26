@@ -336,6 +336,9 @@ endif
 ifdef CUSTOM_CXX
 	CXX := $(CUSTOM_CXX)
 endif
+ifdef CUSTOM_CC
+	CC := $(CUSTOM_CC)
+endif
 
 # Linux
 ifeq ($(LINUX), 1)
