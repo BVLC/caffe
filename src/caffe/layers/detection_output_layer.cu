@@ -3,11 +3,10 @@
 #include <string>
 #include <utility>
 #include <vector>
-
 #include "caffe/layers/detection_output_layer.hpp"
 
 namespace caffe {
-
+	
 template <typename Dtype>
 void DetectionOutputLayer<Dtype>::Forward_gpu(
     const vector<Blob<Dtype> *> &bottom, const vector<Blob<Dtype> *> &top) {
@@ -100,7 +99,7 @@ void DetectionOutputLayer<Dtype>::Forward_const_gpu(
         }
       }
       // Keep top k results per image.
-      std::sort(score_index_pairs.begin(), score_index_pairs.end(),
+      std::partial_sort(score_index_pairs.begin(),score_index_pairs.begin()+keep_top_k_, score_index_pairs.end(),
                 SortScorePairDescend<pair<int, int>>);
       score_index_pairs.resize(keep_top_k_);
       // Store the new indices.

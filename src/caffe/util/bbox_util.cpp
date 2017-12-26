@@ -489,20 +489,25 @@ template <typename Dtype>
 void GetMaxScoreIndex(const Dtype* scores, const int num, const float threshold,
       const int top_k, vector<pair<Dtype, int> >* score_index_vec) {
   // Generate index score pairs.
+  if(top_k<1){
+     return;
+  }
   for (int i = 0; i < num; ++i) {
     if (scores[i] > threshold) {
       score_index_vec->push_back(std::make_pair(scores[i], i));
     }
+  }
+  if (top_k < score_index_vec->size()) {
+    std::partial_sort(score_index_vec->begin(), score_index_vec->begin()+top_k,
+	      score_index_vec->end(),SortScorePairDescend<int>); 
+    score_index_vec->resize(top_k);
+    return;
   }
 
   // Sort the score pair according to the scores in descending order
   std::sort(score_index_vec->begin(), score_index_vec->end(),
             SortScorePairDescend<int>);
 
-  // Keep top_k scores if needed.
-  if (top_k > -1 && top_k < score_index_vec->size()) {
-    score_index_vec->resize(top_k);
-  }
 }
 
 template
@@ -561,23 +566,21 @@ void ApplyNMSFast(const Dtype* bboxes, const Dtype* scores, const int num,
   // Do nms.
   float adaptive_threshold = nms_threshold;
   indices->clear();
-  while (score_index_vec.size() != 0) {
-    const int idx = score_index_vec.front().second;
+  for(auto& it:score_index_vec){
+    const int idx = it.second;
     bool keep = true;
     for (int k = 0; k < indices->size(); ++k) {
-      if (keep) {
         const int kept_idx = (*indices)[k];
-        float overlap = JaccardOverlap(bboxes + idx * 4, bboxes + kept_idx * 4);
-        keep = overlap <= adaptive_threshold;
-      } else {
-        break;
-      }
+        if(JaccardOverlap(bboxes + idx * 4, bboxes + kept_idx * 4) >  adaptive_threshold){
+	   keep = false;
+	   break;
+	}
     }
-    if (keep) {
-      indices->push_back(idx);
+    if (!keep) {
+       continue;
     }
-    score_index_vec.erase(score_index_vec.begin());
-    if (keep && eta < 1 && adaptive_threshold > 0.5) {
+    indices->push_back(idx);
+    if (eta < 1 && adaptive_threshold > 0.5) {
       adaptive_threshold *= eta;
     }
   }
