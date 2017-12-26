@@ -60,6 +60,9 @@ else
 	OTHER_BUILD_DIR := $(DEBUG_BUILD_DIR)
 endif
 
+ifeq ($(CAFFE_PER_LAYER_TIMINGS), 1)
+	COMMON_FLAGS += -DCAFFE_PER_LAYER_TIMINGS
+endif
 
 #################### MLSL ####################
 
@@ -78,10 +81,6 @@ endif
 	LIBRARY_DIRS += $(MLSL_ROOT)/intel64/lib
 	IGNORE := $(shell bash -c "source $(MLSL_ROOT)/intel64/bin/mlslvars.sh; env | sed 's/=/:=/' | sed 's/^/export /' > make_mlsl_env")
 	include make_mlsl_env
-
-ifeq ($(CAFFE_PER_LAYER_TIMINGS), 1)
-	COMMON_FLAGS += -DCAFFE_PER_LAYER_TIMINGS
-endif
 
 ifeq ($(CAFFE_MLSL_SHUFFLE), 1)
 	COMMON_FLAGS += -DCAFFE_MLSL_SHUFFLE

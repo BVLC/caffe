@@ -2033,8 +2033,8 @@ void Net<Dtype>::PrintTimers(bool printTotal) {
     startcomm_time_per_layer_total : startcomm_time_per_layer;
   std::vector<double>& waitcomm_timers = printTotal ?
     waitcomm_time_per_layer_total : waitcomm_time_per_layer;
-  std::string prefix = printTotal ? "TOTAL " : "DELTA ";
 #endif
+  std::string prefix = printTotal ? "TOTAL " : "DELTA ";
 
   double forward_time = std::accumulate(forward_timers.begin(),
       forward_timers.end(), 0.0) / 1000.0;

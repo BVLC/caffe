@@ -357,7 +357,9 @@ void Solver<Dtype>::Step(int iters) {
     net_->PrintTimers(false);
     net_->ResetTimers();
 
+#ifdef USE_MLSL
     if (mn::get_node_id() == 0)
+#endif
         LOG(INFO) << "iter " << iter_ << ", forward_backward_update_time: "
                 << iter_time << " ms";
 #endif

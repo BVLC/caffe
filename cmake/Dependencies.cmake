@@ -94,6 +94,10 @@ if(USE_OPENCV)
   add_definitions(-DUSE_OPENCV)
 endif()
 
+if(CAFFE_PER_LAYER_TIMINGS)
+  add_definitions("-DCAFFE_PER_LAYER_TIMINGS")
+endif()
+
 # ---[ MLSL
 if(USE_MLSL)
   if (NOT CPU_ONLY)
@@ -120,9 +124,6 @@ if(USE_MLSL)
   link_directories(SYSTEM "${MLSL_ROOT}/intel64/lib")
   list(APPEND Caffe_LINKER_LIBS mlsl)
 
-  if(CAFFE_PER_LAYER_TIMINGS)
-    add_definitions("-DCAFFE_PER_LAYER_TIMINGS")
-  endif()
   if(CAFFE_MLSL_SHUFFLE)
     add_definitions("-DCAFFE_MLSL_SHUFFLE")
   endif()
