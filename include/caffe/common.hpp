@@ -80,7 +80,6 @@ using std::fstream;
 using std::ios;
 using std::isinf;
 using std::isnan;
-using std::iterator;
 using std::make_pair;
 using std::map;
 using std::ostringstream;
