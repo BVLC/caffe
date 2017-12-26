@@ -8,8 +8,6 @@
 #include <utility>
 #include <vector>
 
-#include "boost/iterator/counting_iterator.hpp"
-
 #include "caffe/util/bbox_util.hpp"
 
 namespace caffe {
