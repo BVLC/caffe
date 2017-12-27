@@ -1664,7 +1664,6 @@ layer {
   concat_param {
     axis: 1
   }
-    engine: "CAFFE"
 }
 layer {
   name: "mbox_conf"
@@ -1679,7 +1678,6 @@ layer {
   concat_param {
     axis: 1
   }
-    engine: "CAFFE"
 }
 layer {
   name: "mbox_priorbox"
@@ -1694,7 +1692,6 @@ layer {
   concat_param {
     axis: 2
   }
-  engine: "CAFFE"
 }
 layer {
   name: "mbox_loss"
