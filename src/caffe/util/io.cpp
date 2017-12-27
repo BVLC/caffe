@@ -5,7 +5,6 @@
 #ifdef USE_OPENCV
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
-#include <opencv2/highgui/highgui_c.h>
 #include <opencv2/imgproc/imgproc.hpp>
 #endif  // USE_OPENCV
 #include <stdint.h>
@@ -45,14 +44,6 @@ bool ReadProtoFromTextFile(const char* filename, Message* proto) {
   return success;
 }
 
-void WriteProtoToTextFile(const Message& proto, const char* filename) {
-  int fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-  FileOutputStream* output = new FileOutputStream(fd);
-  CHECK(google::protobuf::TextFormat::Print(proto, output));
-  delete output;
-  close(fd);
-}
-
 bool ReadProtoFromBinaryFile(const char* filename, Message* proto) {
 #if defined (_MSC_VER)  // for MSC compiler binary flag needs to be specified
   int fd = _open(filename, O_RDONLY | O_BINARY);
@@ -70,27 +61,6 @@ bool ReadProtoFromBinaryFile(const char* filename, Message* proto) {
   delete raw_input;
   close(fd);
   return success;
-}
-
-
-bool ReadFileToDatum(const string& filename, const int label,
-    Datum* datum) {
-  std::streampos size;
-
-  fstream file(filename.c_str(), ios::in|ios::binary|ios::ate);
-  if (file.is_open()) {
-    size = file.tellg();
-    std::string buffer(size, ' ');
-    file.seekg(0, ios::beg);
-    file.read(&buffer[0], size);
-    file.close();
-    datum->set_data(buffer);
-    datum->set_label(label);
-    datum->set_encoded(true);
-    return true;
-  } else {
-    return false;
-  }
 }
 
 #ifdef USE_OPENCV
@@ -119,30 +89,5 @@ cv::Mat DecodeDatumToCVMat(const Datum& datum, bool is_color) {
   return cv_img;
 }
 
-void CVMatToDatum(const cv::Mat& cv_img, Datum* datum) {
-  CHECK(cv_img.depth() == CV_8U) << "Image data type must be unsigned byte";
-  datum->set_channels(cv_img.channels());
-  datum->set_height(cv_img.rows);
-  datum->set_width(cv_img.cols);
-  datum->clear_data();
-  datum->clear_float_data();
-  datum->set_encoded(false);
-  int datum_channels = datum->channels();
-  int datum_height = datum->height();
-  int datum_width = datum->width();
-  int datum_size = datum_channels * datum_height * datum_width;
-  std::string buffer(datum_size, ' ');
-  for (int h = 0; h < datum_height; ++h) {
-    const uchar* ptr = cv_img.ptr<uchar>(h);
-    int img_index = 0;
-    for (int w = 0; w < datum_width; ++w) {
-      for (int c = 0; c < datum_channels; ++c) {
-        int datum_index = (c * datum_height + h) * datum_width + w;
-        buffer[datum_index] = static_cast<char>(ptr[img_index++]);
-      }
-    }
-  }
-  datum->set_data(buffer);
-}
 #endif  // USE_OPENCV
 }  // namespace caffe
