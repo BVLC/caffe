@@ -41,10 +41,11 @@ void Caffe::set_device(int device_id) {
 #else // Normal GPU + CPU Caffe.
 
 Caffe::~Caffe() {
-  if (cublas_handle_)
-    CUBLAS_CHECK(cublasDestroy(cublas_handle_));
-#ifdef USE_CUDNN
   if (cublas_handle_) {
+    CUBLAS_CHECK(cublasDestroy(cublas_handle_));
+  }
+#ifdef USE_CUDNN
+  if (cudnn_handle_) {
     CUDNN_CHECK(cudnnDestroy(cudnn_handle_));
   }
 #endif
