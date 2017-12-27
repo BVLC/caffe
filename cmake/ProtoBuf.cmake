@@ -73,7 +73,6 @@ function(caffe_protobuf_generate_cpp output_dir srcs_var hdrs_var)
     add_custom_command(
       OUTPUT "${output_dir}/${fil_we}.pb.cc"
              "${output_dir}/${fil_we}.pb.h"
-             "${output_dir}/${fil_we}_pb2.py"
       COMMAND ${CMAKE_COMMAND} -E make_directory "${output_dir}"
       COMMAND ${PROTOBUF_PROTOC_EXECUTABLE} --cpp_out    ${output_dir} ${_protoc_include} ${abs_fil}
       DEPENDS ${abs_fil}
