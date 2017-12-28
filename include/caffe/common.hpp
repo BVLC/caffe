@@ -126,8 +126,6 @@ private:
   std::shared_ptr<deepir::allocator::buddy_pool> device_pool_;
 #ifdef USE_CUDNN
   cudnnHandle_t cudnn_handle_{nullptr};
-  cudnnTensorDescriptor_t bottom_desc_{nullptr};
-  cudnnTensorDescriptor_t top_desc_{nullptr};
 #endif
 #endif
 
