@@ -31,7 +31,5 @@ void ReLULayer<Dtype>::Forward_const_gpu(const vector<Blob<Dtype>*>& bottom,
       count, bottom_data, top_data, negative_slope);
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(ReLULayer);
-
-
+INSTANTIATE_LAYER_GPU_FUNCS_CONST(ReLULayer);
 }  // namespace caffe
