@@ -35,7 +35,6 @@ void FlattenLayer<Dtype>::Reshape_const(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void FlattenLayer<Dtype>::Forward_const_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) const {
-  bottom[0]->cpu_data();
   top[0]->ShareData(*bottom[0]);
 }
 

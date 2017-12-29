@@ -128,6 +128,7 @@ Dtype* Blob<Dtype>::mutable_gpu_data() {
 template <typename Dtype>
 void Blob<Dtype>::ShareData(const Blob& other) {
   CHECK_EQ(count_, other.count());
+  CUDA_CHECK(cudaStreamSynchronize(cudaStreamPerThread));
   data_ = other.data();
 }
 
