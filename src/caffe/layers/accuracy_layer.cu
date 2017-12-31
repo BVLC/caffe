@@ -72,7 +72,9 @@ void AccuracyLayer<Dtype>::Forward_gpu(
   const int num_labels = bottom[0]->shape(label_axis_);
   const int nthreads = outer_num_ * inner_num_;
 
-  Dtype* acc_data = static_cast<Dtype*>((new SyncedMemory(bottom[0]->count() * sizeof(Dtype)))->mutable_gpu_data());
+  Dtype* acc_data = static_cast<Dtype*> \
+            ((new SyncedMemory(bottom[0]->count() * sizeof(Dtype)))   \
+             ->mutable_gpu_data());
   if (top.size() == 1) {
     // simple case - report only global accuracy.
 
