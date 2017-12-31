@@ -140,7 +140,7 @@ void AccuracyLayer<Dtype>::Forward_gpu(
 template <typename Dtype>
 void AccuracyLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
-  if (propagate_down[1]) {  NOT_IMPLEMENTED;  }
+  if (propagate_down[1]) {  CAFFE_NOT_IMPLEMENTED;  }
 }
 
 INSTANTIATE_LAYER_GPU_FUNCS(AccuracyLayer);
