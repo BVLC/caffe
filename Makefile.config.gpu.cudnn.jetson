@@ -10,9 +10,6 @@ USE_LMDB := 1
 # CPU-only switch (uncomment to build without GPU support).
 # CPU_ONLY := 1
 
-# Uncomment if you're using OpenCV 3
-# OPENCV_VERSION := 3
-
 # To customize your choice of compiler, uncomment and set the following.
 # N.B. the default for Linux is g++ and the default for OSX is clang++
 #CUSTOM_CXX := g++
@@ -65,7 +62,7 @@ PYTHON_LIB := /usr/lib
 # PYTHON_LIB := $(ANACONDA_HOME)/lib
 
 INCLUDE_HDF5 := /usr/include/hdf5/serial
-LIBRARY_HDF5 := /usr/lib/x86_64-linux-gnu/hdf5/serial
+LIBRARY_HDF5 := /usr/lib/aarch64-linux-gnu/hdf5/serial
 
 # When compiling next to TF, need to sync the protobuf version
 INCLUDE_TF_PROTOBUF := ../../../protobuf/include
