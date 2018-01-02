@@ -336,7 +336,7 @@ string LibDNNBlas<MItype, MOtype>::gemm_string_identifier(
     default:
       break;
   }
-  ss << "q_" << quantizer->get_mode_string();
+  ss << "q_" << (quantizer->needs_quantization() ? "a" : "p");
   return ss.str();
 }
 

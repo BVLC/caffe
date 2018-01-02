@@ -28,7 +28,7 @@ namespace caffe {
  *      should sum to 1 as in a probability distribution: @f$
  *      \forall n \sum\limits_{k=1}^k \hat{p}_{nk} = 1 @f$.
  *   -# @f$ (n \times 1 \times 1 \times 1) @f$
- *      the labels @f$ l @f$, an int_tpeger-valued Blob with values
+ *      the labels @f$ l @f$, an integer-valued Blob with values
  *      @f$ l_n \in [0, 1, 2, ..., k - 1] @f$
  *      indicating the correct class label among the @f$ k @f$ classes
  *   -# @f$ (1 \times 1 \times k \times k) @f$

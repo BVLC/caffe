@@ -15,8 +15,8 @@ namespace caffe {
  * Note: because this layer does not change the input values -- merely the
  * dimensions -- it can simply copy the input. The copy happens "virtually"
  * (thus taking effectively 0 real time) by setting, in Forward, the data
- * point_tper of the top Blob to that of the bottom Blob (see Blob::ShareData),
- * and in Backward, the diff point_tper of the bottom Blob to that of the top
+ * pointer of the top Blob to that of the bottom Blob (see Blob::ShareData),
+ * and in Backward, the diff pointer of the bottom Blob to that of the top
  * Blob (see Blob::ShareDiff).
  */
 template<typename Dtype, typename MItype, typename MOtype>

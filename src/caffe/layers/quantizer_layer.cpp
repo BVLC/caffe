@@ -21,7 +21,7 @@ void QuantizerLayer<Dtype, MItype, MOtype>::Forward_cpu(
       const vector<Blob<MItype>*>& bottom,
       const vector<Blob<MOtype>*>& top) {
   for(size_t i = 0; i < bottom.size(); ++i) {
-    this->out_quant_->Forward_cpu(bottom[i], top[i], true, false);
+    this->top_quant_->Forward_cpu(bottom[i], top[i], true, false);
   }
 }
 
@@ -32,7 +32,7 @@ void QuantizerLayer<Dtype, MItype, MOtype>::Backward_cpu(
       const vector<Blob<MItype>*>& bottom) {
   for(size_t i = 0; i < top.size(); ++i) {
     if (propagate_down[i]) {
-      this->out_quant_->Backward_cpu(top[i], bottom[i], false, true);
+      this->top_quant_->Backward_cpu(top[i], bottom[i], false, true);
     }
   }
 }
@@ -43,7 +43,7 @@ void QuantizerLayer<Dtype, MItype, MOtype>::Forward_gpu(
       const vector<Blob<MItype>*>& bottom,
       const vector<Blob<MOtype>*>& top) {
   for(size_t i = 0; i < bottom.size(); ++i) {
-    this->out_quant_->Forward_gpu(bottom[i], top[i], true, false);
+    this->top_quant_->Forward_gpu(bottom[i], top[i], true, false);
   }
 }
 
@@ -54,7 +54,7 @@ void QuantizerLayer<Dtype, MItype, MOtype>::Backward_gpu(
       const vector<Blob<MItype>*>& bottom) {
   for(size_t i = 0; i < top.size(); ++i) {
     if (propagate_down[i]) {
-      this->out_quant_->Backward_gpu(top[i], bottom[i], false, true);
+      this->top_quant_->Backward_gpu(top[i], bottom[i], false, true);
     }
   }
 }

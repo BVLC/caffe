@@ -12,7 +12,7 @@ namespace caffe {
 const float kLOG_THRESHOLD = 1e-20;
 
 /**
- * @brief An int_tperface for Layer%s that take two Blob%s as input -- usually
+ * @brief An interface for Layer%s that take two Blob%s as input -- usually
  *        (1) predictions and (2) ground-truth labels -- and output a
  *        singleton Blob representing the loss.
  *

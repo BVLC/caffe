@@ -31,7 +31,7 @@ namespace caffe {
  *      @f$ \hat{p}_{nk} = \exp(x_{nk}) /
  *      \left[\sum_{k'} \exp(x_{nk'})\right] @f$ (see SoftmaxLayer).
  *   -# @f$ (n \times 1 \times 1 \times 1) @f$
- *      the labels @f$ l @f$, an int_tpeger-valued Blob with values
+ *      the labels @f$ l @f$, an integer-valued Blob with values
  *      @f$ l_n \in [0, 1, 2, ..., k - 1] @f$
  *      indicating the correct class label among the @f$ k @f$ classes
  * @param top output Blob vector (length 1)
@@ -109,7 +109,7 @@ class SoftmaxWithLossLayer : public LossLayer<Dtype, MItype, MOtype> {
 
   virtual void GenerateProgram();
 
-  /// The int_tpernal SoftmaxLayer used to map predictions to a distribution.
+  /// The internal SoftmaxLayer used to map predictions to a distribution.
   shared_ptr<Layer<Dtype, Dtype, Dtype> > softmax_layer_;
   /// prob stores the output probability predictions from the SoftmaxLayer.
   Blob<Dtype> prob_;

@@ -15,6 +15,7 @@
 #include "caffe/quantizer.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/math_functions.hpp"
+#include "caffe/quantizer_creator.hpp"
 
 #include "caffe/backend/backend.hpp"
 #include "caffe/backend/device.hpp"
@@ -209,7 +210,19 @@ class LayerBase {
    */
   virtual vector<shared_ptr<BlobBase> > blob_bases() = 0;
 
+  /**
+   * @brief Returns the vector of all initialized quantizers in the layers.
+   */
+  virtual vector<shared_ptr<QuantizerBase> > get_all_quantizers() = 0;
+
  protected:
+  LayerBase(const LayerParameter& param) {
+    layer_param_ = param;
+    device_ = Caffe::GetDevice(layer_param_.device(), true);
+    // Set phase and copy blobs (if there are any).
+    phase_ = param.phase();
+  }
+
   /** Device context */
   Device *device_;
   /** The protobuf that stores the layer parameters */
@@ -220,6 +233,7 @@ class LayerBase {
   vector<bool> param_propagate_down_;
 
   shared_ptr<QuantizerBase> net_quant_;
+  shared_ptr<QuantizerBase> blobs_quant_;
 };
 
 /**
@@ -240,11 +254,31 @@ class Layer : public LayerBase {
    * to SetUp(), where the dimensions of the bottom blobs are provided to the
    * layer.
    */
-  explicit Layer(const LayerParameter& param) {
-    layer_param_ = param;
-    device_ = Caffe::GetDevice(layer_param_.device(), true);
-    // Set phase and copy blobs (if there are any).
-    phase_ = param.phase();
+  explicit Layer(const LayerParameter& param) : LayerBase(param) {
+    if (layer_param_.has_net_quantizer()) {
+      net_quant_ = CreateQuantizer(layer_param_.net_quantizer());
+    } else {
+      net_quant_ = make_shared<Quantizer<float, Dtype> >(device_);
+    }
+    if (layer_param_.has_blobs_quantizer()) {
+      blobs_quant_ = CreateQuantizer(layer_param_.blobs_quantizer());
+    } else {
+      blobs_quant_ = make_shared<Quantizer<Dtype, Dtype> >(device_);
+    }
+    if (layer_param_.has_bottom_quantizer()) {
+      bottom_quant_ = make_shared<Quantizer<MItype, Dtype> >(
+          layer_param_.bottom_quantizer());
+    } else {
+      bottom_quant_ = make_shared<Quantizer<MItype, Dtype> >(device_);
+    }
+
+    if (layer_param_.has_top_quantizer()) {
+      top_quant_ = make_shared<Quantizer<Dtype, MOtype> >(
+          layer_param_.top_quantizer());
+    } else {
+      top_quant_ = make_shared<Quantizer<Dtype, MOtype> >(device_);
+    }
+
     if (layer_param_.blobs_size() > 0) {
       blobs_.resize(layer_param_.blobs_size());
       for (int_tp i = 0; i < layer_param_.blobs_size(); ++i) {
@@ -434,6 +468,24 @@ class Layer : public LayerBase {
     return blob_base_vec;
   }
 
+  virtual vector<shared_ptr<QuantizerBase> > get_all_quantizers() {
+    vector<shared_ptr<QuantizerBase> > quant_base_vec;
+    if (this->net_quant_ != nullptr) {
+      quant_base_vec.push_back(net_quant_);
+    }
+    if (this->blobs_quant_ != nullptr) {
+      quant_base_vec.push_back(this->blobs_quant_);
+    }
+    if (this->bottom_quant_ != nullptr) {
+      quant_base_vec.push_back(this->bottom_quant_);
+    }
+    if (this->top_quant_ != nullptr) {
+      quant_base_vec.push_back(this->top_quant_);
+    }
+    return quant_base_vec;
+  }
+
+
   /**
    * @brief Returns the scalar loss associated with a top blob at a given index.
    */
@@ -469,8 +521,8 @@ class Layer : public LayerBase {
   vector<Dtype> loss_;
 
   /** Quantizers */
-  shared_ptr<Quantizer<MItype, Dtype> > in_quant_;
-  shared_ptr<Quantizer<Dtype, MOtype> > out_quant_;
+  shared_ptr<Quantizer<MItype, Dtype> > bottom_quant_;
+  shared_ptr<Quantizer<Dtype, MOtype> > top_quant_;
 
   /** Device program */
   shared_ptr<DeviceProgram> device_program_;
@@ -591,8 +643,14 @@ inline Dtype Layer<Dtype, MItype, MOtype>::Forward(
   Reshape(bottom, top);
   switch (Caffe::mode()) {
     case Caffe::CPU:
+      for (int_tp bottom_id = 0; bottom_id < bottom.size(); ++bottom_id) {
+        bottom_quant_->Observe_in_cpu(bottom[bottom_id]->count(),
+                                  bottom[bottom_id]->cpu_data());
+      }
       Forward_cpu(bottom, top);
       for (int_tp top_id = 0; top_id < top.size(); ++top_id) {
+        top_quant_->Observe_out_cpu(top[top_id]->count(),
+                                    top[top_id]->cpu_data());
         if (!this->loss(top_id)) {
           continue;
         }
@@ -603,9 +661,17 @@ inline Dtype Layer<Dtype, MItype, MOtype>::Forward(
       }
       break;
     case Caffe::GPU:
+#ifndef CPU_ONLY
+      for (int_tp bottom_id = 0; bottom_id < bottom.size(); ++bottom_id) {
+        bottom_quant_->Observe_in_gpu(bottom[bottom_id]->count(),
+                                  bottom[bottom_id]->gpu_data());
+      }
+      #endif  // !CPU_ONLY
       Forward_gpu(bottom, top);
 #ifndef CPU_ONLY
       for (int_tp top_id = 0; top_id < top.size(); ++top_id) {
+        top_quant_->Observe_out_gpu(top[top_id]->count(),
+                                    top[top_id]->gpu_data());
         if (!this->loss(top_id)) {
           continue;
         }
@@ -617,7 +683,7 @@ inline Dtype Layer<Dtype, MItype, MOtype>::Forward(
         // TODO: Type conversion may be necessary
         loss += blob_loss;
       }
-#endif
+#endif  // !CPU_ONLY
     break;
   default:
     LOG(FATAL) << "Unknown caffe mode.";
@@ -632,10 +698,30 @@ inline void Layer<Dtype, MItype, MOtype>::Backward(
                       const vector<Blob<MItype>*>& bottom) {
   switch (Caffe::mode()) {
     case Caffe::CPU:
+      for (int_tp top_id = 0; top_id < top.size(); ++top_id) {
+        top_quant_->Observe_out_cpu(top[top_id]->count(),
+                                    top[top_id]->cpu_diff());
+      }
       Backward_cpu(top, propagate_down, bottom);
+      for (int_tp bottom_id = 0; bottom_id < bottom.size(); ++bottom_id) {
+        bottom_quant_->Observe_in_cpu(bottom[bottom_id]->count(),
+                                  bottom[bottom_id]->cpu_diff());
+      }
       break;
     case Caffe::GPU:
+#ifndef CPU_ONLY
+      for (int_tp top_id = 0; top_id < top.size(); ++top_id) {
+        top_quant_->Observe_out_gpu(top[top_id]->count(),
+                                    top[top_id]->gpu_diff());
+      }
+#endif  // !CPU_ONLY
       Backward_gpu(top, propagate_down, bottom);
+#ifndef CPU_ONLY
+      for (int_tp bottom_id = 0; bottom_id < bottom.size(); ++bottom_id) {
+        bottom_quant_->Observe_in_gpu(bottom[bottom_id]->count(),
+                                  bottom[bottom_id]->gpu_diff());
+      }
+#endif  // !CPU_ONLY
       break;
     default:
       LOG(FATAL)<< "Unknown caffe mode.";

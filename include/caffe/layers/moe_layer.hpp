@@ -10,10 +10,11 @@
 
 namespace caffe {
 
-/**
- * @brief Takes at least two Blob%s and concatenates them along either the num
- *        or channel dimension, outputting the result.
- */
+// Forward declare net
+template<typename Dtype>
+class Net;
+
+
 template<typename Dtype, typename MItype, typename MOtype>
 class MOELayer : public Layer<Dtype, MItype, MOtype> {
  public:
@@ -39,8 +40,8 @@ class MOELayer : public Layer<Dtype, MItype, MOtype> {
       const vector<Blob<MItype>*>& bottom);
 
 
-  shared_ptr<Net> gating_net_;
-  vector<shared_ptr<Net>> expert_nets_;
+  shared_ptr<Net<float> > gating_net_;
+  vector<shared_ptr<Net<float> > > expert_nets_;
 
  private:
   void GenerateProgram();

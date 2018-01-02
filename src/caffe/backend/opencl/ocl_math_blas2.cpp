@@ -52,7 +52,7 @@ void OclDevice::gemv_half(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
       &queue));
 
 #else  // default (ViennaCL)
-    NOT_IMPLEMENTED;
+    Device::gemv_half(trans_a, m, n, alpha, a, x, beta, y);
 #endif  // clBLAS, CLBlast, or default (ViennaCL)
 }
 #endif  // USE_HALF
@@ -76,13 +76,13 @@ void OclDevice::gemv_float(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
         sizeof(float) * offA, sizeof(float) * m * n, 0, NULL, NULL, NULL));
     float* xptr = reinterpret_cast<float*>(clEnqueueMapBuffer(
         ctx.get_queue().handle().get(), x.get_ocl_mem(), true, CL_MAP_READ,
-        sizeof(float) * offx, sizeof(float) * (trans_a == CblasTrans) ? m : n, 0,
-        NULL,
-        NULL, NULL));
+        sizeof(float) * offx, sizeof(float) * ((trans_a == CblasTrans) ? m : n),
+        0, NULL, NULL, NULL));
     float* yptr = reinterpret_cast<float*>(clEnqueueMapBuffer(
         ctx.get_queue().handle().get(), y.get_ocl_mem(), true,
         CL_MAP_READ | CL_MAP_WRITE, sizeof(float) * offy,
-        sizeof(float) * (trans_a == CblasTrans) ? n : m, 0, NULL, NULL, NULL));
+        sizeof(float) * ((trans_a == CblasTrans) ? n : m),
+        0, NULL, NULL, NULL));
 
     caffe_gemv<float>(trans_a, m, n, alpha, Aptr, xptr, beta, yptr);
 
@@ -179,12 +179,14 @@ void OclDevice::gemv_double(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
         sizeof(double) * offA, sizeof(double) * m * n, 0, NULL, NULL, NULL));
     double* xptr = reinterpret_cast<double*>(clEnqueueMapBuffer(
         ctx.get_queue().handle().get(), x.get_ocl_mem(), true, CL_MAP_READ,
-        sizeof(double) * offx, sizeof(double) * (trans_a == CblasTrans) ? m : n,
-            0, NULL, NULL, NULL));
+        sizeof(double) * offx,
+        sizeof(double) * ((trans_a == CblasTrans) ? m : n),
+        0, NULL, NULL, NULL));
     double* yptr = reinterpret_cast<double*>(clEnqueueMapBuffer(
         ctx.get_queue().handle().get(), y.get_ocl_mem(), true,
         CL_MAP_READ | CL_MAP_WRITE, sizeof(double) * offy,
-        sizeof(double) * (trans_a == CblasTrans) ? n : m, 0, NULL, NULL, NULL));
+        sizeof(double) * ((trans_a == CblasTrans) ? n : m),
+        0, NULL, NULL, NULL));
 
     caffe_gemv<double>(trans_a, m, n, alpha, Aptr, xptr, beta, yptr);
 

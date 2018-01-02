@@ -10,7 +10,7 @@
 namespace caffe {
 
 /**
- * @brief Takes two+ Blobs, int_tperprets last Blob as a selector and
+ * @brief Takes two+ Blobs, interprets last Blob as a selector and
  *  filter remaining Blobs accordingly with selector data (0 means that
  * the corresponding item has to be filtered, non-zero means that corresponding
  * item needs to stay).

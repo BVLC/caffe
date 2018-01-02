@@ -51,7 +51,7 @@ string LibDNNBlas<MItype, MOtype>::generate_gemv_source(
     bool trans_A, const uint_tp M, const uint_tp N,
     bool alpha_term, bool beta_term,
     libdnnAccumulatePrecision_t prec,
-    shared_ptr<Quantizer<MItype, MOtype> > out_quantize) {
+    shared_ptr<Quantizer<MItype, MOtype> > top_quantize) {
   stringstream ss;
 
   ss << program->setup();
@@ -360,7 +360,7 @@ string LibDNNBlas<MItype, MOtype>::gemv_string_identifier(
     default:
       break;
   }
-  ss << "q_" << quantizer->get_mode_string();
+  ss << "q_" << (quantizer->needs_quantization() ? "a" : "p");
   return ss.str();
 }
 

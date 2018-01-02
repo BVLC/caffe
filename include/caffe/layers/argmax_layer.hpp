@@ -13,7 +13,7 @@ namespace caffe {
  * @brief Compute the index of the @f$ k @f$ max values for each datum across
  *        all dimensions @f$ (c \times H \times W) @f$.
  *
- * int_tpended for use after a classification layer to produce a prediction.
+ * intended for use after a classification layer to produce a prediction.
  * If parameter out_max_val is set to true, output is a vector of pairs
  * (max_ind, max_val) for each image. The axis parameter specifies an axis
  * along which to maximise.

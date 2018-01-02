@@ -10,7 +10,7 @@
 namespace caffe {
 
 /**
- * @brief An int_tperface for layers that take one blob as input (@f$ X @f$)
+ * @brief An interface for layers that take one blob as input (@f$ X @f$)
  *        and produce one equally-sized blob as output (@f$ Y @f$), where
  *        each element of the output depends only on the corresponding input
  *        element.

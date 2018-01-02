@@ -9,7 +9,7 @@ string LibDNNBlas<MItype, MOtype>::scale_string_identifier(
     shared_ptr<Quantizer<MItype, MOtype> > quantizer) {
   stringstream ss;
   ss << "scale_";
-  ss << "q_" << quantizer->get_mode_string();
+  ss << "q_" << (quantizer->needs_quantization() ? "a" : "p");
   return ss.str();
 }
 
@@ -86,7 +86,7 @@ string LibDNNBlas<MItype, MOtype>::axpby_string_identifier(
     shared_ptr<Quantizer<MItype, MOtype> > quantizer) {
   stringstream ss;
   ss << "axpby_";
-  ss << "q_" << quantizer->get_mode_string();
+  ss << "q_" << (quantizer->needs_quantization() ? "a" : "p");
   return ss.str();
 }
 
@@ -176,7 +176,7 @@ string LibDNNBlas<MItype, MOtype>::dot_string_identifier(
     default:
       break;
   }
-  ss << "q_" << quantizer->get_mode_string();
+  ss << "q_" << (quantizer->needs_quantization() ? "a" : "p");
   return ss.str();
 }
 
@@ -282,7 +282,7 @@ string LibDNNBlas<MItype, MOtype>::asum_string_identifier(
     default:
       break;
   }
-  ss << "q_" << quantizer->get_mode_string();
+  ss << "q_" << (quantizer->needs_quantization() ? "a" : "p");
   return ss.str();
 }
 

@@ -76,6 +76,11 @@ message FillerParameter {
   optional VarianceNorm variance_norm = 8 [default = FAN_IN];
 }
 
+enum QuantizerMode {
+  PASSIVE = 0;
+  OBSERVE = 1;
+}
+
 message QuantizerParameter {
   optional int64 index = 1 [default = -1];
   optional DataType input_data_type = 2 [default = FLOAT];
@@ -89,12 +94,6 @@ message QuantizerParameter {
   optional double max_out = 8;
   optional double min_out = 9;
   
-  enum QuantizerMode {
-  	PASSIVE = 0;
-  	OBSERVE = 1;
-  	ACTIVE = 2;
-  	ACTIVE_OBSERVE = 3;
-  }
   optional QuantizerMode mode = 10 [default = PASSIVE];
   
   // Parameters for device abstraction
@@ -125,13 +124,13 @@ message NetParameter {
   // Print debugging information about results while running Net::Forward,
   // Net::Backward, and Net::Update.
   optional bool debug_info = 7 [default = false];
-  
-  // Network quantizers
-  repeated QuantizerParameter quantizer = 90;
 
   // The layers that make up the net.  Each of their configurations, including
   // connectivity and behavior, is specified as a LayerParameter.
   repeated LayerParameter layer = 100;  // ID 100 so layers are printed last.
+  
+  // The collected quantizer informations for each quantizer zone
+  repeated QuantizerParameter quantizer = 80;
 
   // DEPRECATED: use 'layer' instead.
   repeated V1LayerParameter layers = 2;
@@ -302,6 +301,7 @@ message NetState {
   optional Phase phase = 1 [default = TEST];
   optional int64 level = 2 [default = 0];
   repeated string stage = 3;
+  optional QuantizerMode quantizer_mode = 4 [default = PASSIVE];
 }
 
 message NetStateRule {
@@ -365,6 +365,10 @@ message LayerParameter {
   optional Phase phase = 10;
   
   optional int64 quantizer_index = 15 [default = 0];
+  optional QuantizerParameter bottom_quantizer = 16;
+  optional QuantizerParameter top_quantizer = 17;
+  optional QuantizerParameter net_quantizer = 18;
+  optional QuantizerParameter blobs_quantizer = 19;
 
   // The amount of weight to assign each top blob in the objective.
   // Each layer assigns a default value, usually of either 0 or 1,

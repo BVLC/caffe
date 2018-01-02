@@ -76,7 +76,7 @@ class LRNLayer : public Layer<Dtype, MItype, MOtype> {
   int_tp width_;
 
   // Fields used for normalization ACROSS_CHANNELS
-  // scale_ stores the int_tpermediate summing results
+  // scale_ stores the intermediate summing results
   Blob<Dtype> scale_;
 
   // Fields used for normalization WITHIN_CHANNEL
