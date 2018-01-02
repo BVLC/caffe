@@ -3463,6 +3463,116 @@ TEST_F(CompileNetTest, TestCompileNetBatchNormConvolution) {
 }
 #endif
 
+#ifndef DISABLE_CONV_SUM_FUSION
+TEST_F(CompileNetTest, TestCompileNetConvEltReluFusionMKLDNN) {
+
+  const string& input_proto =
+      "name: 'TestNetwork' "
+      "layer { "
+      "  name: 'data' "
+      "  type: 'Data' "
+      "  top: 'data' "
+      "  top: 'label' "
+      "} "
+      "layer { "
+      "  bottom: 'data' "
+      "  name: 'conv1' "
+      "  top: 'conv1' "
+      "  type: 'Convolution' "
+      "  convolution_param { "
+      "   engine: MKLDNN "
+      "  } "
+      "} "
+      "layer { "
+      "  bottom: 'data' "
+      "  name: 'conv2' "
+      "  top: 'conv2' "
+      "  type: 'Convolution' "
+      "  convolution_param { "
+      "   engine: MKLDNN "
+      "  } "
+      "} "
+      "layer { "
+      "  bottom: 'conv1' "
+      "  name: 'conv3' "
+      "  top: 'conv3' "
+      "  type: 'Convolution' "
+      "  convolution_param { "
+      "   engine: MKLDNN "
+      "  } "
+      "} "
+      "layer { "
+      "  bottom: 'conv2' "
+      "  bottom: 'conv3' "
+      "  name: 'conv4' "
+      "  top: 'relu' "
+      "  type: 'Eltwise' "
+      "} "
+      
+      "layer { "
+      " bottom: 'relu' "
+      " top: 'relu' "
+      " name: 'relu' "
+      " type: 'ReLU' "
+      "}"
+
+      "layer { "
+      "  name: 'loss' "
+      "  type: 'SoftmaxWithLoss' "
+      "  bottom: 'relu' "
+      "  bottom: 'label' "
+      "} ";
+
+  const string& output_proto =
+      "name: 'TestNetwork' "
+      "layer { "
+      "  name: 'data' "
+      "  type: 'Data' "
+      "  top: 'data' "
+      "  top: 'label' "
+      "} "
+
+      "layer { "
+      "  bottom: 'data' "
+      "  name: 'conv1' "
+      "  top: 'conv1' "
+      "  type: 'Convolution' "
+      "  convolution_param { "
+      "   engine: MKLDNN "
+      "  } "
+      "} "
+      "layer { "
+      "  bottom: 'data' "
+      "  name: 'conv2' "
+      "  top: 'conv2' "
+      "  type: 'Convolution' "
+      "  convolution_param { "
+      "   engine: MKLDNN "
+      "  } "
+      "} "
+      "layer { "
+      "  bottom: 'conv1' "
+      "  bottom: 'conv2' "
+      "  name: 'conv3' "
+      "  top: 'relu' "
+      "  type: 'Convolution' "
+      "  convolution_param { "
+      "   engine: MKLDNN "
+      "  } "
+      "} "
+      "layer { "
+      "  name: 'loss' "
+      "  type: 'SoftmaxWithLoss' "
+      "  bottom: 'relu' "
+      "  bottom: 'label' "
+      "} ";
+ 
+ const string input_proto_test = "state: { phase: TEST } engine: 'MKLDNN'" + input_proto;
+ const string output_proto_test = "state: { phase: TEST } engine: 'MKLDNN'" + output_proto;
+ this->RunCompilerNetTest(input_proto_test, output_proto_test);
+}
+#endif
+
 #ifdef MKLDNN_SUPPORTED
 // If BatchNorm of engine MKLDNN
 // produce blob consumed by
