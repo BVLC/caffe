@@ -72,46 +72,46 @@ if __name__ == "__main__":
 
   # check if root directory exists
   if not os.path.exists(root_dir):
-    print "root directory: {} does not exist".format(root_dir)
+    print("root directory: {} does not exist".format(root_dir))
     sys.exit()
   # add "/" to root directory if needed
   if root_dir[-1] != "/":
     root_dir += "/"
   # check if list file exists
   if not os.path.exists(list_file):
-    print "list file: {} does not exist".format(list_file)
+    print("list file: {} does not exist".format(list_file))
     sys.exit()
   # check list file format is correct
   with open(list_file, "r") as lf:
     for line in lf.readlines():
       img_file, anno = line.strip("\n").split(" ")
       if not os.path.exists(root_dir + img_file):
-        print "image file: {} does not exist".format(root_dir + img_file)
+        print("image file: {} does not exist".format(root_dir + img_file))
       if anno_type == "classification":
         if not anno.isdigit():
-          print "annotation: {} is not an integer".format(anno)
+          print("annotation: {} is not an integer".format(anno))
       elif anno_type == "detection":
         if not os.path.exists(root_dir + anno):
-          print "annofation file: {} does not exist".format(root_dir + anno)
+          print("annofation file: {} does not exist".format(root_dir + anno))
           sys.exit()
       break
   # check if label map file exist
   if anno_type == "detection":
     if not os.path.exists(label_map_file):
-      print "label map file: {} does not exist".format(label_map_file)
+      print("label map file: {} does not exist".format(label_map_file))
       sys.exit()
     label_map = caffe_pb2.LabelMap()
     lmf = open(label_map_file, "r")
     try:
       text_format.Merge(str(lmf.read()), label_map)
     except:
-      print "Cannot parse label map file: {}".format(label_map_file)
+      print("Cannot parse label map file: {}".format(label_map_file))
       sys.exit()
   out_parent_dir = os.path.dirname(out_dir)
   if not os.path.exists(out_parent_dir):
     os.makedirs(out_parent_dir)
   if os.path.exists(out_dir) and not redo:
-    print "{} already exists and I do not hear redo".format(out_dir)
+    print("{} already exists and I do not hear redo".format(out_dir))
     sys.exit()
   if os.path.exists(out_dir):
     shutil.rmtree(out_dir)
@@ -155,7 +155,7 @@ if __name__ == "__main__":
         .format(caffe_root, anno_type, min_dim, max_dim, resize_height,
             resize_width, backend, shuffle, check_size, encode_type, encoded,
             gray, root_dir, list_file, out_dir)
-  print cmd
+  print(cmd)
   process = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE)
   output = process.communicate()[0]
 
