@@ -155,7 +155,7 @@ if __name__ == "__main__":
         .format(caffe_root, anno_type, min_dim, max_dim, resize_height,
             resize_width, backend, shuffle, check_size, encode_type, encoded,
             gray, root_dir, list_file, out_dir)
-  print(md)
+  print(cmd)
   process = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE)
   output = process.communicate()[0]
 
