@@ -16,7 +16,6 @@
 #include "caffe/net.hpp"
 #include "caffe/parallel.hpp"
 #include "caffe/proto/caffe.pb.h"
-#include "caffe/quantizer_creator.hpp"
 #include "caffe/util/hdf5.hpp"
 #include "caffe/util/insert_splits.hpp"
 #include "caffe/util/insert_conversions.hpp"
@@ -55,6 +54,9 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   // Set phase from the state.
   phase_ = in_param.state().phase();
 
+  // Set quantizer mode
+  quant_mode_ = in_param.state().quantizer_mode();
+
   // Filter layers based on their include/exclude rules and
   // the current NetState.
   NetParameter filtered_param;
@@ -72,9 +74,6 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   InsertConversions(splitted_param, &converted_param);
 
   NetParameter param = converted_param;
-
-  // Initialize defined quantizers
-  InitializeQuantizers(in_param);
 
   // Basically, build all the layers and set up its connections.
   name_ = param.name();
@@ -154,10 +153,6 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
         blob_loss_weights_.resize(top_id_vecs_[layer_id][top_id] + 1, Dtype(0));
       }
       Dtype layer_loss;
-      shared_ptr<QuantizerBase> quantizer = GetQuantizer(
-          layer->layer_param().quantizer_index(),
-          proto_data_type<Dtype>(),
-          layer->layer_param().compute_data_type());
       layer->loss(top_id, static_cast<void*>(&layer_loss));
       blob_loss_weights_[top_id_vecs_[layer_id][top_id]] = layer_loss;
       if (Caffe::root_solver()) {
@@ -587,10 +582,6 @@ Dtype Net<Dtype>::ForwardFromTo(int_tp start, int_tp end) {
       before_forward_[c]->run(i);
     }
     Dtype layer_loss;
-    shared_ptr<QuantizerBase> quantizer = GetQuantizer(
-        layers_[i]->layer_param().quantizer_index(),
-        proto_data_type<Dtype>(),
-        layers_[i]->layer_param().compute_data_type());
     layers_[i]->Forward(bottom_vecs_[i], top_vecs_[i],
                         static_cast<void*>(&layer_loss));
     loss += layer_loss;
@@ -819,6 +810,32 @@ void Net<Dtype>::Reshape() {
 
 template<typename Dtype>
 void Net<Dtype>::CopyTrainedLayersFrom(const NetParameter& param) {
+
+  // Load quantizer statistics
+  std::map<int_tp, std::pair<double, double> > quantizer_map;
+  for (int_tp i = 0; i < param.quantizer_size(); ++i) {
+    QuantizerParameter quant_param = param.quantizer(i);
+    quantizer_map[quant_param.index()] = std::make_pair<double, double>(
+        quant_param.observed_min(), quant_param.observed_max());
+  }
+
+  for (int_tp i = 0; this->layers().size(); ++i) {
+    vector<shared_ptr<QuantizerBase> > quantizers =
+        this->layers()[i]->get_all_quantizers();
+    vector<shared_ptr<QuantizerBase> > quant_base_vec =
+        layers_[i]->get_all_quantizers();
+    for (int_tp j = 0; quant_base_vec.size(); ++j) {
+      QuantizerParameter quant_param = quant_base_vec[j]->quant_param();
+      std::map<int_tp, std::pair<double, double> >::iterator iter =
+          quantizer_map.find(quant_param.index());
+      if (iter != quantizer_map.end()) {
+        quant_param.set_observed_min(std::get<0>(iter->second));
+        quant_param.set_observed_max(std::get<1>(iter->second));
+      }
+      quant_base_vec[j]->update_param(quant_param);
+    }
+  }
+
   int_tp num_source_layers = param.layer_size();
   for (int_tp i = 0; i < num_source_layers; ++i) {
     const LayerParameter& source_layer = param.layer(i);
@@ -943,12 +960,40 @@ void Net<Dtype>::ToProto(NetParameter* param, bool write_diff) const {
     LayerParameter* layer_param = param->add_layer();
     layers_[i]->ToProto(layer_param, write_diff);
   }
+  QuantizerToProto(param);
 }
 
+template<typename Dtype>
+void Net<Dtype>::QuantizerToProto(NetParameter* param) const {
+  std::map<int_tp, std::pair<double, double> > quantizer_map;
+  for (size_t i = 0; i < layers_.size(); ++i) {
+    vector<shared_ptr<QuantizerBase> > quant_base_vec =
+        layers_[i]->get_all_quantizers();
+    for (size_t j = 0; j < quant_base_vec.size(); ++j) {
+      int_tp idx = quant_base_vec[j]->get_index();
+      double l_min = quant_base_vec[j]->get_observed_min();
+      double l_max = quant_base_vec[j]->get_observed_max();
+      std::map<int_tp, std::pair<double, double> >::iterator iter =
+          quantizer_map.find(idx);
+      if (iter != quantizer_map.end()) {
+        l_min = std::min(std::get<0>(iter->second), l_min);
+        l_max = std::max(std::get<1>(iter->second), l_max);
+      }
+      quantizer_map[idx] = std::make_pair(l_min, l_max);
+    }
+  }
 
-template <typename Dtype>
+  for (std::map<int_tp, std::pair<double, double> >::iterator iter =
+       quantizer_map.begin(); iter != quantizer_map.end(); ++iter) {
+    QuantizerParameter* quant_param = param->add_quantizer();
+    quant_param->set_index(iter->first);
+    quant_param->set_observed_min(std::get<0>(iter->second));
+    quant_param->set_observed_max(std::get<1>(iter->second));
+  }
+}
+
+template<typename Dtype>
 void Net<Dtype>::ToHDF5(const string& filename, bool write_diff) const {
-// This code is taken from https://github.com/sh1r0/caffe-android-lib
 #ifdef USE_HDF5
   hid_t file_hid = H5Fcreate(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT,
       H5P_DEFAULT);
@@ -1000,10 +1045,42 @@ void Net<Dtype>::ToHDF5(const string& filename, bool write_diff) const {
       H5Gclose(layer_diff_hid);
     }
   }
+
   H5Gclose(data_hid);
   if (write_diff) {
     H5Gclose(diff_hid);
   }
+
+  std::map<int_tp, std::pair<double, double> > quantizer_map;
+  for (size_t i = 0; i < layers_.size(); ++i) {
+    vector<shared_ptr<QuantizerBase> > quant_base_vec =
+        layers_[i]->get_all_quantizers();
+    for (size_t j = 0; j < quant_base_vec.size(); ++j) {
+      int_tp idx = quant_base_vec[j]->get_index();
+      double l_min = quant_base_vec[j]->get_observed_min();
+      double l_max = quant_base_vec[j]->get_observed_max();
+      std::map<int_tp, std::pair<double, double> >::iterator iter =
+          quantizer_map.find(idx);
+      if (iter != quantizer_map.end()) {
+        l_min = std::min(std::get<0>(iter->second), l_min);
+        l_max = std::max(std::get<1>(iter->second), l_max);
+      }
+      quantizer_map[idx] = std::make_pair(l_min, l_max);
+    }
+  }
+
+  hid_t quant_hid = H5Gcreate2(file_hid, "data", H5P_DEFAULT, H5P_DEFAULT,
+      H5P_DEFAULT);
+  for (std::map<int_tp, std::pair<double, double> >::iterator iter =
+      quantizer_map.begin(); iter != quantizer_map.end(); ++iter) {
+    hid_t quant_idx_hid = H5Gcreate2(file_hid,
+                               std::to_string(iter->first).c_str(), H5P_DEFAULT,
+                               H5P_DEFAULT, H5P_DEFAULT);
+    // FIXME: Implement HDF5 quantizer storage
+    H5Gclose(quant_idx_hid);
+  }
+  H5Gclose(quant_hid);
+
   H5Fclose(file_hid);
 // This code is taken from https://github.com/sh1r0/caffe-android-lib
 #else
@@ -1069,31 +1146,6 @@ const shared_ptr<LayerBase> Net<Dtype>::layer_by_name(
     LOG(WARNING)<< "Unknown layer name " << layer_name;
   }
   return layer_ptr;
-}
-
-template<typename Dtype>
-void Net<Dtype>::InitializeQuantizers(NetParameter net_param) {
-  for(size_t i = 0; i < net_param.quantizer_size(); ++i) {
-    QuantizerParameter quant_param = net_param.quantizer(i);
-    quantizers_.push_back(CreateQuantizer(quant_param));
-    size_t index = quant_param.index();
-    DataType in = quant_param.input_data_type();
-    DataType out = quant_param.output_data_type();
-    tuple<size_t, DataType, DataType> key = std::make_tuple(index, in, out);
-    quantizer_map_[key] = quantizers_.size() - 1;
-  }
-}
-
-template<typename Dtype>
-shared_ptr<QuantizerBase> Net<Dtype>::GetQuantizer(size_t index, DataType in,
-                                       DataType out) {
-  tuple<size_t, DataType, DataType> key = std::make_tuple(index, in, out);
-  if (quantizer_map_.find(key) == quantizer_map_.end()) {
-    QuantizerParameter quant_param;
-    return nullptr;
-  } else {
-    return quantizers_[quantizer_map_[key]];
-  }
 }
 
 INSTANTIATE_CLASS_1T_GUARDED(Net, (half_fp)(float)(double));

@@ -1,6 +1,8 @@
 #ifndef CAFFE_QUANTIZER_HPP_
 #define CAFFE_QUANTIZER_HPP_
 
+#include <mutex>
+
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
 #include "caffe/backend/vptr.hpp"
@@ -8,25 +10,11 @@
 
 namespace caffe {
 
-enum QuantizerMode {
-  // In passive mode, the quantizer does nothing
-  QUANTIZER_MODE_PASSIVE = 0,
-  // In observe mode, the quantizer observes max/min values
-  QUANTIZER_MODE_OBSERVE = 1,
-  // In active mode, the quantizer actively converts from one type to another
-  QUANTIZER_MODE_ACTIVE = 2,
-  // Active and observing
-  QUANTIZER_MODE_ACTIVE_OBSERVE = 3
-};
-
 class QuantizerBase {
  public:
-  QuantizerMode get_mode() const;
-  void set_mode(QuantizerMode mode);
-  string get_mode_string();
+  virtual void update_param(QuantizerParameter& param) = 0;
 
-  void update_param(QuantizerParameter& param);
-  QuantizerParameter get_param() const;
+  virtual bool needs_quantization() const = 0;
 
   virtual void GenerateKernels() = 0;
   virtual void Forward_cpu(size_t n, const void* input, void* output) = 0;
@@ -35,6 +23,11 @@ class QuantizerBase {
                            vptr<void> output) = 0;
   virtual void Backward_gpu(size_t n, vptr<const void> input,
                             vptr<void> output) = 0;
+
+  virtual void Observe_in_cpu(size_t n, const void* data) = 0;
+  virtual void Observe_in_gpu(size_t n, vptr<const void> data) = 0;
+  virtual void Observe_out_cpu(size_t n, const void* data) = 0;
+  virtual void Observe_out_gpu(size_t n, vptr<const void> data) = 0;
 
   virtual bool fw_scale_divide() const = 0;
   virtual bool bw_scale_divide() const = 0;
@@ -46,19 +39,47 @@ class QuantizerBase {
   virtual string bw_scale_term(int_tp vec_len, string scale_var,
                                string src_val) const = 0;
 
+  int_tp get_index() const {
+    return index_;
+  }
+
+  double get_observed_max() const {
+    return observed_max_;
+  }
+
+  double get_observed_min() const {
+    return observed_min_;
+  }
+
+  const QuantizerParameter& quant_param() const {
+    return param_;
+  }
+
  protected:
-  explicit QuantizerBase(QuantizerParameter& param);
+  explicit QuantizerBase(const QuantizerParameter& param);
   explicit QuantizerBase(Device* dev_ptr);
+  int_tp index_;
+
+  std::mutex quant_mutex_;
+
   QuantizerParameter param_;
   shared_ptr<DeviceProgram> program_;
   bool program_ready_;
   Device* device_;
 
+  // Floating point observed range
   double observed_max_;
   double observed_min_;
 
+  // Floating point configured range
+  double flt_max_;
+  double flt_min_;
+
+  // Input value range
   double max_in_;
   double min_in_;
+
+  // Output value range
   double max_out_;
   double min_out_;
 
@@ -68,8 +89,12 @@ class QuantizerBase {
 template<typename MItype, typename MOtype>
 class Quantizer : public QuantizerBase {
  public:
-  explicit Quantizer(QuantizerParameter& param);
+  explicit Quantizer(const QuantizerParameter& param);
   explicit Quantizer(Device* dev_ptr);
+
+  virtual void update_param(QuantizerParameter& param);
+
+  virtual bool needs_quantization() const;
 
   virtual void GenerateKernels();
 
@@ -95,6 +120,16 @@ class Quantizer : public QuantizerBase {
   void Backward_cpu(size_t n, const MOtype* input, MItype* output);
   void Forward_gpu(size_t n, vptr<const MItype> input, vptr<MOtype> output);
   void Backward_gpu(size_t n, vptr<const MOtype> input, vptr<MItype> output);
+
+  virtual void Observe_in_cpu(size_t n, const void* data);
+  virtual void Observe_in_gpu(size_t n, vptr<const void> data);
+  virtual void Observe_out_cpu(size_t n, const void* data);
+  virtual void Observe_out_gpu(size_t n, vptr<const void> data);
+
+  void Observe_in_cpu(size_t n, const MItype* data);
+  void Observe_in_gpu(size_t n, vptr<const MItype> data);
+  void Observe_out_cpu(size_t n, const MOtype* data);
+  void Observe_out_gpu(size_t n, vptr<const MOtype> data);
 
   virtual bool fw_scale_divide() const;
   virtual bool bw_scale_divide() const;

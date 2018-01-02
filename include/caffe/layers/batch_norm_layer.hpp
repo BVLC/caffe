@@ -31,7 +31,7 @@ namespace caffe {
  * and scaling factor.
  *
  * [1] S. Ioffe and c. Szegedy, "Batch Normalization: Accelerating Deep Network
- *     Training by Reducing int_tpernal Covariate Shift." arXiv preprint_tp
+ *     Training by Reducing internal Covariate Shift." arXiv preprint_tp
  *     arXiv:1502.03167 (2015).
  *
  * TODO(dox): thorough documentation for Forward, Backward, and proto params.

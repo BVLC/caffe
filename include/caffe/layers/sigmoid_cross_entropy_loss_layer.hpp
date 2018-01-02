@@ -18,7 +18,7 @@ namespace caffe {
  *                  p_n \log \hat{p}_n +
  *                  (1 - p_n) \log(1 - \hat{p}_n)
  *              \right]
- *        @f$, often used for predicting targets int_tperpreted as probabilities.
+ *        @f$, often used for predicting targets interpreted as probabilities.
  *
  * This layer is implemented rather than separate
  * SigmoidLayer + CrossEntropyLayer

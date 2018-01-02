@@ -40,7 +40,7 @@ void OclDevice::axpy_half(const uint_tp n, const half_fp alpha,
       &queue));
 
 #else  // default (ViennaCL)
-  NOT_IMPLEMENTED;
+  Device::axpy(n, alpha, x, y);
 #endif  // clBLAS, CLBlast, or default (ViennaCL)
 }
 void OclDevice::axpby_half(const uint_tp n, const half_fp alpha,
@@ -76,7 +76,7 @@ void OclDevice::scal_half(const uint_tp n, const half_fp alpha,
       &queue));
 
 #else  // default (ViennaCL)
-  NOT_IMPLEMENTED;
+  Device::scal_half(n, alpha, x);
 #endif  // clBLAS, CLBlast, or default (ViennaCL)
 }
 void OclDevice::dot_half(const uint_tp n, vptr<const half_fp> x,
@@ -137,7 +137,7 @@ void OclDevice::dot_half(const uint_tp n, vptr<const half_fp> x,
   clReleaseMemObject(Z);
 
 #else  // default (ViennaCL)
-  NOT_IMPLEMENTED;
+  Device::dot_half(n, x, y, out);
 #endif  // clBLAS, CLBlast, or default (ViennaCL)
 }
 void OclDevice::asum_half(const uint_tp n, vptr<const half_fp> x,
@@ -194,7 +194,7 @@ void OclDevice::asum_half(const uint_tp n, vptr<const half_fp> x,
   clReleaseMemObject(Z);
 
 #else  // default (ViennaCL)
-  NOT_IMPLEMENTED;
+  Device::asum_half(n, x, y);
 #endif  // clBLAS, CLBlast, or default (ViennaCL)
 }
 void OclDevice::scale_half(const uint_tp n, const half_fp alpha,
@@ -256,7 +256,7 @@ void OclDevice::scale_half(const uint_tp n, const half_fp alpha,
         &queue));
 
 #else  // default (ViennaCL)
-    NOT_IMPLEMENTED;
+    Device::scale_half(n, alpha, x, y);
 #endif  // clBLAS, CLBlast, or default (ViennaCL)
   }
 }

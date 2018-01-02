@@ -7,7 +7,7 @@
 
 namespace caffe {
 
-QuantizerBase::QuantizerBase(QuantizerParameter& param)
+QuantizerBase::QuantizerBase(const QuantizerParameter& param)
   : param_(param), program_ready_(false) {
   this->device_ = Caffe::GetDevice(param_.device(), true);
 }
@@ -17,99 +17,111 @@ QuantizerBase::QuantizerBase(Device* dev_ptr)
   this->device_ = dev_ptr;
 }
 
-void QuantizerBase::update_param(QuantizerParameter& param) {
+template<typename MItype, typename MOtype>
+void Quantizer<MItype, MOtype>::update_param(QuantizerParameter& param) {
+  quant_mutex_.lock();
   this->param_ = param;
   this->program_ready_ = false;
-  switch (this->param_.mode()) {
-    case QuantizerParameter_QuantizerMode_PASSIVE:
-      this->mode_ = QUANTIZER_MODE_PASSIVE;
-      break;
-    case QuantizerParameter_QuantizerMode_OBSERVE:
-      this->mode_ = QUANTIZER_MODE_OBSERVE;
-      break;
-    case QuantizerParameter_QuantizerMode_ACTIVE:
-      this->mode_ = QUANTIZER_MODE_ACTIVE;
-      break;
-    case QuantizerParameter_QuantizerMode_ACTIVE_OBSERVE:
-      this->mode_ = QUANTIZER_MODE_ACTIVE_OBSERVE;
-      break;
-    default:
-      this->mode_ = QUANTIZER_MODE_PASSIVE;
-      break;
+  this->index_ = param_.index();
+  this->mode_ = param_.mode();
+
+  // Load estimated max/min values
+  if (this->param_.has_observed_min()) {
+    this->observed_min_ = param_.observed_min();
   }
   if (this->param_.has_observed_max()) {
     this->observed_max_ = param_.observed_max();
   }
-  if (this->param_.has_observed_min()) {
-    this->observed_min_ = param_.observed_min();
+
+  // Set floating point (symmetric) maximum and minimum
+  this->flt_min_ = std::min(this->observed_min_, -this->observed_max_);
+  this->flt_max_ = std::max(this->observed_max_, -this->observed_min_);
+
+  if (this->param_.has_min_in()) {
+    this->min_in_ = param_.min_in();
+  } else {
+    if (is_float_type<MItype>()) {
+      this->min_in_ = this->flt_min_;
+    }
+    if (is_signed_integer_type<MItype>()) {
+      this->min_in_ = type_min_val<MItype>();
+    }
   }
   if (this->param_.has_max_in()) {
     this->max_in_ = param_.max_in();
+  } else {
+    if (is_float_type<MItype>()) {
+      this->max_in_ = this->flt_max_;
+    }
+    if (is_signed_integer_type<MItype>()) {
+      this->max_in_ = type_max_val<MItype>();
+    }
   }
-  if (this->param_.has_min_in()) {
-    this->min_in_ = param_.min_in();
+
+  if (this->param_.has_min_out()) {
+    this->min_out_ = param_.min_out();
+  } else {
+    if (is_float_type<MOtype>()) {
+      this->min_out_ = this->flt_min_;
+    }
+    if (is_signed_integer_type<MOtype>()) {
+      this->min_out_ = type_min_val<MOtype>();
+    }
   }
   if (this->param_.has_max_out()) {
     this->max_out_ = param_.max_out();
+  } else {
+    if (is_float_type<MOtype>()) {
+      this->max_out_ = this->flt_max_;
+    }
+    if (is_signed_integer_type<MOtype>()) {
+      this->max_out_ = type_max_val<MOtype>();
+    }
   }
-  if (this->param_.has_min_out()) {
-    this->min_out_ = param_.min_out();
-  }
-}
-
-QuantizerParameter QuantizerBase::get_param() const {
-  return param_;
+  quant_mutex_.unlock();
 }
 
 template<typename MItype, typename MOtype>
 void Quantizer<MItype, MOtype>::init() {
   this->program_ = this->device_->CreateProgram();
 
-  this->observed_max_ = type_min_val<double>();
   this->observed_min_ = type_max_val<double>();
+  this->observed_max_ = type_min_val<double>();
 
+  this->flt_min_ = type_min_val<double>();
+  this->flt_max_ = type_max_val<double>();
   this->min_in_ = type_min_val<MItype>();
   this->max_in_ = type_max_val<MItype>();
   this->min_out_ = type_min_val<MOtype>();
   this->max_out_ = type_max_val<MOtype>();
-  if (std::is_same<MItype, MOtype>::value) {
-    this->mode_ = QUANTIZER_MODE_PASSIVE;
-  } else {
-    if (is_float_type<MItype>() && is_float_type<MOtype>()) {
-      this->mode_ = QUANTIZER_MODE_PASSIVE;
-    } else {
-      this->mode_ = QUANTIZER_MODE_ACTIVE;
-    }
-  }
-}
-
-QuantizerMode QuantizerBase::get_mode() const {
-  return mode_;
-}
-
-void QuantizerBase::set_mode(QuantizerMode mode) {
-  mode_ = mode;
-  program_ready_ = false;
-}
-
-string QuantizerBase::get_mode_string() {
-  switch (mode_) {
-    case QUANTIZER_MODE_PASSIVE:
-      return "passive";
-      break;
-    case QUANTIZER_MODE_OBSERVE:
-      return "observe";
-    case QUANTIZER_MODE_ACTIVE:
-      return "active";
-    case QUANTIZER_MODE_ACTIVE_OBSERVE:
-      return "active_observe";
-    default:
-      return "unknown";
-  }
 }
 
 template<typename MItype, typename MOtype>
-Quantizer<MItype, MOtype>::Quantizer(QuantizerParameter& param)
+bool Quantizer<MItype, MOtype>::needs_quantization() const {
+  if (is_float_type<MItype>() && is_float_type<MOtype>()) {
+    // Float types can be cast to each other
+    return false;
+  }
+  if ((is_integer_type<MItype>() && is_float_type<MOtype>())
+       || (is_integer_type<MOtype>() && is_float_type<MItype>())) {
+    // Float to integer and inverse needs quantizations
+    return true;
+  }
+  if (is_integer_type<MItype>() && is_integer_type<MOtype>()) {
+    if (std::is_same<MItype, MOtype>::value) {
+      if (this->min_in_ == this->min_out_ && this->max_in_ == this->max_out_) {
+        // Identical integer type with same value range does not need quantization
+        return false;
+      }
+    }
+    // Integer types of different sizes need rescaling
+    return true;
+  }
+  return true;
+}
+
+template<typename MItype, typename MOtype>
+Quantizer<MItype, MOtype>::Quantizer(const QuantizerParameter& param)
   : QuantizerBase(param) {
   init();
   update_param(param_);
@@ -153,7 +165,7 @@ void Quantizer<MItype, MOtype>::Forward_cpu(
   CHECK(input);
   CHECK(output);
 
-  if (mode_ == QUANTIZER_MODE_PASSIVE || mode_ == QUANTIZER_MODE_OBSERVE) {
+  if (!needs_quantization()) {
     if (std::is_same<MItype, MOtype>::value) {
 #pragma omp parallel for
       for (size_t i = 0; i < n; ++i) {
@@ -227,7 +239,7 @@ void Quantizer<MItype, MOtype>::Backward_cpu(
   CHECK(input);
   CHECK(output);
 
-  if (mode_ == QUANTIZER_MODE_PASSIVE || mode_ == QUANTIZER_MODE_OBSERVE) {
+  if (!needs_quantization()) {
     if (std::is_same<MItype, MOtype>::value) {
 #pragma omp parallel for
       for (size_t i = 0; i < n; ++i) {
@@ -239,6 +251,7 @@ void Quantizer<MItype, MOtype>::Backward_cpu(
         output[i] = static_cast<MItype>(input[i]);
       }
     }
+    return;
   }
 
   if (bw_scale_before_cast()) {
@@ -364,9 +377,11 @@ template<typename MItype, typename MOtype>
 MItype Quantizer<MItype, MOtype>::fw_scale_before_cast_val() const {
   double val = 0.0;
   if (this->fw_scale_divide()) {
-    val = std::max(std::abs(max_in_), std::abs(min_in_)) / std::max(std::abs(max_out_), std::abs(min_out_));
+    val = std::max(std::abs(max_in_), std::abs(min_in_))
+      / std::max(std::abs(max_out_), std::abs(min_out_));
   } else {
-    val = std::max(std::abs(max_out_), std::abs(min_out_) / std::max(std::abs(max_in_), std::abs(min_in_)));
+    val = std::max(std::abs(max_out_), std::abs(min_out_)
+      / std::max(std::abs(max_in_), std::abs(min_in_)));
   }
   return static_cast<MItype>(val);
 }
@@ -416,7 +431,7 @@ string Quantizer<MItype, MOtype>::fw_scale_term(int_tp vec_len,
                                                  string scale_var,
                                                  string src_val) const {
   string tmp = "";
-  if (mode_ == QUANTIZER_MODE_PASSIVE || mode_ == QUANTIZER_MODE_OBSERVE) {
+  if (!needs_quantization()) {
     if (std::is_same<MItype, MOtype>::value) {
       return src_val;
     }
@@ -441,7 +456,7 @@ string Quantizer<MItype, MOtype>::bw_scale_term(int_tp vec_len,
                                                  string scale_var,
                                                  string src_val) const {
   string tmp = "";
-  if (mode_ == QUANTIZER_MODE_PASSIVE || mode_ == QUANTIZER_MODE_OBSERVE) {
+  if (!needs_quantization()) {
     if (std::is_same<MItype, MOtype>::value) {
       return src_val;
     }
@@ -461,6 +476,64 @@ string Quantizer<MItype, MOtype>::bw_scale_term(int_tp vec_len,
   }
 }
 
+template<typename MItype, typename MOtype>
+void Quantizer<MItype, MOtype>::Observe_in_cpu(size_t n, const void* data) {
+  Observe_in_cpu(n, static_cast<const MOtype*>(data));
+}
+
+template<typename MItype, typename MOtype>
+void Quantizer<MItype, MOtype>::Observe_in_cpu(size_t n,
+                                                 const MItype* data) {
+  if (mode_ = PASSIVE) {
+    return;
+  }
+  double local_min = type_max_val<double>();
+  double local_max = type_min_val<double>();
+  double scal = std::max(std::abs(max_in_), std::abs(min_in_))
+              / std::max(std::abs(flt_max_), std::abs(flt_min_));
+  for (size_t i = 0; i < n; ++i) {
+    double value;
+    if (is_signed_integer_type<MItype>()) {
+      value = static_cast<double>(data[i])/scal;
+    } else {
+      value = data[i];
+    }
+    local_min = std::min(local_min, value);
+    local_max = std::max(local_max, value);
+  }
+  this->quant_mutex_.lock();
+  this->observed_min_ = std::min(local_min, this->observed_min_);
+  this->observed_max_ = std::max(local_max, this->observed_max_);
+  this->quant_mutex_.unlock();
+}
+
+template<typename MItype, typename MOtype>
+void Quantizer<MItype, MOtype>::Observe_out_cpu(size_t n, const void* data) {
+  Observe_out_cpu(n, static_cast<const MItype*>(data));
+}
+
+template<typename MItype, typename MOtype>
+void Quantizer<MItype, MOtype>::Observe_out_cpu(size_t n,
+                                                  const MOtype* data) {
+  double local_min = type_max_val<double>();
+  double local_max = type_min_val<double>();
+  double scal = std::max(std::abs(max_in_), std::abs(min_in_))
+              / std::max(std::abs(flt_max_), std::abs(flt_min_));
+  for (size_t i = 0; i < n; ++i) {
+    double value;
+    if (is_signed_integer_type<MItype>()) {
+      value = static_cast<double>(data[i])/scal;
+    } else {
+      value = data[i];
+    }
+    local_min = std::min(local_min, value);
+    local_max = std::max(local_max, value);
+  }
+  this->quant_mutex_.lock();
+  this->observed_min_ = std::min(local_min, this->observed_min_);
+  this->observed_max_ = std::max(local_max, this->observed_max_);
+  this->quant_mutex_.unlock();
+}
 
 INSTANTIATE_CLASS_2T(Quantizer, PROTO_TYPES, PROTO_TYPES)
 

@@ -8,15 +8,16 @@ namespace caffe {
 
 void InsertConversions(const NetParameter& param, NetParameter* param_convert);
 
-void ConfigureConvertLayer(const string& layer_name, const string& blob_name,
-    const int_tp blob_idx, const int_tp split_count, const float loss_weight,
-    LayerParameter* convert_layer_param);
+void ConfigureConversionLayer(const string& layer_name, const string& blob_name,
+    const int_tp blob_idx, const float loss_weight,
+    LayerParameter* convert_layer_param, DataType bottom_data_type,
+    DataType top_data_type, size_t quantizer_index);
 
-string ConvertLayerName(const string& layer_name, const string& blob_name,
+string ConversionLayerName(const string& layer_name, const string& blob_name,
     const int_tp blob_idx);
 
-string ConvertBlobName(const string& layer_name, const string& blob_name,
-    const int_tp blob_idx, const int_tp split_idx);
+string ConversionBlobName(const string& layer_name, const string& blob_name,
+    const int_tp blob_idx);
 
 }  // namespace caffe
 

@@ -113,6 +113,10 @@ class Net {
   void CopyTrainedLayersFromHDF5(const string trained_filename);
   /// @brief Writes the net to a proto.
   void ToProto(NetParameter* param, bool write_diff = false) const;
+
+  /// @brief Writes the network quantizers to a proto.
+  void QuantizerToProto(NetParameter* param) const;
+
   /// @brief Writes the net to an HDF5 file.
   void ToHDF5(const string& filename, bool write_diff = false) const;
 
@@ -140,6 +144,10 @@ class Net {
   /// @brief returns the phase: TRAIN or TEST
   inline Phase phase() const {
     return phase_;
+  }
+  /// @brief returns the quantizer mode: PASSIVE or OBSERVE
+  inline QuantizerMode quant_mode() const {
+    return quant_mode_;
   }
   /**
    * @brief returns the bottom vecs for each layer -- usually you won't
@@ -288,14 +296,12 @@ class Net {
   /// @brief Helper for displaying debug info in Update.
   void UpdateDebugInfo(const int_tp param_id);
 
-  void InitializeQuantizers(NetParameter net_param);
-
-  shared_ptr<QuantizerBase> GetQuantizer(size_t index, DataType in,
-                                         DataType out);
   /// @brief The network name
   string name_;
   /// @brief The phase: TRAIN or TEST
   Phase phase_;
+  /// @brief The quantizer mode: PASSIVE or OBSERVE
+  QuantizerMode quant_mode_;
   /// @brief Individual layers in the net
   vector<shared_ptr<LayerBase> > layers_;
   vector<string> layer_names_;
@@ -303,8 +309,6 @@ class Net {
   vector<bool> layer_need_backward_;
   /// @brief the blobs storing intermediate results between the layer.
   vector<shared_ptr<BlobBase> > blobs_;
-  vector<shared_ptr<QuantizerBase> > quantizers_;
-  map<tuple<size_t, DataType, DataType>, size_t> quantizer_map_;
   vector<string> blob_names_;
   map<string, int_tp> blob_names_index_;
   vector<bool> blob_need_backward_;

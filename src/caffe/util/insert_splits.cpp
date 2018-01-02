@@ -78,8 +78,10 @@ void InsertSplits(const NetParameter& param, NetParameter* param_split) {
         const string& blob_name = layer_param->top(j);
         LayerParameter* split_layer_param = param_split->add_layer();
         const float loss_weight = top_idx_to_loss_weight[top_idx];
+        int_tp quantizer_index = layer_param->quantizer_index();
         ConfigureSplitLayer(layer_name, blob_name, j, split_count,
-            loss_weight, split_layer_param);
+            loss_weight, split_layer_param, layer_param->top_data_type(),
+            layer_param->top_data_type(), quantizer_index);
         if (loss_weight) {
           layer_param->clear_loss_weight();
           top_idx_to_bottom_split_idx[top_idx]++;
@@ -91,11 +93,16 @@ void InsertSplits(const NetParameter& param, NetParameter* param_split) {
 
 void ConfigureSplitLayer(const string& layer_name, const string& blob_name,
     const int_tp blob_idx, const int_tp split_count, const float loss_weight,
-    LayerParameter* split_layer_param) {
+    LayerParameter* split_layer_param, DataType bottom_data_type,
+    DataType top_data_type, int_tp quantizer_index) {
   split_layer_param->Clear();
   split_layer_param->add_bottom(blob_name);
   split_layer_param->set_name(SplitLayerName(layer_name, blob_name, blob_idx));
   split_layer_param->set_type("Split");
+  split_layer_param->set_compute_data_type(bottom_data_type);
+  split_layer_param->set_top_data_type(top_data_type);
+  split_layer_param->set_bottom_data_type(bottom_data_type);
+  split_layer_param->set_quantizer_index(quantizer_index);
   for (int_tp k = 0; k < split_count; ++k) {
     split_layer_param->add_top(
         SplitBlobName(layer_name, blob_name, blob_idx, k));

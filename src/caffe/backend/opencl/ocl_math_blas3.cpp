@@ -56,7 +56,7 @@ void OclDevice::gemm_half(const CBLAS_TRANSPOSE trans_a,
       c.get_ocl_mem(), offC, ldc,
       &queue));
 #else  // default (ViennaCL)
-  NOT_IMPLEMENTED;
+  Device::gemm_half(trans_a, trans_b, m, n, k, alpha, a, b, beta, c);
 #endif  // clBLAS, CLBlast, or default (ViennaCL)
 }
 #endif  // USE_HALF

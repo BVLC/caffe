@@ -270,7 +270,7 @@ inline double type_min_val() {
 
 template<>
 inline double type_min_val<half_fp>() {
-  return static_cast<double>(HALF_MIN);
+  return static_cast<double>(-HALF_MAX);
 }
 template<>
 inline double type_min_val<float>() {
