@@ -398,9 +398,11 @@ namespace caffe {
         get_session().commit();
       }
 
+#ifdef ENABLE_WEIGHT_GRAD_COMPRESSION
       inline void set_quantization_param(MLSL::QuantParams *qparams) {
         MLSL::Environment::GetEnv().SetQuantizationParams(qparams);
       }
+#endif
 
       namespace stats {
         inline void stop() {
@@ -478,10 +480,18 @@ namespace caffe {
       }
       template <typename Dtype>
       void add_parameter_set(int kernelCount, int kernelSize,
-        bool distributedUpdate = false, MLSL::CompressionType compressType = MLSL::CompressionType::CT_NONE)
+        bool distributedUpdate = false
+#ifdef ENABLE_WEIGHT_GRAD_COMPRESSION
+        , MLSL::CompressionType compressType = MLSL::CompressionType::CT_NONE
+#endif
+        )
       {
         opRegInfo_->AddParameterSet(kernelCount, kernelSize, detail::dtype<Dtype>(),
-           distributedUpdate, compressType);
+           distributedUpdate
+#ifdef ENABLE_WEIGHT_GRAD_COMPRESSION
+           , compressType
+#endif
+           );
       }
     private:
       MLSL::OperationRegInfo *opRegInfo_{ nullptr };

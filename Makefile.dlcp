@@ -42,6 +42,7 @@ endif
 endif
 
 ifeq ($(USE_MLSL), 1)
+ifneq ($(ENABLE_WEIGHT_GRAD_COMPRESSION), 0)
 ifeq ($(origin DLCPROOT), environment)
 dlcp: dlcproot_set
 else
@@ -51,6 +52,10 @@ else
 dlcp:
 	@echo "weight grad compression disabled because intel compiler not found"
 endif
+endif
+else
+dlcp:
+	@echo "disabling weight grad compression if ENABLE_WEIGHT_GRAD_COMPRESSION is set to 0"
 endif
 else
 dlcp:
