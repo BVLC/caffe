@@ -41,14 +41,15 @@ function build_caffe_gcc
 
     if [ $is_multinode_ -eq 1 ]; then
         echo "USE_MLSL := 1" >> Makefile.config
-        if [ $is_layer_timing -eq 1 ]; then
-            echo "CAFFE_PER_LAYER_TIMINGS := 1" >> Makefile.config
-        fi
 
         mlslvars_sh=`find external/mlsl/ -name mlslvars.sh`
         if [ -f $mlslvars_sh ]; then
             source $mlslvars_sh
         fi
+    fi
+
+    if [ $is_layer_timing -eq 1 ]; then
+        echo "CAFFE_PER_LAYER_TIMINGS := 1" >> Makefile.config
     fi
 
     if [ $debug -eq 1 ]; then
@@ -100,9 +101,10 @@ function build_caffe_icc
     cmake_params="-DCPU_ONLY=1 -DBOOST_ROOT=$boost_root"
     if [ $is_multinode_ -eq 1 ]; then
         cmake_params+=" -DUSE_MLSL=1"
-        if [ $is_layer_timing -eq 1 ]; then
-            cmake_params+=" -DCAFFE_PER_LAYER_TIMINGS=1"
-        fi
+    fi
+
+    if [ $is_layer_timing -eq 1 ]; then
+        cmake_params+=" -DCAFFE_PER_LAYER_TIMINGS=1"
     fi
 
     if [ $debug -eq 1 ]; then
