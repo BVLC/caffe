@@ -312,7 +312,6 @@ class Net {
   */
   static void CompilationRuleFour(const NetParameter& param,
                              NetParameter* param_compiled);
-  
   /**
    * @brief If find "Conv--BN--Scale" in current network, merge BN and Scale layer into Convolution
    * layers, this optimization only works in caffe TEST phase now.
@@ -339,6 +338,24 @@ class Net {
   /// @brief return whether NetState state meets NetStateRule rule
   static bool StateMeetsRule(const NetState& state, const NetStateRule& rule,
       const string& layer_name);
+  /**
+   * @brief Look at the layer activations and parameters to find the maximum
+   * absolute values. The following layers are considered: Convolution,
+   * InnerProduct.
+   *
+   * @param layer_name The layers that should be quantized to fixed point.
+   * @param max_in The highest layer input.
+   * @param max_out The highest layer output.
+   * @param max_param The highest layer parameter.
+   *
+   * For layer parameters, the biases are ignored.
+   */
+  void RangeInLayers(vector<string>* layer_name, vector<Dtype>* max_in,
+      vector<Dtype>* max_out, vector<vector<Dtype>>* max_param, string scaling);
+  /**
+   * @brief Find the maximum value in a blob.
+   */
+  vector<Dtype> FindMax(Blob<Dtype>* blob, bool is_single=true);
   inline const map<string,int>& blob_names_index() const {
     return blob_names_index_;
   }

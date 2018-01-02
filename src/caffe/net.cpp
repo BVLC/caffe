@@ -1109,6 +1109,106 @@ bool Net<Dtype>::StateMeetsRule(const NetState& state,
   return true;
 }
 
+template <typename Dtype>
+vector<Dtype> Net<Dtype>::FindMax(Blob<Dtype>* blob, bool is_single) {
+  const Dtype* data = blob->cpu_data();
+  int cnt = blob->count();
+  vector<Dtype> max_vals;
+  Dtype max_val = (Dtype)(-10);
+
+  int index = 0;
+  if(blob->shape().size() == 4) {
+    if(is_single) {
+      max_vals = vector<Dtype>(1, Dtype(-10));
+      for (int i = 0; i < cnt; ++i) {
+        max_val = std::max(max_val, (Dtype)fabs(data[i]));
+      }
+      max_vals.at(0) = max_val;
+    } else { // output_channel * input_channel * kernel_height * kernel_width
+      int height = blob->shape(2);
+      int width = blob->shape(3);
+      int channel = blob->shape(0);
+      max_vals = vector<Dtype>(channel, Dtype(-10));
+      int step = blob->shape(1) * height * width;
+      for (int i = 0; i < cnt; ++i) {
+        if((i + 1) % step == 0) {
+          max_vals.at(index) = std::max(max_val, (Dtype)fabs(data[i]));
+          ++index;
+        } else {
+          max_val = std::max(max_val, (Dtype)fabs(data[i]));
+        }
+      }
+    }
+  } else {
+    if(is_single) {
+      max_vals = vector<Dtype>(1, Dtype(-10));
+      for (int i = 0; i < cnt; ++i) {
+        max_val = std::max(max_val, (Dtype)fabs(data[i]));
+      }
+      max_vals.at(0) = max_val;
+    } else { // output_channel * input_channel
+      int channel = blob->shape(0);
+      max_vals = vector<Dtype>(channel, Dtype(-10));
+      int step = blob->shape(1);
+      for (int i = 0; i < cnt; ++i) {
+        if((i + 1) % step == 0) {
+          max_vals.at(index) = std::max(max_val, (Dtype)fabs(data[i]));
+          ++index;
+        } else {
+          max_val = std::max(max_val, (Dtype)fabs(data[i]));
+        }
+      }
+    }
+  }
+  
+  return max_vals;
+}
+
+template <typename Dtype>
+void Net<Dtype>::RangeInLayers(vector<string>* layer_name,
+      vector<Dtype>* max_in, vector<Dtype>* max_out, vector<vector<Dtype>>* max_param, string scaling) {
+  // Initialize vector elements, if needed.
+  if(layer_name->size()==0) {
+    for (int layer_id = 0; layer_id < layers_.size(); ++layer_id) {
+      if (strcmp(layers_[layer_id]->type(), "Convolution") == 0) {
+        layer_name->push_back(this->layer_names()[layer_id]);
+        max_in->push_back(0);
+        max_out->push_back(0);
+        if (scaling == "single") {
+          max_param->push_back(vector<Dtype>(1, 0));
+        }
+        else {
+          int param_shape = (&(*layers_[layer_id]->blobs()[0]))->shape(0);
+          max_param->push_back(vector<Dtype>(param_shape, 0));
+        }
+      }
+    }
+  }
+  // Find maximal values.
+  int index = 0;
+  vector<Dtype> max_vals;
+  for (int layer_id = 0; layer_id < layers_.size(); ++layer_id) {
+    if (strcmp(layers_[layer_id]->type(), "Convolution") == 0) {
+      max_vals = FindMax(bottom_vecs_[layer_id][0]);
+      max_in->at(index) = std::max(max_in->at(index), max_vals.at(0)); 
+
+      max_vals = FindMax(top_vecs_[layer_id][0]);
+      max_out->at(index) = std::max(max_out->at(index), max_vals.at(0));
+
+      // Consider the weights only, ignore the bias
+      if (scaling == "single") {
+        max_vals = FindMax(&(*layers_[layer_id]->blobs()[0]));
+        max_param->at(index).at(0) = std::max(max_param->at(index).at(0), max_vals.at(0));
+      } else {
+        max_vals = FindMax(&(*layers_[layer_id]->blobs()[0]), false);
+        for(int i = 0; i < max_vals.size(); ++i) 
+          max_param->at(index).at(i) = std::max(max_param->at(index).at(i), max_vals.at(i));
+      }
+      index++;
+    }
+  }
+}
+
 // Helper for Net::Init: add a new top blob to the net.
 template <typename Dtype>
 void Net<Dtype>::AppendTop(const NetParameter& param, const int layer_id,
@@ -1281,7 +1381,6 @@ Dtype Net<Dtype>::ForwardFromTo(int start, int end) {
     LAYER_TIMING_START(forward, i);
     PERFORMANCE_MEASUREMENT_BEGIN();
 
-    // LOG(ERROR) << "Forwarding " << layer_names_[i];
     Dtype layer_loss = layers_[i]->Forward(bottom_vecs_[i], top_vecs_[i]);
 
     PERFORMANCE_MEASUREMENT_END((std::string("FW_") + layer_names_[i]).c_str());

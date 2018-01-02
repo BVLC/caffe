@@ -59,12 +59,39 @@ using namespace mkldnn;
 
 namespace caffe {
 
+// =====  Log functions ==============================================
+template <typename Dtype>
+inline void info_mem_pd(shared_ptr<memory::primitive_desc> mem_pd, string name) {
+    // format of mem_pda
+//#ifdef DEBUG        
+    LOG(INFO) << name;
+
+    switch (mem_pd->desc().data.format) {
+        case memory::format::nchw: LOG(INFO) << "format: nchw"; break;
+        case memory::format::nhwc: LOG(INFO) << "format: nhwc"; break;
+        case memory::format::nChw8c: LOG(INFO) << "format: nChw8c"; break;
+        case memory::format::nChw16c: LOG(INFO) << "format: nChw16c"; break;
+        case memory::format::nc: LOG(INFO) << "format: nc"; break;
+        default: assert(!"Error format");
+    }
+    // data_type
+    switch (mem_pd->desc().data.data_type) {
+        case memory::data_type::f32: LOG(INFO) << "data_type: f32"; break;
+        case memory::data_type::u8: LOG(INFO) << "data_type: u8"; break;
+        case memory::data_type::s8: LOG(INFO) << "data_type: s8"; break;
+        case memory::data_type::s32: LOG(INFO) << "data_type: s32"; break;
+        default: assert(!"Error data_type");
+    }
+//#endif
+}
+
+
 // =====  MKLDNNBatchNormLayer =======================================
 template <typename Dtype>
 class MKLDNNBatchNormLayer : public MKLDNNLayer<Dtype>, public Layer<Dtype> {
 public:
     explicit MKLDNNBatchNormLayer(const LayerParameter& param)
-        : Layer<Dtype>(param)
+        : MKLDNNLayer<Dtype>(param), Layer<Dtype>(param)
         , fwd_top_data(), fwd_bottom_data()
         , bwd_top_diff(), bwd_bottom_diff()
         , BatchNormFwd_pd(), BatchNormBwd_pd()
@@ -270,6 +297,12 @@ private:
     MKLDNNPrimitive<Dtype> lrnFwd;
     MKLDNNPrimitive<Dtype> lrnBwd;
     shared_ptr<memory::desc> bottom_md;
+
+    int fl;
+    float scale;
+    shared_ptr<memory> buffer;
+    MKLDNNPrimitive<Dtype> lrn_reorder;
+
     shared_ptr<memory> fwd_top_data_memory, bwd_bottom_diff_memory, scratch_memory;
     shared_ptr<primitive> fwd_bottom_data_primitive, bwd_top_diff_primitive;
     Dtype alpha_, beta_, k_;
@@ -284,7 +317,7 @@ template <typename Dtype>
 class MKLDNNPoolingLayer : public MKLDNNLayer<Dtype>, public Layer<Dtype>  {
 public:
     explicit MKLDNNPoolingLayer(const LayerParameter& param)
-            : MKLDNNLayer<Dtype>(), Layer<Dtype>(param)
+            : MKLDNNLayer<Dtype>(param), Layer<Dtype>(param)
             , fwd_bottom_data(), fwd_top_data()
             , bwd_top_diff(), bwd_bottom_diff()
             , poolingFwd_pd()
@@ -359,7 +392,7 @@ public:
     *     the value @f$ \nu @f$ by which negative values are multiplied.
     */
   explicit MKLDNNReLULayer(const LayerParameter& param)
-    : MKLDNNLayer<Dtype>(), NeuronLayer<Dtype>(param)
+    : MKLDNNLayer<Dtype>(param), NeuronLayer<Dtype>(param)
     , fwd_top_data(), fwd_bottom_data()
     , bwd_top_diff(), bwd_bottom_diff()
     , reluFwd_pd(), reluBwd_pd()
@@ -405,7 +438,7 @@ template <typename Dtype>
 class MKLDNNConcatLayer : public MKLDNNLayer<Dtype> , public Layer<Dtype> {
 public:
     explicit MKLDNNConcatLayer(const LayerParameter& param)
-            : MKLDNNLayer<Dtype>(), Layer<Dtype>(param),
+            : MKLDNNLayer<Dtype>(param), Layer<Dtype>(param),
             concatFwd_pd(), fwd_output_memory(),
             bwd_reorder_input_memory(), bwd_reorder_output_memory(),
             fwd_top_data(), fwd_bottom_data(), split_dims() {
@@ -454,7 +487,7 @@ template <typename Dtype>
 class MKLDNNSplitLayer : public MKLDNNLayer<Dtype> , public Layer<Dtype> {
 public:
     explicit MKLDNNSplitLayer(const LayerParameter& param)
-            : MKLDNNLayer<Dtype>(), Layer<Dtype>(param),
+            : MKLDNNLayer<Dtype>(param), Layer<Dtype>(param),
               splitBwd_pd_(), bwd_bottom_diff_memory_()
             {
               PERFORMANCE_EVENT_ID_RESET(perf_id_bw_);
@@ -494,7 +527,7 @@ template <typename Dtype>
 class MKLDNNEltwiseLayer : public MKLDNNLayer<Dtype> , public Layer<Dtype>  {
 public:
   explicit MKLDNNEltwiseLayer(const LayerParameter& param)
-    : MKLDNNLayer<Dtype>(), Layer<Dtype>(param)
+    : MKLDNNLayer<Dtype>(param), Layer<Dtype>(param)
     , fwd_top_data(), fwd_bottom_data()
     , eltwiseFwd_pd()
     , fwd_top_data_memory()

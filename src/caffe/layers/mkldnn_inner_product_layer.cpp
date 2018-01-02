@@ -56,7 +56,7 @@ namespace caffe {
 template <typename Dtype>
 MKLDNNInnerProductLayer<Dtype>::MKLDNNInnerProductLayer(
             const LayerParameter& param) :
-            MKLDNNLayer<Dtype>(),
+            MKLDNNLayer<Dtype>(param),
             InnerProductLayer<Dtype>(param),
             fwd_bottom_data(NULL),
             fwd_top_data(NULL),

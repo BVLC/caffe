@@ -609,6 +609,7 @@ message LayerParameter {
   optional MultinodeLayerParameter multinode = 150;
   optional MnActivationParameter mn_activation_param = 151;
   optional MnParamGradCompressParameter mn_grad_compress_param = 156;
+  optional QuantizationParameter quantization_param = 158;
 }
 
 message MultinodeLayerParameter {
@@ -630,7 +631,27 @@ message MnActivationParameter {
   optional bool need_reduce = 5 [default = true];
 }
 
-
+// Message for layers with reduced word with arithmetic
+message QuantizationParameter{
+  enum Precision {
+    DYNAMIC_FIXED_POINT = 0;
+  }
+  optional Precision precision = 1 [default = DYNAMIC_FIXED_POINT];
+  enum Rounding {
+    NEAREST = 0;
+  }
+  optional Rounding rounding_scheme = 2 [default = NEAREST];
+  // Dynamic fixed point word width
+  optional uint32 bw_layer_in = 3 [default = 32];
+  optional uint32 bw_layer_out = 4 [default = 32];
+  optional uint32 bw_params = 5 [default = 32];
+  repeated int32 fl_layer_in = 6;
+  repeated int32 fl_layer_out = 7;
+  repeated int32 fl_params = 8;
+  repeated float scale_in = 20;
+  repeated float scale_out = 21;
+  repeated float scale_params = 22;
+}
 
 message MnParamGradCompressParameter {
   repeated bool param_grad_compress_enable = 1;

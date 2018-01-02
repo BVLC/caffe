@@ -46,6 +46,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/common.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "mkldnn.hpp"
+#include "caffe/quant/base_quant_layer.hpp"
 
 using namespace mkldnn;
 
@@ -192,9 +193,9 @@ private:
 
 // =====  MKLDNNLayer =======================================
 template <typename Dtype>
-class MKLDNNLayer {
+class MKLDNNLayer : public BaseQuantLayer<Dtype> {
 public:
-    explicit MKLDNNLayer() {}
+    explicit MKLDNNLayer(const LayerParameter &param);
     virtual ~MKLDNNLayer() {}
 protected:
     bool reshape;

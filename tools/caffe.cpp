@@ -357,6 +357,9 @@ int test_detection(Net<float>& caffe_net) {
   PERFORMANCE_INIT_MONITOR();
 
   for (int i = 0; i < FLAGS_iterations; ++i) {
+#ifdef DEBUG
+    LOG(INFO) << "Iteration: " << i;
+#endif
     float iter_loss;
     const vector<Blob<float>*>& result = caffe_net.Forward(&iter_loss);
 

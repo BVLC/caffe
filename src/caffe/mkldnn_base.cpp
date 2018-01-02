@@ -66,6 +66,39 @@ shared_ptr<MKLDNNStream>  MKLDNNPrimitive<Dtype>::submit() {
     return mkldnn_stream;
 }
 
+template <typename Dtype>
+MKLDNNLayer<Dtype>::MKLDNNLayer(const LayerParameter &param) :
+  BaseQuantLayer<Dtype>() {
+  if (param.has_quantization_param()) {
+    this->precision_ = param.quantization_param().precision();
+    this->rounding_ = param.quantization_param().rounding_scheme();
+    switch (this->precision_) {
+    case QuantizationParameter_Precision_DYNAMIC_FIXED_POINT:
+      this->bw_layer_in_ = param.quantization_param().bw_layer_in();
+      this->bw_layer_out_ = param.quantization_param().bw_layer_out();
+      this->bw_params_ = param.quantization_param().bw_params();
+      for (int i = 0; i < param.quantization_param().fl_layer_in_size(); i++)
+        this->fl_layer_in_.push_back(param.quantization_param().fl_layer_in(i));
+      for (int i = 0; i < param.quantization_param().fl_layer_out_size(); i++)
+        this->fl_layer_out_.push_back(param.quantization_param().fl_layer_out(i));
+      for (int i = 0; i < param.quantization_param().fl_params_size(); i++)
+        this->fl_params_.push_back(param.quantization_param().fl_params(i));
+      //floating point
+      for (int i = 0; i < param.quantization_param().scale_in_size(); i++)
+        this->scale_in_.push_back(param.quantization_param().scale_in(i));
+      for (int i = 0; i < param.quantization_param().scale_out_size(); i++)
+        this->scale_out_.push_back(param.quantization_param().scale_out(i));
+      for (int i = 0; i < param.quantization_param().scale_params_size(); i++)
+        this->scale_params_.push_back(param.quantization_param().scale_params(i));
+
+      break;
+    default:
+      LOG(FATAL) << "Unknown precision mode: " << this->precision_;
+      break;
+    }
+  }
+}
+
 template class MKLDNNLayer<double>;
 template class MKLDNNLayer<float>;
 template class MKLDNNPrimitive<double>;
