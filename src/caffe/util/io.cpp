@@ -63,31 +63,4 @@ bool ReadProtoFromBinaryFile(const char* filename, Message* proto) {
   return success;
 }
 
-#ifdef USE_OPENCV
-cv::Mat DecodeDatumToCVMatNative(const Datum& datum) {
-  cv::Mat cv_img;
-  CHECK(datum.encoded()) << "Datum not encoded";
-  const string& data = datum.data();
-  std::vector<char> vec_data(data.c_str(), data.c_str() + data.size());
-  cv_img = cv::imdecode(vec_data, -1);
-  if (!cv_img.data) {
-    LOG(ERROR) << "Could not decode datum ";
-  }
-  return cv_img;
-}
-cv::Mat DecodeDatumToCVMat(const Datum& datum, bool is_color) {
-  cv::Mat cv_img;
-  CHECK(datum.encoded()) << "Datum not encoded";
-  const string& data = datum.data();
-  std::vector<char> vec_data(data.c_str(), data.c_str() + data.size());
-  int cv_read_flag = (is_color ? CV_LOAD_IMAGE_COLOR :
-    CV_LOAD_IMAGE_GRAYSCALE);
-  cv_img = cv::imdecode(vec_data, cv_read_flag);
-  if (!cv_img.data) {
-    LOG(ERROR) << "Could not decode datum ";
-  }
-  return cv_img;
-}
-
-#endif  // USE_OPENCV
 }  // namespace caffe
