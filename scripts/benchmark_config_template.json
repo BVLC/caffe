@@ -1,0 +1,38 @@
+{
+    "params":{
+        "topology" : "your topology like alexnet/googlenet/googlenet_v2/resnet_50/all",
+        "hostfile" : "/your/hostfile",
+        "network" : "tcp or opa",
+        "netmask" : "your ethernet card name like eth0",
+        "dummy_data_use" : true,
+        "scal_test" : false,
+        "caffe_bin" : "",
+        "engine" : "choose CAFFE, MKL2017 or MKLDNN"
+    },
+    "batch_size_table" : {
+        "alexnet" : {
+            "bdw" : "1024",
+            "skx" : "1024",
+            "knl" : "512",
+            "knm" : "1024"
+        },
+        "googlenet" : {
+            "bdw" : "128",
+            "skx" : "144",
+            "knl" : "144",
+            "knm" : "144"
+        },
+        "googlenet_v2" : {
+            "bdw" : "128",
+            "skx" : "192",
+            "knl" : "192",
+            "knm" : "128"
+        },
+        "resnet_50" : {
+            "bdw" : "32",
+            "skx" : "96",
+            "knl" : "64",
+            "knm" : "64"
+        }
+    }
+} 
