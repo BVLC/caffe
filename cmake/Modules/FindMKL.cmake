@@ -19,7 +19,12 @@ caffe_option(MKL_USE_STATIC_LIBS "Use static libraries" OFF IF NOT MKL_USE_SINGL
 caffe_option(MKL_MULTI_THREADED  "Use multi-threading"   ON IF NOT MKL_USE_SINGLE_DYNAMIC_LIBRARY)
 
 # ---[ Root folders
-set(INTEL_ROOT "/opt/intel" CACHE PATH "Folder contains intel libs")
+if(WIN32)
+  set(ProgramFilesx86 "ProgramFiles(x86)")
+  set(INTEL_ROOT $ENV{${ProgramFilesx86}}/IntelSWTools/compilers_and_libraries/windows CACHE PATH "Folder contains intel libs")
+else()
+  set(INTEL_ROOT "/opt/intel" CACHE PATH "Folder contains intel libs")
+endif()
 find_path(MKL_ROOT include/mkl.h PATHS $ENV{MKLROOT} ${INTEL_ROOT}/mkl
                                    DOC "Folder contains MKL")
 
@@ -42,10 +47,12 @@ else()
     if(WIN32)
       list(APPEND __mkl_libs intel_c)
     else()
-      list(APPEND __mkl_libs intel gf)
+      list(APPEND __mkl_libs intel)
+      #list(APPEND __mkl_libs intel gf)
     endif()
   else()
-    list(APPEND __mkl_libs intel_lp64 gf_lp64)
+    list(APPEND __mkl_libs intel_lp64)
+    #list(APPEND __mkl_libs intel_lp64 intel_gf_lp64)
   endif()
 
   if(MKL_MULTI_THREADED)
@@ -54,7 +61,8 @@ else()
      list(APPEND __mkl_libs sequential)
   endif()
 
-  list(APPEND __mkl_libs core cdft_core)
+  list(APPEND __mkl_libs core)
+  #list(APPEND __mkl_libs core cdft_core)
 endif()
 
 
@@ -62,8 +70,16 @@ foreach (__lib ${__mkl_libs})
   set(__mkl_lib "mkl_${__lib}")
   string(TOUPPER ${__mkl_lib} __mkl_lib_upper)
 
-  if(MKL_USE_STATIC_LIBS)
-    set(__mkl_lib "lib${__mkl_lib}.a")
+  if(NOT MKL_USE_SINGLE_DYNAMIC_LIBRARY)
+    if(MKL_USE_STATIC_LIBS)
+      if(NOT WIN32)
+        set(__mkl_lib "lib${__mkl_lib}.a")
+      endif()
+    else()
+      if(WIN32)
+        set(__mkl_lib "${__mkl_lib}_dll")
+      endif()
+    endif()
   endif()
 
   find_library(${__mkl_lib_upper}_LIBRARY
@@ -78,17 +94,8 @@ foreach (__lib ${__mkl_libs})
 endforeach()
 
 
-if(NOT MKL_USE_SINGLE_DYNAMIC_LIBRARY)
-  if (MKL_USE_STATIC_LIBS)
-    set(__iomp5_libs iomp5 libiomp5mt.lib)
-  else()
-    set(__iomp5_libs iomp5 libiomp5md.lib)
-  endif()
-
-  if(WIN32)
-    find_path(INTEL_INCLUDE_DIR omp.h PATHS ${INTEL_ROOT} PATH_SUFFIXES include)
-    list(APPEND __looked_for INTEL_INCLUDE_DIR)
-  endif()
+if(NOT MKL_USE_SINGLE_DYNAMIC_LIBRARY AND MKL_MULTI_THREADED)
+  set(__iomp5_libs iomp5 libiomp5md)
 
   find_library(MKL_RTL_LIBRARY ${__iomp5_libs}
      PATHS ${INTEL_RTL_ROOT} ${INTEL_ROOT}/compiler ${MKL_ROOT}/.. ${MKL_ROOT}/../compiler
