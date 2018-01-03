@@ -1,0 +1,71 @@
+#!/bin/sh
+# zforce: force a gz extension on all gzip files so that gzip will not
+# compress them twice.
+#
+# This can be useful for files with names truncated after a file transfer.
+# 12345678901234 is renamed to 12345678901.gz
+
+
+# Copyright (C) 2002, 2007 Free Software Foundation
+# Copyright (C) 1993 Jean-loup Gailly
+
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+PATH="${GZIP_BINDIR-'c:/progra~1/Gzip/bin'}:$PATH"; export PATH
+
+version="zforce (gzip) 1.3.12
+Copyright (C) 2007 Free Software Foundation, Inc.
+This is free software.  You may redistribute copies of it under the terms of
+the GNU General Public License <http://www.gnu.org/licenses/gpl.html>.
+There is NO WARRANTY, to the extent permitted by law.
+
+Written by Jean-loup Gailly."
+
+usage="Usage: $0 [FILE]...
+Force a .gz extension on all compressed FILEs so that gzip will
+not compress them twice.
+
+Report bugs to <bug-gzip@gnu.org>."
+
+if test $# = 0; then
+  echo "$usage" >&2
+  exit 1
+fi
+
+res=0
+for i do
+  case "$i" in
+  --h*) exec echo "$usage";;
+  --v*) exec echo "$version";;
+  *[-.]z | *[-.]gz | *.t[ag]z) continue;;
+  esac
+
+  if test ! -f "$i" ; then
+    echo zforce: $i not a file
+    res=1
+    continue
+  fi
+
+  if gzip -l < "$i" 2>/dev/null | grep '^compressed' > /dev/null; then
+
+    new="$i.gz"
+    if mv "$i" "$new"; then
+      echo $i -- replaced with $new
+    else
+      res=$?
+    fi
+  fi
+done
+exit $res

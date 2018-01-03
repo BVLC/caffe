@@ -1,0 +1,229 @@
+#!/bin/sh
+# gzexe: compressor for Unix executables.
+# Use this only for binaries that you do not use frequently.
+#
+# The compressed version is a shell script which decompresses itself after
+# skipping $skip lines of shell commands.  We try invoking the compressed
+# executable with the original name (for programs looking at their name).
+# We also try to retain the original file permissions on the compressed file.
+# For safety reasons, gzexe will not create setuid or setgid shell scripts.
+
+# WARNING: the first line of this file must be either : or #!/bin/sh
+# The : is required for some old versions of csh.
+# On Ultrix, /bin/sh is too buggy, change the first line to: #!/bin/sh5
+
+
+# Copyright (C) 1998, 2002, 2004, 2006, 2007 Free Software Foundation
+# Copyright (C) 1993 Jean-loup Gailly
+
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+tab='	'
+nl='
+'
+IFS=" $tab$nl"
+
+version='gzexe (gzip) 1.3.12
+Copyright (C) 2007 Free Software Foundation, Inc.
+This is free software.  You may redistribute copies of it under the terms of
+the GNU General Public License <http://www.gnu.org/licenses/gpl.html>.
+There is NO WARRANTY, to the extent permitted by law.
+
+Written by Jean-loup Gailly.'
+
+usage="Usage: $0 [OPTION] FILE...
+Rename each FILE with a compressed version of itself, renaming FILE to FILE~.
+
+  -d             Decompress each FILE instead of compressing it.
+      --help     display this help and exit
+      --version  output version information and exit
+
+Report bugs to <bug-gzip@gnu.org>."
+
+
+PATH="${GZIP_BINDIR-'c:/progra~1/Gzip/bin'}:$PATH"
+
+decomp=0
+res=0
+while :; do
+  case $1 in
+  -d) decomp=1; shift;;
+  --h*) exec echo "$usage";;
+  --v*) exec echo "$version";;
+  --) shift; break;;
+  *) break;;
+  esac
+done
+
+if test $# -eq 0; then
+  echo >&2 "$0: missing operand
+Try \`$0 --help' for more information."
+  exit 1
+fi
+
+tmp=
+trap 'res=$?
+  test -n "$tmp" && rm -f "$tmp"
+  (exit $res); exit $res
+' 0 1 2 3 5 10 13 15
+
+mktemp_status=
+
+for i do
+  case $i in
+  -*) file=./$i;;
+  *)  file=$i;;
+  esac
+  if test ! -f "$file" || test ! -r "$file"; then
+    res=$?
+    echo >&2 "$0: $i is not a readable regular file"
+    continue
+  fi
+  if test $decomp -eq 0; then
+    if sed -e 1d -e 2q "$file" | grep "^skip=[0-9][0-9]*$" >/dev/null; then
+      echo >&2 "$0: $i is already gzexe'd"
+      continue
+    fi
+  fi
+  if test -u "$file"; then
+    echo >&2 "$0: $i has setuid permission, unchanged"
+    continue
+  fi
+  if test -g "$file"; then
+    echo >&2 "$0: $i has setgid permission, unchanged"
+    continue
+  fi
+  case /$file in
+  */basename | */bash | */cat | */chmod | */cp | \
+  */dirname | */echo | */expr | */gzip | \
+  */ln | */mkdir | */mktemp | */mv | */rm | \
+  */sed | */sh | */sleep | */test | */tail)
+    echo >&2 "$0: $i might depend on itself"; continue;;
+  esac
+
+  dir=`dirname "$file"` || dir=$TMPDIR
+  test -d "$dir" && test -w "$dir" && test -x "$dir" || dir=/tmp
+  test -n "$tmp" && rm -f "$tmp"
+  if test -z "$mktemp_status"; then
+    type mktemp >/dev/null 2>&1
+    mktemp_status=$?
+  fi
+  if test $mktemp_status -eq 0; then
+    tmp=`TMPDIR=$dir mktemp -t gzexeXXXXXX`
+  else
+    tmp=$dir/gzexe$$
+  fi && { cp -p "$file" "$tmp" 2>/dev/null || cp "$file" "$tmp"; } || {
+    res=$?
+    echo >&2 "$0: cannot copy $file"
+    continue
+  }
+  if test -w "$tmp"; then
+    writable=1
+  else
+    writable=0
+    chmod u+w "$tmp" || {
+      res=$?
+      echo >&2 "$0: cannot chmod $tmp"
+      continue
+    }
+  fi
+  if test $decomp -eq 0; then
+    (cat <<'EOF' &&
+#!/bin/sh
+skip=44
+
+tab='	'
+nl='
+'
+IFS=" $tab$nl"
+
+umask=`umask`
+umask 77
+
+gztmpdir=
+trap 'res=$?
+  test -n "$gztmpdir" && rm -fr "$gztmpdir"
+  (exit $res); exit $res
+' 0 1 2 3 5 10 13 15
+
+if type mktemp >/dev/null 2>&1; then
+  gztmpdir=`mktemp -dt`
+else
+  gztmpdir=/tmp/gztmp$$; mkdir $gztmpdir
+fi || { (exit 127); exit 127; }
+
+gztmp=$gztmpdir/$0
+case $0 in
+-* | */*'
+') mkdir -p "$gztmp" && rm -r "$gztmp";;
+*/*) gztmp=$gztmpdir/`basename "$0"`;;
+esac || { (exit 127); exit 127; }
+
+case `echo X | tail -n +1 2>/dev/null` in
+X) tail_n=-n;;
+*) tail_n=;;
+esac
+if tail $tail_n +$skip <"$0" | gzip -cd > "$gztmp"; then
+  umask $umask
+  chmod 700 "$gztmp"
+  (sleep 5; rm -fr "$gztmpdir") 2>/dev/null &
+  "$gztmp" ${1+"$@"}; res=$?
+else
+  echo >&2 "Cannot decompress $0"
+  (exit 127); res=127
+fi; exit $res
+EOF
+    gzip -cv9 "$file") > "$tmp" || {
+      res=$?
+      echo >&2 "$0: compression not possible for $i, file unchanged."
+      continue
+    }
+
+  else
+    # decompression
+    skip=44
+    skip_line=`sed -e 1d -e 2q "$file"`
+    case $skip_line in
+    skip=[0-9] | skip=[0-9][0-9] | skip=[0-9][0-9][0-9])
+      eval "$skip_line";;
+    esac
+    case `echo X | tail -n +1 2>/dev/null` in
+    X) tail_n=-n;;
+    *) tail_n=;;
+    esac
+    tail $tail_n +$skip "$file" | gzip -cd > "$tmp" || {
+      res=$?
+      echo >&2 "$0: $i probably not in gzexe format, file unchanged."
+      continue
+    }
+  fi
+  test $writable -eq 1 || chmod u-w "$tmp" || {
+    res=$?
+    echo >&2 "$0: $tmp: cannot chmod"
+    continue
+  }
+  ln -f "$file" "$file~" || {
+    res=$?
+    echo >&2 "$0: cannot backup $i as $i~"
+    continue
+  }
+  mv -f "$tmp" "$file" || {
+    res=$?
+    echo >&2 "$0: cannot rename $tmp to $i"
+    continue
+  }
+  tmp=
+done
+(exit $res); exit $res

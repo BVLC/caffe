@@ -1,0 +1,182 @@
+#!/bin/sh
+
+# Copyright (C) 1998, 2002, 2004, 2007 Free Software Foundation
+# Copyright (C) 1993 Jean-loup Gailly
+
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+PATH="${GZIP_BINDIR-'c:/progra~1/Gzip/bin'}:$PATH"; export PATH
+
+version="znew (gzip) 1.3.12
+Copyright (C) 2007 Free Software Foundation, Inc.
+This is free software.  You may redistribute copies of it under the terms of
+the GNU General Public License <http://www.gnu.org/licenses/gpl.html>.
+There is NO WARRANTY, to the extent permitted by law.
+
+Written by Jean-loup Gailly."
+
+usage="Usage: $0 [OPTION]... [FILE]...
+Recompress files from .Z (compress) format to .gz (gzip) format.
+
+Options:
+
+  -f     Force recompression even if a .gz file already exists.
+  -t     Test the new files before deleting originals.
+  -v     Verbose; display name and statistics for each file compressed.
+  -9     Use the slowest compression method (optimal compression).
+  -P     Use pipes for the conversion to reduce disk space usage.
+  -K     Keep a .Z file when it is smaller than the .gz file.
+      --help     display this help and exit
+      --version  output version information and exit
+
+Report bugs to <bug-gzip@gnu.org>."
+
+check=0
+pipe=0
+opt=
+files=
+keep=0
+res=0
+old=0
+new=0
+block=1024
+# block is the disk block size (best guess, need not be exact)
+
+warn="(does not preserve modes and timestamp)"
+cpmod= 
+cpmodarg= 
+if type ${CPMOD:-cpmod} 2>/dev/null; then 
+  cpmod=${CPMOD:-cpmod} 
+  warn=""
+fi
+
+if test -z "$cpmod"; then 
+  cpmod=touch 
+  cpmodarg="-r"
+  warn="(does not preserve file modes)"
+fi
+
+case "$GZIP" in                                                                  
+  *-S*) ext=`echo "$GZIP" | sed 's/^.*-S[[:space:]]*\([^[:space:]]*\).*$/\1/'`   
+       ;;                                                                        
+  *-suffix*) ext=`echo "$GZIP" | sed 's/^.*--suffix=\([^[:space:]]*\).*$/\1/'`   
+       ;;                                                                        
+  *) ext='.gz'                                                                   
+       ;;                                                                        
+esac  
+if test "$ext" = ".Z"; then
+  echo znew: cannot use .Z as gzip extension.
+  exit 1
+fi
+
+for arg
+do
+  case "$arg" in
+  --help)      exec echo "$usage";;
+  --version)   exec echo "$version";;
+  -*)     opt="$opt $arg"; shift;;
+   *)     break;;
+  esac
+done
+
+if test $# -eq 0; then
+  echo "$usage" >&2
+  exit 1
+fi
+
+opt=`echo "$opt" | sed -e 's/ //g' -e 's/-//g'`
+case "$opt" in
+  *t*) check=1; opt=`echo "$opt" | sed 's/t//g'`
+esac
+case "$opt" in
+  *K*) keep=1; opt=`echo "$opt" | sed 's/K//g'`
+esac
+case "$opt" in
+  *P*) pipe=1; opt=`echo "$opt" | sed 's/P//g'`
+esac
+if test -n "$opt"; then
+  opt="-$opt"
+fi
+
+for i do
+  n=`echo $i | sed 's/.Z$//'`
+  if test ! -f "$n.Z" ; then
+    echo $n.Z not found
+    res=1; continue
+  fi
+  test $keep -eq 1 && old=`wc -c < "$n.Z"`
+  if test $pipe -eq 1; then
+    if gzip -d < "$n.Z" | gzip $opt > "$n$ext"; then
+      # Copy file attributes from old file to new one, if possible.
+      test -n "$cpmod" && $cpmod $cpmodarg "$n.Z" "$n$ext" 2> /dev/null
+    else
+      echo error while recompressing $n.Z
+      res=1; continue
+    fi
+  else
+    if test $check -eq 1; then
+      if cp -p "$n.Z" "$n.$$" 2> /dev/null || cp "$n.Z" "$n.$$"; then
+	:
+      else
+	echo cannot backup "$n.Z"
+        res=1; continue
+      fi
+    fi
+    if gzip -d "$n.Z"; then
+      :
+    else
+      test $check -eq 1 && mv "$n.$$" "$n.Z"
+      echo error while uncompressing $n.Z
+      res=1; continue
+    fi
+    if gzip $opt "$n"; then
+      :
+    else
+      if test $check -eq 1; then
+	mv "$n.$$" "$n.Z" && rm -f "$n"
+        echo error while recompressing $n
+      else
+	# compress $n  (might be dangerous if disk full)
+        echo error while recompressing $n, left uncompressed
+      fi
+      res=1; continue
+    fi
+  fi
+  test $keep -eq 1 && new=`wc -c < "$n$ext"`
+  if test $keep -eq 1 && test `expr \( $old + $block - 1 \) / $block` -lt \
+			      `expr \( $new + $block - 1 \) / $block`; then
+    if test $pipe -eq 1; then
+      rm -f "$n$ext"
+    elif test $check -eq 1; then
+      mv "$n.$$" "$n.Z" && rm -f "$n$ext"
+    else
+      gzip -d "$n$ext" && compress "$n" && rm -f "$n$ext"
+    fi
+    echo "$n.Z smaller than $n$ext -- unchanged"
+
+  elif test $check -eq 1; then
+    if gzip -t "$n$ext" ; then
+      rm -f "$n.$$" "$n.Z"
+    else
+      test $pipe -eq 0 && mv "$n.$$" "$n.Z"
+      rm -f "$n$ext"
+      echo error while testing $n$ext, $n.Z unchanged
+      res=1; continue
+    fi
+  elif test $pipe -eq 1; then
+    rm -f "$n.Z"
+  fi
+done
+exit $res

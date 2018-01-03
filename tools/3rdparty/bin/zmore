@@ -1,0 +1,90 @@
+#!/bin/sh
+
+# Copyright (C) 2001, 2002, 2007 Free Software Foundation
+# Copyright (C) 1992, 1993 Jean-loup Gailly
+
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+PATH="${GZIP_BINDIR-'c:/progra~1/Gzip/bin'}:$PATH"; export PATH
+
+version="zmore (gzip) 1.3.12
+Copyright (C) 2007 Free Software Foundation, Inc.
+This is free software.  You may redistribute copies of it under the terms of
+the GNU General Public License <http://www.gnu.org/licenses/gpl.html>.
+There is NO WARRANTY, to the extent permitted by law.
+
+Written by Jean-loup Gailly."
+
+usage="Usage: $0 [OPTION]... [FILE]...
+Like 'more', but operate on the uncompressed contents of any compressed FILEs.
+
+Report bugs to <bug-gzip@gnu.org>."
+
+if test "`echo -n a`" = "-n a"; then
+  # looks like a SysV system:
+  n1=''; n2='\c'
+else
+  n1='-n'; n2=''
+fi
+oldtty=`stty -g 2>/dev/null`
+if stty -cbreak 2>/dev/null; then
+  cb='cbreak'; ncb='-cbreak'
+else
+  # 'stty min 1' resets eof to ^a on both SunOS and SysV!
+  cb='min 1 -icanon'; ncb='icanon eof ^d'
+fi
+if test $? -eq 0 && test -n "$oldtty"; then
+   trap 'stty $oldtty 2>/dev/null; exit' 0 2 3 5 10 13 15
+else
+   trap 'stty $ncb echo 2>/dev/null; exit' 0 2 3 5 10 13 15
+fi
+
+if test $# = 0; then
+    if test -t 0; then
+	echo "$usage" >&2
+    else
+	gzip -cdfq | eval ${PAGER-more}
+    fi
+else
+    FIRST=1
+    for FILE
+    do
+	case $FILE in
+	--h*) exec echo "$usage";;
+	--v*) exec echo "$version";;
+	esac
+
+       if test -e $FILE || test -e $FILE.gz; then 
+	if test $FIRST -eq 0; then
+		echo $n1 "--More--(Next file: $FILE)$n2"
+		stty $cb -echo 2>/dev/null
+		ANS=`dd bs=1 count=1 2>/dev/null`
+		stty $ncb echo 2>/dev/null
+		echo " "
+		case "$ANS" in
+		[eq]) exit;;
+		esac
+	fi
+	if test "$ANS" != 's'; then
+		echo "------> $FILE <------"
+		gzip -cdfq -- "$FILE" | eval ${PAGER-more}
+	fi
+	if test -t 1; then
+		FIRST=0
+	fi
+       else < $FILE                                                                                                       
+       fi 
+    done
+fi
