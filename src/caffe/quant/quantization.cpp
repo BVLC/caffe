@@ -1,5 +1,5 @@
 /*
-All modification made by Intel Corporation: © 2016 Intel Corporation
+All modification made by Intel Corporation: © 2018 Intel Corporation
 
 All contributions by the University of California:
 Copyright (c) 2014, 2015, The Regents of the University of California (Regents)
