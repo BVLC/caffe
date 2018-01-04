@@ -3,32 +3,36 @@ layer {
   name: "data"
   type: "DummyData"
   top: "data"
-  include {
-    phase: TRAIN
-  }
-  dummy_data_param {
-    shape: { dim: 32 dim: 3 dim: 224 dim: 224 }
-    data_filler {
-      type: "constant"
-      value: 0.01
-    }
-  }
-}
-layer {
-  name: "data"
-  type: "DummyData"
   top: "label"
   include {
     phase: TRAIN
   }
   dummy_data_param {
-    shape: { dim: 32  }
     data_filler {
       type: "constant"
+      value: 0.01
     }
+    shape: { dim: 32 dim: 3 dim: 224 dim: 224 }
+    shape: { dim: 32 dim: 1 dim: 1 dim: 1  }
   }
 }
-
+layer {
+  name: "data"
+  type: "DummyData"
+  top: "data"
+  top: "label"
+  include {
+    phase: TEST
+  }
+  dummy_data_param {
+    data_filler {
+      type: "constant"
+      value: 0.01
+    }
+    shape: { dim: 32 dim: 3 dim: 224 dim: 224 }
+    shape: { dim: 32 dim: 1 dim: 1   dim: 1   }
+  }
+}
 layer {
 	bottom: "data"
 	top: "conv1"
