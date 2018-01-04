@@ -231,10 +231,10 @@ layer {
   quantization_param {
     precision: DYNAMIC_FIXED_POINT
     bw_layer_in: 8
-    bw_layer_out: 32 #FIXME 8
+    bw_layer_out: 8
     bw_params: 8
     fl_layer_in: 6
-    fl_layer_out: 16 #FIXME 6
+    fl_layer_out: 6
     fl_params: 8
   }
 }
