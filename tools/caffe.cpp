@@ -466,8 +466,15 @@ int test() {
     Caffe::set_mode(Caffe::CPU);
   }
   // Instantiate the caffe net.
-  Net<float> caffe_net(FLAGS_model, caffe::TEST, FLAGS_level, &stages, NULL,
-                       FLAGS_engine);
+  
+  bool use_weights_as_model = Net<float>::CheckWeightsHasQuantization(FLAGS_weights);
+  string param_file = FLAGS_model;
+  if (use_weights_as_model) {
+    param_file = FLAGS_weights;
+  }
+
+  Net<float> caffe_net(param_file, caffe::TEST, FLAGS_level, &stages, NULL,
+                       FLAGS_engine, use_weights_as_model);
   caffe_net.CopyTrainedLayersFrom(FLAGS_weights);
   LOG(INFO) << "Running for " << FLAGS_iterations << " iterations.";
 

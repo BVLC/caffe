@@ -117,10 +117,14 @@ Net<Dtype>::Net(const NetParameter& param, const Net* root_net)
 template <typename Dtype>
 Net<Dtype>::Net(const string& param_file, Phase phase,
     const int level, const vector<string>* stages,
-    const Net* root_net, std::string engine)
+    const Net* root_net, std::string engine, bool use_weights)
     : root_net_(root_net) {
   NetParameter param;
-  ReadNetParamsFromTextFileOrDie(param_file, &param);
+  if(use_weights) {
+    ReadNetParamsFromBinaryFileOrDie(param_file, &param);
+   } else {
+    ReadNetParamsFromTextFileOrDie(param_file, &param);
+  }
   // Set phase, stages and level
   param.mutable_state()->set_phase(phase);
   if (stages != NULL) {
@@ -201,9 +205,16 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     param = param_with_mn;
   }
 #endif
-
+  bool has_quantization_flag = false;
+  for(int i=0; i<param.layer_size(); i++) {
+    LayerParameter* layer_param = (const_cast<NetParameter&>(param)).mutable_layer(i);
+    if (layer_param->type().compare("Convolution") == 0 && layer_param->has_quantization_param()) {
+        has_quantization_flag = true;
+        break;
+    }
+  }
   // Printing processed model
-  if (Caffe::root_solver()) {
+  if (Caffe::root_solver() && !has_quantization_flag) {
     LOG(INFO) << "Initializing net from parameters: " << std::endl;
     LOG(INFO).flush();
     fflush(0);
@@ -951,6 +962,24 @@ void Net<Dtype>::CompilationRuleFour(const NetParameter& param,
   }
 
   return;
+}
+
+
+template <typename Dtype>
+bool Net<Dtype>::CheckWeightsHasQuantization(const string& weights) {
+
+    NetParameter param;
+    ReadNetParamsFromBinaryFileOrDie(weights, &param);
+
+    for(int i=0; i<param.layer_size(); i++) {
+        LayerParameter* layer_param =
+            (const_cast<NetParameter&>(param)).mutable_layer(i);
+        if (layer_param->type().compare("Convolution") == 0 && layer_param->has_quantization_param()) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 template <typename Dtype>
