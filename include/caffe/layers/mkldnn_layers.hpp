@@ -62,10 +62,9 @@ namespace caffe {
 // =====  Log functions ==============================================
 template <typename Dtype>
 inline void info_mem_pd(shared_ptr<memory::primitive_desc> mem_pd, string name) {
-    // format of mem_pda
-//#ifdef DEBUG        
+#ifdef DEBUG        
     LOG(INFO) << name;
-
+    // format of mem_pd
     switch (mem_pd->desc().data.format) {
         case memory::format::nchw: LOG(INFO) << "format: nchw"; break;
         case memory::format::nhwc: LOG(INFO) << "format: nhwc"; break;
@@ -82,7 +81,7 @@ inline void info_mem_pd(shared_ptr<memory::primitive_desc> mem_pd, string name) 
         case memory::data_type::s32: LOG(INFO) << "data_type: s32"; break;
         default: assert(!"Error data_type");
     }
-//#endif
+#endif
 }
 
 
