@@ -93,8 +93,8 @@ void InsertSplits(const NetParameter& param, NetParameter* param_split) {
 
 void ConfigureSplitLayer(const string& layer_name, const string& blob_name,
     const int_tp blob_idx, const int_tp split_count, const float loss_weight,
-    LayerParameter* split_layer_param, DataType bottom_data_type,
-    DataType top_data_type, int_tp quantizer_index) {
+    LayerParameter* split_layer_param, const DataType bottom_data_type,
+    const DataType top_data_type, const int_tp quantizer_index) {
   split_layer_param->Clear();
   split_layer_param->add_bottom(blob_name);
   split_layer_param->set_name(SplitLayerName(layer_name, blob_name, blob_idx));

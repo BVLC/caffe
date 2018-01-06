@@ -87,7 +87,7 @@ string CudaDevice::name() {
 // but might be more significant for parallel training. Most importantly,
 // it improved stability for large models on many GPUs.
 
-void CudaDevice::MallocMemHost(void** ptr, uint_tp size) {
+void CudaDevice::MallocMemHost(uint_tp size, void** ptr) {
   CUDA_CHECK(cudaMallocHost(ptr, size));
 }
 

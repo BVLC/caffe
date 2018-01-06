@@ -309,6 +309,24 @@ void caffe_axpby<double>(const int_tp n, const double alpha,
                              const double* X, const double beta, double* Y) {
   cblas_daxpby(n, alpha, X, 1, beta, Y, 1);
 }
+template<typename Dtype>
+void caffe_axpby(const int_tp n, const Dtype alpha, const Dtype* X,
+                 const Dtype beta, Dtype* Y) {
+#pragma omp parallel for
+  for (int_tp i = 0; i < n; ++i) {
+    Y[i] = alpha * X[i] + beta * Y[i];
+  }
+}
+template void caffe_axpby<half_fp>(const int_tp n, const half_fp alpha,
+                         const half_fp* X, const half_fp beta, half_fp* Y);
+template void caffe_axpby<int8_t>(const int_tp n, const int8_t alpha,
+                         const int8_t* X, const int8_t beta, int8_t* Y);
+template void caffe_axpby<int16_t>(const int_tp n, const int16_t alpha,
+                         const int16_t* X, const int16_t beta, int16_t* Y);
+template void caffe_axpby<int32_t>(const int_tp n, const int32_t alpha,
+                         const int32_t* X, const int32_t beta, int32_t* Y);
+template void caffe_axpby<int64_t>(const int_tp n, const int64_t alpha,
+                         const int64_t* X, const int64_t beta, int64_t* Y);
 
 // ADD
 template<>

@@ -360,7 +360,7 @@ vptr<const int_tp> Blob<Dtype>::gpu_shape() const {
 template <typename Dtype>
 const Dtype* Blob<Dtype>::cpu_data() const {
   CHECK(data_);
-  return (const Dtype*) data_->cpu_data();
+  return static_cast<const Dtype*>(data_->cpu_data());
 }
 
 template<typename Dtype>

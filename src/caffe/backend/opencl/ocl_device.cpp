@@ -97,7 +97,7 @@ string OclDevice::name() {
   return name_;
 }
 
-void OclDevice::MallocMemHost(void** ptr, uint_tp size) {
+void OclDevice::MallocMemHost(uint_tp size, void** ptr) {
 #ifdef USE_MKL
   *ptr = mkl_malloc(size ? size : 1, 64);
 #else
@@ -133,7 +133,7 @@ vptr<void> OclDevice::MallocMemDevice(uint_tp size, void** ptr,
   if (zero_copy) {
     uint_tp zero_copy_size = (size + CAFFE_MALLOC_CACHE_ALIGN - 1)
                             & ~(CAFFE_MALLOC_CACHE_ALIGN - 1);
-    this->MallocMemHost(ptr, zero_copy_size);
+    this->MallocMemHost(zero_copy_size, ptr);
     gpu_ptr = clCreateBuffer(ctx.handle().get(),
                       CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR,
                       zero_copy_size, *ptr, &err);
@@ -380,7 +380,7 @@ void OclDevice::ocl_null_kernel(float arg, cl_event* event) {
   clSetKernelArg(kernel.handle().get(), 0, sizeof(arg), &arg);
   clEnqueueTask(ctx.get_queue().handle().get(), kernel.handle().get(), 0,
                   NULL, event);
-  clFinish(ctx.get_queue().handle().get());
+  ctx.get_queue().finish();
 }
 
 const char* OclDevice::clGetErrorString(cl_int error) {

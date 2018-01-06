@@ -32,17 +32,17 @@ void caffe_gemv<half_fp>(const CBLAS_TRANSPOSE trans_A,
 }
 
 template<>
-void caffe_gemv<float>(const CBLAS_TRANSPOSE trans_A, const int_tp m,
-                           const int_tp n, const float alpha, const float* a,
+void caffe_gemv<float>(const CBLAS_TRANSPOSE trans_A, const int_tp M,
+                           const int_tp N, const float alpha, const float* A,
                            const float* x, const float beta, float* y) {
-  cblas_sgemv(CblasRowMajor, trans_A, m, n, alpha, a, n, x, 1, beta, y, 1);
+  cblas_sgemv(CblasRowMajor, trans_A, M, N, alpha, A, N, x, 1, beta, y, 1);
 }
 
 template<>
-void caffe_gemv<double>(const CBLAS_TRANSPOSE trans_A, const int_tp m,
-                            const int_tp n, const double alpha, const double* a,
+void caffe_gemv<double>(const CBLAS_TRANSPOSE trans_A, const int_tp M,
+                            const int_tp N, const double alpha, const double* A,
                             const double* x, const double beta, double* y) {
-  cblas_dgemv(CblasRowMajor, trans_A, m, n, alpha, a, n, x, 1, beta, y, 1);
+  cblas_dgemv(CblasRowMajor, trans_A, M, N, alpha, A, N, x, 1, beta, y, 1);
 }
 
 }  // namespace caffe
