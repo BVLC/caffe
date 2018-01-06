@@ -74,9 +74,9 @@ endif
 
 	RETURN_STRING=$(shell ./external/mlsl/prepare_mlsl.sh)
 	MLSL_ROOT=$(firstword $(RETURN_STRING))
-	MLSL_LDFLAGS:=-lmpi -l$(lastword $(RETURN_STRING)) -Wl,-rpath,$(MLSL_ROOT)/intel64/lib
+	MLSL_LDFLAGS:=-l$(lastword $(RETURN_STRING)) -Wl,-rpath,$(MLSL_ROOT)/intel64/lib
 	COMMON_FLAGS += -DUSE_MLSL=1
-	LIBRARIES += mlsl mpi
+	LIBRARIES += mlsl
 	INCLUDE_DIRS += $(MLSL_ROOT)/intel64/include
 	LIBRARY_DIRS += $(MLSL_ROOT)/intel64/lib
 	COMMON_FLAGS += -DFOUNDED_MLSL_ROOT=$(MLSL_ROOT)
