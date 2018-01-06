@@ -85,6 +85,8 @@ template<typename MItype, typename MOtype>
 void Quantizer<MItype, MOtype>::init() {
   this->program_ = this->device_->CreateProgram();
 
+  this->mode_ = PASSIVE;
+
   this->observed_min_ = type_max_val<double>();
   this->observed_max_ = type_min_val<double>();
 

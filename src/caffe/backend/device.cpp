@@ -24,7 +24,7 @@ shared_ptr<SQLiteHelper> Device::get_database() {
 
 string Device::name() { return "CPU"; }
 
-void Device::MallocMemHost(void** ptr, uint_tp size) {
+void Device::MallocMemHost(uint_tp size, void** ptr) {
 #ifdef USE_MKL
   *ptr = mkl_malloc(size ? size : 1, 64);
 #else

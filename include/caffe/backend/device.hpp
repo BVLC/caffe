@@ -112,7 +112,7 @@ class Device {
   virtual string name();
   virtual shared_ptr<DeviceProgram> CreateProgram();
 
-  virtual void MallocMemHost(void** ptr, uint_tp size);
+  virtual void MallocMemHost(uint_tp size, void** ptr);
   virtual void FreeMemHost(void* ptr);
   virtual vptr<void> MallocMemDevice(uint_tp size, void** ptr,
                                      bool zero_copy);

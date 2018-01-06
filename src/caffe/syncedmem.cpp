@@ -34,16 +34,18 @@ inline void SyncedMemory::to_cpu() {
                                             device_->is_host_unified());
         device_->increase_memory_usage(size_);
         device_->memset(size_, 0, gpu_ptr_);
+        device_->FinishQueues();  // Required to synchronize CPU-GPU states
         own_gpu_data_ = true;
         own_cpu_data_ = true;
         own_zero_copy_data_ = true;
         head_ = SYNCED;
       } else {
 #endif  // !CPU_ONLY
-        device_->MallocMemHost(&cpu_ptr_, size_);
+        // TODO: Reverse cpu_ptr_ and size_ arguments.
+        device_->MallocMemHost(size_, &cpu_ptr_);
         caffe_memset(size_, 0, cpu_ptr_);
-        head_ = HEAD_AT_CPU;
         own_cpu_data_ = true;
+        head_ = HEAD_AT_CPU;
 #ifndef CPU_ONLY
       }
 #endif  // !CPU_ONLY
@@ -52,7 +54,7 @@ inline void SyncedMemory::to_cpu() {
     case HEAD_AT_GPU: {
 #ifndef CPU_ONLY
       if (cpu_ptr_ == nullptr) {
-        device_->MallocMemHost(&cpu_ptr_, size_);
+        device_->MallocMemHost(size_, &cpu_ptr_);
         own_cpu_data_ = true;
       }
       if (own_zero_copy_data_) {
@@ -86,6 +88,7 @@ inline void SyncedMemory::to_gpu() {
       device_->memset(size_, 0, gpu_ptr_);
       own_gpu_data_ = true;
       if (device_->is_host_unified()) {
+        device_->FinishQueues();  // Required to synchronize CPU-GPU states
         own_cpu_data_ = true;
         own_zero_copy_data_ = true;
         head_ = SYNCED;
@@ -104,7 +107,6 @@ inline void SyncedMemory::to_gpu() {
       if (own_zero_copy_data_) {
         device_->CheckZeroCopy(gpu_ptr_, cpu_ptr_, size_);
       } else {
-        // std::cout << "CPU -> GPU copy: " << size_ << std::endl;
         device_->memcpy(size_, cpu_ptr_, gpu_ptr_);
       }
       head_ = SYNCED;
@@ -152,10 +154,9 @@ vptr<const void> SyncedMemory::gpu_data() {
 void SyncedMemory::set_gpu_data(vptr<void> data) {
 #ifndef CPU_ONLY
   if (own_gpu_data_) {
+    device_->FreeMemDevice(gpu_ptr_);
     if (own_zero_copy_data_) {
       device_->FreeMemHost(cpu_ptr_);
-    } else {
-      device_->FreeMemDevice(gpu_ptr_);
     }
   }
   gpu_ptr_ = data;

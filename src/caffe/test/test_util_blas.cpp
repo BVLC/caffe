@@ -105,9 +105,9 @@ TYPED_TEST(GemmTest, TestGemvCPUGPU) {
   caffe_copy(6, data, a.mutable_cpu_data());
   caffe_copy(3, data, X.mutable_cpu_data());
 
-
   caffe_gemv<TypeParam>(CblasNoTrans, 2, 3, 1., a.cpu_data(),
       X.cpu_data(), 0., Y.mutable_cpu_data());
+
   for (int_tp i = 0; i < 2; ++i) {
     EXPECT_EQ(Y.cpu_data()[i], result_2[i]);
   }
