@@ -66,7 +66,7 @@ class Net {
   explicit Net(const NetParameter& param, const Net* root_net = NULL);
   explicit Net(const string& param_file, Phase phase,
       const int level = 0, const vector<string>* stages = NULL,
-      const Net* root_net = NULL, std::string engine = "");
+      const Net* root_net = NULL, std::string engine = "", bool use_weights = false);
   virtual ~Net() {}
 
   /// @brief Initialize a network with a NetParameter.
@@ -312,6 +312,12 @@ class Net {
   */
   static void CompilationRuleFour(const NetParameter& param,
                              NetParameter* param_compiled);
+
+
+  /**
+  * @brief Check the input file has quantization parms or not.
+  */
+  static bool CheckWeightsHasQuantization(const string& weights);
   /**
    * @brief If find "Conv--BN--Scale" in current network, merge BN and Scale layer into Convolution
    * layers, this optimization only works in caffe TEST phase now.
