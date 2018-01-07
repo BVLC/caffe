@@ -785,12 +785,12 @@ string LibDNNDeconv<MItype, MOtype>::generate_bw_kernels(string name) {
 
   // Local tile memory
   // Asub for loading weights & shuffling the output
-  ss << "volatile " << this->program_->local_mem("MItype",
+  ss << this->program_->local_mem("MItype",
                       "Asub[" + std::to_string(tsm) + "]"
                       + "[" + std::to_string(tsk) + " + v_pad_A]") << ";"
                     << std::endl;
   // Bsub for loading the input image and shuffling the output image
-  ss << "volatile " << this->program_->local_mem("MItype",
+  ss << this->program_->local_mem("MItype",
                       "Bsub[" + std::to_string(tsk) + "]"
                       + "[" + std::to_string(tsn) + " + v_pad_B]") << ";"
                     << std::endl;
@@ -994,10 +994,10 @@ string LibDNNDeconv<MItype, MOtype>::generate_wg_kernels(string name) {
      << std::endl;
 
   // Local tile memory
-  ss << "volatile " << this->program_->local_mem("MItype", "Asub["
+  ss << this->program_->local_mem("MItype", "Asub["
                        + std::to_string(tsm) + "][" + std::to_string(tsk)
                        + " + v_pad_A]") << ";" << std::endl;
-  ss << "volatile " << this->program_->local_mem("MItype", "Bsub["
+  ss << this->program_->local_mem("MItype", "Bsub["
                        + std::to_string(tsk) + "][" + std::to_string(tsn)
                        + " + v_pad_B]") << ";" << std::endl;
 
@@ -1206,7 +1206,7 @@ string LibDNNDeconv<MItype, MOtype>::generate_wg_kernels(string name) {
      << std::endl;
 
   // Local tile memory
-  ss << "volatile " << this->program_->local_mem("MItype", "Asub["
+  ss << this->program_->local_mem("MItype", "Asub["
                        + std::to_string(tsm) + "][" + std::to_string(tsk)
                        + " + v_pad_A]") << ";" << std::endl;
 
@@ -1409,12 +1409,12 @@ string LibDNNDeconv<MItype, MOtype>::generate_fw_kernels(string name) {
 
   // Local tile memory
   // Asub for loading weights & shuffling the output
-  ss << "volatile " << this->program_->local_mem("MItype",
+  ss << this->program_->local_mem("MItype",
                       "Asub[" + std::to_string(tsm) + "]"
                       + "[" + std::to_string(tsk) + " + v_pad_A]") << ";"
                     << std::endl;
   // Bsub for loading the input image and shuffling the output image
-  ss << "volatile " << this->program_->local_mem("MItype",
+  ss << this->program_->local_mem("MItype",
                       "Bsub[" + std::to_string(tsk) + "]"
                       + "[" + std::to_string(tsn) + " + v_pad_B]") << ";"
                     << std::endl;

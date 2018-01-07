@@ -36,12 +36,14 @@ bool CudaDeviceProgram::Compile(bool load_cache, bool store_cache) {
       + std::to_string(prop.major) + std::to_string(prop.minor);
   // string stdcpp_opt = "--std=c++11";
   string fum_opt = "--use_fast_math";
+  string def_dev_opt = "-default-device";
 
   build_opts.push_back(arch_opt.c_str());
   //build_opts.push_back(stdcpp_opt.c_str());
   if (this->device_->is_fast_unsafe_math()) {
     build_opts.push_back(fum_opt.c_str());
   }
+  build_opts.push_back(def_dev_opt.c_str());
 
   // Pointer holding binary CUDA program
   char* ptx = nullptr;
@@ -177,6 +179,7 @@ string CudaDeviceProgram::setup() {
 
 #ifdef USE_HALF
   ss << "#include \"cuda_fp16.h\"" << std::endl;
+  ss << "#include \"cuda_fp16.hpp\"" << std::endl;
 #endif  // USE_HALF
 
   ss << "#define int8_t char" << std::endl;
@@ -213,6 +216,23 @@ string CudaDeviceProgram::setup() {
   ss << "#endif  //" << "uint_tpc" << std::endl;
   ss << "#define " << "uint_tpc" << " unsigned int" << std::endl;
 #endif  // USE_INDEX_64
+
+#ifdef USE_HALF
+  // Add support for wider FP16 vectors in CUDA
+  ss << "typedef struct __align__(8) {" << std::endl;
+  ss << "half x, y, z, w;" << std::endl;
+  ss << "} half4;" << std::endl;
+
+  ss << "typedef struct __align__(16) {" << std::endl;
+  ss << "half s0, s1, s2, s3, s4, s5, s6, s7, s8;" << std::endl;
+  ss << "} half8;" << std::endl;
+
+  ss << "typedef struct __align__(32) {" << std::endl;
+  ss << "half s0, s1, s2, s3, s4, s5, s6, s7, s8, "
+     << "s9, sA, sB, sC, sD, sE, sF;" << std::endl;
+  ss << "} half16;" << std::endl;
+#endif  // USE_HALF
+
   return ss.str();
 }
 

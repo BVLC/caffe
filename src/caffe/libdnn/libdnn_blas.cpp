@@ -1,3 +1,4 @@
+#ifdef USE_LIBDNN
 #include "caffe/libdnn/libdnn_blas.hpp"
 
 namespace caffe {
@@ -42,3 +43,5 @@ int_tp LibDNNBlas<MItype, MOtype>::get_id_or_new(string identifier) {
 INSTANTIATE_CLASS_2T_GUARDED(LibDNNBlas, PROTO_TYPES, PROTO_TYPES);
 
 }  // namespace caffe
+
+#endif  // USE_LIBDNN

@@ -199,12 +199,12 @@ string LibDNNBlas<MItype, MOtype>::generate_gemm_source(
 
   // Local tile memory
   // Asub
-  ss << "volatile " << program->local_mem("MItype",
+  ss << program->local_mem("MItype",
                       "Asub[" + std::to_string(tsm) + "]"
                       + "[" + std::to_string(tsk) + " + v_pad_A]") << ";"
                     << std::endl;
   // Bsub
-  ss << "volatile " << program->local_mem("MItype",
+  ss << program->local_mem("MItype",
                       "Bsub[" + std::to_string(tsk) + "]"
                       + "[" + std::to_string(tsn) + " + v_pad_B]") << ";"
                     << std::endl;

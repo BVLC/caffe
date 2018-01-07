@@ -39,18 +39,18 @@ void ContrastiveLossLayer<Dtype, MItype, MOtype>::GenerateProgram() {
   ss << this->device_program_->kernel_loop("uint_tp", "i", "count");
   // the num index, to access Y and dist_sq
   ss << "uint_tp n = i / channels;" << std::endl;
-  ss << "if (static_cast<int_tp>(y[n])) {" << std::endl;  // similar pairs
+  ss << "if ((int_tp)(y[n])) {" << std::endl;  // similar pairs
   ss << "bottom_diff[i] = alpha * diff[i];" << std::endl;
   ss << "} else {" << std::endl;  // dissimilar pairs
-  ss << "Dtype mdist(0.0);" << std::endl;
-  ss << "Dtype beta(0.0);" << std::endl;
+  ss << "Dtype mdist = (Dtype)0;" << std::endl;
+  ss << "Dtype beta = (Dtype)0;" << std::endl;
   ss << "if (legacy_version) {" << std::endl;
   ss << "mdist = (margin - dist_sq[n]);" << std::endl;
   ss << "beta = -alpha;" << std::endl;
   ss << "} else {" << std::endl;
   ss << "Dtype dist = sqrt(dist_sq[n]);" << std::endl;
   ss << "mdist = (margin - dist);" << std::endl;
-  ss << "beta = -alpha * mdist / (dist + Dtype(1e-4)) * diff[i];" << std::endl;
+  ss << "beta = -alpha * mdist / (dist + (Dtype)(1e-4)) * diff[i];" << std::endl;
   ss << "}" << std::endl;
   ss << "if (mdist > 0.0) {" << std::endl;
   ss << "bottom_diff[i] = beta;" << std::endl;

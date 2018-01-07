@@ -86,13 +86,19 @@ void Device::add_scalar(const uint_tp n, const Dtype alpha, vptr<Dtype> x) {
 }
 
 template
-void Device::add_scalar(const uint_tp n, const half_fp alpha,
-                vptr<half_fp> x);
+void Device::add_scalar(const uint_tp n, const half_fp alpha, vptr<half_fp> x);
 template
 void Device::add_scalar(const uint_tp n, const float alpha, vptr<float> x);
 template
 void Device::add_scalar(const uint_tp n, const double alpha, vptr<double> x);
-
+template
+void Device::add_scalar(const uint_tp n, const int8_t alpha, vptr<int8_t> x);
+template
+void Device::add_scalar(const uint_tp n, const int16_t alpha, vptr<int16_t> x);
+template
+void Device::add_scalar(const uint_tp n, const int32_t alpha, vptr<int32_t> x);
+template
+void Device::add_scalar(const uint_tp n, const int64_t alpha, vptr<int64_t> x);
 
 template<typename Dtype>
 void Device::scal(const uint_tp n, const Dtype alpha, vptr<Dtype> x) {
@@ -112,13 +118,19 @@ void Device::scal(const uint_tp n, const Dtype alpha, vptr<Dtype> x) {
 }
 
 template
-void Device::scal(const uint_tp n, const half_fp alpha,
-                  vptr<half_fp> x);
+void Device::scal(const uint_tp n, const half_fp alpha, vptr<half_fp> x);
 template
 void Device::scal(const uint_tp n, const float alpha, vptr<float> x);
 template
 void Device::scal(const uint_tp n, const double alpha, vptr<double> x);
-
+template
+void Device::scal(const uint_tp n, const int8_t alpha, vptr<int8_t> x);
+template
+void Device::scal(const uint_tp n, const int16_t alpha, vptr<int16_t> x);
+template
+void Device::scal(const uint_tp n, const int32_t alpha, vptr<int32_t> x);
+template
+void Device::scal(const uint_tp n, const int64_t alpha, vptr<int64_t> x);
 
 template<typename Dtype>
 void Device::add(const uint_tp n, vptr<const Dtype> a,
@@ -148,6 +160,18 @@ void Device::add(const uint_tp n, vptr<const float> a, vptr<const float> b,
 template
 void Device::add(const uint_tp n, vptr<const double> a, vptr<const double> b,
                  vptr<double> y);
+template
+void Device::add(const uint_tp n, vptr<const int8_t> a,
+                 vptr<const int8_t> b, vptr<int8_t> y);
+template
+void Device::add(const uint_tp n, vptr<const int16_t> a,
+                 vptr<const int16_t> b, vptr<int16_t> y);
+template
+void Device::add(const uint_tp n, vptr<const int32_t> a,
+                 vptr<const int32_t> b, vptr<int32_t> y);
+template
+void Device::add(const uint_tp n, vptr<const int64_t> a,
+                 vptr<const int64_t> b, vptr<int64_t> y);
 
 
 template<typename Dtype>
@@ -178,6 +202,18 @@ void Device::sub(const uint_tp n, vptr<const float> a, vptr<const float> b,
 template
 void Device::sub(const uint_tp n, vptr<const double> a, vptr<const double> b,
                  vptr<double> y);
+template
+void Device::sub(const uint_tp n, vptr<const int8_t> a, vptr<const int8_t> b,
+                 vptr<int8_t> y);
+template
+void Device::sub(const uint_tp n, vptr<const int16_t> a, vptr<const int16_t> b,
+                 vptr<int16_t> y);
+template
+void Device::sub(const uint_tp n, vptr<const int32_t> a, vptr<const int32_t> b,
+                 vptr<int32_t> y);
+template
+void Device::sub(const uint_tp n, vptr<const int64_t> a, vptr<const int64_t> b,
+                 vptr<int64_t> y);
 
 
 template<typename Dtype>
@@ -208,6 +244,18 @@ void Device::mul(const uint_tp n, vptr<const float> a, vptr<const float> b,
 template
 void Device::mul(const uint_tp n, vptr<const double> a, vptr<const double> b,
                  vptr<double> y);
+template
+void Device::mul(const uint_tp n, vptr<const int8_t> a,
+                 vptr<const int8_t> b, vptr<int8_t> y);
+template
+void Device::mul(const uint_tp n, vptr<const int16_t> a,
+                 vptr<const int16_t> b, vptr<int16_t> y);
+template
+void Device::mul(const uint_tp n, vptr<const int32_t> a,
+                 vptr<const int32_t> b, vptr<int32_t> y);
+template
+void Device::mul(const uint_tp n, vptr<const int64_t> a,
+                 vptr<const int64_t> b, vptr<int64_t> y);
 
 
 template<typename Dtype>
@@ -238,6 +286,18 @@ void Device::div(const uint_tp n, vptr<const float> a, vptr<const float> b,
 template
 void Device::div(const uint_tp n, vptr<const double> a, vptr<const double> b,
                  vptr<double> y);
+template
+void Device::div(const uint_tp n, vptr<const int8_t> a, vptr<const int8_t> b,
+                 vptr<int8_t> y);
+template
+void Device::div(const uint_tp n, vptr<const int16_t> a, vptr<const int16_t> b,
+                 vptr<int16_t> y);
+template
+void Device::div(const uint_tp n, vptr<const int32_t> a, vptr<const int32_t> b,
+                 vptr<int32_t> y);
+template
+void Device::div(const uint_tp n, vptr<const int64_t> a, vptr<const int64_t> b,
+                 vptr<int64_t> y);
 
 
 template<typename Dtype>
@@ -264,6 +324,18 @@ template
 void Device::abs(const uint_tp n, vptr<const float> a, vptr<float> y);
 template
 void Device::abs(const uint_tp n, vptr<const double> a, vptr<double> y);
+template
+void Device::abs(const uint_tp n, vptr<const int8_t> a,
+                 vptr<int8_t> y);
+template
+void Device::abs(const uint_tp n, vptr<const int16_t> a,
+                 vptr<int16_t> y);
+template
+void Device::abs(const uint_tp n, vptr<const int32_t> a,
+                 vptr<int32_t> y);
+template
+void Device::abs(const uint_tp n, vptr<const int64_t> a,
+                 vptr<int64_t> y);
 
 
 template<typename Dtype>
@@ -284,12 +356,19 @@ void Device::exp(const uint_tp n, vptr<const Dtype> a, vptr<Dtype> y) {
 }
 
 template
-void Device::exp(const uint_tp n, vptr<const half_fp> a,
-                 vptr<half_fp> y);
+void Device::exp(const uint_tp n, vptr<const half_fp> a, vptr<half_fp> y);
 template
 void Device::exp(const uint_tp n, vptr<const float> a, vptr<float> y);
 template
 void Device::exp(const uint_tp n, vptr<const double> a, vptr<double> y);
+template
+void Device::exp(const uint_tp n, vptr<const int8_t> a, vptr<int8_t> y);
+template
+void Device::exp(const uint_tp n, vptr<const int16_t> a, vptr<int16_t> y);
+template
+void Device::exp(const uint_tp n, vptr<const int32_t> a, vptr<int32_t> y);
+template
+void Device::exp(const uint_tp n, vptr<const int64_t> a, vptr<int64_t> y);
 
 
 template<typename Dtype>
@@ -316,6 +395,14 @@ template
 void Device::log(const uint_tp n, vptr<const float> a, vptr<float> y);
 template
 void Device::log(const uint_tp n, vptr<const double> a, vptr<double> y);
+template
+void Device::log(const uint_tp n, vptr<const int8_t> a, vptr<int8_t> y);
+template
+void Device::log(const uint_tp n, vptr<const int16_t> a, vptr<int16_t> y);
+template
+void Device::log(const uint_tp n, vptr<const int32_t> a, vptr<int32_t> y);
+template
+void Device::log(const uint_tp n, vptr<const int64_t> a, vptr<int64_t> y);
 
 
 template<typename Dtype>
@@ -346,6 +433,18 @@ void Device::powx(const uint_tp n, vptr<const float> a, const float b,
 template
 void Device::powx(const uint_tp n, vptr<const double> a, const double b,
                   vptr<double> y);
+template
+void Device::powx(const uint_tp n, vptr<const int8_t> a,
+                  const int8_t b, vptr<int8_t> y);
+template
+void Device::powx(const uint_tp n, vptr<const int16_t> a,
+                  const int16_t b, vptr<int16_t> y);
+template
+void Device::powx(const uint_tp n, vptr<const int32_t> a,
+                  const int32_t b, vptr<int32_t> y);
+template
+void Device::powx(const uint_tp n, vptr<const int64_t> a,
+                  const int64_t b, vptr<int64_t> y);
 
 
 template<typename Dtype>
@@ -366,13 +465,19 @@ void Device::sqrt(const uint_tp n, vptr<const Dtype> a, vptr<Dtype> y) {
 }
 
 template
-void Device::sqrt(const uint_tp n, vptr<const half_fp> a,
-                  vptr<half_fp> y);
+void Device::sqrt(const uint_tp n, vptr<const half_fp> a, vptr<half_fp> y);
 template
 void Device::sqrt(const uint_tp n, vptr<const float> a, vptr<float> y);
 template
 void Device::sqrt(const uint_tp n, vptr<const double> a, vptr<double> y);
-
+template
+void Device::sqrt(const uint_tp n, vptr<const int8_t> a, vptr<int8_t> y);
+template
+void Device::sqrt(const uint_tp n, vptr<const int16_t> a, vptr<int16_t> y);
+template
+void Device::sqrt(const uint_tp n, vptr<const int32_t> a, vptr<int32_t> y);
+template
+void Device::sqrt(const uint_tp n, vptr<const int64_t> a, vptr<int64_t> y);
 
 template<typename Dtype>
 void Device::sign(const uint_tp n, vptr<const Dtype> x, vptr<Dtype> y) {
@@ -392,13 +497,19 @@ void Device::sign(const uint_tp n, vptr<const Dtype> x, vptr<Dtype> y) {
 }
 
 template
-void Device::sign(const uint_tp n, vptr<const half_fp> x,
-                  vptr<half_fp> y);
+void Device::sign(const uint_tp n, vptr<const half_fp> x, vptr<half_fp> y);
 template
 void Device::sign(const uint_tp n, vptr<const float> x, vptr<float> y);
 template
 void Device::sign(const uint_tp n, vptr<const double> x, vptr<double> y);
-
+template
+void Device::sign(const uint_tp n, vptr<const int8_t> x, vptr<int8_t> y);
+template
+void Device::sign(const uint_tp n, vptr<const int16_t> x, vptr<int16_t> y);
+template
+void Device::sign(const uint_tp n, vptr<const int32_t> x, vptr<int32_t> y);
+template
+void Device::sign(const uint_tp n, vptr<const int64_t> x, vptr<int64_t> y);
 
 template<typename Dtype>
 void Device::sgnbit(const uint_tp n, vptr<const Dtype> x, vptr<Dtype> y) {
@@ -418,12 +529,20 @@ void Device::sgnbit(const uint_tp n, vptr<const Dtype> x, vptr<Dtype> y) {
 }
 
 template
-void Device::sgnbit(const uint_tp n, vptr<const half_fp> x,
-                    vptr<half_fp> y);
+void Device::sgnbit(const uint_tp n, vptr<const half_fp> x, vptr<half_fp> y);
 template
 void Device::sgnbit(const uint_tp n, vptr<const float> x, vptr<float> y);
 template
 void Device::sgnbit(const uint_tp n, vptr<const double> x, vptr<double> y);
+template
+void Device::sgnbit(const uint_tp n, vptr<const int8_t> x, vptr<int8_t> y);
+template
+void Device::sgnbit(const uint_tp n, vptr<const int16_t> x, vptr<int16_t> y);
+template
+void Device::sgnbit(const uint_tp n, vptr<const int32_t> x, vptr<int32_t> y);
+template
+void Device::sgnbit(const uint_tp n, vptr<const int64_t> x, vptr<int64_t> y);
+
 
 template<typename Dtype, typename MItype, typename MOtype>
 string create_set_source(Device* dev, shared_ptr<DeviceProgram> program) {

@@ -41,7 +41,6 @@ inline void SyncedMemory::to_cpu() {
         head_ = SYNCED;
       } else {
 #endif  // !CPU_ONLY
-        // TODO: Reverse cpu_ptr_ and size_ arguments.
         device_->MallocMemHost(size_, &cpu_ptr_);
         caffe_memset(size_, 0, cpu_ptr_);
         own_cpu_data_ = true;

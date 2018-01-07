@@ -44,31 +44,31 @@ inline void caffe_memset(const uint_tp n, const int_tp alpha, void* X) {
 }
 
 template<typename Dtype>
-void caffe_add_scalar(const int_tp n, const Dtype alpha, Dtype *X);
+void caffe_add_scalar(const int_tp n, const Dtype alpha, Dtype *x);
 
 template<typename Dtype>
-void caffe_scal(const int_tp n, const Dtype alpha, Dtype *X);
+void caffe_scal(const int_tp n, const Dtype alpha, Dtype *x);
 
 template<typename Dtype>
-void caffe_sqr(const int_tp n, const Dtype* a, Dtype* Y);
+void caffe_sqr(const int_tp n, const Dtype* a, Dtype* y);
 
 template <typename Dtype>
-void caffe_sqrt(const int_tp n, const Dtype* a, Dtype* Y);
+void caffe_sqrt(const int_tp n, const Dtype* a, Dtype* y);
 
 template <typename Dtype>
-void caffe_add(const int_tp n, const Dtype* a, const Dtype* b, Dtype* Y);
+void caffe_add(const int_tp n, const Dtype* a, const Dtype* b, Dtype* y);
 
 template<typename Dtype>
-void caffe_sub(const int_tp n, const Dtype* a, const Dtype* b, Dtype* Y);
+void caffe_sub(const int_tp n, const Dtype* a, const Dtype* b, Dtype* y);
 
 template<typename Dtype>
-void caffe_mul(const int_tp n, const Dtype* a, const Dtype* b, Dtype* Y);
+void caffe_mul(const int_tp n, const Dtype* a, const Dtype* b, Dtype* y);
 
 template<typename Dtype>
-void caffe_div(const int_tp n, const Dtype* a, const Dtype* b, Dtype* Y);
+void caffe_div(const int_tp n, const Dtype* a, const Dtype* b, Dtype* y);
 
 template<typename Dtype>
-void caffe_powx(const int_tp n, const Dtype* a, const Dtype b, Dtype* Y);
+void caffe_powx(const int_tp n, const Dtype* a, const Dtype b, Dtype* y);
 
 uint_tp caffe_rng_rand();
 
@@ -98,20 +98,16 @@ template<typename Dtype>
 void caffe_abs(const int_tp n, const Dtype* a, Dtype* Y);
 
 template<typename Dtype>
-typename std::enable_if<float_is_same<Dtype>::value, Dtype>::type
-caffe_dot(const int_tp n, const Dtype* X, const Dtype* Y);
+Dtype caffe_dot(const int_tp n, const Dtype* x, const Dtype* y);
+
 
 template<typename Dtype>
-typename std::enable_if<signed_integer_is_same<Dtype>::value, Dtype>::type
-caffe_dot(const int_tp n, const Dtype* X, const Dtype* Y);
+Dtype caffe_strided_dot(const int_tp n, const Dtype* x, const int_tp incx,
+                            const Dtype* y, const int_tp incy);
 
+// Returns the sum of the absolute values of the elements of vector x
 template<typename Dtype>
-Dtype caffe_strided_dot(const int_tp n, const Dtype* X, const int_tp incx,
-                            const Dtype* Y, const int_tp incy);
-
-// Returns the sum of the absolute values of the elements of vector X
-template<typename Dtype>
-Dtype caffe_asum(const int_tp n, const Dtype* X);
+Dtype caffe_asum(const int_tp n, const Dtype* x);
 
 // the branchless, type-safe version from
 // http://stackoverflow.com/questions/1903954/is-there-a-standard-sign-function-signum-sgn-in-c-c

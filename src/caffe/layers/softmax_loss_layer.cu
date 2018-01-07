@@ -25,7 +25,7 @@ void SoftmaxWithLossLayer<Dtype, MItype, MOtype>::GenerateProgram() {
   fw_args.push_back(this->device_program_->template create_kernel_arg<Dtype>(
                     "label", KERNEL_ARG_CONST | KERNEL_ARG_GLOBAL_MEM));
   fw_args.push_back(this->device_program_->template create_kernel_arg<Dtype>(
-                    "loss", KERNEL_ARG_CONST));
+                    "loss", KERNEL_ARG_GLOBAL_MEM));
   fw_args.push_back(this->device_program_->template create_kernel_arg<int_tp>(
                     "num", KERNEL_ARG_CONST));
   fw_args.push_back(this->device_program_->template create_kernel_arg<int_tp>(
@@ -50,7 +50,7 @@ void SoftmaxWithLossLayer<Dtype, MItype, MOtype>::GenerateProgram() {
   ss << "} else {" << std::endl;
   ss << "loss[index] = -log("
      << "max(prob_data[n * dim + label_value * spatial_dim + s], "
-     << "Dtype(FLT_MIN)));" << std::endl;
+     << "(Dtype)FLT_MIN));" << std::endl;
   ss << "counts[index] = 1;" << std::endl;
   ss << "}" << std::endl;
   ss << "}" << std::endl;
@@ -65,19 +65,20 @@ void SoftmaxWithLossLayer<Dtype, MItype, MOtype>::GenerateProgram() {
                     "label", KERNEL_ARG_CONST | KERNEL_ARG_GLOBAL_MEM));
   bw_args.push_back(this->device_program_->template create_kernel_arg<Dtype>(
                     "bottom_diff", KERNEL_ARG_GLOBAL_MEM));
-  fw_args.push_back(this->device_program_->template create_kernel_arg<int_tp>(
+  bw_args.push_back(this->device_program_->template create_kernel_arg<int_tp>(
                     "num", KERNEL_ARG_CONST));
-  fw_args.push_back(this->device_program_->template create_kernel_arg<int_tp>(
+  bw_args.push_back(this->device_program_->template create_kernel_arg<int_tp>(
                     "dim", KERNEL_ARG_CONST));
-  fw_args.push_back(this->device_program_->template create_kernel_arg<int_tp>(
+  bw_args.push_back(this->device_program_->template create_kernel_arg<int_tp>(
                     "spatial_dim", KERNEL_ARG_CONST));
-  fw_args.push_back(this->device_program_->template create_kernel_arg<bool>(
+  bw_args.push_back(this->device_program_->template create_kernel_arg<bool>(
                     "has_ignore_label", KERNEL_ARG_CONST));
-  fw_args.push_back(this->device_program_->template create_kernel_arg<int_tp>(
+  bw_args.push_back(this->device_program_->template create_kernel_arg<int_tp>(
                     "ignore_label", KERNEL_ARG_CONST));
-  fw_args.push_back(this->device_program_->template create_kernel_arg<Dtype>(
+  bw_args.push_back(this->device_program_->template create_kernel_arg<Dtype>(
                     "counts", KERNEL_ARG_GLOBAL_MEM));
-  ss << this->device_program_->function("BRBackward", bw_args);
+  ss << this->device_program_->function("SoftmaxLossBackwardGPU", bw_args);
+  ss << "const int_tp channels = dim / spatial_dim;" << std::endl;
   ss << this->device_program_->kernel_loop("uint_tp", "index", "nthreads");
   ss << "const int_tp n = index / spatial_dim;" << std::endl;
   ss << "const int_tp s = index % spatial_dim;" << std::endl;
@@ -175,7 +176,7 @@ void SoftmaxWithLossLayer<Dtype, MItype, MOtype>::Backward_gpu(
     vptr<Dtype> counts = prob_.mutable_gpu_diff();
 
     shared_ptr<DeviceKernel> kernel =
-                      this->device_program_->GetKernel("SoftmaxLossForwardGPU");
+                     this->device_program_->GetKernel("SoftmaxLossBackwardGPU");
     kernel->add_arg(&nthreads);
     kernel->add_arg(&top_data);
     kernel->add_arg(&label);

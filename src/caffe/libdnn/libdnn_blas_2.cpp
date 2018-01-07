@@ -134,9 +134,8 @@ string LibDNNBlas<MItype, MOtype>::generate_gemv_source(
 
   // Local memory
   // xsub
-  ss << "volatile " << program->local_mem("MItype",
-                      "xsub[" + std::to_string(tsn) + "]") << ";"
-                    << std::endl;
+  ss << program->local_mem("MItype", "xsub[" + std::to_string(tsn) + "]") << ";"
+     << std::endl;
 
   ss << accreg_type << vwm << " yreg[WPTM / VWM];" << std::endl;
 
@@ -186,7 +185,7 @@ string LibDNNBlas<MItype, MOtype>::generate_gemv_source(
       // Load x into registers
       ss << "for (int_tp wn = 0; wn < WPTN/VWN; ++wn) {" << std::endl;
       if (unroll) {
-        for (int n = 0; n < vwn; ++n) {
+        for (int_tp n = 0; n < vwn; ++n) {
           ss << "VEC_" << vwn << "_" << n << "(xreg[wn]) = "
              << "xsub[wn + " << n << " + t * WPTN];" << std::endl;
         }
@@ -221,10 +220,10 @@ string LibDNNBlas<MItype, MOtype>::generate_gemv_source(
         }
       } else {
         if (trans_A) {
-          ss << "Areg[wm][wn] = A[(wn + t * WPTN) * M + (wm + offM)]"
+          ss << "Areg[wm][wn] = A[(wn + t * WPTN + offN) * M + (wm + offM)]"
              << std::endl;
         } else {
-          ss << "Areg[wm][wn] = A[wn + t * WPTN + (wm + offM) * N]"
+          ss << "Areg[wm][wn] = A[wn + t * WPTN + offN + (wm + offM) * N]"
              << std::endl;
         }
       }
@@ -248,8 +247,8 @@ string LibDNNBlas<MItype, MOtype>::generate_gemv_source(
       ss << "#pragma unroll" << std::endl;
       ss << "for (int_tp wn = 0; wn < WPTN / VWN; ++wn) {" << std::endl;
       if (unroll) {
-        for (int_tp n = 0; n < vwn; ++n) {
-          for (int_tp m = 0; m < vwm; ++m) {
+        for (int_tp m = 0; m < vwm; ++m) {
+          for (int_tp n = 0; n < vwn; ++n) {
             ss << "VEC_" << vwm << "_" << m << "(yreg[wm])"
                << " += ";
             if (prec != LIBDNN_ACCUMULATE_PREC_NATIVE) {

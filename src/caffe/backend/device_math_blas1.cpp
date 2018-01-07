@@ -1,3 +1,4 @@
+#include "caffe/common.hpp"
 #include "caffe/backend/vptr.hpp"
 #include "caffe/backend/device.hpp"
 

@@ -476,6 +476,24 @@ REGISTER_LAYER_CREATOR(Softmax, GetSoftmaxLayer,
 REGISTER_LAYER_CREATOR(Softmax, GetSoftmaxLayer,
                        (double), (double), (double));
 
+template<typename Dtype, typename MItype, typename MOtype>
+shared_ptr<Layer<Dtype, MItype, MOtype> > GetCaffeSoftmaxLayer(
+    const LayerParameter& param) {
+  return shared_ptr<Layer<Dtype, MItype, MOtype> >(
+      new SoftmaxLayer<Dtype, MItype, MOtype>(param));
+}
+
+REGISTER_LAYER_CREATOR(Softmax, GetCaffeSoftmaxLayer,
+                       (half_fp), (half_fp), (half_fp));
+REGISTER_LAYER_CREATOR(Softmax, GetCaffeSoftmaxLayer,
+                       (int8_t), (int8_t), (int8_t));
+REGISTER_LAYER_CREATOR(Softmax, GetCaffeSoftmaxLayer,
+                       (int16_t), (int16_t), (int16_t));
+REGISTER_LAYER_CREATOR(Softmax, GetCaffeSoftmaxLayer,
+                       (int32_t), (int32_t), (int32_t));
+REGISTER_LAYER_CREATOR(Softmax, GetCaffeSoftmaxLayer,
+                       (int64_t), (int64_t), (int64_t));
+
 // Get tanh layer according to engine.
 template<typename Dtype, typename MItype, typename MOtype>
 shared_ptr<Layer<Dtype, MItype, MOtype> > GetTanHLayer(

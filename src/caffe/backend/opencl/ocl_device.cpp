@@ -22,6 +22,10 @@ OclDevice::OclDevice(uint_tp id, uint_tp list_id) {
   this->name_ = "";
 }
 
+OclDevice::~OclDevice() {
+  buffers_.clear();
+}
+
 void OclDevice::Init() {
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(id_);
 

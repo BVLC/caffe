@@ -33,6 +33,7 @@ template<typename Dtype, typename MItype, typename MOtype>
 void ContrastiveLossLayer<Dtype, MItype, MOtype>::Reshape(
     const vector<Blob<MItype>*>& bottom,
     const vector<Blob<MOtype>*>& top) {
+  LossLayer<Dtype, MItype, MOtype>::Reshape(bottom, top);
 
   if (Caffe::mode() == Caffe::GPU && this->device_program_.get() == nullptr) {
     this->GenerateProgram();
