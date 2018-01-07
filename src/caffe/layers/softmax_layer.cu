@@ -97,7 +97,7 @@ void SoftmaxLayer<Dtype, MItype, MOtype>::GenerateProgram() {
     args.push_back(this->device_program_->template create_kernel_arg<Dtype>(
                       "data", KERNEL_ARG_CONST | KERNEL_ARG_GLOBAL_MEM));
     args.push_back(this->device_program_->template create_kernel_arg<Dtype>(
-                      "cannel_sum", KERNEL_ARG_GLOBAL_MEM));
+                      "channel_sum", KERNEL_ARG_GLOBAL_MEM));
     ss << this->device_program_->function("kernel_channel_sum", args);
     ss << this->device_program_->kernel_loop("uint_tp", "index",
                                              "num * spatial_dim");
@@ -327,5 +327,9 @@ void SoftmaxLayer<Dtype, MItype, MOtype>::Backward_gpu(
 INSTANTIATE_CLASS_3T_GUARDED(SoftmaxLayer, (half_fp), (half_fp), (half_fp));
 INSTANTIATE_CLASS_3T_GUARDED(SoftmaxLayer, (float), (float), (float));
 INSTANTIATE_CLASS_3T_GUARDED(SoftmaxLayer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(SoftmaxLayer, (int8_t), (int8_t), (int8_t));
+INSTANTIATE_CLASS_3T_GUARDED(SoftmaxLayer, (int16_t), (int16_t), (int16_t));
+INSTANTIATE_CLASS_3T_GUARDED(SoftmaxLayer, (int32_t), (int32_t), (int32_t));
+INSTANTIATE_CLASS_3T_GUARDED(SoftmaxLayer, (int64_t), (int64_t), (int64_t));
 
 }  // namespace caffe

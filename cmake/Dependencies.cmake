@@ -126,10 +126,6 @@ if (USE_OPENCL)
     list(APPEND Caffe_DEFINITIONS PUBLIC -DVIENNACL_WITH_OPENCL)
   endif()
 
-  if(USE_LIBDNN)
-    list(APPEND Caffe_DEFINITIONS PUBLIC -DUSE_LIBDNN)
-  endif()
-
   if(USE_INTEL_SPATIAL)
     list(APPEND Caffe_DEFINITIONS PUBLIC -DUSE_INTEL_SPATIAL)
   endif()
@@ -158,6 +154,11 @@ if (USE_OPENCL)
       set(USE_FFT OFF)
     endif()
   endif()
+endif()
+
+# ---[ LIBDNN
+if(USE_LIBDNN)
+  list(APPEND Caffe_DEFINITIONS PUBLIC -DUSE_LIBDNN)
 endif()
 
 # ---[ CUDA

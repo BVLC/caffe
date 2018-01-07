@@ -12,6 +12,7 @@ namespace caffe {
 class OclDevice : public Device {
  public:
   explicit OclDevice(uint_tp id, uint_tp list_id);
+  ~OclDevice();
 
   const char* clGetErrorString(cl_int error);
 #ifdef USE_CLFFT

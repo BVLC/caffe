@@ -159,7 +159,7 @@ string LibDNNBlas<MItype, MOtype>::dot_string_identifier(
     libdnnAccumulatePrecision_t prec,
     shared_ptr<Quantizer<MItype, MOtype> > quantizer) {
   stringstream ss;
-  ss << "axpby_";
+  ss << "dot_";
   switch (prec) {
     case LIBDNN_ACCUMULATE_PREC_8:
       ss << "prec_8_";

@@ -25,6 +25,7 @@ CudaDevice::~CudaDevice() {
     free(cuda_headers_[i]);
     free(cuda_header_sources_[i]);
   }
+  buffers_.clear();
 }
 
 void CudaDevice::Init() {
