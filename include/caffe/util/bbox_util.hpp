@@ -1,9 +1,3 @@
-#ifdef USE_OPENCV
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#endif  // USE_OPENCV
-
 #ifndef CAFFE_UTIL_BBOX_UTIL_H_
 #define CAFFE_UTIL_BBOX_UTIL_H_
 
@@ -13,8 +7,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-
-#include "glog/logging.h"
 
 #include "caffe/caffe.hpp"
 
