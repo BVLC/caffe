@@ -207,15 +207,17 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
     bool is_sum;
     if (bottom.size() > 1) {
       is_sum = true;
-      shared_ptr<MKLDNNMemoryDescriptor<Dtype, false> > bottom_0_desc =
-          get_mkldnn_prv_descriptor<Dtype, false>(bottom[0]);
 
-      shared_ptr<MKLDNNMemoryDescriptor<Dtype, false> > bottom_1_desc =
-          get_mkldnn_prv_descriptor<Dtype, false>(bottom[1]);
+      memory::data_type bottom_1_dt = memory::data_type::f32;
+      if (const_cast<Dtype*>(bottom[1]->prv_data()) != NULL){
+    
+        shared_ptr<MKLDNNMemoryDescriptor<Dtype, false> > bottom_1_desc =
+            get_mkldnn_prv_descriptor<Dtype, false>(bottom[1]);
+        bottom_1_dt = static_cast<memory::data_type>(bottom_1_desc->prv_memory_pd()->desc().data.data_type);
+      } 
 
-      if (top_dt != bottom_1_desc->prv_memory_pd()->desc().data.data_type) {
-        top_dt = static_cast<memory::data_type>(
-            bottom_1_desc->prv_memory_pd()->desc().data.data_type);
+      if (top_dt != bottom_1_dt) {
+        top_dt = bottom_1_dt;
       }
     }
 
