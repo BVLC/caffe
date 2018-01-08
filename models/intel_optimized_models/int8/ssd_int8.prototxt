@@ -39,12 +39,12 @@ layer {
   bottom: "data"
   top: "conv1_1"
   param {
-    lr_mult: 1
-    decay_mult: 1
+    lr_mult: 1.0
+    decay_mult: 1.0
   }
   param {
-    lr_mult: 2
-    decay_mult: 0
+    lr_mult: 2.0
+    decay_mult: 0.0
   }
   convolution_param {
     num_output: 64
@@ -55,7 +55,7 @@ layer {
     }
     bias_filler {
       type: "constant"
-      value: 0
+      value: 0.0
     }
   }
 }
@@ -71,12 +71,12 @@ layer {
   bottom: "conv1_1"
   top: "conv1_2"
   param {
-    lr_mult: 1
-    decay_mult: 1
+    lr_mult: 1.0
+    decay_mult: 1.0
   }
   param {
-    lr_mult: 2
-    decay_mult: 0
+    lr_mult: 2.0
+    decay_mult: 0.0
   }
   convolution_param {
     num_output: 64
@@ -87,7 +87,7 @@ layer {
     }
     bias_filler {
       type: "constant"
-      value: 0
+      value: 0.0
     }
   }
   quantization_param {
@@ -95,9 +95,9 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    fl_layer_in: -2
-    fl_layer_out: -4
-    fl_params: 8
+    scale_in: 0.319999992847
+    scale_out: 0.0799999982119
+    scale_params: 454.859985352
   }
 }
 layer {
@@ -123,12 +123,12 @@ layer {
   bottom: "pool1"
   top: "conv2_1"
   param {
-    lr_mult: 1
-    decay_mult: 1
+    lr_mult: 1.0
+    decay_mult: 1.0
   }
   param {
-    lr_mult: 2
-    decay_mult: 0
+    lr_mult: 2.0
+    decay_mult: 0.0
   }
   convolution_param {
     num_output: 128
@@ -139,7 +139,7 @@ layer {
     }
     bias_filler {
       type: "constant"
-      value: 0
+      value: 0.0
     }
   }
   quantization_param {
@@ -147,9 +147,9 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    fl_layer_in: -4
-    fl_layer_out: -5
-    fl_params: 8
+    scale_in: 0.0799999982119
+    scale_out: 0.0599999986589
+    scale_params: 299.019989014
   }
 }
 layer {
@@ -164,12 +164,12 @@ layer {
   bottom: "conv2_1"
   top: "conv2_2"
   param {
-    lr_mult: 1
-    decay_mult: 1
+    lr_mult: 1.0
+    decay_mult: 1.0
   }
   param {
-    lr_mult: 2
-    decay_mult: 0
+    lr_mult: 2.0
+    decay_mult: 0.0
   }
   convolution_param {
     num_output: 128
@@ -180,7 +180,7 @@ layer {
     }
     bias_filler {
       type: "constant"
-      value: 0
+      value: 0.0
     }
   }
   quantization_param {
@@ -188,9 +188,9 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    fl_layer_in: -5
-    fl_layer_out: -5
-    fl_params: 9
+    scale_in: 0.0599999986589
+    scale_out: 0.0500000007451
+    scale_params: 540.909973145
   }
 }
 layer {
@@ -216,12 +216,12 @@ layer {
   bottom: "pool2"
   top: "conv3_1"
   param {
-    lr_mult: 1
-    decay_mult: 1
+    lr_mult: 1.0
+    decay_mult: 1.0
   }
   param {
-    lr_mult: 2
-    decay_mult: 0
+    lr_mult: 2.0
+    decay_mult: 0.0
   }
   convolution_param {
     num_output: 256
@@ -232,7 +232,7 @@ layer {
     }
     bias_filler {
       type: "constant"
-      value: 0
+      value: 0.0
     }
   }
   quantization_param {
@@ -240,9 +240,9 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    fl_layer_in: -5
-    fl_layer_out: -5
-    fl_params: 8
+    scale_in: 0.0500000007451
+    scale_out: 0.0399999991059
+    scale_params: 256.5
   }
 }
 layer {
@@ -257,12 +257,12 @@ layer {
   bottom: "conv3_1"
   top: "conv3_2"
   param {
-    lr_mult: 1
-    decay_mult: 1
+    lr_mult: 1.0
+    decay_mult: 1.0
   }
   param {
-    lr_mult: 2
-    decay_mult: 0
+    lr_mult: 2.0
+    decay_mult: 0.0
   }
   convolution_param {
     num_output: 256
@@ -273,7 +273,7 @@ layer {
     }
     bias_filler {
       type: "constant"
-      value: 0
+      value: 0.0
     }
   }
   quantization_param {
@@ -281,9 +281,9 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    fl_layer_in: -5
-    fl_layer_out: -5
-    fl_params: 8
+    scale_in: 0.0399999991059
+    scale_out: 0.0500000007451
+    scale_params: 306.799987793
   }
 }
 layer {
@@ -298,12 +298,12 @@ layer {
   bottom: "conv3_2"
   top: "conv3_3"
   param {
-    lr_mult: 1
-    decay_mult: 1
+    lr_mult: 1.0
+    decay_mult: 1.0
   }
   param {
-    lr_mult: 2
-    decay_mult: 0
+    lr_mult: 2.0
+    decay_mult: 0.0
   }
   convolution_param {
     num_output: 256
@@ -314,7 +314,7 @@ layer {
     }
     bias_filler {
       type: "constant"
-      value: 0
+      value: 0.0
     }
   }
   quantization_param {
@@ -322,9 +322,9 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    fl_layer_in: -5
-    fl_layer_out: -5
-    fl_params: 8
+    scale_in: 0.0500000007451
+    scale_out: 0.0599999986589
+    scale_params: 352.630004883
   }
 }
 layer {
@@ -350,12 +350,12 @@ layer {
   bottom: "pool3"
   top: "conv4_1"
   param {
-    lr_mult: 1
-    decay_mult: 1
+    lr_mult: 1.0
+    decay_mult: 1.0
   }
   param {
-    lr_mult: 2
-    decay_mult: 0
+    lr_mult: 2.0
+    decay_mult: 0.0
   }
   convolution_param {
     num_output: 512
@@ -366,7 +366,7 @@ layer {
     }
     bias_filler {
       type: "constant"
-      value: 0
+      value: 0.0
     }
   }
   quantization_param {
@@ -374,9 +374,9 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    fl_layer_in: -5
-    fl_layer_out: -4
-    fl_params: 8
+    scale_in: 0.0599999986589
+    scale_out: 0.0799999982119
+    scale_params: 478.589996338
   }
 }
 layer {
@@ -391,12 +391,12 @@ layer {
   bottom: "conv4_1"
   top: "conv4_2"
   param {
-    lr_mult: 1
-    decay_mult: 1
+    lr_mult: 1.0
+    decay_mult: 1.0
   }
   param {
-    lr_mult: 2
-    decay_mult: 0
+    lr_mult: 2.0
+    decay_mult: 0.0
   }
   convolution_param {
     num_output: 512
@@ -407,7 +407,7 @@ layer {
     }
     bias_filler {
       type: "constant"
-      value: 0
+      value: 0.0
     }
   }
   quantization_param {
@@ -415,9 +415,9 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    fl_layer_in: -4
-    fl_layer_out: -3
-    fl_params: 8
+    scale_in: 0.0799999982119
+    scale_out: 0.180000007153
+    scale_params: 485.910003662
   }
 }
 layer {
@@ -432,12 +432,12 @@ layer {
   bottom: "conv4_2"
   top: "conv4_3"
   param {
-    lr_mult: 1
-    decay_mult: 1
+    lr_mult: 1.0
+    decay_mult: 1.0
   }
   param {
-    lr_mult: 2
-    decay_mult: 0
+    lr_mult: 2.0
+    decay_mult: 0.0
   }
   convolution_param {
     num_output: 512
@@ -448,7 +448,7 @@ layer {
     }
     bias_filler {
       type: "constant"
-      value: 0
+      value: 0.0
     }
   }
   quantization_param {
@@ -456,9 +456,9 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    fl_layer_in: -3
-    fl_layer_out: -2
-    fl_params: 9
+    scale_in: 0.180000007153
+    scale_out: 0.40000000596
+    scale_params: 552.33001709
   }
 }
 layer {
@@ -484,12 +484,12 @@ layer {
   bottom: "pool4"
   top: "conv5_1"
   param {
-    lr_mult: 1
-    decay_mult: 1
+    lr_mult: 1.0
+    decay_mult: 1.0
   }
   param {
-    lr_mult: 2
-    decay_mult: 0
+    lr_mult: 2.0
+    decay_mult: 0.0
   }
   convolution_param {
     num_output: 512
@@ -500,7 +500,7 @@ layer {
     }
     bias_filler {
       type: "constant"
-      value: 0
+      value: 0.0
     }
     dilation: 1
   }
@@ -509,9 +509,9 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    fl_layer_in: -2
-    fl_layer_out: -1
-    fl_params: 9
+    scale_in: 0.40000000596
+    scale_out: 0.550000011921
+    scale_params: 766.260009766
   }
 }
 layer {
@@ -526,12 +526,12 @@ layer {
   bottom: "conv5_1"
   top: "conv5_2"
   param {
-    lr_mult: 1
-    decay_mult: 1
+    lr_mult: 1.0
+    decay_mult: 1.0
   }
   param {
-    lr_mult: 2
-    decay_mult: 0
+    lr_mult: 2.0
+    decay_mult: 0.0
   }
   convolution_param {
     num_output: 512
@@ -542,7 +542,7 @@ layer {
     }
     bias_filler {
       type: "constant"
-      value: 0
+      value: 0.0
     }
     dilation: 1
   }
@@ -551,9 +551,9 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    fl_layer_in: -1
-    fl_layer_out: 0
-    fl_params: 9
+    scale_in: 0.550000011921
+    scale_out: 1.16999995708
+    scale_params: 838.429992676
   }
 }
 layer {
@@ -568,12 +568,12 @@ layer {
   bottom: "conv5_2"
   top: "conv5_3"
   param {
-    lr_mult: 1
-    decay_mult: 1
+    lr_mult: 1.0
+    decay_mult: 1.0
   }
   param {
-    lr_mult: 2
-    decay_mult: 0
+    lr_mult: 2.0
+    decay_mult: 0.0
   }
   convolution_param {
     num_output: 512
@@ -584,7 +584,7 @@ layer {
     }
     bias_filler {
       type: "constant"
-      value: 0
+      value: 0.0
     }
     dilation: 1
   }
@@ -593,9 +593,9 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    fl_layer_in: 0
-    fl_layer_out: 0
-    fl_params: 9
+    scale_in: 1.16999995708
+    scale_out: 1.78999996185
+    scale_params: 717.200012207
   }
 }
 layer {
@@ -622,12 +622,12 @@ layer {
   bottom: "pool5"
   top: "fc6"
   param {
-    lr_mult: 1
-    decay_mult: 1
+    lr_mult: 1.0
+    decay_mult: 1.0
   }
   param {
-    lr_mult: 2
-    decay_mult: 0
+    lr_mult: 2.0
+    decay_mult: 0.0
   }
   convolution_param {
     num_output: 1024
@@ -638,9 +638,8 @@ layer {
     }
     bias_filler {
       type: "constant"
-      value: 0
+      value: 0.0
     }
-    engine: CAFFE
     dilation: 6
   }
   quantization_param {
@@ -648,9 +647,9 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    fl_layer_in: 0
-    fl_layer_out: 2
-    fl_params: 9
+    scale_in: 1.78999996185
+    scale_out: 5.80999994278
+    scale_params: 581.219970703
   }
 }
 layer {
@@ -665,12 +664,12 @@ layer {
   bottom: "fc6"
   top: "fc7"
   param {
-    lr_mult: 1
-    decay_mult: 1
+    lr_mult: 1.0
+    decay_mult: 1.0
   }
   param {
-    lr_mult: 2
-    decay_mult: 0
+    lr_mult: 2.0
+    decay_mult: 0.0
   }
   convolution_param {
     num_output: 1024
@@ -680,7 +679,7 @@ layer {
     }
     bias_filler {
       type: "constant"
-      value: 0
+      value: 0.0
     }
   }
   quantization_param {
@@ -688,9 +687,9 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    fl_layer_in: 2
-    fl_layer_out: 4
-    fl_params: 9
+    scale_in: 5.80999994278
+    scale_out: 23.5200004578
+    scale_params: 937.08001709
   }
 }
 layer {
@@ -705,12 +704,12 @@ layer {
   bottom: "fc7"
   top: "conv6_1"
   param {
-    lr_mult: 1
-    decay_mult: 1
+    lr_mult: 1.0
+    decay_mult: 1.0
   }
   param {
-    lr_mult: 2
-    decay_mult: 0
+    lr_mult: 2.0
+    decay_mult: 0.0
   }
   convolution_param {
     num_output: 256
@@ -722,7 +721,7 @@ layer {
     }
     bias_filler {
       type: "constant"
-      value: 0
+      value: 0.0
     }
   }
   quantization_param {
@@ -730,9 +729,9 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    fl_layer_in: 4
-    fl_layer_out: 5
-    fl_params: 9
+    scale_in: 23.5200004578
+    scale_out: 41.3400001526
+    scale_params: 590.469970703
   }
 }
 layer {
@@ -747,12 +746,12 @@ layer {
   bottom: "conv6_1"
   top: "conv6_2"
   param {
-    lr_mult: 1
-    decay_mult: 1
+    lr_mult: 1.0
+    decay_mult: 1.0
   }
   param {
-    lr_mult: 2
-    decay_mult: 0
+    lr_mult: 2.0
+    decay_mult: 0.0
   }
   convolution_param {
     num_output: 512
@@ -764,7 +763,7 @@ layer {
     }
     bias_filler {
       type: "constant"
-      value: 0
+      value: 0.0
     }
   }
   quantization_param {
@@ -772,9 +771,9 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    fl_layer_in: 5
-    fl_layer_out: 5
-    fl_params: 10
+    scale_in: 41.3400001526
+    scale_out: 32.3899993896
+    scale_params: 1789.36999512
   }
 }
 layer {
@@ -789,12 +788,12 @@ layer {
   bottom: "conv6_2"
   top: "conv7_1"
   param {
-    lr_mult: 1
-    decay_mult: 1
+    lr_mult: 1.0
+    decay_mult: 1.0
   }
   param {
-    lr_mult: 2
-    decay_mult: 0
+    lr_mult: 2.0
+    decay_mult: 0.0
   }
   convolution_param {
     num_output: 128
@@ -806,7 +805,7 @@ layer {
     }
     bias_filler {
       type: "constant"
-      value: 0
+      value: 0.0
     }
   }
   quantization_param {
@@ -814,9 +813,9 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    fl_layer_in: 5
-    fl_layer_out: 4
-    fl_params: 9
+    scale_in: 32.3899993896
+    scale_out: 20.6700000763
+    scale_params: 882.909973145
   }
 }
 layer {
@@ -831,12 +830,12 @@ layer {
   bottom: "conv7_1"
   top: "conv7_2"
   param {
-    lr_mult: 1
-    decay_mult: 1
+    lr_mult: 1.0
+    decay_mult: 1.0
   }
   param {
-    lr_mult: 2
-    decay_mult: 0
+    lr_mult: 2.0
+    decay_mult: 0.0
   }
   convolution_param {
     num_output: 256
@@ -848,7 +847,7 @@ layer {
     }
     bias_filler {
       type: "constant"
-      value: 0
+      value: 0.0
     }
   }
   quantization_param {
@@ -856,9 +855,9 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    fl_layer_in: 4
-    fl_layer_out: 3
-    fl_params: 10
+    scale_in: 20.6700000763
+    scale_out: 14.25
+    scale_params: 1246.82995605
   }
 }
 layer {
@@ -873,12 +872,12 @@ layer {
   bottom: "conv7_2"
   top: "conv8_1"
   param {
-    lr_mult: 1
-    decay_mult: 1
+    lr_mult: 1.0
+    decay_mult: 1.0
   }
   param {
-    lr_mult: 2
-    decay_mult: 0
+    lr_mult: 2.0
+    decay_mult: 0.0
   }
   convolution_param {
     num_output: 128
@@ -890,7 +889,7 @@ layer {
     }
     bias_filler {
       type: "constant"
-      value: 0
+      value: 0.0
     }
   }
   quantization_param {
@@ -898,9 +897,9 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    fl_layer_in: 3
-    fl_layer_out: 4
-    fl_params: 9
+    scale_in: 14.25
+    scale_out: 18.6299991608
+    scale_params: 646.679992676
   }
 }
 layer {
@@ -915,12 +914,12 @@ layer {
   bottom: "conv8_1"
   top: "conv8_2"
   param {
-    lr_mult: 1
-    decay_mult: 1
+    lr_mult: 1.0
+    decay_mult: 1.0
   }
   param {
-    lr_mult: 2
-    decay_mult: 0
+    lr_mult: 2.0
+    decay_mult: 0.0
   }
   convolution_param {
     num_output: 256
@@ -932,7 +931,7 @@ layer {
     }
     bias_filler {
       type: "constant"
-      value: 0
+      value: 0.0
     }
   }
   quantization_param {
@@ -940,9 +939,9 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    fl_layer_in: 4
-    fl_layer_out: 4
-    fl_params: 10
+    scale_in: 18.6299991608
+    scale_out: 18.4300003052
+    scale_params: 1516.22998047
   }
 }
 layer {
@@ -957,12 +956,12 @@ layer {
   bottom: "conv8_2"
   top: "conv9_1"
   param {
-    lr_mult: 1
-    decay_mult: 1
+    lr_mult: 1.0
+    decay_mult: 1.0
   }
   param {
-    lr_mult: 2
-    decay_mult: 0
+    lr_mult: 2.0
+    decay_mult: 0.0
   }
   convolution_param {
     num_output: 128
@@ -974,7 +973,7 @@ layer {
     }
     bias_filler {
       type: "constant"
-      value: 0
+      value: 0.0
     }
   }
   quantization_param {
@@ -982,9 +981,9 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    fl_layer_in: 4
-    fl_layer_out: 4
-    fl_params: 9
+    scale_in: 18.4300003052
+    scale_out: 16.2800006866
+    scale_params: 864.780029297
   }
 }
 layer {
@@ -999,12 +998,12 @@ layer {
   bottom: "conv9_1"
   top: "conv9_2"
   param {
-    lr_mult: 1
-    decay_mult: 1
+    lr_mult: 1.0
+    decay_mult: 1.0
   }
   param {
-    lr_mult: 2
-    decay_mult: 0
+    lr_mult: 2.0
+    decay_mult: 0.0
   }
   convolution_param {
     num_output: 256
@@ -1016,7 +1015,7 @@ layer {
     }
     bias_filler {
       type: "constant"
-      value: 0
+      value: 0.0
     }
   }
   quantization_param {
@@ -1024,9 +1023,9 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    fl_layer_in: 4
-    fl_layer_out: 3
-    fl_params: 10
+    scale_in: 16.2800006866
+    scale_out: 10.6199998856
+    scale_params: 1733.91003418
   }
 }
 layer {
@@ -1044,7 +1043,7 @@ layer {
     across_spatial: false
     scale_filler {
       type: "constant"
-      value: 20
+      value: 20.0
     }
     channel_shared: false
   }
@@ -1055,12 +1054,12 @@ layer {
   bottom: "conv4_3_norm"
   top: "conv4_3_norm_mbox_loc"
   param {
-    lr_mult: 1
-    decay_mult: 1
+    lr_mult: 1.0
+    decay_mult: 1.0
   }
   param {
-    lr_mult: 2
-    decay_mult: 0
+    lr_mult: 2.0
+    decay_mult: 0.0
   }
   convolution_param {
     num_output: 16
@@ -1072,8 +1071,17 @@ layer {
     }
     bias_filler {
       type: "constant"
-      value: 0
+      value: 0.0
     }
+  }
+  quantization_param {
+    precision: DYNAMIC_FIXED_POINT
+    bw_layer_in: 8
+    bw_layer_out: 8
+    bw_params: 8
+    scale_in: 22.3600006104
+    scale_out: 9.88000011444
+    scale_params: 247.979995728
   }
 }
 layer {
@@ -1103,12 +1111,12 @@ layer {
   bottom: "conv4_3_norm"
   top: "conv4_3_norm_mbox_conf"
   param {
-    lr_mult: 1
-    decay_mult: 1
+    lr_mult: 1.0
+    decay_mult: 1.0
   }
   param {
-    lr_mult: 2
-    decay_mult: 0
+    lr_mult: 2.0
+    decay_mult: 0.0
   }
   convolution_param {
     num_output: 84
@@ -1120,8 +1128,17 @@ layer {
     }
     bias_filler {
       type: "constant"
-      value: 0
+      value: 0.0
     }
+  }
+  quantization_param {
+    precision: DYNAMIC_FIXED_POINT
+    bw_layer_in: 8
+    bw_layer_out: 8
+    bw_params: 8
+    scale_in: 22.3600006104
+    scale_out: 9.13000011444
+    scale_params: 793.659973145
   }
 }
 layer {
@@ -1152,16 +1169,16 @@ layer {
   bottom: "data"
   top: "conv4_3_norm_mbox_priorbox"
   prior_box_param {
-    min_size: 30
-    max_size: 60
-    aspect_ratio: 2
+    min_size: 30.0
+    max_size: 60.0
+    aspect_ratio: 2.0
     flip: true
     clip: false
-    variance: 0.1
-    variance: 0.1
-    variance: 0.2
-    variance: 0.2
-    step: 8
+    variance: 0.10000000149
+    variance: 0.10000000149
+    variance: 0.20000000298
+    variance: 0.20000000298
+    step: 8.0
     offset: 0.5
   }
 }
@@ -1171,12 +1188,12 @@ layer {
   bottom: "fc7"
   top: "fc7_mbox_loc"
   param {
-    lr_mult: 1
-    decay_mult: 1
+    lr_mult: 1.0
+    decay_mult: 1.0
   }
   param {
-    lr_mult: 2
-    decay_mult: 0
+    lr_mult: 2.0
+    decay_mult: 0.0
   }
   convolution_param {
     num_output: 24
@@ -1188,8 +1205,17 @@ layer {
     }
     bias_filler {
       type: "constant"
-      value: 0
+      value: 0.0
     }
+  }
+  quantization_param {
+    precision: DYNAMIC_FIXED_POINT
+    bw_layer_in: 8
+    bw_layer_out: 8
+    bw_params: 8
+    scale_in: 23.5200004578
+    scale_out: 28.1800003052
+    scale_params: 1580.34997559
   }
 }
 layer {
@@ -1219,12 +1245,12 @@ layer {
   bottom: "fc7"
   top: "fc7_mbox_conf"
   param {
-    lr_mult: 1
-    decay_mult: 1
+    lr_mult: 1.0
+    decay_mult: 1.0
   }
   param {
-    lr_mult: 2
-    decay_mult: 0
+    lr_mult: 2.0
+    decay_mult: 0.0
   }
   convolution_param {
     num_output: 126
@@ -1236,8 +1262,17 @@ layer {
     }
     bias_filler {
       type: "constant"
-      value: 0
+      value: 0.0
     }
+  }
+  quantization_param {
+    precision: DYNAMIC_FIXED_POINT
+    bw_layer_in: 8
+    bw_layer_out: 8
+    bw_params: 8
+    scale_in: 23.5200004578
+    scale_out: 4.11999988556
+    scale_params: 975.270019531
   }
 }
 layer {
@@ -1268,17 +1303,17 @@ layer {
   bottom: "data"
   top: "fc7_mbox_priorbox"
   prior_box_param {
-    min_size: 60
-    max_size: 111
-    aspect_ratio: 2
-    aspect_ratio: 3
+    min_size: 60.0
+    max_size: 111.0
+    aspect_ratio: 2.0
+    aspect_ratio: 3.0
     flip: true
     clip: false
-    variance: 0.1
-    variance: 0.1
-    variance: 0.2
-    variance: 0.2
-    step: 16
+    variance: 0.10000000149
+    variance: 0.10000000149
+    variance: 0.20000000298
+    variance: 0.20000000298
+    step: 16.0
     offset: 0.5
   }
 }
@@ -1288,12 +1323,12 @@ layer {
   bottom: "conv6_2"
   top: "conv6_2_mbox_loc"
   param {
-    lr_mult: 1
-    decay_mult: 1
+    lr_mult: 1.0
+    decay_mult: 1.0
   }
   param {
-    lr_mult: 2
-    decay_mult: 0
+    lr_mult: 2.0
+    decay_mult: 0.0
   }
   convolution_param {
     num_output: 24
@@ -1305,8 +1340,17 @@ layer {
     }
     bias_filler {
       type: "constant"
-      value: 0
+      value: 0.0
     }
+  }
+  quantization_param {
+    precision: DYNAMIC_FIXED_POINT
+    bw_layer_in: 8
+    bw_layer_out: 8
+    bw_params: 8
+    scale_in: 32.3899993896
+    scale_out: 30.3400001526
+    scale_params: 1448.85998535
   }
 }
 layer {
@@ -1336,12 +1380,12 @@ layer {
   bottom: "conv6_2"
   top: "conv6_2_mbox_conf"
   param {
-    lr_mult: 1
-    decay_mult: 1
+    lr_mult: 1.0
+    decay_mult: 1.0
   }
   param {
-    lr_mult: 2
-    decay_mult: 0
+    lr_mult: 2.0
+    decay_mult: 0.0
   }
   convolution_param {
     num_output: 126
@@ -1353,8 +1397,17 @@ layer {
     }
     bias_filler {
       type: "constant"
-      value: 0
+      value: 0.0
     }
+  }
+  quantization_param {
+    precision: DYNAMIC_FIXED_POINT
+    bw_layer_in: 8
+    bw_layer_out: 8
+    bw_params: 8
+    scale_in: 32.3899993896
+    scale_out: 4.40999984741
+    scale_params: 886.849975586
   }
 }
 layer {
@@ -1385,17 +1438,17 @@ layer {
   bottom: "data"
   top: "conv6_2_mbox_priorbox"
   prior_box_param {
-    min_size: 111
-    max_size: 162
-    aspect_ratio: 2
-    aspect_ratio: 3
+    min_size: 111.0
+    max_size: 162.0
+    aspect_ratio: 2.0
+    aspect_ratio: 3.0
     flip: true
     clip: false
-    variance: 0.1
-    variance: 0.1
-    variance: 0.2
-    variance: 0.2
-    step: 32
+    variance: 0.10000000149
+    variance: 0.10000000149
+    variance: 0.20000000298
+    variance: 0.20000000298
+    step: 32.0
     offset: 0.5
   }
 }
@@ -1405,12 +1458,12 @@ layer {
   bottom: "conv7_2"
   top: "conv7_2_mbox_loc"
   param {
-    lr_mult: 1
-    decay_mult: 1
+    lr_mult: 1.0
+    decay_mult: 1.0
   }
   param {
-    lr_mult: 2
-    decay_mult: 0
+    lr_mult: 2.0
+    decay_mult: 0.0
   }
   convolution_param {
     num_output: 24
@@ -1422,8 +1475,17 @@ layer {
     }
     bias_filler {
       type: "constant"
-      value: 0
+      value: 0.0
     }
+  }
+  quantization_param {
+    precision: DYNAMIC_FIXED_POINT
+    bw_layer_in: 8
+    bw_layer_out: 8
+    bw_params: 8
+    scale_in: 14.25
+    scale_out: 26.8600006104
+    scale_params: 1228.0300293
   }
 }
 layer {
@@ -1453,12 +1515,12 @@ layer {
   bottom: "conv7_2"
   top: "conv7_2_mbox_conf"
   param {
-    lr_mult: 1
-    decay_mult: 1
+    lr_mult: 1.0
+    decay_mult: 1.0
   }
   param {
-    lr_mult: 2
-    decay_mult: 0
+    lr_mult: 2.0
+    decay_mult: 0.0
   }
   convolution_param {
     num_output: 126
@@ -1470,8 +1532,17 @@ layer {
     }
     bias_filler {
       type: "constant"
-      value: 0
+      value: 0.0
     }
+  }
+  quantization_param {
+    precision: DYNAMIC_FIXED_POINT
+    bw_layer_in: 8
+    bw_layer_out: 8
+    bw_params: 8
+    scale_in: 14.25
+    scale_out: 4.65999984741
+    scale_params: 896.140014648
   }
 }
 layer {
@@ -1502,17 +1573,17 @@ layer {
   bottom: "data"
   top: "conv7_2_mbox_priorbox"
   prior_box_param {
-    min_size: 162
-    max_size: 213
-    aspect_ratio: 2
-    aspect_ratio: 3
+    min_size: 162.0
+    max_size: 213.0
+    aspect_ratio: 2.0
+    aspect_ratio: 3.0
     flip: true
     clip: false
-    variance: 0.1
-    variance: 0.1
-    variance: 0.2
-    variance: 0.2
-    step: 64
+    variance: 0.10000000149
+    variance: 0.10000000149
+    variance: 0.20000000298
+    variance: 0.20000000298
+    step: 64.0
     offset: 0.5
   }
 }
@@ -1522,12 +1593,12 @@ layer {
   bottom: "conv8_2"
   top: "conv8_2_mbox_loc"
   param {
-    lr_mult: 1
-    decay_mult: 1
+    lr_mult: 1.0
+    decay_mult: 1.0
   }
   param {
-    lr_mult: 2
-    decay_mult: 0
+    lr_mult: 2.0
+    decay_mult: 0.0
   }
   convolution_param {
     num_output: 16
@@ -1539,7 +1610,7 @@ layer {
     }
     bias_filler {
       type: "constant"
-      value: 0
+      value: 0.0
     }
   }
   quantization_param {
@@ -1547,9 +1618,9 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    fl_layer_in: 4
-    fl_layer_out: 5
-    fl_params: 10
+    scale_in: 18.4300003052
+    scale_out: 26.6599998474
+    scale_params: 1359.68994141
   }
 }
 layer {
@@ -1579,12 +1650,12 @@ layer {
   bottom: "conv8_2"
   top: "conv8_2_mbox_conf"
   param {
-    lr_mult: 1
-    decay_mult: 1
+    lr_mult: 1.0
+    decay_mult: 1.0
   }
   param {
-    lr_mult: 2
-    decay_mult: 0
+    lr_mult: 2.0
+    decay_mult: 0.0
   }
   convolution_param {
     num_output: 84
@@ -1596,8 +1667,17 @@ layer {
     }
     bias_filler {
       type: "constant"
-      value: 0
+      value: 0.0
     }
+  }
+  quantization_param {
+    precision: DYNAMIC_FIXED_POINT
+    bw_layer_in: 8
+    bw_layer_out: 8
+    bw_params: 8
+    scale_in: 18.4300003052
+    scale_out: 5.67999982834
+    scale_params: 1086.95996094
   }
 }
 layer {
@@ -1628,16 +1708,16 @@ layer {
   bottom: "data"
   top: "conv8_2_mbox_priorbox"
   prior_box_param {
-    min_size: 213
-    max_size: 264
-    aspect_ratio: 2
+    min_size: 213.0
+    max_size: 264.0
+    aspect_ratio: 2.0
     flip: true
     clip: false
-    variance: 0.1
-    variance: 0.1
-    variance: 0.2
-    variance: 0.2
-    step: 100
+    variance: 0.10000000149
+    variance: 0.10000000149
+    variance: 0.20000000298
+    variance: 0.20000000298
+    step: 100.0
     offset: 0.5
   }
 }
@@ -1647,12 +1727,12 @@ layer {
   bottom: "conv9_2"
   top: "conv9_2_mbox_loc"
   param {
-    lr_mult: 1
-    decay_mult: 1
+    lr_mult: 1.0
+    decay_mult: 1.0
   }
   param {
-    lr_mult: 2
-    decay_mult: 0
+    lr_mult: 2.0
+    decay_mult: 0.0
   }
   convolution_param {
     num_output: 16
@@ -1664,7 +1744,7 @@ layer {
     }
     bias_filler {
       type: "constant"
-      value: 0
+      value: 0.0
     }
   }
   quantization_param {
@@ -1672,9 +1752,9 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    fl_layer_in: 3
-    fl_layer_out: 6
-    fl_params: 10
+    scale_in: 10.6199998856
+    scale_out: 35.0900001526
+    scale_params: 1117.32995605
   }
 }
 layer {
@@ -1704,12 +1784,12 @@ layer {
   bottom: "conv9_2"
   top: "conv9_2_mbox_conf"
   param {
-    lr_mult: 1
-    decay_mult: 1
+    lr_mult: 1.0
+    decay_mult: 1.0
   }
   param {
-    lr_mult: 2
-    decay_mult: 0
+    lr_mult: 2.0
+    decay_mult: 0.0
   }
   convolution_param {
     num_output: 84
@@ -1721,8 +1801,17 @@ layer {
     }
     bias_filler {
       type: "constant"
-      value: 0
+      value: 0.0
     }
+  }
+  quantization_param {
+    precision: DYNAMIC_FIXED_POINT
+    bw_layer_in: 8
+    bw_layer_out: 8
+    bw_params: 8
+    scale_in: 10.6199998856
+    scale_out: 5.92000007629
+    scale_params: 539.520019531
   }
 }
 layer {
@@ -1753,16 +1842,16 @@ layer {
   bottom: "data"
   top: "conv9_2_mbox_priorbox"
   prior_box_param {
-    min_size: 264
-    max_size: 315
-    aspect_ratio: 2
+    min_size: 264.0
+    max_size: 315.0
+    aspect_ratio: 2.0
     flip: true
     clip: false
-    variance: 0.1
-    variance: 0.1
-    variance: 0.2
-    variance: 0.2
-    step: 300
+    variance: 0.10000000149
+    variance: 0.10000000149
+    variance: 0.20000000298
+    variance: 0.20000000298
+    step: 300.0
     offset: 0.5
   }
 }
@@ -1818,7 +1907,7 @@ layer {
       dim: 0
       dim: -1
       dim: 21
-    }    
+    }
   }
 }
 layer {
@@ -1854,11 +1943,36 @@ layer {
     share_location: true
     background_label_id: 0
     nms_param {
-      nms_threshold: 0.45
+      nms_threshold: 0.449999988079
       top_k: 400
+    }
+    save_output_param {
+      output_directory: "data/ssd_out/VOC2007/SSD_300x300"
+      output_name_prefix: "comp4_det_test_"
+      output_format: "VOC"
+      label_map_file: "data/VOC0712/labelmap_voc.prototxt"
+      name_size_file: "data/VOC0712/test_name_size.txt"
+      num_test_image: 4952
     }
     code_type: CENTER_SIZE
     keep_top_k: 200
-    confidence_threshold: 0.01
+    confidence_threshold: 0.00999999977648
+  }
+}
+layer {
+  name: "detection_eval"
+  type: "DetectionEvaluate"
+  bottom: "detection_out"
+  bottom: "label"
+  top: "detection_eval"
+  include {
+    phase: TEST
+  }
+  detection_evaluate_param {
+    num_classes: 21
+    background_label_id: 0
+    overlap_threshold: 0.5
+    evaluate_difficult_gt: false
+    name_size_file: "data/VOC0712/test_name_size.txt"
   }
 }
