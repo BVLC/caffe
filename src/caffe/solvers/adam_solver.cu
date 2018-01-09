@@ -5,11 +5,16 @@ namespace caffe {
 
 template <typename Dtype>
 __global__ void AdamUpdate(int N, Dtype* g, Dtype* m, Dtype* v,
-    Dtype beta1, Dtype beta2, Dtype eps_hat, Dtype corrected_local_rate) {
+    Dtype beta1, Dtype beta2, Dtype eps_hat, Dtype corrected_local_rate, bool amsgrad) {
   CUDA_KERNEL_LOOP(i, N) {
     float gi = g[i];
     float mi = m[i] = m[i]*beta1 + gi*(1-beta1);
+    float vi_old = v[i];
     float vi = v[i] = v[i]*beta2 + gi*gi*(1-beta2);
+    if (amsgrad) {
+      if (vi < vi_old)
+        v[i] = vi = vi_old;
+    }   
     g[i] = corrected_local_rate * mi / (sqrt(vi) + eps_hat);
   }
 }

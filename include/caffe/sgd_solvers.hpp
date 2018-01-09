@@ -144,6 +144,8 @@ class AdamSolver : public SGDSolver<Dtype> {
   void AdamPreSolve();
   virtual void ComputeUpdateValue(int param_id, Dtype rate);
 
+  bool amsgrad_ = true;
+  
   DISABLE_COPY_AND_ASSIGN(AdamSolver);
 };
 
