@@ -114,7 +114,9 @@ function set_mlsl_vars
     if [ -z $MLSL_ROOT ]; then
         # use built-in mlsl if nothing is specified in ini
         mlslvars_sh=`find external/mlsl/ -name mlslvars.sh`
-        source $mlslvars_sh
+        if [ -f $mlslvars_sh ]; then
+            source $mlslvars_sh
+        fi
     fi
 
     if [ ${num_mlsl_servers} -eq -1 ]; then

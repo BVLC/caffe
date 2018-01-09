@@ -42,9 +42,11 @@ function build_caffe_gcc
     if [ $is_multinode_ -eq 1 ]; then
         echo "USE_MLSL := 1" >> Makefile.config
 
-        mlslvars_sh=`find external/mlsl/ -name mlslvars.sh`
-        if [ -f $mlslvars_sh ]; then
-            source $mlslvars_sh
+        if [ -z $MLSL_ROOT ]; then
+            mlslvars_sh=`find external/mlsl/ -name mlslvars.sh`
+            if [ -f $mlslvars_sh ]; then
+                source $mlslvars_sh
+            fi
         fi
     fi
 
