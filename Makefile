@@ -394,7 +394,7 @@ ifneq (,$(findstring icpc,$(CXX)))
 else ifneq (,$(findstring clang++,$(CXX)))
 	CXX_HARDENING_FLAGS += -fPIE -fstack-protector
 else ifneq (,$(findstring g++,$(CXX)))
-	ifeq ($(shell echo | awk '{ print $(GCCVERSION) >= 4.9 }'), 1)
+	ifeq ($(shell echo | awk '{print $(GCCVERSION) < 4.9;}'), 0)
 		CXX_HARDENING_FLAGS += -fPIE -fstack-protector-strong
 		#Enable SGD FUSION if gcc version >= 4.9
 		COMMON_FLAGS += -DENABLE_SGD_FUSION
