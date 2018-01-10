@@ -15,5 +15,6 @@ Improvements and new features include:
 - Support for Squeeze & Excitation Nets (https://github.com/hujie-frank/SENet).
 - Support for SoftNMS with SSD (https://arxiv.org/abs/1704.04503)
 - Support for Focal-Loss with SSD (https://arxiv.org/abs/1708.02002)
+- Support for AMSGrad (fix to Adam optimizer, https://openreview.net/forum?id=ryQu7f-RZ)
 
 While this is intended to be used with DeepDetect, this is a great alternative to the original Caffe if you'd like to avoid uncaptured errors, train from text or sparse data, need built-in image detection.

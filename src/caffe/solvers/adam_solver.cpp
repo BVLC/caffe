@@ -13,7 +13,7 @@ void AdamSolver<Dtype>::AdamPreSolve() {
     const vector<int>& shape = net_params[i]->shape();
     this->history_.push_back(
             shared_ptr<Blob<Dtype> >(new Blob<Dtype>(shape)));
-    if (amsgrad_)
+    if (this->param_.amsgrad())
       this->temp_.push_back(
 			    shared_ptr<Blob<Dtype> >(new Blob<Dtype>(shape)));
   }
@@ -22,7 +22,7 @@ void AdamSolver<Dtype>::AdamPreSolve() {
 #ifndef CPU_ONLY
 template <typename Dtype>
 void adam_update_gpu(int N, Dtype* g, Dtype* m, Dtype* v, Dtype beta1,
-    Dtype beta2, Dtype eps_hat, Dtype corrected_local_rate);
+		     Dtype beta2, Dtype eps_hat, Dtype corrected_local_rate, bool amsgrad);
 #endif
 
 template <typename Dtype>
@@ -32,6 +32,7 @@ void AdamSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
   Dtype local_rate = rate * net_params_lr[param_id];
   const Dtype beta1 = this->param_.momentum();
   const Dtype beta2 = this->param_.momentum2();
+  const bool amsgrad = this->param_.amsgrad();
 
   // we create aliases for convenience
   size_t update_history_offset = net_params.size();
@@ -59,21 +60,21 @@ void AdamSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
         net_params[param_id]->cpu_diff(),
     val_t->mutable_cpu_data());
 
-    if (amsgrad_)
+    if (amsgrad)
       for (int k=0;k<N;k++)
 	{
-	  val_v_t->mutable_cpu_data()[k] = val_v->mutable_cpu_data()[k];
+	  val_v_t->mutable_cpu_data()[k] = val_v->cpu_data()[k];
 	}
     
     caffe_cpu_axpby(N, Dtype(1)-beta2,
         val_t->cpu_data(), beta2,
         val_v->mutable_cpu_data());
 
-    if (amsgrad_)
+    if (amsgrad)
       for (int k=0;k<N;k++)
 	{
-	  val_v->mutable_cpu_data()[k] = std::max(val_v_t->mutable_cpu_data()[k],
-						  val_v->mutable_cpu_data()[k]);
+	  val_v->mutable_cpu_data()[k] = std::max(val_v_t->cpu_data()[k],
+						  val_v->cpu_data()[k]);
 	}
     
     // set update
@@ -95,7 +96,7 @@ void AdamSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
 #ifndef CPU_ONLY
     adam_update_gpu(N, net_params[param_id]->mutable_gpu_diff(),
         val_m->mutable_gpu_data(), val_v->mutable_gpu_data(), beta1, beta2,
-		    eps_hat, local_rate*correction, amsgrad_);
+		    eps_hat, local_rate*correction, amsgrad);
 #else
     NO_GPU;
 #endif
