@@ -70,7 +70,7 @@ string create_source(Device* dev,
     ss << "int_tp w_im = w_offset + j * dilation_w;" << std::endl;
     ss << "*data_col_ptr = "
        << "(h_im >= 0 && w_im >= 0 && h_im < height && w_im < width) ?"
-       << "data_im_ptr[i * dilation_h * width + j * dilation_w] : 0;"
+       << "data_im_ptr[i * dilation_h * width + j * dilation_w] : (Dtype)0;"
        << std::endl;
     ss << "data_col_ptr += height_col * width_col;" << std::endl;
     ss << "}" << std::endl;

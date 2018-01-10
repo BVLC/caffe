@@ -1,13 +1,14 @@
-#include <iostream>
+#ifdef USE_CUDA
+
+#include <cfloat>
 #include <fstream>
+#include <iostream>
 #include <boost/filesystem.hpp>
 
 #include "caffe/backend/cuda/cuda_device_program.hpp"
 #include "caffe/backend/cuda/cuda_device.hpp"
 
 namespace caffe {
-
-#ifdef USE_CUDA
 
 CudaDeviceProgram::CudaDeviceProgram(Device* dev) : DeviceProgram(dev),
     cuda_program_(nullptr), cuda_module_(nullptr) {
@@ -22,6 +23,10 @@ CudaDeviceProgram::~CudaDeviceProgram() {
 }
 
 bool CudaDeviceProgram::Compile(bool load_cache, bool store_cache) {
+  // CUDA_CHECK(cudaSetDevice(device_->id()));
+
+  bool success = true;
+
   // Don't compile empty programs with no function declarations
   if (this->args_.size() == 0) {
     return true;
@@ -61,10 +66,17 @@ bool CudaDeviceProgram::Compile(bool load_cache, bool store_cache) {
     if (id >= 0 && ptx_size > 0) {
       ptx = new char[ptx_size];  // NOLINT
       loaded_from_cache = this->device_->get_database()->LoadKernel(id, ptx);
-      if (!loaded_from_cache) {
-        delete ptx;  // NOLINT
-        ptx = nullptr;
+      if (loaded_from_cache) {
+        CUresult result = cuModuleLoadDataEx(cuda_module_.get(), ptx, 0, 0, 0);
+        loaded_from_cache = (result == CUDA_SUCCESS);
+        success = loaded_from_cache;
+        if (!loaded_from_cache) {
+          LOG(WARNING) << "Failed to load CUDA binary from cache ("
+                       << cudaGetErrorString(result) << ")" << std::endl;
+        }
       }
+      delete ptx;  // NOLINT
+      ptx = nullptr;
     }
   }
 #endif  // USE_SQLITE
@@ -81,7 +93,6 @@ bool CudaDeviceProgram::Compile(bool load_cache, bool store_cache) {
     nvrtcGetPTXSize(*cuda_program_.get(), &ptx_size);
     ptx = new char[ptx_size];
     nvrtcGetPTX(*cuda_program_.get(), ptx);
-
 #ifndef NDEBUG
     string debug_path = ".caffe_debug";
     const char* path = debug_path.c_str();
@@ -106,26 +117,34 @@ bool CudaDeviceProgram::Compile(bool load_cache, bool store_cache) {
       fclose(fp);
     }
 #endif  // NDEBUG
+    CUresult result = cuModuleLoadDataEx(cuda_module_.get(), ptx, 0, 0, 0);
+    if (!(result == CUDA_SUCCESS)) {
+      LOG(ERROR) << "Failed to compile CUDA binary from code ("
+                 << cudaGetErrorString(result) << ")" << std::endl;
+    }
 #ifdef USE_SQLITE
-    if (store_cache) {
+    if (store_cache && (result == CUDA_SUCCESS)) {
       this->device_->get_database()->StoreKernel(identifier(),
                                                 flags.c_str(), flags.size(),
                                                 src_.c_str(), src_.size(),
                                                 ptx, ptx_size);
     }
 #endif  // USE_SQLITE
+    delete ptx;  // NOLINT
   }
-
-  cuModuleLoadDataEx(cuda_module_.get(), ptx, 0, 0, 0);
-  delete ptx;  // NOLINT
-  return true;
+  return success;
 }
 
 
 shared_ptr<DeviceKernel> CudaDeviceProgram::GetKernel(string name) {
   shared_ptr<CUfunction> kernel = make_shared<CUfunction>();
   CHECK(cuda_module_.get()) << "CUDA module invalid.";
-  cuModuleGetFunction(kernel.get(), *cuda_module_.get(), name.c_str());
+  CUresult result = cuModuleGetFunction(kernel.get(), *cuda_module_.get(),
+                                        name.c_str());
+  if (result != CUDA_SUCCESS) {
+    LOG(FATAL) << "Loading CUDA kernel " << name << " failed ("
+               << cudaGetErrorString(result) << ")" << std::endl;
+  }
   CHECK(kernel.get()) << "Loading CUDA kernel " << name << " failed.";
 
   KernelArgs args;
@@ -144,6 +163,7 @@ string CudaDeviceProgram::function(string name,
              vector<std::tuple<string, string, uint64_t>> args) {
   args_.insert(make_pair(name, args));
   stringstream ss;
+  ss << " extern \"C\" ";
   ss << "__global__ void ";
   ss << name << "(";
   for (uint_tp i = 0; i < args.size(); ++i) {
@@ -169,7 +189,7 @@ string CudaDeviceProgram::kernel_loop(string type,
   stringstream ss;
   ss << "for (" << type << " "
      << index << " = blockIdx.x * blockDim.x + threadIdx.x; "
-     << index << " < " << n << "; "
+     << index << " < (" << n << "); "
      << index << " += blockDim.x * gridDim.x) {" << std::endl;
   return ss.str();
 }
@@ -180,7 +200,12 @@ string CudaDeviceProgram::setup() {
 #ifdef USE_HALF
   ss << "#include \"cuda_fp16.h\"" << std::endl;
   ss << "#include \"cuda_fp16.hpp\"" << std::endl;
+
+  ss << "#define HALF_SUPPORT_AVAILABLE" << std::endl;
+  ss << "#define HALF_MAX " << HALF_MAX << std::endl;
 #endif  // USE_HALF
+
+  ss << "#define FLT_MAX " << FLT_MAX << std::endl;
 
   ss << "#define int8_t char" << std::endl;
   ss << "#define int16_t short" << std::endl;
@@ -534,7 +559,40 @@ string CudaDeviceProgram::convert_type_int64(int_tp vec_len,
   return "((longlong" + std::to_string(vec_len) + ")(" + src_val + "))";
 }
 
-#endif  // USE_CUDA
 
+string CudaDeviceProgram::helper_functions_half() const {
+  stringstream ss;
+  ss << "__device__ half abs(half x) {" << std::endl;
+  ss << "return (half)abs((float)x);;" << std::endl;
+  ss << "}" << std::endl;
+  ss << "__device__ half pow(half x, half y) {" << std::endl;
+  ss << "return (half)pow((float)x, (float)y);";
+  ss << "}" << std::endl;
+  ss << "__device__ half signbit(half x) {" << std::endl;
+  ss << "return (half)signbit((float)x);";
+  ss << "}" << std::endl;
+  return ss.str();
+}
+string CudaDeviceProgram::helper_functions_float() const {
+  return "";
+}
+string CudaDeviceProgram::helper_functions_double() const {
+  return "";
+}
+string CudaDeviceProgram::helper_functions_int8() const {
+  return "";
+}
+string CudaDeviceProgram::helper_functions_int16() const {
+  return "";
+}
+string CudaDeviceProgram::helper_functions_int32() const {
+  return "";
+}
+string CudaDeviceProgram::helper_functions_int64() const {
+  return "";
 }
 
+
+}  // namespace caffe
+
+#endif  // USE_CUDA

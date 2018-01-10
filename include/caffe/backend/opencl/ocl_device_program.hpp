@@ -86,6 +86,14 @@ class OclDeviceProgram : public DeviceProgram {
   virtual string convert_type_int32(int_tp vec_len, string src_val) const;
   virtual string convert_type_int64(int_tp vec_len, string src_val) const;
 
+  virtual string helper_functions_half() const;
+  virtual string helper_functions_float() const;
+  virtual string helper_functions_double() const;
+  virtual string helper_functions_int8() const;
+  virtual string helper_functions_int16() const;
+  virtual string helper_functions_int32() const;
+  virtual string helper_functions_int64() const;
+
  private:
   viennacl::ocl::program ocl_program_;
 };

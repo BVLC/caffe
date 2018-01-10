@@ -197,8 +197,8 @@ void OclDevice::get_threads(const vector<size_t>* work_size,
                             DeviceKernel* kernel,
                             bool auto_select) {
   CHECK(work_size);
-  CHECK(local);
   CHECK(group);
+  CHECK(local);
   CHECK(kernel);
 
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(id_);

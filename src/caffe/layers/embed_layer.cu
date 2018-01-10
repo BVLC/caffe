@@ -34,7 +34,7 @@ void EmbedLayer<Dtype, MItype, MOtype>::GenerateProgram() {
   fw_args.push_back(this->device_program_->template create_kernel_arg<MOtype>(
                     "top_data", KERNEL_ARG_GLOBAL_MEM));
   ss << this->device_program_->function("EmbedForward", fw_args);
-  ss << this->device_program_->kernel_loop("uint_tp", "index", "nthreads");
+  ss << this->device_program_->kernel_loop("uint_tp", "top_index", "nthreads");
   ss << "const int_tp b = top_index / n;" << std::endl;
   ss << "const int_tp d = top_index % n;" << std::endl;
   ss << "const int_tp index = (int_tp)(bottom_data[b]);" << std::endl;
@@ -59,7 +59,7 @@ void EmbedLayer<Dtype, MItype, MOtype>::GenerateProgram() {
   bw_args.push_back(this->device_program_->template create_kernel_arg<Dtype>(
                     "weight_diff", KERNEL_ARG_GLOBAL_MEM));
   ss << this->device_program_->function("EmbedBackward", bw_args);
-  ss << this->device_program_->kernel_loop("uint_tp", "index", "nthreads");
+  ss << this->device_program_->kernel_loop("uint_tp", "top_index", "nthreads");
   ss << "const int_tp b = top_index / n;" << std::endl;
   ss << "const int_tp d = top_index % n;" << std::endl;
   ss << "const int_tp index = (int_tp)(bottom_data[b]);" << std::endl;

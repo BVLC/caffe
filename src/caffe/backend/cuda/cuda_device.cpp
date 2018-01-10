@@ -29,6 +29,10 @@ CudaDevice::~CudaDevice() {
 }
 
 void CudaDevice::Init() {
+  // Force initialize CUDA context
+  cudaSetDevice(id_);
+  cudaFree(0);
+
   cudaDeviceProp prop;
   CUDA_CHECK(cudaGetDeviceProperties(&prop, id_));
   max_local_sizes_[0] = prop.maxThreadsDim[0];
@@ -101,21 +105,21 @@ vptr<void> CudaDevice::MallocMemDevice(uint_tp size, void** ptr,
   CHECK_GT(size, 0) << "Illegal allocation of size 0.";
 
   int initial_device;
-  cudaGetDevice(&initial_device);
-  cudaSetDevice(this->id());
+  CUDA_CHECK(cudaGetDevice(&initial_device));
+  CUDA_CHECK(cudaSetDevice(this->id()));
   void* gpu_ptr;
   CUDA_CHECK(cudaMalloc(&gpu_ptr, size));
-  cudaSetDevice(initial_device);
+  CUDA_CHECK(cudaSetDevice(initial_device));
   CHECK_NE(zero_copy, true) << "Zero-copy not supported on CUDA.";
   return vptr<void>(make_shared<cuda_dev_ptr<void> >(gpu_ptr));
 }
 
 void CudaDevice::FreeMemDevice(vptr<void> ptr) {
   int initial_device;
-  cudaGetDevice(&initial_device);
-  cudaSetDevice(this->id());
-  cudaFree(ptr.get_cuda_ptr());
-  cudaSetDevice(initial_device);
+  CUDA_CHECK(cudaGetDevice(&initial_device));
+  CUDA_CHECK(cudaSetDevice(this->id()));
+  CUDA_CHECK(cudaFree(ptr.get_cuda_ptr()));
+  CUDA_CHECK(cudaSetDevice(initial_device));
 }
 
 bool CheckZeroCopy(vptr<void> gpu_ptr, void* cpu_ptr, uint_tp size) {
@@ -213,11 +217,7 @@ bool CudaDevice::CheckCapability(DeviceCapability cap) {
 }
 
 bool CudaDevice::CheckType(string type) {
-  if (backend_ == BACKEND_CUDA) {
-    if (type.compare("GPU") == 0)
-      return true;
-  }
-  return false;
+  return (type.compare("GPU") == 0);
 }
 
 bool CudaDevice::CheckZeroCopy(vptr<const void> gpu_ptr, void* cpu_ptr,

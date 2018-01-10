@@ -191,7 +191,7 @@ class Device {
   template<typename Dtype>
   void set(const uint_tp n, const Dtype alpha, vptr<Dtype> x);
 
-  virtual void memset(const uint_tp n, const char alpha, vptr<char> x);
+  void memset(const uint_tp n, const char alpha, vptr<char> x);
 
   template<typename Dtype>
   void add_scalar(const uint_tp n, const Dtype alpha, vptr<Dtype> x);

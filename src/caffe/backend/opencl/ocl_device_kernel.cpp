@@ -55,6 +55,13 @@ void OclDeviceKernel::Execute(vector<size_t> group,
     local_ws_ptr = NULL;
   }
 
+  /*
+  for (int_tp i = 0; i < work_dim; ++i) {
+    std::cout << "Global: " << global_ws[i] << std::endl;
+    std::cout << "Local: " << local_ws[i] << std::endl;
+  }
+  */
+
   OCL_CHECK(clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
                                    kernel, work_dim, NULL,
                                    global_ws_ptr, local_ws_ptr,
@@ -78,7 +85,7 @@ void OclDeviceKernel::set_arg(uint_tp idx, const bool *arg) {
 void OclDeviceKernel::set_arg(uint_tp idx, const char *arg) {
   int_tp curr_arg_idx = idx + ocl_arg_offsets_[idx];
   clSetKernelArg(this->ocl_kernel_.handle().get(), curr_arg_idx,
-                 safe_sizeof<char>(), &arg);
+                 safe_sizeof<char>(), arg);
   this->arg_idx_ = std::max(idx + 1, this->arg_idx_);
 }
 void OclDeviceKernel::set_arg(uint_tp idx, const int8_t *arg) {

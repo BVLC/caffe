@@ -81,6 +81,9 @@ class DeviceProgram {
   string atomic_add(string source, string operand);
 
   template<typename Dtype>
+  string helper_functions();
+
+  template<typename Dtype>
   string define_type(const char* name);
 
   template<typename Dtype>
@@ -118,6 +121,15 @@ class DeviceProgram {
   virtual string kernel_arg_type_uint16_t(uint64_t flags) = 0;
   virtual string kernel_arg_type_uint32_t(uint64_t flags) = 0;
   virtual string kernel_arg_type_uint64_t(uint64_t flags) = 0;
+
+  virtual string helper_functions_half() const = 0;
+  virtual string helper_functions_float() const = 0;
+  virtual string helper_functions_double() const = 0;
+  virtual string helper_functions_int8() const = 0;
+  virtual string helper_functions_int16() const = 0;
+  virtual string helper_functions_int32() const = 0;
+  virtual string helper_functions_int64() const = 0;
+
 
   uint64_t compile_flags_;
   Device *device_;
