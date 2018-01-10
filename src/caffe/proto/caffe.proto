@@ -220,7 +220,7 @@ message NetParameter {
 // NOTE
 // Update the next available ID when you add a new SolverParameter field.
 //
-// SolverParameter next available ID: 44 (last added: plateau_winsize)
+// SolverParameter next available ID: 45 (last added: amsgrad)
 message SolverParameter {
   //////////////////////////////////////////////////////////////////////////////
   // Specifying the train and test networks
@@ -353,6 +353,8 @@ message SolverParameter {
   optional float delta = 31 [default = 1e-8];
   // parameters for the Adam solver
   optional float momentum2 = 39 [default = 0.999];
+  // long-term memory of past gradients
+  optional bool amsgrad = 45 [default = false];
 
   // RMSProp decay value
   // MeanSquare(t) = rms_decay*MeanSquare(t-1) + (1-rms_decay)*SquareGradient(t)
