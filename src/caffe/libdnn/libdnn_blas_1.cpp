@@ -18,13 +18,17 @@ string LibDNNBlas<MItype, MOtype>::generate_scale_source(
             shared_ptr<DeviceProgram> program, shared_ptr<LibDNNTuner> tuner,
             shared_ptr<Quantizer<MItype, MOtype> > quantizer) {
   stringstream ss;
+  ss << program->setup();
+  ss << program->template define_vector_type<MItype>("MItype", 0, 16);
+  ss << program->template define_vector_type<MOtype>("MOtype", 0, 16);
+  ss << program->vector_accessors();
   KernelArgs args;
   args.push_back(program->create_kernel_arg<uint_tp>("n", KERNEL_ARG_CONST));
   args.push_back(program->create_kernel_arg<MItype>("alpha", KERNEL_ARG_CONST));
   args.push_back(program->create_kernel_arg<MItype>("x",
             KERNEL_ARG_CONST | KERNEL_ARG_GLOBAL_MEM  | KERNEL_ARG_MEM_OFFSET));
   args.push_back(program->create_kernel_arg<MOtype>("y",
-            KERNEL_ARG_CONST | KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_MEM_OFFSET));
+                                KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_MEM_OFFSET));
   ss << program->function("libdnn_scale", args);
   ss << program->kernel_loop("uint_tp", "index", "n");
   ss << "y[index] = alpha * x[index];" << std::endl;
@@ -95,6 +99,10 @@ string LibDNNBlas<MItype, MOtype>::generate_axpby_source(
             shared_ptr<DeviceProgram> program, shared_ptr<LibDNNTuner> tuner,
             shared_ptr<Quantizer<MItype, MOtype> > quantizer) {
   stringstream ss;
+  ss << program->setup();
+  ss << program->template define_vector_type<MItype>("MItype", 0, 16);
+  ss << program->template define_vector_type<MOtype>("MOtype", 0, 16);
+  ss << program->vector_accessors();
   KernelArgs args;
   args.push_back(program->create_kernel_arg<uint_tp>("n", KERNEL_ARG_CONST));
   args.push_back(program->create_kernel_arg<MItype>("alpha", KERNEL_ARG_CONST));
@@ -102,7 +110,7 @@ string LibDNNBlas<MItype, MOtype>::generate_axpby_source(
             KERNEL_ARG_CONST | KERNEL_ARG_GLOBAL_MEM  | KERNEL_ARG_MEM_OFFSET));
   args.push_back(program->create_kernel_arg<MItype>("beta", KERNEL_ARG_CONST));
   args.push_back(program->create_kernel_arg<MOtype>("y",
-            KERNEL_ARG_CONST | KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_MEM_OFFSET));
+                                KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_MEM_OFFSET));
   ss << program->function("libdnn_axpby", args);
   ss << program->kernel_loop("uint_tp", "index", "n");
   ss << "y[index] = alpha * x[index] + beta * y[index];" << std::endl;
@@ -265,7 +273,7 @@ string LibDNNBlas<MItype, MOtype>::asum_string_identifier(
     libdnnAccumulatePrecision_t prec,
     shared_ptr<Quantizer<MItype, MOtype> > quantizer) {
   stringstream ss;
-  ss << "axpby_";
+  ss << "asum_";
   switch (prec) {
     case LIBDNN_ACCUMULATE_PREC_8:
       ss << "prec_8_";
@@ -307,9 +315,9 @@ string LibDNNBlas<MItype, MOtype>::generate_asum_source(
   args.push_back(program->create_kernel_arg<MOtype>("out",
                                                    KERNEL_ARG_GLOBAL_MEM));
   ss << program->function("libdnn_asum", args);
-  ss << "out = (MOtype) 0.0";
+  ss << "out[0] = (MOtype)0;" << std::endl;
   ss << program->kernel_loop("uint_tp", "index", "n");
-  ss << "out += x[index];" << std::endl;
+  ss << "out[0] += x[index];" << std::endl;
   ss << "}" << std::endl;
   ss << "}" << std::endl;
   return ss.str();

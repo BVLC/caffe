@@ -467,4 +467,34 @@ string DeviceProgram::convert_type<int64_t>(int_tp vec_len,
 }
 
 
+template<>
+string DeviceProgram::helper_functions<half_fp>() {
+  return helper_functions_half();
+}
+template<>
+string DeviceProgram::helper_functions<float>() {
+  return helper_functions_float();
+}
+template<>
+string DeviceProgram::helper_functions<double>() {
+  return helper_functions_double();
+}
+template<>
+string DeviceProgram::helper_functions<int8_t>() {
+  return helper_functions_int8();
+}
+template<>
+string DeviceProgram::helper_functions<int16_t>() {
+  return helper_functions_int16();
+}
+template<>
+string DeviceProgram::helper_functions<int32_t>() {
+  return helper_functions_int32();
+}
+template<>
+string DeviceProgram::helper_functions<int64_t>() {
+  return helper_functions_int64();
+}
+
+
 }  // namespace caffe

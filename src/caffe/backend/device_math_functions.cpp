@@ -571,6 +571,7 @@ template<typename Dtype, typename MItype, typename MOtype>
 string create_source(Device* dev, shared_ptr<DeviceProgram> program) {
   stringstream ss;
 
+  ss << program->helper_functions<Dtype>();
   ss << program->define_type<Dtype>("Dtype");
 
   // Add Scalar
@@ -627,7 +628,7 @@ string create_source(Device* dev, shared_ptr<DeviceProgram> program) {
                       KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_MEM_OFFSET));
     ss << program->function("caffe_gpu_powx", args);
     ss << program->kernel_loop("uint_tp", "index", "n");
-    ss << "if (alpha == 2.0) {" << std::endl;
+    ss << "if (alpha == (Dtype)2) {" << std::endl;
     string abs_fun;
     if (dev->backend() == BACKEND_CUDA) {
       abs_fun = "abs";
@@ -698,7 +699,8 @@ string create_source(Device* dev, shared_ptr<DeviceProgram> program) {
                       KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_MEM_OFFSET));
     ss << program->function("caffe_gpu_sign", args);
     ss << program->kernel_loop("uint_tp", "index", "n");
-    ss << "y[index] = (0.0 < x[index]) - (x[index] < 0.0);" << std::endl;
+    ss << "y[index] = ((Dtype)0 < x[index]) - (x[index] < (Dtype)0);"
+       << std::endl;
     ss << "}" << std::endl;
     ss << "}" << std::endl;
   }
@@ -716,7 +718,7 @@ string create_source(Device* dev, shared_ptr<DeviceProgram> program) {
     ss << program->function("caffe_gpu_signbit", args);
     ss << program->kernel_loop("uint_tp", "index", "n");
     if (is_signed_integer_type<Dtype>()) {
-      ss << "y[index] = (Dtype)(x[index] < 0);" << std::endl;
+      ss << "y[index] = (Dtype)(x[index] < (Dtype)0);" << std::endl;
     } else {
       ss << "y[index] = signbit(x[index]);" << std::endl;
     }
@@ -739,14 +741,14 @@ void Device::CreateMathProgram() {
         {
           KernelArgs args;
           args.push_back(this->math_programs_[i]
-                                ->create_kernel_arg<uint_tp>("n",
-                                KERNEL_ARG_CONST));
+                         ->create_kernel_arg<uint_tp>("n",
+                         KERNEL_ARG_CONST));
           args.push_back(this->math_programs_[i]
-                                ->create_kernel_arg<char>("alpha",
-                                KERNEL_ARG_CONST));
+                         ->create_kernel_arg<char>("alpha",
+                         KERNEL_ARG_CONST));
           args.push_back(this->math_programs_[i]
-                                ->create_kernel_arg<char>("y",
-                                KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_MEM_OFFSET));
+                         ->create_kernel_arg<char>("y",
+                         KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_MEM_OFFSET));
           ss << this->math_programs_[i]->function("caffe_gpu_memset", args);
           ss << this->math_programs_[i]->kernel_loop("uint_tp", "index", "n");
           ss << "y[index] = alpha;" << std::endl;

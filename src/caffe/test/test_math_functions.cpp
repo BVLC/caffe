@@ -57,42 +57,42 @@ TYPED_TEST(CPUMathFunctionsTest, TestNothing) {
 
 TYPED_TEST(CPUMathFunctionsTest, TestAsum) {
   int_tp n = this->blob_bottom_->count();
-  const TypeParam* X = this->blob_bottom_->cpu_data();
+  const TypeParam* x = this->blob_bottom_->cpu_data();
   TypeParam std_asum = 0;
   for (int_tp i = 0; i < n; ++i) {
-    std_asum += std::fabs(X[i]);
+    std_asum += std::fabs(x[i]);
   }
-  TypeParam cpu_asum = caffe_asum<TypeParam>(n, X);
+  TypeParam cpu_asum = caffe_asum<TypeParam>(n, x);
   EXPECT_LT((cpu_asum - std_asum) / std_asum, 1e-2);
 }
 
 TYPED_TEST(CPUMathFunctionsTest, TestSign) {
   int_tp n = this->blob_bottom_->count();
-  const TypeParam* X = this->blob_bottom_->cpu_data();
-  caffe_sign<TypeParam>(n, X, this->blob_bottom_->mutable_cpu_diff());
+  const TypeParam* x = this->blob_bottom_->cpu_data();
+  caffe_sign<TypeParam>(n, x, this->blob_bottom_->mutable_cpu_diff());
   const TypeParam* signs = this->blob_bottom_->cpu_diff();
   for (int_tp i = 0; i < n; ++i) {
-    EXPECT_EQ(signs[i], X[i] > 0 ? 1 : (X[i] < 0 ? -1 : 0));
+    EXPECT_EQ(signs[i], x[i] > 0 ? 1 : (x[i] < 0 ? -1 : 0));
   }
 }
 
 TYPED_TEST(CPUMathFunctionsTest, TestSgnbit) {
   int_tp n = this->blob_bottom_->count();
-  const TypeParam* X = this->blob_bottom_->cpu_data();
-  caffe_sgnbit<TypeParam>(n, X, this->blob_bottom_->mutable_cpu_diff());
+  const TypeParam* x = this->blob_bottom_->cpu_data();
+  caffe_sgnbit<TypeParam>(n, x, this->blob_bottom_->mutable_cpu_diff());
   const TypeParam* signbits = this->blob_bottom_->cpu_diff();
   for (int_tp i = 0; i < n; ++i) {
-    EXPECT_EQ(signbits[i], X[i] < 0 ? 1 : 0);
+    EXPECT_EQ(signbits[i], x[i] < 0 ? 1 : 0);
   }
 }
 
 TYPED_TEST(CPUMathFunctionsTest, TestFabs) {
   int_tp n = this->blob_bottom_->count();
-  const TypeParam* X = this->blob_bottom_->cpu_data();
-  caffe_abs<TypeParam>(n, X, this->blob_bottom_->mutable_cpu_diff());
+  const TypeParam* x = this->blob_bottom_->cpu_data();
+  caffe_abs<TypeParam>(n, x, this->blob_bottom_->mutable_cpu_diff());
   const TypeParam* abs_val = this->blob_bottom_->cpu_diff();
   for (int_tp i = 0; i < n; ++i) {
-    EXPECT_EQ(abs_val[i], X[i] > 0 ? X[i] : -X[i]);
+    EXPECT_EQ(abs_val[i], x[i] > 0 ? x[i] : -x[i]);
   }
 }
 
@@ -103,9 +103,9 @@ TYPED_TEST(CPUMathFunctionsTest, TestScale) {
   caffe_scale<TypeParam>(n, alpha, this->blob_bottom_->cpu_data(),
                              this->blob_bottom_->mutable_cpu_diff());
   const TypeParam* scaled = this->blob_bottom_->cpu_diff();
-  const TypeParam* X = this->blob_bottom_->cpu_data();
+  const TypeParam* x = this->blob_bottom_->cpu_data();
   for (int_tp i = 0; i < n; ++i) {
-    EXPECT_EQ(scaled[i], X[i] * alpha);
+    EXPECT_EQ(scaled[i], x[i] * alpha);
   }
 }
 
@@ -134,10 +134,10 @@ TYPED_TEST(GPUMathFunctionsTest, TestAsum) {
     n = 512;
     precision = 0.1;
   }
-  const TypeParam* X = this->blob_bottom_->cpu_data();
+  const TypeParam* x = this->blob_bottom_->cpu_data();
   TypeParam std_asum = 0;
   for (int_tp i = 0; i < n; ++i) {
-    std_asum += fabs(X[i]);
+    std_asum += fabs(x[i]);
   }
   TypeParam gpu_asum;
 
@@ -157,9 +157,9 @@ TYPED_TEST(GPUMathFunctionsTest, TestSign) {
                                         this->blob_bottom_->mutable_gpu_diff());
 
   const TypeParam* signs = this->blob_bottom_->cpu_diff();
-  const TypeParam* X = this->blob_bottom_->cpu_data();
+  const TypeParam* x = this->blob_bottom_->cpu_data();
   for (int_tp i = 0; i < n; ++i) {
-    EXPECT_EQ(signs[i], X[i] > 0 ? 1 : (X[i] < 0 ? -1 : 0));
+    EXPECT_EQ(signs[i], x[i] > 0 ? 1 : (x[i] < 0 ? -1 : 0));
   }
 }
 
@@ -172,9 +172,9 @@ TYPED_TEST(GPUMathFunctionsTest, TestSgnbit) {
                                  this->blob_bottom_->mutable_gpu_diff());
 
   const TypeParam* signbits = this->blob_bottom_->cpu_diff();
-  const TypeParam* X = this->blob_bottom_->cpu_data();
+  const TypeParam* x = this->blob_bottom_->cpu_data();
   for (int_tp i = 0; i < n; ++i) {
-    EXPECT_EQ(signbits[i], X[i] < 0 ? 1 : 0);
+    EXPECT_EQ(signbits[i], x[i] < 0 ? 1 : 0);
   }
 }
 
@@ -187,9 +187,9 @@ TYPED_TEST(GPUMathFunctionsTest, TestFabs) {
                               this->blob_bottom_->mutable_gpu_diff());
 
   const TypeParam* abs_val = this->blob_bottom_->cpu_diff();
-  const TypeParam* X = this->blob_bottom_->cpu_data();
+  const TypeParam* x = this->blob_bottom_->cpu_data();
   for (int_tp i = 0; i < n; ++i) {
-    EXPECT_EQ(abs_val[i], X[i] > 0 ? X[i] : -X[i]);
+    EXPECT_EQ(abs_val[i], x[i] > 0 ? x[i] : -x[i]);
   }
 }
 
@@ -204,9 +204,9 @@ TYPED_TEST(GPUMathFunctionsTest, TestScale) {
                                 this->blob_bottom_->mutable_gpu_diff());
 
   const TypeParam* scaled = this->blob_bottom_->cpu_diff();
-  const TypeParam* X = this->blob_bottom_->cpu_data();
+  const TypeParam* x = this->blob_bottom_->cpu_data();
   for (int_tp i = 0; i < n; ++i) {
-    EXPECT_EQ(scaled[i], X[i] * alpha);
+    EXPECT_EQ(scaled[i], x[i] * alpha);
   }
 }
 

@@ -54,6 +54,7 @@ namespace caffe {
 #define CUDA_POST_KERNEL_CHECK CUDA_CHECK(cudaPeekAtLastError())
 
 // CUDA: library error reporting.
+const char* cudaGetErrorString(CUresult error);
 const char* cublasGetErrorString(cublasStatus_t error);
 const char* curandGetErrorString(curandStatus_t error);
 

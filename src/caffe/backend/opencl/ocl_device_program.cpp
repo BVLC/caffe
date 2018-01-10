@@ -175,11 +175,13 @@ shared_ptr<DeviceKernel> OclDeviceProgram::GetKernel(string name) {
     args = pos->second;
   }
 
-  /*for(int_tp i = 0; i < args.size(); ++i) {
+  /*
+  for(int_tp i = 0; i < args.size(); ++i) {
     std::cout << i << " flags: " << std::get<0>(args[i]) << std::endl;
     std::cout << i << " flags: " << std::get<1>(args[i]) << std::endl;
     std::cout << i << " flags: " << std::get<2>(args[i]) << std::endl;
-  }*/
+  }
+  */
 
   return make_shared<OclDeviceKernel>(device_, kernel, args);
 }
@@ -247,7 +249,7 @@ string OclDeviceProgram::kernel_loop(string type,
   stringstream ss;
   ss << "for (" << type << " "
      << index << " = get_global_id(0); "
-     << index << " < " << n << "; "
+     << index << " < (" << n << "); "
      << index << " += get_global_size(0)) {" << std::endl;
   return ss.str();
 }
@@ -570,6 +572,28 @@ string OclDeviceProgram::convert_type_int64(int_tp vec_len,
    return "convert_long" + (vec_len > 0 ? std::to_string(vec_len) : "")
        + "(" + src_val + ")";
  }
+
+string OclDeviceProgram::helper_functions_half() const {
+  return "";
+}
+string OclDeviceProgram::helper_functions_float() const {
+  return "";
+}
+string OclDeviceProgram::helper_functions_double() const {
+  return "";
+}
+string OclDeviceProgram::helper_functions_int8() const {
+  return "";
+}
+string OclDeviceProgram::helper_functions_int16() const {
+  return "";
+}
+string OclDeviceProgram::helper_functions_int32() const {
+  return "";
+}
+string OclDeviceProgram::helper_functions_int64() const {
+  return "";
+}
 
 #endif  // USE_OPENCL
 

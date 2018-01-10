@@ -59,7 +59,6 @@ inline void SyncedMemory::to_cpu() {
       if (own_zero_copy_data_) {
         device_->CheckZeroCopy(gpu_ptr_, cpu_ptr_, size_);
       } else {
-        // std::cout << "GPU -> CPU copy: " << size_ << std::endl;
         device_->memcpy(size_, gpu_ptr_, cpu_ptr_);
       }
       head_ = SYNCED;

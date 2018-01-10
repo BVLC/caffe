@@ -25,6 +25,8 @@ namespace caffe {
 
 void CudaDevice::memcpy(const uint_tp n, vptr<const void> x, vptr<void> y) {
   if (x.get_cuda_ptr() != y.get_cuda_ptr()) {
+    CHECK(x.get_cuda_ptr());
+    CHECK(y.get_cuda_ptr());
     CUDA_CHECK(cudaMemcpy(y.get_cuda_ptr(), x.get_cuda_ptr(),
                           n, cudaMemcpyDefault));  // NOLINT(caffe/alt_fn)
   }
@@ -32,6 +34,8 @@ void CudaDevice::memcpy(const uint_tp n, vptr<const void> x, vptr<void> y) {
 
 void CudaDevice::memcpy(const uint_tp n, const void* x, vptr<void> y) {
   if (x != y.get_cuda_ptr()) {
+    CHECK(x);
+    CHECK(y.get_cuda_ptr());
     CUDA_CHECK(cudaMemcpy(y.get_cuda_ptr(), x,
                           n, cudaMemcpyDefault));  // NOLINT(caffe/alt_fn)
   }
@@ -39,6 +43,8 @@ void CudaDevice::memcpy(const uint_tp n, const void* x, vptr<void> y) {
 
 void CudaDevice::memcpy(const uint_tp n, vptr<const void> x, void* y) {
   if (x.get_cuda_ptr() != y) {
+    CHECK(x.get_cuda_ptr());
+    CHECK(y);
     CUDA_CHECK(cudaMemcpy(y, x.get_cuda_ptr(),
                           n, cudaMemcpyDefault));  // NOLINT(caffe/alt_fn)
   }

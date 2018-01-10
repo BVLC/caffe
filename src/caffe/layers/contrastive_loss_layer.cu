@@ -52,10 +52,10 @@ void ContrastiveLossLayer<Dtype, MItype, MOtype>::GenerateProgram() {
   ss << "mdist = (margin - dist);" << std::endl;
   ss << "beta = -alpha * mdist / (dist + (Dtype)(1e-4)) * diff[i];" << std::endl;
   ss << "}" << std::endl;
-  ss << "if (mdist > 0.0) {" << std::endl;
+  ss << "if (mdist > (Dtype)0) {" << std::endl;
   ss << "bottom_diff[i] = beta;" << std::endl;
   ss << "} else {" << std::endl;
-  ss << "bottom_diff[i] = 0;" << std::endl;
+  ss << "bottom_diff[i] = (MItype)0;" << std::endl;
   ss << "}" << std::endl;
   ss << "}" << std::endl;
   ss << "}" << std::endl;
