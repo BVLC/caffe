@@ -26,6 +26,10 @@ class GradientChecker {
                   const Dtype kink_range = -1)
       : stepsize_(stepsize), threshold_(threshold), seed_(seed), kink_(kink),
         kink_range_(kink_range) {
+    if (std::is_same<Dtype, half_fp>::value) {
+      // Relax threshold under low precision
+      threshold_ *= 200;
+    }
   }
   // Checks the gradient of a layer, with provided bottom layers and top
   // layers.

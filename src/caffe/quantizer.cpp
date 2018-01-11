@@ -480,13 +480,13 @@ string Quantizer<MItype, MOtype>::bw_scale_term(int_tp vec_len,
 
 template<typename MItype, typename MOtype>
 void Quantizer<MItype, MOtype>::Observe_in_cpu(size_t n, const void* data) {
-  Observe_in_cpu(n, static_cast<const MOtype*>(data));
+  Observe_in_cpu(n, static_cast<const MItype*>(data));
 }
 
 template<typename MItype, typename MOtype>
 void Quantizer<MItype, MOtype>::Observe_in_cpu(size_t n,
                                                  const MItype* data) {
-  if (mode_ = PASSIVE) {
+  if (mode_ == PASSIVE) {
     return;
   }
   double local_min = type_max_val<double>();
@@ -511,12 +511,15 @@ void Quantizer<MItype, MOtype>::Observe_in_cpu(size_t n,
 
 template<typename MItype, typename MOtype>
 void Quantizer<MItype, MOtype>::Observe_out_cpu(size_t n, const void* data) {
-  Observe_out_cpu(n, static_cast<const MItype*>(data));
+  Observe_out_cpu(n, static_cast<const MOtype*>(data));
 }
 
 template<typename MItype, typename MOtype>
 void Quantizer<MItype, MOtype>::Observe_out_cpu(size_t n,
                                                   const MOtype* data) {
+  if (mode_ == PASSIVE) {
+    return;
+  }
   double local_min = type_max_val<double>();
   double local_max = type_min_val<double>();
   double scal = std::max(std::abs(max_in_), std::abs(min_in_))

@@ -297,6 +297,47 @@ inline double type_min_val<int64_t>() {
   return -static_cast<double>(std::numeric_limits<int64_t>::max());
 }
 
+template<typename T>
+inline size_t type_max_integer_representable() {
+  LOG(FATAL) << "Unknown type" << std::endl;
+  return 0;
+}
+
+template<>
+inline size_t type_max_integer_representable<half_fp>() {
+  return 2048;
+}
+
+template<>
+inline size_t type_max_integer_representable<float>() {
+  return 16777216ULL;
+}
+
+template<>
+inline size_t type_max_integer_representable<double>() {
+  return 9007199254740992ULL;
+}
+
+template<>
+inline size_t type_max_integer_representable<int8_t>() {
+  return std::numeric_limits<int8_t>::max();
+}
+
+template<>
+inline size_t type_max_integer_representable<int16_t>() {
+  return std::numeric_limits<int16_t>::max();
+}
+
+template<>
+inline size_t type_max_integer_representable<int32_t>() {
+  return std::numeric_limits<int32_t>::max();
+}
+
+template<>
+inline size_t type_max_integer_representable<int64_t>() {
+  return std::numeric_limits<int64_t>::max();
+}
+
 
 }  // namespace caffe
 

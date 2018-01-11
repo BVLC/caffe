@@ -28,6 +28,9 @@ void ArgMaxLayer<Dtype, MItype, MOtype>::LayerSetUp(
       << "top_k must be less than or equal to"
         " the dimension of the flattened bottom blob per instance.";
   }
+  CHECK_LE(bottom[0]->count(1), type_max_integer_representable<MOtype>())
+    << "flattened bottom blob dimension must be less than or equal to the "
+        "highest representable integer of the top data type.";
 }
 
 template<typename Dtype, typename MItype, typename MOtype>

@@ -71,7 +71,8 @@ bool CudaDeviceProgram::Compile(bool load_cache, bool store_cache) {
         loaded_from_cache = (result == CUDA_SUCCESS);
         success = loaded_from_cache;
         if (!loaded_from_cache) {
-          LOG(WARNING) << "Failed to load CUDA binary from cache ("
+          LOG(WARNING) << "Failed to load CUDA binary ("
+                       << this->identifier() << ") from cache ("
                        << cudaGetErrorString(result) << ")" << std::endl;
         }
       }
@@ -119,7 +120,8 @@ bool CudaDeviceProgram::Compile(bool load_cache, bool store_cache) {
 #endif  // NDEBUG
     CUresult result = cuModuleLoadDataEx(cuda_module_.get(), ptx, 0, 0, 0);
     if (!(result == CUDA_SUCCESS)) {
-      LOG(ERROR) << "Failed to compile CUDA binary from code ("
+      LOG(ERROR) << "Failed to compile CUDA binary ("
+                 << this->identifier() << ") from code ("
                  << cudaGetErrorString(result) << ")" << std::endl;
     }
 #ifdef USE_SQLITE
@@ -142,7 +144,8 @@ shared_ptr<DeviceKernel> CudaDeviceProgram::GetKernel(string name) {
   CUresult result = cuModuleGetFunction(kernel.get(), *cuda_module_.get(),
                                         name.c_str());
   if (result != CUDA_SUCCESS) {
-    LOG(FATAL) << "Loading CUDA kernel " << name << " failed ("
+    LOG(FATAL) << "Loading CUDA kernel " << name << " ("
+               << this->identifier() << ") failed ("
                << cudaGetErrorString(result) << ")" << std::endl;
   }
   CHECK(kernel.get()) << "Loading CUDA kernel " << name << " failed.";
