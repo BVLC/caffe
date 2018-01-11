@@ -58,7 +58,7 @@ void AccuracyLayer<Dtype, MItype, MOtype>::Forward_cpu(
   vector<Dtype> maxval(top_k_+1);
   vector<int_tp> max_id(top_k_+1);
   if (top.size() > 1) {
-    caffe_set(nums_buffer_.count(), Dtype(0), nums_buffer_.mutable_cpu_data());
+    caffe_set(nums_buffer_.count(), 0, nums_buffer_.mutable_cpu_data());
     caffe_set(top[1]->count(), Dtype(0), top[1]->mutable_cpu_data());
   }
   int_tp count = 0;

@@ -59,15 +59,17 @@ bool OclDeviceProgram::Compile(bool load_cache, bool store_cache) {
           loaded_from_cache = loaded_from_cache && (status[i] == CL_SUCCESS);
         }
         if (err != CL_SUCCESS || !loaded_from_cache) {
-          LOG(WARNING) << "Failed to load OpenCL binary from cache ("
-                     << clGetErrorString(err) << ")" << std::endl;
+          LOG(WARNING) << "Failed to load OpenCL binary ("
+                       << this->identifier() << ") from cache ("
+                       << clGetErrorString(err) << ")" << std::endl;
           loaded_from_cache = false;
         } else {
           err = clBuildProgram(cached_program, ctx.device_num(),
                                &(device_ids[0]), ctx.build_options().c_str(),
                                nullptr, nullptr);
           if (err != CL_SUCCESS || !loaded_from_cache) {
-            LOG(WARNING) << "Failed to load OpenCL binary from cache ("
+            LOG(WARNING) << "Failed to load OpenCL binary ("
+                         << this->identifier() << ") from cache ("
                          << clGetErrorString(err) << ")" << std::endl;
             loaded_from_cache = false;
           }
@@ -86,14 +88,16 @@ bool OclDeviceProgram::Compile(bool load_cache, bool store_cache) {
     cl_program compiled_program = clCreateProgramWithSource(ctx.handle().get(),
                                        1, &src_ptr, &src_size, &err);
     if (err != CL_SUCCESS) {
-      LOG(ERROR) << "Failed to compile OpenCL binary from code ("
+      LOG(ERROR) << "Failed to compile OpenCL binary ("
+                 << this->identifier() << ") from code ("
                  << clGetErrorString(err) << ")" << std::endl;
     }
     err = clBuildProgram(compiled_program, ctx.device_num(),
                          &(device_ids[0]), ctx.build_options().c_str(),
                          nullptr, nullptr);
     if (err != CL_SUCCESS) {
-      LOG(ERROR) << "Failed to compile OpenCL binary from code ("
+      LOG(ERROR) << "Failed to compile OpenCL binary ("
+                 << this->identifier() << ") from code ("
                  << clGetErrorString(err) << ")" << std::endl;
     }
     ocl_program_ = ctx.add_program(compiled_program, string_identifier());
@@ -151,6 +155,7 @@ bool OclDeviceProgram::Compile(bool load_cache, bool store_cache) {
                                  1024, &(kernels[0]), &num_kernels);
   if (err != CL_SUCCESS) {
     LOG(ERROR) << "Failed to load OpenCL kernels ("
+               << this->identifier() << ") ("
                << clGetErrorString(err) << ")" << std::endl;
   } else {
     for (cl_uint i = 0; i < num_kernels; ++i) {
@@ -170,7 +175,8 @@ shared_ptr<DeviceKernel> OclDeviceProgram::GetKernel(string name) {
   KernelArgs args;
   std::map<string, KernelArgs>::iterator pos = this->args_.find(name);
   if (pos == this->args_.end()) {
-    LOG(FATAL) << "OpenCL kernel " << name << " not found";
+    LOG(FATAL) << "OpenCL kernel " << name << " ("
+               << this->identifier() << ") not found";
   } else {
     args = pos->second;
   }

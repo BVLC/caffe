@@ -14,10 +14,12 @@ DeviceProgram::DeviceProgram(Device* dev) :
 
 void DeviceProgram::set_source(string src) {
   this->src_ = src;
+  src_has_changed_ = true;
 }
 
 void DeviceProgram::add_source(string src) {
   this->src_ += src;
+  src_has_changed_ = true;
 }
 
 void DeviceProgram::set_compile_flags(uint64_t flags) {

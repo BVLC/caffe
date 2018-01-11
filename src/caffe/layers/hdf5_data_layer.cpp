@@ -21,11 +21,14 @@ TODO:
 namespace caffe {
 
 template<typename Dtype, typename MItype, typename MOtype>
-HDF5DataLayer<Dtype, MItype, MOtype>::~HDF5DataLayer<Dtype, MItype, MOtype>() { }
+HDF5DataLayer<Dtype, MItype, MOtype>::~HDF5DataLayer<Dtype, MItype, MOtype>() {
+
+}
 
 // Load data and label from HDF5 filename into the class property blobs.
 template<typename Dtype, typename MItype, typename MOtype>
-void HDF5DataLayer<Dtype, MItype, MOtype>::LoadHDF5FileData(const char* filename) {
+void HDF5DataLayer<Dtype, MItype, MOtype>::LoadHDF5FileData(
+    const char* filename) {
   DLOG(INFO) << "Loading HDF5 file: " << filename;
   hid_t file_id = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
   if (file_id < 0) {
@@ -71,7 +74,8 @@ void HDF5DataLayer<Dtype, MItype, MOtype>::LoadHDF5FileData(const char* filename
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void HDF5DataLayer<Dtype, MItype, MOtype>::LayerSetUp(const vector<Blob<MItype>*>& bottom,
+void HDF5DataLayer<Dtype, MItype, MOtype>::LayerSetUp(
+      const vector<Blob<MItype>*>& bottom,
       const vector<Blob<MOtype>*>& top) {
   // Refuse transformation parameters since HDF5 is totally generic.
   CHECK(!this->layer_param_.has_transform_param()) <<
@@ -160,7 +164,8 @@ void HDF5DataLayer<Dtype, MItype, MOtype>::Next() {
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void HDF5DataLayer<Dtype, MItype, MOtype>::Forward_cpu(const vector<Blob<MItype>*>& bottom,
+void HDF5DataLayer<Dtype, MItype, MOtype>::Forward_cpu(
+      const vector<Blob<MItype>*>& bottom,
       const vector<Blob<MOtype>*>& top) {
   const int batch_size = this->layer_param_.hdf5_data_param().batch_size();
   for (int i = 0; i < batch_size; ++i) {

@@ -75,6 +75,9 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
 
   NetParameter param = converted_param;
 
+  // To debug InsertSplits and InsertConversions
+  // std::cout << param.DebugString() << std::endl;
+
   // Basically, build all the layers and set up its connections.
   name_ = param.name();
   map<string, int_tp> blob_name_to_idx;
@@ -199,7 +202,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   // loss.  We can skip backward computation for blobs that don't contribute
   // to the loss.
   // Also checks if all bottom blobs don't need backward computation (possible
-  // because the skip_propagate_down param) and so we can skip bacward
+  // because the skip_propagate_down param) and so we can skip backward
   // computation for the entire layer
   std::set<string> blobs_under_loss;
   std::set<string> blobs_skip_backp;
@@ -436,7 +439,9 @@ void Net<Dtype>::AppendTop(const NetParameter& param, const int_tp layer_id,
     blobs_.push_back(blob_pointer);
     blob_names_.push_back(blob_name);
     blob_need_backward_.push_back(false);
-    if (blob_name_to_idx) { (*blob_name_to_idx)[blob_name] = blob_id; }
+    if (blob_name_to_idx) {
+      (*blob_name_to_idx)[blob_name] = blob_id;
+    }
     top_id_vecs_[layer_id].push_back(blob_id);
     top_vecs_[layer_id].push_back(blob_pointer.get());
   }
