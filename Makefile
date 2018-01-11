@@ -493,6 +493,11 @@ ifeq ($(DISABLE_BN_FOLDING), 1)
 	COMMON_FLAGS += -DDISABLE_BN_FOLDING
 endif
 
+# Disable Bn + ReLU fusion
+ifeq ($(DISABLE_BN_RELU_FUSION), 1)
+    COMMON_FLAGS += -DDISABLE_BN_RELU_FUSION
+endif
+
 # Disable the conv/eltwise/relu layer fusion
 ifeq ($(DISABLE_CONV_SUM_FUSION), 1)
 	COMMON_FLAGS += -DDISABLE_CONV_SUM_FUSION
