@@ -1,3 +1,4 @@
+# For INT8 reference
 name: "ResNet-50"
 layer {
   name: "data"
@@ -6,10 +7,10 @@ layer {
   dummy_data_param {
     data_filler {
       type: "constant"
-      value: 0.0099999997764825821
+      value: 0.01
     }    
     shape {
-      dim: 50
+      dim: 64
       dim: 3
       dim: 224
       dim: 224
@@ -25,7 +26,7 @@ layer {
       type: "constant"
     }    
     shape {
-      dim: 50
+      dim: 64
     }    
   }
 }
@@ -263,7 +264,7 @@ layer {
     bw_layer_out: 8
     bw_params: 8
     scale_in: 19.9799995422
-    scale_out: 5.73999977112
+    scale_out: 11.5200004578
     scale_params: 72.1699981689
   }
 }
@@ -434,7 +435,7 @@ layer {
     bw_layer_out: 8
     bw_params: 8
     scale_in: 19.5799999237
-    scale_out: 5.73999977112
+    scale_out: 11.5200004578
     scale_params: 88.4599990845
   }
 }
@@ -605,7 +606,7 @@ layer {
     bw_layer_out: 8
     bw_params: 8
     scale_in: 13.5799999237
-    scale_out: 5.73999977112
+    scale_out: 11.5200004578
     scale_params: 103.910003662
   }
 }
@@ -822,7 +823,7 @@ layer {
     bw_layer_out: 8
     bw_params: 8
     scale_in: 25.5400009155
-    scale_out: 4.78000020981
+    scale_out: 9.59000015259
     scale_params: 65.7200012207
   }
 }
@@ -993,7 +994,7 @@ layer {
     bw_layer_out: 8
     bw_params: 8
     scale_in: 20.4899997711
-    scale_out: 4.78000020981
+    scale_out: 9.59000015259
     scale_params: 55.6899986267
   }
 }
@@ -1164,7 +1165,7 @@ layer {
     bw_layer_out: 8
     bw_params: 8
     scale_in: 3.74000000954
-    scale_out: 4.78000020981
+    scale_out: 9.59000015259
     scale_params: 66.2300033569
   }
 }
@@ -1335,7 +1336,7 @@ layer {
     bw_layer_out: 8
     bw_params: 8
     scale_in: 15.0600004196
-    scale_out: 4.78000020981
+    scale_out: 9.59000015259
     scale_params: 113.980003357
   }
 }
@@ -1552,7 +1553,7 @@ layer {
     bw_layer_out: 8
     bw_params: 8
     scale_in: 15.3699998856
-    scale_out: 3.70000004768
+    scale_out: 7.42999982834
     scale_params: 75.6200027466
   }
 }
@@ -1723,7 +1724,7 @@ layer {
     bw_layer_out: 8
     bw_params: 8
     scale_in: 6.44000005722
-    scale_out: 3.70000004768
+    scale_out: 7.42999982834
     scale_params: 67.4400024414
   }
 }
@@ -1894,7 +1895,7 @@ layer {
     bw_layer_out: 8
     bw_params: 8
     scale_in: 6.94999980927
-    scale_out: 3.70000004768
+    scale_out: 7.42999982834
     scale_params: 76.9700012207
   }
 }
@@ -2065,7 +2066,7 @@ layer {
     bw_layer_out: 8
     bw_params: 8
     scale_in: 5.40000009537
-    scale_out: 3.70000004768
+    scale_out: 7.42999982834
     scale_params: 77.1500015259
   }
 }
@@ -2236,7 +2237,7 @@ layer {
     bw_layer_out: 8
     bw_params: 8
     scale_in: 6.51999998093
-    scale_out: 3.70000004768
+    scale_out: 7.42999982834
     scale_params: 98.8199996948
   }
 }
@@ -2407,7 +2408,7 @@ layer {
     bw_layer_out: 8
     bw_params: 8
     scale_in: 5.01999998093
-    scale_out: 3.70000004768
+    scale_out: 7.42999982834
     scale_params: 93.3000030518
   }
 }
@@ -2624,7 +2625,7 @@ layer {
     bw_layer_out: 8
     bw_params: 8
     scale_in: 25.2000007629
-    scale_out: 0.939999997616
+    scale_out: 1.87999999523
     scale_params: 27.1299991608
   }
 }
@@ -2795,7 +2796,7 @@ layer {
     bw_layer_out: 8
     bw_params: 8
     scale_in: 29.2800006866
-    scale_out: 0.939999997616
+    scale_out: 1.87999999523
     scale_params: 35.3400001526
   }
 }
@@ -2966,7 +2967,7 @@ layer {
     bw_layer_out: 8
     bw_params: 8
     scale_in: 14.7100000381
-    scale_out: 0.939999997616
+    scale_out: 1.87999999523
     scale_params: 23.2399997711
   }
 }
@@ -3031,26 +3032,4 @@ layer {
     }
   }
 }
-layer {
-  name: "accuracy/top-1"
-  type: "Accuracy"
-  bottom: "fc1000"
-  bottom: "label"
-  top: "accuracy-top1"
-  include {
-    phase: TEST
-  }
-}
-layer {
-  name: "accuracy/top-5"
-  type: "Accuracy"
-  bottom: "fc1000"
-  bottom: "label"
-  top: "accuracy-top5"
-  include {
-    phase: TEST
-  }
-  accuracy_param {
-    top_k: 5
-  }
-}
+

@@ -1,3 +1,4 @@
+# For INT8 reference
 name: "VGG_VOC0712_SSD_300x300_test"
 layer {
   name: "data"
@@ -1946,33 +1947,9 @@ layer {
       nms_threshold: 0.449999988079
       top_k: 400
     }
-    save_output_param {
-      output_directory: "data/ssd_out/VOC2007/SSD_300x300"
-      output_name_prefix: "comp4_det_test_"
-      output_format: "VOC"
-      label_map_file: "data/VOC0712/labelmap_voc.prototxt"
-      name_size_file: "data/VOC0712/test_name_size.txt"
-      num_test_image: 4952
-    }
     code_type: CENTER_SIZE
     keep_top_k: 200
     confidence_threshold: 0.00999999977648
   }
 }
-layer {
-  name: "detection_eval"
-  type: "DetectionEvaluate"
-  bottom: "detection_out"
-  bottom: "label"
-  top: "detection_eval"
-  include {
-    phase: TEST
-  }
-  detection_evaluate_param {
-    num_classes: 21
-    background_label_id: 0
-    overlap_threshold: 0.5
-    evaluate_difficult_gt: false
-    name_size_file: "data/VOC0712/test_name_size.txt"
-  }
-}
+
