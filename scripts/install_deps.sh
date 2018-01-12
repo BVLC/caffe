@@ -65,11 +65,11 @@ function is_sudoer
 
 function install_python_deps
 {
-    eval $command_prefix pip install --upgrade pip
+    pip install --user --upgrade pip
     pushd $root_dir/python >/dev/null
     for req in $(cat requirements.txt) pydot;
     do
-        eval $command_prefix pip install $req
+       pip install --user $req
     done
     popd >/dev/null
 }
@@ -101,11 +101,11 @@ function install_deps
 
 function install_python_deps_multinode
 {
-    ansible all -m shell -a "$command_prefix pip install --upgrade pip"
+    ansible all -m shell -a "pip install --user --upgrade pip"
     pushd $root_dir/python >/dev/null
     for req in $(cat requirements.txt) pydot;
     do
-        ansible all -m shell -a "$command_prefix pip install $req"
+        ansible all -m shell -a "pip install --user $req"
     done
     popd >/dev/null
 
