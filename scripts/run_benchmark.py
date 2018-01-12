@@ -108,7 +108,7 @@ class CaffeBenchmark(object):
             for line in src_f.readlines():
                 if re.match(batch_size_pattern, line) and cnt < batch_size_cnt:
                    #change batch size
-                    re.sub("[0-9]+", new_batch_size, line, count = 1)
+                    line = re.sub("[0-9]+", new_batch_size, line, count = 1)
                     cnt += 1
                 dst_f.write(line) 
         return dst_model_file
