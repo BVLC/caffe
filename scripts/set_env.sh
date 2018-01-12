@@ -62,7 +62,7 @@ function init_mpi_envs
 function clear_shm
 {
     clear_command="rm -rf /dev/shm/*"
-    check_shm_command="df -h | grep shm"
+    check_shm_command="df -h /dev/shm | grep shm"
 
     # TODO: check if 40G is the minimum shm size?
     min_shm_size=40
@@ -133,11 +133,12 @@ function set_mlsl_vars
     export MLSL_NUM_SERVERS=${numservers}
 
     if [ ${numservers} -gt 0 ]; then
-        if [ "${cpu_model}" == "knl" ] || [ "${cpu_model}" == "knm" ]; then
-            listep=6,7,8,9
-        else
-            listep=6,7
-        fi
+        listep="6"
+        for ((i=7; i<${numservers}+6; i++))
+        do
+            listep+=",$i"
+        done
+
         export MLSL_SERVER_AFFINITY="${listep}"
         echo "MLSL_SERVER_AFFINITY: ${listep}"
     fi
@@ -146,7 +147,7 @@ function set_mlsl_vars
     if [ "$debug" == "on" ]; then
         export MLSL_LOG_LEVEL=3
     else
-        export MLSL_LOG_LEVEL=0
+        export MLSL_LOG_LEVEL=1
     fi
 }
 
