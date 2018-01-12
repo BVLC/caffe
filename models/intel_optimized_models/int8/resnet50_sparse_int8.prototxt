@@ -1,3 +1,4 @@
+# For INT8 reference
 name: "ResNet-50"
 layer {
   name: "data"
@@ -263,7 +264,7 @@ layer {
     bw_layer_out: 8
     bw_params: 8
     scale_in: 19.9799995422
-    scale_out: 6.03000020981
+    scale_out: 12.1099996567
     scale_params: 72.1699981689
   }
 }
@@ -434,7 +435,7 @@ layer {
     bw_layer_out: 8
     bw_params: 8
     scale_in: 19.5799999237
-    scale_out: 6.03000020981
+    scale_out: 12.1099996567
     scale_params: 88.4599990845
   }
 }
@@ -616,7 +617,7 @@ layer {
     bw_layer_out: 8
     bw_params: 8
     scale_in: 16.9200000763
-    scale_out: 5.73999977112
+    scale_out: 11.5200004578
     scale_params: 103.910003662
   }
 }
@@ -833,7 +834,7 @@ layer {
     bw_layer_out: 8
     bw_params: 8
     scale_in: 25.5400009155
-    scale_out: 4.65000009537
+    scale_out: 9.32999992371
     scale_params: 65.7200012207
   }
 }
@@ -1004,7 +1005,7 @@ layer {
     bw_layer_out: 8
     bw_params: 8
     scale_in: 20.4899997711
-    scale_out: 4.65000009537
+    scale_out: 9.32999992371
     scale_params: 55.6899986267
   }
 }
@@ -1175,7 +1176,7 @@ layer {
     bw_layer_out: 8
     bw_params: 8
     scale_in: 3.70000004768
-    scale_out: 4.65000009537
+    scale_out: 9.32999992371
     scale_params: 66.2300033569
   }
 }
@@ -1357,7 +1358,7 @@ layer {
     bw_layer_out: 8
     bw_params: 8
     scale_in: 14.6999998093
-    scale_out: 4.88999986649
+    scale_out: 9.82999992371
     scale_params: 113.980003357
   }
 }
@@ -1574,7 +1575,7 @@ layer {
     bw_layer_out: 8
     bw_params: 8
     scale_in: 14.8900003433
-    scale_out: 4.28000020981
+    scale_out: 8.60000038147
     scale_params: 75.6200027466
   }
 }
@@ -1745,7 +1746,7 @@ layer {
     bw_layer_out: 8
     bw_params: 8
     scale_in: 6.30999994278
-    scale_out: 4.28000020981
+    scale_out: 8.60000038147
     scale_params: 67.4400024414
   }
 }
@@ -1916,7 +1917,7 @@ layer {
     bw_layer_out: 8
     bw_params: 8
     scale_in: 6.90999984741
-    scale_out: 4.28000020981
+    scale_out: 8.60000038147
     scale_params: 76.9700012207
   }
 }
@@ -2087,7 +2088,7 @@ layer {
     bw_layer_out: 8
     bw_params: 8
     scale_in: 5.40000009537
-    scale_out: 4.28000020981
+    scale_out: 8.60000038147
     scale_params: 77.1500015259
   }
 }
@@ -2258,7 +2259,7 @@ layer {
     bw_layer_out: 8
     bw_params: 8
     scale_in: 6.51999998093
-    scale_out: 4.28000020981
+    scale_out: 8.60000038147
     scale_params: 98.8199996948
   }
 }
@@ -2440,7 +2441,7 @@ layer {
     bw_layer_out: 8
     bw_params: 8
     scale_in: 16.6200008392
-    scale_out: 4.23000001907
+    scale_out: 8.5
     scale_params: 93.3000030518
   }
 }
@@ -2657,7 +2658,7 @@ layer {
     bw_layer_out: 8
     bw_params: 8
     scale_in: 25.2000007629
-    scale_out: 0.939999997616
+    scale_out: 1.87999999523
     scale_params: 27.1299991608
   }
 }
@@ -2828,7 +2829,7 @@ layer {
     bw_layer_out: 8
     bw_params: 8
     scale_in: 26.6200008392
-    scale_out: 0.939999997616
+    scale_out: 1.87999999523
     scale_params: 35.3400001526
   }
 }
@@ -2999,7 +3000,7 @@ layer {
     bw_layer_out: 8
     bw_params: 8
     scale_in: 14.7100000381
-    scale_out: 0.939999997616
+    scale_out: 1.87999999523
     scale_params: 23.2399997711
   }
 }
@@ -3064,36 +3065,4 @@ layer {
     }
   }
 }
-layer {
-  name: "prob"
-  type: "SoftmaxWithLoss"
-  bottom: "fc1000"
-  bottom: "label"
-  top: "prob"
-  include {
-    phase: TRAIN
-  }
-}
-layer {
-  name: "accuracy/top-1"
-  type: "Accuracy"
-  bottom: "fc1000"
-  bottom: "label"
-  top: "accuracy-top1"
-  include {
-    phase: TEST
-  }
-}
-layer {
-  name: "accuracy/top-5"
-  type: "Accuracy"
-  bottom: "fc1000"
-  bottom: "label"
-  top: "accuracy-top5"
-  include {
-    phase: TEST
-  }
-  accuracy_param {
-    top_k: 5
-  }
-}
+
