@@ -47,7 +47,9 @@ if __name__ == "__main__":
       help="Randomly shuffle the order of images and their labels.")
   parser.add_argument("--check-label", default = False, action = "store_true",
       help="Check that there is no duplicated name/label.")
-
+  parser.add_argument("--mean", default = True, action = "store_true",
+                      help="Whether to compute the mean dataset image per-channel values and store them into mean_values.txt")
+  
   args = parser.parse_args()
   root_dir = args.root
   list_file = args.listfile
@@ -69,7 +71,8 @@ if __name__ == "__main__":
   resize_width = args.resize_width
   shuffle = args.shuffle
   check_label = args.check_label
-
+  mean = args.mean
+  
   # check if root directory exists
   if not os.path.exists(root_dir):
     print "root directory: {} does not exist".format(root_dir)
@@ -124,6 +127,7 @@ if __name__ == "__main__":
         " --label_type={}" \
         " --label_map_file={}" \
         " --check_label={}" \
+        " --mean={}" \
         " --min_dim={}" \
         " --max_dim={}" \
         " --resize_height={}" \
@@ -135,7 +139,7 @@ if __name__ == "__main__":
         " --encoded={}" \
         " --gray={}" \
         " {} {} {}" \
-        .format(caffe_root, anno_type, label_type, label_map_file, check_label,
+        .format(caffe_root, anno_type, label_type, label_map_file, check_label, mean,
             min_dim, max_dim, resize_height, resize_width, backend, shuffle,
             check_size, encode_type, encoded, gray, root_dir, list_file, out_dir)
   elif anno_type == "classification":
@@ -161,7 +165,7 @@ if __name__ == "__main__":
 
   if not os.path.exists(example_dir):
     os.makedirs(example_dir)
-  link_dir = os.path.join(example_dir, os.path.basename(out_dir))
-  if os.path.exists(link_dir):
-    os.unlink(link_dir)
-  os.symlink(out_dir, link_dir)
+  #link_dir = os.path.join(example_dir, os.path.basename(out_dir))
+  #if os.path.exists(link_dir):
+  #  os.unlink(link_dir)
+  #os.symlink(out_dir, link_dir)
