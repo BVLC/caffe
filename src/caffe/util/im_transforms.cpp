@@ -735,6 +735,7 @@ cv::Mat ApplyDistort(const cv::Mat& in_img, const DistortionParameter& param) {
   vector<float> binary_probs;
   if (param.prob() > 0.0)
     binary_probs = {1.f-param.prob(),param.prob()};
+  else return in_img;
   
   if (prob > 0.5) {
     // Do random brightness distortion
