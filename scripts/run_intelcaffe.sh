@@ -10,7 +10,7 @@ numnodes=1
 mode="train"
 
 # it's assigned by detect_cpu
-cpu_model="skx"
+cpu_model=""
 
 # a list of nodes
 host_file=""
@@ -54,6 +54,8 @@ mpibench_param="allreduce"
 
 script_dir=$(dirname $0)
 
+caffe_bin=""
+
 function usage
 {
     script_name=$0
@@ -69,6 +71,8 @@ function usage
     echo "               [--output output_folder]"
     echo "               [--mpibench_bin mpibench_bin]"
     echo "               [--mpibench_param mpibench_param]"
+    echo "               [--caffe_bin  caffe_binary_path]"
+    echo "               [--cpu cpu_model]"
     echo ""
     echo "  Parameters:"
     echo "    hostfile: host file includes list of nodes. Only used if you're running with multinode"
@@ -89,29 +93,43 @@ function usage
     echo "    output_folder: output folder for storing results"
     echo "    mpibench_bin: IMB-MPI1 (default). relative path of binary of mpi benchmark."
     echo "    mpibench_param: allreduce (default). parameter of mpi benchmark."
+    echo "    caffe_binary_path: path of caffe binary."
+    echo "    cpu_model: specify cpu model and use the optimal settings if the CPU is not"
+    echo "               included in supported list. Value: bdw, knl, skx and knm."
+    echo "               bdw - Broadwell, knl - Knights Landing, skx - Skylake,"
+    echo "               knm - Knights Mill."
+    echo ""
 }
 
-declare -a cpu_list=("Intel Xeon E5-26xx (Broadwell)" "Intel Xeon Phi 72xx (Knights Landing)" 
-                     "Intel Xeon Platinum 8180 (Skylake)" "Intel Xeon 6148 (Skylake)")
+declare -a cpu_list=("Intel Xeon E7-88/48xx, E5-46/26/16xx, E3-12xx, D15/D-15 (Broadwell)"
+                     "Intel Xeon Phi 7210/30/50/90 (Knights Landing)" 
+                     "Intel Xeon Platinum 81/61/51/41/31xx (Skylake)")
 
 function detect_cpu
 {
     # detect cpu model
     model_string=`lscpu | grep "Model name" | awk -F ':' '{print $2}'`
-    if [[ $model_string == *"7235"* ]] || [[ $model_string == *"7285"* ]] || [[ $model_string == *"7295"* ]]; then
-        cpu_model="knm"
-    elif [[ $model_string == *"72"* ]]; then
-        cpu_model="knl"
-    elif [[ $model_string == *"8180"* ]] || [[ $model_string == *"8124"* ]]; then
-        cpu_model="skx"
-    elif [[ $model_string == *"6148"* ]]; then
-        cpu_model="skx"
-    elif [[ $model_string == *"E5-26"* ]]; then
-        cpu_model="bdw"
+    if [[ $model_string == *"Phi"* ]]; then
+        if [[ $model_string =~ 72(1|3|5|9)0 ]]; then
+            cpu_model="knl"
+        elif [[ $model_string == *"72"* ]]; then
+            cpu_model="knm"
+        else
+            cpu_model="unknown"
+            echo "CPU model :$model_string is unknown."
+            echo "    Use default settings, which may not be the optimal one."
+        fi
     else
-        cpu_model="unknown"
-        echo "CPU model :$model_string is unknown."
-        echo "    Use default settings, which may not be the optimal one."
+        model_num=`echo $model_string | awk '{print $4}'`
+        if [[ $model_num =~ ^[8|6|5|4|3]1 ]]; then
+            cpu_model="skx"
+        elif [[ $model_num =~ ^E5-[4|2|1]6|^E7-[8|4]8|^E3-12|^D[-]?15 ]]; then
+            cpu_model="bdw"
+        else
+            cpu_model="unknown"
+            echo "CPU model :$model_string is unknown."
+            echo "    Use default settings, which may not be the optimal one."
+        fi
     fi
 }
 
@@ -125,11 +143,11 @@ function set_numa_node
     # detect numa mode: cache and flat mode for KNL
     numa_node=($(numactl -H | grep "available" | awk -F ' ' '{print $2}'))
     if [ $numa_node -eq 1 ]; then
-        echo "Cache mode."
+        echo "    NUMA configuration: Cache mode."
         # cache mode, use numa node 0
         numanode=0
     else
-        echo "Flat mode."
+        echo "    NUMA configuration: Flat mode."
         numanode=1
     fi
 }
@@ -152,12 +170,12 @@ function execute_command
     local xeonbin_=$1
     local result_dir_=$2
 
-    if [ "${cpu_model}" == "bdw" ]; then
-        exec_command="$xeonbin_"
-    elif [ "${cpu_model}" == "skx" ]; then
+    if [ "${cpu_model}" == "skx" ]; then
         exec_command="numactl -l $xeonbin_"
-    else
+    elif [ "${cpu_model}" == "knl" ] || [ "${cpu_model}" == "knm" ]; then
         exec_command="numactl --preferred=$numanode $xeonbin_"
+    else
+        exec_command="$xeonbin_"
     fi
 
     if [ ${numnodes} -gt 1 ]; then
@@ -335,7 +353,7 @@ function test_ssh_connection
 {
     host_file_=$1
     if [ "$host_file_" != "" ]; then
-        host_list=( `cat $host_file_ | sort | uniq ` )
+        host_list=( `cat $host_file_ | sort -V | uniq ` )
         for host in ${host_list[@]}
         do
             hostname=`ssh $host "hostname"`
@@ -349,7 +367,7 @@ function test_ssh_connection
 function get_model_fname
 {
     solver_file_=$1
-    model_file_=$(grep -w "net:" $solver_file_ | head -n 1 | awk -F ':' '{print $2}' | sed 's/\"//g')
+    model_file_=$(grep -w "net:" $solver_file_ | head -n 1 | awk -F ':' '{print $2}' | sed 's/\"//g' | sed 's/\r//g')
     echo "$(echo $model_file_)"
 }
 
@@ -357,14 +375,13 @@ function check_lmdb_files
 {
     model_file_=$1
     
-    lmdb_dirs=(ilsvrc12_train_lmdb ilsvrc12_val_lmdb) 
     is_missing_lmdb=0
+    lmdb_dirs=($(grep -w "source:" $model_file_ | sed 's/^ *//g' | grep -v "^#" | awk -F ' ' '{print $(NF)}' | sed 's/\"//g' | sed 's/\r//g'))
     for lmdb_dir in "${lmdb_dirs[@]}"
     do
-        data_source_dir=$(grep -w "$lmdb_dir" $model_file_ | head -n 1 | awk -F ' ' '{print $(NF)}' | sed 's/\"//g')
-        echo "    LMDB data source: $data_source_dir"
-        if [ ! -d $data_source_dir ]; then
-            echo "Error: LMDB data source doesn't exist ($data_source_dir)."
+        echo "    LMDB data source: $lmdb_dir"
+        if [ ! -d "$lmdb_dir" ]; then
+            echo "Error: LMDB data source doesn't exist ($lmdb_dir)."
             let is_missing_lmdb=1
         fi
     done
@@ -475,6 +492,18 @@ do
         --help)
             usage
             ;;
+        --engine)
+            engine=$2
+            shift
+            ;;
+        --caffe_bin)
+            caffe_bin=$2
+            shift
+            ;;
+        --cpu)
+            cpu_model=$2
+            shift
+            ;;
         *)
             echo "Unknown option: $key"
             usage
@@ -484,14 +513,18 @@ do
     shift
 done
 
-detect_cpu
-
 echo ""
 echo "CPUs with optimal settings:"
 for ((i=0; i<${#cpu_list[@]}; i++))
 do
     echo "    ${cpu_list[$i]}"
 done
+
+# if cpu model is not specified in command, detect cpu model by "lscpu" command
+if [ "$cpu_model" == "" ]; then
+    detect_cpu
+fi
+
 echo ""
 echo "Settings:"
 echo "    CPU: $cpu_model"
@@ -565,7 +598,7 @@ fi
 # Names to configfile, binary (executable) files #
 # Add check for host_file's existence to support single node
 if [[ $host_file != "" ]]; then
-    nodenames=( `cat $host_file | sort | uniq ` )
+    nodenames=( `cat $host_file | sort -V | uniq ` )
     if [ ${#nodenames[@]} -eq 0 ]; then
         echo "Error: empty host file! Exit."
         exit 0
@@ -601,7 +634,10 @@ if [ "${benchmark_mode}" != "none" ]; then
 fi
 
 if [ "${mode}" != "none" ]; then
-    caffe_bin="./build/tools/caffe"
+    if [ "$caffe_bin" == "" ]; then
+      caffe_bin="${root_dir}/build/tools/caffe"
+    fi
+
     check_dependency $caffe_bin
     if [ $? -ne 0 ]; then
         echo "Exit."

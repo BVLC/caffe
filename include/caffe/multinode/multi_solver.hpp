@@ -111,7 +111,7 @@ class MultiSolver {
 #endif
  private:
   virtual Dtype ForwardBackwardImpl(bool first, bool last);
-  bool IsSkipWaitGradient(int layer_id);
+  bool IsSkipSyncGradient(int layer_id);
   bool WaitGradient(int layer_id);
   void UpdateGradient(int layer_id);
 

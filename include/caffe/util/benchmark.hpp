@@ -54,6 +54,10 @@ class Timer {
   virtual float MicroSeconds();
   virtual float Seconds();
 
+  virtual void InitTime();
+  virtual void InitTime(Timer &);
+  virtual float Duration();
+
   inline bool initted() { return initted_; }
   inline bool running() { return running_; }
   inline bool has_run_at_least_once() { return has_run_at_least_once_; }
@@ -68,6 +72,9 @@ class Timer {
   cudaEvent_t start_gpu_;
   cudaEvent_t stop_gpu_;
 #endif
+
+  boost::posix_time::ptime init_cpu_;
+
   boost::posix_time::ptime start_cpu_;
   boost::posix_time::ptime stop_cpu_;
   float elapsed_milliseconds_;

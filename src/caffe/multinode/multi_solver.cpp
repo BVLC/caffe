@@ -43,67 +43,72 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <boost/bind.hpp>
 
 #include "caffe/multinode/multi_solver.hpp"
+#include "caffe/util/performance.hpp"
 
 namespace caffe {
 
 #ifdef CAFFE_PER_LAYER_TIMINGS
 
-#define LAYER_TIMING_START() do { \
-  root_solver_->timer.Start(); \
+#define LAYER_TIMING_START(name, index) do { \
+  if (root_solver_->net()->phase() == TRAIN) { \
+    root_solver_->net()->name##_start_time_per_layer[index] = root_solver_->net()->timer.Duration(); \
+  } \
 }while(0)
 
-#define LAYER_TIMING_STOP(name, index) do { \
-  root_solver_->name##_time_per_layer[index] += root_solver_->timer.MicroSeconds(); \
+#define LAYER_TIMING_STOP_2(layer_time_name, name, index) do { \
+  if (root_solver_->net()->phase() == TRAIN) { \
+    root_solver_->net()->name##_stop_time_per_layer[index] = root_solver_->net()->timer.Duration(); \
+    root_solver_->net()->layer_time_name##_time_per_layer[index] += (root_solver_->net()->name##_stop_time_per_layer[index] - root_solver_->net()->name##_start_time_per_layer[index]); \
+  } \
 }while(0)
+
+#define LAYER_TIMING_STOP(name, index) LAYER_TIMING_STOP_2(name,name,index)
 
 #ifdef FW_OVERLAP_OPT
-#define LAYER_WAIT_TIMING_START() do { \
-  root_solver_->wait_timer.Start(); \
+#define LAYER_WAIT_TIMING_START(index) do { \
+  if (root_solver_->net()->phase() == TRAIN) { \
+    root_solver_->net()->first_waitcomm_start_time_per_layer[index] = root_solver_->net()->wait_timer.Duration(); \
+  } \
 }while(0)
 
-#define LAYER_WAIT_TIMING_STOP(layer_index) do { \
-  root_solver_->waitcomm_time_per_layer[layer_index] += root_solver_->wait_timer.MicroSeconds(); \
+#define LAYER_WAIT_TIMING_STOP(index) do { \
+  if (root_solver_->net()->phase() == TRAIN) { \
+    root_solver_->net()->first_waitcomm_stop_time_per_layer[index] = root_solver_->net()->wait_timer.Duration(); \
+    root_solver_->net()->waitcomm_time_per_layer[index] += (root_solver_->net()->first_waitcomm_stop_time_per_layer[index] - root_solver_->net()->first_waitcomm_start_time_per_layer[index]); \
+  } \
 }while(0)
 
 #define LAYER_REMOVE_UPDATE_TIME(layer_i, layer_k) do { \
-  root_solver_->waitcomm_time_per_layer[layer_i] -= root_solver_->update_time_per_layer[layer_k]; \
+  if (root_solver_->net()->phase() == TRAIN) { \
+    root_solver_->net()->waitcomm_time_per_layer[layer_i] -= root_solver_->net()->update_time_per_layer[layer_k]; \
+  } \
 } while (0)
 #endif
 
-#define ITER_TIMING_START() do { \
-  root_solver_->timer.Start(); \
-}while(0)
-
-#define ITER_TIMING_STOP(name) do { \
-  root_solver_->name##_time_per_iter += root_solver_->timer.MicroSeconds(); \
-}while(0)
-
 #else
 
-#define LAYER_TIMING_START()
-#define LAYER_TIMING_STOP(name,index)
+#define LAYER_TIMING_START(name, index)
+#define LAYER_TIMING_STOP(name, index) 
+#define LAYER_TIMING_STOP_2(layer_time_name, name,index)
 
 #ifdef FW_OVERLAP_OPT
-#define LAYER_WAIT_TIMING_START()
-#define LAYER_WAIT_TIMING_STOP(layer_index)
+#define LAYER_WAIT_TIMING_START(index)
+#define LAYER_WAIT_TIMING_STOP(index)
 #define LAYER_REMOVE_UPDATE_TIME(layer_i, layer_k)
 #endif
 
-#define ITER_TIMING_START()
-#define ITER_TIMING_STOP(name)
+#endif /* CAFFE_PER_LAYER_TIMINGS */
 
-#endif
 
 template <typename Dtype>
-inline bool MultiSolver<Dtype>::IsSkipWaitGradient(int layer_id) {
+inline bool MultiSolver<Dtype>::IsSkipSyncGradient(int layer_id) {
   Net<Dtype>& net = *root_solver_->net();
   const std::vector<shared_ptr<Layer<Dtype>>>& layers{ net.layers() };
   const std::vector<bool>& layer_need_backward{ net.layer_need_backward() };
 
   if (!layer_need_backward[layer_id] || ((layers[layer_id]->layerOp != nullptr)
         && !layers[layer_id]->layerOp->HasParameterSets())) {
-    DLOG(INFO) << "ForwardBackwardImpl: no need for apply_updates for layer # "
-      << layer_id << ", skip on_delwt_wait, apply_updates, on_wtinc_ready";
+    DLOG(INFO) << "No need for synchronizing gradients for layer # " << layer_id;
     return true;
   }
   return false;
@@ -111,33 +116,27 @@ inline bool MultiSolver<Dtype>::IsSkipWaitGradient(int layer_id) {
 
 template <typename Dtype>
 inline bool MultiSolver<Dtype>::WaitGradient(int layer_id) {
-#ifndef FW_OVERLAP_OPT
-  LAYER_TIMING_START();
-#endif
   for (int j = 0; j < callbacks_.size(); ++j) {
     callbacks_[j]->on_delwt_wait(layer_id);
   }
-#ifndef FW_OVERLAP_OPT
-  LAYER_TIMING_STOP(waitcomm, layer_id);
-  return true;
-#else
+
+#ifdef FW_OVERLAP_OPT
   return layer_finished_flags_[layer_id];
+#else
+  return true;
 #endif
 }
 
 template <typename Dtype>
 inline void MultiSolver<Dtype>::UpdateGradient(int layer_id) {
 #ifdef FW_OVERLAP_OPT
-  if (layer_finished_flags_[layer_id]) {
+    CHECK(layer_finished_flags_[layer_id]);
 #endif
-    LAYER_TIMING_START();
+    PERFORMANCE_MEASUREMENT_BEGIN();
     for (int j = 0; j < callbacks_.size(); ++j) {
       callbacks_[j]->apply_updates(layer_id);
     }
-    LAYER_TIMING_STOP(update, layer_id);
-#ifdef FW_OVERLAP_OPT
-  }
-#endif
+    PERFORMANCE_MEASUREMENT_END_STATIC("weights_update");
 }
 
 template <typename Dtype>
@@ -150,30 +149,35 @@ Dtype MultiSolver<Dtype>::ForwardBackwardImpl(bool first, bool last) {
   for (int i = 0; i < layers.size(); ++i) {
 #ifdef FW_OVERLAP_OPT
     if (first) {
-      LAYER_WAIT_TIMING_START();
+      LAYER_WAIT_TIMING_START(i);
       while (layer_finished_flags_[i] == false) {
-        if (IsSkipWaitGradient(i))
-           break;
-
+        if (IsSkipSyncGradient(i))
+          break;
         if (WaitGradient(i)) {
           // The function call cannot be moved out of while loop. Otherwise,
           // at first iteration, additional UpdateGradient will be called,
           // even if no gradient is synced.
+          LAYER_TIMING_START(first_update, i);
           UpdateGradient(i);
+          LAYER_TIMING_STOP_2(update, first_update, i);
+
           // The update time for layer i must be removed from waitcomm time
           // for layer i
           LAYER_REMOVE_UPDATE_TIME(i, i);
           break;
         }
-        
+
         // wait and update gradient for next layers
         for (int k=i+1; k<layers.size(); k++) {
-          if (layer_finished_flags_[k] || IsSkipWaitGradient(k)) {
+          if (layer_finished_flags_[k] || IsSkipSyncGradient(k)) {
             layer_finished_flags_[k] = true;
             continue;
           }
           if (WaitGradient(k)) {
+            LAYER_TIMING_START(first_update, k);
             UpdateGradient(k);
+            LAYER_TIMING_STOP_2(update, first_update, k);
+
             // The update time for layer k must be removed from waitcomm time
             // for layer i
             LAYER_REMOVE_UPDATE_TIME(i, k);
@@ -181,45 +185,36 @@ Dtype MultiSolver<Dtype>::ForwardBackwardImpl(bool first, bool last) {
           }
         }
       }
-
       LAYER_WAIT_TIMING_STOP(i);
       // set flag to false after updating gradient
       layer_finished_flags_[i] = false;
     }
 #endif
 
-    LAYER_TIMING_START();
     loss += net.ForwardFromTo(i, i);
-    LAYER_TIMING_STOP(forward, i);
   }
-
+  
   // Clear parameter diffs after communication is finished (that is, after 
   // calling WaitGradientComm)
   if (first) {
-    ITER_TIMING_START();
     root_solver_->net()->ClearParamDiffs();
-    ITER_TIMING_STOP(cleardiffs);
   }
 
   for (int i = layers.size() - 1; i >= 0; --i) {
     if (!layer_need_backward[i]) {
       continue;
     }
-
-    LAYER_TIMING_START();
+    
     net.BackwardFromTo(i, i);
-    LAYER_TIMING_STOP(backward, i);
 
-    if (last && (layers[i]->layerOp != nullptr)
-        && layers[i]->layerOp->HasParameterSets()) {
-      LAYER_TIMING_START();
+    LAYER_TIMING_START(startcomm, i);
+    if (last && IsSkipSyncGradient(i) == false) {
       for (int j = 0; j < callbacks_.size(); ++j) {
         callbacks_[j]->on_backward_finished(i);
       }
-      LAYER_TIMING_STOP(startcomm, i);
     }
+    LAYER_TIMING_STOP(startcomm, i);
   }
-
 
 #ifdef FW_OVERLAP_OPT
   int iter = root_solver_->iter();
@@ -233,11 +228,13 @@ Dtype MultiSolver<Dtype>::ForwardBackwardImpl(bool first, bool last) {
 
   if (last_iter_wait_flag) {
     for (int i = 0; i < layers.size(); ++i) {
-      if (IsSkipWaitGradient(i))
+      LAYER_TIMING_START(waitcomm, i);
+      if (IsSkipSyncGradient(i)) {
+        LAYER_TIMING_STOP(waitcomm, i);
         continue;
+      }
 
 #ifdef FW_OVERLAP_OPT
-      LAYER_WAIT_TIMING_START();
       while (
 #endif
         WaitGradient(i)
@@ -245,11 +242,11 @@ Dtype MultiSolver<Dtype>::ForwardBackwardImpl(bool first, bool last) {
           == false)
 #endif
       ;
+      LAYER_TIMING_STOP(waitcomm, i);
 
-#ifdef FW_OVERLAP_OPT
-      LAYER_WAIT_TIMING_STOP(i);
-#endif
+      LAYER_TIMING_START(update, i);
       UpdateGradient(i);
+      LAYER_TIMING_STOP(update, i);
     }
   }
 

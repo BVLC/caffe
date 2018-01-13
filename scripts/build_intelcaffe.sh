@@ -6,6 +6,7 @@ function usage
     echo "Usage:"
     echo "  $script_name [--multinode] [--compiler icc/gcc] [--rebuild] "
     echo "               [--boost_root boost_install_dir] [--layer_timing]"
+    echo "               [--debug]"
     echo ""
     echo "  Parameters:"
     echo "    multinode:    specify it to build caffe for multinode. build for single"
@@ -18,6 +19,7 @@ function usage
     echo "                  boost in directory of caffe source and build it."
     echo "    layer_timing: build caffe for multinode with CAFFE_PER_LAYER_TIMINGS flag."
     echo "                  by default, the flag is NOT included for build."
+    echo "    debug:        build caffe with debug flag. by default, the option is off."
 }
 
 function check_dependency
@@ -39,14 +41,23 @@ function build_caffe_gcc
 
     if [ $is_multinode_ -eq 1 ]; then
         echo "USE_MLSL := 1" >> Makefile.config
-        if [ $is_layer_timing -eq 1 ]; then
-            echo "CAFFE_PER_LAYER_TIMINGS := 1" >> Makefile.config
-        fi
 
         mlslvars_sh=`find external/mlsl/ -name mlslvars.sh`
         if [ -f $mlslvars_sh ]; then
             source $mlslvars_sh
         fi
+    fi
+
+    if [ $is_layer_timing -eq 1 ]; then
+        echo "CAFFE_PER_LAYER_TIMINGS := 1" >> Makefile.config
+    fi
+
+    if [ $debug -eq 1 ]; then
+        echo "DEBUG := 1" >> Makefile.config
+    fi
+
+    if [ "$boost_root" != "" ]; then
+        echo "BOOST_ROOT := $boost_root" >> Makefile.config
     fi
 
     if [ $is_rebuild -eq 1 ]; then
@@ -90,9 +101,14 @@ function build_caffe_icc
     cmake_params="-DCPU_ONLY=1 -DBOOST_ROOT=$boost_root"
     if [ $is_multinode_ -eq 1 ]; then
         cmake_params+=" -DUSE_MLSL=1"
-        if [ $is_layer_timing -eq 1 ]; then
-            cmake_params+=" -DCAFFE_PER_LAYER_TIMINGS=1"
-        fi
+    fi
+
+    if [ $is_layer_timing -eq 1 ]; then
+        cmake_params+=" -DCAFFE_PER_LAYER_TIMINGS=1"
+    fi
+
+    if [ $debug -eq 1 ]; then
+        cmake_params+=" -DDEBUG=1"
     fi
 
     build_dir=$root_dir/build
@@ -123,6 +139,7 @@ function sync_caffe_dir
 
 root_dir=$(cd $(dirname $(dirname $0)); pwd)
 
+debug=0
 is_layer_timing=0
 boost_root=""
 is_rebuild=0
@@ -152,6 +169,9 @@ do
         --help)
             usage
             exit 0
+            ;;
+        --debug)
+            debug=1
             ;;
         *)
             echo "Unknown option: $key"

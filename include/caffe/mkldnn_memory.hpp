@@ -60,7 +60,17 @@ class MKLDNNMemoryDescriptorBase : public PrvMemDescr
 public:
     MKLDNNMemoryDescriptorBase(shared_ptr<memory::primitive_desc> usr_memory_pd
                                 , shared_ptr<memory::primitive_desc> prv_memory_pd
-                                , Blob<Dtype>* blob, MKLDNNLayer<Dtype>* mkldnn_layer);
+                                , Blob<Dtype>* blob, MKLDNNLayer<Dtype>* mkldnn_layer
+                                , std::vector<int>fl=std::vector<int>(1,0)
+                                , bool is_sum=false);
+
+    MKLDNNMemoryDescriptorBase(shared_ptr<memory::primitive_desc> usr_memory_pd
+                                , shared_ptr<memory::primitive_desc> prv_memory_pd
+                                , Blob<Dtype>* blob, MKLDNNLayer<Dtype>* mkldnn_layer
+                                , bool is_float
+                                , std::vector<float>scale=std::vector<float>(1,1.)
+                                , bool is_sum=false); 
+
 
     ~MKLDNNMemoryDescriptorBase() {}
     // ---- PrvMemDescr virtual functions -----
@@ -99,6 +109,20 @@ public:
     shared_ptr<primitive>  reorder_prv2usr() { return _reorder_prv2usr.aprimitive; }
     shared_ptr<primitive>  reorder_extprv2prv() { return _reorder_extprv2prv.aprimitive; }
 
+    float get_scale(int i) { return _scale[i]; }
+    std::vector<float> get_scale() { return _scale; }
+    void set_scale(std::vector<float> scale) { _scale.assign(scale.begin(),scale.end());}
+
+    int get_fl(int i) { return _fl[i]; }
+    std::vector<int> get_fl() { return _fl; }
+    void set_fl(std::vector<int> fl) { _fl.assign(fl.begin(),fl.end());}
+
+    void set_sum(bool is_sum) { _is_sum = is_sum; }
+    bool get_sum() { return _is_sum; }
+
+    void set_float(bool is_float) { _is_float = is_float; }
+    bool get_float() { return _is_float; }
+
     void set_mkldnn_layer(MKLDNNLayer<Dtype>* layer) { _mkldnn_layer = layer;  }
     MKLDNNLayer<Dtype>*  mkldnn_layer() const { return _mkldnn_layer;  }
 
@@ -130,28 +154,49 @@ protected:
           // TODO: may need initialize memory by 0
         }
     }
-    void set_prv_memory_pd(shared_ptr<memory::primitive_desc> memory_pd)  {
+    void set_prv_memory_pd(shared_ptr<memory::primitive_desc> memory_pd, std::vector<float> scale)  {
         _prv_memory_pd = memory_pd;
         if (_prv_memory_pd && _usr_memory_pd) {
             check_usr_with_prv_descriptors();
-            this->create_reorder_descriptors();
+            this->create_reorder_descriptors(scale);
         }
     }
-    void set_extprv_memory_pd(shared_ptr<memory::primitive_desc> memory_pd)  {
+
+    void set_prv_memory_pd(shared_ptr<memory::primitive_desc> memory_pd, std::vector<int> fl)  {
+        _prv_memory_pd = memory_pd;
+        if (_prv_memory_pd && _usr_memory_pd) {
+            check_usr_with_prv_descriptors();
+            this->create_reorder_descriptors(fl);
+        }
+    }
+
+    void set_extprv_memory_pd(shared_ptr<memory::primitive_desc> memory_pd, std::vector<int> fl, std::vector<int> fl_ext, bool is_sum)  {
         _extprv_memory_pd = memory_pd;
         if (_prv_memory_pd && _usr_memory_pd) {
             check_usr_with_prv_descriptors();
-            this->create_reorder_descriptors();
+            this->create_reorder_descriptors(fl, fl_ext, is_sum);
         }
     }
-    void set_usr_memory_pd(shared_ptr<memory::primitive_desc> memory_pd) {
-        _usr_memory_pd = memory_pd;
+
+    void set_extprv_memory_pd(shared_ptr<memory::primitive_desc> memory_pd, std::vector<float> scale, std::vector<float> scale_ext, bool is_sum)  {
+        _extprv_memory_pd = memory_pd;
         if (_prv_memory_pd && _usr_memory_pd) {
             check_usr_with_prv_descriptors();
-            this->create_reorder_descriptors();
+            this->create_reorder_descriptors(scale, scale_ext, is_sum);
         }
     }
-    void create_reorder_descriptors();
+
+    void set_usr_memory_pd(shared_ptr<memory::primitive_desc> memory_pd, std::vector<float> scale) {
+        _usr_memory_pd = memory_pd;
+    }
+
+    void set_usr_memory_pd(shared_ptr<memory::primitive_desc> memory_pd, std::vector<int> fl) {
+        _usr_memory_pd = memory_pd;
+    }
+
+    void create_reorder_descriptors(std::vector<float> scale, std::vector<float>scale_ext=std::vector<float>(1,1.), bool is_sum=false);
+
+    void create_reorder_descriptors(std::vector<int> fl, std::vector<int>fl_ext=std::vector<int>(1,0), bool is_sum=false);
 
     shared_ptr<memory::primitive_desc> _usr_memory_pd;
     shared_ptr<memory::primitive_desc> _prv_memory_pd;
@@ -169,6 +214,10 @@ protected:
 
     MKLDNNLayer<Dtype>* _mkldnn_layer;
     Blob<Dtype>* _blob;
+    std::vector<float> _scale = std::vector<float>(1,1.);
+    std::vector<int> _fl = std::vector<int>(1,0);
+    bool _is_sum = false;
+    bool _is_float = false;
 #ifdef USE_MLSL
     shared_ptr<char> _mlsl_memory;
 #endif
@@ -179,7 +228,16 @@ class MKLDNNMemoryDescriptor : public MKLDNNMemoryDescriptorBase<Dtype> {
 public:
     MKLDNNMemoryDescriptor(shared_ptr<memory::primitive_desc> usr_memory_pd
                         , shared_ptr<memory::primitive_desc> prv_memory_pd
-                        , Blob<Dtype>* blob, MKLDNNLayer<Dtype>* mkldnn_layer);
+                        , Blob<Dtype>* blob, MKLDNNLayer<Dtype>* mkldnn_layer
+                        , std::vector<int> fl=std::vector<int>(1,0)
+                        , bool is_sum=false);
+
+    MKLDNNMemoryDescriptor(shared_ptr<memory::primitive_desc> usr_memory_pd
+                        , shared_ptr<memory::primitive_desc> prv_memory_pd
+                        , Blob<Dtype>* blob, MKLDNNLayer<Dtype>* mkldnn_layer
+                        , bool is_float
+                        , std::vector<float> scale=std::vector<float>(1,1.)
+                        , bool is_sum=false);
 
     virtual void convert_from_prv(void* cpu_ptr);
     virtual void convert_to_prv(void* cpu_ptr);
@@ -218,8 +276,18 @@ class MKLDNNData : public MKLDNNMemoryDescriptor<Dtype, false>
 public:
     MKLDNNData(shared_ptr<memory::primitive_desc> usr_memory_pd
                 , shared_ptr<memory::primitive_desc> prv_memory_pd
-                , Blob<Dtype>* blob, MKLDNNLayer<Dtype>* mkldnn_layer)
-        : MKLDNNMemoryDescriptor<Dtype, false>(usr_memory_pd, prv_memory_pd, blob, mkldnn_layer) {}
+                , Blob<Dtype>* blob, MKLDNNLayer<Dtype>* mkldnn_layer
+                , std::vector<int> fl=std::vector<int>(1,0)
+                , bool is_sum=false)
+        : MKLDNNMemoryDescriptor<Dtype, false>(usr_memory_pd, prv_memory_pd, blob, mkldnn_layer, fl, is_sum) {}
+
+    MKLDNNData(shared_ptr<memory::primitive_desc> usr_memory_pd
+                , shared_ptr<memory::primitive_desc> prv_memory_pd
+                , Blob<Dtype>* blob, MKLDNNLayer<Dtype>* mkldnn_layer
+                , bool is_float
+                , std::vector<float> scale=std::vector<float>(1,1.)
+                , bool is_sum=false)
+        : MKLDNNMemoryDescriptor<Dtype, false>(usr_memory_pd, prv_memory_pd, blob, mkldnn_layer, is_float, scale, is_sum) {}
 };
 
 template <typename Dtype>

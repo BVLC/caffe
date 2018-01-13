@@ -232,11 +232,13 @@ void BaseConvolutionLayer<Dtype>::DoReshape(const vector<Blob<Dtype>*>& bottom,
   num_ = bottom[0]->count(0, channel_axis_);
   CHECK_EQ(bottom[0]->shape(channel_axis_), channels_)
       << "Input size incompatible with convolution kernel.";
+#ifdef DISABLE_CONV_SUM_FUSION
   // TODO: generalize to handle inputs of different shapes.
   for (int bottom_id = 1; bottom_id < bottom.size(); ++bottom_id) {
     CHECK(bottom[0]->shape() == bottom[bottom_id]->shape())
         << "All inputs must have the same shape.";
   }
+#endif
   // Shape the tops.
   bottom_shape_ = &bottom[0]->shape();
   compute_output_shape();

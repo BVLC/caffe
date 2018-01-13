@@ -226,7 +226,8 @@ void SoftmaxWithLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
           ratio = (alpha  + (dim - 1) * beta);
           // for label true, alpha - yi (alpha + (N-1) * beta)
           // for label false, beta - yj (alpha + (N-1) * beta)
-          caffe_cpu_axpby(bottom[0]->count(), Dtype(ratio), bottom_diff, Dtype(-beta), bottom_diff);
+          caffe_scal(bottom[0]->count(), Dtype(ratio), bottom_diff);
+          caffe_add_scalar(bottom[0]->count(), Dtype(-beta), bottom_diff);
         }
         Dtype weight_sum = Dtype(0);
         const Dtype* weights = bottom[2]->cpu_data();
@@ -263,7 +264,8 @@ void SoftmaxWithLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
           ratio = (alpha  + (dim - 1) * beta);
           // for label true, alpha - yi (alpha + (N-1) * beta)
           // for label false, beta - yj (alpha + (N-1) * beta)
-          caffe_cpu_axpby(bottom[0]->count(), Dtype(ratio), bottom_diff, Dtype(-beta), bottom_diff);
+          caffe_scal(bottom[0]->count(), Dtype(ratio), bottom_diff);
+          caffe_add_scalar(bottom[0]->count(), Dtype(-beta), bottom_diff);
         }
         int count = 0;
         for (int i = 0; i < outer_num_; ++i) {

@@ -64,9 +64,49 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/util/remove_batch_norm.hpp"
 #include "caffe/util/apply_bn_stats_batch_size.hpp"
 
+
 PERFORMANCE_CREATE_MONITOR();
 
 namespace caffe {
+
+#ifdef CAFFE_PER_LAYER_TIMINGS
+
+#define LAYER_TIMING_START(name, index) do { \
+  if (this->phase() == TRAIN) { \
+    this->name##_start_time_per_layer[index] = this->timer.Duration(); \
+  } \
+}while(0)
+
+#define LAYER_TIMING_STOP(name, index) do { \
+  if (this->phase() == TRAIN) { \
+    this->name##_stop_time_per_layer[index] = this->timer.Duration(); \
+    this->name##_time_per_layer[index] += (this->name##_stop_time_per_layer[index] - this->name##_start_time_per_layer[index]); \
+  } \
+}while(0)
+
+
+#define ITER_TIMING_START() do { \
+  if (this->phase() == TRAIN) { \
+    this->timer.Start(); \
+  } \
+}while(0)
+
+#define ITER_TIMING_STOP(name) do { \
+  if (this->phase() == TRAIN) { \
+    this->name##_time_per_iter += this->timer.MicroSeconds(); \
+  } \
+}while(0)
+
+#else
+
+#define LAYER_TIMING_START(name,index)
+#define LAYER_TIMING_STOP(name,index)
+
+#define ITER_TIMING_START()
+#define ITER_TIMING_STOP(name)
+
+#endif /* CAFFE_PER_LAYER_TIMINGS */
+
 
 template <typename Dtype>
 Net<Dtype>::Net(const NetParameter& param, const Net* root_net)
@@ -474,6 +514,10 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   }
 #endif /* USE_MLSL */
 
+#ifdef CAFFE_PER_LAYER_TIMINGS
+  InitTimers();
+#endif
+
   LOG_IF(INFO, Caffe::root_solver()) << "Network initialization done.";
 }
 
@@ -529,9 +573,20 @@ void Net<Dtype>::CompileNet(const NetParameter& param,
   param_temp2.clear_layer();   // Remove layers
   CompilationRuleTwo(param_temp, &param_temp2);
 
+#ifdef DISABLE_CONV_SUM_FUSION
   param_compiled->CopyFrom(param_temp2);
   param_compiled->clear_layer();    // Remove layers
   CompilationRuleThree(param_temp2, param_compiled);
+#else
+  NetParameter param_temp3;
+  param_temp3.CopyFrom(param_temp2);
+  param_temp3.clear_layer();
+  CompilationRuleThree(param_temp2, &param_temp3);
+
+  param_compiled->CopyFrom(param_temp3);
+  param_compiled->clear_layer();
+  CompilationRuleFour(param_temp3, param_compiled);
+#endif 
 }
 
 template <typename Dtype>
@@ -699,6 +754,7 @@ void Net<Dtype>::CompilationRuleTwo(const NetParameter& param,
             use_negative_slope = true;
         } else {
             layer_param->mutable_convolution_param()->set_relu(true);
+            layer_param->mutable_convolution_param()->set_negative_slope(0);
         }
         if(param.state().phase() == TRAIN && !use_negative_slope) {
           if(i+1 < param.layer_size()) {
@@ -827,6 +883,71 @@ void Net<Dtype>::CompilationRuleThree(const NetParameter& param,
         const_cast<string&>((each_layer_pair[0])->top(0)).append("_x");
       }
     }
+  }
+
+  return;
+}
+
+template <typename Dtype>
+void Net<Dtype>::CompilationRuleFour(const NetParameter& param,
+                                     NetParameter* param_compiled) {
+  // only apply this rule for inference(TEST) phase
+  if (param.state().phase() != TEST || param.engine().compare("MKLDNN") != 0) {
+    param_compiled->CopyFrom(param);
+    return;
+  }
+  string blob_need_to_insert;
+  LayerParameter* need_to_convert_layer = NULL;
+  for (int i = 0; i < param.layer_size(); i++) {
+    LayerParameter* layer_param =
+        (const_cast<NetParameter&>(param)).mutable_layer(i);
+    if (layer_param->type().compare("Convolution") == 0 
+        && (layer_param->has_engine() == false
+        || (layer_param->has_engine() == true
+        && layer_param->engine().compare("MKLDNN") ==0))) {
+      std::vector<const LayerParameter*> child_layers_params;
+      Net<Dtype>::GetBlobConsumers(child_layers_params, layer_param->top(0),
+                                   param,
+                                   i + 1 < param.layer_size() ? i + 1 : i);
+
+      if (child_layers_params[0]->type().compare("Eltwise") == 0) {
+        std::vector<const LayerParameter*> grand_child_layers_params;
+
+        Net<Dtype>::GetBlobConsumers(grand_child_layers_params,
+                                     child_layers_params[0]->top(0), param,
+                                     i + 1 < param.layer_size() ? i + 1 : i);
+        const LayerParameter& grand_child_layer_param =
+            grand_child_layers_params.size() > 0
+                ? *(grand_child_layers_params[0])
+                : *layer_param;
+
+        if (grand_child_layer_param.type().compare("ReLU") != 0) {
+          param_compiled->add_layer()->CopyFrom(*layer_param);
+          continue;
+        }
+
+        if (child_layers_params[0]->bottom(0) == layer_param->top(0) ) {
+          param_compiled->add_layer()->CopyFrom(*layer_param);
+          need_to_convert_layer = layer_param;
+          continue;
+        }
+
+        const_cast<string&>(layer_param->top(0)) =
+            grand_child_layer_param.top(0);
+        if (need_to_convert_layer != NULL) {
+          layer_param->add_bottom(
+              const_cast<string&>(need_to_convert_layer->top(0)));
+          need_to_convert_layer = NULL;
+        } else {
+          layer_param->add_bottom(
+              const_cast<string&>(child_layers_params[0]->bottom(0)));
+        }
+
+        i += 2;  // skip next eltwise and relu
+      }
+    }
+
+    param_compiled->add_layer()->CopyFrom(*layer_param);
   }
 
   return;
@@ -986,6 +1107,106 @@ bool Net<Dtype>::StateMeetsRule(const NetState& state,
     }
   }
   return true;
+}
+
+template <typename Dtype>
+vector<Dtype> Net<Dtype>::FindMax(Blob<Dtype>* blob, bool is_single) {
+  const Dtype* data = blob->cpu_data();
+  int cnt = blob->count();
+  vector<Dtype> max_vals;
+  Dtype max_val = (Dtype)(-10);
+
+  int index = 0;
+  if(blob->shape().size() == 4) {
+    if(is_single) {
+      max_vals = vector<Dtype>(1, Dtype(-10));
+      for (int i = 0; i < cnt; ++i) {
+        max_val = std::max(max_val, (Dtype)fabs(data[i]));
+      }
+      max_vals.at(0) = max_val;
+    } else { // output_channel * input_channel * kernel_height * kernel_width
+      int height = blob->shape(2);
+      int width = blob->shape(3);
+      int channel = blob->shape(0);
+      max_vals = vector<Dtype>(channel, Dtype(-10));
+      int step = blob->shape(1) * height * width;
+      for (int i = 0; i < cnt; ++i) {
+        if((i + 1) % step == 0) {
+          max_vals.at(index) = std::max(max_val, (Dtype)fabs(data[i]));
+          ++index;
+        } else {
+          max_val = std::max(max_val, (Dtype)fabs(data[i]));
+        }
+      }
+    }
+  } else {
+    if(is_single) {
+      max_vals = vector<Dtype>(1, Dtype(-10));
+      for (int i = 0; i < cnt; ++i) {
+        max_val = std::max(max_val, (Dtype)fabs(data[i]));
+      }
+      max_vals.at(0) = max_val;
+    } else { // output_channel * input_channel
+      int channel = blob->shape(0);
+      max_vals = vector<Dtype>(channel, Dtype(-10));
+      int step = blob->shape(1);
+      for (int i = 0; i < cnt; ++i) {
+        if((i + 1) % step == 0) {
+          max_vals.at(index) = std::max(max_val, (Dtype)fabs(data[i]));
+          ++index;
+        } else {
+          max_val = std::max(max_val, (Dtype)fabs(data[i]));
+        }
+      }
+    }
+  }
+  
+  return max_vals;
+}
+
+template <typename Dtype>
+void Net<Dtype>::RangeInLayers(vector<string>* layer_name,
+      vector<Dtype>* max_in, vector<Dtype>* max_out, vector<vector<Dtype>>* max_param, string scaling) {
+  // Initialize vector elements, if needed.
+  if(layer_name->size()==0) {
+    for (int layer_id = 0; layer_id < layers_.size(); ++layer_id) {
+      if (strcmp(layers_[layer_id]->type(), "Convolution") == 0) {
+        layer_name->push_back(this->layer_names()[layer_id]);
+        max_in->push_back(0);
+        max_out->push_back(0);
+        if (scaling == "single") {
+          max_param->push_back(vector<Dtype>(1, 0));
+        }
+        else {
+          int param_shape = (&(*layers_[layer_id]->blobs()[0]))->shape(0);
+          max_param->push_back(vector<Dtype>(param_shape, 0));
+        }
+      }
+    }
+  }
+  // Find maximal values.
+  int index = 0;
+  vector<Dtype> max_vals;
+  for (int layer_id = 0; layer_id < layers_.size(); ++layer_id) {
+    if (strcmp(layers_[layer_id]->type(), "Convolution") == 0) {
+      max_vals = FindMax(bottom_vecs_[layer_id][0]);
+      max_in->at(index) = std::max(max_in->at(index), max_vals.at(0)); 
+
+      max_vals = FindMax(top_vecs_[layer_id][0]);
+      max_out->at(index) = std::max(max_out->at(index), max_vals.at(0));
+
+      // Consider the weights only, ignore the bias
+      if (scaling == "single") {
+        max_vals = FindMax(&(*layers_[layer_id]->blobs()[0]));
+        max_param->at(index).at(0) = std::max(max_param->at(index).at(0), max_vals.at(0));
+      } else {
+        max_vals = FindMax(&(*layers_[layer_id]->blobs()[0]), false);
+        for(int i = 0; i < max_vals.size(); ++i) 
+          max_param->at(index).at(i) = std::max(max_param->at(index).at(i), max_vals.at(i));
+      }
+      index++;
+    }
+  }
 }
 
 // Helper for Net::Init: add a new top blob to the net.
@@ -1157,12 +1378,13 @@ Dtype Net<Dtype>::ForwardFromTo(int start, int end) {
   CHECK_LT(end, layers_.size());
   Dtype loss = 0;
   for (int i = start; i <= end; ++i) {
+    LAYER_TIMING_START(forward, i);
     PERFORMANCE_MEASUREMENT_BEGIN();
 
-    // LOG(ERROR) << "Forwarding " << layer_names_[i];
     Dtype layer_loss = layers_[i]->Forward(bottom_vecs_[i], top_vecs_[i]);
 
     PERFORMANCE_MEASUREMENT_END((std::string("FW_") + layer_names_[i]).c_str());
+    LAYER_TIMING_STOP(forward, i);
 
     loss += layer_loss;
     if (debug_info_) { ForwardDebugInfo(i); }
@@ -1208,13 +1430,15 @@ void Net<Dtype>::BackwardFromTo(int start, int end) {
   CHECK_LT(start, layers_.size());
   for (int i = start; i >= end; --i) {
     if (layer_need_backward_[i]) {
+
+      LAYER_TIMING_START(backward, i);
       PERFORMANCE_MEASUREMENT_BEGIN();
 
       layers_[i]->Backward(
           top_vecs_[i], bottom_need_backward_[i], bottom_vecs_[i]);
 
       PERFORMANCE_MEASUREMENT_END((std::string("BW_")+layer_names_[i]).c_str());
-
+      LAYER_TIMING_STOP(backward, i);
       if (debug_info_) { BackwardDebugInfo(i); }
     }
   }
@@ -1721,9 +1945,11 @@ void Net<Dtype>::ClearParamDiffs(int learnable_param_id) {
 
 template <typename Dtype>
 void Net<Dtype>::ClearParamDiffs() {
+  ITER_TIMING_START();
   for (int i = 0; i < learnable_params_.size(); ++i) {
     ClearParamDiffs(i);
   }
+  ITER_TIMING_STOP(cleardiffs);
 }
 
 template <typename Dtype>
@@ -1784,6 +2010,351 @@ const shared_ptr<Layer<Dtype> > Net<Dtype>::layer_by_name(
   return layer_ptr;
 }
 
+#ifdef CAFFE_PER_LAYER_TIMINGS
+
+template <typename Dtype>
+void Net<Dtype>::InitTimers() {
+  int layer_count = layers().size();
+
+  this->forward_time_per_layer.resize(layer_count, 0.0);
+  this->backward_time_per_layer.resize(layer_count, 0.0);
+  this->update_time_per_layer.resize(layer_count, 0.0);
+  this->cleardiffs_time_per_iter = 0.0;
+
+  this->forward_time_per_layer_total.resize(layer_count, 0.0);
+  this->backward_time_per_layer_total.resize(layer_count, 0.0);
+  this->update_time_per_layer_total.resize(layer_count, 0.0);
+  this->cleardiffs_time_per_iter_total = 0.0;
+
+  this->forward_start_time_per_layer.resize(layer_count, 0.0);
+  this->forward_stop_time_per_layer.resize(layer_count, 0.0);
+  this->backward_start_time_per_layer.resize(layer_count, 0.0);
+  this->backward_stop_time_per_layer.resize(layer_count, 0.0);
+  this->update_start_time_per_layer.resize(layer_count, 0.0);
+  this->update_stop_time_per_layer.resize(layer_count, 0.0);
+
+#ifdef USE_MLSL
+  this->startcomm_time_per_layer.resize(layer_count, 0.0);
+  this->waitcomm_time_per_layer.resize(layer_count, 0.0);
+
+  this->startcomm_time_per_layer_total.resize(layer_count, 0.0);
+  this->waitcomm_time_per_layer_total.resize(layer_count, 0.0);
+
+  this->startcomm_start_time_per_layer.resize(layer_count, 0.0);
+  this->startcomm_stop_time_per_layer.resize(layer_count, 0.0);
+
+#ifdef FW_OVERLAP_OPT
+  this->first_update_start_time_per_layer.resize(layer_count, 0.0);
+  this->first_update_stop_time_per_layer.resize(layer_count, 0.0);
+  this->first_waitcomm_start_time_per_layer.resize(layer_count, 0.0);
+  this->first_waitcomm_stop_time_per_layer.resize(layer_count, 0.0);
+#endif
+
+  this->waitcomm_start_time_per_layer.resize(layer_count, 0.0);
+  this->waitcomm_stop_time_per_layer.resize(layer_count, 0.0);
+#endif
+
+  timer.InitTime();
+#ifdef FW_OVERLAP_OPT
+  wait_timer.InitTime(timer);
+#endif
+}
+
+template <typename Dtype>
+void Net<Dtype>::ResetTimers() {
+  std::transform(this->forward_time_per_layer_total.begin(),
+      this->forward_time_per_layer_total.end(),
+      this->forward_time_per_layer.begin(),
+      this->forward_time_per_layer_total.begin(),
+      std::plus<double>());
+
+  std::transform(this->backward_time_per_layer_total.begin(),
+      this->backward_time_per_layer_total.end(),
+      this->backward_time_per_layer.begin(),
+      this->backward_time_per_layer_total.begin(),
+      std::plus<double>());
+
+  std::transform(this->update_time_per_layer_total.begin(),
+      this->update_time_per_layer_total.end(),
+      this->update_time_per_layer.begin(),
+      this->update_time_per_layer_total.begin(),
+      std::plus<double>());
+  this->cleardiffs_time_per_iter_total += this->cleardiffs_time_per_iter;
+#ifdef USE_MLSL
+  std::transform(this->startcomm_time_per_layer_total.begin(),
+      this->startcomm_time_per_layer_total.end(),
+      this->startcomm_time_per_layer.begin(),
+      this->startcomm_time_per_layer_total.begin(),
+      std::plus<double>());
+
+  std::transform(this->waitcomm_time_per_layer_total.begin(),
+      this->waitcomm_time_per_layer_total.end(),
+      this->waitcomm_time_per_layer.begin(),
+      this->waitcomm_time_per_layer_total.begin(),
+      std::plus<double>());
+#endif
+
+  std::fill(this->forward_time_per_layer.begin(),
+      this->forward_time_per_layer.end(), 0.0);
+  std::fill(this->backward_time_per_layer.begin(),
+      this->backward_time_per_layer.end(), 0.0);
+  std::fill(this->update_time_per_layer.begin(),
+      this->update_time_per_layer.end(), 0.0);
+  this->cleardiffs_time_per_iter = 0.0;
+#ifdef USE_MLSL
+  std::fill(this->startcomm_time_per_layer.begin(),
+      this->startcomm_time_per_layer.end(), 0.0);
+  std::fill(this->waitcomm_time_per_layer.begin(),
+      this->waitcomm_time_per_layer.end(), 0.0);
+#endif
+}
+
+template <typename Dtype>
+void Net<Dtype>::PrintTimers(bool printTotal) {
+#ifdef USE_MLSL
+  if (mn::get_node_id() != 0)
+    return;
+#endif
+
+  LOG(WARNING) << std::endl;
+  LOG(WARNING) << "####################################################";
+
+  std::vector<double>& forward_timers = printTotal ?
+    forward_time_per_layer_total : forward_time_per_layer;
+  std::vector<double>& backward_timers = printTotal ?
+    backward_time_per_layer_total : backward_time_per_layer;
+  std::vector<double>& update_timers = printTotal ?
+    update_time_per_layer_total : update_time_per_layer;
+  double cleardiffs_timer = printTotal ?
+    cleardiffs_time_per_iter_total : cleardiffs_time_per_iter;
+#ifdef USE_MLSL
+  std::vector<double>& startcomm_timers = printTotal ?
+    startcomm_time_per_layer_total : startcomm_time_per_layer;
+  std::vector<double>& waitcomm_timers = printTotal ?
+    waitcomm_time_per_layer_total : waitcomm_time_per_layer;
+#endif
+  std::string prefix = printTotal ? "TOTAL " : "DELTA ";
+
+  double forward_time = std::accumulate(forward_timers.begin(),
+      forward_timers.end(), 0.0) / 1000.0;
+  LOG(WARNING) << prefix << "FORWARD TIME: " << forward_time << " ms";
+  for (int layer_idx = 0; layer_idx < layers().size(); layer_idx++) {
+    LOG(WARNING) << "LAYER-" << layer_idx << " "
+      << layers()[layer_idx]->type()
+      << ": forward_time: " << forward_timers[layer_idx] / 1000.0
+      << " ms";
+  }
+  LOG(WARNING) << std::endl;
+
+  double backward_time = std::accumulate(backward_timers.begin(),
+      backward_timers.end(), 0.0) / 1000.0;
+  LOG(WARNING) << prefix << "BACKWARD TIME: " << backward_time << " ms";
+  for (int layer_idx = 0; layer_idx < layers().size(); layer_idx++) {
+    LOG(WARNING) << "LAYER-" << layer_idx << " "
+      << layers()[layer_idx]->type()
+      << ": backward_time: " << backward_timers[layer_idx] / 1000.0
+      << " ms";
+  }
+  LOG(WARNING) << std::endl;
+
+  double update_time = std::accumulate(update_timers.begin(),
+      update_timers.end(), 0.0) / 1000.0;
+  LOG(WARNING) << prefix << "UPDATE TIME: " << update_time << " ms";
+  for (int layer_idx = 0; layer_idx < layers().size(); layer_idx++) {
+    LOG(WARNING) << "LAYER-" << layer_idx << " "
+      << layers()[layer_idx]->type()
+      << ": update_time: " << update_timers[layer_idx] / 1000.0
+      << " ms";
+  }
+  LOG(WARNING) << std::endl;
+
+  double cleardiffs_time = cleardiffs_timer / 1000.0;
+  LOG(WARNING) << prefix << "CLEAR PARAMETER DIFFS TIME: " << cleardiffs_time << " ms";
+  LOG(WARNING) << std::endl;
+
+#ifdef USE_MLSL
+  double startcomm_time = std::accumulate(startcomm_timers.begin(),
+      startcomm_timers.end(), 0.0) / 1000.0;
+  LOG(WARNING) << prefix << "START COMMUNICATION TIME: " << startcomm_time << " ms";
+  for (int layer_idx = 0; layer_idx < layers().size(); layer_idx++) {
+    LOG(WARNING) << "LAYER-" << layer_idx << " "
+      << layers()[layer_idx]->type()
+      << ": startcomm_time: " << startcomm_timers[layer_idx] / 1000.0
+      << " ms";
+  }
+  LOG(WARNING) << std::endl;
+
+  double waitcomm_time = std::accumulate(waitcomm_timers.begin(),
+      waitcomm_timers.end(), 0.0) / 1000.0;
+  LOG(WARNING) << prefix << "WAIT COMMUNICATION TIME: " << waitcomm_time << " ms";
+  for (int layer_idx = 0; layer_idx < layers().size(); layer_idx++) {
+    LOG(WARNING) << "LAYER-" << layer_idx << " "
+      << layers()[layer_idx]->type()
+      << ": waitcomm_time: " << waitcomm_timers[layer_idx] / 1000.0
+      << " ms";
+  }
+  LOG(WARNING) << std::endl;
+
+  LOG(WARNING) << prefix << "TIME (Computation + Communication): " << (forward_time +
+      backward_time + update_time + cleardiffs_time + startcomm_time + waitcomm_time) / 1000.0
+    << " sec";
+#else
+  LOG(WARNING) << prefix << "TIME (Computation): " << (forward_time +
+      backward_time + update_time + cleardiffs_time) / 1000.0 << " sec";
+#endif
+
+  LOG(WARNING) << "####################################################";
+  LOG(WARNING) << std::endl;
+}
+
+template <typename Dtype>
+void Net<Dtype>::SaveTimeline() {
+  static bool initialized = false;
+  std::ofstream time_file;
+  string filename = name() + "_timeline"
+#ifdef USE_MLSL
+        + "_" + std::to_string(mn::get_node_id())
+#endif
+        + ".txt";
+  if (initialized)
+    time_file.open(filename, std::ios_base::app);
+  else {
+    initialized = true;
+    time_file.open(filename);
+  }
+
+  time_file << "start,end,type,OP" << std::endl;
+
+  for (int layer_idx = 0; layer_idx < layers().size(); ++layer_idx) {
+    if (forward_start_time_per_layer[layer_idx] == 0
+        || forward_stop_time_per_layer[layer_idx] == 0)
+        continue;
+    time_file << forward_start_time_per_layer[layer_idx] / 1000
+        << "," << forward_stop_time_per_layer[layer_idx] / 1000
+        << ",Comp," << layers()[layer_idx]->type()
+        << std::endl;
+  }
+
+  for (int layer_idx = 0; layer_idx < layers().size(); ++layer_idx) {
+    if (backward_start_time_per_layer[layer_idx] == 0
+        || backward_stop_time_per_layer[layer_idx] == 0)
+        continue;
+    time_file << backward_start_time_per_layer[layer_idx] / 1000
+        << "," << backward_stop_time_per_layer[layer_idx] / 1000
+        << ",Comp," << layers()[layer_idx]->type() << "Grad"
+        << std::endl;
+  }
+
+#if defined(USE_MLSL) && defined(FW_OVERLAP_OPT) 
+  for (int layer_idx = 0; layer_idx < layers().size(); ++layer_idx) {
+    if (first_update_start_time_per_layer[layer_idx] == 0
+        || first_update_stop_time_per_layer[layer_idx] == 0)
+        continue;
+
+    time_file << first_update_start_time_per_layer[layer_idx] / 1000
+        << "," << first_update_stop_time_per_layer[layer_idx] / 1000
+        << ",Comp," << layers()[layer_idx]->type() << "FirstUpdate"
+        << std::endl;
+  }
+#endif
+
+  for (int layer_idx = 0; layer_idx < layers().size(); ++layer_idx) {
+    if (update_start_time_per_layer[layer_idx] == 0
+        || update_stop_time_per_layer[layer_idx] == 0)
+        continue;
+
+    time_file << update_start_time_per_layer[layer_idx] / 1000
+        << "," << update_stop_time_per_layer[layer_idx] / 1000
+        << ",Comp," << layers()[layer_idx]->type() << "Update"
+        << std::endl;
+  }
+
+#ifdef USE_MLSL
+  for (int layer_idx = 0; layer_idx < layers().size(); ++layer_idx) {
+    if (startcomm_start_time_per_layer[layer_idx] == 0
+        || startcomm_stop_time_per_layer[layer_idx] == 0)
+        continue;
+
+    time_file << startcomm_start_time_per_layer[layer_idx] / 1000
+        << "," << startcomm_stop_time_per_layer[layer_idx] / 1000
+        << ",Comm," << layers()[layer_idx]->type() << "Start"
+        << std::endl;
+  }
+
+#ifdef FW_OVERLAP_OPT
+  for (int layer_idx = 0; layer_idx < layers().size(); ++layer_idx) {
+    if (first_waitcomm_start_time_per_layer[layer_idx] == 0
+        || first_waitcomm_stop_time_per_layer[layer_idx] == 0)
+        continue;
+
+    time_file << first_waitcomm_start_time_per_layer[layer_idx] / 1000
+        << "," << first_waitcomm_stop_time_per_layer[layer_idx] / 1000
+        << ",Comm," << layers()[layer_idx]->type() << "FirstWait"
+        << std::endl;
+  }
+#endif
+
+  for (int layer_idx = 0; layer_idx < layers().size(); ++layer_idx) {
+    if (waitcomm_start_time_per_layer[layer_idx] == 0
+        || waitcomm_stop_time_per_layer[layer_idx] == 0)
+        continue;
+
+    time_file << waitcomm_start_time_per_layer[layer_idx] / 1000
+        << "," << waitcomm_stop_time_per_layer[layer_idx] / 1000
+        << ",Comm," << layers()[layer_idx]->type() << "Wait"
+        << std::endl;
+  }
+#endif
+
+  time_file.close();
+}
+
+template <typename Dtype>
+void Net<Dtype>::PrintPayloadSize() {
+#ifdef USE_MLSL
+  if (mn::get_node_id() != 0)
+    return;
+#endif
+
+  int total_payload_size = 0;
+  const vector<Blob<Dtype> *> &net_params (learnable_params());
+
+  LOG(WARNING) << std::endl;
+  LOG(WARNING) << "####################################################";
+
+
+  for (int layer_idx = 0; layer_idx < layers().size(); ++layer_idx) {
+    std::vector<int> param_ids = get_layer_learnable_param_ids(layer_idx);
+    for (int j = 0; j < param_ids.size(); j++) {
+      int layer_payload_size = net_params[param_ids[j]]->count();
+
+      LOG(WARNING) << "LAYER-" << layer_idx << " "
+        << layers()[layer_idx]->type()
+        << ": payload_size: " << layer_payload_size
+        << " units";
+
+      total_payload_size += layer_payload_size;
+    }
+  }
+
+  LOG(WARNING) << "TOTAL PAYLOAD SIZE: " << total_payload_size << " units";
+  LOG(WARNING) << "####################################################";
+  LOG(WARNING) << std::endl;
+}
+
+#endif /* CAFFE_PER_LAYER_TIMINGS */
+
+
 INSTANTIATE_CLASS(Net);
 
 }  // namespace caffe
+
+#if defined(FOUNDED_MLSL_ROOT)
+#define DEF_MLSL(str) \
+const char *mlsl_root = #str; 
+
+__attribute__((constructor)) void lib_ctor()  {
+    DEF_MLSL(FOUNDED_MLSL_ROOT);
+    setenv("MLSL_ROOT", mlsl_root, 0);
+}
+#endif

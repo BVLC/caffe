@@ -300,6 +300,7 @@ TYPED_TEST(MKLDNNConvolutionLayerTest, TestSetupMKLDNN) {
   EXPECT_EQ(this->blob_top_2_->width(), OW);
 }
 
+#if 0
 TYPED_TEST(MKLDNNConvolutionLayerTest, TestSetupMKLDNNWithRectangeKernelStridePad) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
@@ -418,7 +419,6 @@ TYPED_TEST(MKLDNNConvolutionLayerTest, TestSimpleConvolutionReLUMKLDNN) {
   }
 }
 
-#if 0
 TYPED_TEST(MKLDNNConvolutionLayerTest, TestDilatedConvolutionMKLDNN) {
   typedef typename TypeParam::Dtype Dtype;
   vector<int> bottom_shape;
@@ -1010,7 +1010,6 @@ TYPED_TEST(MKLDNNConvolutionLayerTest, TestGradient3D) {
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_);
 }
-#endif
 
 TYPED_TEST(MKLDNNConvolutionLayerTest, Test1x1Gradient) {
   typedef typename TypeParam::Dtype Dtype;
@@ -1030,6 +1029,7 @@ TYPED_TEST(MKLDNNConvolutionLayerTest, Test1x1Gradient) {
       this->blob_top_vec_);
 }
 
+#endif
 TYPED_TEST(MKLDNNConvolutionLayerTest, TestGradientGroup) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;

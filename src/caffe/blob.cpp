@@ -245,12 +245,18 @@ shared_ptr<PrvMemDescr> Blob<Dtype>::get_prv_diff_descriptor() {
 template <typename Dtype>
 void Blob<Dtype>::ShareData(const Blob& other) {
   CHECK_EQ(count_, other.count());
+  // Although the count is same, we have to forcedly sync data to cpu if shape is changed.
+  // This is used to avoid mismatch between cpu shape and prv data.
+  if(this->shape() != other.shape() && other.data()) other.data()->mutable_cpu_data();
   data_ = other.data();
 }
 
 template <typename Dtype>
 void Blob<Dtype>::ShareDiff(const Blob& other) {
   CHECK_EQ(count_, other.count());
+  // Although the count is same, we have to forcedly sync data to cpu if shape is changed.
+  // This is used to avoid mismatch between cpu shape and prv data.
+  if(this->shape() != other.shape() && other.diff()) other.diff()->mutable_cpu_data();
   diff_ = other.diff();
 }
 

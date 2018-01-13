@@ -155,6 +155,20 @@ void Timer::Init() {
   }
 }
 
+void Timer::InitTime() {
+  init_cpu_ = boost::posix_time::microsec_clock::local_time();
+}
+
+void Timer::InitTime(Timer &timer_) {
+  init_cpu_ = timer_.init_cpu_;
+}
+
+float Timer::Duration() {
+  boost::posix_time::ptime curr_cpu_ = boost::posix_time::microsec_clock::local_time();
+  float elapsed = (curr_cpu_ - init_cpu_).total_microseconds();
+  return elapsed;
+}
+
 CPUTimer::CPUTimer() {
   this->initted_ = true;
   this->running_ = false;

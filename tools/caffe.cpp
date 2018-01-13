@@ -357,6 +357,9 @@ int test_detection(Net<float>& caffe_net) {
   PERFORMANCE_INIT_MONITOR();
 
   for (int i = 0; i < FLAGS_iterations; ++i) {
+#ifdef DEBUG
+    LOG(INFO) << "Iteration: " << i;
+#endif
     float iter_loss;
     const vector<Blob<float>*>& result = caffe_net.Forward(&iter_loss);
 
@@ -565,6 +568,8 @@ int time() {
   // have huge variance in some machines.
   int warmup_iterations = 5;
   for (int j = 0; j < warmup_iterations; ++j) {
+    if (j == warmup_iterations - 1)
+      PERFORMANCE_START_RESETTING_MONITOR();
     for (int i = 0; i < layers.size(); ++i) {
       layers[i]->Forward(bottom_vecs[i], top_vecs[i]);
     }
@@ -575,6 +580,8 @@ int time() {
       }
     }
   }
+
+  PERFORMANCE_STOP_RESETTING_MONITOR();
 
   LOG(INFO) << "*** Benchmark begins ***";
   LOG(INFO) << "Testing for " << FLAGS_iterations << " iterations.";

@@ -147,8 +147,6 @@ void MKLDNNEltwiseLayer<Dtype>::InitEltwiseFwd(const vector<Blob<Dtype>*>& botto
     memory::format mfmt_nchw = memory::format::nchw;
 
     // ---- Initialize memory descriptors -------------
-    shared_ptr<memory::desc> bottom_data_md, top_data_md;
-
     std::vector<memory::primitive_desc> bottom_data_mpd;
     fwd_bottom_data.clear();
     fwd_bottom_data_primitives_.clear();
@@ -168,15 +166,9 @@ void MKLDNNEltwiseLayer<Dtype>::InitEltwiseFwd(const vector<Blob<Dtype>*>& botto
                 = get_mkldnn_prv_descriptor<Dtype, false>(bottom[i]);
             bottom_data_mfmt = static_cast<memory::format>(
                 mem_descr->prv_memory_pd()->desc().data.format);
-            bottom_data_md.reset(new memory::desc(mem_descr->prv_memory_pd()->desc()));
             prv_bottom_data_mpd.reset(new memory::primitive_desc(
                 {{n, ic, ih, iw}, mpcsn, bottom_data_mfmt}, cpu_engine));
         }
-        else
-        {
-            bottom_data_md.reset(new memory::desc({{n, ic, ih, iw}}, mpcsn, bottom_data_mfmt));
-        }
-        top_data_md = bottom_data_md;
 
         bottom_data_mpd.push_back(memory::primitive_desc(
             {{n, ic, ih, iw}, mpcsn, bottom_data_mfmt}, cpu_engine));

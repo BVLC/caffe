@@ -44,7 +44,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/net.hpp"
 #include "caffe/solver_factory.hpp"
 
-#include "caffe/util/benchmark.hpp"
 
 namespace caffe {
 
@@ -160,36 +159,6 @@ class Solver {
   virtual void PrintLearningRate() = 0;
 
   void TestAll();
-
-
-#ifdef CAFFE_PER_LAYER_TIMINGS
-  /* Timers for performance measurements */
-  Timer timer;
-#ifdef FW_OVERLAP_OPT
-  Timer wait_timer;
-#endif
-  std::vector<double> forward_time_per_layer;
-  std::vector<double> backward_time_per_layer;
-  std::vector<double> update_time_per_layer;
-  double cleardiffs_time_per_iter;
-#ifdef USE_MLSL
-  std::vector<double> startcomm_time_per_layer;
-  std::vector<double> waitcomm_time_per_layer;
-#endif
-
-  std::vector<double> forward_time_per_layer_total;
-  std::vector<double> backward_time_per_layer_total;
-  std::vector<double> update_time_per_layer_total;
-  double cleardiffs_time_per_iter_total;
-#ifdef USE_MLSL
-  std::vector<double> startcomm_time_per_layer_total;
-  std::vector<double> waitcomm_time_per_layer_total;
-#endif
-
-  void InitTimers();
-  void ResetTimers();
-  void PrintTimers(bool printTotal);
-#endif /* CAFFE_PER_LAYER_TIMINGS */
 
  protected:
   string SnapshotFilename(const string extension);

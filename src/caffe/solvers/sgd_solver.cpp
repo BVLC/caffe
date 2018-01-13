@@ -45,6 +45,31 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 namespace caffe {
+
+#ifdef CAFFE_PER_LAYER_TIMINGS
+
+#define LAYER_UPDATE_TIMING_START(index) do { \
+  if (this->net()->phase() == TRAIN) { \
+    this->net()->update_start_time_per_layer[index] = this->net()->timer.Duration(); \
+  } \
+}while(0)
+
+#define LAYER_UPDATE_TIMING_STOP(index) do { \
+  if (this->net()->phase() == TRAIN) { \
+    this->net()->update_stop_time_per_layer[index] = this->net()->timer.Duration(); \
+    this->net()->update_time_per_layer[index] += (this->net()->update_stop_time_per_layer[index] - this->net()->update_start_time_per_layer[index]); \
+  } \
+}while(0)
+
+#else
+
+#define LAYER_UPDATE_TIMING_START(index)
+#define LAYER_UPDATE_TIMING_STOP(index)
+
+#endif
+
+
+
 template <typename Dtype>
 Dtype SGDSolver<Dtype>::GetWarmUpLR(int cur_iter, int warmup_iter, Dtype warmup_start_lr) {
   if (cur_iter < 0) {
@@ -195,10 +220,24 @@ template <typename Dtype>
 void SGDSolver<Dtype>::ApplyUpdate() {
   PrintLearningRate();
   ClipGradients();
+#ifdef CAFFE_PER_LAYER_TIMINGS
+#ifdef USE_MLSL
+  CHECK(mn::is_multinode() == false);
+#endif
+  for (int i=0; i<this->net_->layers().size(); i++) {
+    const std::vector<int> param_ids = this->net_->get_layer_learnable_param_ids(i);
+    LAYER_UPDATE_TIMING_START(i);
+    for (int param_id = 0; param_id < param_ids.size(); ++param_id) {
+      ApplyUpdate(param_ids[param_id]);
+    }
+    LAYER_UPDATE_TIMING_STOP(i);
+  }
+#else
   for (int param_id = 0; param_id < this->net_->learnable_params().size();
        ++param_id) {
     ApplyUpdate(param_id);
   }
+#endif
 }
 
 template <typename Dtype>

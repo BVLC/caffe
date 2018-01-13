@@ -201,6 +201,12 @@ namespace caffe {
 #else
                    << " DISABLED"
 #endif
+                   << ", WEIGHT GRADIENT COMPRESSION IS"
+#ifdef ENABLE_WEIGHT_GRAD_COMPRESSION
+                   << " ENABLED"
+#else
+                   << " DISABLED"
+#endif
                    << ", SINGLE DB SPLITTING IS"
 #ifdef CAFFE_MLSL_SHUFFLE
                    << " ENABLED";

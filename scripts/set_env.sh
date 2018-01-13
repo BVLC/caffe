@@ -118,10 +118,10 @@ function set_mlsl_vars
     fi
 
     if [ ${num_mlsl_servers} -eq -1 ]; then
-        if [ "${cpu_model}" == "bdw" ] || [ "${cpu_model}" == "skx" ]; then
-            numservers=2
-        else
+        if [ "${cpu_model}" == "knl" ] || [ "${cpu_model}" == "knm" ]; then
             numservers=4
+        else
+            numservers=2
         fi
     else
         numservers=$((num_mlsl_servers))
@@ -131,10 +131,10 @@ function set_mlsl_vars
     export MLSL_NUM_SERVERS=${numservers}
 
     if [ ${numservers} -gt 0 ]; then
-        if [ "${cpu_model}" == "bdw" ] || [ "${cpu_model}" == "skx" ]; then
+        if [ "${cpu_model}" == "knl" ] || [ "${cpu_model}" == "knm" ]; then
             listep=6,7,8,9
         else
-            listep=6,7,8,9,10,11,12,13
+            listep=6,7
         fi
         export MLSL_SERVER_AFFINITY="${listep}"
         echo "MLSL_SERVER_AFFINITY: ${listep}"
@@ -153,17 +153,16 @@ function set_openmp_envs
     ppncpu=1
     threadspercore=1
 
+    cpus=`lscpu | grep "^CPU(s):" | awk '{print $2}'`
     cores=`lscpu | grep "Core(s) per socket:" | awk '{print $4}'`
     sockets=`lscpu | grep "Socket(s)" | awk  '{print $2}'`
     maxcores=$((cores*sockets))
 
     if [ "$internal_thread_pin" == "on" ]; then
-        num_internal_threads=2
-        export INTERNAL_THREADS_PIN=$((maxcores-2)),$((maxcores-1))
-    else
-        num_internal_threads=0
+        export INTERNAL_THREADS_PIN=$((cpus-2)),$((cpus-1))
+        echo "Pin internal threads to: $INTERNAL_THREADS_PIN"
     fi
-    numthreads=$(((maxcores-numservers-num_internal_threads)*threadspercore))
+    numthreads=$(((maxcores-numservers)*threadspercore))
     numthreads_per_proc=$((numthreads/ppncpu))
 
     # OMP configuration
@@ -183,7 +182,7 @@ function set_openmp_envs
 
         export OMP_NUM_THREADS=${numthreads_per_proc}
         export KMP_HW_SUBSET=1t
-        affinitystr="proclist=[0-5,$((5+numservers+reserved_cores+1))-$((maxcores-1-num_internal_threads))],granularity=thread,explicit"
+        affinitystr="proclist=[0-5,$((5+numservers+reserved_cores+1))-$((maxcores-1))],granularity=thread,explicit"
         export KMP_AFFINITY=$affinitystr
     else
         # For single node only set for KNM

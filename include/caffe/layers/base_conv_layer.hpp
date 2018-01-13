@@ -63,8 +63,9 @@ class BaseConvolutionLayer : public Layer<Dtype> {
 
   virtual inline int MinBottomBlobs() const { return 1; }
   virtual inline int MinTopBlobs() const { return 1; }
+#ifdef DISABLE_CONV_SUM_FUSION
   virtual inline bool EqualNumBottomTopBlobs() const { return true; }
-
+#endif
  protected:
   // Split Reshape into two parts
   // Part 1 for normal blob reshape 
