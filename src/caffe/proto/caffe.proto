@@ -186,7 +186,11 @@ message SolverParameter {
   optional float clip_gradients = 35 [default = -1];
 
   optional int32 snapshot = 14 [default = 0]; // The snapshot interval
-  optional string snapshot_prefix = 15; // The prefix for the snapshot.
+  // The prefix for the snapshot.
+  // If not set then is replaced by prototxt file path without extention.
+  // If is set to directory then is augmented by prototxt file name
+  // without extention.
+  optional string snapshot_prefix = 15;
   // whether to snapshot diff in the results or not. Snapshotting diff will help
   // debugging but the final protocol buffer size will be much larger.
   optional bool snapshot_diff = 16 [default = false];
