@@ -9,6 +9,7 @@
 
 # uncomment to disable IO dependencies and corresponding data layers
 # USE_OPENCV := 0
+OPENCV_VERSION := 3
 # USE_LEVELDB := 0
 # USE_LMDB := 0
 
