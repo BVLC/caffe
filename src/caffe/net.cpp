@@ -910,7 +910,7 @@ void Net<Dtype>::CompilationRuleFour(const NetParameter& param,
                                    param,
                                    i + 1 < param.layer_size() ? i + 1 : i);
 
-      if (child_layers_params[0]->type().compare("Eltwise") == 0) {
+      if (child_layers_params.size() > 0 && child_layers_params[0]->type().compare("Eltwise") == 0) {
         std::vector<const LayerParameter*> grand_child_layers_params;
 
         Net<Dtype>::GetBlobConsumers(grand_child_layers_params,
