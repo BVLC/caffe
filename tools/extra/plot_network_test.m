@@ -4,59 +4,71 @@ clear;
 clc;
 set(0,'DefaultTextInterpreter','none');
 
-% load the log file of caffe model  
-fid = fopen('C:\Projects\caffe\examples\cifar10_xnor\log\cifar10xnor_test.log', 'r');
+% load the log file of caffe model
+file_path = 'H:\Caffe_Log\log\bvlc_reference_alexnet_inq_test.log';
+fid = fopen(file_path, 'r');
+[filepath,name,ext] = fileparts(file_path);
 tline = fgetl(fid);  
 
-
-accuracyArray =[];
+accuracy_top1_Array =[];
+accuracy_top5_Array =[];
 lossArray = [];
+
 str = '';
 str2 = '';
-Net_name = 'CIFAR10';
-%Net_name = 'CIFAR10_Binary';
-%Net_name = 'CIFAR10_XNOR';
+Net_name = name;
 
-%record the last line  
+%record the last line
 lastLine = '';  
-      
+
+%Seek the words from log
+str_index_acc1 = 'accuracy1 = ';
+str_index_acc5 = 'accuracy5 = ';
+str_index_loss = 'loss = ';
+str_index_batch = 'Batch';
+str_index_symbol = ' (* ';
+
 %read line  
 while ischar(tline)
 %%%%%%%%%%%%%% the accuracy line %%%%%%%%%%%%%%  
-    k = strfind(tline, 'accuracy = ');
-    k1 = strfind(tline, 'loss = ');
-    k2 = strfind(tline, 'Batch');
+    k = strfind(tline, str_index_acc1);
+	k1 = strfind(tline, str_index_acc5);
+    k2 = strfind(tline, str_index_loss);
+    k3 = strfind(tline, str_index_batch);
+	k4 = strfind(tline, str_index_symbol);
     
-    if(~isempty(k2))
+    if(~isempty(k3))
         if(~isempty(k))
-            % If the string contain test and accuracy at the same time  
-            % The bias from 'accuracy' to the float number  
-            indexStart = k + 11;   
+            indexStart = k + length(str_index_acc1);   
             indexEnd = size(tline);  
             str = tline(indexStart : indexEnd(2));  
-            accuracyArray = [accuracyArray, str2double(str)];
+            accuracy_top1_Array = [accuracy_top1_Array, str2double(str)];
         elseif(~isempty(k1))
-            % If the string contain test and accuracy at the same time  
-            % The bias from 'accuracy' to the float number  
-            indexStart = k1 + 7;   
+            indexStart = k1 + length(str_index_acc5);   
+            indexEnd = size(tline);  
+            str2 = tline(indexStart : indexEnd(2));  
+            accuracy_top5_Array = [accuracy_top5_Array, str2double(str2)];
+		elseif(~isempty(k2))
+            indexStart = k2 + length(str_index_loss);   
             indexEnd = size(tline);  
             str2 = tline(indexStart : indexEnd(2));  
             lossArray = [lossArray, str2double(str2)];
-        else
-            
+		else
         end
     else
         if(~isempty(k))
-            indexStart = k + 11;   
+            indexStart = k + length(str_index_acc1);   
             indexEnd = size(tline);  
             str = tline(indexStart : indexEnd(2));  
-            avg_accuracy = str2double(str);
-        elseif(~isempty(k1))
-			
-			k3 = strfind(tline, ' (* ');
-			
-            indexStart = k1 + 7;   
-            indexEnd = k3;
+            avg_accuracy_top1 = str2double(str);
+		elseif(~isempty(k1))
+            indexStart = k1 + length(str_index_acc5);   
+            indexEnd = size(tline);  
+            str = tline(indexStart : indexEnd(2));  
+            avg_accuracy_top5 = str2double(str);
+        elseif(~isempty(k2))
+            indexStart = k2 + length(str_index_loss);   
+            indexEnd = k4;
             str = tline(indexStart : indexEnd);  
             avg_loss = str2double(str);
         else
@@ -70,15 +82,20 @@ end
 
 %draw figure
 h = figure('Position', [100, 100, 800, 800]);
-subplot(3,1,1);
-h1 = plot(0:(length(accuracyArray)-1), accuracyArray);title([Net_name ': Accuracy vs Batch']);
-lgd = legend('Accuracy');
-title(lgd,['Avg Accuracy = ' num2str(avg_accuracy)]);
-subplot(3,1,2);
-h2 = plot(0:(length(lossArray)-1), lossArray);title([Net_name ': Loss vs Batch']);
-lgd = legend('Loss');
-title(lgd,['Avg Loss = ' num2str(avg_loss)]);
-subplot(3,1,3);
-h3 = plot(lossArray, accuracyArray,'*');title([Net_name ': Accuracy vs Loss']);
 
-saveas(h,[Net_name '_test_result.jpg']);
+subplot(3,1,1);
+h1 = plot(0:(length(accuracy_top1_Array)-1), accuracy_top1_Array);title([Net_name ': Top 1 Accuracy vs Batch']);
+lgd = legend('Top 1 Accuracy');
+title(lgd,['Avg Accuracy = ' num2str(avg_accuracy_top1)]);
+
+subplot(3,1,2);
+h1 = plot(0:(length(accuracy_top5_Array)-1), accuracy_top5_Array);title([Net_name ': Top 5 Accuracy vs Batch']);
+lgd = legend('Top 5 Accuracy');
+title(lgd,['Avg Accuracy = ' num2str(avg_accuracy_top5)]);
+
+subplot(3,1,3);
+h2 = plot(0:(length(lossArray)-1), lossArray);title([Net_name ': Loss vs Batch']);
+lgd = legend(['Avg Loss = ' num2str(avg_loss)]);
+
+%save the figure as jpg
+saveas(h, fullfile(filepath, [Net_name '_result']), 'jpeg');
