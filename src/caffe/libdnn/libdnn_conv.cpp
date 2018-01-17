@@ -951,11 +951,11 @@ string LibDNNConv<MItype, MOtype>::generate_fw_kernels(string name) {
   ss << "if (globalRow < M && globalCol < N) {" << std::endl;
   if (bias_term_) {
     ss << "Cptr[globalRow * N + globalCol] = "
-       << "((MItype*)(&(Creg[wm][wn/VWN])))[wn%VWN] + v_bmul * biasval;"
-       << std::endl;
+       << "((MItype*)(&(Creg[wm][wn/VWN])))[wn % VWN]"
+       << " + (MItype)v_bmul * biasval;" << std::endl;
   } else {
     ss << "Cptr[globalRow * N + globalCol] = "
-       << "((MItype*)(&(Creg[wm][wn/VWN])))[wn%VWN];" << std::endl;
+       << "((MItype*)(&(Creg[wm][wn/VWN])))[wn % VWN];" << std::endl;
   }
   ss << "}" << std::endl;   // M-N-Guard
   ss << "}" << std::endl;   // For (N)
@@ -1190,12 +1190,12 @@ string LibDNNConv<MItype, MOtype>::generate_wg_kernels(string name) {
   if (bias_term_) {
     ss << "if (tidn == 0 && offN == 0 && globalRow < M) {" << std::endl;
     if (wgalgo_ == LIBDNN_CONVOLUTION_WG_ALGO_DIRECT) {
-      ss << "Dptr[globalRow] = ((MItype*)(&(Dreg[wm/VWM])))[wm%VWM];"
+      ss << "Dptr[globalRow] = ((MItype*)(&(Dreg[wm/VWM])))[wm % VWM];"
          << std::endl;
     }
     if (wgalgo_ == LIBDNN_CONVOLUTION_WG_ALGO_ATOMIC) {
-      ss << "caffe_gpu_atomic_add(&(Dptr[globalRow]), "
-         << "((MItype*)(&(Dreg[wm/VWM])))[wm%VWM]);" << std::endl;
+      ss << this->program_->template atomic_add<MItype>("&(Dptr[globalRow])",
+                       "((MItype*)(&(Dreg[wm/VWM])))[wm % VWM]") << std::endl;
     }
     ss << "}" << std::endl;
   }
@@ -1206,11 +1206,12 @@ string LibDNNConv<MItype, MOtype>::generate_wg_kernels(string name) {
   ss << "if (globalRow < M && globalCol < N) {" << std::endl;
   if (wgalgo_ == LIBDNN_CONVOLUTION_WG_ALGO_DIRECT) {
     ss << "Cptr[globalRow * N + globalCol] = "
-       << "((MItype*)(&(Creg[wm][wn/VWN])))[wn%VWN];" << std::endl;
+       << "((MItype*)(&(Creg[wm][wn/VWN])))[wn % VWN];" << std::endl;
   }
   if (wgalgo_ == LIBDNN_CONVOLUTION_WG_ALGO_ATOMIC) {
-    ss << "caffe_gpu_atomic_add(&(Cptr[globalRow * N + globalCol]), "
-       << "((MItype*)(&(Creg[wm][wn/VWN])))[wn%VWN]);" << std::endl;
+    ss << this->program_->template atomic_add<MItype>(
+        "&(Cptr[globalRow * N + globalCol])",
+        "((MItype*)(&(Creg[wm][wn/VWN])))[wn % VWN]") << std::endl;
   }
   ss << "}" << std::endl;   // M-N-Guard
   ss << "}" << std::endl;   // For (N)
@@ -1446,7 +1447,7 @@ string LibDNNConv<MItype, MOtype>::generate_bw_kernels(string name) {
   if (bwalgo_ == LIBDNN_CONVOLUTION_BW_ALGO_IM2COL) {
     ss << "if (globalRow < M && globalCol < N) {" << std::endl;
     ss << "Cptr[globalRow * N + globalCol] = ";
-    ss << "((MItype*)(&(Creg[wm][wn/VWN])))[wn%VWN];" << std::endl;
+    ss << "((MItype*)(&(Creg[wm][wn/VWN])))[wn % VWN];" << std::endl;
     ss << "}" << std::endl;
   }
 
@@ -1492,8 +1493,8 @@ string LibDNNConv<MItype, MOtype>::generate_bw_kernels(string name) {
     }
 
     ss << "if (in_range) {" << std::endl;
-    ss << "caffe_gpu_atomic_add(&(Cptr[tiledIndex]), "
-       << "((MItype*)(&(Creg[wm][wn/VWN])))[wn%VWN]);" << std::endl;
+    ss << this->program_->template atomic_add<MItype>("&(Cptr[tiledIndex])",
+                     "((MItype*)(&(Creg[wm][wn/VWN])))[wn % VWN]") << std::endl;
     ss << "}" << std::endl;
   }
 
@@ -1517,8 +1518,8 @@ void LibDNNConv<MItype, MOtype>::GenerateKernels() {
   ss << this->program_->template define_vector_type<MItype>("MItype", 0, 16);
   ss << this->program_->template define_vector_type<MOtype>("MOtype", 0, 16);
   ss << this->program_->atomics();
-
   ss << this->program_->vector_accessors();
+
   ss << generate_fw_defs();
   ss << generate_fw_kernels("conv_forward");
   ss << generate_bw_defs();

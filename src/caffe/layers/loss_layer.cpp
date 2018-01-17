@@ -20,7 +20,7 @@ void LossLayer<Dtype, MItype, MOtype>::Reshape(
     const vector<Blob<MOtype>*>& top) {
   CHECK_EQ(bottom[0]->shape(0), bottom[1]->shape(0))
       << "The data and label should have the same first dimension.";
-  vector<int_tp> loss_shape(0);  // Loss layers output a scalar; 0 axes.
+  vector<int_tp> loss_shape(1, 1);  // Loss layers output a scalar; 1 element.
   top[0]->Reshape(loss_shape);
 }
 

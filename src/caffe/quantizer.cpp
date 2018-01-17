@@ -18,9 +18,11 @@ QuantizerBase::QuantizerBase(Device* dev_ptr)
 }
 
 template<typename MItype, typename MOtype>
-void Quantizer<MItype, MOtype>::update_param(QuantizerParameter& param) {
+void Quantizer<MItype, MOtype>::update_param(const QuantizerParameter& param) {
   quant_mutex_.lock();
   this->param_ = param;
+  this->param_.set_input_data_type(proto_data_type<MItype>());
+  this->param_.set_output_data_type(proto_data_type<MOtype>());
   this->program_ready_ = false;
   this->index_ = param_.index();
   this->mode_ = param_.mode();
@@ -133,13 +135,19 @@ template<typename MItype, typename MOtype>
 Quantizer<MItype, MOtype>::Quantizer(Device* dev_ptr)
   : QuantizerBase(dev_ptr) {
   init();
+  QuantizerParameter param;
+  param.set_device(dev_ptr->id());
+  param.set_input_data_type(proto_data_type<MItype>());
+  param.set_output_data_type(proto_data_type<MOtype>());
+  param.set_index(0);
+  update_param(param);
 }
 
 
 template<typename MItype, typename MOtype>
 void Quantizer<MItype, MOtype>::Forward_cpu(Blob<MItype>* input,
                                             Blob<MOtype>* output,
-                                            bool fw_data, bool fw_diff) {
+                                            bool fw_data, bool fw_diff) const {
   CHECK_EQ(input->count(), output->count());
   if (fw_data) {
     this->Forward_cpu(input->count(),
@@ -155,7 +163,7 @@ void Quantizer<MItype, MOtype>::Forward_cpu(Blob<MItype>* input,
 
 template<typename MItype, typename MOtype>
 void Quantizer<MItype, MOtype>::Forward_cpu(
-   size_t n, const void* input, void* output) {
+   size_t n, const void* input, void* output) const {
   this->Forward_cpu(n,
                     static_cast<const MItype*>(input),
                     static_cast<MOtype*>(output));
@@ -163,7 +171,7 @@ void Quantizer<MItype, MOtype>::Forward_cpu(
 
 template<typename MItype, typename MOtype>
 void Quantizer<MItype, MOtype>::Forward_cpu(
-   size_t n, const MItype* input, MOtype* output) {
+   size_t n, const MItype* input, MOtype* output) const {
   CHECK(input);
   CHECK(output);
 
@@ -179,6 +187,7 @@ void Quantizer<MItype, MOtype>::Forward_cpu(
         output[i] = static_cast<MOtype>(input[i]);
       }
     }
+    return;
   }
 
   if (fw_scale_before_cast()) {
@@ -213,7 +222,7 @@ void Quantizer<MItype, MOtype>::Forward_cpu(
 template<typename MItype, typename MOtype>
 void Quantizer<MItype, MOtype>::Backward_cpu(Blob<MOtype>* input,
                                              Blob<MItype>* output,
-                                             bool bw_data, bool bw_diff) {
+                                             bool bw_data, bool bw_diff) const {
   CHECK_EQ(input->count(), output->count());
   if (bw_data) {
     this->Backward_cpu(input->count(),
@@ -229,7 +238,7 @@ void Quantizer<MItype, MOtype>::Backward_cpu(Blob<MOtype>* input,
 
 template<typename MItype, typename MOtype>
 void Quantizer<MItype, MOtype>::Backward_cpu(
-   size_t n, const void* input, void* output) {
+   size_t n, const void* input, void* output) const {
   this->Backward_cpu(n,
                      static_cast<const MOtype*>(input),
                      static_cast<MItype*>(output));
@@ -237,7 +246,7 @@ void Quantizer<MItype, MOtype>::Backward_cpu(
 
 template<typename MItype, typename MOtype>
 void Quantizer<MItype, MOtype>::Backward_cpu(
-   size_t n, const MOtype* input, MItype* output) {
+   size_t n, const MOtype* input, MItype* output) const {
   CHECK(input);
   CHECK(output);
 

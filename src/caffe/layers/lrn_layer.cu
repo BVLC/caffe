@@ -103,7 +103,8 @@ void LRNLayer<Dtype, MItype, MOtype>::GenerateProgram() {
                       "out", KERNEL_ARG_GLOBAL_MEM));
     ss << this->device_program_->function("LRNComputeOutput", args);
     ss << this->device_program_->kernel_loop("uint_tp", "index", "nthreads");
-    ss << "out[index] = in[index] * pow(scale[index], negative_beta);"
+    ss << "out[index] = in[index] * pow((Dtype)(scale[index]), "
+       << "(Dtype)(negative_beta));"
        << std::endl;
     ss << "}" << std::endl;
     ss << "}" << std::endl;
@@ -124,13 +125,13 @@ void LRNLayer<Dtype, MItype, MOtype>::GenerateProgram() {
     args.push_back(this->device_program_->template create_kernel_arg<int_tp>(
                       "num", KERNEL_ARG_CONST));
     args.push_back(this->device_program_->template create_kernel_arg<int_tp>(
-                      "channels", KERNEL_ARG_GLOBAL_MEM));
+                      "channels", KERNEL_ARG_CONST));
     args.push_back(this->device_program_->template create_kernel_arg<int_tp>(
-                      "height", KERNEL_ARG_GLOBAL_MEM));
+                      "height", KERNEL_ARG_CONST));
     args.push_back(this->device_program_->template create_kernel_arg<int_tp>(
-                      "width", KERNEL_ARG_GLOBAL_MEM));
+                      "width", KERNEL_ARG_CONST));
     args.push_back(this->device_program_->template create_kernel_arg<int_tp>(
-                      "size", KERNEL_ARG_GLOBAL_MEM));
+                      "size", KERNEL_ARG_CONST));
     args.push_back(this->device_program_->template create_kernel_arg<Dtype>(
                       "negative_beta", KERNEL_ARG_CONST));
     args.push_back(this->device_program_->template create_kernel_arg<Dtype>(
@@ -178,7 +179,8 @@ void LRNLayer<Dtype, MItype, MOtype>::GenerateProgram() {
     ss << "}" << std::endl;
     ss << "bottom_diff_off[(head - post_pad) * step]"
        << " = top_diff_off[(head - post_pad)"
-       << " * step] * pow(scale_off[(head - post_pad) * step], negative_beta)"
+       << " * step] * pow((Dtype)(scale_off[(head - post_pad) * step]), "
+       << "(Dtype)(negative_beta))"
        << " - cache_ratio * bottom_off[(head - post_pad) * step] * accum_ratio;"
        << std::endl;
     ss << "++head;" << std::endl;
@@ -192,7 +194,8 @@ void LRNLayer<Dtype, MItype, MOtype>::GenerateProgram() {
     ss << "}" << std::endl;
     ss << "bottom_diff_off[(head - post_pad) * step]"
        << " = top_diff_off[(head - post_pad)"
-       << " * step] * pow(scale_off[(head - post_pad) * step], negative_beta)"
+       << " * step] * pow((Dtype)(scale_off[(head - post_pad) * step]), "
+       << "(Dtype)(negative_beta))"
        << " - cache_ratio * bottom_off[(head - post_pad) * step] * accum_ratio;"
        << std::endl;
     ss << "++head;" << std::endl;

@@ -268,23 +268,42 @@ bool Blob<Dtype>::Reshape(const vector<int_tp>& shape,
   CHECK_LE(shape.size(), kMaxBlobAxes);
   count_ = 1;
   shape_.resize(shape.size());
+  shape_stride_.resize(shape_stride.size());
   if (!shape_data_ || shape_data_->size() < shape.size() * sizeof(int_tp)) {
     shape_data_.reset(
         new SyncedMemory(shape.size() * sizeof(int_tp), device_));
   }
-  int_tp* shape_data = static_cast<int_tp*>(shape_data_->mutable_cpu_data());
+  if (!shape_stride_data_ || shape_stride_data_->size() < shape.size()
+      * sizeof(int_tp)) {
+    shape_stride_data_.reset(
+        new SyncedMemory(shape_stride.size() * sizeof(int_tp), device_));
+  }
+  int_tp* shape_data = static_cast<int_tp*>(
+      shape_data_->mutable_cpu_data());
+  int_tp* shape_stride_data = static_cast<int_tp*>(
+      shape_stride_data_->mutable_cpu_data());
   for (int_tp i = 0; i < shape.size(); ++i) {
     CHECK_GE(shape[i], 0);
+    CHECK_GE(shape_stride[i], 0);
     if (count_ != 0) {
 #ifdef USE_INDEX_64
-      CHECK_LE(shape[i], LONG_MAX / count_) << "blob size exceeds INT_MAX";
+      CHECK_LE(shape[i], LONG_MAX / count_)
+        << "blob size exceeds INT_MAX";
+      CHECK_LE(shape_stride[i], LONG_MAX / count_)
+        << "blob size exceeds INT_MAX";
 #else
-      CHECK_LE(shape[i], INT_MAX / count_) << "blob size exceeds INT_MAX";
+      CHECK_LE(shape[i], INT_MAX / count_)
+        << "blob size exceeds INT_MAX";
+      CHECK_LE(shape_stride[i], INT_MAX / count_)
+        << "blob size exceeds INT_MAX";
 #endif  // USE_INDEX_64
     }
     count_ *= shape[i];
     shape_[i] = shape[i];
     shape_data[i] = shape[i];
+
+    shape_stride_[i] = shape_stride[i];
+    shape_stride_data[i] = shape_stride[i];
   }
   if (count_ > capacity_) {
     capacity_ = count_;
@@ -320,12 +339,12 @@ bool Blob<Dtype>::Reshape(const BlobShape& shape) {
 
 template<typename Dtype>
 bool Blob<Dtype>::ReshapeLike(const Blob<Dtype>& other) {
-  return Reshape(other.shape());
+  return Reshape(other.shape(), other.shape_stride());
 }
 
 template<typename Dtype>
 bool Blob<Dtype>::ReshapeLike(const BlobBase* other) {
-  return Reshape(other->shape());
+  return Reshape(other->shape(), other->shape_stride());
 }
 
 template<typename Dtype>

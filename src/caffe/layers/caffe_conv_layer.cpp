@@ -103,9 +103,9 @@ void CaffeConvolutionLayer<Dtype, MItype, MOtype>::forward_gpu_gemm(
   if (!this->is_1x1_) {
     if (!skip_im2col) {
       conv_im2col_gpu(input + input_off,
-                      this->col_buffer()->mutable_gpu_data());
+                      this->col_buffer_.mutable_gpu_data());
     }
-    col_buff = this->col_buffer()->gpu_data();
+    col_buff = this->col_buffer_.gpu_data();
   }
   for (int_tp g = 0; g < this->group_; ++g) {
     this->device_->template gemm<Dtype>(
@@ -116,7 +116,6 @@ void CaffeConvolutionLayer<Dtype, MItype, MOtype>::forward_gpu_gemm(
         + this->col_offset_ * g, (Dtype) 0.,
         output + output_off + this->output_offset_ * g);
   }
-  this->unlock_col_buffer();
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
@@ -138,7 +137,7 @@ void CaffeConvolutionLayer<Dtype, MItype, MOtype>::backward_gpu_gemm(
                                                     vptr<const Dtype> weights,
                                                     vptr<Dtype> input,
                                                     const uint_tp input_off) {
-  vptr<Dtype> col_buff = this->col_buffer()->mutable_gpu_data();
+  vptr<Dtype> col_buff = this->col_buffer_.mutable_gpu_data();
   if (this->is_1x1_) {
     col_buff = input;
   }
@@ -154,7 +153,6 @@ void CaffeConvolutionLayer<Dtype, MItype, MOtype>::backward_gpu_gemm(
   if (!this->is_1x1_) {
     conv_col2im_gpu(col_buff, input + input_off);
   }
-  this->unlock_col_buffer();
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
@@ -166,8 +164,8 @@ void CaffeConvolutionLayer<Dtype, MItype, MOtype>::weight_gpu_gemm(
                                                   vptr<Dtype> weights) {
   vptr<const Dtype> col_buff = input;
   if (!this->is_1x1_) {
-    conv_im2col_gpu(input + input_off, this->col_buffer()->mutable_gpu_data());
-    col_buff = this->col_buffer()->gpu_data();
+    conv_im2col_gpu(input + input_off, this->col_buffer_.mutable_gpu_data());
+    col_buff = this->col_buffer_.gpu_data();
   }
   for (int_tp g = 0; g < this->group_; ++g) {
     this->device_->template gemm<Dtype>(
@@ -179,7 +177,6 @@ void CaffeConvolutionLayer<Dtype, MItype, MOtype>::weight_gpu_gemm(
         + this->col_offset_ * g, (Dtype) 1.,
         weights + this->weight_offset_ * g);
   }
-  this->unlock_col_buffer();
 }
 
 template<typename Dtype, typename MItype, typename MOtype>

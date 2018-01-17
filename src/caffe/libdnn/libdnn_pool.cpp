@@ -206,11 +206,15 @@ string LibDNNPool<MItype, MOtype>::generate_fw_kernels(string name,
   if (std::is_same<MItype, half_fp>::value) {
     ss << "#define DTYPE_MAX HALF_MAX" << std::endl;
     ss << "#define DTYPE_MIN HALF_MIN" << std::endl;
-  } else {
+  } else if (std::is_same<MItype, float>::value
+        || std::is_same<MItype, double>::value) {
 #endif
     ss << "#define DTYPE_MAX FLT_MAX" << std::endl;
     ss << "#define DTYPE_MIN FLT_MIN" << std::endl;
 #ifdef USE_HALF
+  } else {
+    ss << "#define DTYPE_MAX " << type_max_val<MItype>() << std::endl;
+    ss << "#define DTYPE_MIN " << 0 << std::endl;
   }
 #endif
 
@@ -239,7 +243,7 @@ string LibDNNPool<MItype, MOtype>::generate_fw_kernels(string name,
                                                "batch_size", KERNEL_ARG_CONST));
   ss << this->program_->function(name, args);
 
-  ss << "int_tp out_idx = " << this->program_->global_id(2) << ";" << std::endl;
+  ss << "int_tp out_idx = " << this->program_->global_id(0) << ";" << std::endl;
   ss << "if (" << this->program_->global_id(1)
      << " >= channels * batch_size) {return;}" << std::endl;
   ss << "int_tp idx_0 = " << this->program_->global_id(0) << ";" << std::endl;
@@ -264,7 +268,7 @@ string LibDNNPool<MItype, MOtype>::generate_fw_kernels(string name,
 
   if (pool_method_ == LIBDNN_POOLING_METHOD_MAX) {
     if (use_top_mask_) {
-      ss << this->program_->global_ptr("MItype", "mask_ptr") << " = top_mask + "
+      ss << this->program_->global_ptr("MOtype", "mask_ptr") << " = top_mask + "
          << this->program_->global_id(1) << " * v_imso;" << std::endl;
     } else {
       ss << this->program_->global_ptr("int_tp", "mask_ptr") << " = mask + "
@@ -292,7 +296,6 @@ string LibDNNPool<MItype, MOtype>::generate_fw_kernels(string name,
   }
 
   vector<int_tp> d_iter;
-  int_tp curr_idx = 0;
 
   for (int_tp i = 0; i < kernel_shape_.size(); ++i) {
     d_iter.push_back(0);
@@ -437,7 +440,11 @@ string LibDNNPool<MItype, MOtype>::generate_fw_kernels(string name,
   }
   if (pool_method_ == LIBDNN_POOLING_METHOD_MAX) {
     ss << "out_ptr[out_idx] = val;" << std::endl;
-    ss << "mask_ptr[out_idx] = (MItype)maxidx;" << std::endl;
+    if (use_top_mask_) {
+      ss << "mask_ptr[out_idx] = (MItype)maxidx;" << std::endl;
+    } else {
+      ss << "mask_ptr[out_idx] = maxidx;" << std::endl;
+    }
   }
   if (pool_method_ == LIBDNN_POOLING_METHOD_STO) {
     if (test_mode) {
@@ -619,8 +626,8 @@ string LibDNNPool<MItype, MOtype>::generate_bw_kernels(string name) {
             ss << "true) {" << std::endl;
           }
           if (ave_idx == 1) {
-            ss << "caffe_gpu_atomic_add((&out_ptr["
-               << kernel_offset << "]), val);" << std::endl;
+            ss << this->program_->template atomic_add<MItype>("(&out_ptr["
+               + std::to_string(kernel_offset) + "])", "val") << std::endl;
           }
           if ((ave_idx == 1) && (pad_guard || overspill_guard)) {
             ss << "}" << std::endl;
@@ -654,14 +661,16 @@ string LibDNNPool<MItype, MOtype>::generate_bw_kernels(string name) {
     }
     if (pool_method_ == LIBDNN_POOLING_METHOD_MAX) {
       ss << "if (mask_ptr[0] >= 0 && mask_ptr[0] < v_imsi) {" << std::endl;
-      ss << "caffe_gpu_atomic_add(&out_ptr[(int_tp)(mask_ptr[0])], "
-         << "in_ptr[0]);" << std::endl;
+      ss << this->program_->template atomic_add<MItype>(
+          "&out_ptr[(int_tp)(mask_ptr[0])]",
+          "in_ptr[0]") << std::endl;
       ss << "}" << std::endl;
     }
     if (pool_method_ == LIBDNN_POOLING_METHOD_STO) {
       ss << "if (mask_ptr[0] >= 0 && mask_ptr[0] < v_imsi) {" << std::endl;
-      ss << "caffe_gpu_atomic_add(&out_ptr[(int_tp)(rand_ptr[0])], "
-         << "in_ptr[0]);" << std::endl;
+      ss << this->program_->template atomic_add<MItype>(
+          "&out_ptr[(int_tp)(rand_ptr[0])]",
+          "in_ptr[0]") << std::endl;
       ss << "}" << std::endl;
     }
 
@@ -694,7 +703,7 @@ string LibDNNPool<MItype, MOtype>::generate_bw_kernels(string name) {
          << "+ " << this->program_->global_id(1) << " * v_imsi + out_idx;"
          << std::endl;
     }
-    ss << this->program_->global_ptr("MOtype", "in_ptr") << " = top_diff "
+    ss << this->program_->global_ptr("const MOtype", "in_ptr") << " = top_diff "
        << "+ " << this->program_->global_id(1) << " * v_imso;" << std::endl;
 
     if (pool_method_ == LIBDNN_POOLING_METHOD_MAX) {
@@ -703,7 +712,7 @@ string LibDNNPool<MItype, MOtype>::generate_bw_kernels(string name) {
            << " = top_mask + " << this->program_->global_id(1) << " * v_imso;"
            << std::endl;
       } else {
-        ss << this->program_->global_ptr("const MOtype", "mask_ptr")
+        ss << this->program_->global_ptr("const int_tp", "mask_ptr")
            << " = mask + " << this->program_->global_id(1) << " * v_imso;"
            << std::endl;
       }

@@ -129,7 +129,7 @@ TYPED_TEST(DeconvolutionLayerTest, TestSimpleDeconvolution) {
             expected += 3;
           }
           const Dtype delta = std::is_same<Dtype, half_fp>::value ?
-                              1e-2 : 1e-4;
+                              2e-2 : 1e-4;
           EXPECT_NEAR(top_data[this->blob_top_->offset(n, c, h, w)],
               expected, delta);
         }

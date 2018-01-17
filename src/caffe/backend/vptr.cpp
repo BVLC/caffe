@@ -445,21 +445,29 @@ shared_ptr<dev_ptr<Dtype> > vptr<Dtype,
 template<typename Dtype>
 Dtype* vptr<Dtype, typename const_enable_if<Dtype>::type>::get_cuda_ptr()
     const {
+  if (dev_ptr_ == nullptr)
+    return nullptr;
   return (dynamic_cast<cuda_dev_ptr<Dtype>*>(dev_ptr_.get()))->get();
 }
 template<typename Dtype>
 Dtype* vptr<Dtype, typename non_const_enable_if<Dtype>::type>::get_cuda_ptr()
     const {
+  if (dev_ptr_ == nullptr)
+    return nullptr;
   return (dynamic_cast<cuda_dev_ptr<Dtype>*>(dev_ptr_.get()))->get();
 }
 template<typename Dtype>
 void* vptr<Dtype, typename const_enable_if<Dtype>::type>
                                                     ::get_cuda_ptr_ptr() const {
+  if (dev_ptr_ == nullptr)
+    return nullptr;
   return (dynamic_cast<cuda_dev_ptr<Dtype>*>(dev_ptr_.get()))->get_ptr();
 }
 template<typename Dtype>
 void* vptr<Dtype, typename non_const_enable_if<Dtype>::type>
                                                     ::get_cuda_ptr_ptr() const {
+  if (dev_ptr_ == nullptr)
+    return nullptr;
   return (dynamic_cast<cuda_dev_ptr<Dtype>*>(dev_ptr_.get()))->get_ptr();
 }
 #endif  // USE_CUDA
@@ -468,21 +476,29 @@ void* vptr<Dtype, typename non_const_enable_if<Dtype>::type>
 template<typename Dtype>
 cl_mem vptr<Dtype, typename const_enable_if<Dtype>::type>::get_ocl_mem()
     const {
+  if (dev_ptr_ == nullptr)
+    return nullptr;
   return (dynamic_cast<ocl_dev_ptr<Dtype>*>(dev_ptr_.get()))->get_ocl_mem();
 }
 template<typename Dtype>
 cl_mem vptr<Dtype, typename non_const_enable_if<Dtype>::type>::get_ocl_mem()
     const {
+  if (dev_ptr_ == nullptr)
+    return nullptr;
   return (dynamic_cast<ocl_dev_ptr<Dtype>*>(dev_ptr_.get()))->get_ocl_mem();
 }
 template<typename Dtype>
 uint_tp vptr<Dtype, typename const_enable_if<Dtype>::type>::get_ocl_off()
     const {
+  if (dev_ptr_ == nullptr)
+    return 0;
   return (dynamic_cast<ocl_dev_ptr<Dtype>*>(dev_ptr_.get()))->get_off();
 }
 template<typename Dtype>
 uint_tp vptr<Dtype, typename non_const_enable_if<Dtype>::type>::get_ocl_off()
     const {
+  if (dev_ptr_ == nullptr)
+    return 0;
   return (dynamic_cast<ocl_dev_ptr<Dtype>*>(dev_ptr_.get()))->get_off();
 }
 #endif  // USE_OPENCL
@@ -1051,13 +1067,13 @@ vptr<Dtype>& vptr<Dtype, typename const_enable_if<Dtype>::type>
 
 template<typename Dtype>
 bool vptr<Dtype, typename const_enable_if<Dtype>::type>
-                              ::is_valid() {
+                              ::is_valid() const {
   return dev_ptr_ != nullptr;
 }
 
 template<typename Dtype>
 bool vptr<Dtype, typename non_const_enable_if<Dtype>::type>
-                              ::is_valid() {
+                              ::is_valid() const {
   return dev_ptr_ != nullptr;
 }
 

@@ -305,7 +305,7 @@ inline size_t type_max_integer_representable() {
 
 template<>
 inline size_t type_max_integer_representable<half_fp>() {
-  return 2048;
+  return 2048ULL;
 }
 
 template<>

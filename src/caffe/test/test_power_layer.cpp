@@ -45,7 +45,7 @@ class PowerLayerTest : public MultiDeviceTest<TypeParam> {
     const Dtype min_precision = std::is_same<Dtype, half_fp>::value ?
                                 1e-3 : 1e-5;
     const Dtype precision_factor =
-      std::is_same<Dtype, half_fp>::value ? 1e-2 : 1e-4;
+      std::is_same<Dtype, half_fp>::value ? 2e-2 : 1e-4;
     for (int_tp i = 0; i < this->blob_bottom_->count(); ++i) {
       Dtype expected_value = pow(shift + scale * bottom_data[i], power);
       if (power == Dtype(0) || power == Dtype(1) || power == Dtype(2)) {

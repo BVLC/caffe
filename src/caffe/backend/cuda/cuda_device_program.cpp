@@ -72,7 +72,7 @@ bool CudaDeviceProgram::Compile(bool load_cache, bool store_cache) {
         success = loaded_from_cache;
         if (!loaded_from_cache) {
           LOG(WARNING) << "Failed to load CUDA binary ("
-                       << this->identifier() << ") from cache ("
+                       << this->string_identifier() << ") from cache ("
                        << cudaGetErrorString(result) << ")" << std::endl;
         }
       }
@@ -121,7 +121,7 @@ bool CudaDeviceProgram::Compile(bool load_cache, bool store_cache) {
     CUresult result = cuModuleLoadDataEx(cuda_module_.get(), ptx, 0, 0, 0);
     if (!(result == CUDA_SUCCESS)) {
       LOG(ERROR) << "Failed to compile CUDA binary ("
-                 << this->identifier() << ") from code ("
+                 << this->string_identifier() << ") from code ("
                  << cudaGetErrorString(result) << ")" << std::endl;
     }
 #ifdef USE_SQLITE
@@ -145,7 +145,7 @@ shared_ptr<DeviceKernel> CudaDeviceProgram::GetKernel(string name) {
                                         name.c_str());
   if (result != CUDA_SUCCESS) {
     LOG(FATAL) << "Loading CUDA kernel " << name << " ("
-               << this->identifier() << ") failed ("
+               << this->string_identifier() << ") failed ("
                << cudaGetErrorString(result) << ")" << std::endl;
   }
   CHECK(kernel.get()) << "Loading CUDA kernel " << name << " failed.";
@@ -206,9 +206,11 @@ string CudaDeviceProgram::setup() {
 
   ss << "#define HALF_SUPPORT_AVAILABLE" << std::endl;
   ss << "#define HALF_MAX " << HALF_MAX << std::endl;
+  ss << "#define HALF_MIN " << HALF_MIN << std::endl;
 #endif  // USE_HALF
 
   ss << "#define FLT_MAX " << FLT_MAX << std::endl;
+  ss << "#define FLT_MIN " << FLT_MIN << std::endl;
 
   ss << "#define int8_t char" << std::endl;
   ss << "#define int16_t short" << std::endl;
@@ -565,6 +567,8 @@ string CudaDeviceProgram::convert_type_int64(int_tp vec_len,
 
 string CudaDeviceProgram::helper_functions_half() const {
   stringstream ss;
+  ss << "#ifndef CAFFE_CUDA_HELPER_HALF" << std::endl;
+  ss << "#define CAFFE_CUDA_HELPER_HALF" << std::endl;
   ss << "__device__ half abs(half x) {" << std::endl;
   ss << "return (half)abs((float)x);;" << std::endl;
   ss << "}" << std::endl;
@@ -574,6 +578,8 @@ string CudaDeviceProgram::helper_functions_half() const {
   ss << "__device__ half signbit(half x) {" << std::endl;
   ss << "return (half)signbit((float)x);";
   ss << "}" << std::endl;
+  ss << "#endif  // CAFFE_CUDA_HELPER_HALF" << std::endl;
+
   return ss.str();
 }
 string CudaDeviceProgram::helper_functions_float() const {

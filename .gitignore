@@ -126,5 +126,5 @@ MANIFEST-*
 *.props
 
 # Log files
-log.txt
-error.txt
+log*.txt
+error*.txt

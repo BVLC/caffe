@@ -21,7 +21,7 @@ void PReLULayer<Dtype, MItype, MOtype>::LayerSetUp(const vector<Blob<MItype>*>& 
   } else {
     this->blobs_.resize(1);
     if (channel_shared_) {
-      this->blobs_[0].reset(new Blob<Dtype>(vector<int_tp>(0),
+      this->blobs_[0].reset(new Blob<Dtype>(vector<int_tp>(1, 1),
                                             this->device_));
     } else {
       this->blobs_[0].reset(new Blob<Dtype>(vector<int_tp>(1, channels),

@@ -24,7 +24,7 @@ SyncedMemory::~SyncedMemory() {
 
 inline void SyncedMemory::to_cpu() {
   if (size_ == 0)
-    return;
+    LOG(FATAL) << "Trying to access memory of size 0.";
 
   switch (head_) {
     case UNINITIALIZED: {
@@ -75,7 +75,7 @@ inline void SyncedMemory::to_cpu() {
 
 inline void SyncedMemory::to_gpu() {
   if (size_ == 0)
-    return;
+    LOG(FATAL) << "Trying to access memory of size 0.";
 
 #ifndef CPU_ONLY
   switch (head_) {

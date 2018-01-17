@@ -133,7 +133,7 @@ TYPED_TEST(AccuracyLayerTest, TestForwardCPU) {
     }
   }
   const TypeParam delta = std::is_same<TypeParam, half_fp>::value ?
-                      1e-2 : 1e-4;
+                      2e-2 : 1e-4;
   EXPECT_NEAR(this->blob_top_->data_at(0, 0, 0, 0),
               num_correct_labels / 100.0, delta);
 }
@@ -181,7 +181,7 @@ TYPED_TEST(AccuracyLayerTest, TestForwardWithSpatialAxes) {
     }
   }
   const TypeParam delta = std::is_same<TypeParam, half_fp>::value ?
-                      1e-2 : 1e-4;
+                      2e-2 : 1e-4;
   EXPECT_NEAR(this->blob_top_->data_at(0, 0, 0, 0),
               num_correct_labels / TypeParam(num_labels), delta);
 }
@@ -223,7 +223,7 @@ TYPED_TEST(AccuracyLayerTest, TestForwardIgnoreLabel) {
   }
   EXPECT_EQ(count, 97);  // We set 3 out of 100 labels to kIgnoreLabelValue.
   const TypeParam delta = std::is_same<TypeParam, half_fp>::value ?
-                      1e-2 : 1e-4;
+                      2e-2 : 1e-4;
   EXPECT_NEAR(this->blob_top_->data_at(0, 0, 0, 0),
               num_correct_labels / TypeParam(count), delta);
 }
@@ -256,7 +256,7 @@ TYPED_TEST(AccuracyLayerTest, TestForwardCPUTopK) {
   }
 
   const TypeParam delta = std::is_same<TypeParam, half_fp>::value ?
-                      1e-2 : 1e-4;
+                      2e-2 : 1e-4;
   EXPECT_NEAR(this->blob_top_->data_at(0, 0, 0, 0),
               num_correct_labels / 100.0, delta);
 }
@@ -291,7 +291,7 @@ TYPED_TEST(AccuracyLayerTest, TestForwardCPUPerClass) {
     }
   }
   const TypeParam delta = std::is_same<TypeParam, half_fp>::value ?
-                      1e-2 : 1e-4;
+                      2e-2 : 1e-4;
   EXPECT_NEAR(this->blob_top_->data_at(0, 0, 0, 0),
               num_correct_labels / 100.0, delta);
   for (int_tp i = 0; i < num_class; ++i) {
@@ -345,7 +345,7 @@ TYPED_TEST(AccuracyLayerTest, TestForwardCPUPerClassWithIgnoreLabel) {
   }
   EXPECT_EQ(count, 97);
   const TypeParam delta = std::is_same<TypeParam, half_fp>::value ?
-                      1e-2 : 1e-4;
+                      2e-2 : 1e-4;
   EXPECT_NEAR(this->blob_top_->data_at(0, 0, 0, 0),
               num_correct_labels / TypeParam(count), delta);
   for (int_tp i = 0; i < 10; ++i) {

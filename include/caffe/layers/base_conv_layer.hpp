@@ -18,7 +18,7 @@ class BaseConvolutionLayer : public Layer<Dtype, MItype, MOtype> {
  public:
   explicit BaseConvolutionLayer(const LayerParameter& param)
       : Layer<Dtype, MItype, MOtype>(param), col_buffer_lock_id_(-1),
-        deconvolution_(false){
+        deconvolution_(false) {
   }
   virtual void LayerSetUp(const vector<Blob<MItype>*>& bottom,
                           const vector<Blob<MOtype>*>& top);
@@ -45,9 +45,7 @@ class BaseConvolutionLayer : public Layer<Dtype, MItype, MOtype> {
   inline int_tp input_shape(int_tp i) {
     return (*bottom_shape_)[channel_axis_ + i];
   }
-  // reverse_dimensions should return true iff we are implementing deconv, so
-  // that conv helpers know which dimensions are which.
-  bool reverse_dimensions();
+
   // Compute height_out_ and width_out_ from other parameters.
   void compute_output_shape();
 

@@ -44,10 +44,10 @@ void OclDevice::gemv_half(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
     clblast::Gemv<clblast::half>(
       layout, a_transpose,
       m, n,
-      alpha,
+      clblast::FloatToHalf(alpha),
       a.get_ocl_mem(), offA, ldA,
       x.get_ocl_mem(), offx, incx,
-      beta,
+      clblast::FloatToHalf(beta),
       y.get_ocl_mem(), offy, incy,
       &queue));
 

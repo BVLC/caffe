@@ -22,27 +22,30 @@ void SigmoidCrossEntropyLossLayer<Dtype, MItype, MOtype>::GenerateProgram() {
                     "input_data", KERNEL_ARG_CONST | KERNEL_ARG_GLOBAL_MEM));
   fw_args.push_back(this->device_program_->template create_kernel_arg<Dtype>(
                     "target", KERNEL_ARG_CONST | KERNEL_ARG_GLOBAL_MEM));
-  fw_args.push_back(this->device_program_->template create_kernel_arg<Dtype>(
+  fw_args.push_back(this->device_program_->template create_kernel_arg<MItype>(
                     "loss", KERNEL_ARG_GLOBAL_MEM));
   fw_args.push_back(this->device_program_->template create_kernel_arg<bool>(
-                    "has_ingore_label", KERNEL_ARG_CONST));
+                    "has_ignore_label", KERNEL_ARG_CONST));
   fw_args.push_back(this->device_program_->template create_kernel_arg<int_tp>(
-                    "ingore_label", KERNEL_ARG_CONST));
-  fw_args.push_back(this->device_program_->template create_kernel_arg<Dtype>(
+                    "ignore_label", KERNEL_ARG_CONST));
+  fw_args.push_back(this->device_program_->template create_kernel_arg<MItype>(
                     "counts", KERNEL_ARG_GLOBAL_MEM));
   ss << this->device_program_->function("SigmoidCrossEntropyLossForwardGPU",
                                         fw_args);
-  ss << this->device_program_->kernel_loop("uint_tp", "index", "count");
+  ss << this->device_program_->kernel_loop("uint_tp", "i", "count");
   ss << "const int_tp target_value = (int_tpc)(target[i]);"
      << std::endl;
   ss << "if (has_ignore_label && target_value == ignore_label) {" << std::endl;
-  ss << "loss[i] = 0;" << std::endl;
-  ss << "counts[i] = 0;" << std::endl;
+  ss << "loss[i] = (MItype)0;" << std::endl;
+  ss << "counts[i] = (MItype)0;" << std::endl;
   ss << "} else {" << std::endl;
-  ss << "loss[i] = input_data[i] * (target[i] - (input_data[i] >= 0)) -"
-     << " log(1 + exp(input_data[i] - 2 * input_data[i] *"
-     << " (input_data[i] >= 0)));" << std::endl;
-  ss << "counts[i] = 1;" << std::endl;
+  ss << "loss[i] = input_data[i] * (target[i] -"
+     << " ((input_data[i] >= (MItype)0) ? (MItype)1 : (MItype)0 )) -"
+     << " (MItype)log((MItype)1 +"
+     << " (MItype)exp(input_data[i] - (MItype)2 * input_data[i] *"
+     << " ((input_data[i] >= (MItype)0) ? (MItype)1 : (MItype)0)));"
+     << std::endl;
+  ss << "counts[i] = (MItype)1;" << std::endl;
   ss << "}" << std::endl;
   ss << "}" << std::endl;
   ss << "}" << std::endl;
@@ -58,11 +61,11 @@ void SigmoidCrossEntropyLossLayer<Dtype, MItype, MOtype>::GenerateProgram() {
                     "diff", KERNEL_ARG_GLOBAL_MEM));
   ss << this->device_program_->function("SigmoidCrossEntropyLossIgnoreDiffGPU",
                                         bw_args);
-  ss << this->device_program_->kernel_loop("uint_tp", "index", "nthreads");
-  ss << "const int_tp target_value = static_cast<int_tp>(target[i]);"
+  ss << this->device_program_->kernel_loop("uint_tp", "i", "count");
+  ss << "const int_tp target_value = (int_tpc)(target[i]);"
      << std::endl;
   ss << "if (target_value == ignore_label) {" << std::endl;
-  ss << "diff[i] = 0;" << std::endl;
+  ss << "diff[i] = (MItype)0;" << std::endl;
   ss << "}" << std::endl;
   ss << "}" << std::endl;
   ss << "}" << std::endl;
@@ -82,16 +85,16 @@ void SigmoidCrossEntropyLossLayer<Dtype, MItype, MOtype>::Forward_gpu(
   const int_tp count = bottom[0]->count();
   const int_tp num = bottom[0]->num();
   // Stable version of loss computation from input data
-  vptr<const Dtype> input_data = bottom[0]->gpu_data();
-  vptr<const Dtype> target = bottom[1]->gpu_data();
+  vptr<const MItype> input_data = bottom[0]->gpu_data();
+  vptr<const MItype> target = bottom[1]->gpu_data();
   // Since this memory is not used for anything until it is overwritten
   // on the backward pass, we use it here to avoid having to allocate new GPU
   // memory to accumulate intermediate results in the kernel.
-  vptr<Dtype> loss_data = bottom[0]->mutable_gpu_diff();
+  vptr<MItype> loss_data = bottom[0]->mutable_gpu_diff();
 
-  Dtype loss;
-  vptr<Dtype> count_data = bottom[1]->mutable_gpu_diff();
-  Dtype valid_count;
+  MItype loss;
+  vptr<MItype> count_data = bottom[1]->mutable_gpu_diff();
+  MItype valid_count;
 
   shared_ptr<DeviceKernel> kernel =
           this->device_program_->GetKernel("SigmoidCrossEntropyLossForwardGPU");
@@ -109,7 +112,6 @@ void SigmoidCrossEntropyLossLayer<Dtype, MItype, MOtype>::Forward_gpu(
   this->device_->get_threads(&work_size, &group, &local, kernel.get(), true);
   kernel->Execute(group, local);
 
-  this->device_->template asum<Dtype>(count, loss_data, &loss);
   // Only launch another CUDA kernel if we actually need the valid count.
   if (normalization_ == LossParameter_NormalizationMode_VALID &&
       has_ignore_label_) {

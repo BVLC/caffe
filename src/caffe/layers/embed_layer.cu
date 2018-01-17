@@ -64,8 +64,8 @@ void EmbedLayer<Dtype, MItype, MOtype>::GenerateProgram() {
   ss << "const int_tp d = top_index % n;" << std::endl;
   ss << "const int_tp index = (int_tp)(bottom_data[b]);" << std::endl;
   ss << "const int_tp weight_index = index * n + d;" << std::endl;
-  ss << this->device_program_->template atomic_add<Dtype>("top_diff[top_index]",
-                                     "weight_diff + weight_index") << std::endl;
+  ss << this->device_program_->template atomic_add<Dtype>(
+      "weight_diff + weight_index", "top_diff[top_index]") << std::endl;
   ss << "}" << std::endl;
   ss << "}" << std::endl;
   this->device_program_->set_source(ss.str());

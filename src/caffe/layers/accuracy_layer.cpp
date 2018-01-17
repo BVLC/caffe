@@ -35,7 +35,7 @@ void AccuracyLayer<Dtype, MItype, MOtype>::Reshape(
       << "e.g., if label axis == 1 and prediction shape is (n, c, H, W), "
       << "label count (number of labels) must be n*H*W, "
       << "with integer values in {0, 1, ..., c-1}.";
-  vector<int_tp> top_shape(0);  // Accuracy is a scalar; 0 axes.
+  vector<int_tp> top_shape(1, 1);  // Accuracy is a scalar; 1 element.
   top[0]->Reshape(top_shape);
   if (top.size() > 1) {
     // Per-class accuracy is a vector; 1 axes.

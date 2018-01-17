@@ -5,8 +5,9 @@
 namespace caffe {
 
 template<typename Dtype, typename MItype, typename MOtype>
-void DeconvolutionLayer<Dtype, MItype, MOtype>::Forward_gpu(const vector<Blob<MItype>*>& bottom,
-                                            const vector<Blob<MOtype>*>& top) {
+void DeconvolutionLayer<Dtype, MItype, MOtype>::Forward_gpu(
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
   vptr<const Dtype> weight = this->blobs_[0]->gpu_data();
   for (int_tp i = 0; i < bottom.size(); ++i) {
     vptr<const Dtype> bottom_data = bottom[i]->gpu_data();
