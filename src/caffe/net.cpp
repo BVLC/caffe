@@ -557,12 +557,14 @@ void Net<Dtype>::CompileNet(const NetParameter& param,
   #define NUM_OF_RULES sizeof(CompileRules)/sizeof(CompileRules[0])
   #define COMPILE_BN_FOLDING_INDEX 0
   #define COMPILE_BN_RELU_FUSION_INDEX 3
-  #define COMPILE_CONV_SUM_FUSION_INDEX 5
+  #define COMPILE_SPARSE_INDEX 5
+  #define COMPILE_CONV_SUM_FUSION_INDEX 6
   int i, current = 0;
   NetParameter param_temp[2];
   void (*CompileRules[]) (const NetParameter& param, NetParameter* param_compiled) =
-    {RemoveBNScale<Dtype>, CompilationRuleOne, CompilationRuleTwo,
-    CompilationRuleFuseBnRelu, CompilationRuleThree, CompilationRuleFour};
+    {RemoveBNScale<Dtype>, CompilationRuleRemoveScale, CompilationRuleConvReluFusion,
+    CompilationRuleFuseBnRelu, CompilationRuleBNInplace, CompilationRuleSparse, CompilationRuleConvSumFusion};
+
   bool disabled[NUM_OF_RULES] = {false};
 
 #ifdef DISABLE_BN_FOLDING
@@ -574,6 +576,10 @@ void Net<Dtype>::CompileNet(const NetParameter& param,
 #ifdef DISABLE_CONV_SUM_FUSION
   disabled[COMPILE_CONV_SUM_FUSION_INDEX] = true;
 #endif
+#ifdef DISABLE_SPARSE
+  disabled[COMPILE_SPARSE_INDEX] = true;
+#endif
+
   param_temp[current].CopyFrom(param);
   for (i = 0; i < NUM_OF_RULES; i++)
     if (!disabled[i]) {
@@ -587,10 +593,11 @@ void Net<Dtype>::CompileNet(const NetParameter& param,
   #undef COMPILE_BN_FOLDING_INDEX
   #undef COMPILE_BN_RELU_FUSION_INDEX
   #undef COMPILE_CONV_SUM_FUSION_INDEX
+  #undef COMPILE_CONV_SUM_FUSION_INDEX
 }
 
 template <typename Dtype>
-void Net<Dtype>::CompilationRuleOne(const NetParameter& param,
+void Net<Dtype>::CompilationRuleRemoveScale(const NetParameter& param,
                                     NetParameter* param_compiled) {
 
   bool merge_bn_scale = false;
@@ -680,7 +687,7 @@ void Net<Dtype>::CompilationRuleOne(const NetParameter& param,
 
 
 template <typename Dtype>
-void Net<Dtype>::CompilationRuleTwo(const NetParameter& param,
+void Net<Dtype>::CompilationRuleConvReluFusion(const NetParameter& param,
                                     NetParameter* param_compiled) {
   std::set<std::string> layers_to_drop;
   bool use_negative_slope = false;
@@ -783,7 +790,7 @@ void Net<Dtype>::CompilationRuleTwo(const NetParameter& param,
 }
 
 template <typename Dtype>
-void Net<Dtype>::CompilationRuleThree(const NetParameter& param,
+void Net<Dtype>::CompilationRuleBNInplace(const NetParameter& param,
                                       NetParameter* param_compiled) {
   for (int i = 0; i < param.layer_size(); ++i) {
     LayerParameter* layer_param =
@@ -889,7 +896,7 @@ void Net<Dtype>::CompilationRuleThree(const NetParameter& param,
 }
 
 template <typename Dtype>
-void Net<Dtype>::CompilationRuleFour(const NetParameter& param,
+void Net<Dtype>::CompilationRuleConvSumFusion(const NetParameter& param,
                                      NetParameter* param_compiled) {
   // only apply this rule for inference(TEST) phase
   if (param.state().phase() != TEST || param.engine().compare("MKLDNN") != 0) {
@@ -951,6 +958,179 @@ void Net<Dtype>::CompilationRuleFour(const NetParameter& param,
   }
 
   return;
+}
+
+template <typename Dtype>
+void Net<Dtype>::CompilationRuleSparse(const NetParameter& param,
+                                       NetParameter* param_compiled) {
+  //TODO: Verify the convergence of the sparse model
+  if (param.state().phase() != TEST || param.engine().compare("MKLDNN") != 0) {
+    param_compiled->CopyFrom(param);
+    return;
+  }
+
+  LayerParameter* potential_sparse_layer = NULL;
+  LayerParameter* confirmed_sparse_layer = NULL;
+  LayerParameter* layer_param = NULL;
+
+  std::map<string, string> bottom_blob_layer_mapping;
+  // top blob as the key and  its layer name as the value
+  std::map<string, string> top_blob_layer_mapping;
+  std::map<string, std::vector<LayerParameter*>> sparse_layer_name_mapping;  // key is layer name
+  std::vector<LayerParameter*> trigger_sparse_layers;
+  std::map<string, int> conv_layer_id_mapping;
+  std::map<string, int> eltwise_layer_id_mapping;
+  std::map<string, int> layer_name_id_mapping;
+
+  std::map<int, int> pooling_layer_id_stride;  // saves the layer's id which
+                                               // need to add pooling layer;
+  std::map<int, int> conv_layer_id_stride;  // saves the conv layer's id which
+                                            // need to modify its stride;
+  std::map<int, string> pooling_layer_id_top_blob;
+  
+  // step 1 get topology details, such as layer name/id mapping
+  for (int index = 0; index < param.layer_size(); index++) {
+    layer_param = (const_cast<NetParameter&>(param)).mutable_layer(index);
+    layer_name_id_mapping[layer_param->name()] = index;
+
+    for (int j = 0; j < layer_param->top_size(); j++) {
+      top_blob_layer_mapping[layer_param->top(j)] = layer_param->name();
+    }
+
+    for (int k = 0; k < layer_param->bottom_size(); k++) {
+      bottom_blob_layer_mapping[layer_param->bottom(k)] = layer_param->name();
+    }
+
+    if (layer_param->type().compare("Eltwise") == 0) {
+      eltwise_layer_id_mapping[layer_param->name()] = index;
+    }
+
+    if (layer_param->type().compare("Convolution") == 0 &&
+        layer_param->has_convolution_param() &&
+        layer_param->convolution_param().kernel_size_size() > 0 &&
+        layer_param->convolution_param().stride_size() > 0) {
+      conv_layer_id_mapping[layer_param->name()] = index;
+      
+      if (layer_param->convolution_param().kernel_size(0) > 1) {
+        potential_sparse_layer = layer_param;
+      } else if (layer_param->convolution_param().kernel_size(0) == 1 &&
+                 layer_param->convolution_param().stride(0) > 1  &&
+          (layer_param->convolution_param().pad_size() == 0 ||
+           (layer_param->convolution_param().pad_size() > 0 &&
+            layer_param->convolution_param().pad(0) == 0))) {
+        confirmed_sparse_layer = potential_sparse_layer;
+
+        if (trigger_sparse_layers.size() > 0) {
+          for (int j = 0; j < trigger_sparse_layers.size(); j++) {
+            if (top_blob_layer_mapping[trigger_sparse_layers[j]->bottom(0)] !=
+                top_blob_layer_mapping[layer_param->bottom(0)]) {
+              trigger_sparse_layers.clear();
+              break;
+            }
+          }
+          trigger_sparse_layers.push_back(layer_param);
+          sparse_layer_name_mapping[confirmed_sparse_layer->name()] =
+              trigger_sparse_layers;
+        } else {
+          trigger_sparse_layers.push_back(layer_param);
+        }
+      }
+    }
+  }
+
+  if(trigger_sparse_layers.size() > 1)
+    sparse_layer_name_mapping[confirmed_sparse_layer->name()] = trigger_sparse_layers;
+
+  std::map<string, std::vector<LayerParameter*>>::iterator sparse_it =
+      sparse_layer_name_mapping.begin();
+  while (sparse_it != sparse_layer_name_mapping.end()) {
+    if (sparse_it->second[0]->convolution_param().stride(0) !=
+        sparse_it->second[1]->convolution_param().stride(0)) {
+          continue;
+    }
+    LayerParameter* sparse_layer_param =
+        (const_cast<NetParameter&>(param))
+            .mutable_layer(layer_name_id_mapping[sparse_it->first]);
+    int updated_stride_value =
+        sparse_layer_param->convolution_param().stride(0) *
+        sparse_it->second[0]->convolution_param().stride(0);
+    conv_layer_id_stride[conv_layer_id_mapping[sparse_it->first]] =
+        updated_stride_value;
+    conv_layer_id_stride[conv_layer_id_mapping[sparse_it->second[0]->name()]] = 1;
+    conv_layer_id_stride[conv_layer_id_mapping[sparse_it->second[1]->name()]] = 1;
+
+    std::map<string, int>::iterator eltwise_iter = eltwise_layer_id_mapping.begin();
+    while (eltwise_iter != eltwise_layer_id_mapping.end()) {
+      // it means there is a eltwise layer between the layer need to sparse and
+      // the  layer triggers the sparse
+      if (conv_layer_id_mapping[sparse_it->first] < eltwise_iter->second &&
+          eltwise_iter->second < conv_layer_id_mapping[sparse_it->second[0]->name()]) {
+        break;  // now eltwise_iter stands for eltwise layer
+      }
+      eltwise_iter++;
+    }
+
+    std::vector<int> need_add_pooling_layer_id;
+    LayerParameter* eltwise_layer_param =
+        (const_cast<NetParameter&>(param)).mutable_layer(eltwise_iter->second);
+    for (int k = 0; k < eltwise_layer_param->bottom_size() - 1; k++) {
+      need_add_pooling_layer_id.push_back(
+          layer_name_id_mapping
+              [top_blob_layer_mapping[eltwise_layer_param->bottom(k)]]);
+      int pooling_layer_id = layer_name_id_mapping
+          [top_blob_layer_mapping[eltwise_layer_param->bottom(k)]];
+      pooling_layer_id_stride[pooling_layer_id] = updated_stride_value;
+      pooling_layer_id_top_blob[pooling_layer_id] =
+          eltwise_layer_param->bottom(k);
+    }
+    sparse_it++;
+  }
+
+  for (int i = 0; i < param.layer_size(); i++) {
+    LayerParameter* each_layer_param =
+        (const_cast<NetParameter&>(param)).mutable_layer(i);
+    if (conv_layer_id_stride.find(i) != conv_layer_id_stride.end()) {
+      each_layer_param->mutable_convolution_param()->set_stride(
+          0, conv_layer_id_stride[i]);
+    } else if (pooling_layer_id_stride.find(i) !=
+               pooling_layer_id_stride.end()) {
+      param_compiled->add_layer()->CopyFrom(*each_layer_param);
+      each_layer_param = param_compiled->add_layer();
+      each_layer_param->Clear();
+      each_layer_param->set_type("Pooling");
+      each_layer_param->set_name(pooling_layer_id_top_blob[i] + "_p");
+
+      each_layer_param->add_bottom(pooling_layer_id_top_blob[i]);
+      each_layer_param->add_top(pooling_layer_id_top_blob[i] + "_p");
+
+      each_layer_param->mutable_pooling_param()->add_stride(
+          pooling_layer_id_stride[i]);
+      each_layer_param->mutable_pooling_param()->add_kernel_size(1);
+      each_layer_param->mutable_pooling_param()->set_pool(
+          PoolingParameter_PoolMethod_MAX);
+
+      int target_layer_id = layer_name_id_mapping
+          [bottom_blob_layer_mapping[pooling_layer_id_top_blob[i]]];
+      LayerParameter* target_layer_param =
+          (const_cast<NetParameter&>(param)).mutable_layer(target_layer_id);
+      int target_blob_index = 0;
+      bool found_blob_flag = false;
+      for (; target_blob_index < target_layer_param->bottom_size();
+           target_blob_index++) {
+        if (target_layer_param->bottom(target_blob_index) ==
+            pooling_layer_id_top_blob[i]) {
+          found_blob_flag = true;
+          break;
+        }
+      }
+      if (found_blob_flag) {
+        target_layer_param->set_bottom(target_blob_index,
+                                       pooling_layer_id_top_blob[i] + "_p");
+        continue;
+      }
+    }
+    param_compiled->add_layer()->CopyFrom(*each_layer_param);
+  }
 }
 
 template <typename Dtype>

@@ -21,6 +21,10 @@ if(DISABLE_CONV_SUM_FUSION)
 	add_definitions("-DDISABLE_CONV_SUM_FUSION")
 endif()
 
+if(DISABLE_SPARSE)
+	message(STATUS "sparse is disabled!")
+	add_definitions("-DDISABLE_SPARSE")
+endif()
 # --[ If user doesn't specify build type then assume release
 if("${CMAKE_BUILD_TYPE}" STREQUAL "")
   set(CMAKE_BUILD_TYPE Release)

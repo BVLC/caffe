@@ -84,6 +84,9 @@ DISABLE_BN_RELU_FUSION := 0
 
 #Use conv/eltwise/relu layer fusion to boost inference.
 DISABLE_CONV_SUM_FUSION := 0
+
+#Use sparse to boost inference.
+DISABLE_SPARSE := 0
 # Intel(r) Machine Learning Scaling Library (uncomment to build
 # with MLSL for multi-node training)
 # USE_MLSL :=1
