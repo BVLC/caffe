@@ -1,0 +1,16 @@
+net: "./examples/warpctc_captcha/lstm_ctc.prototxt"
+
+test_iter: 50
+test_interval: 1000
+base_lr: 0.0001
+lr_policy: "step"
+gamma: 0.1
+stepsize: 25000
+display: 1000
+max_iter: 50000
+momentum: 0.9
+weight_decay: 0.0005
+snapshot: 25000
+snapshot_prefix: "./examples/warpctc_captcha/model/lstm_ctc"
+solver_mode: GPU
+clip_gradients: 5000

@@ -1,0 +1,103 @@
+layer {
+    name: "input"
+    type: "Input"
+    top: "data"
+    input_param {shape: {dim:1 dim:3 dim:30 dim:80}}
+}
+layer {
+    name: "indicator"
+    type: "ContinuationIndicator"
+    top: "indicator"
+    continuation_indicator_param {
+        time_step:  80
+        batch_size: 1
+    }
+}
+
+layer {
+    name: "permuted_data"
+    type: "Permute"
+    bottom: "data"
+    top: "permuted_data"
+    permute_param {
+        order: 3
+        order: 0
+        order: 1
+        order: 2
+    }
+}
+
+layer {
+    name: "lstm1"
+    type: "LSTM"
+    bottom: "permuted_data"
+    bottom: "indicator"
+    top: "lstm1"
+    recurrent_param {
+        num_output: 100
+        weight_filler {
+          type: "xavier"
+        }
+        bias_filler {
+          type: "constant"
+          value: 0
+        }
+    }
+}
+
+layer {
+    name: "lstm2"
+    type: "LSTM"
+    bottom: "lstm1"
+    bottom: "indicator"
+    top: "lstm2"
+    recurrent_param {
+        num_output: 100
+        weight_filler {
+          type: "xavier"
+        }
+        bias_filler {
+          type: "constant"
+          value: 0
+        }
+    }
+}
+
+layer {
+  name: "fc1"
+  type: "InnerProduct"
+  bottom: "lstm2"
+  top: "fc1"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  inner_product_param {
+    num_output: 11
+	  axis: 2
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+
+layer {
+  name: "permute_fc"
+  type: "Permute"
+  bottom: "fc1"
+  top: "premuted_fc"
+  permute_param {
+    order: 1
+    order: 0
+    order: 2
+  }
+}
+
