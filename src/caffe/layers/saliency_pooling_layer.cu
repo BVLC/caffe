@@ -28,23 +28,19 @@ __global__ void SalPoolForward(const int nthreads,
     const int wend = min(wstart + kernel_w, width);
     hstart = max(hstart, 0);
     wstart = max(wstart, 0);
-    Dtype Features = -FLT_MAX;
+    Dtype Features = NULL;
     const Dtype* const bottom_slice = image_data + (n * channels + c) * height * width;
-
-    // Saliency map variables
     const Dtype* const saliency_map_slice = saliency_data + (n * channels + c)  * height * width;
 
-    Dtype vmax = -FLT_MAX;
+    //Dtype vmax = -FLT_MAX;
     for (int h = hstart; h < hend; ++h) {
       for (int w = wstart; w < wend; ++w) {
-        if (bottom_slice[h * width + w] > vmax) {
-          Features = bottom_slice[h * width + w] * saliency_map_slice[h * width + w];
-          //Si = bottom_slice[h * width + w];
-        }
+        //if (bottom_slice[h * width + w] > vmax) {
+          Features += bottom_slice[h * width + w] * saliency_map_slice[h * width + w];
+        //}
       }
     }
     //printf("Index: %d\tValue: %d\n", index,  (kernel_h * kernel_w));
-
     top_data[index] =  Features / ( kernel_h * kernel_w );
   }
 }
