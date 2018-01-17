@@ -103,7 +103,7 @@ class vptr<Dtype, typename const_enable_if<Dtype>::type> {
   vptr<Dtype> operator+=(uint_tp val);
   vptr<Dtype> operator-=(uint_tp val);
 
-  bool is_valid();
+  bool is_valid() const;
 
 private:
   shared_ptr<dev_ptr<Dtype> > dev_ptr_;
@@ -169,7 +169,7 @@ class vptr<Dtype, typename non_const_enable_if<Dtype>::type> {
   vptr<Dtype> operator+=(uint_tp val);
   vptr<Dtype> operator-=(uint_tp val);
 
-  bool is_valid();
+  bool is_valid() const;
 
 private:
   shared_ptr<dev_ptr<Dtype> > dev_ptr_;

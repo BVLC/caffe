@@ -29,7 +29,7 @@ void DeviceProgram::set_compile_flags(uint64_t flags) {
 template<typename Dtype>
 string DeviceProgram::atomic_add(string source, string operand) {
   return "caffe_gpu_atomic_" + safe_type_name<Dtype>()
-          + "_add(" + source + ", " + operand + ")";
+          + "_add(" + source + ", " + operand + ");";
 }
 
 string DeviceProgram::vector_accessors() {
@@ -59,12 +59,19 @@ string DeviceProgram::vector_accessors() {
 }
 
 template
-string DeviceProgram::atomic_add<half_fp>(string source,
-                                                   string operand);
+string DeviceProgram::atomic_add<half_fp>(string source, string operand);
 template
 string DeviceProgram::atomic_add<float>(string source, string operand);
 template
 string DeviceProgram::atomic_add<double>(string source, string operand);
+template
+string DeviceProgram::atomic_add<int8_t>(string source, string operand);
+template
+string DeviceProgram::atomic_add<int16_t>(string source, string operand);
+template
+string DeviceProgram::atomic_add<int32_t>(string source, string operand);
+template
+string DeviceProgram::atomic_add<int64_t>(string source, string operand);
 
 template<typename Dtype>
 string DeviceProgram::define_type(const char* name) {

@@ -28,7 +28,6 @@ class HDF5DataLayerTest : public MultiDeviceTest<TypeParam> {
   virtual void SetUp() {
     blob_top_vec_.push_back(blob_top_data_);
     blob_top_vec_.push_back(blob_top_label_);
-    blob_top_vec_.push_back(blob_top_label2_);
 
     // Check out generate_sample_data.py in the same directory.
     filename = new string(ABS_TEST_DATA_DIR "/sample_data_list.txt");
@@ -54,6 +53,9 @@ TYPED_TEST_CASE(HDF5DataLayerTest, TestDtypesAndDevices);
 
 TYPED_TEST(HDF5DataLayerTest, TestRead) {
   typedef typename TypeParam::Dtype Dtype;
+  this->blob_top_vec_.push_back(this->blob_top_label2_);
+
+
   // Create LayerParameter with the known parameters.
   // The data file we are reading has 10 rows and 8 columns,
   // with values from 0 to 10*8 reshaped in row-major order.
@@ -143,6 +145,9 @@ TYPED_TEST(HDF5DataLayerTest, TestSkip) {
   int batch_size = 5;
   hdf5_data_param->set_batch_size(batch_size);
   hdf5_data_param->set_source(*(this->filename));
+  int_tp num_cols = 8;
+  int_tp height = 6;
+  int_tp width = 5;
 
   Caffe::set_solver_count(8);
   for (int dev = 0; dev < Caffe::solver_count(); ++dev) {
@@ -150,6 +155,15 @@ TYPED_TEST(HDF5DataLayerTest, TestSkip) {
 
     HDF5DataLayer<Dtype, Dtype, Dtype> layer(param);
     layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+    EXPECT_EQ(this->blob_top_data_->num(), batch_size);
+    EXPECT_EQ(this->blob_top_data_->channels(), num_cols);
+    EXPECT_EQ(this->blob_top_data_->height(), height);
+    EXPECT_EQ(this->blob_top_data_->width(), width);
+
+    EXPECT_EQ(this->blob_top_label_->num_axes(), 2);
+    EXPECT_EQ(this->blob_top_label_->shape(0), batch_size);
+    EXPECT_EQ(this->blob_top_label_->shape(1), 1);
+
     int label = dev;
     for (int iter = 0; iter < 1; ++iter) {
       layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);

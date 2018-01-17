@@ -90,30 +90,31 @@ string LibDNN<MItype, MOtype>::generate_gemm_core(
         if (prec != LIBDNN_ACCUMULATE_PREC_NATIVE) {
           ss << "(" << accreg_type << ")";
         }
-        ss << "(VEC_" << vwm << "_" << i << "(Areg) * v_bmul);" << std::endl;
+        ss << "(VEC_" << vwm << "_" << i << "(Areg) * (MItype)v_bmul);"
+           << std::endl;
       }
     } else {
       ss << "Dreg[wm] += ";
       switch (prec) {
         case LIBDNN_ACCUMULATE_PREC_8:
           ss << this->program_->template convert_type<int8_t>(vwm,
-                                                              "Areg * v_bmul");
+                                                       "Areg * (MItype)v_bmul");
           break;
         case LIBDNN_ACCUMULATE_PREC_16:
           ss << this->program_->template convert_type<int16_t>(vwm,
-                                                               "Areg * v_bmul");
+                                                       "Areg * (MItype)v_bmul");
           break;
         case LIBDNN_ACCUMULATE_PREC_32:
           ss << this->program_->template convert_type<int32_t>(vwm,
-                                                               "Areg * v_bmul");
+                                                       "Areg * (MItype)v_bmul");
           break;
         case LIBDNN_ACCUMULATE_PREC_64:
           ss << this->program_->template convert_type<int64_t>(vwm,
-                                                               "Areg * v_bmul");
+                                                       "Areg * (MItype)v_bmul");
           break;
         case LIBDNN_ACCUMULATE_PREC_NATIVE:
         default:
-          ss << "Areg * v_bmul";
+          ss << "Areg * (MItype)v_bmul";
           break;
       }
       ss << ";" << std::endl;
@@ -226,7 +227,7 @@ string LibDNN<MItype, MOtype>::generate_accreg_init(
       ss << "for (int_tp wm = 0; wm < WPTM; ++wm) {" << std::endl;
       ss << "int_tp globalRow = offM + tidm + wm * RTSM;"
          << std::endl;
-      ss << "((" << accreg_type << "*)(&(Dreg[wm / VWM])))[wm %V WM] = ";
+      ss << "((" << accreg_type << "*)(&(Dreg[wm / VWM])))[wm % VWM] = ";
       if (prec != LIBDNN_ACCUMULATE_PREC_NATIVE) {
         ss << "(" << accreg_type << ")";
       }

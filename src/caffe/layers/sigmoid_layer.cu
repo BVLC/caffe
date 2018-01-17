@@ -14,6 +14,7 @@ void SigmoidLayer<Dtype, MItype, MOtype>::GenerateProgram() {
   ss << this->device_program_->template define_type<Dtype>("Dtype");
   ss << this->device_program_->template define_type<MItype>("MItype");
   ss << this->device_program_->template define_type<MOtype>("MOtype");
+  ss << this->device_program_->template helper_functions<Dtype>();
 
   KernelArgs fw_args;
   fw_args.push_back(this->device_program_->template create_kernel_arg<uint_tp>(
@@ -24,7 +25,8 @@ void SigmoidLayer<Dtype, MItype, MOtype>::GenerateProgram() {
                     "out", KERNEL_ARG_GLOBAL_MEM));
   ss << this->device_program_->function("SigmoidForward", fw_args);
   ss << this->device_program_->kernel_loop("uint_tp", "index", "n");
-  ss << "out[index] = 0.5 * tanh(0.5 * in[index]) + 0.5;" << std::endl;
+  ss << "out[index] = (Dtype)0.5 * (Dtype)tanh((Dtype)0.5 * in[index])"
+     << " + (Dtype)0.5;" << std::endl;
   ss << "}" << std::endl;
   ss << "}" << std::endl;
 
@@ -40,7 +42,7 @@ void SigmoidLayer<Dtype, MItype, MOtype>::GenerateProgram() {
   ss << this->device_program_->function("SigmoidBackward", bw_args);
   ss << this->device_program_->kernel_loop("uint_tp", "index", "n");
   ss << "const Dtype sigmoid_x = out_data[index];" << std::endl;
-  ss << "out_diff[index] = in_diff[index] * sigmoid_x * (1 - sigmoid_x);"
+  ss << "out_diff[index] = in_diff[index] * sigmoid_x * ((Dtype)1 - sigmoid_x);"
      << std::endl;
   ss << "}" << std::endl;
   ss << "}" << std::endl;

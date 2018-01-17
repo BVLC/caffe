@@ -305,6 +305,8 @@ string LibDNNBlas<MItype, MOtype>::generate_asum_source(
   ss << program->template define_vector_type<MItype>("MItype", 0, 16);
   ss << program->template define_vector_type<MOtype>("MOtype", 0, 16);
   ss << program->vector_accessors();
+  ss << program->template helper_functions<MItype>();
+  ss << program->template helper_functions<MOtype>();
   // TODO: Better implementation
   KernelArgs args;
   args.push_back(program->create_kernel_arg<uint_tp>("n",
@@ -317,7 +319,7 @@ string LibDNNBlas<MItype, MOtype>::generate_asum_source(
   ss << program->function("libdnn_asum", args);
   ss << "out[0] = (MOtype)0;" << std::endl;
   ss << program->kernel_loop("uint_tp", "index", "n");
-  ss << "out[0] += x[index];" << std::endl;
+  ss << "out[0] += abs(x[index]);" << std::endl;
   ss << "}" << std::endl;
   ss << "}" << std::endl;
   return ss.str();
@@ -354,7 +356,7 @@ void LibDNNBlas<MItype, MOtype>::asum(const uint_tp n, vptr<const MItype> x,
   lock.unlock();
 
   int_tp buffer_id = -1;
-  vector<int_tp> buffer_shape(1,1);
+  vector<int_tp> buffer_shape(1, 1);
   shared_ptr<Blob<MOtype> > buff = this->dev_ptr_->template
                                        Buffer<MOtype>(buffer_shape, &buffer_id);
   vptr<MOtype> gpu_out = buff->mutable_gpu_data();

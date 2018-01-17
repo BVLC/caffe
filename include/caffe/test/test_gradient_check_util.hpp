@@ -35,7 +35,8 @@ class GradientChecker {
   // layers.
   // Note that after the gradient check, we do not guarantee that the data
   // stored in the layer parameters and the blobs are unchanged.
-  void CheckGradient(Layer<Dtype, Dtype, Dtype>* layer, const vector<Blob<Dtype>*>& bottom,
+  void CheckGradient(Layer<Dtype, Dtype, Dtype>* layer,
+                     const vector<Blob<Dtype>*>& bottom,
                      const vector<Blob<Dtype>*>& top,
                      int_tp check_bottom = -1) {
     layer->SetUp(bottom, top);
@@ -243,10 +244,10 @@ void GradientChecker<Dtype>::CheckGradientNet(
 }
 
 template<typename Dtype>
-Dtype GradientChecker<Dtype>::GetObjAndGradient(const Layer<Dtype, Dtype, Dtype>& layer,
-                                                const vector<Blob<Dtype>*>& top,
-                                                int_tp top_id,
-                                                int_tp top_data_id) {
+Dtype GradientChecker<Dtype>::GetObjAndGradient(
+    const Layer<Dtype, Dtype, Dtype>& layer,
+    const vector<Blob<Dtype>*>& top,
+    int_tp top_id, int_tp top_data_id) {
   Dtype loss = 0;
   if (top_id < 0) {
     // the loss will be half of the sum of squares of all outputs

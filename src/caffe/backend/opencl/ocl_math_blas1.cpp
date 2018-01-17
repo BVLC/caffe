@@ -34,7 +34,7 @@ void OclDevice::axpy_half(const uint_tp n, const half_fp alpha,
   OPENCL_CLBLAST_CHECK(
     clblast::Axpy<clblast::half>(
       n,
-      alpha,
+      clblast::FloatToHalf(alpha),
       x.get_ocl_mem(), offX, incX,
       y.get_ocl_mem(), offY, incY,
       &queue));
@@ -71,7 +71,7 @@ void OclDevice::scal_half(const uint_tp n, const half_fp alpha,
   OPENCL_CLBLAST_CHECK(
     clblast::Scal<clblast::half>(
       n,
-      alpha,
+      clblast::FloatToHalf(alpha),
       x.get_ocl_mem(), offX, incx,
       &queue));
 
@@ -251,7 +251,7 @@ void OclDevice::scale_half(const uint_tp n, const half_fp alpha,
     OPENCL_CLBLAST_CHECK(
       clblast::Scal<clblast::half>(
         n,
-        alpha,
+        clblast::FloatToHalf(alpha),
         y.get_ocl_mem(), offY, incY,
         &queue));
 

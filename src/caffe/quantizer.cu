@@ -373,13 +373,13 @@ void Quantizer<MItype, MOtype>::Observe_in_gpu(size_t n,
 
 template<typename MItype, typename MOtype>
 void Quantizer<MItype, MOtype>::Observe_out_gpu(size_t n,
-                                               vptr<const void> data) {
+                                                vptr<const void> data) {
   Observe_out_gpu(n, vptr<const MOtype>(data));
 }
 
 template<typename MItype, typename MOtype>
 void Quantizer<MItype, MOtype>::Observe_out_gpu(size_t n,
-                                               vptr<const MOtype> data) {
+                                                vptr<const MOtype> data) {
   if (mode_ == PASSIVE) {
     return;
   }

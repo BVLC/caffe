@@ -37,11 +37,6 @@ void BaseConvolutionLayer<Dtype, MItype, MOtype>::compute_output_shape() {
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-bool BaseConvolutionLayer<Dtype, MItype, MOtype>::reverse_dimensions() {
-  return deconvolution_;
-}
-
-template<typename Dtype, typename MItype, typename MOtype>
 void BaseConvolutionLayer<Dtype, MItype, MOtype>::LayerSetUp(
             const vector<Blob<MItype>*>& bottom,
             const vector<Blob<MOtype>*>& top) {
@@ -162,7 +157,7 @@ void BaseConvolutionLayer<Dtype, MItype, MOtype>::LayerSetUp(
   CHECK_EQ(channels_ % group_, 0);
   CHECK_EQ(num_output_ % group_, 0)
     << "Number of output should be multiples of group.";
-  if (reverse_dimensions()) {
+  if (this->deconvolution_) {
     conv_out_channels_ = channels_;
     conv_in_channels_ = num_output_;
   } else {
@@ -249,7 +244,7 @@ void BaseConvolutionLayer<Dtype, MItype, MOtype>::Reshape(
   for (int_tp top_id = 0; top_id < top.size(); ++top_id) {
     top[top_id]->Reshape(top_shape);
   }
-  if (reverse_dimensions()) {
+  if (this->deconvolution_) {
     conv_out_spatial_dim_ = bottom[0]->count(first_spatial_axis);
   } else {
     conv_out_spatial_dim_ = top[0]->count(first_spatial_axis);
@@ -261,7 +256,7 @@ void BaseConvolutionLayer<Dtype, MItype, MOtype>::Reshape(
   conv_input_shape_.Reshape(bottom_dim_blob_shape);
   int_tp* conv_input_shape_data = conv_input_shape_.mutable_cpu_data();
   for (int_tp i = 0; i < num_spatial_axes_ + 1; ++i) {
-    if (reverse_dimensions()) {
+    if (this->deconvolution_) {
       conv_input_shape_data[i] = top[0]->shape(channel_axis_ + i);
     } else {
       conv_input_shape_data[i] = bottom[0]->shape(channel_axis_ + i);
@@ -274,7 +269,7 @@ void BaseConvolutionLayer<Dtype, MItype, MOtype>::Reshape(
   col_buffer_shape_.clear();
   col_buffer_shape_.push_back(kernel_dim_ * group_);
   for (int_tp i = 0; i < num_spatial_axes_; ++i) {
-    if (reverse_dimensions()) {
+    if (this->deconvolution_) {
       col_buffer_shape_.push_back(input_shape(i + 1));
     } else {
       col_buffer_shape_.push_back(output_shape_[i]);
@@ -286,7 +281,7 @@ void BaseConvolutionLayer<Dtype, MItype, MOtype>::Reshape(
   bottom_dim_ = bottom[0]->count(channel_axis_);
   top_dim_ = top[0]->count(channel_axis_);
   num_kernels_im2col_ = conv_in_channels_ * conv_out_spatial_dim_;
-  num_kernels_col2im_ = reverse_dimensions() ? top_dim_ : bottom_dim_;
+  num_kernels_col2im_ = this->deconvolution_ ? top_dim_ : bottom_dim_;
 
   // Set up the all ones "bias multiplier" for adding biases by BLAS
   out_spatial_dim_ = top[0]->count(first_spatial_axis);
@@ -317,7 +312,7 @@ shared_ptr<Blob<Dtype> >
 
 template<typename Dtype, typename MItype, typename MOtype>
 void BaseConvolutionLayer<Dtype, MItype, MOtype>::unlock_col_buffer() {
-  if (not (col_buffer_lock_id_ == -1)) {
+  if (col_buffer_lock_id_ != -1) {
     shared_col_buffer_ = nullptr;
     this->device_->unlock_buffer(&col_buffer_lock_id_);
   }

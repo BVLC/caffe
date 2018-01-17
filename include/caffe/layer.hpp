@@ -258,25 +258,44 @@ class Layer : public LayerBase {
     if (layer_param_.has_net_quantizer()) {
       net_quant_ = CreateQuantizer(layer_param_.net_quantizer());
     } else {
-      net_quant_ = make_shared<Quantizer<float, Dtype> >(device_);
+      QuantizerParameter quant_param;
+      quant_param.set_device(this->device_->id());
+      quant_param.set_input_data_type(proto_data_type<float>());
+      quant_param.set_output_data_type(layer_param_.top_data_type());
+      quant_param.set_index(layer_param_.quantizer_index());
+      net_quant_ = make_shared<Quantizer<float, MOtype> >(quant_param);
     }
     if (layer_param_.has_blobs_quantizer()) {
       blobs_quant_ = CreateQuantizer(layer_param_.blobs_quantizer());
     } else {
-      blobs_quant_ = make_shared<Quantizer<Dtype, Dtype> >(device_);
+      QuantizerParameter quant_param;
+      quant_param.set_device(this->device_->id());
+      quant_param.set_input_data_type(proto_data_type<float>());
+      quant_param.set_output_data_type(layer_param_.compute_data_type());
+      quant_param.set_index(layer_param_.quantizer_index());
+      blobs_quant_ = make_shared<Quantizer<float, Dtype> >(quant_param);
     }
     if (layer_param_.has_bottom_quantizer()) {
       bottom_quant_ = make_shared<Quantizer<MItype, Dtype> >(
           layer_param_.bottom_quantizer());
     } else {
-      bottom_quant_ = make_shared<Quantizer<MItype, Dtype> >(device_);
+      QuantizerParameter quant_param;
+      quant_param.set_device(this->device_->id());
+      quant_param.set_input_data_type(layer_param_.bottom_data_type());
+      quant_param.set_output_data_type(layer_param_.compute_data_type());
+      quant_param.set_index(layer_param_.quantizer_index());
+      bottom_quant_ = make_shared<Quantizer<MItype, Dtype> >(quant_param);
     }
-
     if (layer_param_.has_top_quantizer()) {
       top_quant_ = make_shared<Quantizer<Dtype, MOtype> >(
           layer_param_.top_quantizer());
     } else {
-      top_quant_ = make_shared<Quantizer<Dtype, MOtype> >(device_);
+      QuantizerParameter quant_param;
+      quant_param.set_device(this->device_->id());
+      quant_param.set_input_data_type(layer_param_.compute_data_type());
+      quant_param.set_output_data_type(layer_param_.top_data_type());
+      quant_param.set_index(layer_param_.quantizer_index());
+      top_quant_ = make_shared<Quantizer<Dtype, MOtype> >(quant_param);
     }
 
     if (layer_param_.blobs_size() > 0) {
@@ -382,7 +401,7 @@ class Layer : public LayerBase {
     for (size_t i = 0; i < bottom.size(); ++i) {
       cast_bottom.push_back(static_cast<Blob<MItype>*>(bottom[i]));
     }
-    for (size_t i = 0; i < bottom.size(); ++i) {
+    for (size_t i = 0; i < top.size(); ++i) {
       cast_top.push_back(static_cast<Blob<MOtype>*>(top[i]));
     }
     Dtype layer_loss = this->Forward(cast_bottom, cast_top);
@@ -399,10 +418,10 @@ class Layer : public LayerBase {
     for (size_t i = 0; i < bottom.size(); ++i) {
       cast_bottom.push_back(static_cast<Blob<MItype>*>(bottom[i]));
     }
-    for (size_t i = 0; i < bottom.size(); ++i) {
+    for (size_t i = 0; i < top.size(); ++i) {
       cast_top.push_back(static_cast<Blob<MOtype>*>(top[i]));
     }
-    this->Backward(top, propagate_down, bottom);
+    this->Backward(cast_top, propagate_down, cast_bottom);
   }
 
   /**
@@ -471,7 +490,7 @@ class Layer : public LayerBase {
   virtual vector<shared_ptr<QuantizerBase> > get_all_quantizers() {
     vector<shared_ptr<QuantizerBase> > quant_base_vec;
     if (this->net_quant_ != nullptr) {
-      quant_base_vec.push_back(net_quant_);
+      quant_base_vec.push_back(this->net_quant_);
     }
     if (this->blobs_quant_ != nullptr) {
       quant_base_vec.push_back(this->blobs_quant_);
@@ -618,8 +637,11 @@ class Layer : public LayerBase {
       CHECK_EQ(top.size(), num_loss_weights) << "loss_weight must be "
       "unspecified or specified once per top blob.";
       for (int_tp top_id = 0; top_id < top.size(); ++top_id) {
-        const MOtype loss_weight = layer_param_.loss_weight(top_id);
-        if (loss_weight == Dtype(0)) {continue;}
+        float loss_weight_param = layer_param_.loss_weight(top_id);
+        MOtype loss_weight = MOtype(0);
+        Quantizer<float, MOtype> quant(net_quant_->quant_param());
+        quant.Forward_cpu(1, &loss_weight_param, &loss_weight);
+        if (loss_weight == MOtype(0)) { continue; }
         this->set_loss(top_id, loss_weight);
         const int_tp count = top[top_id]->count();
         MOtype* loss_multiplier = top[top_id]->mutable_cpu_diff();
@@ -645,7 +667,7 @@ inline Dtype Layer<Dtype, MItype, MOtype>::Forward(
     case Caffe::CPU:
       for (int_tp bottom_id = 0; bottom_id < bottom.size(); ++bottom_id) {
         bottom_quant_->Observe_in_cpu(bottom[bottom_id]->count(),
-                                  bottom[bottom_id]->cpu_data());
+                                      bottom[bottom_id]->cpu_data());
       }
       Forward_cpu(bottom, top);
       for (int_tp top_id = 0; top_id < top.size(); ++top_id) {

@@ -17,6 +17,22 @@ void PoolingLayer<Dtype, MItype, MOtype>::GenerateProgram() {
   ss << this->device_program_->template define_type<MItype>("MItype");
   ss << this->device_program_->template define_type<MOtype>("MOtype");
 
+#ifdef USE_HALF
+  if (std::is_same<MItype, half_fp>::value) {
+    ss << "#define DTYPE_MAX HALF_MAX" << std::endl;
+    ss << "#define DTYPE_MIN HALF_MIN" << std::endl;
+  } else if (std::is_same<MItype, float>::value
+        || std::is_same<MItype, double>::value) {
+#endif
+    ss << "#define DTYPE_MAX FLT_MAX" << std::endl;
+    ss << "#define DTYPE_MIN FLT_MIN" << std::endl;
+#ifdef USE_HALF
+  } else {
+    ss << "#define DTYPE_MAX " << type_max_val<MItype>() << std::endl;
+    ss << "#define DTYPE_MIN " << 0 << std::endl;
+  }
+#endif
+
   {
     KernelArgs args;
     args.push_back(this->device_program_->template create_kernel_arg<uint_tp>(
@@ -81,7 +97,7 @@ void PoolingLayer<Dtype, MItype, MOtype>::GenerateProgram() {
     ss << "while (wstart < 0) {" << std::endl;
     ss << "wstart += dilation_w;" << std::endl;
     ss << "}" << std::endl;
-    ss << "Dtype maxval = -FLT_MAX;" << std::endl;
+    ss << "Dtype maxval = -DTYPE_MAX;" << std::endl;
     ss << "int_tp maxidx = -1;" << std::endl;
     ss << "bottom_data += (n * channels + c) * height * width;" << std::endl;
     ss << "for (int_tp h = hstart; h < hend; h += dilation_h) {" << std::endl;
@@ -307,7 +323,7 @@ void PoolingLayer<Dtype, MItype, MOtype>::GenerateProgram() {
     ss << "int_tp wend = min((int_tpc) (wstart + ext_kernel_w),"
        << " (int_tpc) width);" << std::endl;
     // We set cumsum to be 0 to avoid divide-by-zero problems
-    ss << "Dtype cumsum = FLT_MIN;" << std::endl;
+    ss << "Dtype cumsum = DTYPE_MIN;" << std::endl;
     ss << "Dtype cumvalues = 0.;" << std::endl;
     ss << "bottom_data += (n * channels + c) * height * width;" << std::endl;
     // First pass: get sum
@@ -555,7 +571,7 @@ void PoolingLayer<Dtype, MItype, MOtype>::GenerateProgram() {
        << " (int_tpc) width);" << std::endl;
     ss << "hstart = max((int_tpc) (hstart), (int_tpc) (0));" << std::endl;
     ss << "wstart = max((int_tpc) (wstart), (int_tpc) (0));" << std::endl;
-    ss << "Dtype maxval = -FLT_MAX;" << std::endl;
+    ss << "Dtype maxval = -DTYPE_MAX;" << std::endl;
     ss << "int_tp maxidx = -1;" << std::endl;
     ss << this->device_program_->global_ptr("const Dtype", "bottom_slice")
        << " = bottom_data + (n * channels + c) * height * width;" << std::endl;
@@ -1052,7 +1068,7 @@ void PoolingLayer<Dtype, MItype, MOtype>::GenerateProgram() {
     ss << "offset *= size[i];" << std::endl;
     ss << "d_iter[i] = d_start[i];" << std::endl;
     ss << "if (d_start[i] >= d_end[i]) {" << std::endl;
-    ss << "top_data[index] = -FLT_MAX;" << std::endl;
+    ss << "top_data[index] = -DTYPE_MAX;" << std::endl;
     ss << "if (mask) {" << std::endl;
     ss << "mask[index] = -1;" << std::endl;
     ss << "} else {" << std::endl;
@@ -1064,7 +1080,7 @@ void PoolingLayer<Dtype, MItype, MOtype>::GenerateProgram() {
     ss << "int_tp chan = num % channels;" << std::endl;
     ss << "num /= channels;" << std::endl;
     ss << "offset *= (num * channels + chan);" << std::endl;
-    ss << "Dtype maxval = -FLT_MAX;" << std::endl;
+    ss << "Dtype maxval = -DTYPE_MAX;" << std::endl;
     ss << "int_tp maxidx = -1;" << std::endl;
     ss << "int_tp final_offset = 0;" << std::endl;
     ss << "bool incremented;" << std::endl;

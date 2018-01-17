@@ -103,6 +103,25 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     // Set device
     layer_param.set_device(Caffe::GetDefaultDevice()->list_id());
 
+    // Set quantizer settings
+    if (!layer_param.has_net_quantizer()) {
+      QuantizerParameter quant_param;
+      quant_param.set_device(layer_param.device());
+      quant_param.set_input_data_type(proto_data_type<Dtype>());
+      quant_param.set_output_data_type(layer_param.top_data_type());
+      quant_param.set_index(layer_param.quantizer_index());
+      layer_param.mutable_net_quantizer()->CopyFrom(quant_param);
+    }
+
+    if (!layer_param.has_blobs_quantizer()) {
+      QuantizerParameter quant_param;
+      quant_param.set_device(layer_param.device());
+      quant_param.set_input_data_type(proto_data_type<Dtype>());
+      quant_param.set_output_data_type(layer_param.compute_data_type());
+      quant_param.set_index(layer_param.quantizer_index());
+      layer_param.mutable_blobs_quantizer()->CopyFrom(quant_param);
+    }
+
     if (layer_param.propagate_down_size() > 0) {
       CHECK_EQ(layer_param.propagate_down_size(),
           layer_param.bottom_size())<< "propagate_down param must be specified "
@@ -156,7 +175,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
         blob_loss_weights_.resize(top_id_vecs_[layer_id][top_id] + 1, Dtype(0));
       }
       Dtype layer_loss;
-      layer->loss(top_id, static_cast<void*>(&layer_loss));
+      layer->loss(top_id, &layer_loss);
       blob_loss_weights_[top_id_vecs_[layer_id][top_id]] = layer_loss;
       if (Caffe::root_solver()) {
         LOG(INFO) << "Top shape: "
@@ -433,7 +452,7 @@ void Net<Dtype>::AppendTop(const NetParameter& param, const int_tp layer_id,
     if (Caffe::root_solver()) {
       LOG(INFO) << layer_param->name() << " -> " << blob_name;
     }
-    shared_ptr<BlobBase> blob_pointer = CreateBlob(
+    shared_ptr<BlobBase> blob_pointer = CreateBlob(device_,
         layer_param->top_data_type());
     const int_tp blob_id = blobs_.size();
     blobs_.push_back(blob_pointer);
@@ -587,6 +606,7 @@ Dtype Net<Dtype>::ForwardFromTo(int_tp start, int_tp end) {
       before_forward_[c]->run(i);
     }
     Dtype layer_loss;
+    // std::cout << layer_names()[i] << std::endl;
     layers_[i]->Forward(bottom_vecs_[i], top_vecs_[i],
                         static_cast<void*>(&layer_loss));
     loss += layer_loss;
@@ -824,20 +844,22 @@ void Net<Dtype>::CopyTrainedLayersFrom(const NetParameter& param) {
         quant_param.observed_min(), quant_param.observed_max());
   }
 
-  for (int_tp i = 0; this->layers().size(); ++i) {
+  for (int_tp i = 0; i < this->layers().size(); ++i) {
     vector<shared_ptr<QuantizerBase> > quantizers =
         this->layers()[i]->get_all_quantizers();
     vector<shared_ptr<QuantizerBase> > quant_base_vec =
         layers_[i]->get_all_quantizers();
-    for (int_tp j = 0; quant_base_vec.size(); ++j) {
-      QuantizerParameter quant_param = quant_base_vec[j]->quant_param();
+    for (int_tp j = 0; j < quant_base_vec.size(); ++j) {
+      const QuantizerParameter& quant_param = quant_base_vec[j]->quant_param();
+      QuantizerParameter quant_param_copy;
+      quant_param_copy.CopyFrom(quant_param);
       std::map<int_tp, std::pair<double, double> >::iterator iter =
           quantizer_map.find(quant_param.index());
       if (iter != quantizer_map.end()) {
-        quant_param.set_observed_min(std::get<0>(iter->second));
-        quant_param.set_observed_max(std::get<1>(iter->second));
+        quant_param_copy.set_observed_min(std::get<0>(iter->second));
+        quant_param_copy.set_observed_max(std::get<1>(iter->second));
       }
-      quant_base_vec[j]->update_param(quant_param);
+      quant_base_vec[j]->update_param(quant_param_copy);
     }
   }
 
@@ -861,7 +883,7 @@ void Net<Dtype>::CopyTrainedLayersFrom(const NetParameter& param) {
         << "Incompatible number of blobs for layer " << source_layer_name;
     for (int_tp j = 0; j < target_blobs.size(); ++j) {
       if (!target_blobs[j]->ShapeEquals(source_layer.blobs(j))) {
-        shared_ptr<BlobBase> source_blob = CreateBlob(
+        shared_ptr<BlobBase> source_blob = CreateBlob(device_,
             source_layer.blobs(j).data_type());
         const bool kReshape = true;
         source_blob->FromProto(source_layer.blobs(j), kReshape);
