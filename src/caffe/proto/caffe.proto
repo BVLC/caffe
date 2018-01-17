@@ -447,7 +447,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 156 (last added: focal_loss_parm)
+// LayerParameter next available layer-specific ID: 160 (last added: labelsequenceaccuracy_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -563,6 +563,9 @@ message LayerParameter {
   optional WindowDataParameter window_data_param = 129;
   optional UpsampleParameter upsample_param = 152;
   optional DenseImageDataParameter dense_image_data_param = 46;
+  optional CtcLossParameter ctc_loss_param = 157;
+  optional ContinuationIndicatorParameter continuation_indicator_param = 158;
+  optional LabelsequenceAccuracyParameter labelsequence_accuracy_param = 159;
 }
 
 // Message that stores parameters used to apply transformation
@@ -2075,4 +2078,19 @@ message PReLUParameter {
 
 message ShuffleChannelParameter {
   optional uint32 group = 1[default = 1]; // The number of group
+}
+
+message CtcLossParameter {
+    optional uint32 alphabet_size = 1 [default = 0];
+    optional uint32 time_step = 3 [default = 0];
+    optional int32 blank_label = 4 [default = 0];
+}
+
+message ContinuationIndicatorParameter {
+    optional uint32 time_step = 1 [default = 0];
+    optional uint32 batch_size = 2 [default = 0];
+}
+
+message LabelsequenceAccuracyParameter {
+  optional int32 blank_label = 1 [default = 0];
 }
