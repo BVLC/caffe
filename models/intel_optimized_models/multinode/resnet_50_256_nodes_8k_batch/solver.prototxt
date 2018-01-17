@@ -14,6 +14,6 @@ warmup_iter: 780 # 1281167 / 8192 * 5 epochs
 warmup_start_lr: 0.1
 momentum: 0.9
 weight_decay: 0.0001
-snapshot: 156
+snapshot: 1560
 snapshot_prefix: "models/intel_optimized_models/multinode/resnet_50_256_nodes_8k_batch/resnet_50_256_nodes_8k"
 solver_mode: CPU
