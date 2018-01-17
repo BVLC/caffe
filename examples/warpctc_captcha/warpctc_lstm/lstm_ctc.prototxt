@@ -32,7 +32,7 @@ layer {
     type: "ContinuationIndicator"
     top: "indicator"
     continuation_indicator_param {
-        time_step:  80
+        time_step:  128
         batch_size: 512
     }
 }
@@ -123,7 +123,7 @@ layer {
 	ctc_loss_param {
 		blank_label: 10
 		alphabet_size: 11
-    time_step: 80
+    time_step: 128
 	}
 }
 

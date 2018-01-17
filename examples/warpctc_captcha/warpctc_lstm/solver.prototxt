@@ -1,4 +1,4 @@
-net: "./examples/warpctc_captcha/lstm_ctc.prototxt"
+net: "./examples/warpctc_captcha/warpctc_lstm/lstm_ctc.prototxt"
 
 test_iter: 50
 test_interval: 1000

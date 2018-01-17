@@ -2,14 +2,14 @@ layer {
     name: "input"
     type: "Input"
     top: "data"
-    input_param {shape: {dim:1 dim:3 dim:30 dim:80}}
+    input_param {shape: {dim:1 dim:3 dim:30 dim:128}}
 }
 layer {
     name: "indicator"
     type: "ContinuationIndicator"
     top: "indicator"
     continuation_indicator_param {
-        time_step:  80
+        time_step:  128
         batch_size: 1
     }
 }

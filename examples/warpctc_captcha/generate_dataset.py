@@ -8,7 +8,8 @@ import h5py
 
 CAFFE_ROOT = os.getcwd()   # assume you are in $CAFFE_ROOT$ dir
 img_path = os.path.join(CAFFE_ROOT, 'data/captcha/')
-IMAGE_WIDTH, IMAGE_HEIGHT = 80, 30
+#IMAGE_WIDTH, IMAGE_HEIGHT = 80, 30
+IMAGE_WIDTH, IMAGE_HEIGHT = 128, 32
 LABEL_SEQ_LEN = 5
 # captcha images list
 images = filter(lambda x: os.path.splitext(x)[1] == '.png', os.listdir(img_path))
