@@ -16,7 +16,7 @@ __global__ void SalPoolForward(const int nthreads,
     const int num, const int channels, const int height, const int width,
     const int pooled_height, const int pooled_width, const int kernel_h,
     const int kernel_w, const int stride_h, const int stride_w, const int pad_h,
-    const int pad_w, Dtype* const top_image_data, int* mask, Dtype* top_mask) {
+    const int pad_w, Dtype* const top_data, int* mask, Dtype* top_mask) {
   CUDA_KERNEL_LOOP(index, nthreads) {
     const int pw = index % pooled_width;
     const int ph = (index / pooled_width) % pooled_height;
@@ -40,7 +40,7 @@ __global__ void SalPoolForward(const int nthreads,
         }
       }
     }
-    top_image_data[index] = maxval;
+    top_data[index] = maxval;
     if (mask) {
       mask[index] = maxidx;
     } else {
@@ -54,36 +54,39 @@ void SaliencyPoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom
   const vector<Blob<Dtype>*>& top){
     const Dtype* image_data = bottom[0]->gpu_data();
     const Dtype* saliency_data = bottom[1]->gpu_data();
-    Dtype* top_image_data = top[0]->mutable_gpu_data();
-    Dtype* top_saliency_data = top[1]->mutable_gpu_data();
+    Dtype* top_data = top[0]->mutable_gpu_data();
     int count = top[0]->count();
     // We'll output the mask to top[1] if it's of size >1.
     const bool use_top_mask = top.size() > 1;
     int* mask = NULL;
     Dtype* top_mask = NULL;
 
+    printf("-------------------------------------------------\n");
     printf("Bottom[0]: Image\n");
     printf("Num: \t%d\n", bottom[0]->num());
     printf("Channels: \t%d\n", bottom[0]->channels());
     printf("Height: \t%d\n", bottom[0]->height());
     printf("Width: \t%d\n", bottom[0]->width());
-
     printf("\nBottom[1]: Saliency Map\n");
     printf("Num: \t%d\n", bottom[1]->num());
     printf("Channels: \t%d\n", bottom[1]->channels());
     printf("Height: \t%d\n", bottom[1]->height());
-    printf("Width: \t%d\n", bottom[1]->width());
+    printf("Width: \t%d\n\n", bottom[1]->width());
+    printf("Count:\t %d\n", bottom[0]->count());
+    printf("-------------------------------------------------\n");
+
 
     if (use_top_mask) {
       top_mask = top[1]->mutable_gpu_data();
     } else {
       mask = max_idx_.mutable_gpu_data();
     }
+
     // NOLINT_NEXT_LINE(whitespace/operators)
     SalPoolForward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
         count, image_data, saliency_data, bottom[0]->num(), channels_,
         height_, width_, pooled_height_, pooled_width_, kernel_h_,
-        kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_, top_image_data,
+        kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_, top_data,
         mask, top_mask);
     CUDA_POST_KERNEL_CHECK;
   }

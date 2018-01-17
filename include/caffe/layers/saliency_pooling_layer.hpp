@@ -26,7 +26,7 @@ class SaliencyPoolingLayer : public Layer<Dtype> {
 
   virtual inline const char* type() const { return "SaliencyPooling"; }
   virtual inline int ExactNumBottomBlobs() const { return 2; }
-  virtual inline int MinTopBlobs() const { return 2; }
+  virtual inline int MinTopBlobs() const { return 1; }
 
  protected:
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
