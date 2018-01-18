@@ -61,6 +61,8 @@ void SoftmaxWithLossLayer<Dtype>::Forward_gpu(
   if (top.size() == 2) {
     top[1]->ShareData(prob_);
   }
+
+  caffe_gpu_set(bottom[0]->count(), Dtype(0), bottom[0]->mutable_gpu_diff());
 }
 
 template <typename Dtype>
