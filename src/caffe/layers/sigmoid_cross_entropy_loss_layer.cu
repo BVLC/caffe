@@ -69,6 +69,9 @@ void SigmoidCrossEntropyLossLayer<Dtype>::Forward_gpu(
   caffe_gpu_asum(count, loss_data, &loss);
   normalizer_ = get_normalizer(normalization_, valid_count);
   top[0]->mutable_cpu_data()[0] = loss / normalizer_;
+
+  caffe_gpu_set(bottom[0]->count(), Dtype(0), bottom[0]->mutable_gpu_diff());
+  caffe_gpu_set(bottom[1]->count(), Dtype(0), bottom[1]->mutable_gpu_diff());
 }
 
 template <typename Dtype>
