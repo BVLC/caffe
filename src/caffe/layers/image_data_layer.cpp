@@ -7,6 +7,9 @@
 #include <utility>
 #include <vector>
 
+#include "caffe/layers/base_data_layer.hpp"
+#include "caffe/layer.hpp"
+
 #include "caffe/data_transformer.hpp"
 #include "caffe/layers/base_data_layer.hpp"
 #include "caffe/layers/image_data_layer.hpp"
@@ -28,6 +31,8 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   const int new_height = this->layer_param_.image_data_param().new_height();
   const int new_width  = this->layer_param_.image_data_param().new_width();
   const bool is_color  = this->layer_param_.image_data_param().is_color();
+  const int label_size  = this->layer_param_.image_data_param().label_size();
+  label_size_ = label_size;
   string root_folder = this->layer_param_.image_data_param().root_folder();
 
   CHECK((new_height == 0 && new_width == 0) ||
@@ -36,6 +41,9 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   // Read the file with filenames and labels
   const string& source = this->layer_param_.image_data_param().source();
   LOG(INFO) << "Opening file " << source;
+  // Extend image_data_layer from single label to multilabel inputs
+  ReadImagesList(source.c_str(), &lines_);
+  /*
   std::ifstream infile(source.c_str());
   string line;
   size_t pos;
@@ -45,7 +53,7 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
     label = atoi(line.substr(pos + 1).c_str());
     lines_.push_back(std::make_pair(line.substr(0, pos), label));
   }
-
+  */
   CHECK(!lines_.empty()) << "File is empty";
 
   if (this->layer_param_.image_data_param().shuffle()) {
@@ -54,7 +62,12 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
     const unsigned int prefetch_rng_seed = caffe_rng_rand();
     prefetch_rng_.reset(new Caffe::RNG(prefetch_rng_seed));
     ShuffleImages();
-  }
+  }//  else {
+  //   if (this->phase_ == TRAIN && Caffe::solver_rank() > 0 &&
+  //       this->layer_param_.image_data_param().rand_skip() == 0) {
+  //     LOG(WARNING) << "Shuffling or skipping recommended for multi-GPU";
+  //   }
+  // }
   LOG(INFO) << "A total of " << lines_.size() << " images.";
 
   lines_id_ = 0;
@@ -86,11 +99,20 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       << top[0]->channels() << "," << top[0]->height() << ","
       << top[0]->width();
   // label
+  /*
   vector<int> label_shape(1, batch_size);
   top[1]->Reshape(label_shape);
-  for (int i = 0; i < this->PREFETCH_COUNT; ++i) {
-    this->prefetch_[i].label_.Reshape(label_shape);
+  for (int i = 0; i < this->prefetch_.size(); ++i) {
+    this->prefetch_[i]->label_.Reshape(label_shape);
   }
+  */
+  //multi label
+    //vector<int> label_shape(batch_size, label_size);
+    top[1]->Reshape(batch_size, label_size, 1, 1);
+    for (int i = 0; i < this->PREFETCH_COUNT; ++i) {
+      this->prefetch_[i].label_.Reshape(batch_size, label_size, 1, 1);
+    }
+
 }
 
 template <typename Dtype>
@@ -149,7 +171,10 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     this->data_transformer_->Transform(cv_img, &(this->transformed_data_));
     trans_time += timer.MicroSeconds();
 
-    prefetch_label[item_id] = lines_[lines_id_].second;
+    //prefetch_label[item_id] = lines_[lines_id_].second;
+    for(int labels_idx = 0; labels_idx < label_size_; ++labels_idx){
+	prefetch_label[ item_id*label_size_ + labels_idx ] = lines_[lines_id_].second[labels_idx];
+    }    
     // go to the next iter
     lines_id_++;
     if (lines_id_ >= lines_size) {
