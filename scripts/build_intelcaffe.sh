@@ -206,6 +206,12 @@ do
     fi
 done
 
+# Fix the compilation failure if icc environment is set.
+# During building caffe, MKL library will be downloaded,
+# and the environment variable will be set.
+unset MKLROOT
+unset CPATH
+
 echo "Build Intel Caffe by $compiler..."
 if [ "$compiler" == "icc" ]; then
     if [ "$boost_root" == "" ]; then
