@@ -56,6 +56,7 @@ void RMSPropSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
   Dtype delta = this->param_.delta();
   Dtype rms_decay = this->param_.rms_decay();
   Dtype local_rate = rate * net_params_lr[param_id];
+  Dtype momentum = this->param_.momentum();
 
   switch (Caffe::mode()) {
   case Caffe::CPU:
@@ -69,13 +70,19 @@ void RMSPropSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
         Dtype(1-rms_decay), this->update_[param_id]->cpu_data(),
         rms_decay, this->history_[param_id]-> mutable_cpu_data());
 
-    // prepare update
-    caffe_powx(net_params[param_id]->count(),
-        this->history_[param_id]->cpu_data(), Dtype(0.5),
+    // copy
+    caffe_copy(net_params[param_id]->count(),
+        this->history_[param_id]->cpu_data(),
         this->update_[param_id]->mutable_cpu_data());
 
+    // add delta
     caffe_add_scalar(net_params[param_id]->count(),
         delta, this->update_[param_id]->mutable_cpu_data());
+
+    // prepare update
+    caffe_powx(net_params[param_id]->count(),
+        this->update_[param_id]->cpu_data(), Dtype(0.5),
+        this->update_[param_id]->mutable_cpu_data());
 
     caffe_div(net_params[param_id]->count(),
         net_params[param_id]->cpu_diff(), this->update_[param_id]->cpu_data(),
@@ -83,7 +90,11 @@ void RMSPropSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
 
     // scale and copy
     caffe_cpu_axpby(net_params[param_id]->count(), local_rate,
-        this->update_[param_id]->cpu_data(), Dtype(0),
+        this->update_[param_id]->cpu_data(), momentum,
+        this->temp_[param_id]->mutable_cpu_data());
+
+    caffe_copy(net_params[param_id]->count(),
+        this->temp_[param_id]->cpu_data(),
         net_params[param_id]->mutable_cpu_diff());
     break;
   case Caffe::GPU:
