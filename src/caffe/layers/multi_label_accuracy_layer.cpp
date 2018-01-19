@@ -80,7 +80,7 @@ void MultiLabelAccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bot
   DLOG(INFO) << "Sensitivity: " << sensitivity;
   DLOG(INFO) << "Specificity: " << specificity;
   DLOG(INFO) << "Harmonic Mean of Sens and Spec: " << harmmean;
-  DLOG(INFO) << "Precission: " << precission;
+  DLOG(INFO) << "Precision: " << precission;
   DLOG(INFO) << "F1 Score: " << f1_score;
 
   top[0]->mutable_cpu_data()[0] = sensitivity;
