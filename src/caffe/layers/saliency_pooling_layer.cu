@@ -42,7 +42,6 @@ __global__ void SalPoolForward(const int nthreads,
     }
     //top_data[index] = aveval / pool_size;
     //printf("Index:%d \t Eval:%f \t Salval:%f\n", index, aveval, salval);
-
     if (salval == 0) {
       top_data[index] = 0;
     } else {
