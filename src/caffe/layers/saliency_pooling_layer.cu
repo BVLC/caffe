@@ -31,15 +31,16 @@ __global__ void SalPoolForward(const int nthreads,
     wend = min(wend, width);
     float aveval = 0;
     float salval = 0;
-    const Dtype* const bottom_slice = image_data    + (n * channels + c) * height * width;
-    const Dtype* const saliency_bottom_slice = saliency_data + (n * channels + c) * height * width;
+    const Dtype* const bottom_slice           = image_data + (n * channels + c) * height * width;
+    const Dtype* const saliency_bottom_slice  = saliency_data + (n * channels + c) * height * width;
     for (int h = hstart; h < hend; ++h) {
       for (int w = wstart; w < wend; ++w) {
+        //aveval += bottom_slice[h * width + w] * saliency_bottom_slice[h * width + w];
         aveval += bottom_slice[h * width + w];
         salval += saliency_bottom_slice[h * width + w];
       }
     }
-
+    //top_data[index] = aveval / pool_size;
     //printf("Index:%d \t Eval:%f \t Salval:%f\n", index, aveval, salval);
 
     if (salval == 0) {
@@ -58,23 +59,13 @@ void SaliencyPoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom
     Dtype* top_data = top[0]->mutable_gpu_data();
     int count = top[0]->count();
 
-    // NOLINT_NEXT_LINE(whitespace/operators)
+    // CUDA Routine
     SalPoolForward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
             count, image_data, saliency_data, bottom[0]->num(), channels_,
             height_, width_, pooled_height_, pooled_width_, kernel_h_,
             kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_, top_data);
     CUDA_POST_KERNEL_CHECK;
   }
-
-
-/*
-###############################################################################
-###############################################################################
-###############################################################################
-###############################################################################
-*/
-
-
 
 template <typename Dtype>
 __global__ void SalPoolBackward(const int nthreads, const Dtype* const top_diff,
@@ -123,15 +114,13 @@ void SaliencyPoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   const int count = bottom[0]->count();
   caffe_gpu_set(count, Dtype(0.), bottom_diff);
 
-  // NOLINT_NEXT_LINE(whitespace/operators)
+  // CUDA Routine
   SalPoolBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
       count, top_diff, top[0]->num(), channels_,
       height_, width_, pooled_height_, pooled_width_, kernel_h_,
       kernel_w_, stride_h_, stride_w_, pad_h_, pad_w_, bottom_diff);
       CUDA_POST_KERNEL_CHECK;
-
   }
-
 
 INSTANTIATE_LAYER_GPU_FUNCS(SaliencyPoolingLayer);
 
