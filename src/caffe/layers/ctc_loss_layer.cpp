@@ -1,4 +1,5 @@
 #include <caffe/layers/ctc_loss_layer.hpp>
+#include <numeric>
 namespace caffe {
 
 template <typename Dtype>
