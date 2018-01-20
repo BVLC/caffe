@@ -2,7 +2,7 @@ layer {
     name: "input"
     type: "Input"
     top: "data"
-    input_param {shape: {dim:1 dim:3 dim:30 dim:128}}
+    input_param {shape: {dim:1 dim:3 dim:32 dim:128}}
 }
 layer {
     name: "indicator"
