@@ -227,11 +227,10 @@ def transform_convolutions(model_path, compiled_model_path):
 
 
 def generate_sample(sample_path, input_model, weights,
-                    quantized_model, detection, iterations=1, error_margin=1, power=0):
-    cmd = '{0} quantize -model {1} -weights {2} -model_quantized {3} -iterations {4} ' \
-          '-trimming_mode dynamic_fixed_point -error_margin {5} -power {6}'.format(sample_path, input_model, weights,
-                                                                                   quantized_model, iterations,
-                                                                                   error_margin, power)
+                    quantized_model, detection, scaling_mode, iterations=1, error_margin=1, power=0):
+    cmd = '{0} quantize -model {1} -weights {2} -model_quantized {3} -iterations {4} -error_margin {5} -power {6}' \
+          ' -scaling {7} -trimming_mode dynamic_fixed_point'.format(sample_path, input_model, weights, quantized_model,
+                                                                    iterations, error_margin, power, scaling_mode)
     if detection:
         cmd += ' --detection=1'
 
@@ -325,6 +324,7 @@ if __name__ == '__main__':
                     ' -l acceptable accuracy loss value, the default value is 0.01 stands for one percent' \
                     ' -d 1(0 means classification while 1 means detection, the default value is 0' \
                     ' -n blob name which means accuracy' \
+                    ' -c scaling mode, the default value is single' \
                     ' -s sampling iterations'
 
     parser = argparse.ArgumentParser(add_help=False)
@@ -352,6 +352,9 @@ if __name__ == '__main__':
     parser.add_argument('-n', '--blob_name', action='store', dest='blob_name', default='',
                         help='top blob name which stands for accuracy')
 
+    parser.add_argument('-c', '--weights_channel', action='store', dest='scaling_mode', default='single',
+                        help='the scaling mode for weights')
+    
     parser.add_argument('-s', '--sampling_iterations', action='store', dest='sampling_iterations', default=10,
                         help='iteration number of sampling, the default value is 10.')
 
@@ -379,6 +382,11 @@ if __name__ == '__main__':
     except:
         print 'Set the sampling iteration to the default value 10'
         user_sampling_iteration = 10
+
+    if params.scaling_mode != 'multipe' or params.scaling_mode != 'single':
+        user_scaling_mode = 'single'
+    else:
+        user_scaling_mode = params.scaling_mode
 
     try:
         toleration = float(params.loss)
@@ -425,8 +433,8 @@ if __name__ == '__main__':
     quantized_weights = user_input_weights.rsplit('.')[0] + '_quantized.caffemodel'
     enable_power_of_2 = 0
     print 'Sampling...'
-    generate_sample(sample, model, user_input_weights,
-                    quantized_prototxt, detection_flag, user_sampling_iteration, 100 * toleration, enable_power_of_2)
+    generate_sample(sample, model, user_input_weights, quantized_prototxt, detection_flag, user_scaling_mode,
+                    user_sampling_iteration, 100 * toleration, enable_power_of_2)
     print 'Sampling done'
     print 'Generating the FP32 accuracy...'
     top_1 = get_the_accuracy(caffe_bin_path, model, user_input_weights, user_input_iterations, detection_flag,
