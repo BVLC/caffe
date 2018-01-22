@@ -70,11 +70,13 @@ void Classifier::GetLabelseqs(const std::vector<int>& label_seq_with_blank,
   int length = label_seq_with_blank.size();
   for(int i = 0; i < length; ++i) {
     int cur = label_seq_with_blank[i];
+    std::cerr << cur << " ";
     if(cur != prev && cur != blank_label_) {
       label_seq.push_back(cur);
     }
     prev = cur;
   }
+  std::cerr << std::endl;
 }
 /* Return the top N predictions. */
 std::vector<int> Classifier::Classify(const cv::Mat& img) {
@@ -101,7 +103,8 @@ std::vector<int> Classifier::Predict(const cv::Mat& img) {
   /* Copy the output layer to a std::vector */
   Blob<float>* output_layer = net_->output_blobs()[0];
 
-  const int time_step = input_geometry_.width;
+  //const int time_step = input_geometry_.width; // OK for pure lstm, not OK for crnn
+  const int time_step = 32;
   const int alphabet_size = output_layer->shape(2);
 
   std::vector<int> pred_label_seq_with_blank(time_step);
@@ -160,7 +163,7 @@ void Classifier::Preprocess(const cv::Mat& img,
   else
     sample_resized.convertTo(sample_float, CV_32FC1);
 
-  sample_float /= 255.0;
+  //sample_float /= 255.0;
 
   cv::split(sample_float, *input_channels);
 
