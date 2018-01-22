@@ -34,7 +34,6 @@ layer {
     top: "indicator"
     continuation_indicator_param {
         time_step:  128
-        batch_size: 512
     }
 }
 

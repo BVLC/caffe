@@ -406,7 +406,7 @@ layer {
     top: "indicator"
     continuation_indicator_param {
         time_step:  32
-        batch_size: 64
+	axis: 1
     }
 }
 layer {
