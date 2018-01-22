@@ -302,6 +302,7 @@ layer {
 layer {
     name: "indicator"
     type: "ContinuationIndicator"
+    bottom: "permuted_data"
     top: "indicator"
     continuation_indicator_param {
         time_step:  32

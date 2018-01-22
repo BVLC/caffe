@@ -2088,7 +2088,7 @@ message CtcLossParameter {
 
 message ContinuationIndicatorParameter {
     optional uint32 time_step = 1 [default = 0];
-    optional uint32 batch_size = 2 [default = 0];
+    optional int32 axis = 2 [default = 0];
 }
 
 message LabelsequenceAccuracyParameter {
