@@ -564,6 +564,14 @@ void Caffe::SetDevice(const int device_id) {
 #endif
 }
 
+#ifdef USE_GREENTEA
+const cl_context& Caffe::GetOpenCLContext(const int id, bool list_id) {
+  viennacl::ocl::context &ctx = viennacl::ocl::get_context(
+         GetDevice(id, list_id)->id());
+  return ctx.handle().get();
+}
+#endif  // USE_GREENTEA
+
 // Should call explicitly for OCL + FFT
 void Caffe::TeardownDevice(const int device_id) {
 #if defined(USE_GREENTEA) &&defined(USE_FFT)
