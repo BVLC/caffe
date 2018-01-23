@@ -223,6 +223,7 @@ void SaliencyPoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom
     /* invoke the GPU to initialize all of the random states */
     init<<<count, 1>>>(time(0), states);
 
+
     /* allocate an array of unsigned ints on the GPU */
     float* gpu_nums;
     float cpu_nums[count];
