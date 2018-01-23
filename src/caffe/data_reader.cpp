@@ -177,6 +177,10 @@ DataReader::DBWrapper::DBWrapper(const LayerParameter& param) {
   cursor.reset(db->NewCursor());
 }
 
+DataReader::DBWrapper::~DBWrapper() {
+}
+
+
 DataReader::DBShuffle::DBShuffle(const LayerParameter& param):DBWrapper(param) {
   CHECK(param.data_param().backend() != DataParameter_DB_LEVELDB)
                                       << "LevelDB doesn't support shuffle";

@@ -387,7 +387,7 @@ endif
 
 # Compiler flags
 ifneq (,$(findstring icpc,$(CXX)))
-	CXX_HARDENING_FLAGS += -fstack-protector
+	CXX_HARDENING_FLAGS += -fstack-protector -wd2196
 	#Enable SGD FUSION if use intel compiler
 	COMMON_FLAGS += -DENABLE_SGD_FUSION
 
@@ -415,7 +415,7 @@ else
 endif
 
 # Generic flags
-CXX_HARDENING_FLAGS += -fPIC -fno-operator-names -Wformat -Wformat-security -Wall
+CXX_HARDENING_FLAGS += -fPIC -fno-operator-names -Wformat -Wformat-security -Wall -Werror
 LINKER_EXEC_HARDENING_FLAGS += -pie
 
 # Release-only flag

@@ -85,6 +85,8 @@ class EngineParser {
 #endif
 
     LOG(FATAL) << "EngineParser: Unknown subengine: " << engineName;
+    // should never be here. it's used to eliminate a build warning #1011: missing return statement at end of non-void function.
+    return CpuEngine::Instance().get_engine(); 
   }
 #endif
 
