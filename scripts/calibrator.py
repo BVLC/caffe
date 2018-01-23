@@ -300,6 +300,20 @@ def tuning_quantized_topology(base_top1_accuracy, prototxt, caffe_bin, model_wei
         current_top1_accuracy = get_the_accuracy(caffe_bin, prototxt, model_weights, iterations, detection, blob_name)
 
 
+def accuracy_blob_name_parser(prototxt):
+    net = read_prototxt(prototxt)
+    if not net:
+        print 'Please check the model prototxt integrity.'
+        sys.exit(-1)
+    res = {}
+    for i in net.layer:
+        if i.type == 'Accuracy':
+            if i.HasField('accuracy_param'):
+                res[i.accuracy_param.top_k] = i.name
+            else:
+                res[1] = i.name
+    return res[sorted(res.keys())[0]] if res else ''
+
 def check_blob_name_existence(prototxt, blob_name):
     net = read_prototxt(prototxt)
     if not net.layer:
@@ -425,6 +439,9 @@ if __name__ == '__main__':
     setup_env()
 
     target_blob_name = params.blob_name
+    if not target_blob_name and not detection_flag:
+        target_blob_name = accuracy_blob_name_parser(model)
+
     if not target_blob_name or not check_blob_name_existence(model, target_blob_name):
         print 'Please specify valid blob name and rerun the script.'
         sys.exit(-1)
