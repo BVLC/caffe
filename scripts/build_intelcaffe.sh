@@ -130,14 +130,17 @@ function build_caffe_icc
 
 function sync_caffe_dir
 {
-  caffe_dir=`pwd`
-  caffe_parent_dir=`dirname $caffe_dir`
-  which ansible >/dev/null
-  if [ $? -eq 0 ]; then
-      ansible ourcluster -m synchronize -a "src=$caffe_dir dest=$caffe_parent_dir"
-  else
-      echo "Warning: no ansible command for synchronizing caffe directory in nodes"
-  fi
+    echo "Synchronize caffe binary between nodes..."
+    caffe_dir=`pwd`
+    caffe_parent_dir=`dirname $caffe_dir`
+    which ansible >/dev/null
+    if [ $? -eq 0 ]; then
+        set -x
+        ansible ourcluster -m synchronize -a "src=$caffe_dir dest=$caffe_parent_dir"
+        set +x
+    else
+        echo "Warning: no ansible command for synchronizing caffe directory in nodes"
+    fi
 }
 
 
@@ -228,6 +231,6 @@ else
 fi
 
 if [ $is_multinode -eq 1 ]; then
-  sync_caffe_dir
+    sync_caffe_dir
 fi
 

@@ -597,17 +597,19 @@ fi
 
 # Names to configfile, binary (executable) files #
 # Add check for host_file's existence to support single node
-if [[ $host_file != "" ]]; then
+if [ "$host_file" != "" ]; then
     nodenames=( `cat $host_file | sort -V | uniq ` )
     if [ ${#nodenames[@]} -eq 0 ]; then
         echo "Error: empty host file! Exit."
         exit 0
     fi
     numnodes=${#nodenames[@]}
-fi
 
-# test connection between nodes via ssh
-test_ssh_connection $host_file
+    # test connection between nodes via ssh
+    if [ $numnodes -gt 1 ]; then
+        test_ssh_connection $host_file
+    fi
+fi
 
 set_numa_node
 

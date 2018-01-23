@@ -24,7 +24,7 @@ function usage
 function check_os
 {
     echo "Check OS and the version..."
-    
+
     centos_ver_file="/etc/centos-release"
     if [ -f $centos_ver_file ]; then
         os="centos"
@@ -69,7 +69,7 @@ function install_python_deps
     pushd $root_dir/python >/dev/null
     for req in $(cat requirements.txt) pydot;
     do
-       pip install --user $req
+        pip install --user $req
     done
     popd >/dev/null
 }
@@ -152,7 +152,7 @@ function install_deps_multinode
     ansible ourcluster -m ping
 
     if [ "$os" == "centos" ]; then
-    ansible all -m shell -a "$package_installer install python-devel boost boost-devel numpy numpy-devel gflags gflags-devel glog glog-devel protobuf protobuf-devel hdf5 hdf5-devel lmdb lmdb-devel leveldb leveldb-devel snappy-devel opencv opencv-devel scipy"
+        ansible all -m shell -a "$package_installer install python-devel boost boost-devel numpy numpy-devel gflags gflags-devel glog glog-devel protobuf protobuf-devel hdf5 hdf5-devel lmdb lmdb-devel leveldb leveldb-devel snappy-devel opencv opencv-devel scipy"
     elif [ "$os" == "ubuntu" ]; then
         ansible all -m shell -a "$package_installer install pkg-config libprotobuf-dev libleveldb-dev libsnappy-dev libhdf5-serial-dev protobuf-compiler"
         ansible all -m shell -a "$package_installer install --no-install-recommends libboost-all-dev"
