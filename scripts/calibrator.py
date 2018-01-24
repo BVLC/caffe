@@ -390,12 +390,19 @@ if __name__ == '__main__':
     except:
         print 'Set the iterations to the default value 1000'
         user_input_iterations = 1000
-
+    else:
+        if user_input_iterations < 1:
+            print 'Invalid iterations!The value should be larger than zero.'
+            sys.exit(-1)
     try:
         user_sampling_iteration = int(params.sampling_iterations)
     except:
         print 'Set the sampling iteration to the default value 10'
         user_sampling_iteration = 10
+    else:
+        if user_sampling_iteration < 1:
+            print 'Invalid sampling iteration!The value should be larger than zero.'
+            sys.exit(-1)
 
     if params.scaling_mode != 'multipe' or params.scaling_mode != 'single':
         user_scaling_mode = 'single'
