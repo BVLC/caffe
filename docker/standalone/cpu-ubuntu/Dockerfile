@@ -10,6 +10,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         git \
         wget \
         ssh \
+        openssh-server \
+        numactl \
+        vim \
+        net-tools \
+        iputils-ping \
+        screen \
+        libmlx4-1 libmlx5-1 ibutils  rdmacm-utils libibverbs1 ibverbs-utils perftest infiniband-diags \
+        openmpi-bin libopenmpi-dev \
+        ufw \
+        iptables \
         libboost-all-dev \
         libgflags-dev \
         libgoogle-glog-dev \
@@ -38,7 +48,7 @@ RUN pip install --upgrade pip
 RUN git clone -b ${CLONE_TAG} --depth 1 https://github.com/intel/caffe.git . && \
     for req in $(cat python/requirements.txt) pydot; do pip install $req; done && \
     mkdir build && cd build && \
-    cmake -DCPU_ONLY=1 -DCMAKE_BUILD_TYPE=Release .. && \
+    cmake -DCPU_ONLY=1 -DUSE_MLSL=1 -DCMAKE_BUILD_TYPE=Release .. && \
     make all -j"$(nproc)"
 
 ENV PYCAFFE_ROOT $CAFFE_ROOT/python
@@ -46,4 +56,4 @@ ENV PYTHONPATH $PYCAFFE_ROOT:$PYTHONPATH
 ENV PATH $CAFFE_ROOT/build/tools:$PYCAFFE_ROOT:$PATH
 RUN echo "$CAFFE_ROOT/build/lib" >> /etc/ld.so.conf.d/caffe.conf && ldconfig
 
-WORKDIR /workspace
+WORKDIR /opt/caffe
