@@ -715,8 +715,8 @@ void Net<Dtype>::CompilationRuleConvReluFusion(const NetParameter& param,
       // check if Dialation is larger than 1. if yes, don't fuse the following Relu layer with this conv layer
       // as MKLDNN doesn't support dilation convolution yet.
       bool dilation = false;
-      for (int i = 0; i < layer_param->convolution_param().dilation_size(); ++i) {
-        if (layer_param->convolution_param().dilation(i) > 1) {
+      for (int j = 0; j < layer_param->convolution_param().dilation_size(); ++j) {
+        if (layer_param->convolution_param().dilation(j) > 1) {
           dilation = true;
           break;
         }
