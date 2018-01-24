@@ -1029,6 +1029,7 @@ void Net<Dtype>::CompilationRuleSparse(const NetParameter& param,
             }
           }
           trigger_sparse_layers.push_back(layer_param);
+
           sparse_layer_name_mapping[confirmed_sparse_layer->name()] =
               trigger_sparse_layers;
         } else {
@@ -1043,7 +1044,8 @@ void Net<Dtype>::CompilationRuleSparse(const NetParameter& param,
 
   std::map<string, std::vector<LayerParameter*>>::iterator sparse_it =
       sparse_layer_name_mapping.begin();
-  while (sparse_it != sparse_layer_name_mapping.end()) {
+  while (sparse_it != sparse_layer_name_mapping.end() && sparse_it->second.size() > 1) {
+
     if (sparse_it->second[0]->convolution_param().stride(0) !=
         sparse_it->second[1]->convolution_param().stride(0)) {
           continue;
