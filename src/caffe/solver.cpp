@@ -358,10 +358,10 @@ void Solver<Dtype>::Step(int iters) {
     net_->ResetTimers();
 
 #ifdef USE_MLSL
-    if (mn::get_node_id() == 0)
+    if (mn::is_root() == true)
 #endif
-        LOG(INFO) << "iter " << iter_ << ", forward_backward_update_time: "
-                << iter_time << " ms";
+    LOG(INFO) << "iter " << iter_ << ", forward_backward_update_time: "
+            << iter_time << " ms";
 #endif
 
     // Increment the internal iter_ counter -- its value should always indicate
@@ -527,9 +527,8 @@ void Solver<Dtype>::TestClassification(const int test_net_id) {
 #ifdef USE_MLSL
     mn::allreduce(&loss, 1);
     loss /= (param_.test_iter(test_net_id) * mn::get_group_size());
-    if (mn::get_node_id() == 0) {
+    if (mn::is_root() == true)
       LOG(INFO) << "Test loss: " << loss;
-    }
 #else /* !USE_MLSL */
     loss /= param_.test_iter(test_net_id);
     LOG(INFO) << "Test loss: " << loss;
@@ -537,7 +536,7 @@ void Solver<Dtype>::TestClassification(const int test_net_id) {
   }
 #ifdef USE_MLSL
   mn::allreduce(test_score.data(), test_score.size());
-  if (mn::get_node_id() == 0)
+  if (mn::is_root() == true)
 #endif /* USE_MLSL */
   for (int i = 0; i < test_score.size(); ++i) {
     const int output_blob_index =
@@ -634,14 +633,13 @@ void Solver<Dtype>::TestDetection(const int test_net_id) {
   }
   if (param_.test_compute_loss()) {
 #ifdef USE_MLSL
-      mn::allreduce(&loss, 1);
-      loss /= (param_.test_iter(test_net_id) * mn::get_group_size());
-      if (mn::get_node_id() == 0) {
-          LOG(INFO) << "Test loss: " << loss;
-      }
-#else /* !USE_MLSL */
-      loss /= param_.test_iter(test_net_id);
+    mn::allreduce(&loss, 1);
+    loss /= (param_.test_iter(test_net_id) * mn::get_group_size());
+    if (mn::is_root() == true)
       LOG(INFO) << "Test loss: " << loss;
+#else /* !USE_MLSL */
+    loss /= param_.test_iter(test_net_id);
+    LOG(INFO) << "Test loss: " << loss;
 #endif /* USE_MLSL */
   }
 
@@ -690,13 +688,16 @@ void Solver<Dtype>::TestDetection(const int test_net_id) {
     mAP = allnodes_mAP;
     Dtype allnodes_num_pos = static_cast<Dtype>(num_pos.size());
     mn::allreduce(&allnodes_num_pos, 1);
-    if (mn::get_node_id() == 0)
-        mAP /= allnodes_num_pos;
+    if (mn::is_root() == true)
+      mAP /= allnodes_num_pos;
 #else /* USE_MLSL */
     mAP /= num_pos.size();
 #endif
     const int output_blob_index = test_net->output_blob_indices()[i];
     const string& output_name = test_net->blob_names()[output_blob_index];
+#ifdef USE_MLSL
+    if (mn::is_root() == true)
+#endif
     LOG(INFO) << "    Test net output #" << i << ": " << output_name << " = "
               << mAP;
   }
