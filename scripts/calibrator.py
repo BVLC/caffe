@@ -201,7 +201,6 @@ def transform_convolutions(model_path, compiled_model_path):
                                               if (l, index) != convolution_layers[-1]
                                               else len(net.layer), [i[0] for i in fusion_layer])
         inputwith_relu = get_all_top_layers(l, net, index, skip_layers, interesting_layers)
-
         for si in range(0, len(new_net.layer[index].quantization_param.scale_out)):
             if len(outputwith_relu) > 0 or l.name in u8_layers or conv_relu_flag:  # u8
                 new_net.layer[index].quantization_param.scale_out[si] = round(u8_max / new_net.layer[index].
@@ -404,7 +403,7 @@ if __name__ == '__main__':
             print 'Invalid sampling iteration!The value should be larger than zero.'
             sys.exit(-1)
 
-    if params.scaling_mode != 'multipe' or params.scaling_mode != 'single':
+    if params.scaling_mode != 'multipe' and params.scaling_mode != 'single':
         user_scaling_mode = 'single'
     else:
         user_scaling_mode = params.scaling_mode

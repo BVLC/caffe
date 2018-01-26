@@ -204,11 +204,14 @@ void Quantization::Quantize2DynamicFixedPoint() {
       else
         LOG(INFO) << "Scale param=" << scale_params_[k][0];
     } else {
-      for (int j = 0; j < il_params_[k].size(); j++) {
-        if (this->power)
+      if (this->power){
+        for (int j = 0; j < il_params_[k].size(); j++) {
           LOG(INFO) << "Integer length params[" << j << "]=" << il_params_[k][j];
-        else
+        }
+      } else{
+        for (int j = 0; j < scale_params_[k].size(); j++) {
           LOG(INFO) << "Scale params[" << j << "]=" << scale_params_[k][j];
+        }
       }
     }
   }
