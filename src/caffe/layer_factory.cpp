@@ -118,10 +118,10 @@ REGISTER_LAYER_CREATOR(Pooling, GetPoolingLayer);
 
 template <typename Dtype>
 shared_ptr<Layer<Dtype> > GetSaliencyPoolingLayer(const LayerParameter& param) {
-
+/*
   SaliencyPoolingParameter_Engine engine = param.saliency_pooling_param().engine();
   engine = SaliencyPoolingParameter_Engine_CAFFE;
-/*  if (engine == SaliencyPoolingParameter_Engine_DEFAULT) {
+  if (engine == SaliencyPoolingParameter_Engine_DEFAULT) {
     engine = SaliencyPoolingParameter_Engine_CAFFE;
 #ifdef USE_CUDNN
     engine = SaliencyPoolingParameter_Engine_CUDNN;
