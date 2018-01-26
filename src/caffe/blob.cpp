@@ -558,4 +558,3 @@ template class Blob<int>;
 template class Blob<unsigned int>;
 
 }  // namespace caffe
-

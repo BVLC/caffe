@@ -120,7 +120,6 @@ __global__ void StoPoolForwardTrain(const int nthreads,
   }
 }
 
-
 template <typename Dtype>
 __global__ void StoPoolForwardTest(const int nthreads,
     const Dtype* const bottom_data,
@@ -152,7 +151,6 @@ __global__ void StoPoolForwardTest(const int nthreads,
     top_data[index] = (cumsum > 0.) ? cumvalues / cumsum : 0.;
   }
 }
-
 
 template <typename Dtype>
 void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
@@ -211,7 +209,6 @@ void PoolingLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   }
   CUDA_POST_KERNEL_CHECK;
 }
-
 
 template <typename Dtype>
 __global__ void MaxPoolBackward(const int nthreads, const Dtype* const top_diff,
@@ -295,7 +292,6 @@ __global__ void AvePoolBackward(const int nthreads, const Dtype* const top_diff,
   }
 }
 
-
 template <typename Dtype>
 __global__ void StoPoolBackward(const int nthreads,
     const Dtype* const rand_idx, const Dtype* const top_diff,
@@ -328,7 +324,6 @@ __global__ void StoPoolBackward(const int nthreads,
     bottom_diff[index] = gradient;
   }
 }
-
 
 template <typename Dtype>
 void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
@@ -379,8 +374,6 @@ void PoolingLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   CUDA_POST_KERNEL_CHECK;
 }
 
-
 INSTANTIATE_LAYER_GPU_FUNCS(PoolingLayer);
-
 
 }  // namespace caffe
