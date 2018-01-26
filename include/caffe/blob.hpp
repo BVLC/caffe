@@ -254,6 +254,11 @@ class Blob {
   }
 
   const Dtype* cpu_data() const;
+#ifdef CO_SIM
+  //These are APIs used for access data/diff without changing any CAFFE internal status.
+  Dtype* cpu_data_cosim() const;
+  Dtype* cpu_diff_cosim() const;
+#endif
   void set_cpu_data(Dtype* data);
   void set_cpu_diff(Dtype* diff);
 

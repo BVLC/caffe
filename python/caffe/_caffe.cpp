@@ -321,6 +321,7 @@ struct NdarrayCallPolicies : public bp::default_call_policies {
   }
 };
 
+
 bp::object Blob_Reshape(bp::tuple args, bp::dict kwargs) {
   if (bp::len(kwargs) > 0) {
     throw std::runtime_error("Blob.reshape takes no kwargs");
@@ -462,7 +463,14 @@ BOOST_PYTHON_MODULE(_caffe) {
     .add_property("data",     bp::make_function(&Blob<Dtype>::mutable_cpu_data,
           NdarrayCallPolicies()))
     .add_property("diff",     bp::make_function(&Blob<Dtype>::mutable_cpu_diff,
-          NdarrayCallPolicies()));
+          NdarrayCallPolicies()))
+#ifdef CO_SIM
+    .add_property("data_r",     bp::make_function(&Blob<Dtype>::cpu_data_cosim,
+          NdarrayCallPolicies()))
+    .add_property("diff_r",     bp::make_function(&Blob<Dtype>::cpu_diff_cosim,
+          NdarrayCallPolicies()))
+#endif
+    ;
   BP_REGISTER_SHARED_PTR_TO_PYTHON(Blob<Dtype>);
 
   bp::class_<Layer<Dtype>, shared_ptr<PythonLayer<Dtype> >,

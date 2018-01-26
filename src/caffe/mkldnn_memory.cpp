@@ -308,7 +308,46 @@ void MKLDNNMemoryDescriptor<Dtype, is_diff>::convert_to_prv(void* cpu_ptr)
     this->_reorder_usr2prv.submit();
     PERFORMANCE_MEASUREMENT_END_STATIC("mkldnn_conversion");
 }
+#ifdef CO_SIM
+template <typename Dtype, bool is_diff>
+void MKLDNNMemoryDescriptor<Dtype, is_diff>::convert_from_prv_cosim(void* cpu_ptr_cosim)
+{
+    if(this->_reorder_prv2usr_pd == NULL)
+        return;
+    create_reorder_from_prv_cosim(cpu_ptr_cosim);
+    this->_reorder_prv2usr_cosim.submit();
 
+}
+
+template <typename Dtype, bool is_diff>
+void MKLDNNMemoryDescriptor<Dtype, is_diff>::create_reorder_from_prv_cosim(void* cpu_ptr_cosim)
+{
+    CHECK(cpu_ptr_cosim);
+    CHECK(this->_usr_memory_pd);
+    CHECK(this->_prv_memory_pd);
+    CHECK(this->_reorder_prv2usr_pd);
+
+    this->_usr_memory_cosim = this->_usr_memory;
+    this->_reorder_prv2usr_cosim.aprimitive = this->_reorder_prv2usr.aprimitive;
+
+    // Used to save data copy from prv.
+    this->_prv_memory_cosim.reset(new memory(*this->_prv_memory_pd));
+
+    // Copy prv data to _prv_memory_cosim.
+    memcpy(this->_prv_memory_cosim->get_data_handle(), this->get_prv_ptr(), this->prv_size());
+
+    // Wrap _prv_memory_cosim.
+    this->at_prv_cosim.reset(new primitive::at(*this->_prv_memory_cosim));
+
+    if(this->_usr_memory == NULL || this->_cpu_ptr != cpu_ptr_cosim)
+        this->_usr_memory_cosim.reset(new memory(*this->_usr_memory_pd, cpu_ptr_cosim));
+    if(this->_reorder_prv2usr.aprimitive == NULL || this->_cpu_ptr != cpu_ptr_cosim){
+
+        // Create primitive for reorder.
+        this->_reorder_prv2usr_cosim.aprimitive.reset(new reorder(*this->_reorder_prv2usr_pd, *this->at_prv_cosim, *this->_usr_memory_cosim));
+    }
+}
+#endif
 template <typename Dtype, bool is_diff>
 void MKLDNNMemoryDescriptor<Dtype, is_diff>::create_reorder_from_prv(void* cpu_ptr)
 {

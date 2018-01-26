@@ -161,6 +161,19 @@ const Dtype* Blob<Dtype>::cpu_diff() const {
   return (const Dtype*)diff_->cpu_data();
 }
 
+#ifdef CO_SIM
+template <typename Dtype>
+Dtype* Blob<Dtype>::cpu_data_cosim() const {
+  CHECK(data_);
+  return (Dtype*)data_->cpu_data_cosim();
+}
+template <typename Dtype>
+Dtype* Blob<Dtype>::cpu_diff_cosim() const {
+  CHECK(diff_);
+   return (Dtype*)diff_->cpu_data_cosim();
+}
+#endif
+
 template <typename Dtype>
 const Dtype* Blob<Dtype>::gpu_diff() const {
   CHECK(diff_);

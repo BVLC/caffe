@@ -68,6 +68,12 @@ void MKLMemoryDescriptorBase<Dtype>::create_conversions() {
   }
 }
 
+#ifdef CO_SIM
+template <typename Dtype>
+void MKLMemoryDescriptorBase<Dtype>::convert_from_prv_cosim(void* cpu_ptr){}
+template <typename Dtype>
+void MKLMemoryDescriptorBase<Dtype>::create_reorder_from_prv_cosim(void* cpu_ptr){}
+#endif
 template <typename Dtype>
 void MKLMemoryDescriptorBase<Dtype>::remove_conversions() {
   int status;

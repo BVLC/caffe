@@ -212,6 +212,14 @@ protected:
     shared_ptr<memory> _usr_memory;
     void* _cpu_ptr;
 
+#ifdef CO_SIM
+    shared_ptr<memory> _usr_memory_cosim;
+    MKLDNNPrimitive<Dtype> _reorder_prv2usr_cosim;
+    //Used to save the copy of the private memory
+    shared_ptr<memory> _prv_memory_cosim;
+    //Wrapper for readonly_prv_memory
+    shared_ptr<primitive::at>  at_prv_cosim;
+#endif
     MKLDNNLayer<Dtype>* _mkldnn_layer;
     Blob<Dtype>* _blob;
     std::vector<float> _scale = std::vector<float>(1,1.);
@@ -243,6 +251,11 @@ public:
     virtual void convert_to_prv(void* cpu_ptr);
     virtual void convert_from_extprv(shared_ptr<primitive> aprimitive);
     virtual bool on_to_cpu();
+#ifdef CO_SIM
+
+    virtual void create_reorder_from_prv_cosim(void* cpu_ptr);
+    virtual void convert_from_prv_cosim(void* cpu_ptr);
+#endif
 
     virtual void create_reorder_from_prv(void* cpu_ptr);
     virtual void create_reorder_to_prv(void* cpu_ptr);
