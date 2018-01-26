@@ -27,6 +27,7 @@ class SaliencyPoolingLayer : public Layer<Dtype> {
   virtual inline const char* type() const { return "SaliencyPooling"; }
   virtual inline int ExactNumBottomBlobs() const { return 2; }
   virtual inline int MinTopBlobs() const { return 1; }
+  virtual inline int MaxTopBlobs() const { return 2; }
 
  protected:
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
@@ -40,12 +41,10 @@ class SaliencyPoolingLayer : public Layer<Dtype> {
 
   int kernel_h_, kernel_w_;
   int stride_h_, stride_w_;
-  int pad_h_, pad_w_;
   int channels_;
   int height_, width_;
   int pooled_height_, pooled_width_;
-  bool global_pooling_;
-  Blob<Dtype> rand_idx_;
+  Blob<float> randoms_;
   Blob<int> max_idx_;
 };
 
