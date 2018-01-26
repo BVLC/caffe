@@ -66,17 +66,20 @@ void SoftmaxLayer<Dtype>::Forward_cpu_fast_case(
     const vector<Blob<Dtype>*>& top) {
   int channels = bottom[0]->shape(softmax_axis_);
   int dim = bottom[0]->count() / outer_num_;
-  // assert(dim == channels);
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
+
+  const Dtype* __restrict__ bottom_ = bottom[0]->cpu_data();
+  Dtype* __restrict__ top_ = top[0]->mutable_cpu_data();
+
+  #ifdef _OPENMP
+  #pragma omp parallel for
+  #endif
   for (int i = 0; i < outer_num_; ++i) {
-    const Dtype* bottom_data = bottom[0]->cpu_data() + i*dim;
-    Dtype *top_data = top[0]->mutable_cpu_data() + channels*i;
+    const Dtype* bottom_data = bottom_ + i*dim;
+    Dtype *top_data = top_ + channels*i;
 
     Dtype scale_data = bottom_data[0];
     for (int j = 1; j < channels; ++j) {
-        scale_data = std::max(scale_data, bottom_data[j]);
+      scale_data = std::max(scale_data, bottom_data[j]);
     }
 
     // subtraction
@@ -95,7 +98,10 @@ void SoftmaxLayer<Dtype>::Forward_cpu_fast_case(
     }
 
     // division
-    caffe_scal(dim, Dtype(1)/scale_data, top_data);
+    scale_data = Dtype(1.0) / scale_data;
+    for (int j = 0; j < channels; j++) {
+      top_data[j] *= scale_data;
+    }
   }
 }
 
