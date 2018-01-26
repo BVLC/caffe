@@ -240,8 +240,13 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
     if (this->need_quantize_) {
       if(this->scale_in_.size() > 0) this->is_float_ = true;
       int mask = 0;
+      int count = 1; //single channel
+      if(this->fl_params_.size() > 1 || this->scale_params_.size() > 1){
+          int oc_dim_id = 1;
+          mask = 1 << oc_dim_id;
+          count = oc;  //multi channel
+      }
       std::vector<float> scales;
-      int count = 1; // 1 for single channel, oc for multi channel
       for(int i=0; i<count; i++){
           float scale;
           if(this->is_float_){
@@ -404,15 +409,21 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
     fwd_top_data_memory = fwd_top_data->create_output_memory();
 
     if (this->need_quantize_){
-      int count = 1; // 1 for single channel, oc for multi channel
+      int count = 1; //single channel
       if(this->is_float_ || bottom_is_float){
         std::vector<float> scale_weight;
+        if(this->scale_params_.size() > 1){
+            count = oc;  //multi channel
+        }
         for(int i=0; i<count; i++){
           scale_weight.push_back(this->scale_params_[i]);
         }
         fwd_weights_data.reset(new MKLDNNData<Dtype>(usr_weights_data_memory_pd, prv_fwd_weights_data_memory_pd, this->blobs_[0].get(), this, true, scale_weight));
       } else{
         std::vector<int> fl_weight;
+        if(this->fl_params_.size() > 1){
+            count = oc;  //multi channel
+        }
         for(int i=0; i<count; i++){
           fl_weight.push_back(this->fl_params_[i]);
         }
@@ -429,15 +440,21 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
     if (this->bias_term_) {
         shared_ptr<MemPD> prv_fwd_bias_data_memory_pd(new MemPD(convFwd_pd->bias_primitive_desc()));
         if (this->need_quantize_){
-          int count = 1; // 1 for single channel, oc for multi channel
+          int count = 1;  //single channel
           if(this->is_float_ || bottom_is_float){
             std::vector<float> scale_bias;
+            if(this->scale_params_.size() > 1){
+                count = oc;  //multi channel
+            }
             for(int i=0; i<count; i++){
               scale_bias.push_back(this->scale_in_[0] * this->scale_params_[i]);
             }
             fwd_bias_data.reset(new MKLDNNData<Dtype>(usr_bias_data_memory_pd, prv_fwd_bias_data_memory_pd, this->blobs_[1].get(), this, true, scale_bias));
           } else{
             std::vector<int> fl_bias;
+            if(this->fl_params_.size() > 1){
+                count = oc;  //multi channel
+            }
             for(int i=0; i<count; i++){
               fl_bias.push_back(this->fl_layer_in_[0] + this->fl_params_[i]);
             }

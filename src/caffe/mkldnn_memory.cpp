@@ -108,6 +108,13 @@ void MKLDNNMemoryDescriptorBase<Dtype>::create_reorder_descriptors(std::vector<f
 
     primitive_attr attri;
     int mask = 0;
+    if(scale.size() > 1 || scale_ext.size() > 1){
+#ifdef DEBUG
+        LOG(INFO)<<"multi-channel";
+#endif
+        int oc_dim_id = 0;
+        mask = 1 << oc_dim_id;
+    }
 
     if ( *_usr_memory_pd != *_prv_memory_pd) {
         std::vector<float> scales_u2p;
@@ -156,6 +163,13 @@ void MKLDNNMemoryDescriptorBase<Dtype>::create_reorder_descriptors(std::vector<i
 
     primitive_attr attri;
     int mask = 0;
+    if(fl.size() > 1 || fl_ext.size() > 1){
+#ifdef DEBUG
+        LOG(INFO)<<"multi-channel";
+#endif
+        int oc_dim_id = 0;
+        mask = 1 << oc_dim_id;
+    }
 
     if ( *_usr_memory_pd != *_prv_memory_pd) {
         std::vector<float> scales_u2p;
