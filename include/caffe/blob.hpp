@@ -91,7 +91,18 @@ class BlobBase {
   }
   virtual uint_tp byte_count() const = 0;
 
-  shared_ptr<QuantizerBase> net_quant();
+  inline shared_ptr<QuantizerBase> quant() {
+    CHECK(quant_.get());
+    return quant_;
+  }
+
+  inline void set_quant(shared_ptr<QuantizerBase> quant) {
+    CHECK(quant.get());
+    quant_ = quant;
+  }
+
+  virtual void scale_data(const void* scale_factor) = 0;
+  virtual void scale_diff(const void* scale_factor) = 0;
 
   /**
    * @brief Compute the volume of a slice; i.e., the product of dimensions
@@ -261,7 +272,7 @@ class BlobBase {
   int_tp count_;
   int_tp capacity_;
   Device *device_;
-  shared_ptr<QuantizerBase> net_quant_;
+  shared_ptr<QuantizerBase> quant_;
 
   DISABLE_COPY_AND_ASSIGN(BlobBase);
 };
@@ -277,11 +288,11 @@ template<typename Dtype>
 class Blob : public BlobBase {
  public:
   Blob() : BlobBase() { }
-  virtual ~Blob() {
+  virtual ~Blob() { }
 
+  explicit Blob(Device *dev) : BlobBase(dev) {
+    Init();
   }
-
-  explicit Blob(Device *dev) : BlobBase(dev) { }
   explicit Blob(const int_tp num, const int_tp channels, const int_tp height,
                 const int_tp width, Device *device_context =
                     Caffe::GetDefaultDevice());
@@ -292,6 +303,8 @@ class Blob : public BlobBase {
                 const vector<int_tp>& shape_stride,
                 Device *device_context =
                     Caffe::GetDefaultDevice());
+
+  void Init();
 
   /**
    * @brief Change the dimensions of the blob, allocating new memory if
@@ -392,8 +405,10 @@ class Blob : public BlobBase {
   virtual void set_gpu_diff(vptr<const void> in);
 
   /// @brief Scale the blob data by a constant factor.
+  virtual void scale_data(const void* scale_factor);
   void scale_data(Dtype scale_factor);
   /// @brief Scale the blob diff by a constant factor.
+  virtual void scale_diff(const void* scale_factor);
   void scale_diff(Dtype scale_factor);
 
   virtual uint_tp byte_count() const;

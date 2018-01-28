@@ -9,6 +9,7 @@
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/type_utils.hpp"
 #include "caffe/quantizer.hpp"
+#include "caffe/quantizer_creator.hpp"
 
 namespace caffe {
 
@@ -245,6 +246,20 @@ inline void gpu_scal(Device* dev, const uint_tp n, const int64_t alpha,
 #endif  // USE_INT_QUANT_64
 }
 
+template<typename Dtype>
+void Blob<Dtype>::Init() {
+  this->quant_ = make_shared<Quantizer<Dtype, Dtype> >(this->device_);
+}
+
+template<> void Blob<uint8_t>::Init() {
+}
+template<> void Blob<uint16_t>::Init() {
+}
+template<> void Blob<uint32_t>::Init() {
+}
+template<> void Blob<uint64_t>::Init() {
+}
+
 
 template<typename Dtype>
 bool Blob<Dtype>::Reshape(const int_tp num, const int_tp channels,
@@ -354,6 +369,7 @@ Blob<Dtype>::Blob(const int_tp num, const int_tp channels,
     // capacity_ must be initialized before calling Reshape
    capacity_ = 0;
    device_ = dev;
+   Init();
    Reshape(num, channels, height, width);
 }
 
@@ -362,6 +378,7 @@ Blob<Dtype>::Blob(const vector<int_tp>& shape, Device *dev) {
     // capacity_ must be initialized before calling Reshape
   capacity_ = 0;
   device_ = dev;
+  Init();
   Reshape(shape);
 }
 
@@ -468,10 +485,6 @@ void BlobBase::ShareDataBase(const BlobBase* other) {
 void BlobBase::ShareDiffBase(const BlobBase* other) {
   CHECK_EQ(byte_count(), other->byte_count());
   diff_ = other->diff();
-}
-
-shared_ptr<QuantizerBase> BlobBase::net_quant() {
-  return net_quant_;
 }
 
 // The "update" method is used for parameter blobs in a Net, which are stored
@@ -748,6 +761,13 @@ template<> void Blob<uint64_t>::scale_data(uint64_t scale_factor) {
 }
 
 template<typename Dtype>
+void Blob<Dtype>::scale_data(const void* scale_factor) {
+  Dtype converted_scale_factor;
+  this->quant_->Forward_cpu(1, scale_factor, &converted_scale_factor);
+  this->scale_data(converted_scale_factor);
+}
+
+template<typename Dtype>
 void Blob<Dtype>::scale_diff(Dtype scale_factor) {
   Dtype* diff;
   vptr<Dtype> gpu_vptr_diff;
@@ -788,6 +808,13 @@ template<> void Blob<uint32_t>::scale_diff(uint32_t scale_factor) {
 }
 template<> void Blob<uint64_t>::scale_diff(uint64_t scale_factor) {
   NOT_IMPLEMENTED;
+}
+
+template<typename Dtype>
+void Blob<Dtype>::scale_diff(const void* scale_factor) {
+  Dtype converted_scale_factor;
+  this->quant_->Forward_cpu(1, scale_factor, &converted_scale_factor);
+  this->scale_diff(converted_scale_factor);
 }
 
 bool BlobBase::ShapeEquals(const BlobProto& other) {
@@ -869,31 +896,85 @@ void Blob<Dtype>::FromProto(const BlobProto& proto, bool reshape) {
   } else {
     CHECK(ShapeEquals(proto)) << "shape mismatch (reshape not set)";
   }
+  DataType proto_data_type = proto.has_data_type() ? proto.data_type()
+      : (proto.data_size() > 0 || proto.diff_size() > 0 ? FLOAT : DOUBLE);
+
+  QuantizerParameter param;
+  param.CopyFrom(this->quant_->quant_param());
+  param.set_input_data_type(proto_data_type);
+  param.set_output_data_type(this->data_type());
+  shared_ptr<QuantizerBase> quant = CreateQuantizer(param);
+
   // Copy data
-  Dtype* data_vec = mutable_cpu_data();
   if (proto.double_data_size() > 0) {
+    Dtype* data_vec = mutable_cpu_data();
     CHECK_EQ(count_, proto.double_data_size());
-    for (int_tp i = 0; i < count_; ++i) {
-      data_vec[i] = proto.double_data(i);
+    if (quant->needs_quantization()) {
+      for (int_tp i = 0; i < count_; ++i) {
+        double proto_data = proto.double_data(i);
+        quant->Forward_cpu(1, static_cast<const void*>(&proto_data),
+                              static_cast<void*>(&(data_vec[i])));
+      }
+    } else {
+      for (int_tp i = 0; i < count_; ++i) {
+        data_vec[i] = proto.double_data(i);
+      }
     }
-  } else {
+  } else if (proto.data_size() > 0) {
+    Dtype* data_vec = mutable_cpu_data();
     CHECK_EQ(count_, proto.data_size());
-    for (int_tp i = 0; i < count_; ++i) {
-      data_vec[i] = proto.data(i);
+    if (quant->needs_quantization()) {
+      for (int_tp i = 0; i < count_; ++i) {
+        float proto_data = proto.data(i);
+        quant->Forward_cpu(1, static_cast<const void*>(&proto_data),
+                              static_cast<void*>(&(data_vec[i])));
+      }
+    } else {
+      for (int_tp i = 0; i < count_; ++i) {
+        data_vec[i] = proto.data(i);
+      }
     }
+  } else if (proto.has_packed_data()) {
+    Dtype* data_vec = mutable_cpu_data();
+    const void* proto_data = proto.packed_data().c_str();
+    quant->Forward_cpu(count_, static_cast<const void*>(proto_data),
+                               static_cast<void*>(data_vec));
   }
+
+  // Copy diff
   if (proto.double_diff_size() > 0) {
-    CHECK_EQ(count_, proto.double_diff_size());
     Dtype* diff_vec = mutable_cpu_diff();
-    for (int_tp i = 0; i < count_; ++i) {
-      diff_vec[i] = proto.double_diff(i);
+    CHECK_EQ(count_, proto.double_diff_size());
+    if (quant->needs_quantization()) {
+      for (int_tp i = 0; i < count_; ++i) {
+        double proto_diff = proto.double_diff(i);
+        quant->Forward_cpu(1, static_cast<const void*>(&proto_diff),
+                              static_cast<void*>(&(diff_vec[i])));
+      }
+    } else {
+      for (int_tp i = 0; i < count_; ++i) {
+        diff_vec[i] = proto.double_diff(i);
+      }
     }
   } else if (proto.diff_size() > 0) {
-    CHECK_EQ(count_, proto.diff_size());
     Dtype* diff_vec = mutable_cpu_diff();
-    for (int_tp i = 0; i < count_; ++i) {
-      diff_vec[i] = proto.diff(i);
+    CHECK_EQ(count_, proto.diff_size());
+    if (quant->needs_quantization()) {
+      for (int_tp i = 0; i < count_; ++i) {
+        float proto_diff = proto.diff(i);
+        quant->Forward_cpu(1, static_cast<const void*>(&proto_diff),
+                              static_cast<void*>(&(diff_vec[i])));
+      }
+    } else {
+      for (int_tp i = 0; i < count_; ++i) {
+        diff_vec[i] = proto.diff(i);
+      }
     }
+  } else if (proto.has_packed_diff()) {
+    Dtype* diff_vec = mutable_cpu_diff();
+    const void* proto_diff = proto.packed_diff().c_str();
+    quant->Forward_cpu(count_, static_cast<const void*>(proto_diff),
+                               static_cast<void*>(diff_vec));
   }
 }
 
@@ -907,6 +988,10 @@ void Blob<float>::ToProto(BlobProto* proto, bool write_diff) const {
   proto->set_data_type(this->data_type());
   proto->clear_data();
   proto->clear_diff();
+  proto->clear_double_data();
+  proto->clear_double_diff();
+  proto->clear_packed_data();
+  proto->clear_packed_diff();
   const float* data_vec = cpu_data();
   for (int_tp i = 0; i < count_; ++i) {
     proto->add_data(data_vec[i]);
@@ -927,8 +1012,12 @@ void Blob<double>::ToProto(BlobProto* proto, bool write_diff) const {
     proto->mutable_shape_stride()->add_dim(shape_stride_[i]);
   }
   proto->set_data_type(this->data_type());
+  proto->clear_data();
+  proto->clear_diff();
   proto->clear_double_data();
   proto->clear_double_diff();
+  proto->clear_packed_data();
+  proto->clear_packed_diff();
   const double* data_vec = cpu_data();
   for (int_tp i = 0; i < count_; ++i) {
     proto->add_double_data(data_vec[i]);
@@ -949,8 +1038,12 @@ void Blob<Dtype>::ToProto(BlobProto* proto, bool write_diff) const {
     proto->mutable_shape_stride()->add_dim(shape_stride_[i]);
   }
   proto->set_data_type(this->data_type());
+  proto->clear_data();
+  proto->clear_diff();
   proto->clear_double_data();
   proto->clear_double_diff();
+  proto->clear_packed_data();
+  proto->clear_packed_diff();
   const char* data_vec = reinterpret_cast<const char*>(cpu_data());
   proto->set_packed_data(data_vec, byte_count());
   if (write_diff) {
@@ -967,62 +1060,62 @@ DataType Blob<Dtype>::data_type() const {
 template<typename Dtype>
 void Blob<Dtype>::asum_data(void* out) const {
   Dtype val = asum_data();
-  this->net_quant_->Backward_cpu(1, static_cast<void*>(&val), out);
+  this->quant_->Backward_cpu(1, static_cast<void*>(&val), out);
 }
 template<typename Dtype>
 void Blob<Dtype>::asum_diff(void* out) const {
   Dtype val = asum_diff();
-  this->net_quant_->Backward_cpu(1, static_cast<void*>(&val), out);
+  this->quant_->Backward_cpu(1, static_cast<void*>(&val), out);
 }
 template<typename Dtype>
 void Blob<Dtype>::sumsq_data(void* out) const {
   Dtype val = sumsq_data();
-  this->net_quant_->Backward_cpu(1, static_cast<void*>(&val), out);
+  this->quant_->Backward_cpu(1, static_cast<void*>(&val), out);
 }
 template<typename Dtype>
 void Blob<Dtype>::sumsq_diff(void* out) const {
   Dtype val = sumsq_data();
-  this->net_quant_->Backward_cpu(1, static_cast<void*>(&val), out);
+  this->quant_->Backward_cpu(1, static_cast<void*>(&val), out);
 }
 
 template<typename Dtype>
 void Blob<Dtype>::cpu_data(void* out) const {
   CHECK(data_->mutable_cpu_data());
-  this->net_quant_->Backward_cpu(count(), data_->mutable_cpu_data(), out);
+  this->quant_->Backward_cpu(count(), data_->mutable_cpu_data(), out);
 }
 template<typename Dtype>
 void Blob<Dtype>::cpu_diff(void* out) const {
   CHECK(diff_->mutable_cpu_data());
-  this->net_quant_->Backward_cpu(count(), diff_->mutable_cpu_data(), out);
+  this->quant_->Backward_cpu(count(), diff_->mutable_cpu_data(), out);
 }
 
 template<typename Dtype>
 void Blob<Dtype>::gpu_data(vptr<void> out) const {
-  this->net_quant_->Backward_gpu(count(), data_->mutable_gpu_data(), out);
+  this->quant_->Backward_gpu(count(), data_->mutable_gpu_data(), out);
 }
 
 template<typename Dtype>
 void Blob<Dtype>::gpu_diff(vptr<void> out) const {
-  this->net_quant_->Backward_gpu(count(), diff_->mutable_gpu_data(), out);
+  this->quant_->Backward_gpu(count(), diff_->mutable_gpu_data(), out);
 }
 
 template<typename Dtype>
 void Blob<Dtype>::set_cpu_data(const void* const in) {
   CHECK(data_->cpu_data());
-  this->net_quant_->Forward_cpu(count(), in, data_->mutable_cpu_data());
+  this->quant_->Forward_cpu(count(), in, data_->mutable_cpu_data());
 }
 template<typename Dtype>
 void Blob<Dtype>::set_cpu_diff(const void* const in) {
   CHECK(diff_->cpu_data());
-  this->net_quant_->Forward_cpu(count(), in, diff_->mutable_cpu_data());
+  this->quant_->Forward_cpu(count(), in, diff_->mutable_cpu_data());
 }
 template<typename Dtype>
 void Blob<Dtype>::set_gpu_data(vptr<const void> in) {
-  this->net_quant_->Forward_gpu(count(), in, data_->mutable_gpu_data());
+  this->quant_->Forward_gpu(count(), in, data_->mutable_gpu_data());
 }
 template<typename Dtype>
 void Blob<Dtype>::set_gpu_diff(vptr<const void> in) {
-  this->net_quant_->Forward_gpu(count(), in, diff_->mutable_gpu_data());
+  this->quant_->Forward_gpu(count(), in, diff_->mutable_gpu_data());
 }
 
 

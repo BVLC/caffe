@@ -206,15 +206,13 @@ shared_ptr<Blob<Dtype> > Device::Buffer(vector<int_tp> shape, int_tp* lock_id) {
 
   // Ensure the buffer is big enough for the request
   buffer->Reshape(buffer_shape);
+
   // Share data between returned Blob object and internal device buffer
-  blob->Reshape(shape);
+  blob->Reshape(shape);  // Will not cause allocation (lazy allocation)
   blob->ShareDataBase(buffer);
   blob->ShareDiffBase(buffer);
 
-  if (not (lock_id == nullptr)) {
-    *lock_id = buffer_id;
-  }
-
+  *lock_id = buffer_id;
   return blob;
 }
 

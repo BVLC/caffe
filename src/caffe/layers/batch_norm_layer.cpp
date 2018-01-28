@@ -26,9 +26,12 @@ void BatchNormLayer<Dtype, MItype, MOtype>::LayerSetUp(const vector<Blob<MItype>
     vector<int_tp> sz;
     sz.push_back(channels_);
     this->blobs_[0].reset(new Blob<Dtype>(sz, this->device_));
+    this->blobs_[0]->set_quant(this->blobs_quant_);
     this->blobs_[1].reset(new Blob<Dtype>(sz, this->device_));
+    this->blobs_[1]->set_quant(this->blobs_quant_);
     sz[0]=1;
     this->blobs_[2].reset(new Blob<Dtype>(sz, this->device_));
+    this->blobs_[2]->set_quant(this->blobs_quant_);
     for (int_tp i = 0; i < 3; ++i) {
       caffe_set(this->blobs_[i]->count(), Dtype(0),
           this->blobs_[i]->mutable_cpu_data());

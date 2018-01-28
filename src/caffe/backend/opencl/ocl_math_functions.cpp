@@ -20,9 +20,10 @@ void OclDevice::memcpy(const uint_tp n, vptr<const void> x, vptr<void> y) {
     std::cout << "OFF X: " << x.get_ocl_off() << std::endl;
     std::cout << "MEM Y: " << y.get_ocl_mem() << std::endl;
     std::cout << "OFF Y: " << y.get_ocl_off() << std::endl;*/
-    clEnqueueCopyBuffer(ctx.get_queue().handle().get(), x.get_ocl_mem(),
-                        y.get_ocl_mem(), x.get_ocl_off(), y.get_ocl_off(), n, 0,
-                        NULL, NULL);
+    cl_int err = clEnqueueCopyBuffer(ctx.get_queue().handle().get(),
+                    x.get_ocl_mem(), y.get_ocl_mem(), x.get_ocl_off(),
+                    y.get_ocl_off(), n, 0,  NULL, NULL);
+    OCL_CHECK(err);
   }
 }
 
@@ -33,8 +34,10 @@ void OclDevice::memcpy(const uint_tp n, const void* x, vptr<void> y) {
     std::cout << "MEM X: " << x << std::endl;
     std::cout << "MEM Y: " << y.get_ocl_mem() << std::endl;
     std::cout << "OFF Y: " << y.get_ocl_off() << std::endl;*/
-    clEnqueueWriteBuffer(ctx.get_queue().handle().get(), y.get_ocl_mem(),
-                         CL_TRUE, y.get_ocl_off(), n, x, 0, NULL, NULL);
+    cl_int err = clEnqueueWriteBuffer(ctx.get_queue().handle().get(),
+                    y.get_ocl_mem(), CL_TRUE, y.get_ocl_off(), n, x, 0,
+                    NULL, NULL);
+    OCL_CHECK(err);
   }
 }
 
@@ -45,8 +48,10 @@ void OclDevice::memcpy(const uint_tp n, vptr<const void> x, void* y) {
     std::cout << "MEM X: " << x.get_ocl_mem() << std::endl;
     std::cout << "OFF X: " << x.get_ocl_off() << std::endl;
     std::cout << "MEM Y: " << y << std::endl;*/
-    clEnqueueReadBuffer(ctx.get_queue().handle().get(), x.get_ocl_mem(),
-                        CL_TRUE, x.get_ocl_off(), n, y, 0, NULL, NULL);
+    cl_int err = clEnqueueReadBuffer(ctx.get_queue().handle().get(),
+                    x.get_ocl_mem(), CL_TRUE, x.get_ocl_off(), n, y, 0,
+                    NULL, NULL);
+    OCL_CHECK(err);
   }
 }
 

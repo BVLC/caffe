@@ -4,7 +4,7 @@ TODO:
 - load file in a separate thread ("prefetch")
 - can be smarter about the memcpy call instead of doing it row-by-row
   :: use util functions caffe_copy, and Blob->offset()
-  :: don't forget to update hdf5_daa_layer.cu accordingly
+  :: don't forget to update hdf5_data_layer.cu accordingly
 - add ability to shuffle filenames if flag is set
 */
 #include <fstream>  // NOLINT(readability/streams)
@@ -163,6 +163,26 @@ void HDF5DataLayer<Dtype, MItype, MOtype>::Next() {
   offset_++;
 }
 
+// Fast data path (native loading)
+template<typename Dtype, typename MOtype,
+     typename std::enable_if<std::is_same<Dtype, MOtype>::value, int>::type = 0>
+inline void data_copy_to_top(int_tp n, const Dtype* data, MOtype* top,
+                             QuantizerBase* quant) {
+  if (!quant->needs_quantization()) {
+    caffe_copy(n, data, top);
+  } else {
+    quant->Forward_cpu(n, data, top);
+  }
+}
+
+// Slow data path (non-native loading)
+template<typename Dtype, typename MOtype,
+    typename std::enable_if<!std::is_same<Dtype, MOtype>::value, int>::type = 0>
+inline void data_copy_to_top(int_tp n, const Dtype* data, MOtype* top,
+                             QuantizerBase* quant) {
+  quant->Forward_cpu(n, data, top);
+}
+
 template<typename Dtype, typename MItype, typename MOtype>
 void HDF5DataLayer<Dtype, MItype, MOtype>::Forward_cpu(
       const vector<Blob<MItype>*>& bottom,
@@ -174,9 +194,10 @@ void HDF5DataLayer<Dtype, MItype, MOtype>::Forward_cpu(
     }
     for (int_tp j = 0; j < this->layer_param_.top_size(); ++j) {
       int_tp data_dim = top[j]->count() / top[j]->shape(0);
-      caffe_copy(data_dim,
+      data_copy_to_top<Dtype, MOtype>(data_dim,
           &hdf_blobs_[j]->cpu_data()[data_permutation_[current_row_]
-            * data_dim], &top[j]->mutable_cpu_data()[i * data_dim]);
+            * data_dim], &top[j]->mutable_cpu_data()[i * data_dim],
+            this->top_quant_.get());
     }
     Next();
   }
@@ -186,14 +207,20 @@ void HDF5DataLayer<Dtype, MItype, MOtype>::Forward_cpu(
 STUB_GPU_FORWARD(HDF5DataLayer, Forward);
 #endif
 
-INSTANTIATE_CLASS_3T_GUARDED(HDF5DataLayer, (half_fp), (half_fp), (half_fp));
-INSTANTIATE_CLASS_3T_GUARDED(HDF5DataLayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T_GUARDED(HDF5DataLayer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(HDF5DataLayer, (half_fp), (half_fp),
+                             (half_fp)(float)(double));
+INSTANTIATE_CLASS_3T_GUARDED(HDF5DataLayer, (float), (float),
+                             (half_fp)(float)(double));
+INSTANTIATE_CLASS_3T_GUARDED(HDF5DataLayer, (double), (double),
+                             (half_fp)(float)(double));
 
 REGISTER_LAYER_CLASS(HDF5Data);
-REGISTER_LAYER_CLASS_INST(HDF5Data, (half_fp), (half_fp), (half_fp));
-REGISTER_LAYER_CLASS_INST(HDF5Data, (float), (float), (float));
-REGISTER_LAYER_CLASS_INST(HDF5Data, (double), (double), (double));
+REGISTER_LAYER_CLASS_INST(HDF5Data, (half_fp), (half_fp),
+                          (half_fp)(float)(double));
+REGISTER_LAYER_CLASS_INST(HDF5Data, (float), (float),
+                          (half_fp)(float)(double));
+REGISTER_LAYER_CLASS_INST(HDF5Data, (double), (double),
+                          (half_fp)(float)(double));
 
 }  // namespace caffe
 #endif  // USE_HDF5

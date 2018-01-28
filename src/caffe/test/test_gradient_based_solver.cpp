@@ -76,6 +76,11 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
                                const int devices = 1, const bool snapshot =
                                    false,
                                const char* from_snapshot = NULL) {
+    string bottom_type = std::is_same<Dtype, half_fp>::value ?
+        "bottom_data_type: FLOAT" : "";
+    string compute_type = std::is_same<Dtype, half_fp>::value ?
+        "compute_data_type: FLOAT" : "";
+
     ostringstream proto;
     int device_id = 0;
 #ifndef CPU_ONLY
@@ -99,6 +104,8 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
        "  layer { "
        "    name: 'data' "
        "    type: 'HDF5Data' "
+       << bottom_type << " "
+       << compute_type << " "
        "    hdf5_data_param { "
        "      source: '" << *(this->input_file_) << "' "
        "      batch_size: " << num_ / iter_size << " "
@@ -209,7 +216,7 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
       gpus.push_back(dc);
       for (int i = 0; gpus.size() < devices; ++i) {
         if (i != device_id)
-        gpus.push_back(Caffe::GetDevice(i, true));
+          gpus.push_back(Caffe::GetDevice(i, true));
       }
       Caffe::set_solver_count(gpus.size());
 #ifdef USE_NCCL
@@ -383,8 +390,10 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
     const Blob<Dtype>& solver_updated_weights =
         *(static_pointer_cast<Blob<Dtype> >(param_blobs[0]));
     ASSERT_EQ(D, solver_updated_weights.count());
-    const double kPrecision = 1e-2;
-    const double kMinPrecision = 1e-7;
+    const double kPrecision = std::is_same<Dtype, half_fp>::value ?
+        1e0 : 1e-2;
+    const double kMinPrecision = std::is_same<Dtype, half_fp>::value ?
+        3e-2 : 1e-7;
     for (int i = 0; i < D; ++i) {
       const Dtype expected_updated_weight = updated_weights.cpu_data()[i];
       const Dtype solver_updated_weight = solver_updated_weights.cpu_data()[i];
@@ -431,8 +440,10 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
   void CheckAccumulation(const Dtype kLearningRate, const Dtype kWeightDecay,
                          const Dtype kMomentum, const int kNumIters,
                          const int kIterSize) {
-    const double kPrecision = 1e-2;
-    const double kMinPrecision = 1e-7;
+    const double kPrecision = std::is_same<Dtype, half_fp>::value ?
+        1e0 : 1e-2;
+    const double kMinPrecision = std::is_same<Dtype, half_fp>::value ?
+        3e-2 : 1e-7;
     // Solve without accumulation and save parameters.
     this->RunLeastSquaresSolver(kLearningRate, kWeightDecay, kMomentum,
                                 kNumIters);

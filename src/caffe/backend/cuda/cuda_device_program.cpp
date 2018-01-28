@@ -533,36 +533,37 @@ string CudaDeviceProgram::device_type_name_uint64() const {
 
 string CudaDeviceProgram::convert_type_char(int_tp vec_len,
                                             string src_val) const {
-  return "((char" + std::to_string(vec_len) + ")(" + src_val + "))";
+  return "((char" + (vec_len > 0 ? std::to_string(vec_len) : "")
+       + ")(" + src_val + "))";
 }
 string CudaDeviceProgram::convert_type_half(int_tp vec_len,
                                             string src_val) const {
-  return "((half" + std::to_string(vec_len) + ")(" + src_val + "))";
-}
+  return "((half" + (vec_len > 0 ? std::to_string(vec_len) : "")
+       + ")(" + src_val + "))";}
 string CudaDeviceProgram::convert_type_float(int_tp vec_len,
                                              string src_val) const {
-  return "((float" + std::to_string(vec_len) + ")(" + src_val + "))";
-}
+  return "((float" + (vec_len > 0 ? std::to_string(vec_len) : "")
+       + ")(" + src_val + "))";}
 string CudaDeviceProgram::convert_type_double(int_tp vec_len,
                                               string src_val) const {
-  return "((double" + std::to_string(vec_len) + ")(" + src_val + "))";
-}
+  return "((double" + (vec_len > 0 ? std::to_string(vec_len) : "")
+       + ")(" + src_val + "))";}
 string CudaDeviceProgram::convert_type_int8(int_tp vec_len,
                                             string src_val) const {
-  return "((char" + std::to_string(vec_len) + ")(" + src_val + "))";
-}
+  return "((char" + (vec_len > 0 ? std::to_string(vec_len) : "")
+       + ")(" + src_val + "))";}
 string CudaDeviceProgram::convert_type_int16(int_tp vec_len,
                                              string src_val) const {
-  return "((short" + std::to_string(vec_len) + ")(" + src_val + "))";
-}
+  return "((short" + (vec_len > 0 ? std::to_string(vec_len) : "")
+       + ")(" + src_val + "))";}
 string CudaDeviceProgram::convert_type_int32(int_tp vec_len,
                                              string src_val) const {
-  return "((int" + std::to_string(vec_len) + ")(" + src_val + "))";
-}
+  return "((int" + (vec_len > 0 ? std::to_string(vec_len) : "")
+       + ")(" + src_val + "))";}
 string CudaDeviceProgram::convert_type_int64(int_tp vec_len,
                                              string src_val) const {
-  return "((longlong" + std::to_string(vec_len) + ")(" + src_val + "))";
-}
+  return "((longlong" + (vec_len > 0 ? std::to_string(vec_len) : "")
+       + ")(" + src_val + "))";}
 
 
 string CudaDeviceProgram::helper_functions_half() const {

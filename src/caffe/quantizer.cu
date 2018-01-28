@@ -19,12 +19,13 @@ void Quantizer<MItype, MOtype>::GenerateKernels() {
   // Quantizer forward
   {
     KernelArgs args;
-    args.push_back(this->program_->template create_kernel_arg<uint_tp>("n",
+    args.push_back(this->program_->template create_kernel_arg<size_t>("n",
                                                              KERNEL_ARG_CONST));
     args.push_back(this->program_->template create_kernel_arg<MItype>("in",
-               KERNEL_ARG_RESTRICT | KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_CONST));
+               KERNEL_ARG_RESTRICT | KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_CONST |
+               KERNEL_ARG_MEM_OFFSET));
     args.push_back(this->program_->template create_kernel_arg<MOtype>("out",
-                                  KERNEL_ARG_RESTRICT | KERNEL_ARG_GLOBAL_MEM));
+          KERNEL_ARG_MEM_OFFSET | KERNEL_ARG_RESTRICT | KERNEL_ARG_GLOBAL_MEM));
     if (fw_scale_before_cast()) {
       args.push_back(this->program_->template create_kernel_arg<MItype>("scal",
                                                              KERNEL_ARG_CONST));
@@ -34,7 +35,7 @@ void Quantizer<MItype, MOtype>::GenerateKernels() {
     }
     ss << this->program_->function("quantizer_forward", args);
     ss << this->program_->kernel_loop("uint_tp", "i", "n");
-    ss << "out[i] = " << fw_scale_term(0, "scal", "in[i]") << std::endl;
+    ss << "out[i] = " << fw_scale_term(0, "scal", "in[i]") << ";" << std::endl;
     ss << "}" << std::endl;
     ss << "}" << std::endl;
   }
@@ -42,12 +43,13 @@ void Quantizer<MItype, MOtype>::GenerateKernels() {
   // Quantizer backward
   {
     KernelArgs args;
-    args.push_back(this->program_->template create_kernel_arg<uint_tp>("n",
+    args.push_back(this->program_->template create_kernel_arg<size_t>("n",
                                                              KERNEL_ARG_CONST));
     args.push_back(this->program_->template create_kernel_arg<MOtype>("in",
-               KERNEL_ARG_RESTRICT | KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_CONST));
+               KERNEL_ARG_RESTRICT | KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_CONST |
+               KERNEL_ARG_MEM_OFFSET));
     args.push_back(this->program_->template create_kernel_arg<MItype>("out",
-                                  KERNEL_ARG_RESTRICT | KERNEL_ARG_GLOBAL_MEM));
+          KERNEL_ARG_MEM_OFFSET | KERNEL_ARG_RESTRICT | KERNEL_ARG_GLOBAL_MEM));
     if (bw_scale_before_cast()) {
       args.push_back(this->program_->template create_kernel_arg<MOtype>("scal",
                                                              KERNEL_ARG_CONST));
@@ -57,7 +59,7 @@ void Quantizer<MItype, MOtype>::GenerateKernels() {
     }
     ss << this->program_->function("quantizer_backward", args);
     ss << this->program_->kernel_loop("uint_tp", "i", "n");
-    ss << "out[i] = " << bw_scale_term(0, "scal", "in[i]") << std::endl;
+    ss << "out[i] = " << bw_scale_term(0, "scal", "in[i]") << ";" << std::endl;
     ss << "}" << std::endl;
     ss << "}" << std::endl;
   }
@@ -65,10 +67,11 @@ void Quantizer<MItype, MOtype>::GenerateKernels() {
   // Observe in
   {
     KernelArgs args;
-    args.push_back(this->program_->template create_kernel_arg<uint_tp>("n",
+    args.push_back(this->program_->template create_kernel_arg<size_t>("n",
                                                              KERNEL_ARG_CONST));
     args.push_back(this->program_->template create_kernel_arg<MItype>("data",
-               KERNEL_ARG_RESTRICT | KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_CONST));
+               KERNEL_ARG_RESTRICT | KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_CONST |
+               KERNEL_ARG_MEM_OFFSET));
     if (is_signed_integer_type<MItype>()) {
       args.push_back(this->program_->template create_kernel_arg<float>("scal",
                                                              KERNEL_ARG_CONST));
@@ -78,8 +81,10 @@ void Quantizer<MItype, MOtype>::GenerateKernels() {
     args.push_back(this->program_->template create_kernel_arg<float>(
         "inter_max", KERNEL_ARG_RESTRICT | KERNEL_ARG_GLOBAL_MEM));
     ss << this->program_->function("quantizer_observe_in", args);
-    ss << this->program_->local_mem("float", "local_min[64]") << std::endl;
-    ss << this->program_->local_mem("float", "local_max[64]") << std::endl;
+    ss << this->program_->local_mem("float", "local_min[64]") << ";"
+       << std::endl;
+    ss << this->program_->local_mem("float", "local_max[64]") << ";"
+       << std::endl;
     ss << "local_min[" << this->program_->local_id(0) << "] = FLT_MAX;"
        << std::endl;
     ss << "local_max[" << this->program_->local_id(0) << "] = -FLT_MAX;"
@@ -91,13 +96,13 @@ void Quantizer<MItype, MOtype>::GenerateKernels() {
       ss << "float value = data[i];" << std::endl;
     }
     ss << "if (local_min[" << this->program_->local_id(0) << "] > "
-       << "data[i]) {" << std::endl;
-    ss << "local_min[" << this->program_->local_id(0) << "] = data[i];"
+       << "value) {" << std::endl;
+    ss << "local_min[" << this->program_->local_id(0) << "] = value;"
        << std::endl;
     ss << "}" << std::endl;
     ss << "if (local_max[" << this->program_->local_id(0) << "] < "
-       << "data[i]) {" << std::endl;
-    ss << "local_max[" << this->program_->local_id(0) << "] = data[i];"
+       << "value) {" << std::endl;
+    ss << "local_max[" << this->program_->local_id(0) << "] = value;"
        << std::endl;
     ss << "}" << std::endl;
     ss << "}" << std::endl;  // Kernel loop
@@ -123,9 +128,9 @@ void Quantizer<MItype, MOtype>::GenerateKernels() {
     ss << "}" << std::endl;  // while (i != 0)
     // Write partially reduced output
     ss << "if (" << this->program_->local_id(0) << " == 0 ) {" << std::endl;
-    ss << "inter_min[" << this->program_->group_id(0) << "] = local_min[0]"
+    ss << "inter_min[" << this->program_->group_id(0) << "] = local_min[0];"
        << std::endl;
-    ss << "inter_max[" << this->program_->group_id(0) << "] = local_max[0]"
+    ss << "inter_max[" << this->program_->group_id(0) << "] = local_max[0];"
        << std::endl;
     ss << "}" << std::endl;
     ss << "}" << std::endl;
@@ -134,10 +139,11 @@ void Quantizer<MItype, MOtype>::GenerateKernels() {
   // Observe out
   {
     KernelArgs args;
-    args.push_back(this->program_->template create_kernel_arg<uint_tp>("n",
+    args.push_back(this->program_->template create_kernel_arg<size_t>("n",
                                                              KERNEL_ARG_CONST));
     args.push_back(this->program_->template create_kernel_arg<MOtype>("data",
-               KERNEL_ARG_RESTRICT | KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_CONST));
+               KERNEL_ARG_RESTRICT | KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_CONST |
+               KERNEL_ARG_MEM_OFFSET));
     if (is_signed_integer_type<MOtype>()) {
       args.push_back(this->program_->template create_kernel_arg<float>("scal",
                                                              KERNEL_ARG_CONST));
@@ -147,8 +153,10 @@ void Quantizer<MItype, MOtype>::GenerateKernels() {
     args.push_back(this->program_->template create_kernel_arg<float>(
         "inter_max", KERNEL_ARG_RESTRICT | KERNEL_ARG_GLOBAL_MEM));
     ss << this->program_->function("quantizer_observe_out", args);
-    ss << this->program_->local_mem("float", "local_min[64]") << std::endl;
-    ss << this->program_->local_mem("float", "local_max[64]") << std::endl;
+    ss << this->program_->local_mem("float", "local_min[64]") << ";"
+       << std::endl;
+    ss << this->program_->local_mem("float", "local_max[64]") << ";"
+       << std::endl;
     ss << "local_min[" << this->program_->local_id(0) << "] = FLT_MAX;"
        << std::endl;
     ss << "local_max[" << this->program_->local_id(0) << "] = -FLT_MAX;"
@@ -160,13 +168,13 @@ void Quantizer<MItype, MOtype>::GenerateKernels() {
       ss << "float value = data[i];" << std::endl;
     }
     ss << "if (local_min[" << this->program_->local_id(0) << "] > "
-       << "data[i]) {" << std::endl;
-    ss << "local_min[" << this->program_->local_id(0) << "] = data[i];"
+       << "value) {" << std::endl;
+    ss << "local_min[" << this->program_->local_id(0) << "] = value;"
        << std::endl;
     ss << "}" << std::endl;
     ss << "if (local_max[" << this->program_->local_id(0) << "] < "
-       << "data[i]) {" << std::endl;
-    ss << "local_max[" << this->program_->local_id(0) << "] = data[i];"
+       << "value) {" << std::endl;
+    ss << "local_max[" << this->program_->local_id(0) << "] = value;"
        << std::endl;
     ss << "}" << std::endl;
     ss << "}" << std::endl;  // Kernel loop
@@ -192,25 +200,31 @@ void Quantizer<MItype, MOtype>::GenerateKernels() {
     ss << "}" << std::endl;  // while (i != 0)
     // Write partially reduced output
     ss << "if (" << this->program_->local_id(0) << " == 0 ) {" << std::endl;
-    ss << "inter_min[" << this->program_->group_id(0) << "] = local_min[0]"
+    ss << "inter_min[" << this->program_->group_id(0) << "] = local_min[0];"
        << std::endl;
-    ss << "inter_max[" << this->program_->group_id(0) << "] = local_max[0]"
+    ss << "inter_max[" << this->program_->group_id(0) << "] = local_max[0];"
        << std::endl;
     ss << "}" << std::endl;
     ss << "}" << std::endl;
   }
 
+  this->program_->set_source(ss.str());
   this->program_->Compile(true, true);
 }
 
 template<typename MItype, typename MOtype>
 void Quantizer<MItype, MOtype>::Forward_gpu(size_t n, vptr<const MItype> input,
                          vptr<MOtype> output) {
+  this->quant_mutex_.lock();
   if (!program_ready_) {
     this->GenerateKernels();
   }
-  MItype scal_before = fw_scale_before_cast_val();
-  MOtype scal_after = fw_scale_after_cast_val();
+  this->quant_mutex_.unlock();
+
+  MItype scal_before = this->needs_quantization() ?
+      fw_scale_before_cast_val() : MItype(1);
+  MOtype scal_after = this->needs_quantization() ?
+      fw_scale_after_cast_val() : MOtype(1);
 
   shared_ptr<DeviceKernel> kernel =
                           this->program_->GetKernel("quantizer_forward");
@@ -257,11 +271,16 @@ void Quantizer<MItype, MOtype>::Forward_gpu(Blob<MItype>* input,
 template<typename MItype, typename MOtype>
 void Quantizer<MItype, MOtype>::Backward_gpu(size_t n, vptr<const MOtype> input,
                          vptr<MItype> output) {
+  this->quant_mutex_.lock();
   if (!program_ready_) {
     this->GenerateKernels();
   }
-  MOtype scal_before = bw_scale_before_cast_val();
-  MItype scal_after = bw_scale_after_cast_val();
+  this->quant_mutex_.unlock();
+
+  MOtype scal_before = this->needs_quantization() ?
+      bw_scale_before_cast_val() : MOtype(1);
+  MItype scal_after = this->needs_quantization() ?
+      bw_scale_after_cast_val() : MItype(1);
 
   shared_ptr<DeviceKernel> kernel =
                                 this->program_->GetKernel("quantizer_backward");

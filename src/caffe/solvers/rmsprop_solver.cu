@@ -26,8 +26,6 @@ void RMSPropSolver<Dtype>::GenerateProgram() {
                     "delta", KERNEL_ARG_CONST));
   args.push_back(this->device_program_->template create_kernel_arg<Dtype>(
                     "local_rate",  KERNEL_ARG_CONST));
-  args.push_back(this->device_program_->template create_kernel_arg<Dtype>(
-                 "corrected_local_rate", KERNEL_ARG_CONST));
   ss << this->device_program_->function("RMSPropUpdate", args);
   ss << this->device_program_->kernel_loop("uint_tp", "i", "n");
   ss << "Dtype gi = g[i];" << std::endl;

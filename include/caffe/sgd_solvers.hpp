@@ -16,9 +16,19 @@ template <typename Dtype>
 class SGDSolver : public Solver<Dtype> {
  public:
   explicit SGDSolver(const SolverParameter& param, Device* dev)
-      : Solver<Dtype>(param, dev) { PreSolve(); }
+      : Solver<Dtype>(param, dev) {
+    if (Caffe::mode() == Caffe::GPU) {
+      this->GenerateProgram();
+    }
+    PreSolve();
+  }
   explicit SGDSolver(const string& param_file, Device* dev)
-      : Solver<Dtype>(param_file, dev) { PreSolve(); }
+      : Solver<Dtype>(param_file, dev) {
+    if (Caffe::mode() == Caffe::GPU) {
+      this->GenerateProgram();
+    }
+    PreSolve();
+  }
   virtual inline const char* type() const { return "SGD"; }
 
   const vector<shared_ptr<Blob<Dtype> > >& history() { return history_; }
@@ -50,9 +60,17 @@ template <typename Dtype>
 class NesterovSolver : public SGDSolver<Dtype> {
  public:
   explicit NesterovSolver(const SolverParameter& param, Device* dev)
-      : SGDSolver<Dtype>(param, dev) {}
+      : SGDSolver<Dtype>(param, dev) {
+    if (Caffe::mode() == Caffe::GPU) {
+      this->GenerateProgram();
+    }
+  }
   explicit NesterovSolver(const string& param_file, Device* dev)
-      : SGDSolver<Dtype>(param_file, dev) {}
+      : SGDSolver<Dtype>(param_file, dev) {
+    if (Caffe::mode() == Caffe::GPU) {
+      this->GenerateProgram();
+    }
+  }
   virtual inline const char* type() const { return "Nesterov"; }
 
  protected:
@@ -66,9 +84,19 @@ template <typename Dtype>
 class AdaGradSolver : public SGDSolver<Dtype> {
  public:
   explicit AdaGradSolver(const SolverParameter& param, Device* dev)
-      : SGDSolver<Dtype>(param, dev) { constructor_sanity_check(); }
+      : SGDSolver<Dtype>(param, dev) {
+    if (Caffe::mode() == Caffe::GPU) {
+      this->GenerateProgram();
+    }
+    constructor_sanity_check();
+  }
   explicit AdaGradSolver(const string& param_file, Device* dev)
-      : SGDSolver<Dtype>(param_file, dev) { constructor_sanity_check(); }
+      : SGDSolver<Dtype>(param_file, dev) {
+    if (Caffe::mode() == Caffe::GPU) {
+      this->GenerateProgram();
+    }
+    constructor_sanity_check();
+  }
   virtual inline const char* type() const { return "AdaGrad"; }
 
  protected:
@@ -87,9 +115,19 @@ template <typename Dtype>
 class RMSPropSolver : public SGDSolver<Dtype> {
  public:
   explicit RMSPropSolver(const SolverParameter& param, Device* dev)
-      : SGDSolver<Dtype>(param, dev) { constructor_sanity_check(); }
+      : SGDSolver<Dtype>(param, dev) {
+    if (Caffe::mode() == Caffe::GPU) {
+      this->GenerateProgram();
+    }
+    constructor_sanity_check();
+  }
   explicit RMSPropSolver(const string& param_file, Device* dev)
-      : SGDSolver<Dtype>(param_file, dev) { constructor_sanity_check(); }
+      : SGDSolver<Dtype>(param_file, dev) {
+    if (Caffe::mode() == Caffe::GPU) {
+      this->GenerateProgram();
+    }
+    constructor_sanity_check();
+  }
   virtual inline const char* type() const { return "RMSProp"; }
 
  protected:
@@ -111,9 +149,19 @@ template <typename Dtype>
 class AdaDeltaSolver : public SGDSolver<Dtype> {
  public:
   explicit AdaDeltaSolver(const SolverParameter& param, Device* dev)
-      : SGDSolver<Dtype>(param, dev) { AdaDeltaPreSolve(); }
+      : SGDSolver<Dtype>(param, dev) {
+    if (Caffe::mode() == Caffe::GPU) {
+      this->GenerateProgram();
+    }
+    AdaDeltaPreSolve();
+  }
   explicit AdaDeltaSolver(const string& param_file, Device* dev)
-      : SGDSolver<Dtype>(param_file, dev) { AdaDeltaPreSolve(); }
+      : SGDSolver<Dtype>(param_file, dev) {
+    if (Caffe::mode() == Caffe::GPU) {
+      this->GenerateProgram();
+    }
+    AdaDeltaPreSolve();
+  }
   virtual inline const char* type() const { return "AdaDelta"; }
 
  protected:
@@ -136,9 +184,19 @@ template <typename Dtype>
 class AdamSolver : public SGDSolver<Dtype> {
  public:
   explicit AdamSolver(const SolverParameter& param, Device* dev)
-      : SGDSolver<Dtype>(param, dev) { AdamPreSolve();}
+      : SGDSolver<Dtype>(param, dev) {
+    if (Caffe::mode() == Caffe::GPU) {
+      this->GenerateProgram();
+    }
+    AdamPreSolve();
+  }
   explicit AdamSolver(const string& param_file, Device* dev)
-      : SGDSolver<Dtype>(param_file, dev) { AdamPreSolve(); }
+      : SGDSolver<Dtype>(param_file, dev) {
+    if (Caffe::mode() == Caffe::GPU) {
+      this->GenerateProgram();
+    }
+    AdamPreSolve();
+  }
   virtual inline const char* type() const { return "Adam"; }
 
  protected:
