@@ -53,4 +53,7 @@ INSTANTIATE_CLASS_3T_GUARDED(TanHLayer, (half_fp), (half_fp), (half_fp));
 INSTANTIATE_CLASS_3T_GUARDED(TanHLayer, (float), (float), (float));
 INSTANTIATE_CLASS_3T_GUARDED(TanHLayer, (double), (double), (double));
 
+REGISTER_LAYER_CLASS(TanH);
+REGISTER_LAYER_CLASS_INST(TanH, (half_fp), (half_fp), (half_fp));
+
 }  // namespace caffe

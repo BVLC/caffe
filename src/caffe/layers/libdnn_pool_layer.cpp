@@ -209,5 +209,9 @@ INSTANTIATE_CLASS_3T_GUARDED(LibDNNPoolingLayer, (int32_t), (int32_t),
 INSTANTIATE_CLASS_3T_GUARDED(LibDNNPoolingLayer, (int64_t), (int64_t),
                              PROTO_TYPES);
 
+REGISTER_LAYER_CLASS(LibDNNPooling);
+REGISTER_LAYER_CREATOR(Pooling, Creator_LibDNNPoolingLayer,
+                       (half_fp), (half_fp), (half_fp));
+
 }   // namespace caffe
 #endif  // USE_LIBDNN
