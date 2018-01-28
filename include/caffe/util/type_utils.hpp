@@ -305,17 +305,17 @@ inline size_t type_max_integer_representable() {
 
 template<>
 inline size_t type_max_integer_representable<half_fp>() {
-  return 2048ULL;
+  return 2048ULL;  // Floating point 2^11
 }
 
 template<>
 inline size_t type_max_integer_representable<float>() {
-  return 16777216ULL;
+  return 16777216ULL;  // Floating point 2^24
 }
 
 template<>
 inline size_t type_max_integer_representable<double>() {
-  return 9007199254740992ULL;
+  return 9007199254740992ULL;  // Floating point 2^53
 }
 
 template<>

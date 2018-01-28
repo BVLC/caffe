@@ -14,6 +14,37 @@
 
 namespace caffe {
 
+
+// Fast data path (native loading)
+template<typename Dtype, typename MOtype>
+inline typename std::enable_if<std::is_same<Dtype, MOtype>::value, void>::type
+data_copy_to_top(int_tp n, const Dtype* data, vptr<MOtype> top,
+                             QuantizerBase* quant, Device* dev) {
+  if (!quant->needs_quantization()) {
+    dev->template copy(n, data, top);
+  } else {
+    int_tp buffer_id = -1;
+    shared_ptr<Blob<Dtype> > buff = dev->template Buffer<Dtype>(
+                                         std::vector<int_tp>(1, n), &buffer_id);
+    dev->template copy(n, data, buff->mutable_gpu_data());
+    quant->Forward_gpu(n, buff->gpu_data(), top);
+    dev->unlock_buffer(&buffer_id);
+  }
+}
+
+// Slow data path (non-native loading)
+template<typename Dtype, typename MOtype>
+inline typename std::enable_if<!std::is_same<Dtype, MOtype>::value, void>::type
+data_copy_to_top(int_tp n, const Dtype* data, vptr<MOtype> top,
+                             QuantizerBase* quant, Device* dev) {
+  int_tp buffer_id = -1;
+  shared_ptr<Blob<Dtype> > buff = dev->template Buffer<Dtype>(
+                                       std::vector<int_tp>(1, n), &buffer_id);
+  dev->template copy(n, data, buff->mutable_gpu_data());
+  quant->Forward_gpu(n, buff->gpu_data(), top);
+  dev->unlock_buffer(&buffer_id);
+}
+
 template<typename Dtype, typename MItype, typename MOtype>
 void HDF5DataLayer<Dtype, MItype, MOtype>::Forward_gpu(
                                          const vector<Blob<MItype>*>& bottom,
@@ -25,18 +56,21 @@ void HDF5DataLayer<Dtype, MItype, MOtype>::Forward_gpu(
     }
     for (int j = 0; j < this->layer_param_.top_size(); ++j) {
       int data_dim = top[j]->count() / top[j]->shape(0);
-      vptr<Dtype> top_data = top[j]->mutable_gpu_data() + i * data_dim;
-      this->device_->template copy<Dtype>(data_dim,
+      vptr<MOtype> top_data = top[j]->mutable_gpu_data() + i * data_dim;
+      data_copy_to_top<Dtype, MOtype>(data_dim,
          &hdf_blobs_[j]->cpu_data()[data_permutation_[current_row_] * data_dim],
-         top_data);
+         top_data, this->top_quant_.get(), this->device_);
     }
     Next();
   }
 }
 
-INSTANTIATE_CLASS_3T_GUARDED(HDF5DataLayer, (half_fp), (half_fp), (half_fp));
-INSTANTIATE_CLASS_3T_GUARDED(HDF5DataLayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T_GUARDED(HDF5DataLayer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(HDF5DataLayer, (half_fp), (half_fp),
+                             (half_fp)(float)(double));
+INSTANTIATE_CLASS_3T_GUARDED(HDF5DataLayer, (float), (float),
+                             (half_fp)(float)(double));
+INSTANTIATE_CLASS_3T_GUARDED(HDF5DataLayer, (double), (double),
+                             (half_fp)(float)(double));
 
 }  // namespace caffe
 #endif  // USE_HDF5

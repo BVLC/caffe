@@ -87,7 +87,6 @@ void hdf5_load_nd_dataset_helper(
 template <>
 void hdf5_load_nd_dataset<half_fp>(hid_t file_id, const char* dataset_name_,
         int min_dim, int max_dim, Blob<half_fp>* blob, bool reshape) {
-  // FIXME
   hdf5_load_nd_dataset_helper(file_id, dataset_name_, min_dim, max_dim, blob,
                               reshape);
   herr_t status = H5LTread_dataset_short(

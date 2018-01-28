@@ -103,6 +103,19 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     // Set device
     layer_param.set_device(Caffe::GetDefaultDevice()->list_id());
 
+    // Set data types
+    if (!layer_param.has_bottom_data_type()) {
+      layer_param.set_bottom_data_type(proto_data_type<Dtype>());
+    }
+
+    if (!layer_param.has_compute_data_type()) {
+      layer_param.set_compute_data_type(proto_data_type<Dtype>());
+    }
+
+    if (!layer_param.has_top_data_type()) {
+      layer_param.set_top_data_type(proto_data_type<Dtype>());
+    }
+
     // Set quantizer settings
     if (!layer_param.has_net_quantizer()) {
       QuantizerParameter quant_param;

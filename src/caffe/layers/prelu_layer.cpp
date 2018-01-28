@@ -27,6 +27,7 @@ void PReLULayer<Dtype, MItype, MOtype>::LayerSetUp(const vector<Blob<MItype>*>& 
       this->blobs_[0].reset(new Blob<Dtype>(vector<int_tp>(1, channels),
                                             this->device_));
     }
+    this->blobs_[0]->set_quant(this->blobs_quant_);
     shared_ptr<Filler<Dtype> > filler;
     if (prelu_param.has_filler()) {
       filler.reset(GetFiller<Dtype>(prelu_param.filler()));

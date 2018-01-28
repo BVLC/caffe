@@ -19,7 +19,7 @@ message BlobShape {
 }
 
 message BlobProto {
-  optional DataType data_type = 13 [default = FLOAT];
+  optional DataType data_type = 13;
   optional BlobShape shape = 7;
   optional BlobShape shape_stride = 10;
   repeated float data = 5 [packed = true];
@@ -83,8 +83,8 @@ enum QuantizerMode {
 
 message QuantizerParameter {
   optional int64 index = 1 [default = -1];
-  optional DataType input_data_type = 2 [default = FLOAT];
-  optional DataType output_data_type = 3 [default = FLOAT];
+  optional DataType input_data_type = 2;
+  optional DataType output_data_type = 3;
   
   optional double observed_max = 4;
   optional double observed_min = 5;
@@ -101,7 +101,7 @@ message QuantizerParameter {
 }
 
 message NetParameter {
-  optional DataType data_type = 42 [default = FLOAT];
+  optional DataType data_type = 42;
   optional string name = 1; // consider giving the network a name
   // DEPRECATED. See InputParameter. The input blobs to the network.
   repeated string input = 3;
@@ -357,9 +357,9 @@ message LayerParameter {
   repeated string bottom = 3; // the name of each bottom blob
   repeated string top = 4; // the name of each top blob
   
-  optional DataType bottom_data_type = 12 [default = FLOAT];
-  optional DataType compute_data_type = 13 [default = FLOAT];
-  optional DataType top_data_type = 14 [default = FLOAT];
+  optional DataType bottom_data_type = 12;
+  optional DataType compute_data_type = 13;
+  optional DataType top_data_type = 14;
 
   // The train / test phase for computation.
   optional Phase phase = 10;

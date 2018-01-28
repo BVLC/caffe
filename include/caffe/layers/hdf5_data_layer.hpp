@@ -55,7 +55,7 @@ class HDF5DataLayer : public Layer<Dtype, MItype, MOtype> {
   uint_tp num_files_;
   uint_tp current_file_;
   hsize_t current_row_;
-  vector<shared_ptr<Blob<MOtype> > > hdf_blobs_;
+  vector<shared_ptr<Blob<Dtype> > > hdf_blobs_;
   vector<uint_tp> data_permutation_;
   vector<uint_tp> file_permutation_;
   uint64_t offset_;

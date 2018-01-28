@@ -30,8 +30,7 @@ SolverAction::Enum Solver<Dtype>::GetRequestedAction() {
 
 template<typename Dtype>
 Solver<Dtype>::Solver(const SolverParameter& param, Device* dev)
-    : net_(),
-      device_(dev), callbacks_(), requested_early_exit_(false) {
+    : net_(), device_(dev), callbacks_(), requested_early_exit_(false) {
   Init(param);
 }
 
@@ -47,10 +46,6 @@ Solver<Dtype>::Solver(const string& param_file, Device* dev)
 
 template <typename Dtype>
 void Solver<Dtype>::Init(const SolverParameter& param) {
-  // Initialize solver GPU kernels
-  if (Caffe::mode() == Caffe::GPU) {
-    GenerateProgram();
-  }
   LOG_IF(INFO, Caffe::root_solver()) << "Initializing solver from parameters: "
     << std::endl << param.DebugString();
   param_ = param;

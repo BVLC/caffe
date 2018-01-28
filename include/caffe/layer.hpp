@@ -302,6 +302,7 @@ class Layer : public LayerBase {
       blobs_.resize(layer_param_.blobs_size());
       for (int_tp i = 0; i < layer_param_.blobs_size(); ++i) {
         blobs_[i].reset(new Blob<Dtype>(device_));
+        blobs_[i]->set_quant(blobs_quant_);
         blobs_[i]->FromProto(layer_param_.blobs(i));
       }
     }

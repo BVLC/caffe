@@ -83,8 +83,22 @@ bool OclDeviceProgram::Compile(bool load_cache, bool store_cache) {
 #endif  // USE_SQLITE
 
   if (!loaded_from_cache) {
+#ifndef NDEBUG
+    string debug_path = ".caffe_debug";
+    const char* path = debug_path.c_str();
+    boost::filesystem::path dir(path);
+    boost::filesystem::create_directory(dir);
+    {
+      FILE* fp = fopen((".caffe_debug/" + string_identifier() + ".cl").c_str(),
+                       "wb");
+      fwrite(this->src_.c_str(), sizeof(char), this->src_.size(), fp);
+      fclose(fp);
+    }
+#endif  // NDEBUG
+
     size_t src_size = src_.size();
     const char* src_ptr = src_.c_str();
+
     cl_program compiled_program = clCreateProgramWithSource(ctx.handle().get(),
                                        1, &src_ptr, &src_size, &err);
     if (err != CL_SUCCESS) {
@@ -117,18 +131,7 @@ bool OclDeviceProgram::Compile(bool load_cache, bool store_cache) {
                      CL_PROGRAM_BINARIES, 0, nullptr, &len);
     clGetProgramInfo(ocl_program_.handle().get(),
                      CL_PROGRAM_BINARIES, len, &(ptxs[0]), nullptr);
-
 #ifndef NDEBUG
-    string debug_path = ".caffe_debug";
-    const char* path = debug_path.c_str();
-    boost::filesystem::path dir(path);
-    boost::filesystem::create_directory(dir);
-    {
-      FILE* fp = fopen((".caffe_debug/" + string_identifier() + ".cl").c_str(),
-                       "wb");
-      fwrite(this->src_.c_str(), sizeof(char), this->src_.size(), fp);
-      fclose(fp);
-    }
     {
       FILE* fp = fopen((".caffe_debug/" + string_identifier()
                         + ".clptx").c_str(), "wb");
@@ -383,10 +386,14 @@ string OclDeviceProgram::atomics() {
   // atomic-operations-for-floats-in-opencl-improved/
   for (int j = 0; j < atomic_datatypes.size(); ++j) {
     string atomic_datatype = atomic_datatypes[j];
-    if (atomic_datatype == "float" || atomic_datatype == "half") {
+    if (atomic_datatype == "float") {
       ss << "#if defined(ATOMICS_32_AVAILABLE)" << std::endl;
+    } else if (atomic_datatype == "half") {
+      ss << "#if defined(ATOMICS_32_AVAILABLE)"
+         << " && defined(HALF_SUPPORT_AVAILABLE)" << std::endl;
     } else if (atomic_datatype == "double") {
-      ss << "#if defined(ATOMICS_64_AVAILABLE)" << std::endl;
+      ss << "#if defined(ATOMICS_64_AVAILABLE)"
+         << " && defined(DOUBLE_SUPPORT_AVAILABLE)" << std::endl;
     }
     for (int i = 0; i < atomic_funcs.size(); ++i) {
       ss << "inline void caffe_gpu_atomic_"

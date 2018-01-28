@@ -30,6 +30,7 @@ void BiasLayer<Dtype, MItype, MOtype>::LayerSetUp(const vector<Blob<MItype>*>& b
         (num_axes == -1) ? bottom[0]->shape().end() : (shape_start + num_axes);
     vector<int_tp> bias_shape(shape_start, shape_end);
     this->blobs_[0].reset(new Blob<Dtype>(bias_shape));
+    this->blobs_[0]->set_quant(this->blobs_quant_);
     shared_ptr<Filler<Dtype> > filler(GetFiller<Dtype>(param.filler()));
     filler->Fill(this->blobs_[0].get());
   }

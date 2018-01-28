@@ -24,8 +24,6 @@ void NesterovSolver<Dtype>::GenerateProgram() {
                     "momentum", KERNEL_ARG_CONST));
   args.push_back(this->device_program_->template create_kernel_arg<Dtype>(
                     "local_rate", KERNEL_ARG_CONST));
-  args.push_back(this->device_program_->template create_kernel_arg<Dtype>(
-                 "corrected_local_rate", KERNEL_ARG_CONST));
   ss << this->device_program_->function("NesterovUpdate", args);
   ss << this->device_program_->kernel_loop("uint_tp", "i", "n");
   ss << "Dtype hi = h[i];" << std::endl;
