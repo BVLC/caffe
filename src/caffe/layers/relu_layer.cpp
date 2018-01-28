@@ -57,4 +57,7 @@ INSTANTIATE_CLASS_3T_GUARDED(ReLULayer, (half_fp), (half_fp), (half_fp));
 INSTANTIATE_CLASS_3T_GUARDED(ReLULayer, (float), (float), (float));
 INSTANTIATE_CLASS_3T_GUARDED(ReLULayer, (double), (double), (double));
 
+REGISTER_LAYER_CLASS(ReLU);
+REGISTER_LAYER_CLASS_INST(ReLU, (half_fp), (half_fp), (half_fp));
+
 }  // namespace caffe

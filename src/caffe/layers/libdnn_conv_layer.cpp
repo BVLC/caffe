@@ -186,5 +186,9 @@ INSTANTIATE_CLASS_3T_GUARDED(LibDNNConvolutionLayer, (int32_t), (int32_t),
 INSTANTIATE_CLASS_3T_GUARDED(LibDNNConvolutionLayer, (int64_t), (int64_t),
                              PROTO_TYPES);
 
+REGISTER_LAYER_CLASS(LibDNNConvolution);
+REGISTER_LAYER_CREATOR(Convolution, Creator_LibDNNConvolutionLayer,
+                       (half_fp), (half_fp), (half_fp));
+
 }   // namespace caffe
 #endif  // USE_LIBDNN
