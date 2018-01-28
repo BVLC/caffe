@@ -116,19 +116,22 @@ void MKLDNNMemoryDescriptorBase<Dtype>::create_reorder_descriptors(std::vector<f
         mask = 1 << oc_dim_id;
     }
 
+    int count = scale.size();
     if ( *_usr_memory_pd != *_prv_memory_pd) {
-        std::vector<float> scales_u2p;
-        for(int i=0; i<scale.size(); i++){
-            scales_u2p.push_back(scale[i]);
+        std::vector<float> scales_u2p(count);
+        #pragma omp parallel for if (count > 1)
+        for(int i=0; i < count; i++){
+            scales_u2p[i] = scale[i];
         }
         attri.set_output_scales(mask, scales_u2p);
         attri.set_int_output_round_mode(round_nearest);
         _reorder_usr2prv_pd = shared_ptr<reorder::primitive_desc>(
                 new reorder::primitive_desc(*_usr_memory_pd, *_prv_memory_pd, attri));
 
-        std::vector<float> scales_p2u;
-        for(int i=0; i<scale.size(); i++){
-            scales_p2u.push_back(1. / scale[i]);
+        std::vector<float> scales_p2u(count);
+        #pragma omp parallel for if (count > 1)
+        for(int i=0; i < count; i++){
+            scales_p2u[i] = (1. / scale[i]);
         }
         attri.set_output_scales(mask, scales_p2u); 
         attri.set_int_output_round_mode(round_nearest);
@@ -142,10 +145,12 @@ void MKLDNNMemoryDescriptorBase<Dtype>::create_reorder_descriptors(std::vector<f
 #endif
             _reorder_extprv2prv_pd = NULL;
         }else{
-            std::vector<float> scales_e2p;
-            for(int i=0; i<scale.size(); i++){
-                float shift_scale = scale[i] / scale_ext[i]; //fp32->int8 blob_prv_mkldnn_mem_descr->get_scale() will always be 0 ?
-                scales_e2p.push_back(shift_scale);
+            std::vector<float> scales_e2p(count);
+            float shift_scale;
+            #pragma omp parallel for if (count > 1)
+            for(int i=0; i < count; i++){
+                shift_scale = scale[i] / scale_ext[i]; //fp32->int8 blob_prv_mkldnn_mem_descr->get_scale() will always be 0 ?
+                scales_e2p[i] = shift_scale;
             }
             attri.set_output_scales(mask, scales_e2p);
             attri.set_int_output_round_mode(round_nearest);
@@ -171,21 +176,25 @@ void MKLDNNMemoryDescriptorBase<Dtype>::create_reorder_descriptors(std::vector<i
         mask = 1 << oc_dim_id;
     }
 
+    int count = fl.size();
+    float scale;
     if ( *_usr_memory_pd != *_prv_memory_pd) {
-        std::vector<float> scales_u2p;
-        for(int i=0; i<fl.size(); i++){
-            float scale = pow(2, fl[i]);
-            scales_u2p.push_back(scale);
+        std::vector<float> scales_u2p(count);
+        #pragma omp parallel for if (count > 1)
+        for(int i = 0; i < count; i++){
+            scale = pow(2, fl[i]);
+            scales_u2p[i] = scale;
         }
         attri.set_output_scales(mask, scales_u2p);
         attri.set_int_output_round_mode(round_nearest);
         _reorder_usr2prv_pd = shared_ptr<reorder::primitive_desc>(
                 new reorder::primitive_desc(*_usr_memory_pd, *_prv_memory_pd, attri));
 
-        std::vector<float> scales_p2u;
-        for(int i=0; i<fl.size(); i++){
-            float scale = pow(2, -fl[i]);
-            scales_p2u.push_back(scale);
+        std::vector<float> scales_p2u(count);
+        #pragma omp parallel for if (count > 1)
+        for(int i = 0; i < count; i++){
+          scale = pow(2, -fl[i]);
+          scales_p2u[i] = scale;
         }
         attri.set_output_scales(mask, scales_p2u);
         attri.set_int_output_round_mode(round_nearest);
@@ -199,11 +208,13 @@ void MKLDNNMemoryDescriptorBase<Dtype>::create_reorder_descriptors(std::vector<i
 #endif
             _reorder_extprv2prv_pd = NULL;
         }else{
-            std::vector<float> scales_e2p;
-            for(int i=0; i<fl.size(); i++){
-                int shift_fl = fl[i] - fl_ext[i]; //fp32->int8 blob_prv_mkldnn_mem_descr->get_fl() will always be 0 ?
-                float scale = pow(2, shift_fl);
-                scales_e2p.push_back(scale);
+            std::vector<float> scales_e2p(count);
+            int shift_fl;
+            #pragma omp parallel for if (count > 1)
+            for(int i = 0; i < count; i++){
+                shift_fl = fl[i] - fl_ext[i]; //fp32->int8 blob_prv_mkldnn_mem_descr->get_fl() will always be 0 ?
+                scale = pow(2, shift_fl);
+                scales_e2p[i] = scale;
             }
             attri.set_output_scales(mask, scales_e2p);
             attri.set_int_output_round_mode(round_nearest);

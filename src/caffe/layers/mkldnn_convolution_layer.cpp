@@ -246,18 +246,24 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
           mask = 1 << oc_dim_id;
           count = oc;  //multi channel
       }
-      std::vector<float> scales;
-      for(int i=0; i<count; i++){
-          float scale;
-          if(this->is_float_){
-              scale = this->scale_out_[0] / (this->scale_in_[0] * this->scale_params_[i]);
-          } else{
-              int output_shift = this->fl_layer_out_[0] - this->fl_layer_in_[0] - this->fl_params_[i];
-              scale = pow(2. ,output_shift);
-          }
-          scales.push_back(scale);
+      std::vector<float> scales(count);
+      float scale;
+      if(this->is_float_){
+        #pragma omp parallel for if (count > 1)
+        for(int i=0; i<count; i++){
+          scale = this->scale_out_[0] / (this->scale_in_[0] * this->scale_params_[i]);
+          scales[i] = scale;
+        }
+      } else {
+        int output_shift;
+        #pragma omp parallel for if (count > 1)
+        for(int i=0; i<count; i++){
+          output_shift = this->fl_layer_out_[0] - this->fl_layer_in_[0] - this->fl_params_[i];
+          scale = pow(2. ,output_shift);
+          scales[i] = scale;
+        }
       }
-      attr.set_output_scales(mask,scales);
+      attr.set_output_scales(mask, scales);
       attr.set_int_output_round_mode(round_nearest);
     }
     
@@ -411,21 +417,23 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
     if (this->need_quantize_){
       int count = 1; //single channel
       if(this->is_float_ || bottom_is_float){
-        std::vector<float> scale_weight;
         if(this->scale_params_.size() > 1){
             count = oc;  //multi channel
         }
+        std::vector<float> scale_weight(count);
+        #pragma omp parallel for if (count > 1)
         for(int i=0; i<count; i++){
-          scale_weight.push_back(this->scale_params_[i]);
+          scale_weight[i] = this->scale_params_[i];
         }
         fwd_weights_data.reset(new MKLDNNData<Dtype>(usr_weights_data_memory_pd, prv_fwd_weights_data_memory_pd, this->blobs_[0].get(), this, true, scale_weight));
       } else{
-        std::vector<int> fl_weight;
         if(this->fl_params_.size() > 1){
             count = oc;  //multi channel
         }
+        std::vector<int> fl_weight(count);
+        #pragma omp parallel for if (count > 1)
         for(int i=0; i<count; i++){
-          fl_weight.push_back(this->fl_params_[i]);
+          fl_weight[i] = this->fl_params_[i];
         }
         fwd_weights_data.reset(new MKLDNNData<Dtype>(usr_weights_data_memory_pd, prv_fwd_weights_data_memory_pd, this->blobs_[0].get(), this, fl_weight));
       }
@@ -442,21 +450,23 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
         if (this->need_quantize_){
           int count = 1;  //single channel
           if(this->is_float_ || bottom_is_float){
-            std::vector<float> scale_bias;
             if(this->scale_params_.size() > 1){
                 count = oc;  //multi channel
             }
+            std::vector<float> scale_bias(count);
+            #pragma omp parallel for if (count > 1)
             for(int i=0; i<count; i++){
-              scale_bias.push_back(this->scale_in_[0] * this->scale_params_[i]);
+              scale_bias[i] = this->scale_in_[0] * this->scale_params_[i];
             }
             fwd_bias_data.reset(new MKLDNNData<Dtype>(usr_bias_data_memory_pd, prv_fwd_bias_data_memory_pd, this->blobs_[1].get(), this, true, scale_bias));
           } else{
-            std::vector<int> fl_bias;
             if(this->fl_params_.size() > 1){
                 count = oc;  //multi channel
             }
+            std::vector<int> fl_bias(count);
+            #pragma omp parallel for if (count > 1)
             for(int i=0; i<count; i++){
-              fl_bias.push_back(this->fl_layer_in_[0] + this->fl_params_[i]);
+              fl_bias[i] = this->fl_layer_in_[0] + this->fl_params_[i];
             }
             fwd_bias_data.reset(new MKLDNNData<Dtype>(usr_bias_data_memory_pd, prv_fwd_bias_data_memory_pd, this->blobs_[1].get(), this, fl_bias));
           }
