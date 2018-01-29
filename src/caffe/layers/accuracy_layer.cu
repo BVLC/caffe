@@ -134,6 +134,7 @@ void AccuracyLayer<Dtype>::Forward_gpu(
       }
     }
   }
+  caffe_gpu_set(bottom[0]->count(), Dtype(0), bottom[0]->mutable_gpu_diff());
 }
 
 
