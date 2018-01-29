@@ -44,6 +44,7 @@ class SaliencyPoolingLayer : public Layer<Dtype> {
   int channels_;
   int height_, width_;
   int pooled_height_, pooled_width_;
+  int PoolMethod;
   Blob<float> randoms_;
   Blob<int> max_idx_;
 };
