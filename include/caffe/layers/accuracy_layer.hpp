@@ -92,6 +92,8 @@ class AccuracyLayer : public Layer<Dtype> {
   int ignore_label_;
   /// Keeps counts of the number of samples per class.
   Blob<Dtype> nums_buffer_;
+  /// Intermediate results for the GPU implementation
+  Blob<Dtype> gpu_buffer_;
 };
 
 }  // namespace caffe

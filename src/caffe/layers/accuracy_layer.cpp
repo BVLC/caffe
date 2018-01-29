@@ -34,6 +34,7 @@ void AccuracyLayer<Dtype>::Reshape(
       << "label count (number of labels) must be N*H*W, "
       << "with integer values in {0, 1, ..., C-1}.";
   vector<int> top_shape(0);  // Accuracy is a scalar; 0 axes.
+  gpu_buffer_.ReshapeLike(*bottom[0]);
   top[0]->Reshape(top_shape);
   if (top.size() > 1) {
     // Per-class accuracy is a vector; 1 axes.
