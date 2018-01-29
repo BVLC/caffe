@@ -20,6 +20,7 @@ void SaliencyPoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   stride_h_ = stride_w_ = saliency_pool_param.stride();
   CHECK_GT(stride_h_, 0) << "Stride cannot be zero.";
   CHECK_GT(stride_w_, 0) << "Stride cannot be zero.";
+  PoolMethod = saliency_pool_param.pool();
 }
 
 template <typename Dtype>
