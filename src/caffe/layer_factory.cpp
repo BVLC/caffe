@@ -11,6 +11,7 @@
 #include "caffe/layers/deconv_layer.hpp"
 #include "caffe/layers/lrn_layer.hpp"
 #include "caffe/layers/pooling_layer.hpp"
+#include "caffe/layers/saliency_pooling_layer.hpp"
 #include "caffe/layers/relu_layer.hpp"
 #include "caffe/layers/sigmoid_layer.hpp"
 #include "caffe/layers/softmax_layer.hpp"
@@ -133,11 +134,6 @@ shared_ptr<Layer<Dtype> > GetPoolingLayer(const LayerParameter& param) {
                 << "Using Caffe's own pooling layer.";
       return shared_ptr<Layer<Dtype> >(new PoolingLayer<Dtype>(param));
     }
-    // CuDNN assumes layers are not being modified in place, thus
-    // breaking our index tracking for updates in some cases in Caffe.
-    // Until there is a workaround in Caffe (index management) or
-    // cuDNN, use Caffe layer to max pooling, or don't use in place
-    // layers after max pooling layers
     if (param.pooling_param().pool() == PoolingParameter_PoolMethod_MAX) {
         return shared_ptr<Layer<Dtype> >(new PoolingLayer<Dtype>(param));
     } else {
@@ -149,8 +145,55 @@ shared_ptr<Layer<Dtype> > GetPoolingLayer(const LayerParameter& param) {
     throw;  // Avoids missing return warning
   }
 }
-
 REGISTER_LAYER_CREATOR(Pooling, GetPoolingLayer);
+
+/*
+############################################################################################################
+############################################################################################################
+############################################################################################################
+############################################################################################################
+*/
+
+
+// Get saliency pooling layer according to engine.
+
+template <typename Dtype>
+shared_ptr<Layer<Dtype> > GetSaliencyPoolingLayer(const LayerParameter& param) {
+/*
+  SaliencyPoolingParameter_Engine engine = param.saliency_pooling_param().engine();
+  engine = SaliencyPoolingParameter_Engine_CAFFE;
+  if (engine == SaliencyPoolingParameter_Engine_DEFAULT) {
+    engine = SaliencyPoolingParameter_Engine_CAFFE;
+#ifdef USE_CUDNN
+    engine = SaliencyPoolingParameter_Engine_CUDNN;
+#endif
+  }
+  if (engine == SaliencyPoolingParameter_Engine_CAFFE) {
+    return shared_ptr<Layer<Dtype> >(new SaliencyPoolingLayer<Dtype>(param));
+#ifdef USE_CUDNN
+  } else if (engine == SaliencyPoolingParameter_Engine_CUDNN) {
+    if (param.top_size() > 1) {
+      LOG(INFO) << "cuDNN does not support multiple tops. "
+                << "Using Caffe's own pooling layer.";
+      return shared_ptr<Layer<Dtype> >(new SaliencyPoolingLayer<Dtype>(param));
+    }
+#endif
+  } else {
+    LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
+    throw;  // Avoids missing return warning
+  }*/
+  return shared_ptr<Layer<Dtype> >(new SaliencyPoolingLayer<Dtype>(param));
+}
+
+REGISTER_LAYER_CREATOR(SaliencyPooling, GetSaliencyPoolingLayer);
+
+
+/*
+############################################################################################################
+############################################################################################################
+############################################################################################################
+############################################################################################################
+*/
 
 // Get LRN layer according to engine
 template <typename Dtype>
