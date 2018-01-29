@@ -31,6 +31,9 @@
 #include "caffe/util/io.hpp"
 #include "caffe/util/rng.hpp"
 
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+
 using namespace caffe;  // NOLINT(build/namespaces)
 using std::pair;
 using boost::scoped_ptr;
@@ -61,6 +64,8 @@ DEFINE_bool(encoded, false,
     "When this option is on, the encoded image will be save in datum");
 DEFINE_string(encode_type, "",
     "Optional: What type should we encode the image as ('png','jpg',...).");
+DEFINE_bool(mean, true,
+	    "Whether to compute the mean values and write them into mean_values.txt");
 
 int main(int argc, char** argv) {
 #ifdef USE_OPENCV
@@ -92,8 +97,10 @@ int main(int argc, char** argv) {
   const string label_type = FLAGS_label_type;
   const string label_map_file = FLAGS_label_map_file;
   const bool check_label = FLAGS_check_label;
+  const bool mean = FLAGS_mean;
   std::map<std::string, int> name_to_label;
-
+  std::vector<float> meanv;
+  
   std::ifstream infile(argv[2]);
   std::vector<std::pair<std::string, boost::variant<int, std::string> > > lines;
   std::string filename;
@@ -180,6 +187,21 @@ int main(int argc, char** argv) {
             << data.size();
       }
     }
+    if (mean) {
+      if (meanv.empty()) {
+	  meanv = std::vector<float>(datum->channels(),0.0);
+	}
+      std::vector<float> lmeanv(datum->channels(),0.0);
+      std::vector<cv::Mat> channels;
+      cv::Mat img = cv::imread(lines[line_id].first);
+      cv::split(img, channels);
+      for (int d=0;d<datum->channels();d++) {
+	  lmeanv[d] = cv::mean(channels[d])[0];
+	  meanv[d] += lmeanv[d];
+	  //std::cerr << meanv[d] / count << std::endl;
+	}
+    }
+    
     // sequential
     string key_str = caffe::format_int(line_id, 8) + "_" + lines[line_id].first;
 
@@ -200,6 +222,14 @@ int main(int argc, char** argv) {
     txn->Commit();
     LOG(INFO) << "Processed " << count << " files.";
   }
+  if (mean)
+    {
+      std::ofstream fout_mean("mean_values.txt");
+      for (auto v: meanv)
+	fout_mean << v << " ";
+      fout_mean << std::endl;
+      fout_mean.close();
+    }
 #else
   LOG(FATAL) << "This tool requires OpenCV; compile with USE_OPENCV.";
 #endif  // USE_OPENCV

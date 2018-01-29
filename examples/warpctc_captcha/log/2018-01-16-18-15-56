@@ -1,0 +1,8 @@
+
+INFO - 18:15:56 - Using GPUs 0
+INFO - 18:15:56 - GPU 0: TITAN X (Pascal)
+INFO - 18:15:57 - Initializing solver from parameters: 
+[libprotobuf ERROR google/protobuf/text_format.cc:274] Error parsing text-format caffe.NetParameter: 155:32: Message type "caffe.LayerParameter" has no field named "labelsequence_accuracy_param".
+terminate called after throwing an instance of 'CaffeErrorException'
+  what():  src/caffe/util/upgrade_proto.cpp:88 / Check failed (custom): ReadProtoFromTextFile(param_file, param)
+INFO - 18:15:57 - Creating training net from net file: ./examples/warpctc_captcha/lstm_ctc.prototxt

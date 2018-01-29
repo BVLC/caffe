@@ -735,47 +735,63 @@ cv::Mat ApplyDistort(const cv::Mat& in_img, const DistortionParameter& param) {
   vector<float> binary_probs;
   if (param.prob() > 0.0)
     binary_probs = {1.f-param.prob(),param.prob()};
-  brightness = param.prob() ? roll_weighted_die(binary_probs) == 1 : brightness;
-  contrast = param.prob() ? roll_weighted_die(binary_probs) == 1 : contrast;
-  saturation = param.prob() ? roll_weighted_die(binary_probs) == 1 : saturation;
-  hue = param.prob() ? roll_weighted_die(binary_probs) == 1 : hue;
-  random_order = param.prob() ? roll_weighted_die(binary_probs) == 1 : random_order;
+  else return in_img;
   
   if (prob > 0.5) {
     // Do random brightness distortion
+    if (brightness)
+      brightness = (roll_weighted_die(binary_probs) == 1);
     RandomBrightness(out_img, &out_img, brightness,
                      param.brightness_delta());
 
     // Do random contrast distortion.
+    if (contrast)
+      contrast = (roll_weighted_die(binary_probs) == 1);
     RandomContrast(out_img, &out_img, contrast,
                    param.contrast_lower(), param.contrast_upper());
 
     // Do random saturation distortion.
+    if (saturation)
+      saturation = (roll_weighted_die(binary_probs) == 1);
     RandomSaturation(out_img, &out_img, saturation,
                      param.saturation_lower(), param.saturation_upper());
 
     // Do random hue distortion.
+    if (hue)
+      hue = (roll_weighted_die(binary_probs) == 1);
     RandomHue(out_img, &out_img, hue, param.hue_delta());
 
     // Do random reordering of the channels.
+    if (random_order)
+      random_order = (roll_weighted_die(binary_probs) == 1);
     RandomOrderChannels(out_img, &out_img, random_order);
   } else {
     // Do random brightness distortion.
+    if (brightness)
+      brightness = (roll_weighted_die(binary_probs) == 1);
     RandomBrightness(out_img, &out_img, brightness,
                      param.brightness_delta());
 
     // Do random saturation distortion.
+    if (saturation)
+      saturation = (roll_weighted_die(binary_probs) == 1);
     RandomSaturation(out_img, &out_img, saturation,
                      param.saturation_lower(), param.saturation_upper());
 
     // Do random hue distortion.
+    if (hue)
+      hue = (roll_weighted_die(binary_probs) == 1);
     RandomHue(out_img, &out_img, hue, param.hue_delta());
 
     // Do random contrast distortion.
+    if (contrast)
+      contrast = (roll_weighted_die(binary_probs) == 1);
     RandomContrast(out_img, &out_img, contrast,
                    param.contrast_lower(), param.contrast_upper());
 
     // Do random reordering of the channels.
+    if (random_order)
+      random_order = (roll_weighted_die(binary_probs) == 1);
     RandomOrderChannels(out_img, &out_img, random_order);
   }
 

@@ -63,6 +63,8 @@ class LevelDB : public DB {
     return new LevelDBTransaction(db_);
   }
   virtual int Count() { return -1; }
+  virtual void Get(const std::string &key,
+		   std::string &data_val) { (void)key;}
   
  private:
   leveldb::DB* db_;

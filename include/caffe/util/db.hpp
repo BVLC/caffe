@@ -42,7 +42,9 @@ class DB {
   virtual Cursor* NewCursor() = 0;
   virtual Transaction* NewTransaction() = 0;
   virtual int Count() = 0;
-
+  virtual void Get(const std::string &key,
+		   std::string &data_val) = 0;
+  
   DISABLE_COPY_AND_ASSIGN(DB);
 };
 

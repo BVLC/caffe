@@ -143,7 +143,7 @@ class AdamSolver : public SGDSolver<Dtype> {
  protected:
   void AdamPreSolve();
   virtual void ComputeUpdateValue(int param_id, Dtype rate);
-
+  
   DISABLE_COPY_AND_ASSIGN(AdamSolver);
 };
 

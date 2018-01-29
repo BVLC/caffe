@@ -1,0 +1,163 @@
+I0116 15:15:02.527694  4326 caffe.cpp:218] Using GPUs 0
+I0116 15:15:02.549247  4326 caffe.cpp:223] GPU 0: TITAN X (Pascal)
+I0116 15:15:02.896101  4326 solver.cpp:44] Initializing solver from parameters: 
+test_iter: 50
+test_interval: 1000
+base_lr: 0.0001
+display: 1000
+max_iter: 50000
+lr_policy: "step"
+gamma: 0.1
+momentum: 0.9
+weight_decay: 0.0005
+stepsize: 25000
+snapshot: 25000
+snapshot_prefix: "./examples/warpctc_captcha/model/lstm_ctc"
+solver_mode: GPU
+device_id: 0
+net: "./examples/warpctc_captcha/lstm_ctc.prototxt"
+train_state {
+  level: 0
+  stage: ""
+}
+clip_gradients: 5000
+I0116 15:15:02.896239  4326 solver.cpp:87] Creating training net from net file: ./examples/warpctc_captcha/lstm_ctc.prototxt
+I0116 15:15:02.896530  4326 net.cpp:296] The NetState phase (0) differed from the phase (1) specified by a rule in layer data
+I0116 15:15:02.896543  4326 net.cpp:296] The NetState phase (0) differed from the phase (1) specified by a rule in layer permute_fc
+I0116 15:15:02.896544  4326 net.cpp:296] The NetState phase (0) differed from the phase (1) specified by a rule in layer accuracy
+I0116 15:15:02.896595  4326 net.cpp:53] Initializing net from parameters: 
+name: "lstm_ctc_net"
+state {
+  phase: TRAIN
+  level: 0
+  stage: ""
+}
+layer {
+  name: "data"
+  type: "HDF5Data"
+  top: "data"
+  top: "label"
+  include {
+    phase: TRAIN
+  }
+  hdf5_data_param {
+    source: "./data/captcha/trainning.list"
+    batch_size: 512
+  }
+}
+layer {
+  name: "indicator"
+  type: "ContinuationIndicator"
+  top: "indicator"
+  continuation_indicator_param {
+    time_step: 80
+    batch_size: 512
+  }
+}
+layer {
+  name: "permuted_data"
+  type: "Permute"
+  bottom: "data"
+  top: "permuted_data"
+  permute_param {
+    order: 3
+    order: 0
+    order: 1
+    order: 2
+  }
+}
+layer {
+  name: "lstm1"
+  type: "LSTM"
+  bottom: "permuted_data"
+  bottom: "indicator"
+  top: "lstm1"
+  recurrent_param {
+    num_output: 100
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+layer {
+  name: "lstm2"
+  type: "LSTM"
+  bottom: "lstm1"
+  bottom: "indicator"
+  top: "lstm2"
+  recurrent_param {
+    num_output: 100
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+layer {
+  name: "fc1"
+  type: "InnerProduct"
+  bottom: "lstm2"
+  top: "fc1"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  inner_product_param {
+    num_output: 11
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+    axis: 2
+  }
+}
+layer {
+  name: "ctc_loss"
+  type: "CtcLoss"
+  bottom: "fc1"
+  bottom: "label"
+  top: "ctc_loss"
+  loss_weight: 1
+  ctc_loss_param {
+    alphabet_size: 11
+    time_step: 80
+    blank_label: 10
+  }
+}
+I0116 15:15:02.896813  4326 layer_factory.hpp:77] Creating layer data
+I0116 15:15:02.896826  4326 net.cpp:86] Creating Layer data
+I0116 15:15:02.896831  4326 net.cpp:382] data -> data
+I0116 15:15:02.896847  4326 net.cpp:382] data -> label
+I0116 15:15:02.896855  4326 hdf5_data_layer.cpp:79] Loading list of HDF5 filenames from: ./data/captcha/trainning.list
+F0116 15:15:02.896874  4326 hdf5_data_layer.cpp:88] Failed to open source file: ./data/captcha/trainning.list
+*** Check failure stack trace: ***
+    @     0x7fcebff4f5cd  google::LogMessage::Fail()
+    @     0x7fcebff51433  google::LogMessage::SendToLog()
+    @     0x7fcebff4f15b  google::LogMessage::Flush()
+    @     0x7fcebff51e1e  google::LogMessageFatal::~LogMessageFatal()
+    @     0x7fcec05c1769  caffe::HDF5DataLayer<>::LayerSetUp()
+    @     0x7fcec0582e72  caffe::Net<>::Init()
+    @     0x7fcec05853ae  caffe::Net<>::Net()
+    @     0x7fcec070a025  caffe::Solver<>::InitTrainNet()
+    @     0x7fcec070a5b5  caffe::Solver<>::Init()
+    @     0x7fcec070a8bf  caffe::Solver<>::Solver()
+    @     0x7fcec072add1  caffe::Creator_SGDSolver<>()
+    @           0x40aaef  train()
+    @           0x40743e  main
+    @     0x7fcebeebf830  __libc_start_main
+    @           0x407c99  _start
+    @              (nil)  (unknown)
