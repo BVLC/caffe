@@ -465,9 +465,9 @@ BOOST_PYTHON_MODULE(_caffe) {
     .add_property("diff",     bp::make_function(&Blob<Dtype>::mutable_cpu_diff,
           NdarrayCallPolicies()))
 #ifdef CO_SIM
-    .add_property("data_r",     bp::make_function(&Blob<Dtype>::cpu_data_cosim,
+    .add_property("data_ro",     bp::make_function(&Blob<Dtype>::cpu_data_cosim,
           NdarrayCallPolicies()))
-    .add_property("diff_r",     bp::make_function(&Blob<Dtype>::cpu_diff_cosim,
+    .add_property("diff_ro",     bp::make_function(&Blob<Dtype>::cpu_diff_cosim,
           NdarrayCallPolicies()))
 #endif
     ;
