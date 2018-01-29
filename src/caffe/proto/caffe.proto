@@ -1419,6 +1419,10 @@ message PoolingParameter {
 message SaliencyPoolingParameter {
   // Pad, kernel size, and stride are all given as a single value for equal
   // dimensions in height and width or as Y, X pairs.
-  optional uint32 kernel_size = 3; // The kernel size (square window)
-  optional uint32 stride = 1; // The stride (equal in Y, X)
+  optional uint32 kernel_size = 1 [default = 3]; // The kernel size (square window)
+  optional uint32 stride = 2 [default = 2]; // The stride (equal in Y, X)
+  // 0 = Saliency Weighting           (SAL: Feat*Salvals,             NON-SAL: Zero)
+  // 1 = RandomSampling               (SAL: MaxPooling,               NON-SAL: Min value) - Using Ps (Weibull distribution)
+  // 2 = RandomSampling + Weighting   (SAL: MaxPooling*SalientValue   NON-SAL: Min value) - Using Ps (Weibull distribution)
+  optional uint32 pool = 3 [default = 0];
 }
