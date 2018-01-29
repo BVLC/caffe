@@ -592,7 +592,7 @@ void Net<Dtype>::CompileNet(const NetParameter& param,
   #undef NUM_OF_RULES
   #undef COMPILE_BN_FOLDING_INDEX
   #undef COMPILE_BN_RELU_FUSION_INDEX
-  #undef COMPILE_CONV_SUM_FUSION_INDEX
+  #undef DISABLE_SPARSE_INDEX
   #undef COMPILE_CONV_SUM_FUSION_INDEX
 }
 
