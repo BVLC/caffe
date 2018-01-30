@@ -79,10 +79,8 @@ template <typename Dtype>
 void MKLDNNConvolutionLayer<Dtype>::compute_output_shape()
 {
     ConvolutionLayer<Dtype>::compute_output_shape();
-    this->height_out_ = (this->height_ + 2 * this->pad_h_ - this->kernel_h_)
-        / this->stride_h_ + 1;
-    this->width_out_ = (this->width_ + 2 * this->pad_w_ - this->kernel_w_)
-        / this->stride_w_ + 1;
+    this->height_out_ = this->output_shape_[0];
+    this->width_out_ = this->output_shape_[1];
 }
 
 template <typename Dtype>
@@ -182,8 +180,23 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
     int32_t kw = this->kernel_w_;
     int32_t kh = this->kernel_h_;
 
-    memory::dims convolutionStrides {this->stride_h_, this->stride_w_};
-    memory::dims padding {this->pad_h_, this->pad_w_};
+    int32_t sw = this->stride_w_;
+    int32_t sh = this->stride_h_;
+
+    int32_t pw = this->pad_w_;
+    int32_t ph = this->pad_h_;
+    memory::dims convolutionStrides {sh, sw};
+    memory::dims padding {ph, pw};
+    memory::dims padding_r;
+    memory::dims dilation;
+    bool dilated_conv = false;
+    const int* dilation_data = this->dilation_.cpu_data();
+    for (int i = 0; i < this->num_spatial_axes_; ++i) {
+      dilation.push_back(dilation_data[i] - 1);
+      if (dilation_data[i] != 1) dilated_conv = true;
+    }
+    padding_r.push_back((oh - 1) * sh - ih + ((kh - 1) * (dilation_data[0]) + 1) - ph);
+    padding_r.push_back((ow - 1) * sw - iw + ((kw - 1) * (dilation_data[1]) + 1) - pw);
 
     // ---- Initialize memory descriptors (fromat = any) to create convolution descriptor -------------
     memory::data_type mpcsn = memory::data_type::f32;
@@ -312,15 +325,27 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
       // ---- Initialize convolution primitive descriptor -------------
       shared_ptr<convolution_forward::desc> convFwd_desc;
       if (this->bias_term_) {
-        convFwd_desc.reset(new convolution_forward::desc(
-            propagation, convAlgorithm, init_bottom_md, init_weights_md,
-            init_bias_md, init_top_md, convolutionStrides, padding, padding,
-            padding_kind::zero));
+          if (dilated_conv)
+              convFwd_desc.reset(new convolution_forward::desc(
+                  propagation, convAlgorithm, init_bottom_md, init_weights_md,
+                  init_bias_md, init_top_md, convolutionStrides, dilation, padding, padding_r,
+                  padding_kind::zero));
+          else
+              convFwd_desc.reset(new convolution_forward::desc(
+                  propagation, convAlgorithm, init_bottom_md, init_weights_md,
+                  init_bias_md, init_top_md, convolutionStrides, padding, padding,
+                  padding_kind::zero));
       } else {
-        convFwd_desc.reset(new convolution_forward::desc(
-            propagation, convAlgorithm, init_bottom_md, init_weights_md,
-            init_top_md, convolutionStrides, padding, padding,
-            padding_kind::zero));
+          if (dilated_conv)
+              convFwd_desc.reset(new convolution_forward::desc(
+                  propagation, convAlgorithm, init_bottom_md, init_weights_md,
+                  init_top_md, convolutionStrides, dilation, padding, padding_r,
+                  padding_kind::zero));
+          else
+              convFwd_desc.reset(new convolution_forward::desc(
+                  propagation, convAlgorithm, init_bottom_md, init_weights_md,
+                  init_top_md, convolutionStrides, padding, padding,
+                  padding_kind::zero));
       }
 
       for (subEngineIndex = 0; subEngineIndex < ep.getNumberOfSubEngines();
@@ -546,8 +571,23 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionBwd(const vector<Blob<Dtype>*
     int32_t kw = this->kernel_w_;
     int32_t kh = this->kernel_h_;
 
-    memory::dims convolutionStrides {this->stride_h_, this->stride_w_};
-    memory::dims padding {this->pad_h_, this->pad_w_};
+    int32_t sw = this->stride_w_;
+    int32_t sh = this->stride_h_;
+
+    int32_t pw = this->pad_w_;
+    int32_t ph = this->pad_h_;
+    memory::dims convolutionStrides {sh, sw};
+    memory::dims padding {ph, pw};
+    memory::dims padding_r;
+    memory::dims dilation;
+    bool dilated_conv = false;
+    const int* dilation_data = this->dilation_.cpu_data();
+    for (int i = 0; i < this->num_spatial_axes_; ++i) {
+      dilation.push_back(dilation_data[i] - 1);
+      if (dilation_data[i] != 1) dilated_conv = true;
+    }
+    padding_r.push_back((oh - 1) * sh - ih + ((kh - 1) * (dilation_data[0]) + 1) - ph);
+    padding_r.push_back((ow - 1) * sw - iw + ((kw - 1) * (dilation_data[1]) + 1) - pw);
 
     // ---- Initialize memory descriptors (fromat = any) to create convolution descriptor -------------
     memory::data_type mpcsn = memory::data_type::f32;
@@ -579,26 +619,41 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionBwd(const vector<Blob<Dtype>*
         shared_ptr<convolution_backward_data::desc> convBwdData_desc;
         shared_ptr<convolution_backward_weights::desc> convBwdWeights_desc;
         if (this->bias_term_) {
-            convBwdWeights_desc.reset(new convolution_backward_weights::desc(convAlgorithm
+            if (dilated_conv)
+                convBwdWeights_desc.reset(new convolution_backward_weights::desc(convAlgorithm
+                            , init_bottom_md, init_weights_md, init_bias_md, init_top_md
+                            , convolutionStrides, dilation, padding, padding_r, padding_kind::zero));
+            else
+                convBwdWeights_desc.reset(new convolution_backward_weights::desc(convAlgorithm
                             , init_bottom_md, init_weights_md, init_bias_md, init_top_md
                             , convolutionStrides, padding, padding, padding_kind::zero));
         } else {
-            convBwdWeights_desc.reset(new convolution_backward_weights::desc(convAlgorithm
-                                                                             , init_bottom_md, init_weights_md, init_top_md
-                                                                             , convolutionStrides, padding, padding, padding_kind::zero));
+            if (dilated_conv)
+                convBwdWeights_desc.reset(new convolution_backward_weights::desc(convAlgorithm
+                            , init_bottom_md, init_weights_md, init_top_md
+                            , convolutionStrides, dilation, padding, padding_r, padding_kind::zero));
+            else
+                convBwdWeights_desc.reset(new convolution_backward_weights::desc(convAlgorithm
+                            , init_bottom_md, init_weights_md, init_top_md
+                            , convolutionStrides, padding, padding, padding_kind::zero));
         }
        
-        convBwdData_desc.reset(new convolution_backward_data::desc(convAlgorithm
-                                                                   , init_bottom_md, init_weights_md, init_top_md
-                                                                   , convolutionStrides, padding, padding, padding_kind::zero));
+        if (dilated_conv)
+            convBwdData_desc.reset(new convolution_backward_data::desc(convAlgorithm
+                            , init_bottom_md, init_weights_md, init_top_md
+                            , convolutionStrides, dilation, padding, padding_r, padding_kind::zero));
+        else
+            convBwdData_desc.reset(new convolution_backward_data::desc(convAlgorithm
+                            , init_bottom_md, init_weights_md, init_top_md
+                            , convolutionStrides, padding, padding, padding_kind::zero));
 
         for(subEngineIndex=0; subEngineIndex < ep.getNumberOfSubEngines(); subEngineIndex++) {
             try {
                 convBwdData_pd.reset(new convolution_backward_data::primitive_desc(*convBwdData_desc,
-                                                                                   ep.getMKLDNNSubEngine(subEngineIndex), *convFwd_pd));
+                                          ep.getMKLDNNSubEngine(subEngineIndex), *convFwd_pd));
 
                 convBwdWeights_pd.reset(new convolution_backward_weights::primitive_desc(*convBwdWeights_desc,
-                                                                                         ep.getMKLDNNSubEngine(subEngineIndex), *convFwd_pd));
+                                          ep.getMKLDNNSubEngine(subEngineIndex), *convFwd_pd));
             }
             catch(...) {
                 continue;
