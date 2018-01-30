@@ -514,7 +514,10 @@ int test() {
       loss_msg_stream << " (* " << loss_weight
                       << " = " << loss_weight * mean_score << " loss)";
     }
-    VLOG(2) << output_name << " = " << mean_score << loss_msg_stream.str();
+    if (output_name.find("accuracy") == string::npos)
+        VLOG(2) << output_name << " = " << mean_score << loss_msg_stream.str();
+    else
+        LOG(INFO) << output_name << " = " << mean_score << loss_msg_stream.str();
   }
 
   return 0;
