@@ -33,13 +33,18 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   const bool is_color  = this->layer_param_.image_data_param().is_color();
   const int label_size  = this->layer_param_.image_data_param().label_size();
   label_size_ = label_size;
-  string root_folder = this->layer_param_.image_data_param().root_folder();
+  // string root_folder = this->layer_param_.image_data_param().root_folder();
+
+
 
   CHECK((new_height == 0 && new_width == 0) ||
       (new_height > 0 && new_width > 0)) << "Current implementation requires "
       "new_height and new_width to be set at the same time.";
   // Read the file with filenames and labels
   const string& source = this->layer_param_.image_data_param().source();
+  size_t found=source.find_last_of("/\\");
+  string root_folder = source.substr(0,found) + "/";
+
   LOG(INFO) << "Opening file " << source;
   // Extend image_data_layer from single label to multilabel inputs
   ReadImagesList(source.c_str(), &lines_);
@@ -137,7 +142,10 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   const int new_height = image_data_param.new_height();
   const int new_width = image_data_param.new_width();
   const bool is_color = image_data_param.is_color();
-  string root_folder = image_data_param.root_folder();
+  const string& source = this->layer_param_.image_data_param().source();
+  size_t found=source.find_last_of("/\\");
+  string root_folder = source.substr(0,found) + "/";
+  //  string root_folder = image_data_param.root_folder();
 
   // Reshape according to the first image of each batch
   // on single input batches allows for inputs of varying dimension.
