@@ -556,6 +556,7 @@ void Net<Dtype>::CompileNet(const NetParameter& param,
 
   #define NUM_OF_RULES sizeof(CompileRules)/sizeof(CompileRules[0])
   #define COMPILE_BN_FOLDING_INDEX 0
+  #define COMPILE_CONV_RELU_FUSION_INDEX 2
   #define COMPILE_BN_RELU_FUSION_INDEX 3
   #define COMPILE_SPARSE_INDEX 5
   #define COMPILE_CONV_SUM_FUSION_INDEX 6
@@ -569,6 +570,9 @@ void Net<Dtype>::CompileNet(const NetParameter& param,
 
 #ifdef DISABLE_BN_FOLDING
   disabled[COMPILE_BN_FOLDING_INDEX] = true;
+#endif
+#ifdef DISABLE_CONV_RELU_FUSION
+  disabled[COMPILE_CONV_RELU_FUSION_INDEX] = true;
 #endif
 #ifdef DISABLE_BN_RELU_FUSION
   disabled[COMPILE_BN_RELU_FUSION_INDEX] = true;
@@ -591,6 +595,7 @@ void Net<Dtype>::CompileNet(const NetParameter& param,
   param_compiled->CopyFrom(param_temp[current]);
   #undef NUM_OF_RULES
   #undef COMPILE_BN_FOLDING_INDEX
+  #undef COMPILE_CONV_RELU_FUSION_INDEX
   #undef COMPILE_BN_RELU_FUSION_INDEX
   #undef DISABLE_SPARSE_INDEX
   #undef COMPILE_CONV_SUM_FUSION_INDEX

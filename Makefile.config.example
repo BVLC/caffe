@@ -79,13 +79,16 @@ USE_MKLDNN_AS_DEFAULT_ENGINE := 1
 # Use remove batch norm optimization to boost inference
 DISABLE_BN_FOLDING := 0
 
-# Use remove Bn + ReLU fusion to boost inference
+# Use Conv + Relu fusion to boost inference
+DISABLE_CONV_RELU_FUSION:= 0
+
+# Use Bn + ReLU fusion to boost inference
 DISABLE_BN_RELU_FUSION := 0
 
-#Use conv/eltwise/relu layer fusion to boost inference.
+# Use Conv + Eltwise + Relu layer fusion to boost inference.
 DISABLE_CONV_SUM_FUSION := 0
 
-#Use sparse to boost inference.
+# Use sparse to boost inference.
 DISABLE_SPARSE := 0
 
 # Intel(R) Math Kernel Library for Deep Neural Networks (Intel(R) MKL-DNN) 

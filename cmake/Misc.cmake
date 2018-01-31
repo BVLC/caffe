@@ -11,6 +11,11 @@ if(DISABLE_BN_FOLDING)
 	add_definitions("-DDISABLE_BN_FOLDING")
 endif()
 
+if(DISABLE_CONV_RELU_FUSION)
+	message(STATUS "CONV + ReLU fusion is disabled!")
+	add_definitions("-DDISABLE_CONV_RELU_FUSION")
+endif()
+
 if(DISABLE_BN_RELU_FUSION)
     message(STATUS "Bn + ReLU fusion is disabled!")
     add_definitions("-DDISABLE_BN_RELU_FUSION")
