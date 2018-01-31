@@ -525,7 +525,9 @@ include Makefile.dlcp
 BOOST_LDFLAGS += $(foreach boost_lib,$(BOOST_LIBRARIES),-l$(boost_lib))
 ifneq ($(origin BOOST_ROOT), undefined)
 	INCLUDE_DIRS += $(BOOST_ROOT)
+	INCLUDE_DIRS += $(BOOST_ROOT)/include
 	BOOST_LDFLAGS+=-L$(BOOST_ROOT)/stage/lib -Wl,-rpath,$(BOOST_ROOT)/stage/lib
+	BOOST_LDFLAGS+=-L$(BOOST_ROOT)/lib -Wl,-rpath,$(BOOST_ROOT)/lib
 endif
 
 # BLAS configuration (default = MKL)
