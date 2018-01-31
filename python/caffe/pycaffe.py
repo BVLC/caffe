@@ -12,7 +12,7 @@ import numpy as np
 
 from ._caffe import Net, SGDSolver, NesterovSolver, AdaGradSolver, \
         RMSPropSolver, AdaDeltaSolver, AdamSolver, NCCL, Timer
-import caffe.io
+import caffe.caffe_io
 
 import six
 
