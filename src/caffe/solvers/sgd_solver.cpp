@@ -93,6 +93,19 @@ Dtype SGDSolver<Dtype>::GetLearningRate() {
 
     rate = this->param_.base_lr() *
         pow(this->param_.gamma(), this->current_step_);
+  } else if (lr_policy == "sgdr") {
+    // SGDR stuff
+    if (this->iter_ == this->date_next_restart_) {
+      // current step is used for rebuilding other cached variables
+      // in other words, all variables can be computed from current_step, iter_last_event_ and params
+      this->current_step_++;
+      this->period_ *= this->param_.p_mult();
+      this->date_next_restart_ = this->iter_+this->period_;
+      this->max_lr_ *= this->param_.lr_mult();
+      this->iter_last_event_ = this->iter_;
+    }
+    rate = this->param_.min_lr() + 0.5 * (this->max_lr_ - this->param_.min_lr()) * (1+cos((this->iter_-this->iter_last_event_) / (float)this->period_ * M_PI));
+
   } else {
     LOG(FATAL) << "Unknown learning rate policy: " << lr_policy;
   }
@@ -101,6 +114,19 @@ Dtype SGDSolver<Dtype>::GetLearningRate() {
 
 template <typename Dtype>
 void SGDSolver<Dtype>::PreSolve() {
+
+
+  if (this->param_.lr_policy() == "sgdr") {
+    this->iter_last_event_ = 0;
+    this->max_lr_ = this->param_.base_lr();
+    this->period_ = this->param_.period();
+    this->current_step_ = 0;
+    if (this->period_ <= 0) {
+      this->period_ = this->param_.max_iter();
+    }
+    this->date_next_restart_ = this->period_;
+  }
+
   // Initialize the history
   const vector<Blob<Dtype>*>& net_params = this->net_->learnable_params();
   history_.clear();
@@ -357,6 +383,18 @@ void SGDSolver<Dtype>::RestoreSolverStateFromBinaryProto(
   }
   this->current_step_ = state.current_step();
   this->iter_last_event_ = state.iter_last_event();
+  if (this->param_.lr_policy() == "sgdr") {
+    // rebuild cache of variables for sgdr lr
+    this->max_lr_ = this->param_.base_lr() * pow(this->param_.lr_mult(), this->current_step_);
+    if (this->param_.period() > 0) {
+      this->period_ = this->param_.period() * pow(this->param_.p_mult(), this->current_step_);
+      this->date_next_restart_ = this->iter_last_event_ + this->period_;
+    } else {
+      this->period_ = this->param_.max_iter();
+      this->date_next_restart_ = this->param_.max_iter();
+    }
+  }
+
   this->minimum_loss_ = state.minimum_loss();
   CHECK_EQ(state.history_size(), history_.size())
       << "Incorrect length of history blobs.";
@@ -378,6 +416,19 @@ void SGDSolver<Dtype>::RestoreSolverStateFromHDF5(const string& state_file) {
   this->current_step_ = hdf5_load_int(file_hid, "current_step");
   this->iter_last_event_ = hdf5_load_int(file_hid, "iter_last_event");
   this->minimum_loss_ = hdf5_load_float<Dtype>(file_hid, "minimum_loss");
+
+  // rebuild cache of variables for sgdr lr
+  if (this->param_.lr_policy() == "sgdr") {
+    this->max_lr_ = this->param_.base_lr() * pow(this->param_.lr_mult(), this->current_step_);
+    if (this->param_.period() > 0) {
+      this->period_ = this->param_.period() * pow(this->param_.p_mult(), this->current_step_);
+      this->date_next_restart_ = this->iter_last_event_ + this->period_;
+    } else {
+      this->period_ = this->param_.max_iter();
+      this->date_next_restart_ = this->param_.max_iter();
+    }
+  }
+
   hid_t history_hid = H5Gopen2(file_hid, "history", H5P_DEFAULT);
   CHECK_GE(history_hid, 0) << "Error reading history from " << state_file;
   int state_history_size = hdf5_get_num_links(history_hid);

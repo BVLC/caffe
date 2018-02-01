@@ -44,7 +44,12 @@ class SGDSolver : public Solver<Dtype> {
 
   // loss history for 'plateau' LR policy (should be stored in snapshots)
   Dtype minimum_loss_;
+
+  // memorization of state for lr restarts of sgdr
   int iter_last_event_;
+  float max_lr_;
+  int period_;
+  int date_next_restart_;
 
   DISABLE_COPY_AND_ASSIGN(SGDSolver);
 };
