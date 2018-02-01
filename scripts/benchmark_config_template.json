@@ -9,7 +9,7 @@
         "caffe_bin" : "",
         "engine" : "choose CAFFE, MKL2017 or MKLDNN"
     },
-    "batch_size_table" : {
+    "perf_batch_size_table" : {
         "alexnet" : {
             "bdw" : "1024",
             "skx" : "1024",
@@ -34,5 +34,11 @@
             "knl" : "64",
             "knm" : "64"
         }
+    }
+    "scal_batch_size_table" : {
+        "alexnet" : "256",
+        "googlenet" : "64",
+        "googlenet_v2" : "64",
+        "resnet_50" : "64"
     }
 } 
