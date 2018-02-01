@@ -263,8 +263,10 @@ void SyncedMemory::set_prv_descriptor(shared_ptr<PrvMemDescr> descriptor,
   } else {
     if ((head_ != HEAD_AT_PRV) && same_data)
       head_ = SYNCED_PRV;
-    else
+    else if (descriptor->prv_ptr())
       head_ = HEAD_AT_PRV;
+    else
+      head_ = HEAD_AT_CPU;
   }
 
   prv_descriptor_ = descriptor;

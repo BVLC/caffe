@@ -712,16 +712,6 @@ void Net<Dtype>::CompilationRuleConvReluFusion(const NetParameter& param,
           (layer_param->engine() == "") &&
           (param.engine().compare(0, 6, "MKLDNN") == 0 &&
            param.engine().find(":DLA", 6) == string::npos)))) {
-      // check if Dialation is larger than 1. if yes, don't fuse the following Relu layer with this conv layer
-      // as MKLDNN doesn't support dilation convolution yet.
-      bool dilation = false;
-      for (int j = 0; j < layer_param->convolution_param().dilation_size(); ++j) {
-        if (layer_param->convolution_param().dilation(j) > 1) {
-          dilation = true;
-          break;
-        }
-      }
-
       std::vector<const LayerParameter*> consumer_layer_params;
       GetBlobConsumers(consumer_layer_params, layer_param->top(0),
                        param, i+1 < param.layer_size() ? i+1 : i);
@@ -731,8 +721,7 @@ void Net<Dtype>::CompilationRuleConvReluFusion(const NetParameter& param,
 
       // Consumer layer of blob produced by Conv
       // has to be ReLU layer with one Input Blob
-      if (!dilation &&
-          (consumer_layer_param.type().compare("ReLU") == 0) &&
+      if ((consumer_layer_param.type().compare("ReLU") == 0) &&
           ((consumer_layer_param.relu_param().engine() == ReLUParameter_Engine_MKLDNN) ||
            ((consumer_layer_param.relu_param().engine() == ReLUParameter_Engine_DEFAULT) &&
             (consumer_layer_param.engine().compare(0, 6, "MKLDNN") == 0 &&
