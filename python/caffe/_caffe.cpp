@@ -164,11 +164,11 @@ void Net_LoadHDF5(Net<Dtype>* net, string filename) {
   net->CopyTrainedLayersFromHDF5(filename.c_str());
 }
 
-void Net_SetInputArrays(Net<Dtype>* net, bp::object data_obj,
+void Net_SetInputArrays(Net<Dtype>* net, int index, bp::object data_obj,
     bp::object labels_obj) {
   // check that this network has an input MemoryDataLayer
   shared_ptr<MemoryDataLayer<Dtype> > md_layer =
-    boost::dynamic_pointer_cast<MemoryDataLayer<Dtype> >(net->layers()[0]);
+    boost::dynamic_pointer_cast<MemoryDataLayer<Dtype> >(net->layers()[index]);
   if (!md_layer) {
     throw std::runtime_error("set_input_arrays may only be called if the"
         " first layer is a MemoryDataLayer");
@@ -439,7 +439,8 @@ BOOST_PYTHON_MODULE(_caffe) {
         bp::make_function(&Net<Dtype>::output_blob_indices,
         bp::return_value_policy<bp::copy_const_reference>()))
     .def("_set_input_arrays", &Net_SetInputArrays,
-        bp::with_custodian_and_ward<1, 2, bp::with_custodian_and_ward<1, 3> >())
+        bp::with_custodian_and_ward<1, 3,
+        bp::with_custodian_and_ward<1, 4> >())
     .def("save", &Net_Save)
     .def("save_hdf5", &Net_SaveHDF5)
     .def("load_hdf5", &Net_LoadHDF5)
@@ -496,6 +497,7 @@ BOOST_PYTHON_MODULE(_caffe) {
   bp::class_<Solver<Dtype>, shared_ptr<Solver<Dtype> >, boost::noncopyable>(
     "Solver", bp::no_init)
     .add_property("net", &Solver<Dtype>::net)
+    .add_property("max_iter", &Solver<Dtype>::max_iter)
     .add_property("test_nets", bp::make_function(&Solver<Dtype>::test_nets,
           bp::return_internal_reference<>()))
     .add_property("iter", &Solver<Dtype>::iter)
