@@ -17,5 +17,6 @@ Improvements and new features include:
 - Support for Focal-Loss with SSD (https://arxiv.org/abs/1708.02002)
 - Support for AMSGrad (fix to Adam optimizer, https://openreview.net/forum?id=ryQu7f-RZ)
 - Support for Connectionist Temporal Classification (CTC) from https://github.com/baidu-research/warp-ctc and https://github.com/xmfbit/warpctc-caffe
+- Support for SGDR (http://arxiv.org/abs/1608.03983)
 
 While this is intended to be used with DeepDetect, this is a great alternative to the original Caffe if you'd like to avoid uncaptured errors, train from text or sparse data, need built-in image detection.
