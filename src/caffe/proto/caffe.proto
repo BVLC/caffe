@@ -391,9 +391,9 @@ message SolverParameter {
   // min lr at end of period
   optional float min_lr = 50 [default = 1e-6];
   // mult coeff for max_lr (base_lr) at begin of period 
-  optional float lr_mult = 51 [default = 1.0];
+  optional float lr_mult = 51 [default = 0.8];
   // mult coeff for period length: 1 or 2 are good candidates
-  optional float p_mult = 52 [default = 1.0];
+  optional float p_mult = 52 [default = 2.0];
   // period before putting back max_lr, -1 means after last iterations, same as putting max_iter
   optional int32 period = 53 [default = -1];
 }
