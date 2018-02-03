@@ -159,6 +159,12 @@ class Caffe {
   static int EnumerateDevices(bool silent = false);
   // Prepares contexts for devices to use
   static void SetDevices(vector<int> device_ids);
+
+#ifdef USE_OPENCL
+  static const cl_context& GetOpenCLContext(const int id, bool list_id);
+  static const cl_command_queue& GetOpenCLQueue(const int id, bool list_id);
+#endif  // USE_OPENCL
+
   // Finish executing gpu kernels on the specified-device.
   static void Synchronize(int device_id);
 

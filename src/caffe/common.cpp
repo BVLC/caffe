@@ -536,6 +536,20 @@ void Caffe::SetDevice(const int device_id) {
 #endif
 }
 
+#ifdef USE_OPENCL
+const cl_context& Caffe::GetOpenCLContext(const int id, bool list_id) {
+  viennacl::ocl::context &ctx = viennacl::ocl::get_context(
+         GetDevice(id, list_id)->id());
+  return ctx.handle().get();
+}
+
+const cl_command_queue& Caffe::GetOpenCLQueue(const int id, bool list_id) {
+  viennacl::ocl::context &ctx = viennacl::ocl::get_context(
+         GetDevice(id, list_id)->id());
+  return ctx.get_queue().handle().get();
+}
+#endif  // USE_OPENCL
+
 // Should call explicitly for OCL + FFT
 void Caffe::TeardownDevice(const int device_id) {
 #if defined(USE_OPENCL) &&defined(USE_FFT)
