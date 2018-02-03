@@ -87,9 +87,8 @@ void SigmoidCrossEntropyLossLayer<Dtype, MItype, MOtype>::Forward_gpu(
   // Stable version of loss computation from input data
   vptr<const MItype> input_data = bottom[0]->gpu_data();
   vptr<const MItype> target = bottom[1]->gpu_data();
-  // Since this memory is not used for anything until it is overwritten
-  // on the backward pass, we use it here to avoid having to allocate new GPU
-  // memory to accumulate intermediate results in the kernel.
+  // Since this memory is not used for anything, we use it here to avoid having
+  // to allocate new GPU memory to accumulate intermediate results.
   vptr<MItype> loss_data = bottom[0]->mutable_gpu_diff();
 
   MItype loss;
@@ -122,6 +121,12 @@ void SigmoidCrossEntropyLossLayer<Dtype, MItype, MOtype>::Forward_gpu(
   this->device_->template asum<Dtype>(count, loss_data, &loss);
   normalizer_ = get_normalizer(normalization_, valid_count);
   top[0]->mutable_cpu_data()[0] = loss / normalizer_;
+
+  // Clear scratch memory to prevent interfering with backward (see #6202).
+  this->device_->template set<Dtype>(bottom[0]->count(),
+                                     Dtype(0), bottom[0]->mutable_gpu_diff());
+  this->device_->template set<Dtype>(bottom[1]->count(), Dtype(0),
+                                     bottom[1]->mutable_gpu_diff());
 }
 
 template<typename Dtype, typename MItype, typename MOtype>

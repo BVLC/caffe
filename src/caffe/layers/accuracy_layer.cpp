@@ -44,6 +44,10 @@ void AccuracyLayer<Dtype, MItype, MOtype>::Reshape(
     top[1]->Reshape(top_shape_per_class);
     nums_buffer_.Reshape(top_shape_per_class);
   }
+
+  if (Caffe::mode() == Caffe::GPU && this->device_program_.get() == nullptr) {
+    this->GenerateProgram();
+  }
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
@@ -58,7 +62,7 @@ void AccuracyLayer<Dtype, MItype, MOtype>::Forward_cpu(
   vector<Dtype> maxval(top_k_+1);
   vector<int_tp> max_id(top_k_+1);
   if (top.size() > 1) {
-    caffe_set(nums_buffer_.count(), 0, nums_buffer_.mutable_cpu_data());
+    caffe_set(nums_buffer_.count(), Dtype(0), nums_buffer_.mutable_cpu_data());
     caffe_set(top[1]->count(), Dtype(0), top[1]->mutable_cpu_data());
   }
   int_tp count = 0;
@@ -69,32 +73,29 @@ void AccuracyLayer<Dtype, MItype, MOtype>::Forward_cpu(
       if (has_ignore_label_ && label_value == ignore_label_) {
         continue;
       }
-      if (top.size() > 1) ++nums_buffer_.mutable_cpu_data()[label_value];
       DCHECK_GE(label_value, 0);
       DCHECK_LT(label_value, num_labels);
+      if (top.size() > 1) ++nums_buffer_.mutable_cpu_data()[label_value];
+      const Dtype prob_of_true_class = bottom_data[i * dim
+                                                   + label_value * inner_num_
+                                                   + j];
+      int num_better_predictions = -1;  // true_class also counts as "better"
       // Top-k accuracy
-      vector<std::pair<Dtype, int_tp> > bottom_data_vector;
-      for (int_tp k = 0; k < num_labels; ++k) {
-        bottom_data_vector.push_back(make_pair(
-            bottom_data[i * dim + k * inner_num_ + j], k));
+      for (int k = 0; k < num_labels && num_better_predictions < top_k_; ++k) {
+        num_better_predictions +=
+          (bottom_data[i * dim + k * inner_num_ + j] >= prob_of_true_class);
       }
-      std::partial_sort(
-          bottom_data_vector.begin(), bottom_data_vector.begin() + top_k_,
-          bottom_data_vector.end(), std::greater<std::pair<Dtype, int_tp> >());
-      // check if true label is in top k predictions
-      for (int_tp k = 0; k < top_k_; k++) {
-        if (bottom_data_vector[k].second == label_value) {
-          ++accuracy;
-          if (top.size() > 1) ++top[1]->mutable_cpu_data()[label_value];
-          break;
-        }
+      // check if there are less than top_k_ predictions
+      if (num_better_predictions < top_k_) {
+        ++accuracy;
+        if (top.size() > 1) ++top[1]->mutable_cpu_data()[label_value];
       }
       ++count;
     }
   }
 
   // LOG(INFO) << "Accuracy: " << accuracy;
-  top[0]->mutable_cpu_data()[0] = accuracy / count;
+  top[0]->mutable_cpu_data()[0] = (count == 0) ? 0 : (accuracy / count);
   if (top.size() > 1) {
     for (int_tp i = 0; i < top[1]->count(); ++i) {
       top[1]->mutable_cpu_data()[i] =
@@ -104,6 +105,10 @@ void AccuracyLayer<Dtype, MItype, MOtype>::Forward_cpu(
   }
   // Accuracy layer should not be used as a loss function.
 }
+
+#ifdef CPU_ONLY
+STUB_GPU(AccuracyLayer);
+#endif
 
 INSTANTIATE_CLASS_3T_GUARDED(AccuracyLayer, (half_fp), (half_fp), (half_fp));
 INSTANTIATE_CLASS_3T_GUARDED(AccuracyLayer, (float), (float), (float));

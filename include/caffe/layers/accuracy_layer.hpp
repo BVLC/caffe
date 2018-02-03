@@ -66,7 +66,10 @@ class AccuracyLayer : public Layer<Dtype, MItype, MOtype> {
    *         \end{array} \right.
    *      @f$
    */
+
   virtual void Forward_cpu(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<MItype>*>& bottom,
       const vector<Blob<MOtype>*>& top);
 
 
@@ -78,9 +81,14 @@ class AccuracyLayer : public Layer<Dtype, MItype, MOtype> {
       if (propagate_down[i]) { NOT_IMPLEMENTED; }
     }
   }
+  virtual void Backward_gpu(const vector<Blob<MOtype>*>& top,
+      const vector<bool>& propagate_down,
+      const vector<Blob<MItype>*>& bottom);
+
+
+  void GenerateProgram();
 
   int_tp label_axis_, outer_num_, inner_num_;
-
   int_tp top_k_;
 
   /// Whether to ignore instances with a certain label.
@@ -88,7 +96,7 @@ class AccuracyLayer : public Layer<Dtype, MItype, MOtype> {
   /// The label indicating that an instance should be ignored.
   int_tp ignore_label_;
   /// Keeps counts of the number of samples per class.
-  Blob<int_tp> nums_buffer_;
+  Blob<Dtype> nums_buffer_;
 };
 
 }  // namespace caffe
