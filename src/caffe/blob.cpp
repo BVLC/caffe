@@ -246,6 +246,7 @@ inline void gpu_scal(Device* dev, const uint_tp n, const int64_t alpha,
 #endif  // USE_INT_QUANT_64
 }
 
+
 template<typename Dtype>
 void Blob<Dtype>::Init() {
   this->quant_ = make_shared<Quantizer<Dtype, Dtype> >(this->device_);
@@ -258,6 +259,11 @@ template<> void Blob<uint16_t>::Init() {
 template<> void Blob<uint32_t>::Init() {
 }
 template<> void Blob<uint64_t>::Init() {
+}
+
+template<typename Dtype>
+Blob<Dtype>::Blob(Device *dev) : BlobBase(dev) {
+  Init();
 }
 
 

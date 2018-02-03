@@ -165,11 +165,25 @@ void SigmoidCrossEntropyLossLayer<Dtype, MItype, MOtype>::Backward_gpu(
   }
 }
 
-INSTANTIATE_CLASS_3T_GUARDED(SigmoidCrossEntropyLossLayer,
-                            (half_fp), (half_fp), (half_fp));
-INSTANTIATE_CLASS_3T_GUARDED(SigmoidCrossEntropyLossLayer,
-                            (float), (float), (float));
-INSTANTIATE_CLASS_3T_GUARDED(SigmoidCrossEntropyLossLayer,
-                            (double), (double), (double));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(SigmoidCrossEntropyLossLayer, GenerateProgram,
+                                  (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(SigmoidCrossEntropyLossLayer, GenerateProgram,
+                                  (float), (float), (float));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(SigmoidCrossEntropyLossLayer, GenerateProgram,
+                                  (double), (double), (double));
+
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(SigmoidCrossEntropyLossLayer, Forward_gpu,
+                                  (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(SigmoidCrossEntropyLossLayer, Forward_gpu,
+                                  (float), (float), (float));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(SigmoidCrossEntropyLossLayer, Forward_gpu,
+                                  (double), (double), (double));
+
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(SigmoidCrossEntropyLossLayer, Backward_gpu,
+                                  (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(SigmoidCrossEntropyLossLayer, Backward_gpu,
+                                  (float), (float), (float));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(SigmoidCrossEntropyLossLayer, Backward_gpu,
+                                  (double), (double), (double));
 
 }  // namespace caffe

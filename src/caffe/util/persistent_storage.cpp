@@ -9,6 +9,7 @@
 #include <KnownFolders.h>
 #include <ShlObj.h>
 #include <wchar.h>
+#include <comdef.h>
 #endif  // _WIN32 || _WIN64
 
 #ifdef defined(__APPLE__) || defined(__MACH__)

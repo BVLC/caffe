@@ -21,7 +21,7 @@ inline float fixup_arg_type(float v) {
   return v;
 }
 
-inline float fixup_arg_type(half_float::half v) {
+inline float fixup_arg_type(half_fp v) {
   return float(v);
 }
 

@@ -38,8 +38,20 @@ void CuDNNPoolingLayer<Dtype, MItype, MOtype>::Backward_gpu(
         bottom_desc_, bottom_diff));
 }
 
-INSTANTIATE_CLASS_3T_GUARDED(CuDNNPoolingLayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T_GUARDED(CuDNNPoolingLayer, (double), (double), (double));
+
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(CuDNNPoolingLayer, Forward_gpu,
+                                  (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(CuDNNPoolingLayer, Forward_gpu,
+                                  (float), (float), (float));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(CuDNNPoolingLayer, Forward_gpu,
+                                  (double), (double), (double));
+
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(CuDNNPoolingLayer, Backward_gpu,
+                                  (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(CuDNNPoolingLayer, Backward_gpu,
+                                  (float), (float), (float));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(CuDNNPoolingLayer, Backward_gpu,
+                                  (double), (double), (double));
 
 }  // namespace caffe
 #endif

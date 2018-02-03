@@ -71,8 +71,19 @@ void ConvolutionLayer<Dtype, MItype, MOtype>::Backward_gpu(
   }
 }
 
-INSTANTIATE_CLASS_3T_GUARDED(ConvolutionLayer, (half_fp), (half_fp), (half_fp));
-INSTANTIATE_CLASS_3T_GUARDED(ConvolutionLayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T_GUARDED(ConvolutionLayer, (double), (double), (double));
+
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(ConvolutionLayer, Forward_gpu,
+                                  (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(ConvolutionLayer, Forward_gpu,
+                                  (float), (float), (float));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(ConvolutionLayer, Forward_gpu,
+                                  (double), (double), (double));
+
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(ConvolutionLayer, Backward_gpu,
+                                  (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(ConvolutionLayer, Backward_gpu,
+                                  (float), (float), (float));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(ConvolutionLayer, Backward_gpu,
+                                  (double), (double), (double));
 
 }  // namespace caffe

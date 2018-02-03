@@ -16,6 +16,36 @@ header.write('#include <boost/preprocessor/seq/for_each_product.hpp>\n')
 header.write('#include <boost/preprocessor/seq/to_tuple.hpp>\n')
 header.write('#include <boost/preprocessor/tuple/to_seq.hpp>\n')
 
+# Helpers for template class function instantiation
+header.write('template<class Pmf>\n')
+header.write('struct pmf_sig{};\n')
+header.write('template<class Pmf>\n')
+header.write('using pmf_sig_t=typename pmf_sig<Pmf>::type;\n')
+header.write('template<class R, class T, class...Args>\n')
+header.write('struct pmf_sig<R(T::*)(Args...)>{\n')
+header.write('  using type=R(Args...);\n')
+header.write('};\n')
+header.write('template<class R, class T, class...Args>\n')
+header.write('struct pmf_sig<R(T::*)(Args...) const>{\n')
+header.write('  using type=R(Args...) const;\n')
+header.write('};\n')
+header.write('template<class R, class T, class...Args>\n')
+header.write('struct pmf_sig<R(T::*)(Args...) const&>{\n')
+header.write('  using type=R(Args...) const&;\n')
+header.write('};\n')
+header.write('template<class R, class T, class...Args>\n')
+header.write('struct pmf_sig<R(T::*)(Args...) const&&>{\n')
+header.write('  using type=R(Args...) const&&;\n')
+header.write('};\n')
+header.write('template<class R, class T, class...Args>\n')
+header.write('struct pmf_sig<R(T::*)(Args...) &&>{\n')
+header.write('  using type=R(Args...) &&;\n')
+header.write('};\n')
+header.write('template<class R, class T, class...Args>\n')
+header.write('struct pmf_sig<R(T::*)(Args...) &>{\n')
+header.write('  using type=R(Args...) &;\n')
+header.write('};\n')
+
 header.write('#define PP_EMPTY(...)\n')
 header.write('#define PP_DEFER(...) __VA_ARGS__ PP_EMPTY()\n')
 header.write('#define PP_OBSTRUCT(...) __VA_ARGS__ PP_DEFER(PP_EMPTY)()\n')
@@ -54,6 +84,12 @@ for var_type_1 in variant_types:
             flags.append(flag)
     header.write('#define INSTANTIATE_CLASS_' + var_type_1 + '(CLASSNAME)\\\n')
     header.write('  template class CLASSNAME<' + var_type_1 + '>;\n')
+    header.write('#define EXTERN_CLASS_' + var_type_1 + '(CLASSNAME)\\\n')
+    header.write('  extern template class CLASSNAME<' + var_type_1 + '>;\n')
+    header.write('#define INSTANTIATE_FUNC_' + var_type_1 + '(FUNCNAME)\\\n')
+    header.write('  template decltype(FUNCNAME<' + var_type_1 + '>) FUNCNAME<' + var_type_1 + '>;\n')
+    header.write('#define INSTANTIATE_CLASS_FUNC_' + var_type_1 + '(CLASSNAME, FUNCNAME)\\\n')
+    header.write('  template pmf_sig_t<decltype(&CLASSNAME<' + var_type_1 + '>::FUNCNAME)> CLASSNAME<' + var_type_1 + '>::FUNCNAME;\n')
     if len(flags) > 0:
         header.write('#if ')
     for i in range(0, len(flags)):
@@ -64,12 +100,21 @@ for var_type_1 in variant_types:
             header.write(' && ')
     header.write('#define INSTANTIATE_CLASS_GUARDED_' + var_type_1 + '(CLASSNAME)\\\n')
     header.write('  template class CLASSNAME<' + var_type_1 + '>;\n')
+    header.write('#define EXTERN_CLASS_GUARDED_' + var_type_1 + '(CLASSNAME)\\\n')
+    header.write('  extern template class CLASSNAME<' + var_type_1 + '>;\n')
+    header.write('#define INSTANTIATE_FUNC_GUARDED_' + var_type_1 + '(FUNCNAME)\\\n')
+    header.write('  template decltype(FUNCNAME<' + var_type_1 + '>) FUNCNAME<' + var_type_1 + '>;\n')
+    header.write('#define INSTANTIATE_CLASS_FUNC_GUARDED_' + var_type_1 + '(CLASSNAME, FUNCNAME)\\\n')
+    header.write('  template pmf_sig_t<decltype(&CLASSNAME<' + var_type_1 + '>::FUNCNAME)> CLASSNAME<' + var_type_1 + '>::FUNCNAME;\n')
     header.write('#define REGISTER_SOLVER_CREATOR_' + var_type_1 + '(TYPE, CREATOR)\\\n')
     header.write('  static SolverRegisterer<' + var_type_1 + '> ')
-    header.write('g_creator_' + var_type_1 + '_##TYPE(#TYPE, CREATOR<'+ var_type_1 + '>);\n')
+    header.write('g_creator_' + var_type_1 + '_##TYPE(#TYPE, CREATOR<' + var_type_1 + '>);\n')
     if len(flags) > 0:
         header.write('#else\n')
         header.write('#define INSTANTIATE_CLASS_GUARDED_' + var_type_1 + '(CLASSNAME)\n')
+        header.write('#define EXTERN_CLASS_GUARDED_' + var_type_1 + '(CLASSNAME)\n')
+        header.write('#define INSTANTIATE_FUNC_GUARDED_' + var_type_1 + '(FUNCNAME)\n')
+        header.write('#define INSTANTIATE_CLASS_FUNC_GUARDED_' + var_type_1 + '(CLASSNAME, FUNCNAME)\n')
         header.write('#define REGISTER_SOLVER_CREATOR_' + var_type_1 + '(TYPE, CREATOR)\n')
         header.write('#endif\n')
 
@@ -87,6 +132,12 @@ for var_type_1 in variant_types:
                 flags.append(flag)
         header.write('#define INSTANTIATE_CLASS_' + var_type_1 + '_' + var_type_2 + '(CLASSNAME)\\\n')
         header.write('  template class CLASSNAME<' + var_type_1 + ',' + var_type_2 + '>;\n')
+        header.write('#define EXTERN_CLASS_' + var_type_1 + '_' + var_type_2 + '(CLASSNAME)\\\n')
+        header.write('  extern template class CLASSNAME<' + var_type_1 + ',' + var_type_2 + '>;\n')
+        header.write('#define INSTANTIATE_FUNC_' + var_type_1 + '_' + var_type_2 + '(FUNCNAME)\\\n')
+        header.write('  template decltype(FUNCNAME<' + var_type_1 + ',' + var_type_2 + '>) FUNCNAME<' + var_type_1 + ',' + var_type_2 + '>;\n')
+        header.write('#define INSTANTIATE_CLASS_FUNC_' + var_type_1 + '_' + var_type_2 + '(CLASSNAME, FUNCNAME)\\\n')
+        header.write('  template pmf_sig_t<decltype(&CLASSNAME<' + var_type_1 + ',' + var_type_2 + '>::FUNCNAME)> CLASSNAME<' + var_type_1 + ',' + var_type_2 + '>::FUNCNAME;\n')
         if len(flags) > 0:
             header.write('#if ')
         for i in range(0, len(flags)):
@@ -97,9 +148,18 @@ for var_type_1 in variant_types:
                 header.write(' && ')
         header.write('#define INSTANTIATE_CLASS_GUARDED_' + var_type_1 + '_' + var_type_2 + '(CLASSNAME)\\\n')
         header.write('  template class CLASSNAME<' + var_type_1 + ',' + var_type_2 + '>;\n')
+        header.write('#define EXTERN_CLASS_GUARDED_' + var_type_1 + '_' + var_type_2 + '(CLASSNAME)\\\n')
+        header.write('  extern template class CLASSNAME<' + var_type_1 + ',' + var_type_2 + '>;\n')
+        header.write('#define INSTANTIATE_FUNC_GUARDED_' + var_type_1 + '_' + var_type_2 + '(FUNCNAME)\\\n')
+        header.write('  template decltype(FUNCNAME<' + var_type_1 + ',' + var_type_2 + '>) FUNCNAME<' + var_type_1 + ',' + var_type_2 + '>;\n')
+        header.write('#define INSTANTIATE_CLASS_FUNC_GUARDED_' + var_type_1 + '_' + var_type_2 + '(CLASSNAME, FUNCNAME)\\\n')
+        header.write('  template pmf_sig_t<decltype(&CLASSNAME<' + var_type_1 + ',' + var_type_2 + '>::FUNCNAME)> CLASSNAME<' + var_type_1 + ',' + var_type_2 + '>::FUNCNAME;\n')
         if len(flags) > 0:
             header.write('#else\n')
             header.write('#define INSTANTIATE_CLASS_GUARDED_' + var_type_1 + '_' + var_type_2 + '(CLASSNAME)\n')
+            header.write('#define EXTERN_CLASS_GUARDED_' + var_type_1 + '_' + var_type_2 + '(CLASSNAME)\n')
+            header.write('#define INSTANTIATE_FUNC_GUARDED_' + var_type_1 + '_' + var_type_2 + '(FUNCNAME)\n')
+            header.write('#define INSTANTIATE_CLASS_FUNC_GUARDED_' + var_type_1 + '_' + var_type_2 + '(CLASSNAME, FUNCNAME)\n')
             header.write('#endif\n')
 
 # 3 template class instantiation
@@ -121,6 +181,12 @@ for var_type_1 in variant_types:
                     flags.append(flag)
             header.write('#define INSTANTIATE_CLASS_' + var_type_1 + '_' + var_type_2 + '_' + var_type_3 + '(CLASSNAME)\\\n')
             header.write('  template class CLASSNAME<' + var_type_1 + ',' + var_type_2 + ',' + var_type_3 + '>;\n')
+            header.write('#define EXTERN_CLASS_' + var_type_1 + '_' + var_type_2 + '_' + var_type_3 + '(CLASSNAME)\\\n')
+            header.write('  extern template class CLASSNAME<' + var_type_1 + ',' + var_type_2 + ',' + var_type_3 + '>;\n')
+            header.write('#define INSTANTIATE_FUNC_' + var_type_1 + '_' + var_type_2 + '_' + var_type_3 + '(FUNCNAME)\\\n')
+            header.write('  template decltype(FUNCNAME<' + var_type_1 + ',' + var_type_2 + ',' + var_type_3 + '>) FUNCNAME<' + var_type_1 + ',' + var_type_2 + ',' + var_type_3 + '>;\n')
+            header.write('#define INSTANTIATE_CLASS_FUNC_' + var_type_1 + '_' + var_type_2 + '_' + var_type_3 + '(CLASSNAME, FUNCNAME)\\\n')
+            header.write('  template pmf_sig_t<decltype(&CLASSNAME<' + var_type_1 + ',' + var_type_2 + ',' + var_type_3 +'>::FUNCNAME)> CLASSNAME<' + var_type_1 + ',' + var_type_2 + ',' + var_type_3 +'>::FUNCNAME;\n')
             if len(flags) > 0:
                 header.write('#if ')
             for i in range(0, len(flags)):
@@ -131,23 +197,21 @@ for var_type_1 in variant_types:
                     header.write(' && ')
             header.write('#define INSTANTIATE_CLASS_GUARDED_' + var_type_1 + '_' + var_type_2 + '_' + var_type_3 + '(CLASSNAME)\\\n')
             header.write('  template class CLASSNAME<' + var_type_1 + ',' + var_type_2 + ',' + var_type_3 + '>;\n')
-            header.write('#define INSTANTIATE_LAYER_GPU_FORWARD_' + var_type_1 + '_' + var_type_2 + '_' + var_type_3 + '(CLASSNAME)\\\n')
-            header.write('  template void CLASSNAME<' + var_type_1 + ',' + var_type_2 + ',' + var_type_3 + '>::Forward_gpu(\\\n')
-            header.write('      const vector<Blob<' + var_type_2 + '>*>& bottom,\\\n')
-            header.write('      const vector<Blob<' + var_type_3 + '>*>& top);\n')
-            header.write('#define INSTANTIATE_LAYER_GPU_BACKWARD_' + var_type_1 + '_' + var_type_2 + '_' + var_type_3 + '(CLASSNAME)\\\n')
-            header.write('  template void CLASSNAME<' + var_type_1 + ',' + var_type_2 + ',' + var_type_3 + '>::Backward_gpu(\\\n')
-            header.write('      const vector<Blob<' + var_type_3 + '>*>& top,\\\n')
-            header.write('      const vector<bool>& propagate_down,\\\n')
-            header.write('      const vector<Blob<' + var_type_2 + '>*>& bottom);\n')
+            header.write('#define EXTERN_CLASS_GUARDED_' + var_type_1 + '_' + var_type_2 + '_' + var_type_3 + '(CLASSNAME)\\\n')
+            header.write('  extern template class CLASSNAME<' + var_type_1 + ',' + var_type_2 + ',' + var_type_3 + '>;\n')
+            header.write('#define INSTANTIATE_FUNC_GUARDED_' + var_type_1 + '_' + var_type_2 + '_' + var_type_3 + '(FUNCNAME)\\\n')
+            header.write('  template decltype(FUNCNAME<' + var_type_1 + ',' + var_type_2 + ',' + var_type_3 + '>) FUNCNAME<' + var_type_1 + ',' + var_type_2 + ',' + var_type_3 + '>;\n')
+            header.write('#define INSTANTIATE_CLASS_FUNC_GUARDED_' + var_type_1 + '_' + var_type_2 + '_' + var_type_3 + '(CLASSNAME, FUNCNAME)\\\n')
+            header.write('  template pmf_sig_t<decltype(&CLASSNAME<' + var_type_1 + ',' + var_type_2 + ',' + var_type_3 +'>::FUNCNAME)> CLASSNAME<' + var_type_1 + ',' + var_type_2 + ',' + var_type_3 +'>::FUNCNAME;\n')
             header.write('#define REGISTER_LAYER_CREATOR_' + var_type_1 + '_' + var_type_2 + '_' + var_type_3 + '(TYPE, CREATOR)\\\n')
             header.write('  static LayerRegisterer<' + var_type_1 + ',' + var_type_2 + ',' + var_type_3 + '> ')
-            header.write('g_creator_' + var_type_1 + '_' + var_type_2 + '_' + var_type_3 + '_##TYPE(#TYPE, CREATOR<'+ var_type_1 + ',' + var_type_2 + ',' + var_type_3 + '>);\n')
+            header.write('g_creator_' + var_type_1 + '_' + var_type_2 + '_' + var_type_3 + '_##TYPE(#TYPE, CREATOR<' + var_type_1 + ',' + var_type_2 + ',' + var_type_3 + '>);\n')
             if len(flags) > 0:
                 header.write('#else\n')
                 header.write('#define INSTANTIATE_CLASS_GUARDED_' + var_type_1 + '_' + var_type_2 + '_' + var_type_3 + '(CLASSNAME)\n')
-                header.write('#define INSTANTIATE_LAYER_GPU_FORWARD_' + var_type_1 + '_' + var_type_2 + '_' + var_type_3 + '(CLASSNAME)\n')
-                header.write('#define INSTANTIATE_LAYER_GPU_BACKWARD_' + var_type_1 + '_' + var_type_2 + '_' + var_type_3 + '(CLASSNAME)\n')
+                header.write('#define EXTERN_CLASS_GUARDED_' + var_type_1 + '_' + var_type_2 + '_' + var_type_3 + '(CLASSNAME)\n')
+                header.write('#define INSTANTIATE_FUNC_GUARDED_' + var_type_1 + '_' + var_type_2 + '_' + var_type_3 + '(FUNCNAME)\n')
+                header.write('#define INSTANTIATE_CLASS_FUNC_GUARDED_' + var_type_1 + '_' + var_type_2 + '_' + var_type_3 + '(CLASSNAME, FUNCNAME)\n')
                 header.write('#define REGISTER_LAYER_CREATOR_' + var_type_1 + '_' + var_type_2 + '_' + var_type_3 + '(TYPE, CREATOR)\n')
                 header.write('#endif\n')
 
@@ -192,6 +256,92 @@ header.write('  BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_CLASS_HELPER, CLASSNAME, CART_
 header.write('#define INSTANTIATE_CLASS_3T_GUARDED(CLASSNAME, T1, T2, T3)\\\n')
 header.write('  BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_CLASS_GUARDED_HELPER, CLASSNAME, CART_SET_JOIN_US_3T(T1, T2, T3))\n')
 
+
+# template class extern
+header.write('#define EXTERN_CLASS_HELPER(R, CLASSNAME, T)\\\n')
+header.write('  BOOST_PP_CAT(EXTERN_CLASS_, T)(CLASSNAME)\n')
+
+header.write('#define EXTERN_CLASS_GUARDED_HELPER(R, CLASSNAME, T)\\\n')
+header.write('  BOOST_PP_CAT(EXTERN_CLASS_GUARDED_, T)(CLASSNAME)\n')
+
+# 1 template class extern
+header.write('#define EXTERN_CLASS_1T(CLASSNAME, T1)\\\n')
+header.write('  BOOST_PP_SEQ_FOR_EACH(EXTERN_CLASS_HELPER, CLASSNAME, T1)\n')
+
+header.write('#define EXTERN_CLASS_1T_GUARDED(CLASSNAME, T1)\\\n')
+header.write('  BOOST_PP_SEQ_FOR_EACH(EXTERN_CLASS_GUARDED_HELPER, CLASSNAME, T1)\n')
+
+# 2 template class extern
+header.write('#define EXTERN_CLASS_2T(CLASSNAME, T1, T2)\\\n')
+header.write('  BOOST_PP_SEQ_FOR_EACH(EXTERN_CLASS_HELPER, CLASSNAME, CART_SET_JOIN_US_2T(T1, T2))\n')
+
+header.write('#define EXTERN_CLASS_2T_GUARDED(CLASSNAME, T1, T2)\\\n')
+header.write('  BOOST_PP_SEQ_FOR_EACH(EXTERN_CLASS_GUARDED_HELPER, CLASSNAME, CART_SET_JOIN_US_2T(T1, T2))\n')
+
+# 3 template class extern
+header.write('#define EXTERN_CLASS_3T(CLASSNAME, T1, T2, T3)\\\n')
+header.write('  BOOST_PP_SEQ_FOR_EACH(EXTERN_CLASS_HELPER, CLASSNAME, CART_SET_JOIN_US_3T(T1, T2, T3))\n')
+
+header.write('#define EXTERN_CLASS_3T_GUARDED(CLASSNAME, T1, T2, T3)\\\n')
+header.write('  BOOST_PP_SEQ_FOR_EACH(EXTERN_CLASS_GUARDED_HELPER, CLASSNAME, CART_SET_JOIN_US_3T(T1, T2, T3))\n')
+
+
+# template function instantiation
+header.write('#define INSTANTIATE_FUNC_HELPER(R, FUNCNAME, T)\\\n')
+header.write('  BOOST_PP_CAT(INSTANTIATE_FUNC_, T)(FUNCNAME)\n')
+
+header.write('#define INSTANTIATE_FUNC_GUARDED_HELPER(R, FUNCNAME, T)\\\n')
+header.write('  BOOST_PP_CAT(INSTANTIATE_FUNC_GUARDED_, T)(FUNCNAME)\n')
+
+# 1 template function instantiation
+header.write('#define INSTANTIATE_FUNC_1T(FUNCNAME, T1)\\\n')
+header.write('  BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_FUNC_HELPER, FUNCNAME, T1)\n')
+
+header.write('#define INSTANTIATE_FUNC_1T_GUARDED(FUNCNAME, T1)\\\n')
+header.write('  BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_FUNC_GUARDED_HELPER, FUNCNAME, T1)\n')
+
+# 2 template function instantiation
+header.write('#define INSTANTIATE_FUNC_2T(FUNCNAME, T1, T2)\\\n')
+header.write('  BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_FUNC_HELPER, FUNCNAME, CART_SET_JOIN_US_2T(T1, T2))\n')
+
+header.write('#define INSTANTIATE_FUNC_2T_GUARDED(FUNCNAME, T1, T2)\\\n')
+header.write('  BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_FUNC_GUARDED_HELPER, FUNCNAME, CART_SET_JOIN_US_2T(T1, T2))\n')
+
+# 3 template function instantiation
+header.write('#define INSTANTIATE_FUNC_3T(FUNCNAME, T1, T2, T3)\\\n')
+header.write('  BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_FUNC_HELPER, FUNCNAME, CART_SET_JOIN_US_3T(T1, T2, T3))\n')
+
+header.write('#define INSTANTIATE_FUNC_3T_GUARDED(FUNCNAME, T1, T2, T3)\\\n')
+header.write('  BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_FUNC_GUARDED_HELPER, FUNCNAME, CART_SET_JOIN_US_3T(T1, T2, T3))\n')
+
+# template class function instantiation
+header.write('#define INSTANTIATE_CLASS_FUNC_HELPER(R, CLASSNAME_FUNCNAME, T)\\\n')
+header.write('  BOOST_PP_CAT(INSTANTIATE_CLASS_FUNC_, T)(BOOST_PP_SEQ_ELEM(0,CLASSNAME_FUNCNAME),BOOST_PP_SEQ_ELEM(1,CLASSNAME_FUNCNAME))\n')
+
+header.write('#define INSTANTIATE_CLASS_FUNC_GUARDED_HELPER(R, CLASSNAME_FUNCNAME, T)\\\n')
+header.write('  BOOST_PP_CAT(INSTANTIATE_CLASS_FUNC_GUARDED_, T)(BOOST_PP_SEQ_ELEM(0,CLASSNAME_FUNCNAME),BOOST_PP_SEQ_ELEM(1,CLASSNAME_FUNCNAME))\n')
+
+# 1 template class function instantiation
+header.write('#define INSTANTIATE_CLASS_FUNC_1T(CLASSNAME, FUNCNAME, T1)\\\n')
+header.write('  BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_CLASS_FUNC_HELPER, (CLASSNAME)(FUNCNAME), T1)\n')
+
+header.write('#define INSTANTIATE_CLASS_FUNC_1T_GUARDED(CLASSNAME, FUNCNAME, T1)\\\n')
+header.write('  BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_CLASS_FUNC_GUARDED_HELPER, (CLASSNAME)(FUNCNAME), T1)\n')
+
+# 2 template class function instantiation
+header.write('#define INSTANTIATE_CLASS_FUNC_2T(CLASSNAME, FUNCNAME, T1, T2)\\\n')
+header.write('  BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_CLASS_FUNC_HELPER, (CLASSNAME)(FUNCNAME), CART_SET_JOIN_US_2T(T1, T2))\n')
+
+header.write('#define INSTANTIATE_CLASS_FUNC_2T_GUARDED(CLASSNAME, FUNCNAME, T1, T2)\\\n')
+header.write('  BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_CLASS_FUNC_GUARDED_HELPER, (CLASSNAME)(FUNCNAME), CART_SET_JOIN_US_2T(T1, T2))\n')
+
+# 3 template class function instantiation
+header.write('#define INSTANTIATE_CLASS_FUNC_3T(CLASSNAME, FUNCNAME, T1, T2, T3)\\\n')
+header.write('  BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_CLASS_FUNC_HELPER, (CLASSNAME)(FUNCNAME), CART_SET_JOIN_US_3T(T1, T2, T3))\n')
+
+header.write('#define INSTANTIATE_CLASS_FUNC_3T_GUARDED(CLASSNAME, FUNCNAME, T1, T2, T3)\\\n')
+header.write('  BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_CLASS_FUNC_GUARDED_HELPER, (CLASSNAME)(FUNCNAME), CART_SET_JOIN_US_3T(T1, T2, T3))\n')
+
 # Instantiate pointer class
 header.write('#define INSTANTIATE_POINTER_CLASS(CLASSNAME)\\\n')
 header.write('  char gInstantiationGuard##CLASSNAME;\\\n')
@@ -203,23 +353,6 @@ for i in range(0, len(pointer_variant_types)):
         header.write('\n')
     else:
         header.write('\\\n')
-
-# 3 template GPU functions
-header.write('#define INSTANTIATE_LAYER_GPU_FORWARD_HELPER(R, CLASSNAME, T1T2T3)\\\n')
-header.write('  BOOST_PP_CAT(INSTANTIATE_LAYER_GPU_FORWARD_, T1T2T3)(CLASSNAME)\n')
-
-header.write('#define INSTANTIATE_LAYER_GPU_FORWARD(CLASSNAME, T1, T2, T3)\\\n')
-header.write('  BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_LAYER_GPU_FORWARD_HELPER, CLASSNAME, CART_SET_JOIN_US_3T(T1, T2, T3))\n')
-
-header.write('#define INSTANTIATE_LAYER_GPU_BACKWARD_HELPER(R, CLASSNAME, T1T2T3)\\\n')
-header.write('  BOOST_PP_CAT(INSTANTIATE_LAYER_GPU_BACKWARD_, T1T2T3)(CLASSNAME)\n')
-
-header.write('#define INSTANTIATE_LAYER_GPU_BACKWARD(CLASSNAME, T1, T2, T3)\\\n')
-header.write('  BOOST_PP_SEQ_FOR_EACH(INSTANTIATE_LAYER_GPU_BACKWARD_HELPER, CLASSNAME, CART_SET_JOIN_US_3T(T1, T2, T3))\n')
-
-header.write('#define INSTANTIATE_LAYER_GPU_FUNCS(CLASSNAME, T1, T2, T3)\\\n')
-header.write('  INSTANTIATE_LAYER_GPU_FORWARD(CLASSNAME, T1, T2, T3);\\\n')
-header.write('  INSTANTIATE_LAYER_GPU_BACKWARD(CLASSNAME, T1, T2, T3);\n')
 
 # 3 template layer register / creator
 header.write('#define REGISTER_LAYER_CLASS_INST_HELPER(R, TYPE, T1T2T3)\\\n')

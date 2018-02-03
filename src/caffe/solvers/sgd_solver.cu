@@ -33,7 +33,7 @@ void SGDSolver<Dtype>::GenerateProgram() {
   this->device_program_->Compile(true, true);
 }
 
-template <typename Dtype>
+template<typename Dtype>
 void sgd_update_gpu(Device* dev, DeviceProgram* dev_prog,
                     uint_tp n, vptr<Dtype> g, vptr<Dtype> h,
                     Dtype momentum, Dtype local_rate) {
@@ -51,26 +51,9 @@ void sgd_update_gpu(Device* dev, DeviceProgram* dev_prog,
   kernel->Execute(group, local);
 }
 
-#ifdef USE_HALF
-template void sgd_update_gpu<half_fp>(Device* dev,
-                 DeviceProgram* dev_prog, uint_tp n, vptr<half_fp> g,
-                 vptr<half_fp> h, half_fp momentum,
-                 half_fp local_rate);
+INSTANTIATE_FUNC_1T_GUARDED(sgd_update_gpu, (half_fp)(float)(double));
 
-#endif  // USE_HALF
-#ifdef USE_SINGLE
-template void sgd_update_gpu<float>(Device* dev,
-                 DeviceProgram* dev_prog, uint_tp n, vptr<float> g,
-                 vptr<float> h, float momentum,
-                 float local_rate);
-#endif  // USE_SINGLE
-#ifdef USE_DOUBLE
-template void sgd_update_gpu<double>(Device* dev,
-                 DeviceProgram* dev_prog, uint_tp n, vptr<double> g,
-                 vptr<double> h, double momentum,
-                 double local_rate);
-#endif  // USE_DOUBLE
-
-INSTANTIATE_CLASS_1T_GUARDED(SGDSolver, (half_fp)(float)(double))
+INSTANTIATE_CLASS_FUNC_1T_GUARDED(SGDSolver,
+                                  GenerateProgram, (half_fp)(float)(double));
 
 }  // namespace caffe

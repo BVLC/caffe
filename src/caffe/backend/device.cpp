@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "caffe/backend/device.hpp"
+#include "caffe/util/string_and_path.hpp"
 
 namespace caffe {
 
@@ -11,15 +12,18 @@ Device::Device() {}
 
 void Device::Init() {
 #ifdef USE_SQLITE
-  database_ = make_shared<SQLiteHelper>(name() + "."
-                                             + backend_name(backend()));
+  database_ = make_shared<SQLiteHelper>(
+      sanitize_path_string(name()).substr(0, 32) + "." +
+      backend_name(backend()));
   database_->CreateTables();
 #endif
 }
 
+#ifdef USE_SQLITE
 shared_ptr<SQLiteHelper> Device::get_database() {
   return database_;
 }
+#endif  // USE_SQLITE
 
 
 string Device::name() { return "CPU"; }

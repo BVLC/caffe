@@ -59,8 +59,19 @@ void LogLayer<Dtype, MItype, MOtype>::Backward_gpu(
   this->device_->template mul<Dtype>(count, top_diff, bottom_diff, bottom_diff);
 }
 
-INSTANTIATE_CLASS_3T_GUARDED(LogLayer, (half_fp), (half_fp), (half_fp));
-INSTANTIATE_CLASS_3T_GUARDED(LogLayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T_GUARDED(LogLayer, (double), (double), (double));
+
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(LogLayer, Forward_gpu,
+                                  (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(LogLayer, Forward_gpu,
+                                  (float), (float), (float));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(LogLayer, Forward_gpu,
+                                  (double), (double), (double));
+
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(LogLayer, Backward_gpu,
+                                  (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(LogLayer, Backward_gpu,
+                                  (float), (float), (float));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(LogLayer, Backward_gpu,
+                                  (double), (double), (double));
 
 }  // namespace caffe

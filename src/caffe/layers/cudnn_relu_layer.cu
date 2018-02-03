@@ -73,8 +73,20 @@ void CuDNNReLULayer<Dtype, MItype, MOtype>::Backward_gpu(
 #endif
 }
 
-INSTANTIATE_CLASS_3T_GUARDED(CuDNNReLULayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T_GUARDED(CuDNNReLULayer, (double), (double), (double));
+
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(CuDNNReLULayer, Forward_gpu,
+                                  (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(CuDNNReLULayer, Forward_gpu,
+                                  (float), (float), (float));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(CuDNNReLULayer, Forward_gpu,
+                                  (double), (double), (double));
+
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(CuDNNReLULayer, Backward_gpu,
+                                  (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(CuDNNReLULayer, Backward_gpu,
+                                  (float), (float), (float));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(CuDNNReLULayer, Backward_gpu,
+                                  (double), (double), (double));
 
 }  // namespace caffe
 #endif

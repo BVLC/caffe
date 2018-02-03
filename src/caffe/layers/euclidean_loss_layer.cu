@@ -45,11 +45,19 @@ void EuclideanLossLayer<Dtype, MItype, MOtype>::Backward_gpu(
   }
 }
 
-INSTANTIATE_CLASS_3T_GUARDED(EuclideanLossLayer,
-                             (half_fp), (half_fp), (half_fp));
-INSTANTIATE_CLASS_3T_GUARDED(EuclideanLossLayer,
-                             (float), (float), (float));
-INSTANTIATE_CLASS_3T_GUARDED(EuclideanLossLayer,
-                             (double), (double), (double));
+
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(EuclideanLossLayer, Forward_gpu,
+                                  (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(EuclideanLossLayer, Forward_gpu,
+                                  (float), (float), (float));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(EuclideanLossLayer, Forward_gpu,
+                                  (double), (double), (double));
+
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(EuclideanLossLayer, Backward_gpu,
+                                  (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(EuclideanLossLayer, Backward_gpu,
+                                  (float), (float), (float));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(EuclideanLossLayer, Backward_gpu,
+                                  (double), (double), (double));
 
 }  // namespace caffe

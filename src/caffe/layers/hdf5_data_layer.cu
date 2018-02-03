@@ -65,12 +65,26 @@ void HDF5DataLayer<Dtype, MItype, MOtype>::Forward_gpu(
   }
 }
 
-INSTANTIATE_CLASS_3T_GUARDED(HDF5DataLayer, (half_fp), (half_fp),
-                             (half_fp)(float)(double));
-INSTANTIATE_CLASS_3T_GUARDED(HDF5DataLayer, (float), (float),
-                             (half_fp)(float)(double));
-INSTANTIATE_CLASS_3T_GUARDED(HDF5DataLayer, (double), (double),
-                             (half_fp)(float)(double));
+
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(HDF5DataLayer, Forward_gpu,
+                                  (half_fp), (half_fp),
+                                  (half_fp)(float)(double));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(HDF5DataLayer, Forward_gpu,
+                                  (float), (float),
+                                  (half_fp)(float)(double));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(HDF5DataLayer, Forward_gpu,
+                                  (double), (double),
+                                  (half_fp)(float)(double));
+
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(HDF5DataLayer, Backward_gpu,
+                                  (half_fp), (half_fp),
+                                  (half_fp)(float)(double));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(HDF5DataLayer, Backward_gpu,
+                                  (float), (float),
+                                  (half_fp)(float)(double));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(HDF5DataLayer, Backward_gpu,
+                                  (double), (double),
+                                  (half_fp)(float)(double));
 
 }  // namespace caffe
 #endif  // USE_HDF5

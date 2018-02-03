@@ -1727,10 +1727,13 @@ void LibDNNDeconv<MItype, MOtype>::Forward(
 
   shared_ptr<DeviceKernel> kernel =
       this->program_->GetKernel("deconv_forward");
-  vector<size_t> group = {((this->N_FW_ - 1) / fw_div_N + 1),
-                          ((this->M_FW_ - 1) / fw_div_M + 1),
-                          batch_size * this->group_};
-  vector<size_t> local = {fw_wgs0, fw_wgs1, 1};
+  vector<size_t> group = {static_cast<size_t>(
+                                            ((this->N_FW_ - 1) / fw_div_N + 1)),
+                          static_cast<size_t>(
+                                            ((this->M_FW_ - 1) / fw_div_M + 1)),
+                          static_cast<size_t>(batch_size * this->group_)};
+  vector<size_t> local = {static_cast<size_t>(fw_wgs0),
+                          static_cast<size_t>(fw_wgs1), 1};
 
   if (this->bias_term_) {
     kernel->add_arg(&bottom_data);
@@ -1773,10 +1776,13 @@ void LibDNNDeconv<MItype, MOtype>::Backward(
   if (prop_down_data) {
     shared_ptr<DeviceKernel> kernel =
         this->program_->GetKernel("deconv_backward");
-    vector<size_t> group = {((this->N_BW_ - 1) / bw_div_N + 1),
-                            ((this->M_BW_ - 1) / bw_div_M + 1),
-                            batch_size * this->group_};
-    vector<size_t> local = {bw_wgs0, bw_wgs1, 1};
+    vector<size_t> group = {static_cast<size_t>(
+                                            ((this->N_BW_ - 1) / bw_div_N + 1)),
+                            static_cast<size_t>(
+                                             ((this->M_BW_ - 1) / bw_div_M + 1)),
+                            static_cast<size_t>(batch_size * this->group_)};
+    vector<size_t> local = {static_cast<size_t>(bw_wgs0),
+                            static_cast<size_t>(bw_wgs1), 1};
 
     if (this->bias_term_) {
       kernel->add_arg(&top_diff);
@@ -1796,10 +1802,13 @@ void LibDNNDeconv<MItype, MOtype>::Backward(
   if (prop_down_weights && (this->weights_backward_ || this->bias_backward_)) {
     shared_ptr<DeviceKernel> kernel =
         this->program_->GetKernel("deconv_weights");
-    vector<size_t> group = {((this->N_WG_ - 1) / wg_div_N + 1),
-                            ((this->M_WG_ - 1) / wg_div_M + 1),
-                            batch_size * this->group_};
-    vector<size_t> local = {wg_wgs0, wg_wgs1, 1};
+    vector<size_t> group = {static_cast<size_t>(
+                                            ((this->N_WG_ - 1) / wg_div_N + 1)),
+                            static_cast<size_t>(
+                                            ((this->M_WG_ - 1) / wg_div_M + 1)),
+                            static_cast<size_t>(batch_size * this->group_)};
+    vector<size_t> local = {static_cast<size_t>(wg_wgs0),
+                            static_cast<size_t>(wg_wgs1), 1};
 
     if (this->wgalgo_ == LIBDNN_CONVOLUTION_WG_ALGO_DIRECT) {
       group[2] = this->group_;
@@ -1829,10 +1838,13 @@ void LibDNNDeconv<MItype, MOtype>::Backward(
       && (this->weights_backward_ || this->bias_backward_)) {
     shared_ptr<DeviceKernel> kernel =
         this->program_->GetKernel("deconv_weights_bias");
-    vector<size_t> group = {((this->N_BG_ - 1) / wg_div_N + 1),
-                            ((this->M_BG_ - 1) / wg_div_M + 1),
-                            batch_size * this->group_};
-    vector<size_t> local = {wg_wgs0, wg_wgs1, 1};
+    vector<size_t> group = {static_cast<size_t>(
+                                            ((this->N_BG_ - 1) / wg_div_N + 1)),
+                            static_cast<size_t>(
+                                            ((this->M_BG_ - 1) / wg_div_M + 1)),
+                            static_cast<size_t>(batch_size * this->group_)};
+    vector<size_t> local = {static_cast<size_t>(wg_wgs0),
+                            static_cast<size_t>(wg_wgs1), 1};
 
     if (this->wgalgo_ == LIBDNN_CONVOLUTION_WG_ALGO_DIRECT) {
       group[2] = this->group_;

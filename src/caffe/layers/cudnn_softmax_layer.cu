@@ -8,7 +8,8 @@
 namespace caffe {
 
 template<typename Dtype, typename MItype, typename MOtype>
-void CuDNNSoftmaxLayer<Dtype, MItype, MOtype>::Forward_gpu(const vector<Blob<MItype>*>& bottom,
+void CuDNNSoftmaxLayer<Dtype, MItype, MOtype>::Forward_gpu(
+    const vector<Blob<MItype>*>& bottom,
     const vector<Blob<MOtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->gpu_data().get_cuda_ptr();
   Dtype* top_data = top[0]->mutable_gpu_data().get_cuda_ptr();
@@ -21,7 +22,8 @@ void CuDNNSoftmaxLayer<Dtype, MItype, MOtype>::Forward_gpu(const vector<Blob<MIt
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void CuDNNSoftmaxLayer<Dtype, MItype, MOtype>::Backward_gpu(const vector<Blob<MOtype>*>& top,
+void CuDNNSoftmaxLayer<Dtype, MItype, MOtype>::Backward_gpu(
+    const vector<Blob<MOtype>*>& top,
     const vector<bool>& propagate_down, const vector<Blob<MItype>*>& bottom) {
   if (propagate_down[0]) {
     const Dtype* top_data = top[0]->gpu_data().get_cuda_ptr();
@@ -38,8 +40,19 @@ void CuDNNSoftmaxLayer<Dtype, MItype, MOtype>::Backward_gpu(const vector<Blob<MO
   }
 }
 
-INSTANTIATE_CLASS_3T_GUARDED(CuDNNSoftmaxLayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T_GUARDED(CuDNNSoftmaxLayer, (double), (double), (double));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(CuDNNSoftmaxLayer, Forward_gpu,
+                                  (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(CuDNNSoftmaxLayer, Forward_gpu,
+                                  (float), (float), (float));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(CuDNNSoftmaxLayer, Forward_gpu,
+                                  (double), (double), (double));
+
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(CuDNNSoftmaxLayer, Backward_gpu,
+                                  (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(CuDNNSoftmaxLayer, Backward_gpu,
+                                  (float), (float), (float));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(CuDNNSoftmaxLayer, Backward_gpu,
+                                  (double), (double), (double));
 
 }  // namespace caffe
 #endif

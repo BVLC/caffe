@@ -62,28 +62,9 @@ void adadelta_update_gpu(Device* dev, DeviceProgram* dev_prog, uint_tp n,
   kernel->Execute(group, local);
 }
 
-#ifdef USE_HALF
-template void adadelta_update_gpu<half_fp>(Device* dev,
-                  DeviceProgram* dev_prog,
-                  uint_tp n, vptr<half_fp> g, vptr<half_fp> h,
-                  vptr<half_fp> h2, half_fp momentum,
-                  half_fp delta, half_fp local_rate);
-#endif  // USE_HALF
-#ifdef USE_SINGLE
-template void adadelta_update_gpu<float>(Device* dev,
-                  DeviceProgram* dev_prog,
-                  uint_tp n, vptr<float> g, vptr<float> h,
-                  vptr<float> h2, float momentum,
-                  float delta, float local_rate);
-#endif  // USE_SINGLE
-#ifdef USE_DOUBLE
-template void adadelta_update_gpu<double>(Device* dev,
-                  DeviceProgram* dev_prog,
-                  uint_tp n, vptr<double> g, vptr<double> h,
-                  vptr<double> h2, double momentum,
-                  double delta, double local_rate);
-#endif  // USE_DOUBLE
+INSTANTIATE_FUNC_1T_GUARDED(adadelta_update_gpu, (half_fp)(float)(double));
 
-INSTANTIATE_CLASS_1T_GUARDED(AdaDeltaSolver, (half_fp)(float)(double));
+INSTANTIATE_CLASS_FUNC_1T_GUARDED(AdaDeltaSolver,
+                                  GenerateProgram, (half_fp)(float)(double));
 
 }  // namespace caffe
