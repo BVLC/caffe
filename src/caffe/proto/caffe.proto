@@ -301,6 +301,14 @@ message SolverParameter {
   //      return base_lr ( 1/(1 + exp(-gamma * (iter - stepsize))))
   //    - plateau: decreases lr
   //              if the minimum loss isn't updated for 'plateau_winsize' iters
+  //    - sgdr: cosine rate with reinit of lr to lr_max:
+  //              lr = lr_min  + (base_lr − lr_min)(1 + cos(iter/period*\pi))
+  //              iter is #iter _in current period_
+  //              period is #iter for reiniting lr
+  //              at reinit, base_lr *= lr_mult     period *= p_mult
+  //              last parameter : period -> default -> max_iter,  meaning no restart
+  //                 
+  //              
   //
   // where base_lr, max_iter, gamma, step, stepvalue and power are defined
   // in the solver parameter protocol buffer, and iter is the current iteration.
@@ -378,6 +386,16 @@ message SolverParameter {
   }
   // DEPRECATED: use type instead of solver_type
   optional SolverType solver_type = 30 [default = SGD];
+
+  // below parameters for SGD/SGDR
+  // min lr at end of period
+  optional float min_lr = 50 [default = 1e-6];
+  // mult coeff for max_lr (base_lr) at begin of period 
+  optional float lr_mult = 51 [default = 0.8];
+  // mult coeff for period length: 1 or 2 are good candidates
+  optional float p_mult = 52 [default = 2.0];
+  // period before putting back max_lr, -1 means after last iterations, same as putting max_iter
+  optional int32 period = 53 [default = -1];
 }
 
 // A message that stores the solver snapshots
