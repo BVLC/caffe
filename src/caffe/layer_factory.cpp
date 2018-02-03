@@ -22,6 +22,7 @@
 
 #ifdef USE_CUDNN
 #include "caffe/layers/cudnn_conv_layer.hpp"
+#include "caffe/layers/cudnn_deconv_layer.hpp"
 #include "caffe/layers/cudnn_lcn_layer.hpp"
 #include "caffe/layers/cudnn_lrn_layer.hpp"
 #include "caffe/layers/cudnn_pooling_layer.hpp"
@@ -252,6 +253,15 @@ REGISTER_LAYER_CREATOR(Convolution, GetConvolutionLayer,
 template<typename Dtype, typename MItype, typename MOtype>
 shared_ptr<Layer<Dtype, MItype, MOtype> > GetDeconvolutionLayer(
     const LayerParameter& param) {
+  ConvolutionParameter conv_param = param.convolution_param();
+
+  bool use_dilation = false;
+  for (int i = 0; i < conv_param.dilation_size(); ++i) {
+    if (conv_param.dilation(i) > 1) {
+      use_dilation = true;
+    }
+  }
+
   ConvolutionParameter_Engine engine = param.convolution_param().engine();
   if (engine == ConvolutionParameter_Engine_DEFAULT) {
     engine = ConvolutionParameter_Engine_CAFFE;
@@ -259,11 +269,27 @@ shared_ptr<Layer<Dtype, MItype, MOtype> > GetDeconvolutionLayer(
 #ifdef USE_LIBDNN
     engine = ConvolutionParameter_Engine_LIBDNN;
 #endif
+
+#ifdef USE_CUDNN
+    if (Caffe::GetDevice(param.device(), true)->backend() == BACKEND_CUDA
+        && !use_dilation) {
+      engine = ConvolutionParameter_Engine_CUDNN;
+    }
+#endif
   }
 
   if (engine == ConvolutionParameter_Engine_CAFFE) {
     return shared_ptr<Layer<Dtype, MItype, MOtype> >(new
                               DeconvolutionLayer<Dtype, MItype, MOtype>(param));
+#ifdef USE_CUDNN
+  } else if (engine == ConvolutionParameter_Engine_CUDNN){
+    if (use_dilation) {
+      LOG(FATAL) << "CuDNN doesn't support the dilated deconvolution at Layer "
+                 << param.name();
+    }
+    return shared_ptr<Layer<Dtype, MItype, MOtype> >(new
+                         CuDNNDeconvolutionLayer<Dtype, MItype, MOtype>(param));
+#endif  // USE_CUDNN
 #ifdef USE_LIBDNN
   } else if (engine == ConvolutionParameter_Engine_LIBDNN) {
     return shared_ptr<Layer<Dtype, MItype, MOtype> >(new
@@ -279,6 +305,7 @@ REGISTER_LAYER_CREATOR(Deconvolution, GetDeconvolutionLayer,
                        (float), (float), (float));
 REGISTER_LAYER_CREATOR(Deconvolution, GetDeconvolutionLayer,
                        (double), (double), (double));
+
 
 // Get pooling layer according to engine.
 template<typename Dtype, typename MItype, typename MOtype>

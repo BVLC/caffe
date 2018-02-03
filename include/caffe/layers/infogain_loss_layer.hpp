@@ -13,21 +13,22 @@
 namespace caffe {
 
 /**
- * @brief a generalization of MultinomialLogisticLossLayer that takes an
- *      "information gain" (infogain) matrix specifying the "value" of all label
- *      pairs.
+ * @brief A generalization of SoftmaxWithLossLayer that takes an
+ *        "information gain" (infogain) matrix specifying the "value" of all label
+ *        pairs.
  *
- * Equivalent to the MultinomialLogisticLossLayer if the infogain matrix is the
+ * Equivalent to the SoftmaxWithLossLayer if the infogain matrix is the
  * identity.
  *
  * @param bottom input Blob vector (length 2-3)
- *   -# @f$ (n \times c \times H \times W) @f$
- *      the predictions @f$ \hat{p} @f$, a Blob with values in
- *      @f$ [0, 1] @f$ indicating the predicted probability of each of the
- *      @f$ k = CHW @f$ classes.  Each prediction vector @f$ \hat{p}_n @f$
- *      should sum to 1 as in a probability distribution: @f$
- *      \forall n \sum\limits_{k=1}^k \hat{p}_{nk} = 1 @f$.
- *   -# @f$ (n \times 1 \times 1 \times 1) @f$
+ *   -# @f$ (N \times C \times H \times W) @f$
+ *      the predictions @f$ x @f$, a Blob with values in
+ *      @f$ [-\infty, +\infty] @f$ indicating the predicted score for each of
+ *      the @f$ K = CHW @f$ classes. This layer maps these scores to a
+ *      probability distribution over classes using the softmax function
+ *      @f$ \hat{p}_{nk} = \exp(x_{nk}) /
+ *      \left[\sum_{k'} \exp(x_{nk'})\right] @f$ (see SoftmaxLayer).
+ *   -# @f$ (N \times 1 \times 1 \times 1) @f$
  *      the labels @f$ l @f$, an integer-valued Blob with values
  *      @f$ l_n \in [0, 1, 2, ..., k - 1] @f$
  *      indicating the correct class label among the @f$ k @f$ classes
@@ -35,7 +36,7 @@ namespace caffe {
  *      (\b optional) the infogain matrix @f$ H @f$.  This must be provided as
  *      the third bottom blob input if not provided as the infogain_mat in the
  *      InfogainLossParameter. If @f$ H = I @f$, this layer is equivalent to the
- *      MultinomialLogisticLossLayer.
+ *      SoftmaxWithLossLayer.
  * @param top output Blob vector (length 1)
  *   -# @f$ (1 \times 1 \times 1 \times 1) @f$
  *      the computed infogain multinomial logistic loss: @f$ E =
@@ -99,10 +100,10 @@ class InfogainLossLayer : public LossLayer<Dtype, MItype, MOtype> {
    *      respect to the labels (similarly for propagate_down[2] and the
    *      infogain matrix, if provided as bottom[2])
    * @param bottom input Blob vector (length 2-3)
-   *   -# @f$ (n \times c \times H \times W) @f$
-   *      the predictions @f$ \hat{p} @f$; Backward computes diff
-   *      @f$ \frac{\partial E}{\partial \hat{p}} @f$
-   *   -# @f$ (n \times 1 \times 1 \times 1) @f$
+   *   -# @f$ (N \times C \times H \times W) @f$
+   *      the predictions @f$ x @f$; Backward computes diff
+   *      @f$ \frac{\partial E}{\partial x} @f$
+   *   -# @f$ (N \times 1 \times 1 \times 1) @f$
    *      the labels -- ignored as we can't compute their error gradients
    *   -# @f$ (1 \times 1 \times k \times k) @f$
    *      (\b optional) the information gain matrix -- ignored as its error

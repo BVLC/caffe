@@ -40,6 +40,7 @@ Continue with [compilation](installation.html#compilation).
 
     sudo apt-get install libprotobuf-dev libleveldb-dev libsnappy-dev libopencv-dev libhdf5-serial-dev protobuf-compiler
     sudo apt-get install --no-install-recommends libboost-all-dev
+    sudo apt-get install libgflags-dev libgoogle-glog-dev liblmdb-dev
 
 **CUDA**: Install by `apt-get` or the NVIDIA `.run` package.
 The NVIDIA package tends to follow more recent library and driver versions, but the installation is more manual.
@@ -53,12 +54,6 @@ This can be skipped for CPU-only installation.
 **Compatibility notes, 16.04**
 
 CUDA 8 is required on Ubuntu 16.04.
-
-**Remaining dependencies, 14.04**
-
-Everything is packaged in 14.04.
-
-    sudo apt-get install libgflags-dev libgoogle-glog-dev liblmdb-dev
 
 **Remaining dependencies, 12.04**
 

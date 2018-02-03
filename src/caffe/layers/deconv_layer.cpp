@@ -64,6 +64,7 @@ void DeconvolutionLayer<Dtype, MItype, MOtype>::Backward_cpu(
 STUB_GPU(DeconvolutionLayer);
 #endif
 
+
 INSTANTIATE_CLASS_3T_GUARDED(DeconvolutionLayer,
                              (half_fp), (half_fp), (half_fp));
 INSTANTIATE_CLASS_3T_GUARDED(DeconvolutionLayer,

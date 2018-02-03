@@ -41,8 +41,10 @@ void SliceLayer<Dtype, MItype, MOtype>::Reshape(const vector<Blob<MItype>*>& bot
   int_tp count = 0;
   if (slice_point_.size() != 0) {
     CHECK_EQ(slice_point_.size(), top.size() - 1);
-    CHECK_LE(top.size(), bottom_slice_axis);
-    int_tp prev = 0;
+    CHECK_LE(top.size(), bottom_slice_axis)
+        << "slice axis: " << slice_axis_
+        << ", bottom[0] shape: " << bottom[0]->shape_string();
+    int prev = 0;
     vector<int_tp> slices;
     for (int_tp i = 0; i < slice_point_.size(); ++i) {
       CHECK_GT(slice_point_[i], prev);

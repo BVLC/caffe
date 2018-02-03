@@ -232,7 +232,9 @@ void BaseConvolutionLayer<Dtype, MItype, MOtype>::Reshape(
   // TODO: generalize to handle inputs of different shapes.
   for (int_tp bottom_id = 1; bottom_id < bottom.size(); ++bottom_id) {
     CHECK(bottom[0]->shape() == bottom[bottom_id]->shape())
-        << "All inputs must have the same shape.";
+        << "shape mismatch - bottom[0]: " << bottom[0]->shape_string()
+        << " vs. bottom[" << bottom_id << "]: "
+        << bottom[bottom_id]->shape_string();
   }
   // Shape the tops.
   bottom_shape_ = &bottom[0]->shape();
