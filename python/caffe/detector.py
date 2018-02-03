@@ -35,7 +35,7 @@ class Detector(caffe.Net):
     def __init__(self, model_file, pretrained_file, mean=None,
                  input_scale=None, raw_scale=None, channel_swap=None,
                  context_pad=None):
-        caffe.Net.__init__(self, model_file, pretrained_file, caffe.TEST)
+        caffe.Net.__init__(self, model_file, caffe.TEST, weights=pretrained_file)
 
         # configure pre-processing
         in_ = self.inputs[0]
