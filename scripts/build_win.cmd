@@ -113,6 +113,22 @@ if DEFINED APPVEYOR (
     if NOT DEFINED USE_INTEL_SPATIAL set USE_INTEL_SPATIAL=0
     :: Disable host/device shared memory
     if NOT DEFINED DISABLE_DEVICE_HOST_UNIFIED_MEMORY set DISABLE_DEVICE_HOST_UNIFIED_MEMORY=0
+    :: Build with SQLITE kernel cache
+    if NOT DEFINED USE_SQLITE3 set USE_SQLITE3=0
+    :: Build Caffe with FP16 support
+    if NOT DEFINED USE_HALF set USE_HALF=1
+    :: Build Caffe with FP32 support
+    if NOT DEFINED USE_FLOAT set USE_FLOAT=1
+    :: Build Caffe with FP64 support
+    if NOT DEFINED USE_DOUBLE set USE_DOUBLE=0
+    :: Build Caffe with 8 bit quantized support
+    if NOT DEFINED USE_INT_QUANT_8 set USE_INT_QUANT_8=1
+    :: Build Caffe with 16 bit quantized support
+    if NOT DEFINED USE_INT_QUANT_16 set USE_INT_QUANT_16=1
+    :: Build Caffe with 32 bit quantized support
+    if NOT DEFINED USE_INT_QUANT_32 set USE_INT_QUANT_32=0
+    :: Build Caffe with 64 bit quantized support
+    if NOT DEFINED USE_INT_QUANT_64 set USE_INT_QUANT_64=0
 )
 
 :: Set the appropriate CMake generator
@@ -195,6 +211,14 @@ cmake -G"!CMAKE_GENERATOR!" ^
 	  -DUSE_OPENCL:BOOL=%USE_OPENCL% ^
 	  -DUSE_OPENMP:BOOL=%USE_OPENMP% ^
       -DUSE_INDEX64:BOOL=%USE_INDEX64% ^
+      -DUSE_SQLITE:BOOL=%USE_SQLITE% ^
+      -DUSE_HALF:BOOL=%USE_HALF% ^
+      -DUSE_FLOAT:BOOL=%USE_FLOAT% ^
+      -DUSE_DOUBLE:BOOL=%USE_DOUBLE% ^
+      -DUSE_INT_QUANT_8:BOOL=%USE_INT_QUANT_8% ^
+      -DUSE_INT_QUANT_16:BOOL=%USE_INT_QUANT_16% ^
+      -DUSE_INT_QUANT_32:BOOL=%USE_INT_QUANT_32% ^
+      -DUSE_INT_QUANT_64:BOOL=%USE_INT_QUANT_64% ^
       -DUSE_INTEL_SPATIAL:BOOL=%USE_INTEL_SPATIAL% ^
       -DDISABLE_DEVICE_HOST_UNIFIED_MEMORY=%DISABLE_DEVICE_HOST_UNIFIED_MEMORY% ^
       -DCOPY_PREREQUISITES:BOOL=1 ^

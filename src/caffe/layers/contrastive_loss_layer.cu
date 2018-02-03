@@ -154,10 +154,24 @@ void ContrastiveLossLayer<Dtype, MItype, MOtype>::Backward_gpu(
   }
 }
 
-INSTANTIATE_CLASS_3T_GUARDED(ContrastiveLossLayer,
-                            (half_fp), (half_fp), (half_fp));
-INSTANTIATE_CLASS_3T_GUARDED(ContrastiveLossLayer,
-                            (float), (float), (float));
-INSTANTIATE_CLASS_3T_GUARDED(ContrastiveLossLayer,
-                            (double), (double), (double));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(ContrastiveLossLayer, GenerateProgram,
+                                  (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(ContrastiveLossLayer, GenerateProgram,
+                                  (float), (float), (float));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(ContrastiveLossLayer, GenerateProgram,
+                                  (double), (double), (double));
+
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(ContrastiveLossLayer, Forward_gpu,
+                                  (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(ContrastiveLossLayer, Forward_gpu,
+                                  (float), (float), (float));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(ContrastiveLossLayer, Forward_gpu,
+                                  (double), (double), (double));
+
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(ContrastiveLossLayer, Backward_gpu,
+                                  (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(ContrastiveLossLayer, Backward_gpu,
+                                  (float), (float), (float));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(ContrastiveLossLayer, Backward_gpu,
+                                  (double), (double), (double));
 }  // namespace caffe

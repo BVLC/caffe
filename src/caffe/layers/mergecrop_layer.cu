@@ -303,7 +303,24 @@ void MergeCropLayer<Dtype, MItype, MOtype>::Backward_gpu(
   kernel->Execute(group, local);
 }
 
-INSTANTIATE_CLASS_3T_GUARDED(MergeCropLayer, (half_fp), (half_fp), (half_fp));
-INSTANTIATE_CLASS_3T_GUARDED(MergeCropLayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T_GUARDED(MergeCropLayer, (double), (double), (double));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(MergeCropLayer, GenerateProgram,
+                                  (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(MergeCropLayer, GenerateProgram,
+                                  (float), (float), (float));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(MergeCropLayer, GenerateProgram,
+                                  (double), (double), (double));
+
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(MergeCropLayer, Forward_gpu,
+                                  (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(MergeCropLayer, Forward_gpu,
+                                  (float), (float), (float));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(MergeCropLayer, Forward_gpu,
+                                  (double), (double), (double));
+
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(MergeCropLayer, Backward_gpu,
+                                  (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(MergeCropLayer, Backward_gpu,
+                                  (float), (float), (float));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(MergeCropLayer, Backward_gpu,
+                                  (double), (double), (double));
 }  // namespace caffe

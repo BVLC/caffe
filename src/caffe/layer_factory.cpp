@@ -171,7 +171,8 @@ bool checkPoolingDilated(PoolingParameter param) {
 
 // Get convolution layer according to engine.
 template<typename Dtype, typename MItype, typename MOtype>
-shared_ptr<Layer<Dtype, MItype, MOtype> > GetConvolutionLayer(const LayerParameter& param) {
+shared_ptr<Layer<Dtype, MItype, MOtype> > GetConvolutionLayer(
+    const LayerParameter& param) {
   ConvolutionParameter_Engine engine = param.convolution_param().engine();
   if (engine == ConvolutionParameter_Engine_DEFAULT) {
     engine = ConvolutionParameter_Engine_CAFFE;
@@ -219,7 +220,8 @@ shared_ptr<Layer<Dtype, MItype, MOtype> > GetConvolutionLayer(const LayerParamet
   }
 
   if (engine == ConvolutionParameter_Engine_CAFFE) {
-    return shared_ptr<Layer<Dtype, MItype, MOtype> >(new ConvolutionLayer<Dtype, MItype, MOtype>(param));
+    return shared_ptr<Layer<Dtype, MItype, MOtype> >(
+        new ConvolutionLayer<Dtype, MItype, MOtype>(param));
 #ifdef USE_CUDNN
   } else if (engine == ConvolutionParameter_Engine_CUDNN) {
     if (checkConvolutionDilated(param.convolution_param())) {
@@ -533,7 +535,8 @@ shared_ptr<Layer<Dtype, MItype, MOtype> > GetPythonLayer(
   try {
     bp::object module = bp::import(param.python_param().module().c_str());
     bp::object layer = module.attr(param.python_param().layer().c_str())(param);
-    return bp::extract<shared_ptr<PythonLayer<Dtype, MItype, MOtype> > >(layer)();
+    return bp::extract<shared_ptr<
+        PythonLayer<Dtype, MItype, MOtype> > >(layer)();
   } catch (bp::error_already_set) {
     PyErr_Print();
     throw;

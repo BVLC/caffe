@@ -54,25 +54,9 @@ void nesterov_update_gpu(Device* dev, DeviceProgram* dev_prog, uint_tp n,
   kernel->Execute(group, local);
 }
 
-#ifdef USE_HALF
-template void nesterov_update_gpu<half_fp>(Device* dev,
-              DeviceProgram* dev_prog, uint_tp n, vptr<half_fp> g,
-              vptr<half_fp> h, half_fp momentum,
-              half_fp local_rate);
-#endif  // USE_HALF
-#ifdef USE_SINGLE
-template void nesterov_update_gpu<float>(Device* dev,
-              DeviceProgram* dev_prog, uint_tp n, vptr<float> g,
-              vptr<float> h, float momentum,
-              float local_rate);
-#endif  // USE_SINGLE
-#ifdef USE_DOUBLE
-template void nesterov_update_gpu<double>(Device* dev,
-              DeviceProgram* dev_prog, uint_tp n, vptr<double> g,
-              vptr<double> h, double momentum,
-              double local_rate);
-#endif  // USE_DOUBLE
+INSTANTIATE_FUNC_1T_GUARDED(nesterov_update_gpu, (half_fp)(float)(double));
 
-INSTANTIATE_CLASS_1T_GUARDED(NesterovSolver, (half_fp)(float)(double));
+INSTANTIATE_CLASS_FUNC_1T_GUARDED(NesterovSolver,
+                                  GenerateProgram, (half_fp)(float)(double));
 
 }  // namespace caffe

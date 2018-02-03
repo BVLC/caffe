@@ -109,8 +109,25 @@ void ELULayer<Dtype, MItype, MOtype>::Backward_gpu(
 }
 
 
-INSTANTIATE_CLASS_3T_GUARDED(ELULayer, (half_fp), (half_fp), (half_fp));
-INSTANTIATE_CLASS_3T_GUARDED(ELULayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T_GUARDED(ELULayer, (double), (double), (double));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(ELULayer, GenerateProgram,
+                                  (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(ELULayer, GenerateProgram,
+                                  (float), (float), (float));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(ELULayer, GenerateProgram,
+                                  (double), (double), (double));
+
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(ELULayer, Forward_gpu,
+                                  (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(ELULayer, Forward_gpu,
+                                  (float), (float), (float));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(ELULayer, Forward_gpu,
+                                  (double), (double), (double));
+
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(ELULayer, Backward_gpu,
+                                  (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(ELULayer, Backward_gpu,
+                                  (float), (float), (float));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(ELULayer, Backward_gpu,
+                                  (double), (double), (double));
 
 }  // namespace caffe

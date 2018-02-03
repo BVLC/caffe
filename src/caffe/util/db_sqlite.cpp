@@ -192,7 +192,8 @@ void SQLiteHelper::StoreKernel(int64_t hash,
      << "VALUES (?, ?, ?, ?)";
 
   sqlite3_stmt *stmt;
-  rc = sqlite3_prepare_v3(db_, ss.str().c_str(), -1, 0, &stmt, nullptr);
+  rc = sqlite3_prepare_v2(db_, ss.str().c_str(), ss.str().length(), &stmt,
+                          nullptr);
   if (is_error(rc)) {
     LOG(ERROR) << "Can't prepare insert into kernel_cache "
                << "(" << parse_error_code(rc) << ")";
@@ -233,7 +234,8 @@ int64_t SQLiteHelper::GetKernelInfo(int64_t hash,
     stringstream ss;
     ss << "SELECT id, flags, code FROM kernel_cache WHERE hash = ?";
     sqlite3_stmt *stmt;
-    rc = sqlite3_prepare_v3(db_, ss.str().c_str(), -1, 0, &stmt, nullptr);
+    rc = sqlite3_prepare_v2(db_, ss.str().c_str(), ss.str().length(), &stmt,
+                            nullptr);
     if (is_error(rc)) {
       LOG(ERROR) << "Can't prepare select from kernel_cache "
                  << "(" << parse_error_code(rc) << ")";
@@ -309,7 +311,8 @@ int64_t SQLiteHelper::GetKernelInfo(int64_t hash,
     stringstream ss;
     ss << "SELECT program FROM kernel_cache WHERE id = ?";
     sqlite3_stmt *stmt;
-    rc = sqlite3_prepare_v3(db_, ss.str().c_str(), -1, 0, &stmt, nullptr);
+    rc = sqlite3_prepare_v2(db_, ss.str().c_str(), ss.str().length(), &stmt,
+                            nullptr);
     if (is_error(rc)) {
       LOG(ERROR) << "Can't prepare select from kernel_cache "
                  << "(" << parse_error_code(rc) << ")";
@@ -349,7 +352,8 @@ bool SQLiteHelper::LoadKernel(int64_t id, char* program) {
   bool success = true;
 
   sqlite3_stmt *stmt;
-  rc = sqlite3_prepare_v3(db_, ss.str().c_str(), -1, 0, &stmt, nullptr);
+  rc = sqlite3_prepare_v2(db_, ss.str().c_str(), ss.str().length(), &stmt,
+                          nullptr);
   if (is_error(rc)) {
     LOG(ERROR) << "Can't prepare select from kernel_cache "
                << "(" << parse_error_code(rc) << ")";

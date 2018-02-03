@@ -54,7 +54,9 @@ class Device {
  public:
   explicit Device();
 
+#ifdef USE_SQLITE
   shared_ptr<SQLiteHelper> get_database();
+#endif  // USE_SQLITE
 
   Backend backend() const;
   uint_tp id() const;

@@ -91,21 +91,43 @@ void MOELayer<Dtype, MItype, MOtype>::Backward_gpu(
 
 }
 
+/*
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(MOELayer, GenerateProgram,
+                                 (half_fp), (half_fp), PROTO_TYPES);
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(MOELayer, GenerateProgram,
+                                 (float), (float), PROTO_TYPES);
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(MOELayer, GenerateProgram,
+                                 (double), (double), PROTO_TYPES);
+*/
+
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(MOELayer, Forward_gpu,
+                                 (half_fp), (half_fp), PROTO_TYPES);
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(MOELayer, Forward_gpu,
+                                 (float), (float), PROTO_TYPES);
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(MOELayer, Forward_gpu,
+                                 (double), (double), PROTO_TYPES);
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(MOELayer, Forward_gpu,
+                                  (int8_t), (int8_t),  PROTO_TYPES);
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(MOELayer, Forward_gpu,
+                                  (int16_t), (int16_t),  PROTO_TYPES);
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(MOELayer, Forward_gpu,
+                                  (int32_t), (int32_t),  PROTO_TYPES);
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(MOELayer, Forward_gpu,
+                                  (int64_t), (int64_t),  PROTO_TYPES);
 
 
-
-INSTANTIATE_CLASS_3T_GUARDED(MOELayer, (half_fp), (half_fp),
-                             PROTO_TYPES);
-INSTANTIATE_CLASS_3T_GUARDED(MOELayer, (float), (float),
-                             PROTO_TYPES);
-INSTANTIATE_CLASS_3T_GUARDED(MOELayer, (double), (double),
-                             PROTO_TYPES);
-INSTANTIATE_CLASS_3T_GUARDED(MOELayer, (int8_t), (int8_t),
-                             PROTO_TYPES);
-INSTANTIATE_CLASS_3T_GUARDED(MOELayer, (int16_t), (int16_t),
-                             PROTO_TYPES);
-INSTANTIATE_CLASS_3T_GUARDED(MOELayer, (int32_t), (int32_t),
-                             PROTO_TYPES);
-INSTANTIATE_CLASS_3T_GUARDED(MOELayer, (int64_t), (int64_t),
-                             PROTO_TYPES);
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(MOELayer, Backward_gpu,
+                                 (half_fp), (half_fp), PROTO_TYPES);
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(MOELayer, Backward_gpu,
+                                 (float), (float), PROTO_TYPES);
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(MOELayer, Backward_gpu,
+                                 (double), (double), PROTO_TYPES);
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(MOELayer, Backward_gpu,
+                                  (int8_t), (int8_t),  PROTO_TYPES);
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(MOELayer, Backward_gpu,
+                                  (int16_t), (int16_t),  PROTO_TYPES);
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(MOELayer, Backward_gpu,
+                                  (int32_t), (int32_t),  PROTO_TYPES);
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(MOELayer, Backward_gpu,
+                                  (int64_t), (int64_t),  PROTO_TYPES);
 }  // namespace caffe

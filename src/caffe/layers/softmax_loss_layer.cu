@@ -206,11 +206,25 @@ void SoftmaxWithLossLayer<Dtype, MItype, MOtype>::Backward_gpu(
   }
 }
 
-INSTANTIATE_CLASS_3T_GUARDED(SoftmaxWithLossLayer,
-                            (half_fp), (half_fp), (half_fp));
-INSTANTIATE_CLASS_3T_GUARDED(SoftmaxWithLossLayer,
-                            (float), (float), (float));
-INSTANTIATE_CLASS_3T_GUARDED(SoftmaxWithLossLayer,
-                            (double), (double), (double));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(SoftmaxWithLossLayer, GenerateProgram,
+                                  (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(SoftmaxWithLossLayer, GenerateProgram,
+                                  (float), (float), (float));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(SoftmaxWithLossLayer, GenerateProgram,
+                                  (double), (double), (double));
+
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(SoftmaxWithLossLayer, Forward_gpu,
+                                  (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(SoftmaxWithLossLayer, Forward_gpu,
+                                  (float), (float), (float));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(SoftmaxWithLossLayer, Forward_gpu,
+                                  (double), (double), (double));
+
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(SoftmaxWithLossLayer, Backward_gpu,
+                                  (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(SoftmaxWithLossLayer, Backward_gpu,
+                                  (float), (float), (float));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(SoftmaxWithLossLayer, Backward_gpu,
+                                  (double), (double), (double));
 
 }  // namespace caffe

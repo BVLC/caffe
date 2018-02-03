@@ -109,8 +109,25 @@ void ReLULayer<Dtype, MItype, MOtype>::Backward_gpu(
   }
 }
 
-INSTANTIATE_CLASS_3T_GUARDED(ReLULayer, (half_fp), (half_fp), (half_fp));
-INSTANTIATE_CLASS_3T_GUARDED(ReLULayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T_GUARDED(ReLULayer, (double), (double), (double));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(ReLULayer, GenerateProgram,
+                                  (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(ReLULayer, GenerateProgram,
+                                  (float), (float), (float));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(ReLULayer, GenerateProgram,
+                                  (double), (double), (double));
+
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(ReLULayer, Forward_gpu,
+                                  (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(ReLULayer, Forward_gpu,
+                                  (float), (float), (float));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(ReLULayer, Forward_gpu,
+                                  (double), (double), (double));
+
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(ReLULayer, Backward_gpu,
+                                  (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(ReLULayer, Backward_gpu,
+                                  (float), (float), (float));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(ReLULayer, Backward_gpu,
+                                  (double), (double), (double));
 
 }  // namespace caffe

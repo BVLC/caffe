@@ -6,7 +6,8 @@
 namespace caffe {
 
 template<typename Dtype, typename MItype, typename MOtype>
-void CuDNNTanHLayer<Dtype, MItype, MOtype>::Forward_gpu(const vector<Blob<MItype>*>& bottom,
+void CuDNNTanHLayer<Dtype, MItype, MOtype>::Forward_gpu(
+    const vector<Blob<MItype>*>& bottom,
     const vector<Blob<MOtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->gpu_data().get_cuda_ptr();
   Dtype* top_data = top[0]->mutable_gpu_data().get_cuda_ptr();
@@ -28,7 +29,8 @@ void CuDNNTanHLayer<Dtype, MItype, MOtype>::Forward_gpu(const vector<Blob<MItype
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void CuDNNTanHLayer<Dtype, MItype, MOtype>::Backward_gpu(const vector<Blob<MOtype>*>& top,
+void CuDNNTanHLayer<Dtype, MItype, MOtype>::Backward_gpu(
+    const vector<Blob<MOtype>*>& top,
     const vector<bool>& propagate_down,
     const vector<Blob<MItype>*>& bottom) {
   if (!propagate_down[0]) {
@@ -59,8 +61,19 @@ void CuDNNTanHLayer<Dtype, MItype, MOtype>::Backward_gpu(const vector<Blob<MOtyp
 #endif
 }
 
-INSTANTIATE_CLASS_3T_GUARDED(CuDNNTanHLayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T_GUARDED(CuDNNTanHLayer, (double), (double), (double));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(CuDNNTanHLayer, Forward_gpu,
+                                  (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(CuDNNTanHLayer, Forward_gpu,
+                                  (float), (float), (float));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(CuDNNTanHLayer, Forward_gpu,
+                                  (double), (double), (double));
+
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(CuDNNTanHLayer, Backward_gpu,
+                                  (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(CuDNNTanHLayer, Backward_gpu,
+                                  (float), (float), (float));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(CuDNNTanHLayer, Backward_gpu,
+                                  (double), (double), (double));
 
 }  // namespace caffe
 #endif

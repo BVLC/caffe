@@ -861,14 +861,14 @@ void LibDNNPool<MItype, MOtype>::Forward(
   int_tp imso = std::accumulate(im_out_shape_.begin(), im_out_shape_.end(),
                                 1, std::multiplies<int_tp>());
 
-  int_tp lw0 = fw_tuner_->get_param<int_tp>("LW0");
-  int_tp lw1 = fw_tuner_->get_param<int_tp>("LW1");
+  size_t lw0 = static_cast<size_t>(fw_tuner_->get_param<int_tp>("LW0"));
+  size_t lw1 = static_cast<size_t>(fw_tuner_->get_param<int_tp>("LW1"));
 
   shared_ptr<DeviceKernel> kernel =
       this->program_->GetKernel(test_mode ? "pool_forward_test"
                                           : "pool_forward_train");
-  vector<size_t> group = {((imso - 1) / lw0 + 1),
-                          ((channels * batch_size - 1) / lw1 + 1), 1};
+  vector<size_t> group = {static_cast<size_t>(((imso - 1) / lw0 + 1),
+                          ((channels * batch_size - 1) / lw1 + 1)), 1};
   vector<size_t> local = {lw0, lw1, 1};
 
   switch (pool_method_) {
@@ -936,13 +936,13 @@ void LibDNNPool<MItype, MOtype>::Backward(
     imsw = imso;
   }
 
-  int_tp lw0 = bw_tuner_->get_param<int_tp>("LW0");
-  int_tp lw1 = bw_tuner_->get_param<int_tp>("LW1");
+  size_t lw0 = static_cast<size_t>(bw_tuner_->get_param<int_tp>("LW0"));
+  size_t lw1 = static_cast<size_t>(bw_tuner_->get_param<int_tp>("LW1"));
 
   shared_ptr<DeviceKernel> kernel =
       this->program_->GetKernel("pool_backward");
-  vector<size_t> group = {((imsw - 1) / lw0 + 1),
-                          ((channels * batch_size - 1) / lw1 + 1), 1};
+  vector<size_t> group = {static_cast<size_t>(((imsw - 1) / lw0 + 1),
+                          ((channels * batch_size - 1) / lw1 + 1)), 1};
   vector<size_t> local = {lw0, lw1, 1};
 
   switch (pool_method_) {

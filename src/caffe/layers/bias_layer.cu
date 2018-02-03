@@ -97,8 +97,25 @@ void BiasLayer<Dtype, MItype, MOtype>::Backward_gpu(
   }
 }
 
-INSTANTIATE_CLASS_3T_GUARDED(BiasLayer, (half_fp), (half_fp), (half_fp));
-INSTANTIATE_CLASS_3T_GUARDED(BiasLayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T_GUARDED(BiasLayer, (double), (double), (double));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(BiasLayer, GenerateProgram,
+                                  (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(BiasLayer, GenerateProgram,
+                                  (float), (float), (float));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(BiasLayer, GenerateProgram,
+                                  (double), (double), (double));
+
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(BiasLayer, Forward_gpu,
+                                  (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(BiasLayer, Forward_gpu,
+                                  (float), (float), (float));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(BiasLayer, Forward_gpu,
+                                  (double), (double), (double));
+
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(BiasLayer, Backward_gpu,
+                                  (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(BiasLayer, Backward_gpu,
+                                  (float), (float), (float));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(BiasLayer, Backward_gpu,
+                                  (double), (double), (double));
 
 }  // namespace caffe

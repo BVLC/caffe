@@ -275,4 +275,7 @@ INSTANTIATE_CLASS_3T_GUARDED(LRNLayer, (half_fp), (half_fp), (half_fp));
 INSTANTIATE_CLASS_3T_GUARDED(LRNLayer, (float), (float), (float));
 INSTANTIATE_CLASS_3T_GUARDED(LRNLayer, (double), (double), (double));
 
+REGISTER_LAYER_CLASS(LRN);
+REGISTER_LAYER_CLASS_INST(LRN, (half_fp), (half_fp), (half_fp));
+
 }  // namespace caffe

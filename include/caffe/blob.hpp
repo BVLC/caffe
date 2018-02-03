@@ -290,9 +290,8 @@ class Blob : public BlobBase {
   Blob() : BlobBase() { }
   virtual ~Blob() { }
 
-  explicit Blob(Device *dev) : BlobBase(dev) {
-    Init();
-  }
+  explicit Blob(Device *dev);
+
   explicit Blob(const int_tp num, const int_tp channels, const int_tp height,
                 const int_tp width, Device *device_context =
                     Caffe::GetDefaultDevice());
@@ -436,6 +435,54 @@ class Blob : public BlobBase {
 
   DISABLE_COPY_AND_ASSIGN(Blob);
 };  // class Blob
+
+
+template<> void Blob<uint8_t>::Init();
+template<> void Blob<uint16_t>::Init();
+template<> void Blob<uint32_t>::Init();
+template<> void Blob<uint64_t>::Init();
+
+template<> void Blob<uint8_t>::Update();
+template<> void Blob<uint16_t>::Update();
+template<> void Blob<uint32_t>::Update();
+template<> void Blob<uint64_t>::Update();
+
+template<> uint8_t Blob<uint8_t>::asum_data() const;
+template<> uint16_t Blob<uint16_t>::asum_data() const;
+template<> uint32_t Blob<uint32_t>::asum_data() const;
+template<> uint64_t Blob<uint64_t>::asum_data() const;
+
+template<> uint8_t Blob<uint8_t>::asum_diff() const;
+template<> uint16_t Blob<uint16_t>::asum_diff() const;
+template<> uint32_t Blob<uint32_t>::asum_diff() const;
+template<> uint64_t Blob<uint64_t>::asum_diff() const;
+
+template<> uint8_t Blob<uint8_t>::sumsq_data() const;
+template<> uint16_t Blob<uint16_t>::sumsq_data() const;
+template<> uint32_t Blob<uint32_t>::sumsq_data() const;
+template<> uint64_t Blob<uint64_t>::sumsq_data() const;
+
+template<> uint8_t Blob<uint8_t>::sumsq_diff() const;
+template<> uint16_t Blob<uint16_t>::sumsq_diff() const;
+template<> uint32_t Blob<uint32_t>::sumsq_diff() const;
+template<> uint64_t Blob<uint64_t>::sumsq_diff() const;
+
+template<> void Blob<uint8_t>::scale_data(uint8_t scale_factor);
+template<> void Blob<uint16_t>::scale_data(uint16_t scale_factor);
+template<> void Blob<uint32_t>::scale_data(uint32_t scale_factor);
+template<> void Blob<uint64_t>::scale_data(uint64_t scale_factor);
+
+template<> void Blob<uint8_t>::scale_diff(uint8_t scale_factor);
+template<> void Blob<uint16_t>::scale_diff(uint16_t scale_factor);
+template<> void Blob<uint32_t>::scale_diff(uint32_t scale_factor);
+template<> void Blob<uint64_t>::scale_diff(uint64_t scale_factor);
+
+template<> void Blob<float>::ToProto(BlobProto* proto, bool write_diff) const;
+template<> void Blob<double>::ToProto(BlobProto* proto, bool write_diff) const;
+
+EXTERN_CLASS_1T(Blob, (half_fp)(float)(double));
+EXTERN_CLASS_1T(Blob, (int8_t)(int16_t)(int32_t)(int64_t));
+EXTERN_CLASS_1T(Blob, (uint8_t)(uint16_t)(uint32_t)(uint64_t));
 
 }  // namespace caffe
 

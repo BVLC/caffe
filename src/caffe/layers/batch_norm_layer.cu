@@ -179,8 +179,18 @@ void BatchNormLayer<Dtype, MItype, MOtype>::Backward_gpu(
                                      temp_.gpu_data(), bottom_diff);
 }
 
-INSTANTIATE_CLASS_3T_GUARDED(BatchNormLayer, (half_fp), (half_fp), (half_fp));
-INSTANTIATE_CLASS_3T_GUARDED(BatchNormLayer, (float), (float), (float));
-INSTANTIATE_CLASS_3T_GUARDED(BatchNormLayer, (double), (double), (double));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(BatchNormLayer, Forward_gpu,
+                                  (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(BatchNormLayer, Forward_gpu,
+                                  (float), (float), (float));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(BatchNormLayer, Forward_gpu,
+                                  (double), (double), (double));
+
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(BatchNormLayer, Backward_gpu,
+                                  (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(BatchNormLayer, Backward_gpu,
+                                  (float), (float), (float));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(BatchNormLayer, Backward_gpu,
+                                  (double), (double), (double));
 
 }  // namespace caffe
