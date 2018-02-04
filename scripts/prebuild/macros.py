@@ -60,9 +60,9 @@ for i in range(0, len(variant_types)):
         header.write('\\\n')
    
 header.write('#define PROTO_TYPES\\\n')
-for i in range(0, len(proto_types.keys())):
-    header.write('  (' + proto_types.keys()[i] + ')')
-    if (i == len(proto_types.keys()) - 1):
+for i in range(0, len(list(proto_types.keys()))):
+    header.write('  (' + list(proto_types.keys())[i] + ')')
+    if (i == len(list(proto_types.keys())) - 1):
         header.write('\n')
     else:
         header.write('\\\n')

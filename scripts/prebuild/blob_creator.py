@@ -18,15 +18,15 @@ header.write('namespace caffe {\n')
 header.write('inline shared_ptr<BlobBase> CreateBlob(Device* dev, DataType data_type) {\n')
 header.write('switch(data_type) {\n')
 
-var_types = proto_types.keys()
+var_types = list(proto_types.keys())
 
 for i in range(0, len(var_types)):
-    if var_types[i] in variant_enable_flags.keys():
+    if var_types[i] in list(variant_enable_flags.keys()):
         header.write('#if defined(' + variant_enable_flags[var_types[i]] + ')\n')
     header.write('case ' + proto_types[var_types[i]] + ': {\n')
     header.write('return make_shared<Blob<' + var_types[i] + '> >(dev);\n')
     header.write('}\n')  # case
-    if var_types[i] in variant_enable_flags.keys():
+    if var_types[i] in list(variant_enable_flags.keys()):
         header.write('#endif\n')
 header.write('default: { LOG(FATAL) << "Data types not enabled or supported"; }\n')
 header.write('}\n') # switch
