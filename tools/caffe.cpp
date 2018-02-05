@@ -497,7 +497,10 @@ int test() {
         }
         const std::string& output_name = caffe_net.blob_names()[
             caffe_net.output_blob_indices()[j]];
-        VLOG(2) << "Batch " << i << ", " << output_name << " = " << score;
+        if (output_name.find("accuracy") == string::npos)
+            VLOG(2) << "Batch " << i << ", " << output_name << " = " << score;
+        else
+            LOG(INFO) << "Batch " << i << ", " << output_name << " = " << score;
       }
     }
   }
