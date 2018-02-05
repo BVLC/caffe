@@ -3045,4 +3045,31 @@ layer {
 	   phase: TEST
 	}
 }
-		
+layer {
+	name: "accuracy/top-1"
+	type: "Accuracy"
+	bottom: "fc1000"
+	bottom: "label"
+	top: "accuracy/top-1"
+	accuracy_param
+	{
+		top_k: 1
+	}
+	include {
+		phase: TEST
+	}
+}
+layer {
+	name: "accuracy/top-5"
+	type: "Accuracy"
+	bottom: "fc1000"
+	bottom: "label"
+	top: "accuracy/top-5"
+	accuracy_param
+	{
+		top_k: 5
+	}
+	include {
+		phase: TEST
+	}
+}
