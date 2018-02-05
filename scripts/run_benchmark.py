@@ -7,38 +7,38 @@ import json
 import socket
 import logging
 
-topology_list = ["alexnet", "googlenet", "googlenet_v2", "resnet_50", 'all']
 class CaffeBenchmark(object):
     '''Used to do caffe benchmarking'''
-    def __init__(self, topology, bkm_batch_size, host_file = "", network = "", tcp_netmask = "", engine = "", dummy_data_use = True, caffe_bin = "", scal_test = True):
+    def __init__(self, bench_params):
         '''params initialization'''
-        self.topology = topology
-        self.host_file = host_file
-        self.network = network
-        self.tcp_netmask = tcp_netmask
-        self.dummy_data_use = dummy_data_use
-        self.engine = engine
-        self.caffe_bin = caffe_bin
-        self.scal_test = scal_test
+        self.topology = bench_params.topology
+        self.host_file = bench_params.host_file
+        self.network = bench_params.network
+        self.tcp_netmask = bench_params.tcp_netmask
+        self.dummy_data_use = bench_params.dummy_data_use
+        self.engine = bench_params.engine
+        self.caffe_bin = bench_params.caffe_bin
+        self.scal_test = bench_params.scal_test
         self.num_nodes = 1
-        self.cpu_model = "skx"
+        self.cpu_model = 'skx'
         # flag used to mark if we have detected which cpu model we're using
         self.unknown_cpu = False
         self.iterations = 100
         self.caffe_root = os.path.dirname(os.path.dirname(__file__))
         # model template path
-        self.model_path = self.caffe_root + "models/intel_optimized_models"
+        self.model_path = self.caffe_root + "models/intel_optimized_models/benchmark"
         # specific script used to run intelcaffe 
         self.caffe_run_script = self.caffe_root + "scripts/run_intelcaffe.sh"
-        self.bkm_batch_size = bkm_batch_size
+        self.bkm_batch_size = bench_params.bkm_batch_size
+        self.support_topologies = self.bkm_batch_size.keys()
         self.check_parameters()
         current_time = time.strftime("%Y%m%d%H%M%S")
         logging.basicConfig(filename = 'result-benchmark-{}.log'.format(current_time),level = logging.INFO)
 
     def is_supported_topology(self):
         '''check if input topology is supported'''
-        if self.topology not in topology_list:
-            logging.exception("The topology you specified as {} is not supported. Supported topologies are {}".format(self.topology, topology_list))
+        if self.topology not in self.support_topologies:
+            logging.exception("The topology you specified as {} is not supported. Supported topologies are {}".format(self.topology, self.support_topologies))
     
     def calculate_numnodes(self):
         '''calculate current using nodes'''
@@ -65,7 +65,6 @@ class CaffeBenchmark(object):
         for line in _exec_command_and_iter_show(cmd):
             print line
         
-    
     def detect_cpu(self):
         '''check which IA platform currently using'''
         command_name = "lscpu | grep 'Model name' | awk -F ':' '{print $2}'"
@@ -88,8 +87,8 @@ class CaffeBenchmark(object):
             self.unknown_cpu = True
             logging.info("Can't detect which cpu model currently using, will use default settings, which may not be the optimal one.")
     
-    def obtain_model_file(self, model):
-        '''change original model file batch size to bkm batch size'''
+    def gen_model_file(self, model):
+        '''generate model file with new batch size which equal to bkm batch size'''
         prototxt_file = "train_val_dummydata.prototxt" if self.dummy_data_use else "train_val.prototxt"
         dst_model_file = "/".join([self.model_path, model, '-'.join([self.cpu_model, prototxt_file])])
         if os.path.isfile(dst_model_file):
@@ -100,9 +99,9 @@ class CaffeBenchmark(object):
         batch_size_pattern = re.compile(".*shape:.*") if self.dummy_data_use else re.compile("^\s+batch_size:.*")
         # we only care about train phase batch size for benchmarking
         batch_size_cnt = 2 if self.dummy_data_use else 1
-        if model not in self.bkm_batch_size or self.cpu_model not in self.bkm_batch_size[model]:
+        if model not in self.bkm_batch_size or not self.scal_test and self.cpu_model not in self.bkm_batch_size[model]:
             logging.exception("Can't find batch size of topology {} and cpu model {} within batch size table".format(model, self.cpu_model))
-        new_batch_size = self.bkm_batch_size[model][self.cpu_model]
+        new_batch_size = self.bkm_batch_size[model] if self.scal_test else self.bkm_batch_size[model][self.cpu_model]
         with open(src_model_file, 'r') as src_f, open(dst_model_file, 'w') as dst_f:
             cnt = 0
             for line in src_f.readlines():
@@ -113,8 +112,8 @@ class CaffeBenchmark(object):
                 dst_f.write(line) 
         return dst_model_file
 
-    def obtain_solver_file(self, model):
-        '''obtain suitable solver file for training benchmark'''
+    def gen_solver_file(self, model):
+        '''generate suitable solver file for training benchmark'''
         solver_prototxt_file = "solver_dummydata.prototxt" if self.dummy_data_use else "solver.prototxt"
         dst_solver_file = "/".join([self.model_path, model, '-'.join([self.cpu_model, solver_prototxt_file])])
         if os.path.isfile(dst_solver_file):
@@ -122,7 +121,7 @@ class CaffeBenchmark(object):
         src_solver_file = "/".join([self.model_path, model, solver_prototxt_file])
         if not os.path.isfile(src_solver_file):
             logging.exception("template solver file {} doesn't exist.".format(src_solver_file))
-        dst_model_file = self.obtain_model_file(model)
+        dst_model_file = self.gen_model_file(model)
         max_iter = "200"
         display_iter = "1"
         net_path_pattern = re.compile(".*net:.*")
@@ -144,10 +143,10 @@ class CaffeBenchmark(object):
         '''run the topology you specified'''
         self.calculate_numnodes()
         if self.num_nodes == 1:
-            model_file = self.obtain_model_file(model)
+            model_file = self.gen_model_file(model)
             exec_command = ' '.join([self.caffe_run_script, '--model_file', model_file, '--mode time', '--iteration', str(self.iterations), '--benchmark none'])
         else:
-            solver_file = self.obtain_solver_file(model)
+            solver_file = self.gen_solver_file(model)
             exec_command = ' '.join([self.caffe_run_script, '--hostfile', self.host_file, '--solver', solver_file, '--network', self.network, '--benchmark none'])
             if self.network == "tcp":
                 exec_command += " --netmask {}".format(self.tcp_netmask)
@@ -276,9 +275,8 @@ class CaffeBenchmark(object):
                 self.hosts[0], self.hosts[index] = self.hosts[index], self.hosts[0]
                 break
         
-        
-    def obtain_host_file(self, num_nodes):
-        '''obtain suitable host file to do scaling test'''
+    def gen_host_file(self, num_nodes):
+        '''generate suitable host file to do scaling test'''
         dst_host_file = 'scal_hostfile'
         with open(dst_host_file, 'w') as dst_f:
             for i in xrange(num_nodes):
@@ -294,7 +292,7 @@ class CaffeBenchmark(object):
         origin_hostfile = self.host_file
         fps_table = {}
         while num_nodes > 0:
-            self.host_file = self.obtain_host_file(num_nodes)
+            self.host_file = self.gen_host_file(num_nodes)
             self.run_specific_model(model)
             fps_table[num_nodes] = self.speed
             num_nodes /= 2
@@ -320,7 +318,7 @@ class CaffeBenchmark(object):
         self.detect_cpu()
         logging.info("Cpu model: {}".format(self.model_string))
         if self.topology == 'all':
-            for model in topology_list:
+            for model in self.support_topologies:
                 if model == 'all':
                     continue
                 logging.info("--{}".format(model))
@@ -343,26 +341,40 @@ class CaffeBenchmark(object):
             if self.network == "tcp" and self.tcp_netmask == "":
                 logging.exception("Error: need to specify tcp network's netmask")
 
+class BenchmarkParams(object):
+    '''encapsulate benchmark parameters here'''
+    def __init__(self, config_file):
+        '''initialize benchmark parameters through a config file'''
+        if config_file == '' or not os.path.isfile(config_file):
+            logging.exception("Cant't find config file {}.".format(config_file))
+        with open(config_file, 'r') as f:
+            try:
+                config = json.load(f)
+            except Exception:
+                logging.exception("Error: check if your json config file is correct.")
+            self.topology = config['params']['topology']
+            self.host_file = config['params']['hostfile']
+            self.network = config['params']['network']
+            self.tcp_netmask = config['params']['netmask']
+            self.engine = config['params']["engine"]
+            self.dummy_data_use = config['params']['dummy_data_use']
+            self.scal_test = config['params']['scal_test']
+            self.caffe_bin = config['params']['caffe_bin']
+            self.bkm_batch_size = config['scal_batch_size_table'] if self.scal_test else config['perf_batch_size_table']
+        
+def parse_args():
+    '''parse arguments'''
+    description = 'Used to run throughput performance or scaling efficiency benchmarking.'
+    arg_parser = argparse.ArgumentParser(description = description)
+    arg_parser = argparse.ArgumentParser(description = "Used to run intelcaffe training benchmark")
+    arg_parser.add_argument('-c', '--configfile', help = "config file which contains the parameters you want and the batch size you want to use on all topologies and platforms")
+    return arg_parser.parse_args()
+
 def main():
     '''main routine'''
-    arg_parser = argparse.ArgumentParser(description = "Used to run intelcaffe training benchmark")
-    arg_parser.add_argument('--configfile', help = "config file which contains the parameters you want and the batch size you want to use on all topologies and platforms")
-    main_args = arg_parser.parse_args()
-    if main_args.configfile == '' or not os.path.isfile(main_args.configfile):
-        logging.exception("Cant't find config file {}.".format(main_args.configfile))
-    with open(main_args.configfile, 'r') as f:
-        config = json.load(f)
-        topology = config['params']['topology']
-        host_file = config['params']['hostfile']
-        network = config['params']['network']
-        tcp_netmask = config['params']['netmask']
-        engine = config['params']["engine"]
-        dummy_data_use = config['params']['dummy_data_use']
-        scal_test = config['params']['scal_test']
-        caffe_bin = config['params']['caffe_bin']
-        bkm_batch_size = config['batch_size_table']
-    
-    caffe_benchmark = CaffeBenchmark(topology, bkm_batch_size, host_file, network, tcp_netmask, engine, dummy_data_use, caffe_bin, scal_test)
+    main_args = parse_args()
+    bench_params = BenchmarkParams(main_args.configfile) 
+    caffe_benchmark = CaffeBenchmark(bench_params)
     caffe_benchmark.run_benchmark()
 
 if __name__ == "__main__":

@@ -1,0 +1,23 @@
+#This is Intel(R) optimized (in terms of time to train) version of solver for model described in the [AlexNet](http://papers.nips.cc/paper/4824-imagenet-classification-with-deep-convolutional-neural-networks) publication.
+#Original solver.prototxt can be found in /models/bvlc_alexnet/ directory of this repository.
+#Differences:
+#- lr_policy is set to poly instead of step
+#- base_lr is decreased to 0.007
+#- max_iter is decreased to 250000
+#- power is set to 0.6
+#
+#Top-5 and Top-1 results achieved with this version of solver:
+#Top-5: 80.4%
+#Top-1: 57.4%
+#Training was performed using server equipped with Intel(R) Xeon Phi(TM) CPU 7250 processor. 
+net: "models/intel_optimized_models/benchmark/alexnet/train_val.prototxt"
+test_iter: 1000
+test_interval: 10000
+base_lr: 0.007
+lr_policy: "poly"
+power: 0.6
+display: 20
+max_iter: 250000
+momentum: 0.9
+weight_decay: 0.0005
+solver_mode: CPU
