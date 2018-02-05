@@ -1239,7 +1239,7 @@ void DataTransformer<Dtype>::RandomAlterAspectRatio(const cv::Mat& img, cv::Mat 
   CHECK(max_area_ratio >= min_area_ratio);
   ResizeParameter resize_param = param_.random_aspect_ratio_param().resize_param();
   int attempt = 0;
-  while (attempt++ < 10) {
+  while (attempt++ < param_.random_aspect_ratio_param().max_attempt()) {
     float area_ratio = RandRatio(min_area_ratio, max_area_ratio, rand_num_);
     float aspect_ratio_change =
       RandRatio(min_aspect_ratio_change, 1 / min_aspect_ratio_change, rand_num_);
