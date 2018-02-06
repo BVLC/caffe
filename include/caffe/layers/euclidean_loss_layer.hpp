@@ -30,7 +30,7 @@ namespace caffe {
  * This can be used for least-squares regression tasks.  An InnerProductLayer
  * input to a EuclideanLossLayer exactly formulates a linear least squares
  * regression problem. With non-zero weight decay the problem becomes one of
- * ridge regression -- see src/caffe/test/test_sgd_solver.cpp for a concrete
+ * ridge regression -- see src/caffe/test/test_gradient_based_solver.cpp for a concrete
  * example wherein we check that the gradients computed for a Net with exactly
  * this structure match hand-computed gradient formulas for ridge regression.
  *
