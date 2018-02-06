@@ -958,7 +958,7 @@ template <typename Dtype>
 void Net<Dtype>::CompilationRuleSparse(const NetParameter& param,
                                        NetParameter* param_compiled) {
   //TODO: Verify the convergence of the sparse model
-  if (param.engine().compare("MKLDNN") != 0) {
+  if (param.state().phase() != TEST || param.engine().compare("MKLDNN") != 0) {
     param_compiled->CopyFrom(param);
     return;
   }
