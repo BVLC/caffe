@@ -87,11 +87,17 @@ void SGDSolver<Dtype>::ClipGradients() {
     sumsq_diff += net_params[i]->sumsq_diff();
   }
   const Dtype l2norm_diff = std::sqrt(sumsq_diff);
-  if (l2norm_diff > clip_gradients) {
-    Dtype scale_factor = clip_gradients / l2norm_diff;
-    LOG(INFO) << "Gradient clipping: scaling down gradients (L2 norm "
-        << l2norm_diff << " > " << clip_gradients << ") "
-        << "by scale factor " << scale_factor;
+  // If adjustable_clipping is true, divide threshold by current_lr
+  const bool adjustable = this->param_.adjustable_clipping();
+  const Dtype lr_rate = adjustable ? GetLearningRate() : 1.0;
+  if (l2norm_diff > clip_gradients / lr_rate) {
+    Dtype scale_factor = (clip_gradients / lr_rate) / l2norm_diff;
+    if (this->param_.display() && this->iter_ % this->param_.display() == 0) {
+      LOG_IF(INFO, Caffe::root_solver())
+          << "Gradient clipping: scaling down gradients (L2 norm "
+          << l2norm_diff << " > " << clip_gradients << ") "
+          << "by scale factor " << scale_factor;
+    }
     for (int i = 0; i < net_params.size(); ++i) {
       net_params[i]->scale_diff(scale_factor);
     }
