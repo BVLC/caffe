@@ -121,21 +121,7 @@ Be sure to set your MATLAB and Python paths in `Makefile.config` first!
 
 Now that you have installed Caffe, check out the [MNIST tutorial](gathered/examples/mnist.html) and the [reference ImageNet model tutorial](gathered/examples/imagenet.html).
 
-### CMake Build
-
-In lieu of manually editing `Makefile.config` to configure the build, Caffe offers an unofficial CMake build thanks to @Nerei, @akosiorek, and other members of the community. It requires CMake version >= 2.8.7.
-The basic steps are as follows:
-
-    mkdir build
-    cd build
-    cmake ..
-    make all
-    make install
-    make runtest
-
-See [PR #1667](https://github.com/BVLC/caffe/pull/1667) for options and details.
-
-### Throuble shooting
+### Throuble shooting for compilation
 If you meet some problems, these solutions bellow might be helpful for you
 
 1) HDF issue like this:
@@ -188,6 +174,20 @@ Makefile:572: recipe for target '.build_release/lib/libcaffe.so.1.0.0' failed
 make: *** [.build_release/lib/libcaffe.so.1.0.0] Error 1
 ```
 **Solution**: Open Makefile.config, then locate at `LIBRARY_DIRS := $(PYTHON_LIB) /usr/local/lib /usr/lib`, append `/usr/lib/x86_64-linux-gnu/hdf5/serial` to it. Then rerun `make all`.
+
+### CMake Build
+
+In lieu of manually editing `Makefile.config` to configure the build, Caffe offers an unofficial CMake build thanks to @Nerei, @akosiorek, and other members of the community. It requires CMake version >= 2.8.7.
+The basic steps are as follows:
+
+    mkdir build
+    cd build
+    cmake ..
+    make all
+    make install
+    make runtest
+
+See [PR #1667](https://github.com/BVLC/caffe/pull/1667) for options and details.
 
 ## Hardware
 
