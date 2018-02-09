@@ -59,6 +59,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #ifdef USE_MLSL
 #include "caffe/multinode/mlsl.hpp"
+#include "caffe/multinode/multi_sync.hpp"
 #endif
 
 // Temporary solution for numpy < 1.7 versions: old macro, no promises.
@@ -372,6 +373,24 @@ void Solver_add_callback(Solver<Dtype> * solver, bp::object on_start,
   solver->add_callback(new PythonCallback<Dtype>(on_start, on_gradients_ready));
 }
 
+#ifdef USE_MLSL
+
+template<typename Dtype>
+void MultiSolverBackward(MultiSolver<Dtype> * solver)
+{
+  solver->Backward();
+}
+
+#ifdef FW_OVERLAP_OPT
+template<typename Dtype>
+Dtype MultiSolverUpdateAndForward(MultiSolver<Dtype> * solver)
+{
+  return solver->UpdateAndForward();
+}
+#endif
+
+#endif
+
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(SolveOverloads, Solve, 0, 1);
 
 BOOST_PYTHON_MODULE(_caffe) {
@@ -382,6 +401,19 @@ BOOST_PYTHON_MODULE(_caffe) {
 
 #ifdef USE_MLSL
   InitMultinode();
+  bp::class_<MultiSolver<Dtype>, shared_ptr<MultiSolver<Dtype> >, boost::noncopyable>(
+    "MultiSolver", bp::init<shared_ptr<Solver<Dtype>>>())
+    .def("update", &MultiSolver<Dtype>::WaitAndUpdate)
+#ifdef FW_OVERLAP_OPT
+    .def("update_and_forward", &MultiSolverUpdateAndForward<Dtype>)
+#endif
+    .def("forward", &MultiSolver<Dtype>::Forward)
+    .def("backward", &MultiSolverBackward<Dtype>)
+    .def("clear_param_diffs", &MultiSolver<Dtype>::ClearParamDiffs);
+
+  bp::class_<MultiSync<Dtype>> ( "MultiSync", bp::init<shared_ptr<Solver<Dtype>>>())
+     .def("init", &MultiSync<Dtype>::init)
+     .add_property("solver", &MultiSync<Dtype>::get_solver);
 #endif
   bp::def("_node_id", &NodeId);
   bp::def("_num_nodes", &NumNodes);
