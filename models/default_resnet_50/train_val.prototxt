@@ -3036,15 +3036,15 @@ layer {
 	  phase: TRAIN
 	}
 }
-layer {
-       name: "probt"
-       type: "Softmax"
-       bottom: "fc1000"
-       top: "probt"
-       include {
-	   phase: TEST
-	}
-}
+#layer {
+#       name: "probt"
+#       type: "Softmax"
+#       bottom: "fc1000"
+#       top: "probt"
+#       include {
+#	   phase: TEST
+#	}
+#}
 layer {
 	name: "accuracy/top-1"
 	type: "Accuracy"
