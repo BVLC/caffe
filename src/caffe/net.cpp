@@ -299,46 +299,13 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     }
 
 #ifdef USE_MLSL
-    if (!layer_param.type().compare("Data")       ||
-        !layer_param.type().compare("DummyData")  ||
-        !layer_param.type().compare("ImageData")  ||
-        !layer_param.type().compare("HDF5Data")   ||
-        !layer_param.type().compare("MemoryData") ||
-        !layer_param.type().compare("Input") ||
-        !layer_param.type().compare("WindowData") ||
-        !layer_param.type().compare("AnnotatedData")) {
-
-        // FIXME: retrieve batch_size from top[0]->shape[0] when MLSL stuff will be moved from LayerSetUp
-        //int batch_size = top_vecs_[layer_id][0]->shape(0);
-
-        int batch_size = 0;
-        if (!layer_param.type().compare("Data"))
-            batch_size = layer_param.data_param().batch_size();
-        else if (!layer_param.type().compare("DummyData"))
-            batch_size = layer_param.dummy_data_param().shape(0).dim(0);
-        else if (!layer_param.type().compare("ImageData"))
-            batch_size = layer_param.image_data_param().batch_size();
-        else if (!layer_param.type().compare("HDF5Data"))
-            batch_size = layer_param.hdf5_data_param().batch_size();
-        else if (!layer_param.type().compare("MemoryData"))
-            batch_size = layer_param.memory_data_param().batch_size();
-        else if (!layer_param.type().compare("WindowData"))
-            batch_size = layer_param.window_data_param().batch_size();
-        else if (!layer_param.type().compare("AnnotatedData"))
-            batch_size = layer_param.data_param().batch_size();
-        else if (!layer_param.type().compare("Input")
-            && layer_param.input_param().shape(0).dim().size())
-            batch_size = layer_param.input_param().shape(0).dim(0);
-
-        if (caffe::TRAIN == param.state().phase()) {
-            LOG(WARNING) << "SetMinibatchSize " << batch_size;
-            if (global_batch_size < 0) {
-              global_batch_size = batch_size * mn::get_group_size();
-              mn::train::set_global_minibatch_size(global_batch_size);
-            } else {
-              CHECK_EQ(global_batch_size, batch_size * mn::get_group_size());
-            }
-        }
+    if (caffe::TRAIN == param.state().phase()) {
+      // global batch size must be a multiple of data_parts
+      if (global_batch_size < 0) {
+        global_batch_size = mn::get_distrib()->get_data_parts();
+        LOG(WARNING) << "SetMinibatchSize " << global_batch_size;
+        mn::train::set_global_minibatch_size(global_batch_size);
+      }
     }
 #endif /* USE_MLSL */
 
