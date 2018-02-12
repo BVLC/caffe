@@ -90,7 +90,7 @@ void DetectionEvaluateLayer<Dtype>::Forward_cpu(
   // Retrieve all ground truth (including difficult ones).
   map<int, LabelBBox> all_gt_bboxes;
   GetGroundTruth(gt_data, bottom[1]->height(), background_label_id_,
-                 true, &all_gt_bboxes);
+                 true, num_classes_, &all_gt_bboxes);
 
   Dtype* top_data = top[0]->mutable_cpu_data();
   caffe_set(top[0]->count(), Dtype(0.), top_data);

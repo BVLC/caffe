@@ -40,7 +40,7 @@ class DetectionOutputLayer : public Layer<Dtype> {
 
   virtual inline const char* type() const { return "DetectionOutput"; }
   virtual inline int MinBottomBlobs() const { return 3; }
-  virtual inline int MaxBottomBlobs() const { return 4; }
+  virtual inline int MaxBottomBlobs() const { return 5; }
   virtual inline int ExactNumTopBlobs() const { return 1; }
 
  protected:
@@ -73,6 +73,7 @@ class DetectionOutputLayer : public Layer<Dtype> {
     CAFFE_NOT_IMPLEMENTED;
   }
 
+  float objectness_score_;
   int num_classes_;
   bool share_location_;
   int num_loc_classes_;

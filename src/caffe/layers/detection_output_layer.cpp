@@ -18,6 +18,7 @@ void DetectionOutputLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   const DetectionOutputParameter& detection_output_param =
       this->layer_param_.detection_output_param();
   CHECK(detection_output_param.has_num_classes()) << "Must specify num_classes";
+  objectness_score_ = detection_output_param.objectness_score();
   num_classes_ = detection_output_param.num_classes();
   share_location_ = detection_output_param.share_location();
   num_loc_classes_ = share_location_ ? 1 : num_classes_;
@@ -184,17 +185,34 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
   const Dtype* loc_data = bottom[0]->cpu_data();
   const Dtype* conf_data = bottom[1]->cpu_data();
   const Dtype* prior_data = bottom[2]->cpu_data();
+  const Dtype* arm_conf_data = NULL;
+  const Dtype* arm_loc_data = NULL;
   const int num = bottom[0]->num();
+  vector<LabelBBox> all_arm_loc_preds;
+  if (bottom.size() >= 4){
+    arm_conf_data = bottom[3]->cpu_data();
+  }
+  if (bottom.size() >= 5) {
+    arm_loc_data = bottom[4]->cpu_data();
+    GetLocPredictions(arm_loc_data, num, num_priors_, num_loc_classes_,
+		      share_location_, &all_arm_loc_preds);
+  }
 
   // Retrieve all location predictions.
   vector<LabelBBox> all_loc_preds;
   GetLocPredictions(loc_data, num, num_priors_, num_loc_classes_,
-                    share_location_, &all_loc_preds);
+		    share_location_, &all_loc_preds);
 
   // Retrieve all confidences.
   vector<map<int, vector<float> > > all_conf_scores;
-  GetConfidenceScores(conf_data, num, num_priors_, num_classes_,
-                      &all_conf_scores);
+  if (arm_conf_data != NULL) {
+    OSGetConfidenceScores(conf_data, arm_conf_data, num, num_priors_, num_classes_,
+			  &all_conf_scores, objectness_score_);
+  }
+  else {
+    GetConfidenceScores(conf_data, num, num_priors_, num_classes_,
+			&all_conf_scores);
+  }
 
   // Retrieve all prior bboxes. It is same within a batch since we assume all
   // images in a batch are of same dimension.
@@ -205,10 +223,18 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
   // Decode all loc predictions to bboxes.
   vector<LabelBBox> all_decode_bboxes;
   const bool clip_bbox = false;
-  DecodeBBoxesAll(all_loc_preds, prior_bboxes, prior_variances, num,
-                  share_location_, num_loc_classes_, background_label_id_,
-                  code_type_, variance_encoded_in_target_, clip_bbox,
-                  &all_decode_bboxes);
+  if (bottom.size() >= 5) {
+    CasRegDecodeBBoxesAll(all_loc_preds, prior_bboxes, prior_variances, num,
+			  share_location_, num_loc_classes_, background_label_id_,
+			  code_type_, variance_encoded_in_target_, clip_bbox,
+			  &all_decode_bboxes, all_arm_loc_preds);
+  }
+  else {
+    DecodeBBoxesAll(all_loc_preds, prior_bboxes, prior_variances, num,
+		    share_location_, num_loc_classes_, background_label_id_,
+		    code_type_, variance_encoded_in_target_, clip_bbox,
+		    &all_decode_bboxes);
+  }
 
   int num_kept = 0;
   vector<map<int, vector<int> > > all_indices;

@@ -158,7 +158,7 @@ void MultiBoxFocalLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bott
 
   // Retrieve all ground truth.
   map<int, vector<NormalizedBBox> > all_gt_bboxes;
-  GetGroundTruth(gt_data, num_gt_, background_label_id_, use_difficult_gt_,
+  GetGroundTruth(gt_data, num_gt_, background_label_id_, use_difficult_gt_, num_classes_,
                  &all_gt_bboxes);
 
   // Retrieve all prior bboxes. It is same within a batch since we assume all
@@ -180,10 +180,11 @@ void MultiBoxFocalLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bott
   num_matches_ = 0;
   int num_negs = 0;
   // Sample hard negative (and positive) examples based on mining type.
+  const Dtype *arm_fake = NULL;
   MineHardExamples(*bottom[1], all_loc_preds, all_gt_bboxes, prior_bboxes,
                    prior_variances, all_match_overlaps, multibox_loss_param_,
                    &num_matches_, &num_negs, &all_match_indices_,
-                   &all_neg_indices_);
+                   &all_neg_indices_, arm_fake);
 
   if (num_matches_ >= 1) {
     // Form data to pass on to loc_loss_layer_.
