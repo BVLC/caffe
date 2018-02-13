@@ -21,15 +21,26 @@ void DetectionOutputLayer<Dtype>::Forward_gpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   const Dtype* loc_data = bottom[0]->gpu_data();
   const Dtype* prior_data = bottom[2]->gpu_data();
+  const Dtype* arm_loc_data = NULL;
   const int num = bottom[0]->num();
+  if (bottom.size() >= 5){
+    arm_loc_data = bottom[4]->gpu_data();
+  }
 
   // Decode predictions.
   Dtype* bbox_data = bbox_preds_.mutable_gpu_data();
   const int loc_count = bbox_preds_.count();
   const bool clip_bbox = false;
-  DecodeBBoxesGPU<Dtype>(loc_count, loc_data, prior_data, code_type_,
+  if (bottom.size() >= 5){
+   CasRegDecodeBBoxesGPU<Dtype>(loc_count, loc_data, prior_data, code_type_,
+        variance_encoded_in_target_, num_priors_, share_location_,
+        num_loc_classes_, background_label_id_, clip_bbox, bbox_data, arm_loc_data);
+  }
+  else {
+   DecodeBBoxesGPU<Dtype>(loc_count, loc_data, prior_data, code_type_,
       variance_encoded_in_target_, num_priors_, share_location_,
       num_loc_classes_, background_label_id_, clip_bbox, bbox_data);
+  }
   // Retrieve all decoded location predictions.
   const Dtype* bbox_cpu_data;
   if (!share_location_) {
@@ -43,8 +54,14 @@ void DetectionOutputLayer<Dtype>::Forward_gpu(
 
   // Retrieve all confidences.
   Dtype* conf_permute_data = conf_permute_.mutable_gpu_data();
-  PermuteDataGPU<Dtype>(bottom[1]->count(), bottom[1]->gpu_data(),
-      num_classes_, num_priors_, 1, conf_permute_data);
+  if (bottom.size() >= 4) {
+    OSPermuteDataGPU<Dtype>(bottom[1]->count(), bottom[1]->gpu_data(), bottom[3]->gpu_data(),
+        num_classes_, num_priors_, 1, conf_permute_data, objectness_score_);
+  }
+  else {
+    PermuteDataGPU<Dtype>(bottom[1]->count(), bottom[1]->gpu_data(),
+       num_classes_, num_priors_, 1, conf_permute_data);
+  }
   const Dtype* conf_cpu_data = conf_permute_.cpu_data();
 
   int num_kept = 0;
