@@ -1692,7 +1692,12 @@ message ROIPoolingParameter {
   optional uint32 pooled_w = 2 [default = 0]; // The pooled output width
   // Multiplicative spatial scale factor to translate ROI coords from their
   // input scale to the scale used when pooling
-  optional float spatial_scale = 3 [default = 1];
+  // in convientional roi_pooling it is done in original img, coordinates are given in absolute pixels
+  // and so spatial_scale should be 1
+  // in deepdetect case, coordinates are relative in [0,1]^2 and so spatial scale should be
+  // the h,w of input 'blob', -1 (any negative value)
+  // computes it dynamically from input blob
+  optional float spatial_scale = 3 [default = -1];
 }
 
 message ScaleParameter {
