@@ -143,6 +143,26 @@ class AdamSolver : public SGDSolver<Dtype> {
   DISABLE_COPY_AND_ASSIGN(AdamSolver);
 };
 
+/**
+ * @brief AdaMaxSolver, extension of Adam based on infinity norm.
+*/
+
+template <typename Dtype>
+class AdaMaxSolver : public SGDSolver <Dtype> {
+ public:
+  explicit AdaMaxSolver(const SolverParameter& param)
+      : SGDSolver<Dtype>(param) { AdaMaxPreSolve(); }
+  explicit AdaMaxSolver(const string& param_file)
+      : SGDSolver<Dtype>(param_file) { AdaMaxPreSolve(); }
+  virtual inline const char* type() const { return "AdaMax"; }
+
+ protected:
+  void AdaMaxPreSolve();
+  virtual void ComputeUpdateValue(int param_id, Dtype rate);
+
+  DISABLE_COPY_AND_ASSIGN(AdaMaxSolver);
+};
+
 }  // namespace caffe
 
 #endif  // CAFFE_SGD_SOLVERS_HPP_
