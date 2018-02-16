@@ -16,109 +16,22 @@
 
 namespace caffe {
 
-/**
- * @brief Connects Layer%s together into a directed acyclic graph (DAG)
- *        specified by a NetParameter.
- *
- * TODO(dox): more thorough description.
- */
-template<typename Dtype>
-class Net {
+class NetBase {
  public:
-  explicit Net(const NetParameter& param, Device* device_context);
-  explicit Net(const string& param_file, Phase phase, Device* device_context,
-               const int level = 0, const vector<string>* stages = NULL);
-  virtual ~Net() { }
-
-  /// @brief Initialize a network with a NetParameter.
-  void Init(const NetParameter& param);
-
-  /**
-   * @brief Run Forward and return the result.
-   *
-   */
-  const vector<BlobBase*>& Forward(Dtype* loss = NULL);
-
-  /**
-   * The From and To variants of Forward and Backward operate on the
-   * (topological) ordering by which the net is specified. For general DAG
-   * networks, note that (1) computing from one layer to another might entail
-   * extra computation on unrelated branches, and (2) computation starting in
-   * the middle may be incorrect if all of the layers of a fan-in are not
-   * included.
-   */
-  Dtype ForwardFromTo(int_tp start, int_tp end);
-  Dtype ForwardFrom(int_tp start);
-  Dtype ForwardTo(int_tp end);
-  /// @brief DEPRECATED; set input blobs then use Forward() instead.
-  const vector<BlobBase*>& Forward(const vector<BlobBase* > & bottom,
-      Dtype* loss = NULL);
-
-
-  /**
-   * @brief Zeroes out the diffs of all net parameters.
-   *        Should be run before Backward.
-   */
-  void ClearParamDiffs();
-
-  /**
-   * The network backward should take no input and output, since it solely
-   * computes the gradient w.r.t the parameters, and the data has already been
-   * provided during the forward pass.
-   */
-  void Backward();
-  void BackwardFromTo(int_tp start, int_tp end);
-  void BackwardFrom(int_tp start);
-  void BackwardTo(int_tp end);
-
-  /**
-   * @brief Reshape all layers from bottom to top.
-   *
-   * This is useful to propagate changes to layer sizes without running
-   * a forward pass, e.g. to compute output feature size.
-   */
-  void Reshape();
-
-  Dtype ForwardBackward() {
-    Dtype loss;
-    Forward(&loss);
-    Backward();
-    return loss;
+  DataType data_type() const {
+    return param_.data_type();
   }
 
-  /// @brief Updates the network weights based on the diff values computed.
-  void Update();
-  /**
-   * @brief Shares weight data of owner blobs with shared blobs.
-   *
-   * Note: this is called by Net::Init, and thus should normally not be
-   * called manually.
-   */
-  void ShareWeights();
-
-  /**
-   * @brief For an already initialized net, implicitly copies (i.e., using no
-   *        additional memory) the pre-trained layers from another Net.
-   */
-  void ShareTrainedLayersWith(const Net* other);
-  // For an already initialized net, CopyTrainedLayersFrom() copies the already
-  // trained layers from another net parameter instance.
-  /**
-   * @brief For an already initialized net, copies the pre-trained layers from
-   *        another Net.
-   */
-  void CopyTrainedLayersFrom(const NetParameter& param);
-  void CopyTrainedLayersFrom(const string trained_filename);
-  void CopyTrainedLayersFromBinaryProto(const string trained_filename);
-  void CopyTrainedLayersFromHDF5(const string trained_filename);
-  /// @brief Writes the net to a proto.
-  void ToProto(NetParameter* param, bool write_diff = false) const;
-
-  /// @brief Writes the network quantizers to a proto.
-  void QuantizerToProto(NetParameter* param) const;
-
-  /// @brief Writes the net to an HDF5 file.
-  void ToHDF5(const string& filename, bool write_diff = false) const;
+  virtual void Reshape() = 0;
+  virtual void Update() = 0;
+  virtual void ShareWeights() = 0;
+  virtual void ShareTrainedLayersWith(const NetBase* other) = 0;
+  virtual void CopyTrainedLayersFrom(const NetParameter& param) = 0;
+  virtual void CopyTrainedLayersFrom(const string trained_filename) = 0;
+  virtual void CopyTrainedLayersFromBinaryProto(
+                                          const string trained_filename)= 0;
+  virtual void CopyTrainedLayersFromHDF5(const string trained_filename) = 0;
+  virtual void ClearParamDiffs() = 0;
 
   /// @brief returns the network name.
   inline const string& name() const {
@@ -178,9 +91,17 @@ class Net {
   inline const vector<vector<bool> >& bottom_need_backward() const {
     return bottom_need_backward_;
   }
-  inline const vector<Dtype>& blob_loss_weights() const {
-    return blob_loss_weights_;
-  }
+
+  /// @brief Writes the net to a proto.
+  virtual void ToProto(NetParameter* param, bool write_diff = false) const = 0;
+
+  /// @brief Writes the network quantizers to a proto.
+  virtual void QuantizerToProto(NetParameter* param) const = 0;
+
+  /// @brief Writes the net to an HDF5 file.
+  virtual void ToHDF5(const string& filename,
+                      bool write_diff = false) const = 0;
+
   inline const vector<bool>& layer_need_backward() const {
     return layer_need_backward_;
   }
@@ -239,16 +160,8 @@ class Net {
     debug_info_ = value;
   }
 
-  // Helpers for Init.
-  /**
-   * @brief Remove layers that the user specified should be excluded given the current
-   *        phase, level, and stage.
-   */
-  static void FilterNet(const NetParameter& param,
-                        NetParameter* param_filtered);
-  /// @brief return whether NetState state meets NetStateRule rule
-  static bool StateMeetsRule(const NetState& state, const NetStateRule& rule,
-                             const string& layer_name);
+ protected:
+  explicit NetBase(Device* device_context);
 
   // Invoked at specific points during an iteration
   class Callback {
@@ -257,45 +170,11 @@ class Net {
 
     template <typename T>
     friend class Net;
+    friend class NetBase;
   };
-  const vector<Callback*>& before_forward() const { return before_forward_; }
-  void add_before_forward(Callback* value) {
-    before_forward_.push_back(value);
-  }
-  const vector<Callback*>& after_forward() const { return after_forward_; }
-  void add_after_forward(Callback* value) {
-    after_forward_.push_back(value);
-  }
-  const vector<Callback*>& before_backward() const { return before_backward_; }
-  void add_before_backward(Callback* value) {
-    before_backward_.push_back(value);
-  }
-  const vector<Callback*>& after_backward() const { return after_backward_; }
-  void add_after_backward(Callback* value) {
-    after_backward_.push_back(value);
-  }
 
- protected:
-  // Helpers for Init.
-  /// @brief Append a new top blob to the net.
-  void AppendTop(const NetParameter& param, const int_tp layer_id,
-                 const int_tp top_id, std::set<string>* available_blobs,
-                 map<string, int_tp>* blob_name_to_idx);
-  /// @brief Append a new bottom blob to the net.
-  int_tp AppendBottom(const NetParameter& param, const int_tp layer_id,
-                   const int_tp bottom_id, std::set<string>* available_blobs,
-                   map<string, int_tp>* blob_name_to_idx);
-  /// @brief Append a new parameter blob to the net.
-  void AppendParam(const NetParameter& param, const int_tp layer_id,
-                   const int_tp param_id);
-
-  /// @brief Helper for displaying debug info in Forward.
-  void ForwardDebugInfo(const int_tp layer_id);
-  /// @brief Helper for displaying debug info in Backward.
-  void BackwardDebugInfo(const int_tp layer_id);
-  /// @brief Helper for displaying debug info in Update.
-  void UpdateDebugInfo(const int_tp param_id);
-
+  /// @brief The pre-processed network parameter
+  NetParameter param_;
   /// @brief The network name
   string name_;
   /// @brief The phase: TRAIN or TEST
@@ -321,9 +200,6 @@ class Net {
   /// top_vecs stores the vectors containing the output for each layer
   vector<vector<BlobBase*> > top_vecs_;
   vector<vector<int_tp> > top_id_vecs_;
-  /// Vector of weight in the loss (or objective) function of each net blob,
-  /// indexed by blob_id.
-  vector<Dtype> blob_loss_weights_;
   vector<vector<int_tp> > param_id_vecs_;
   vector<int_tp> param_owners_;
   vector<string> param_display_names_;
@@ -363,6 +239,167 @@ class Net {
   vector<Callback*> after_forward_;
   vector<Callback*> before_backward_;
   vector<Callback*> after_backward_;
+};
+
+/**
+ * @brief Connects Layer%s together into a directed acyclic graph (DAG)
+ *        specified by a NetParameter.
+ *
+ * TODO(dox): more thorough description.
+ */
+template<typename Dtype>
+class Net : public NetBase {
+ public:
+  explicit Net(const NetParameter& param, Device* device_context);
+  explicit Net(const string& param_file, Phase phase, Device* device_context,
+               const int level = 0, const vector<string>* stages = NULL);
+  virtual ~Net() { }
+
+  /// @brief Initialize a network with a NetParameter.
+  void Init(const NetParameter& param);
+
+  /**
+   * @brief Run Forward and return the result.
+   *
+   */
+  const vector<BlobBase*>& Forward(Dtype* loss = NULL);
+
+  /**
+   * The From and To variants of Forward and Backward operate on the
+   * (topological) ordering by which the net is specified. For general DAG
+   * networks, note that (1) computing from one layer to another might entail
+   * extra computation on unrelated branches, and (2) computation starting in
+   * the middle may be incorrect if all of the layers of a fan-in are not
+   * included.
+   */
+  Dtype ForwardFromTo(int_tp start, int_tp end);
+  Dtype ForwardFrom(int_tp start);
+  Dtype ForwardTo(int_tp end);
+  /// @brief DEPRECATED; set input blobs then use Forward() instead.
+  const vector<BlobBase*>& Forward(const vector<BlobBase* > & bottom,
+      Dtype* loss = NULL);
+
+  /**
+   * @brief Zeroes out the diffs of all net parameters.
+   *        Should be run before Backward.
+   */
+  virtual void ClearParamDiffs();
+
+  /**
+   * The network backward should take no input and output, since it solely
+   * computes the gradient w.r.t the parameters, and the data has already been
+   * provided during the forward pass.
+   */
+  void Backward();
+  void BackwardFromTo(int_tp start, int_tp end);
+  void BackwardFrom(int_tp start);
+  void BackwardTo(int_tp end);
+
+  /**
+   * @brief Reshape all layers from bottom to top.
+   *
+   * This is useful to propagate changes to layer sizes without running
+   * a forward pass, e.g. to compute output feature size.
+   */
+  virtual void Reshape();
+
+  Dtype ForwardBackward() {
+    Dtype loss;
+    Forward(&loss);
+    Backward();
+    return loss;
+  }
+
+  /// @brief Updates the network weights based on the diff values computed.
+  virtual void Update();
+  /**
+   * @brief Shares weight data of owner blobs with shared blobs.
+   *
+   * Note: this is called by Net::Init, and thus should normally not be
+   * called manually.
+   */
+  virtual void ShareWeights();
+
+  /**
+   * @brief For an already initialized net, implicitly copies (i.e., using no
+   *        additional memory) the pre-trained layers from another Net.
+   */
+  virtual void ShareTrainedLayersWith(const NetBase* other);
+  // For an already initialized net, CopyTrainedLayersFrom() copies the already
+  // trained layers from another net parameter instance.
+  /**
+   * @brief For an already initialized net, copies the pre-trained layers from
+   *        another Net.
+   */
+  virtual void CopyTrainedLayersFrom(const NetParameter& param);
+  virtual void CopyTrainedLayersFrom(const string trained_filename);
+  virtual void CopyTrainedLayersFromBinaryProto(const string trained_filename);
+  virtual void CopyTrainedLayersFromHDF5(const string trained_filename);
+  /// @brief Writes the net to a proto.
+  virtual void ToProto(NetParameter* param, bool write_diff = false) const;
+
+  /// @brief Writes the network quantizers to a proto.
+  virtual void QuantizerToProto(NetParameter* param) const;
+
+  /// @brief Writes the net to an HDF5 file.
+  virtual void ToHDF5(const string& filename, bool write_diff = false) const;
+
+  inline const vector<Dtype>& blob_loss_weights() const {
+    return blob_loss_weights_;
+  }
+
+  // Helpers for Init.
+  /**
+   * @brief Remove layers that the user specified should be excluded given the current
+   *        phase, level, and stage.
+   */
+  static void FilterNet(const NetParameter& param,
+                        NetParameter* param_filtered);
+  /// @brief return whether NetState state meets NetStateRule rule
+  static bool StateMeetsRule(const NetState& state, const NetStateRule& rule,
+                             const string& layer_name);
+
+  const vector<Callback*>& before_forward() const { return before_forward_; }
+  void add_before_forward(Callback* value) {
+    before_forward_.push_back(value);
+  }
+  const vector<Callback*>& after_forward() const { return after_forward_; }
+  void add_after_forward(Callback* value) {
+    after_forward_.push_back(value);
+  }
+  const vector<Callback*>& before_backward() const { return before_backward_; }
+  void add_before_backward(Callback* value) {
+    before_backward_.push_back(value);
+  }
+  const vector<Callback*>& after_backward() const { return after_backward_; }
+  void add_after_backward(Callback* value) {
+    after_backward_.push_back(value);
+  }
+
+ protected:
+  // Helpers for Init.
+  /// @brief Append a new top blob to the net.
+  void AppendTop(const NetParameter& param, const int_tp layer_id,
+                 const int_tp top_id, std::set<string>* available_blobs,
+                 map<string, int_tp>* blob_name_to_idx);
+  /// @brief Append a new bottom blob to the net.
+  int_tp AppendBottom(const NetParameter& param, const int_tp layer_id,
+                   const int_tp bottom_id, std::set<string>* available_blobs,
+                   map<string, int_tp>* blob_name_to_idx);
+  /// @brief Append a new parameter blob to the net.
+  void AppendParam(const NetParameter& param, const int_tp layer_id,
+                   const int_tp param_id);
+
+  /// @brief Helper for displaying debug info in Forward.
+  void ForwardDebugInfo(const int_tp layer_id);
+  /// @brief Helper for displaying debug info in Backward.
+  void BackwardDebugInfo(const int_tp layer_id);
+  /// @brief Helper for displaying debug info in Update.
+  void UpdateDebugInfo(const int_tp param_id);
+
+  /// Vector of weight in the loss (or objective) function of each net blob,
+  /// indexed by blob_id.
+  vector<Dtype> blob_loss_weights_;
 
 DISABLE_COPY_AND_ASSIGN(Net);
 };

@@ -903,7 +903,7 @@ void Blob<Dtype>::FromProto(const BlobProto& proto, bool reshape) {
     CHECK(ShapeEquals(proto)) << "shape mismatch (reshape not set)";
   }
   DataType proto_data_type = proto.has_data_type() ? proto.data_type()
-      : (proto.data_size() > 0 || proto.diff_size() > 0 ? FLOAT : DOUBLE);
+      : (proto.data_size() > 0 || proto.diff_size() > 0 ? CAFFE_FLOAT : CAFFE_DOUBLE);
 
   QuantizerParameter param;
   param.CopyFrom(this->quant_->quant_param());

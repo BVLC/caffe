@@ -11,7 +11,6 @@
 #include "caffe/util/benchmark.hpp"
 
 namespace caffe {
-
 /**
   * @brief Enumeration of actions that a client of the Solver may request by
   * implementing the Solver's action request function, which a
@@ -34,62 +33,16 @@ namespace caffe {
  */
 typedef boost::function<SolverAction::Enum()> ActionCallback;
 
-/**
- * @brief An interface for classes that perform optimization on Net%s.
- *
- * Requires implementation of ApplyUpdate to compute a parameter update
- * given the current state of the Net parameters.
- */
-template<typename Dtype>
-class Solver {
+
+class SolverBase {
  public:
-  explicit Solver(const SolverParameter& param, Device* dev);
-  explicit Solver(const string& param_file, Device* dev);
-  void Init(const SolverParameter& param);
-  void InitTrainNet();
-  void InitTestNets();
-
-  // Allows to change the solver parameters during training
-  void UpdateSolverParams(const SolverParameter& param);
-  SolverParameter GetSolverParams();
-
-  // Client of the Solver optionally may call this in order to set the function
-  // that the solver uses to see what action it should take (e.g. snapshot or
-  // exit training early).
-  void SetActionFunction(ActionCallback func);
-  SolverAction::Enum GetRequestedAction();
-  // The main entry of the solver function. In default, iter will be zero. Pass
-  // in a non-zero iter number to resume training for a pre-trained net.
-  virtual void Solve(const char* resume_file = NULL);
-  inline void Solve(const string resume_file) {
-    Solve(resume_file.c_str());
-  }
-  Dtype Step(int_tp iters);
-  // The Restore method simply dispatches to one of the
-  // RestoreSolverStateFrom___ protected methods. You should implement these
-  // methods to restore the state from the appropriate snapshot type.
-  void Restore(const char* resume_file);
-  // The Solver::Snapshot function implements the basic snapshotting utility
-  // that stores the learned net. You should implement the SnapshotSolverState()
-  // function that produces a SolverState protocol buffer that needs to be
-  // written to disk together with the learned net.
-  void Snapshot();
-  virtual ~Solver() {}
-  inline const SolverParameter& param() const { return param_; }
-  inline shared_ptr<Net<Dtype> > net() { return net_; }
-  inline const vector<shared_ptr<Net<Dtype> > >& test_nets() {
-    return test_nets_;
+  explicit SolverBase(Device* dev)
+    : device_(dev), callbacks_(), requested_early_exit_(false) {
   }
 
-  int_tp iter() {
-    return iter_;
+  DataType data_type() const {
+    return param_.data_type();
   }
-
-  int_tp max_iter() {
-    return param_.max_iter();
-  }
-
-  virtual void SnapshotSolverState(const string& model_filename) = 0;
 
   // Invoked at specific points during an iteration
   class Callback {
@@ -99,13 +52,24 @@ class Solver {
 
     template <typename T>
     friend class Solver;
+    friend class SolverBase;
   };
-  const vector<Callback*>& callbacks() const { return callbacks_; }
-  void add_callback(Callback* value) {
-    callbacks_.push_back(value);
+
+  virtual void Solve(const char* resume_file = NULL) = 0;
+  virtual void Restore(const char* resume_file) = 0;
+  virtual void Snapshot() = 0;
+  virtual void SnapshotSolverState(const string& model_filename) = 0;
+
+  void update_solver_param(const SolverParameter& param) {
+    param_ = param;
+  }
+  inline const SolverParameter& param() const { return param_; }
+
+  inline void Solve(const string resume_file) {
+    Solve(resume_file.c_str());
   }
 
-  void CheckSnapshotWritePermissions();
+  virtual shared_ptr<NetBase> net_base() = 0;
 
   /**
    * @brief Returns the solver type.
@@ -117,6 +81,96 @@ class Solver {
   inline Device *get_device() {
     return device_;
   }
+
+  int_tp iter() {
+    return iter_;
+  }
+
+  int_tp max_iter() {
+    return param_.max_iter();
+  }
+
+  virtual const vector<shared_ptr<NetBase> > test_nets_bases() = 0;
+
+  const vector<Callback*>& callbacks() const { return callbacks_; }
+
+  void add_callback(Callback* value) {
+    callbacks_.push_back(value);
+  }
+
+ protected:
+  SolverParameter param_;
+  int_tp iter_;
+  int_tp current_step_;
+
+  // a function that can be set by a client of the Solver to provide indication
+  // that it wants a snapshot saved and/or to exit early.
+  ActionCallback action_request_function_;
+
+  // True iff a request to stop early was received.
+  bool requested_early_exit_;
+
+  // Timing information, handy to tune e.g. nbr of GPUs
+  Timer iteration_timer_;
+  float iterations_last_;
+
+  Device* device_;
+  shared_ptr<DeviceProgram> device_program_;
+  vector<Callback*> callbacks_;
+};
+
+
+/**
+ * @brief An interface for classes that perform optimization on Net%s.
+ *
+ * Requires implementation of ApplyUpdate to compute a parameter update
+ * given the current state of the Net parameters.
+ */
+template<typename Dtype>
+class Solver : public SolverBase {
+ public:
+  explicit Solver(const SolverParameter& param, Device* dev);
+  explicit Solver(const string& param_file, Device* dev);
+  void Init(const SolverParameter& param);
+  void InitTrainNet();
+  void InitTestNets();
+
+  // Client of the Solver optionally may call this in order to set the function
+  // that the solver uses to see what action it should take (e.g. snapshot or
+  // exit training early).
+  void SetActionFunction(ActionCallback func);
+  SolverAction::Enum GetRequestedAction();
+  // The main entry of the solver function. In default, iter will be zero. Pass
+  // in a non-zero iter number to resume training for a pre-trained net.
+  virtual void Solve(const char* resume_file = NULL);
+  Dtype Step(int_tp iters);
+  // The Restore method simply dispatches to one of the
+  // RestoreSolverStateFrom___ protected methods. You should implement these
+  // methods to restore the state from the appropriate snapshot type.
+  virtual void Restore(const char* resume_file);
+  // The Solver::Snapshot function implements the basic snapshotting utility
+  // that stores the learned net. You should implement the SnapshotSolverState()
+  // function that produces a SolverState protocol buffer that needs to be
+  // written to disk together with the learned net.
+  virtual void Snapshot();
+  virtual ~Solver() {}
+  inline shared_ptr<Net<Dtype> > net() { return net_; }
+  virtual shared_ptr<NetBase> net_base() { return net_; }
+  inline const vector<shared_ptr<Net<Dtype> > >& test_nets() {
+    return test_nets_;
+  }
+  virtual const vector<shared_ptr<NetBase> > test_nets_bases() {
+    std::vector<shared_ptr<NetBase> > converted_test_nets;
+    for (size_t i = 0; i < test_nets_.size(); ++i) {
+      converted_test_nets.push_back(std::static_pointer_cast<NetBase>(
+          test_nets_[i]));
+    }
+    return converted_test_nets;
+  }
+
+  virtual void SnapshotSolverState(const string& model_filename) = 0;
+
+  void CheckSnapshotWritePermissions();
 
 
  protected:
@@ -134,27 +188,10 @@ class Solver {
   void UpdateSmoothedLoss(Dtype loss, int_tp start_iter, int_tp average_loss);
   virtual void GenerateProgram() = 0;
 
-  SolverParameter param_;
-  int_tp iter_;
-  int_tp current_step_;
   shared_ptr<Net<Dtype> > net_;
   vector<shared_ptr<Net<Dtype> > > test_nets_;
-  Device* device_;
-  shared_ptr<DeviceProgram> device_program_;
-  vector<Callback*> callbacks_;
   vector<Dtype> losses_;
   Dtype smoothed_loss_;
-
-  // a function that can be set by a client of the Solver to provide indication
-  // that it wants a snapshot saved and/or to exit early.
-  ActionCallback action_request_function_;
-
-  // True iff a request to stop early was received.
-  bool requested_early_exit_;
-
-  // Timing information, handy to tune e.g. nbr of GPUs
-  Timer iteration_timer_;
-  float iterations_last_;
 
   DISABLE_COPY_AND_ASSIGN(Solver);
 };

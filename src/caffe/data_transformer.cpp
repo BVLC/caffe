@@ -398,8 +398,8 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
     CHECK_EQ(input_width, data_mean_.width());
     for (int_tp n = 0; n < input_num; ++n) {
       int_tp offset = input_blob->offset(n);
-      caffe_sub(data_mean_.count(), input_data + offset, data_mean_.cpu_data(),
-                input_data + offset);
+      caffe_sub<Dtype>(data_mean_.count(), input_data + offset,
+                       data_mean_.cpu_data(), input_data + offset);
     }
   }
 
@@ -408,13 +408,14 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
         << "Specify either 1 mean_value or as many as channels: "
         << input_channels;
     if (mean_values_.size() == 1) {
-      caffe_add_scalar(input_blob->count(), -(mean_values_[0]), input_data);
+      caffe_add_scalar<Dtype>(input_blob->count(), -(mean_values_[0]),
+                              input_data);
     } else {
       for (int_tp n = 0; n < input_num; ++n) {
         for (int_tp c = 0; c < input_channels; ++c) {
           int_tp offset = input_blob->offset(n, c);
-          caffe_add_scalar(input_height * input_width, -(mean_values_[c]),
-                           input_data + offset);
+          caffe_add_scalar<Dtype>(input_height * input_width,
+                                  -(mean_values_[c]), input_data + offset);
         }
       }
     }
@@ -551,6 +552,6 @@ int_tp DataTransformer<Dtype>::Rand(int_tp n) {
   return ((*rng)() % n);
 }
 
-INSTANTIATE_CLASS_1T(DataTransformer, (half_fp)(float)(double));
+INSTANTIATE_CLASS_1T_GUARDED(DataTransformer, PROTO_TYPES);
 
 }  // namespace caffe

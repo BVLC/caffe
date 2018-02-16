@@ -66,4 +66,4 @@ class PythonLayer : public Layer<Dtype, MItype, MOtype> {
 
 }  // namespace caffe
 
-#endif
+#endif  // CAFFE_PYTHON_LAYER_HPP_

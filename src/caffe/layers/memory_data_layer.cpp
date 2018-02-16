@@ -120,7 +120,8 @@ void MemoryDataLayer<Dtype, MItype, MOtype>::AddMatVector(const vector<cv::Mat>&
 #endif  // USE_OPENCV
 
 template<typename Dtype, typename MItype, typename MOtype>
-void MemoryDataLayer<Dtype, MItype, MOtype>::Reset(Dtype* data, Dtype* labels, int_tp n) {
+void MemoryDataLayer<Dtype, MItype, MOtype>::Reset(Dtype* data,
+                                                   Dtype* labels, int_tp n) {
   CHECK(data);
   if (has_label_) {
     CHECK(labels);
@@ -150,8 +151,9 @@ void MemoryDataLayer<Dtype, MItype, MOtype>::set_batch_size(int_tp new_size) {
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void MemoryDataLayer<Dtype, MItype, MOtype>::Forward_cpu(const vector<Blob<MItype>*>& bottom,
-                                         const vector<Blob<MOtype>*>& top) {
+void MemoryDataLayer<Dtype, MItype, MOtype>::Forward_cpu(
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
   CHECK(data_) << "MemoryDataLayer needs to be initialized by calling Reset";
   top[0]->Reshape(shape_);
   top[0]->set_cpu_data(data_ + pos_ * size_);
@@ -168,10 +170,20 @@ void MemoryDataLayer<Dtype, MItype, MOtype>::Forward_cpu(const vector<Blob<MItyp
 INSTANTIATE_CLASS_3T_GUARDED(MemoryDataLayer, (half_fp), (half_fp), (half_fp));
 INSTANTIATE_CLASS_3T_GUARDED(MemoryDataLayer, (float), (float), (float));
 INSTANTIATE_CLASS_3T_GUARDED(MemoryDataLayer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(MemoryDataLayer, (int8_t), (int8_t), (int8_t));
+INSTANTIATE_CLASS_3T_GUARDED(MemoryDataLayer, (int16_t), (int16_t), (int16_t));
+INSTANTIATE_CLASS_3T_GUARDED(MemoryDataLayer, (int32_t), (int32_t), (int32_t));
+INSTANTIATE_CLASS_3T_GUARDED(MemoryDataLayer, (int64_t), (int64_t), (int64_t));
+
 
 REGISTER_LAYER_CLASS(MemoryData);
 REGISTER_LAYER_CLASS_INST(MemoryData, (half_fp), (half_fp), (half_fp));
 REGISTER_LAYER_CLASS_INST(MemoryData, (float), (float), (float));
 REGISTER_LAYER_CLASS_INST(MemoryData, (double), (double), (double));
+REGISTER_LAYER_CLASS_INST(MemoryData, (int8_t), (int8_t), (int8_t));
+REGISTER_LAYER_CLASS_INST(MemoryData, (int16_t), (int16_t), (int16_t));
+REGISTER_LAYER_CLASS_INST(MemoryData, (int32_t), (int32_t), (int32_t));
+REGISTER_LAYER_CLASS_INST(MemoryData, (int64_t), (int64_t), (int64_t));
+
 
 }  // namespace caffe

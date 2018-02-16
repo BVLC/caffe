@@ -77,9 +77,9 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
                                    false,
                                const char* from_snapshot = NULL) {
     string bottom_type = std::is_same<Dtype, half_fp>::value ?
-        "bottom_data_type: FLOAT" : "";
+        "bottom_data_type: CAFFE_FLOAT" : "";
     string compute_type = std::is_same<Dtype, half_fp>::value ?
-        "compute_data_type: FLOAT" : "";
+        "compute_data_type: CAFFE_FLOAT" : "";
 
     ostringstream proto;
     int device_id = 0;

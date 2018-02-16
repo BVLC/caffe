@@ -1,15 +1,13 @@
 import copy, math
 
 # Import pycaffe
-import caffe
-import caffe.net_spec as net_spec
+from .net_spec import layers, params, NetSpec, to_proto
 
 from collections import OrderedDict, Counter, Iterable
 
 from caffe import layers as L, params as P, to_proto
 from caffe.proto import caffe_pb2
 import six
-from compiler.ast import nodes
 
 
 class MetaLayers(object):

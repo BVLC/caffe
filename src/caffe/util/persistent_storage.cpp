@@ -67,7 +67,7 @@ string persistent_storage_path() {
 #endif  // NDEBUG
 
   boost::filesystem::path dir(path);
-  boost::filesystem::create_directory(dir);
+  boost::filesystem::create_directories(dir);
 
   return path + "/";
 }

@@ -40,7 +40,7 @@
 
 #ifdef WITH_PYTHON_LAYER
 #include "caffe/layers/python_layer.hpp"
-#endif
+#endif  // WITH_PYTHON_LAYER
 
 namespace caffe {
 

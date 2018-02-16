@@ -33,8 +33,10 @@ namespace caffe {
 class LayerBase {
  public:
   virtual ~LayerBase() {
-
   }
+
+  virtual void LayerSetUp(const vector<BlobBase*>& bottom,
+                          const vector<BlobBase*>& top) = 0;
 
   virtual void Reshape(const vector<BlobBase*>& bottom,
                        const vector<BlobBase*>& top) = 0;
@@ -364,6 +366,19 @@ class Layer : public LayerBase {
    */
   virtual void LayerSetUp(const vector<Blob<MItype>*>& bottom,
                           const vector<Blob<MOtype>*>& top) {
+  }
+
+  virtual void LayerSetUp(const vector<BlobBase*>& bottom,
+                          const vector<BlobBase*>& top) {
+    vector<Blob<MItype>*> cast_bottom;
+    vector<Blob<MOtype>*> cast_top;
+    for (size_t i = 0; i < bottom.size(); ++i) {
+      cast_bottom.push_back(static_cast<Blob<MItype>*>(bottom[i]));
+    }
+    for (size_t i = 0; i < top.size(); ++i) {
+      cast_top.push_back(static_cast<Blob<MOtype>*>(top[i]));
+    }
+    this->LayerSetUp(cast_bottom, cast_top);
   }
 
   virtual void Reshape(const vector<BlobBase*>& bottom,

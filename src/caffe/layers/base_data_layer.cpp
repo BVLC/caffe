@@ -153,6 +153,10 @@ STUB_GPU_FORWARD(BasePrefetchingDataLayer, Forward);
 INSTANTIATE_CLASS_3T_GUARDED(BaseDataLayer, (half_fp), (half_fp), (half_fp));
 INSTANTIATE_CLASS_3T_GUARDED(BaseDataLayer, (float), (float), (float));
 INSTANTIATE_CLASS_3T_GUARDED(BaseDataLayer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(BaseDataLayer, (int8_t), (int8_t), (int8_t));
+INSTANTIATE_CLASS_3T_GUARDED(BaseDataLayer, (int16_t), (int16_t), (int16_t));
+INSTANTIATE_CLASS_3T_GUARDED(BaseDataLayer, (int32_t), (int32_t), (int32_t));
+INSTANTIATE_CLASS_3T_GUARDED(BaseDataLayer, (int64_t), (int64_t), (int64_t));
 
 INSTANTIATE_CLASS_3T_GUARDED(BasePrefetchingDataLayer,
                              (half_fp), (half_fp), (half_fp));
@@ -160,5 +164,12 @@ INSTANTIATE_CLASS_3T_GUARDED(BasePrefetchingDataLayer,
                              (float), (float), (float));
 INSTANTIATE_CLASS_3T_GUARDED(BasePrefetchingDataLayer,
                              (double), (double), (double));
-
+INSTANTIATE_CLASS_3T_GUARDED(BasePrefetchingDataLayer,
+                             (int8_t), (int8_t), (int8_t));
+INSTANTIATE_CLASS_3T_GUARDED(BasePrefetchingDataLayer,
+                             (int16_t), (int16_t), (int16_t));
+INSTANTIATE_CLASS_3T_GUARDED(BasePrefetchingDataLayer,
+                             (int32_t), (int32_t), (int32_t));
+INSTANTIATE_CLASS_3T_GUARDED(BasePrefetchingDataLayer,
+                             (int64_t), (int64_t), (int64_t));
 }  // namespace caffe

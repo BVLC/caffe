@@ -72,8 +72,8 @@ TYPED_TEST(HDF5DataLayerTest, TestRead) {
   param.add_top("label2");
 
   if (std::is_same<Dtype, half_fp>::value) {
-    param.set_bottom_data_type(FLOAT);
-    param.set_compute_data_type(FLOAT);
+    param.set_bottom_data_type(CAFFE_FLOAT);
+    param.set_compute_data_type(CAFFE_FLOAT);
     param.set_top_data_type(proto_data_type<Dtype>());
   }
 
@@ -165,8 +165,8 @@ TYPED_TEST(HDF5DataLayerTest, TestSkip) {
   param.add_top("label");
 
   if (std::is_same<Dtype, half_fp>::value) {
-    param.set_bottom_data_type(FLOAT);
-    param.set_compute_data_type(FLOAT);
+    param.set_bottom_data_type(CAFFE_FLOAT);
+    param.set_compute_data_type(CAFFE_FLOAT);
     param.set_top_data_type(proto_data_type<Dtype>());
   }
 

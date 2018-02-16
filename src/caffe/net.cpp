@@ -25,17 +25,21 @@
 
 namespace caffe {
 
+NetBase::NetBase(Device* device_context) :
+  device_(device_context) {
+
+}
 
 template<typename Dtype>
 Net<Dtype>::Net(const NetParameter& param, Device* device_context)
-    : device_(device_context) {
+    : NetBase(device_context) {
   Init(param);
 }
 
 template<typename Dtype>
 Net<Dtype>::Net(const string& param_file, Phase phase, Device* device_context,
                 const int level, const vector<string>* stages)
-    : device_(device_context) {
+    : NetBase(device_context) {
   NetParameter param;
   ReadNetParamsFromTextFileOrDie(param_file, &param);
   // Set phase, stages and level
@@ -73,30 +77,31 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   NetParameter converted_param;
   InsertConversions(splitted_param, &converted_param);
 
-  NetParameter param = converted_param;
+  param_ = converted_param;
+  param_.set_data_type(proto_data_type<Dtype>());
 
   // To debug InsertSplits and InsertConversions
   // std::cout << param.DebugString() << std::endl;
 
   // Basically, build all the layers and set up its connections.
-  name_ = param.name();
+  name_ = param_.name();
   map<string, int_tp> blob_name_to_idx;
   std::set<string> available_blobs;
   memory_used_ = 0;
   // For each layer, set up its input and output
-  bottom_vecs_.resize(param.layer_size());
-  top_vecs_.resize(param.layer_size());
-  bottom_id_vecs_.resize(param.layer_size());
-  param_id_vecs_.resize(param.layer_size());
-  top_id_vecs_.resize(param.layer_size());
-  bottom_need_backward_.resize(param.layer_size());
-  for (int_tp layer_id = 0; layer_id < param.layer_size(); ++layer_id) {
+  bottom_vecs_.resize(param_.layer_size());
+  top_vecs_.resize(param_.layer_size());
+  bottom_id_vecs_.resize(param_.layer_size());
+  param_id_vecs_.resize(param_.layer_size());
+  top_id_vecs_.resize(param_.layer_size());
+  bottom_need_backward_.resize(param_.layer_size());
+  for (int_tp layer_id = 0; layer_id < param_.layer_size(); ++layer_id) {
     // Inherit phase from net if unset.
-    if (!param.layer(layer_id).has_phase()) {
-      param.mutable_layer(layer_id)->set_phase(phase_);
+    if (!param_.layer(layer_id).has_phase()) {
+      param_.mutable_layer(layer_id)->set_phase(phase_);
     }
     // Setup layer.
-    const LayerParameter& c_layer_param = param.layer(layer_id);
+    const LayerParameter& c_layer_param = param_.layer(layer_id);
 
     LayerParameter layer_param = c_layer_param;
 
@@ -150,14 +155,14 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     // Figure out this layer's input and output
     for (int_tp bottom_id = 0; bottom_id < layer_param.bottom_size();
         ++bottom_id) {
-      const int_tp blob_id = AppendBottom(param, layer_id, bottom_id,
+      const int_tp blob_id = AppendBottom(param_, layer_id, bottom_id,
                                        &available_blobs, &blob_name_to_idx);
       // If a blob needs backward, this layer should provide it.
       need_backward |= blob_need_backward_[blob_id];
     }
     int_tp num_top = layer_param.top_size();
     for (int_tp top_id = 0; top_id < num_top; ++top_id) {
-      AppendTop(param, layer_id, top_id, &available_blobs, &blob_name_to_idx);
+      AppendTop(param_, layer_id, top_id, &available_blobs, &blob_name_to_idx);
       // Collect Input layer tops as Net inputs.
       if (layer_param.type() == "Input") {
         const int_tp blob_id = blobs_.size() - 1;
@@ -176,7 +181,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
         // Add "anonymous" top blobs -- do not modify available_blobs or
         // blob_name_to_idx as we don't want these blobs to be usable as input
         // to other layers.
-        AppendTop(param, layer_id, num_top, NULL, NULL);
+        AppendTop(param_, layer_id, num_top, NULL, NULL);
       }
     }
     // After this layer is connected, set it up.
@@ -218,7 +223,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
                                                   param_need_backward);
     }
     for (int_tp param_id = 0; param_id < num_param_blobs; ++param_id) {
-      AppendParam(param, layer_id, param_id);
+      AppendParam(param_, layer_id, param_id);
     }
     // Finally, set the backward flag
     layer_need_backward_.push_back(need_backward);
@@ -294,7 +299,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     }
   }
   // Handle force_backward if needed.
-  if (param.force_backward()) {
+  if (param_.force_backward()) {
     for (int_tp layer_id = 0; layer_id < layers_.size(); ++layer_id) {
       layer_need_backward_[layer_id] = true;
       for (int_tp bottom_id = 0;
@@ -328,7 +333,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     layer_names_index_[layer_names_[layer_id]] = layer_id;
   }
   ShareWeights();
-  debug_info_ = param.debug_info();
+  debug_info_ = param_.debug_info();
   if (Caffe::root_solver()) {
     LOG(INFO) << "Network initialization done.";
     LOG(INFO) << "Memory required for data: " << memory_used_ << " B";
@@ -774,7 +779,7 @@ void Net<Dtype>::UpdateDebugInfo(const int_tp param_id) {
 }
 
 template<typename Dtype>
-void Net<Dtype>::ShareTrainedLayersWith(const Net* other) {
+void Net<Dtype>::ShareTrainedLayersWith(const NetBase* other) {
   int_tp num_source_layers = other->layers().size();
   for (int_tp i = 0; i < num_source_layers; ++i) {
     LayerBase* source_layer = other->layers()[i].get();
@@ -1152,13 +1157,11 @@ void Net<Dtype>::ShareWeights() {
   }
 }
 
-template<typename Dtype>
-bool Net<Dtype>::has_blob(const string& blob_name) const {
+bool NetBase::has_blob(const string& blob_name) const {
   return blob_names_index_.find(blob_name) != blob_names_index_.end();
 }
 
-template<typename Dtype>
-const shared_ptr<BlobBase> Net<Dtype>::blob_by_name(
+const shared_ptr<BlobBase> NetBase::blob_by_name(
     const string& blob_name) const {
   shared_ptr<BlobBase> blob_ptr;
   if (has_blob(blob_name)) {
@@ -1170,13 +1173,11 @@ const shared_ptr<BlobBase> Net<Dtype>::blob_by_name(
   return blob_ptr;
 }
 
-template<typename Dtype>
-bool Net<Dtype>::has_layer(const string& layer_name) const {
+bool NetBase::has_layer(const string& layer_name) const {
   return layer_names_index_.find(layer_name) != layer_names_index_.end();
 }
 
-template<typename Dtype>
-const shared_ptr<LayerBase> Net<Dtype>::layer_by_name(
+const shared_ptr<LayerBase> NetBase::layer_by_name(
     const string& layer_name) const {
   shared_ptr<LayerBase> layer_ptr;
   if (has_layer(layer_name)) {
@@ -1188,6 +1189,7 @@ const shared_ptr<LayerBase> Net<Dtype>::layer_by_name(
   return layer_ptr;
 }
 
+class NetBase;
 INSTANTIATE_CLASS_1T_GUARDED(Net, (half_fp)(float)(double));
 
 }  // namespace caffe
