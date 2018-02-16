@@ -106,7 +106,6 @@ namespace bp = boost::python;
 
 namespace caffe {
 
-
 // Data type coupling code
 NPY_TYPES proto_to_npy_type(DataType proto_data_type) {
   switch(proto_data_type) {
@@ -423,21 +422,16 @@ boost::variant<vector<half_fp>, vector<float>, vector<double> >
 #ifdef USE_HALF
       return static_cast<Net<half_fp>*>(net)->blob_loss_weights();
 #endif  // USE_HALF
-      break;
     case CAFFE_DOUBLE:
 #ifdef USE_DOUBLE
       return static_cast<Net<double>*>(net)->blob_loss_weights();
 #endif  // USE_DOUBLE
-      break;
     case CAFFE_FLOAT:
     default:
 #ifdef USE_SINGLE
       return static_cast<Net<float>*>(net)->blob_loss_weights();
 #endif  // USE_SINGLE
-      break;
   }
-  vector<float> empty;
-  return empty;
 }
 
 SolverBase* GetSolver(const SolverParameter& solver_param) {
@@ -969,6 +963,7 @@ BOOST_PYTHON_MODULE(_caffe) {
         &BlobBase::count))
     .def("reshape",           bp::raw_function(&Blob_Reshape))
 #ifndef CPU_ONLY
+    // FIXME
 /*    .add_property("_gpu_data_ptr",
         reinterpret_cast<uintptr_t (BlobBase::*)()>(
           &BlobBase::mutable_gpu_data))
@@ -994,7 +989,6 @@ BOOST_PYTHON_MODULE(_caffe) {
     .add_property("layer_param",
                   bp::make_function(&LayerBase::layer_param,
                   bp::return_internal_reference<>()));
-
   BP_REGISTER_shared_ptr_TO_PYTHON_NO_TEMPLATE(LayerBase);
 
   bp::class_<LayerParameter>("LayerParameter", bp::no_init)
@@ -1036,7 +1030,6 @@ BOOST_PYTHON_MODULE(_caffe) {
     .def("restore", &SolverBase::Restore)
     .def("snapshot", &SolverBase::Snapshot)
     .def("share_weights", &share_weights);
-
   BP_REGISTER_shared_ptr_TO_PYTHON_NO_TEMPLATE(SolverBase);
 
   bp::class_<NetState>("NetState", bp::init<>())
@@ -1138,35 +1131,48 @@ BOOST_PYTHON_MODULE(_caffe) {
       .value("HDF5", SolverParameter_SnapshotFormat_HDF5)
       .value("BINARYPROTO", SolverParameter_SnapshotFormat_BINARYPROTO);
 
+  bp::enum_<::caffe::DataType>("caffe_data_type")
+      .value("CAFFE_HALF", CAFFE_HALF)
+      .value("CAFFE_FLOAT", CAFFE_FLOAT)
+      .value("CAFFE_DOUBLE", CAFFE_DOUBLE)
+      .value("CAFFE_INT8_QUANTIZED", CAFFE_INT8_QUANTIZED)
+      .value("CAFFE_INT16_QUANTIZED", CAFFE_INT16_QUANTIZED)
+      .value("CAFFE_INT32_QUANTIZED", CAFFE_INT32_QUANTIZED)
+      .value("CAFFE_INT64_QUANTIZED", CAFFE_INT64_QUANTIZED);
 
-#define REGISTER_SOLVERS_TO_PYTHON(Dtype) \
+  bp::class_<half_fp>("half_fp");
+
+#define REGISTER_SOLVERS_TO_PYTHON(Dtype, Name) \
+  bp::class_<Solver<Dtype>, bp::bases<SolverBase>, \
+    shared_ptr<Solver<Dtype> >, boost::noncopyable>( \
+        "Solver" Name, bp::no_init); \
   bp::class_<SGDSolver<Dtype>, bp::bases<Solver<Dtype> >, \
     shared_ptr<SGDSolver<Dtype> >, boost::noncopyable>( \
-        "SGDSolver", bp::init<string, Device*>()); \
+        "SGDSolver" Name, bp::init<string, Device*>()); \
   bp::class_<NesterovSolver<Dtype>, bp::bases<Solver<Dtype> >, \
     shared_ptr<NesterovSolver<Dtype> >, boost::noncopyable>( \
-        "NesterovSolver", bp::init<string, Device*>()); \
+        "NesterovSolver" Name, bp::init<string, Device*>()); \
   bp::class_<AdaGradSolver<Dtype>, bp::bases<Solver<Dtype> >, \
     shared_ptr<AdaGradSolver<Dtype> >, boost::noncopyable>( \
-        "AdaGradSolver", bp::init<string, Device*>()); \
+        "AdaGradSolver" Name, bp::init<string, Device*>()); \
   bp::class_<RMSPropSolver<Dtype>, bp::bases<Solver<Dtype> >, \
     shared_ptr<RMSPropSolver<Dtype> >, boost::noncopyable>( \
-        "RMSPropSolver", bp::init<string, Device*>()); \
+        "RMSPropSolver" Name, bp::init<string, Device*>()); \
   bp::class_<AdaDeltaSolver<Dtype>, bp::bases<Solver<Dtype> >, \
     shared_ptr<AdaDeltaSolver<Dtype> >, boost::noncopyable>( \
-        "AdaDeltaSolver", bp::init<string, Device*>()); \
+        "AdaDeltaSolver" Name, bp::init<string, Device*>()); \
   bp::class_<AdamSolver<Dtype>, bp::bases<Solver<Dtype> >, \
     shared_ptr<AdamSolver<Dtype> >, boost::noncopyable>( \
-        "AdamSolver", bp::init<string, Device*>());
+        "AdamSolver" Name, bp::init<string, Device*>());
 
 #ifdef USE_HALF
-  REGISTER_SOLVERS_TO_PYTHON(half_fp);
+  REGISTER_SOLVERS_TO_PYTHON(half_fp, "_half");
 #endif  // USE_HALF
 #ifdef USE_SINGLE
-  REGISTER_SOLVERS_TO_PYTHON(float);
+  REGISTER_SOLVERS_TO_PYTHON(float, "_float");
 #endif  // USE_SINGLE
 #ifdef USE_DOUBLE
-  REGISTER_SOLVERS_TO_PYTHON(double);
+  REGISTER_SOLVERS_TO_PYTHON(double, "_double");
 #endif  // USE_DOUBLE
 
 
@@ -1191,30 +1197,30 @@ BOOST_PYTHON_MODULE(_caffe) {
   bp::class_<vector<int> >("IntVec")
     .def(bp::vector_indexing_suite<vector<int> >());
 
-#define REGISTER_DTYPE_VECTORS_TO_PYTHON(Dtype) \
-  bp::class_<vector<Dtype> >("DtypeVec") \
+#define REGISTER_DTYPE_VECTORS_TO_PYTHON(Dtype, Name) \
+  bp::class_<vector<Dtype> >("DtypeVec" Name) \
     .def(bp::vector_indexing_suite<vector<Dtype> >());
 
 #ifdef USE_HALF
-  REGISTER_DTYPE_VECTORS_TO_PYTHON(half_fp);
+  REGISTER_DTYPE_VECTORS_TO_PYTHON(half_fp, "_half");
 #endif  // USE_HALF
 #ifdef USE_SINGLE
-  REGISTER_DTYPE_VECTORS_TO_PYTHON(float);
+  REGISTER_DTYPE_VECTORS_TO_PYTHON(float, "_float");
 #endif  // USE_SINGLE
 #ifdef USE_DOUBLE
-  REGISTER_DTYPE_VECTORS_TO_PYTHON(double);
+  REGISTER_DTYPE_VECTORS_TO_PYTHON(double, "_double");
 #endif  // USE_DOUBLE
 #ifdef USE_INT_QUANT_8
-  REGISTER_DTYPE_VECTORS_TO_PYTHON(int8_t);
+  REGISTER_DTYPE_VECTORS_TO_PYTHON(int8_t, "_int8");
 #endif  // USE_INT_QUANT_8
 #ifdef USE_INT_QUANT_16
-  REGISTER_DTYPE_VECTORS_TO_PYTHON(int16_t);
+  REGISTER_DTYPE_VECTORS_TO_PYTHON(int16_t, "_int16");
 #endif  // USE_INT_QUANT_16
 #ifdef USE_INT_QUANT_32
-  REGISTER_DTYPE_VECTORS_TO_PYTHON(int32_t);
+  REGISTER_DTYPE_VECTORS_TO_PYTHON(int32_t, "_int32");
 #endif  // USE_INT_QUANT_32
 #ifdef USE_INT_QUANT_64
-  REGISTER_DTYPE_VECTORS_TO_PYTHON(int64_t);
+  REGISTER_DTYPE_VECTORS_TO_PYTHON(int64_t, "_int64");
 #endif  // USE_INT_QUANT_64
 
 
@@ -1223,10 +1229,10 @@ BOOST_PYTHON_MODULE(_caffe) {
   bp::class_<vector<bool> >("BoolVec")
     .def(bp::vector_indexing_suite<vector<bool> >());
 
-#ifdef USE_NCCL
-  bp::class_<NCCL<Dtype>, shared_ptr<NCCL<Dtype> >,
+  bp::class_<NCCL<float>, shared_ptr<NCCL<float> >,
     boost::noncopyable>("NCCL",
-                        bp::init<shared_ptr<Solver<Dtype> >, const string&>())
+                        bp::init<shared_ptr<Solver<float> >, const string&>())
+#ifdef USE_NCCL
     .def("new_uid", NCCL_New_Uid).staticmethod("new_uid")
     .def("bcast", &NCCL<Dtype>::Broadcast)
 #endif
