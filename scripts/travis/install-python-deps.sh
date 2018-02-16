@@ -11,4 +11,5 @@ if ! $WITH_PYTHON3 ; then
 else
   # Python3
   pip install --pre protobuf==3.0.0b3
+  pip install pydot
 fi

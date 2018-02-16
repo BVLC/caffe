@@ -6,6 +6,7 @@
 
 #include "caffe/net.hpp"
 #include "caffe/solver_factory.hpp"
+#include "caffe/util/benchmark.hpp"
 
 namespace caffe {
 
@@ -40,9 +41,8 @@ typedef boost::function<SolverAction::Enum()> ActionCallback;
 template <typename Dtype>
 class Solver {
  public:
-  explicit Solver(const SolverParameter& param,
-      const Solver* root_solver = NULL);
-  explicit Solver(const string& param_file, const Solver* root_solver = NULL);
+  explicit Solver(const SolverParameter& param);
+  explicit Solver(const string& param_file);
   void Init(const SolverParameter& param);
   void InitTrainNet();
   void InitTestNets();
@@ -72,7 +72,7 @@ class Solver {
   inline const vector<shared_ptr<Net<Dtype> > >& test_nets() {
     return test_nets_;
   }
-  int iter() { return iter_; }
+  int iter() const { return iter_; }
 
   // Invoked at specific points during an iteration
   class Callback {
@@ -118,10 +118,6 @@ class Solver {
   vector<Dtype> losses_;
   Dtype smoothed_loss_;
 
-  // The root solver that holds root nets (actually containing shared layers)
-  // in data parallelism
-  const Solver* const root_solver_;
-
   // A function that can be set by a client of the Solver to provide indication
   // that it wants a snapshot saved and/or to exit early.
   ActionCallback action_request_function_;
@@ -129,31 +125,11 @@ class Solver {
   // True iff a request to stop early was received.
   bool requested_early_exit_;
 
+  // Timing information, handy to tune e.g. nbr of GPUs
+  Timer iteration_timer_;
+  float iterations_last_;
+
   DISABLE_COPY_AND_ASSIGN(Solver);
-};
-
-/**
- * @brief Solver that only computes gradients, used as worker
- *        for multi-GPU training.
- */
-template <typename Dtype>
-class WorkerSolver : public Solver<Dtype> {
- public:
-  explicit WorkerSolver(const SolverParameter& param,
-      const Solver<Dtype>* root_solver = NULL)
-      : Solver<Dtype>(param, root_solver) {}
-
- protected:
-  void ApplyUpdate() {}
-  void SnapshotSolverState(const string& model_filename) {
-    LOG(FATAL) << "Should not be called on worker solver.";
-  }
-  void RestoreSolverStateFromBinaryProto(const string& state_file) {
-    LOG(FATAL) << "Should not be called on worker solver.";
-  }
-  void RestoreSolverStateFromHDF5(const string& state_file) {
-    LOG(FATAL) << "Should not be called on worker solver.";
-  }
 };
 
 }  // namespace caffe
