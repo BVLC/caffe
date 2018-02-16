@@ -436,6 +436,8 @@ boost::variant<vector<half_fp>, vector<float>, vector<double> >
 #endif  // USE_SINGLE
       break;
   }
+  vector<float> empty;
+  return empty;
 }
 
 SolverBase* GetSolver(const SolverParameter& solver_param) {
