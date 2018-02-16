@@ -30,14 +30,13 @@ SolverAction::Enum Solver<Dtype>::GetRequestedAction() {
 
 template<typename Dtype>
 Solver<Dtype>::Solver(const SolverParameter& param, Device* dev)
-    : net_(), device_(dev), callbacks_(), requested_early_exit_(false) {
+    : SolverBase(dev), net_() {
   Init(param);
 }
 
 template<typename Dtype>
 Solver<Dtype>::Solver(const string& param_file, Device* dev)
-    : net_(),
-      device_(dev), callbacks_(), requested_early_exit_(false) {
+    : SolverBase(dev), net_() {
   SolverParameter param;
   ReadSolverParamsFromTextFileOrDie(param_file, &param);
   Init(param);
@@ -49,6 +48,7 @@ void Solver<Dtype>::Init(const SolverParameter& param) {
   LOG_IF(INFO, Caffe::root_solver()) << "Initializing solver from parameters: "
     << std::endl << param.DebugString();
   param_ = param;
+  param_.set_data_type(proto_data_type<Dtype>());
   CHECK_GE(param_.average_loss(), 1) << "average_loss should be non-negative.";
   CheckSnapshotWritePermissions();
   if (param_.random_seed() >= 0) {
@@ -65,16 +65,6 @@ void Solver<Dtype>::Init(const SolverParameter& param) {
   current_step_ = 0;
 }
 
-
-template<typename Dtype>
-void Solver<Dtype>::UpdateSolverParams(const SolverParameter& param) {
-  param_ = param;
-}
-
-template<typename Dtype>
-SolverParameter Solver<Dtype>::GetSolverParams() {
-  return param_;
-}
 
 template<typename Dtype>
 void Solver<Dtype>::InitTrainNet() {
@@ -535,6 +525,7 @@ void Solver<Dtype>::UpdateSmoothedLoss(Dtype loss, int_tp start_iter,
   }
 }
 
+class SolverBase;
 INSTANTIATE_CLASS_1T_GUARDED(Solver, (half_fp)(float)(double));
 
 }  // namespace caffe

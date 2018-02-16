@@ -37,6 +37,13 @@ INSTANTIATE_CLASS_FUNC_3T_GUARDED(BasePrefetchingDataLayer, Forward_gpu,
                                   (float), (float), (float));
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(BasePrefetchingDataLayer, Forward_gpu,
                                   (double), (double), (double));
-
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(BasePrefetchingDataLayer, Forward_gpu,
+                                  (int8_t), (int8_t), (int8_t));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(BasePrefetchingDataLayer, Forward_gpu,
+                                  (int16_t), (int16_t), (int16_t));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(BasePrefetchingDataLayer, Forward_gpu,
+                                  (int32_t), (int32_t), (int32_t));
+INSTANTIATE_CLASS_FUNC_3T_GUARDED(BasePrefetchingDataLayer, Forward_gpu,
+                                  (int64_t), (int64_t), (int64_t));
 
 }  // namespace caffe

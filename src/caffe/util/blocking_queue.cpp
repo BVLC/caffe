@@ -94,5 +94,17 @@ template class BlockingQueue<Batch<float>*>;
 #ifdef USE_DOUBLE
 template class BlockingQueue<Batch<double>*>;
 #endif
+#ifdef USE_INT_QUANT_8
+template class BlockingQueue<Batch<int8_t>*>;
+#endif
+#ifdef USE_INT_QUANT_16
+template class BlockingQueue<Batch<int16_t>*>;
+#endif
+#ifdef USE_INT_QUANT_32
+template class BlockingQueue<Batch<int32_t>*>;
+#endif
+#ifdef USE_INT_QUANT_64
+template class BlockingQueue<Batch<int64_t>*>;
+#endif
 
 }  // namespace caffe

@@ -108,36 +108,36 @@ inline string safe_type_name<void>() {
 template<typename T>
 inline DataType proto_data_type() {
   LOG(FATAL) << "Unknown type" << std::endl;
-  return HALF;  // Unreachable
+  return CAFFE_HALF;  // Unreachable
 }
 
 template<>
 inline DataType proto_data_type<half_fp>() {
-  return HALF;
+  return CAFFE_HALF;
 }
 template<>
 inline DataType proto_data_type<float>() {
-  return FLOAT;
+  return CAFFE_FLOAT;
 }
 template<>
 inline DataType proto_data_type<double>() {
-  return DOUBLE;
+  return CAFFE_DOUBLE;
 }
 template<>
 inline DataType proto_data_type<int8_t>() {
-  return INT8_QUANTIZED;
+  return CAFFE_INT8_QUANTIZED;
 }
 template<>
 inline DataType proto_data_type<int16_t>() {
-  return INT16_QUANTIZED;
+  return CAFFE_INT16_QUANTIZED;
 }
 template<>
 inline DataType proto_data_type<int32_t>() {
-  return INT32_QUANTIZED;
+  return CAFFE_INT32_QUANTIZED;
 }
 template<>
 inline DataType proto_data_type<int64_t>() {
-  return INT64_QUANTIZED;
+  return CAFFE_INT64_QUANTIZED;
 }
 
 

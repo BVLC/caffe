@@ -3,14 +3,14 @@ syntax = "proto2";
 package caffe;
 
 enum DataType {
-	FLOAT = 0;
-	HALF = 1;
-	DOUBLE = 2;
-	INT8_QUANTIZED = 3;
-	INT16_QUANTIZED = 4;
-	INT32_QUANTIZED = 5;
-	INT64_QUANTIZED = 6;
-	PACKED_BINARY = 7;
+	CAFFE_FLOAT = 0;
+	CAFFE_HALF = 1;
+	CAFFE_DOUBLE = 2;
+	CAFFE_INT8_QUANTIZED = 3;
+	CAFFE_INT16_QUANTIZED = 4;
+	CAFFE_INT32_QUANTIZED = 5;
+	CAFFE_INT64_QUANTIZED = 6;
+	CAFFE_PACKED_BINARY = 7;
 }
 
 // Specifies the shape (dimensions) of a Blob.
@@ -139,7 +139,7 @@ message NetParameter {
 // NOTE
 // Update the next available ID when you add a new SolverParameter field.
 //
-// SolverParameter next available ID: 43 (last added: datatype)
+// SolverParameter next available ID: 43 (last added: data_type)
 message SolverParameter {
   //////////////////////////////////////////////////////////////////////////////
   // Specifying the train and test networks
@@ -154,7 +154,7 @@ message SolverParameter {
   // a test_iter must be specified for each test_net.
   // a test_level and/or a test_stage may also be specified for each test_net.
   //////////////////////////////////////////////////////////////////////////////
-
+  optional DataType data_type = 42;
   // Proto filename for the train net, possibly combined with one or more
   // test nets.
   optional string net = 24;
