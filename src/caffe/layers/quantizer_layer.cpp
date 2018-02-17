@@ -6,14 +6,18 @@ template<typename Dtype, typename MItype, typename MOtype>
 void QuantizerLayer<Dtype, MItype, MOtype>::LayerSetUp(
       const vector<Blob<MItype>*>& bottom,
       const vector<Blob<MOtype>*>& top) {
-  // TODO
+  this->Reshape(bottom, top);
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
 void QuantizerLayer<Dtype, MItype, MOtype>::Reshape(
       const vector<Blob<MItype>*>& bottom,
       const vector<Blob<MOtype>*>& top) {
-  // TODO
+  CHECK_EQ(bottom.size(), top.size())
+      << "Expected equal number of top and bottom blobs.";
+  for (size_t i = 0; i < bottom.size(); ++i) {
+    top[i]->ReshapeLike(bottom[i]);
+  }
 }
 
 template<typename Dtype, typename MItype, typename MOtype>

@@ -80,6 +80,7 @@ void Quantizer<MItype, MOtype>::update_param(const QuantizerParameter& param) {
       this->max_out_ = type_max_val<MOtype>();
     }
   }
+  program_ready_ = false;
   quant_mutex_.unlock();
 }
 
@@ -752,6 +753,7 @@ void Quantizer<MItype, MOtype>::GenerateKernels() {
 
   this->program_->set_source(ss.str());
   this->program_->Compile(true, true);
+  program_ready_ = true;
 }
 
 template<typename MItype, typename MOtype>
