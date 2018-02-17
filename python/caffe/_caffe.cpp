@@ -4,7 +4,13 @@
 #include <boost/make_shared.hpp>
 #include <boost/preprocessor/seq/enum.hpp>
 #include <boost/python.hpp>
+#include <boost/python/class.hpp>
+#include <boost/python/def.hpp>
 #include <boost/python/exception_translator.hpp>
+#include <boost/python/implicit.hpp>
+#include <boost/python/init.hpp>
+#include <boost/python/module.hpp>
+#include <boost/python/object.hpp>
 #include <boost/python/raw_function.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 #include <boost/variant.hpp>
@@ -40,7 +46,7 @@
 #endif  // USE_INDEX_64
 
 /* Fix to avoid registration warnings in pycaffe (#3960) */
-#define BP_REGISTER_shared_ptr_TO_PYTHON(PTR, TYPES) do { \
+#define BP_REGISTER_SHARED_PTR_TO_PYTHON(PTR, TYPES) do { \
   const boost::python::type_info info = \
     boost::python::type_id<shared_ptr<PTR<BOOST_PP_SEQ_ENUM(TYPES)> > >(); \
   const boost::python::converter::registration* reg = \
@@ -52,7 +58,7 @@
   } \
 } while (0)
 
-#define BP_REGISTER_shared_ptr_TO_PYTHON_NO_TEMPLATE(PTR) do { \
+#define BP_REGISTER_SHARED_PTR_TO_PYTHON_NO_TEMPLATE(PTR) do { \
   const boost::python::type_info info = \
     boost::python::type_id<shared_ptr<PTR > >(); \
   const boost::python::converter::registration* reg = \
@@ -105,7 +111,6 @@ BP_GET_POINTER(NetState);
 namespace bp = boost::python;
 
 namespace caffe {
-
 // Data type coupling code
 NPY_TYPES proto_to_npy_type(DataType proto_data_type) {
   switch(proto_data_type) {
@@ -148,6 +153,49 @@ DataType npy_to_proto_type(NPY_TYPES npy_data_type) {
       return CAFFE_FLOAT;
   }
 }
+
+typedef boost::variant<half_fp, float, double,
+                       int8_t, int16_t, int32_t,
+                       int64_t> variant_proto_types;
+typedef boost::variant<half_fp*, float*, double*,
+                       int8_t*, int16_t*, int32_t*,
+                       int64_t*> variant_proto_ptr_types;
+typedef boost::variant<vector<half_fp>, vector<float>, vector<double>,
+                       vector<int8_t>, vector<int16_t>, vector<int32_t>,
+                       vector<int64_t> > variant_proto_vec_types;
+
+struct variant_proto_types_to_object : boost::static_visitor<PyObject*> {
+  static result_type convert(variant_proto_types const &v) {
+    return boost::apply_visitor(variant_proto_types_to_object(), v);
+  }
+
+  template<typename T>
+  result_type operator()(T const &t) const {
+    return boost::python::incref(boost::python::object(t).ptr());
+  }
+};
+
+struct variant_proto_ptr_types_to_object : boost::static_visitor<PyObject*> {
+  static result_type convert(variant_proto_ptr_types const &v) {
+    return boost::apply_visitor(variant_proto_ptr_types_to_object(), v);
+  }
+
+  template<typename T>
+  result_type operator()(T const &t) const {
+    return boost::python::incref(boost::python::object(t).ptr());
+  }
+};
+
+struct variant_proto_vec_types_to_object : boost::static_visitor<PyObject*> {
+  static result_type convert(variant_proto_vec_types const &v) {
+    return boost::apply_visitor(variant_proto_vec_types_to_object(), v);
+  }
+
+  template<typename T>
+  result_type operator()(T const &t) const {
+    return boost::python::incref(boost::python::object(t).ptr());
+  }
+};
 
 
 // Selecting mode.
@@ -231,9 +279,9 @@ void CheckContiguousArray(PyArrayObject* arr, string name,
 }
 
 // Net constructor
-shared_ptr<NetBase> Net_Init(string network_file, int phase,
-    int level, const bp::object& stages,
-    const bp::object& weights) {
+shared_ptr<NetBase> Net_Init(string network_file, int phase, int level,
+                             const bp::object& stages,
+                             const bp::object& weights) {
   CheckFile(network_file);
 
   // Convert stages from list to vector
@@ -415,8 +463,7 @@ void Net_SetInputArrays(NetBase* net, int index, bp::object data_obj,
   Net_SetLayerInputArrays(net, layer, data_obj, labels_obj);
 }
 
-boost::variant<vector<half_fp>, vector<float>, vector<double> >
-  Net_get_blob_loss_weights(NetBase* net) {
+variant_proto_vec_types Net_get_blob_loss_weights(NetBase* net) {
   switch(net->data_type()) {
     case CAFFE_HALF:
 #ifdef USE_HALF
@@ -466,7 +513,54 @@ SolverBase* GetSolverFromFile(const string& filename) {
   return GetSolver(param);
 }
 
+struct NdarrayConverterGenerator {
+  template <typename T> struct apply;
+};
+
+template<>
+struct NdarrayConverterGenerator::apply<variant_proto_ptr_types> {
+  struct type {
+    PyObject* operator() (variant_proto_ptr_types data) const {
+      // Just store the data pointer, and add the shape information in postcall.
+      switch(data.which()) {
+        case 0:
+          return PyArray_SimpleNewFromData(0, NULL, NPY_FLOAT16,
+                                           boost::get<half_fp*>(data));
+          break;
+        case 1:
+          return PyArray_SimpleNewFromData(0, NULL, NPY_FLOAT32,
+                                           boost::get<float*>(data));
+          break;
+        case 2:
+          return PyArray_SimpleNewFromData(0, NULL, NPY_FLOAT64,
+                                           boost::get<double*>(data));
+          break;
+        case 3:
+          return PyArray_SimpleNewFromData(0, NULL, NPY_BYTE,
+                                           boost::get<int8_t*>(data));
+          break;
+        case 4:
+          return PyArray_SimpleNewFromData(0, NULL, NPY_SHORT,
+                                           boost::get<int16_t*>(data));
+          break;
+        case 5:
+          return PyArray_SimpleNewFromData(0, NULL, NPY_INT,
+                                           boost::get<int32_t*>(data));
+          break;
+        case 6:
+          return PyArray_SimpleNewFromData(0, NULL, NPY_INT64,
+                                           boost::get<int64_t*>(data));
+          break;
+      }
+    }
+    const PyTypeObject* get_pytype() {
+      return &PyArray_Type;
+    }
+  };
+};
+
 struct NdarrayCallPolicies : public bp::default_call_policies {
+  typedef NdarrayConverterGenerator result_converter;
   PyObject* postcall(PyObject* pyargs, PyObject* result) {
     bp::object pyblob = bp::extract<bp::tuple>(pyargs)()[0];
     shared_ptr<BlobBase> blob =
@@ -523,9 +617,9 @@ void exception_translator(std::exception ex) {
 }
 
 // NOLINT_NEXT_LINE(runtime/references)
-boost::variant<half_fp, float, double> ForwardFromTo_NoGIL(NetBase* net,
-                                                     int_tp start, int_tp end) {
-  boost::variant<half_fp, float, double> loss;
+variant_proto_types ForwardFromTo_NoGIL(NetBase* net, int_tp start,
+                                        int_tp end) {
+  variant_proto_types loss;
   Py_BEGIN_ALLOW_THREADS
   switch(net->data_type()) {
     case CAFFE_HALF:
@@ -574,9 +668,8 @@ void BackwardFromTo_NoGIL(NetBase* net, int_tp start, int_tp end) {
 }
 
 // NOLINT_NEXT_LINE(runtime/references)
-boost::variant<half_fp, float, double> Step_NoGIL(SolverBase* solver,
-                                                  int_tp iters) {
-  boost::variant<half_fp, float, double> smoothed_loss;
+variant_proto_types Step_NoGIL(SolverBase* solver, int_tp iters) {
+  variant_proto_types smoothed_loss;
   Py_BEGIN_ALLOW_THREADS
   switch(solver->data_type()) {
     case CAFFE_HALF:
@@ -795,9 +888,7 @@ bp::object NCCL_New_Uid() {
 
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(SolveOverloads, Solve, 0, 1);
 
-boost::variant<half_fp*, float*, double*,
-               int8_t*, int16_t*, int32_t*, int64_t*> Blob_mutable_cpu_data(
-    BlobBase* blob) {
+variant_proto_ptr_types Blob_mutable_cpu_data(BlobBase* blob) {
   switch(blob->data_type()) {
     case CAFFE_HALF:
 #ifdef USE_HALF
@@ -831,41 +922,40 @@ boost::variant<half_fp*, float*, double*,
   }
 }
 
-boost::variant<half_fp*, float*, double*,
-               int8_t*, int16_t*, int32_t*, int64_t*> Blob_mutable_cpu_diff(
-    BlobBase* blob) {
+variant_proto_ptr_types Blob_mutable_cpu_diff(BlobBase* blob) {
   switch(blob->data_type()) {
     case CAFFE_HALF:
 #ifdef USE_HALF
       return static_cast<Blob<half_fp>*>(blob)->mutable_cpu_diff();
 #endif  // USE_HALF
     case CAFFE_DOUBLE:
-#ifdef USE_HALF
+#ifdef USE_DOUBLE
       return static_cast<Blob<double>*>(blob)->mutable_cpu_diff();
-#endif  // USE_HALF
+#endif  // USE_DOUBLE
     case CAFFE_INT8_QUANTIZED:
-#ifdef USE_HALF
+#ifdef USE_INT_QUANT_8
       return static_cast<Blob<int8_t>*>(blob)->mutable_cpu_diff();
-#endif  // USE_HALF
+#endif  // USE_INT_QUANT_8
     case CAFFE_INT16_QUANTIZED:
-#ifdef USE_HALF
+#ifdef USE_INT_QUANT_16
       return static_cast<Blob<int16_t>*>(blob)->mutable_cpu_diff();
-#endif  // USE_HALF
+#endif  // USE_INT_QUANT_16
     case CAFFE_INT32_QUANTIZED:
-#ifdef USE_HALF
+#ifdef USE_INT_QUANT_32
       return static_cast<Blob<int32_t>*>(blob)->mutable_cpu_diff();
-#endif  // USE_HALF
+#endif  // USE_INT_QUANT_32
     case CAFFE_INT64_QUANTIZED:
-#ifdef USE_HALF
+#ifdef USE_INT_QUANT_64
       return static_cast<Blob<int64_t>*>(blob)->mutable_cpu_diff();
-#endif  // USE_HALF
+#endif  // USE_INT_QUANT_64
     case CAFFE_FLOAT:
     default:
-#ifdef USE_HALF
+#ifdef USE_SINGLE
       return static_cast<Blob<float>*>(blob)->mutable_cpu_diff();
-#endif  // USE_HALF
+#endif  // USE_SINGLE
   }
 }
+
 
 BOOST_PYTHON_MODULE(_caffe) {
   bp::register_exception_translator<std::exception>(&exception_translator);
@@ -874,6 +964,47 @@ BOOST_PYTHON_MODULE(_caffe) {
   // in Python
 
   bp::scope().attr("__version__") = AS_STRING(CAFFE_VERSION);
+
+  /*bp::class_<half_fp>("half");
+  bp::class_<float>("float");
+  bp::class_<double>("double");
+  bp::class_<int8_t>("int8_t");
+  bp::class_<int16_t>("int16_t");
+  bp::class_<int32_t>("int32_t");
+  bp::class_<int64_t>("int64_t");*/
+
+  // Boost variants
+  bp::to_python_converter<variant_proto_types,
+                          variant_proto_types_to_object>();
+  bp::to_python_converter<variant_proto_ptr_types,
+                          variant_proto_ptr_types_to_object>();
+  bp::to_python_converter<variant_proto_vec_types,
+                          variant_proto_vec_types_to_object>();
+
+  bp::implicitly_convertible<half_fp, variant_proto_types>();
+  bp::implicitly_convertible<float, variant_proto_types>();
+  bp::implicitly_convertible<double, variant_proto_types>();
+  bp::implicitly_convertible<int8_t, variant_proto_types>();
+  bp::implicitly_convertible<int16_t, variant_proto_types>();
+  bp::implicitly_convertible<int32_t, variant_proto_types>();
+  bp::implicitly_convertible<int64_t, variant_proto_types>();
+
+  bp::implicitly_convertible<half_fp*, variant_proto_ptr_types>();
+  bp::implicitly_convertible<float*, variant_proto_ptr_types>();
+  bp::implicitly_convertible<double*, variant_proto_ptr_types>();
+  bp::implicitly_convertible<int8_t*, variant_proto_ptr_types>();
+  bp::implicitly_convertible<int16_t*, variant_proto_ptr_types>();
+  bp::implicitly_convertible<int32_t*, variant_proto_ptr_types>();
+  bp::implicitly_convertible<int64_t*, variant_proto_ptr_types>();
+
+  bp::implicitly_convertible<vector<half_fp>, variant_proto_vec_types>();
+  bp::implicitly_convertible<vector<float>, variant_proto_vec_types>();
+  bp::implicitly_convertible<vector<double>, variant_proto_vec_types>();
+  bp::implicitly_convertible<vector<int8_t>, variant_proto_vec_types>();
+  bp::implicitly_convertible<vector<int16_t>, variant_proto_vec_types>();
+  bp::implicitly_convertible<vector<int32_t>, variant_proto_vec_types>();
+  bp::implicitly_convertible<vector<int64_t>, variant_proto_vec_types>();
+
 
   // Caffe utility functions
   bp::def("init_log", &InitLog);
@@ -946,7 +1077,7 @@ BOOST_PYTHON_MODULE(_caffe) {
     .def("before_backward", &Net_before_backward)
     .def("after_backward", &Net_after_backward)
     .def("after_backward", &Net_add_nccl);
-  BP_REGISTER_shared_ptr_TO_PYTHON_NO_TEMPLATE(NetBase);
+  BP_REGISTER_SHARED_PTR_TO_PYTHON_NO_TEMPLATE(NetBase);
 
   bp::class_<BlobBase, shared_ptr<BlobBase >, boost::noncopyable>(
     "Blob", bp::no_init)
@@ -971,11 +1102,11 @@ BOOST_PYTHON_MODULE(_caffe) {
         reinterpret_cast<uintptr_t (BlobBase::*)()>(
           &BlobBase::mutable_gpu_diff))*/
 #endif
-    .add_property("data",     bp::make_function(&Blob_mutable_cpu_data,
-          NdarrayCallPolicies()))
-    .add_property("diff",     bp::make_function(&Blob_mutable_cpu_diff,
-          NdarrayCallPolicies()));
-  BP_REGISTER_shared_ptr_TO_PYTHON_NO_TEMPLATE(BlobBase);
+    .add_property("data", bp::make_function(&Blob_mutable_cpu_data,
+                                            NdarrayCallPolicies()))
+    .add_property("diff", bp::make_function(&Blob_mutable_cpu_diff,
+                                            NdarrayCallPolicies()));
+  BP_REGISTER_SHARED_PTR_TO_PYTHON_NO_TEMPLATE(BlobBase);
 
   bp::class_<LayerBase,
               shared_ptr<PythonLayer<float, float, float> >,
@@ -989,7 +1120,7 @@ BOOST_PYTHON_MODULE(_caffe) {
     .add_property("layer_param",
                   bp::make_function(&LayerBase::layer_param,
                   bp::return_internal_reference<>()));
-  BP_REGISTER_shared_ptr_TO_PYTHON_NO_TEMPLATE(LayerBase);
+  BP_REGISTER_SHARED_PTR_TO_PYTHON_NO_TEMPLATE(LayerBase);
 
   bp::class_<LayerParameter>("LayerParameter", bp::no_init)
     .add_property("name",          bp::make_function(
@@ -1030,7 +1161,7 @@ BOOST_PYTHON_MODULE(_caffe) {
     .def("restore", &SolverBase::Restore)
     .def("snapshot", &SolverBase::Snapshot)
     .def("share_weights", &share_weights);
-  BP_REGISTER_shared_ptr_TO_PYTHON_NO_TEMPLATE(SolverBase);
+  BP_REGISTER_SHARED_PTR_TO_PYTHON_NO_TEMPLATE(SolverBase);
 
   bp::class_<NetState>("NetState", bp::init<>())
     .add_property("phase", &NetState::phase,
@@ -1140,8 +1271,6 @@ BOOST_PYTHON_MODULE(_caffe) {
       .value("CAFFE_INT32_QUANTIZED", CAFFE_INT32_QUANTIZED)
       .value("CAFFE_INT64_QUANTIZED", CAFFE_INT64_QUANTIZED);
 
-  bp::class_<half_fp>("half_fp");
-
 #define REGISTER_SOLVERS_TO_PYTHON(Dtype, Name) \
   bp::class_<Solver<Dtype>, bp::bases<SolverBase>, \
     shared_ptr<Solver<Dtype> >, boost::noncopyable>( \
@@ -1201,28 +1330,13 @@ BOOST_PYTHON_MODULE(_caffe) {
   bp::class_<vector<Dtype> >("DtypeVec" Name) \
     .def(bp::vector_indexing_suite<vector<Dtype> >());
 
-#ifdef USE_HALF
   REGISTER_DTYPE_VECTORS_TO_PYTHON(half_fp, "_half");
-#endif  // USE_HALF
-#ifdef USE_SINGLE
   REGISTER_DTYPE_VECTORS_TO_PYTHON(float, "_float");
-#endif  // USE_SINGLE
-#ifdef USE_DOUBLE
   REGISTER_DTYPE_VECTORS_TO_PYTHON(double, "_double");
-#endif  // USE_DOUBLE
-#ifdef USE_INT_QUANT_8
   REGISTER_DTYPE_VECTORS_TO_PYTHON(int8_t, "_int8");
-#endif  // USE_INT_QUANT_8
-#ifdef USE_INT_QUANT_16
   REGISTER_DTYPE_VECTORS_TO_PYTHON(int16_t, "_int16");
-#endif  // USE_INT_QUANT_16
-#ifdef USE_INT_QUANT_32
   REGISTER_DTYPE_VECTORS_TO_PYTHON(int32_t, "_int32");
-#endif  // USE_INT_QUANT_32
-#ifdef USE_INT_QUANT_64
   REGISTER_DTYPE_VECTORS_TO_PYTHON(int64_t, "_int64");
-#endif  // USE_INT_QUANT_64
-
 
   bp::class_<vector<shared_ptr<NetBase> > >("NetVec")
     .def(bp::vector_indexing_suite<vector<shared_ptr<NetBase> >, true>());
@@ -1239,7 +1353,7 @@ BOOST_PYTHON_MODULE(_caffe) {
     /* NOLINT_NEXT_LINE(whitespace/semicolon) */
   ;
 #ifdef USE_NCCL
-  BP_REGISTER_shared_ptr_TO_PYTHON(NCCL, (Dtype));
+  BP_REGISTER_SHARED_PTR_TO_PYTHON(NCCL, (Dtype));
 #endif  // USE_NCCL
 
   bp::class_<Timer, shared_ptr<Timer>, boost::noncopyable>(
@@ -1247,7 +1361,7 @@ BOOST_PYTHON_MODULE(_caffe) {
     .def("start", &Timer::Start)
     .def("stop", &Timer::Stop)
     .add_property("ms", &Timer::MilliSeconds);
-  BP_REGISTER_shared_ptr_TO_PYTHON_NO_TEMPLATE(Timer);
+  BP_REGISTER_SHARED_PTR_TO_PYTHON_NO_TEMPLATE(Timer);
 
   // boost python expects a void (missing) return value, while import_array
   // returns NULL for python3. import_array1() forces a void return value.
