@@ -10,29 +10,38 @@ void InsertConversions(const NetParameter& param, NetParameter* param_convert) {
   map<string, string> blob_name_to_layer_name;
   for (int_tp i = 0; i < param.layer_size(); ++i) {
     const LayerParameter& layer_param = param.layer(i);
-    LayerParameter* copy_layer_param = param_convert->add_layer();
-    copy_layer_param->CopyFrom(param.layer(i));
+    vector<string> layer_bottom_names(layer_param.bottom_size());
     for (int_tp j = 0; j < layer_param.bottom_size(); ++j) {
       const string& blob_name = layer_param.bottom(j);
+      string convert_blob_name = blob_name;
       if (blob_data_types.find(blob_name) ==
           blob_data_types.end()) {
         LOG(FATAL) << "Unknown bottom blob '" << blob_name << "' (layer '"
                    << layer_param.name() << "', bottom index " << j << ")";
       } else {
         if (layer_param.bottom_data_type() != blob_data_types[blob_name]) {
-          string convert_blob_name = ConversionBlobName(
+          convert_blob_name = ConversionBlobName(
               blob_name_to_layer_name[blob_name], blob_name, j);
           LayerParameter* convert_layer_param = param_convert->add_layer();
-          const float loss_weight = layer_param.loss_weight(j);
+          float loss_weight = 0.0;
+          if (j < std::min(layer_param.loss_weight_size(),
+                           layer_param.top_size())) {
+            loss_weight = layer_param.loss_weight(j);
+          }
           ConfigureConversionLayer(blob_name_to_layer_name[blob_name],
                                    blob_name, j, loss_weight,
                                    convert_layer_param,
                                    blob_data_types[blob_name],
                                    layer_param.bottom_data_type(),
                                    layer_param.quantizer_index());
-          copy_layer_param->set_bottom(j, convert_blob_name);
         }
       }
+      layer_bottom_names[j] = convert_blob_name;
+    }
+    LayerParameter* copy_layer_param = param_convert->add_layer();
+    copy_layer_param->CopyFrom(param.layer(i));
+    for (int_tp j = 0; j < layer_bottom_names.size(); ++j) {
+      copy_layer_param->set_bottom(j, layer_bottom_names[j]);
     }
     for (int_tp j = 0; j < layer_param.top_size(); ++j) {
       const string& blob_name = layer_param.top(j);

@@ -965,14 +965,6 @@ BOOST_PYTHON_MODULE(_caffe) {
 
   bp::scope().attr("__version__") = AS_STRING(CAFFE_VERSION);
 
-  /*bp::class_<half_fp>("half");
-  bp::class_<float>("float");
-  bp::class_<double>("double");
-  bp::class_<int8_t>("int8_t");
-  bp::class_<int16_t>("int16_t");
-  bp::class_<int32_t>("int32_t");
-  bp::class_<int64_t>("int64_t");*/
-
   // Boost variants
   bp::to_python_converter<variant_proto_types,
                           variant_proto_types_to_object>();

@@ -2,8 +2,6 @@
 Wrap the internal caffe C++ module (_caffe.so) with a clean, Pythonic
 interface.
 """
-import warnings
-
 from collections import OrderedDict
 try:
     from itertools import izip_longest
@@ -11,34 +9,8 @@ except:
     from itertools import zip_longest as izip_longest
 import numpy as np
 
-from ._caffe import NCCL, Timer, NetParameter, NetState, Net, SolverParameter
-
-try:
-    from ._caffe import SGDSolver_half, NesterovSolver_half, \
-                    AdaGradSolver_half, RMSPropSolver_half, \
-                    AdaDeltaSolver_half, AdamSolver_half
-except ImportError:
-    warnings.warn("Caffe datatype HALF not available.")
-    
-try:              
-    from ._caffe import SGDSolver_float, NesterovSolver_float, \
-                        AdaGradSolver_float, RMSPropSolver_float, \
-                        AdaDeltaSolver_float, AdamSolver_float
-    from ._caffe import SGDSolver_float as SGDSolver, \
-                        NesterovSolver_float as NesterovSolver, \
-                        AdaGradSolver_float as AdaGradSolver, \
-                        RMSPropSolver_float as RMSPropSolver, \
-                        AdaDeltaSolver_float as AdaDeltaSolver, \
-                        AdamSolver_float as AdamSolver
-except ImportError:
-    warnings.warn("Caffe datatype FLOAT not available.")
-
-try:           
-    from ._caffe import SGDSolver_double, NesterovSolver_double, \
-                        AdaGradSolver_double, RMSPropSolver_double, \
-                        AdaDeltaSolver_double, AdamSolver_double
-except ImportError:
-    warnings.warn("Caffe datatype DOUBLE not available.")
+from ._caffe import caffe_data_type, NCCL, Timer, NetParameter, NetState, Net, \
+                    SolverParameter
     
 import caffe.io
 
