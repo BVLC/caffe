@@ -129,6 +129,9 @@ namespace caffe {
 
     virtual ~MultiSync() {
     }
+    boost::shared_ptr<MultiSolver<Dtype>> get_solver() {
+      return solver;
+    }
 
     void synchronize_parameters() {
       LOG(INFO) << "synchronize_params: bcast";
@@ -187,7 +190,7 @@ namespace caffe {
       }
     }
 
-    void run() {
+    void init() {
       LOG(WARNING) << "RUN: "
                    << "PER LAYER TIMINGS ARE"
 #ifdef CAFFE_PER_LAYER_TIMINGS
@@ -223,6 +226,11 @@ namespace caffe {
 #endif
 
       solver->add_callback(this);
+    }
+
+    void run() {
+      init();
+
       solver->Solve();
 
 #ifdef PERFORMANCE_MONITORING

@@ -130,81 +130,31 @@ inline bool MultiSolver<Dtype>::WaitGradient(int layer_id) {
 template <typename Dtype>
 inline void MultiSolver<Dtype>::UpdateGradient(int layer_id) {
 #ifdef FW_OVERLAP_OPT
-    CHECK(layer_finished_flags_[layer_id]);
+  CHECK(layer_finished_flags_[layer_id]);
 #endif
-    PERFORMANCE_MEASUREMENT_BEGIN();
-    for (int j = 0; j < callbacks_.size(); ++j) {
-      callbacks_[j]->apply_updates(layer_id);
-    }
-    PERFORMANCE_MEASUREMENT_END_STATIC("weights_update");
+  PERFORMANCE_MEASUREMENT_BEGIN();
+  for (int j = 0; j < callbacks_.size(); ++j) {
+    callbacks_[j]->apply_updates(layer_id);
+  }
+  PERFORMANCE_MEASUREMENT_END_STATIC("weights_update");
 }
 
 template <typename Dtype>
-Dtype MultiSolver<Dtype>::ForwardBackwardImpl(bool first, bool last) {
-  Dtype loss = 0;
+Dtype MultiSolver<Dtype>::ForwardFromTo(int start, int end) {
   Net<Dtype>& net = *root_solver_->net();
-  const std::vector<shared_ptr<Layer<Dtype>>>& layers{ net.layers() };
+  return net.ForwardFromTo(start, end);
+}
+
+template <typename Dtype>
+void MultiSolver<Dtype>::BackwardFromTo(int start, int end, bool last) {
+  Net<Dtype>& net = *root_solver_->net();
   const std::vector<bool>& layer_need_backward{ net.layer_need_backward() };
 
-  for (int i = 0; i < layers.size(); ++i) {
-#ifdef FW_OVERLAP_OPT
-    if (first) {
-      LAYER_WAIT_TIMING_START(i);
-      while (layer_finished_flags_[i] == false) {
-        if (IsSkipSyncGradient(i))
-          break;
-        if (WaitGradient(i)) {
-          // The function call cannot be moved out of while loop. Otherwise,
-          // at first iteration, additional UpdateGradient will be called,
-          // even if no gradient is synced.
-          LAYER_TIMING_START(first_update, i);
-          UpdateGradient(i);
-          LAYER_TIMING_STOP_2(update, first_update, i);
-
-          // The update time for layer i must be removed from waitcomm time
-          // for layer i
-          LAYER_REMOVE_UPDATE_TIME(i, i);
-          break;
-        }
-
-        // wait and update gradient for next layers
-        for (int k=i+1; k<layers.size(); k++) {
-          if (layer_finished_flags_[k] || IsSkipSyncGradient(k)) {
-            layer_finished_flags_[k] = true;
-            continue;
-          }
-          if (WaitGradient(k)) {
-            LAYER_TIMING_START(first_update, k);
-            UpdateGradient(k);
-            LAYER_TIMING_STOP_2(update, first_update, k);
-
-            // The update time for layer k must be removed from waitcomm time
-            // for layer i
-            LAYER_REMOVE_UPDATE_TIME(i, k);
-            break;
-          }
-        }
-      }
-      LAYER_WAIT_TIMING_STOP(i);
-      // set flag to false after updating gradient
-      layer_finished_flags_[i] = false;
-    }
-#endif
-
-    loss += net.ForwardFromTo(i, i);
-  }
-  
-  // Clear parameter diffs after communication is finished (that is, after 
-  // calling WaitGradientComm)
-  if (first) {
-    root_solver_->net()->ClearParamDiffs();
-  }
-
-  for (int i = layers.size() - 1; i >= 0; --i) {
+  for (int i=start; i>=end; --i) {
     if (!layer_need_backward[i]) {
       continue;
     }
-    
+
     net.BackwardFromTo(i, i);
 
     LAYER_TIMING_START(startcomm, i);
@@ -215,6 +165,148 @@ Dtype MultiSolver<Dtype>::ForwardBackwardImpl(bool first, bool last) {
     }
     LAYER_TIMING_STOP(startcomm, i);
   }
+}
+
+template <typename Dtype>
+void MultiSolver<Dtype>::Backward(bool last) {
+  Net<Dtype>& net = *root_solver_->net();
+  const std::vector<shared_ptr<Layer<Dtype>>>& layers{ net.layers() };
+
+  for (int i = layers.size() - 1; i >= 0; --i) {
+#ifdef FW_OVERLAP_OPT
+    if (layer_finished_flags_[i])
+      layer_finished_flags_[i] = false;
+#endif
+
+    BackwardFromTo(i, i, last);
+  }
+}
+
+#ifdef FW_OVERLAP_OPT
+template <typename Dtype>
+void MultiSolver<Dtype>::WaitAndUpdateBeforeFwd(int layer_id) {
+  LAYER_WAIT_TIMING_START(layer_id);
+  while (layer_finished_flags_[layer_id] == false) {
+    if (IsSkipSyncGradient(layer_id))
+      break;
+    if (WaitGradient(layer_id)) {
+      // The function call cannot be moved out of while loop. Otherwise,
+      // at first iteration, additional UpdateGradient will be called,
+      // even if no gradient is synced.
+      LAYER_TIMING_START(first_update, layer_id);
+      UpdateGradient(layer_id);
+      LAYER_TIMING_STOP_2(update, first_update, layer_id);
+
+      // The update time for layer i must be removed from waitcomm time
+      // for layer i
+      LAYER_REMOVE_UPDATE_TIME(layer_id, layer_id);
+      break;
+    }
+
+    Net<Dtype>& net = *root_solver_->net();
+    const std::vector<shared_ptr<Layer<Dtype>>>& layers{ net.layers() };
+
+    // wait and update gradient for next layers
+    for (int k=layer_id+1; k<layers.size(); k++) {
+      if (layer_finished_flags_[k] || IsSkipSyncGradient(k)) {
+        layer_finished_flags_[k] = true;
+        continue;
+      }
+      if (WaitGradient(k)) {
+        LAYER_TIMING_START(first_update, k);
+        UpdateGradient(k);
+        LAYER_TIMING_STOP_2(update, first_update, k);
+
+        // The update time for layer k must be removed from waitcomm time
+        // for layer i
+        LAYER_REMOVE_UPDATE_TIME(layer_id, k);
+        break;
+      }
+    }
+  }
+  LAYER_WAIT_TIMING_STOP(layer_id);
+  // set flag to false after updating gradient
+  layer_finished_flags_[layer_id] = false;
+}
+
+template <typename Dtype>
+Dtype MultiSolver<Dtype>::UpdateAndForward(bool first) {
+  Dtype loss = 0;
+  Net<Dtype>& net = *root_solver_->net();
+  const std::vector<shared_ptr<Layer<Dtype>>>& layers{ net.layers() };
+
+  for (int i = 0; i < layers.size(); ++i) {
+    if (first) {
+      WaitAndUpdateBeforeFwd(i);
+    }
+    loss += ForwardFromTo(i, i);
+  }
+  return loss;
+}
+#endif
+
+template <typename Dtype>
+Dtype MultiSolver<Dtype>::Forward() {
+  Dtype loss = 0;
+  Net<Dtype>& net = *root_solver_->net();
+  const std::vector<shared_ptr<Layer<Dtype>>>& layers{ net.layers() };
+
+  for (int i = 0; i < layers.size(); ++i) {
+    loss += ForwardFromTo(i, i);
+  }
+  return loss;
+}
+
+template <typename Dtype>
+void MultiSolver<Dtype>::WaitAndUpdate() {
+  Net<Dtype>& net = *root_solver_->net();
+  const std::vector<shared_ptr<Layer<Dtype>>>& layers{ net.layers() };
+
+  for (int i = 0; i < layers.size(); ++i) {
+    LAYER_TIMING_START(waitcomm, i);
+    if (IsSkipSyncGradient(i)) {
+      LAYER_TIMING_STOP(waitcomm, i);
+      continue;
+    }
+
+#ifdef FW_OVERLAP_OPT
+    while (
+#endif
+        WaitGradient(i)
+#ifdef FW_OVERLAP_OPT
+      == false)
+#endif
+        ;
+    LAYER_TIMING_STOP(waitcomm, i);
+
+    LAYER_TIMING_START(update, i);
+    UpdateGradient(i);
+    LAYER_TIMING_STOP(update, i);
+  }
+}
+
+template <typename Dtype>
+inline void MultiSolver<Dtype>::ClearParamDiffs() {
+  root_solver_->net()->ClearParamDiffs();
+}
+
+template <typename Dtype>
+Dtype MultiSolver<Dtype>::ForwardBackwardImpl(bool first, bool last) {
+  Dtype loss = 0;
+
+#ifdef FW_OVERLAP_OPT
+  loss = UpdateAndForward(first);
+#else
+  loss = Forward();
+#endif
+
+  // Clear parameter diffs after communication is finished (that is, after 
+  // calling WaitGradientComm)
+  if (first) {
+    ClearParamDiffs();
+  }
+
+  Backward(last);
 
 #ifdef FW_OVERLAP_OPT
   int iter = root_solver_->iter();
@@ -227,27 +319,7 @@ Dtype MultiSolver<Dtype>::ForwardBackwardImpl(bool first, bool last) {
 #endif
 
   if (last_iter_wait_flag) {
-    for (int i = 0; i < layers.size(); ++i) {
-      LAYER_TIMING_START(waitcomm, i);
-      if (IsSkipSyncGradient(i)) {
-        LAYER_TIMING_STOP(waitcomm, i);
-        continue;
-      }
-
-#ifdef FW_OVERLAP_OPT
-      while (
-#endif
-        WaitGradient(i)
-#ifdef FW_OVERLAP_OPT
-          == false)
-#endif
-      ;
-      LAYER_TIMING_STOP(waitcomm, i);
-
-      LAYER_TIMING_START(update, i);
-      UpdateGradient(i);
-      LAYER_TIMING_STOP(update, i);
-    }
+    WaitAndUpdate();
   }
 
   DLOG(WARNING) << "iter " << root_solver_->iter() << ", loss " << loss;
