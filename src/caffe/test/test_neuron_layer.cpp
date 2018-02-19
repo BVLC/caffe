@@ -791,16 +791,19 @@ TYPED_TEST(NeuronLayerTest, TestPReLUInPlace) {
   ip2.Backward(blob_middle_vec_2, propagate_down, blob_bottom_vec_2);
   // Check numbers
   for (int s = 0; s < blob_bottom_2->count(); ++s) {
-    EXPECT_EQ(this->blob_bottom_->cpu_diff()[s], blob_bottom_2->cpu_diff()[s]);
+    EXPECT_FLOAT_EQ(this->blob_bottom_->cpu_diff()[s],
+        blob_bottom_2->cpu_diff()[s]);
   }
   for (int s = 0; s < ip.blobs()[0]->count(); ++s) {
-    EXPECT_EQ(ip.blobs()[0]->cpu_diff()[s], ip2.blobs()[0]->cpu_diff()[s]);
+    EXPECT_FLOAT_EQ(ip.blobs()[0]->cpu_diff()[s],
+        ip2.blobs()[0]->cpu_diff()[s]);
   }
   for (int s = 0; s < ip.blobs()[1]->count(); ++s) {
-    EXPECT_EQ(ip.blobs()[1]->cpu_diff()[s], ip2.blobs()[1]->cpu_diff()[s]);
+    EXPECT_FLOAT_EQ(ip.blobs()[1]->cpu_diff()[s],
+        ip2.blobs()[1]->cpu_diff()[s]);
   }
   for (int s = 0; s < prelu.blobs()[0]->count(); ++s) {
-    EXPECT_EQ(prelu.blobs()[0]->cpu_diff()[s],
+    EXPECT_FLOAT_EQ(prelu.blobs()[0]->cpu_diff()[s],
         prelu2.blobs()[0]->cpu_diff()[s]);
   }
 }

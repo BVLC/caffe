@@ -3,13 +3,13 @@ if(NOT HAVE_PYTHON)
   return()
 endif()
 
-include_directories(${PYTHON_INCLUDE_DIRS} ${NUMPY_INCLUDE_DIR} ${Boost_INCLUDE_DIRS})
 file(GLOB_RECURSE python_srcs ${PROJECT_SOURCE_DIR}/python/*.cpp)
 
 add_library(pycaffe SHARED ${python_srcs})
-target_link_libraries(pycaffe ${Caffe_LINK} ${PYTHON_LIBRARIES} ${Boost_LIBRARIES})
-set_target_properties(pycaffe PROPERTIES PREFIX "" OUTPUT_NAME "_caffe")
 caffe_default_properties(pycaffe)
+set_target_properties(pycaffe PROPERTIES PREFIX "" OUTPUT_NAME "_caffe")
+target_include_directories(pycaffe PUBLIC ${PYTHON_INCLUDE_DIRS} ${NUMPY_INCLUDE_DIR})
+target_link_libraries(pycaffe PUBLIC ${Caffe_LINK} ${PYTHON_LIBRARIES})
 
 if(UNIX OR APPLE)
     set(__linkname "${PROJECT_SOURCE_DIR}/python/caffe/_caffe.so")
@@ -22,13 +22,19 @@ if(UNIX OR APPLE)
 endif()
 
 # ---[ Install
-file(GLOB files1 *.py requirements.txt)
-install(FILES ${files1} DESTINATION python)
+# scripts
+file(GLOB python_files *.py requirements.txt)
+install(FILES ${python_files} DESTINATION python)
 
-file(GLOB files2 caffe/*.py)
-install(FILES  ${files2} DESTINATION python/caffe)
+# module
+install(DIRECTORY caffe
+    DESTINATION python
+    FILES_MATCHING
+    PATTERN "*.py"
+    PATTERN "ilsvrc_2012_mean.npy"
+    PATTERN "test" EXCLUDE
+    )
+
+# _caffe.so
 install(TARGETS pycaffe  DESTINATION python/caffe)
-install(DIRECTORY caffe/imagenet caffe/proto caffe/test DESTINATION python/caffe)
-
-
 

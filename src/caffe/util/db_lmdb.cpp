@@ -32,7 +32,7 @@ void LMDB::Open(const string& source, Mode mode) {
     MDB_CHECK(rc);
   }
 #endif
-  LOG(INFO) << "Opened lmdb " << source;
+  LOG_IF(INFO, Caffe::root_solver()) << "Opened lmdb " << source;
 }
 
 LMDBCursor* LMDB::NewCursor() {

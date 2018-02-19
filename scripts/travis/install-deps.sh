@@ -8,6 +8,7 @@ source $BASEDIR/defaults.sh
 apt-get -y update
 apt-get install -y --no-install-recommends \
   build-essential \
+  graphviz \
   libboost-filesystem-dev \
   libboost-python-dev \
   libboost-system-dev \
@@ -31,6 +32,7 @@ if ! $WITH_PYTHON3 ; then
     python-dev \
     python-numpy \
     python-protobuf \
+    python-pydot \
     python-skimage
 else
   # Python3
@@ -56,7 +58,7 @@ else
       dh-autoreconf \
       unzip
 
-    wget https://github.com/google/protobuf/archive/v3.0.0-beta-3.tar.gz -O protobuf3.tar.gz
+    wget https://github.com/google/protobuf/archive/3.0.x.tar.gz -O protobuf3.tar.gz
     tar -xzf protobuf3.tar.gz -C $PROTOBUF3_DIR --strip 1
     rm protobuf3.tar.gz
     cd $PROTOBUF3_DIR
@@ -84,7 +86,7 @@ if $WITH_CUDA ; then
   rm $CUDA_REPO_PKG
 
   if $WITH_CUDNN ; then
-    ML_REPO_PKG=nvidia-machine-learning-repo_4.0-2_amd64.deb
+    ML_REPO_PKG=nvidia-machine-learning-repo-ubuntu1404_4.0-2_amd64.deb
     wget http://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1404/x86_64/$ML_REPO_PKG
     dpkg -i $ML_REPO_PKG
   fi
@@ -104,7 +106,7 @@ if $WITH_CUDA ; then
   ln -s /usr/local/cuda-$CUDA_VERSION /usr/local/cuda
 
   if $WITH_CUDNN ; then
-    apt-get install -y --no-install-recommends libcudnn5-dev
+    apt-get install -y --no-install-recommends libcudnn7-dev
   fi
 fi
 
