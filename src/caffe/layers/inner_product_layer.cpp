@@ -18,7 +18,7 @@ void InnerProductLayer<Dtype, MItype, MOtype>::LayerSetUp(
   const int_tp axis = bottom[0]->CanonicalAxisIndex(
       this->layer_param_.inner_product_param().axis());
   // Dimensions starting from "axis" are "flattened" into a single
-  // length K_ vector. For example, if bottom[0]'s shape is (n, c, H, W),
+  // length K_ vector. For example, if bottom[0]'s shape is (N, C, H, W),
   // and axis == 1, n inner products with dimension CHW are performed.
   K_ = bottom[0]->count(axis);
   // Check if we need to set up the weights
@@ -41,18 +41,22 @@ void InnerProductLayer<Dtype, MItype, MOtype>::LayerSetUp(
     }
     this->blobs_[0].reset(new Blob<Dtype>(weight_shape, this->device_));
     this->blobs_[0]->set_quant(this->blobs_quant_);
-    // fill the weights
-    shared_ptr<Filler<Dtype> > weight_filler(GetFiller<Dtype>(
+    // fill the weights (for float types only)
+    if (is_float_type<Dtype>()) {
+      shared_ptr<Filler<Dtype> > weight_filler(GetFiller<Dtype>(
             this->layer_param_.inner_product_param().weight_filler()));
-    weight_filler->Fill(this->blobs_[0].get());
+      weight_filler->Fill(this->blobs_[0].get());
+    }
     // If necessary, intiialize and fill the bias term
     if (bias_term_) {
       vector<int_tp> bias_shape(1, N_);
       this->blobs_[1].reset(new Blob<Dtype>(bias_shape, this->device_));
       this->blobs_[1]->set_quant(this->blobs_quant_);
-      shared_ptr<Filler<Dtype> > bias_filler(GetFiller<Dtype>(
-              this->layer_param_.inner_product_param().bias_filler()));
-      bias_filler->Fill(this->blobs_[1].get());
+      if (is_float_type<Dtype>()) {
+        shared_ptr<Filler<Dtype> > bias_filler(GetFiller<Dtype>(
+                this->layer_param_.inner_product_param().bias_filler()));
+        bias_filler->Fill(this->blobs_[1].get());
+      }
     }
   }  // parameter initialization
   this->param_propagate_down_.resize(this->blobs_.size(), true);
@@ -155,10 +159,23 @@ INSTANTIATE_CLASS_3T_GUARDED(InnerProductLayer,
                              (float), (float), (float));
 INSTANTIATE_CLASS_3T_GUARDED(InnerProductLayer,
                              (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(InnerProductLayer,
+                             (int8_t), (int8_t), (int8_t));
+INSTANTIATE_CLASS_3T_GUARDED(InnerProductLayer,
+                             (int16_t), (int16_t), (int16_t));
+INSTANTIATE_CLASS_3T_GUARDED(InnerProductLayer,
+                             (int32_t), (int32_t), (int32_t));
+INSTANTIATE_CLASS_3T_GUARDED(InnerProductLayer,
+                             (int64_t), (int64_t), (int64_t));
 
 REGISTER_LAYER_CLASS(InnerProduct);
 REGISTER_LAYER_CLASS_INST(InnerProduct, (half_fp), (half_fp), (half_fp));
 REGISTER_LAYER_CLASS_INST(InnerProduct, (float), (float), (float));
 REGISTER_LAYER_CLASS_INST(InnerProduct, (double), (double), (double));
+REGISTER_LAYER_CLASS_INST(InnerProduct, (int8_t), (int8_t), (int8_t));
+REGISTER_LAYER_CLASS_INST(InnerProduct, (int16_t), (int16_t), (int16_t));
+REGISTER_LAYER_CLASS_INST(InnerProduct, (int32_t), (int32_t), (int32_t));
+REGISTER_LAYER_CLASS_INST(InnerProduct, (int64_t), (int64_t), (int64_t));
+
 
 }  // namespace caffe

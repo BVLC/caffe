@@ -38,7 +38,7 @@ void caffe_rng_gaussian<half_fp>(const int_tp n,
   float fa = a;
   boost::normal_distribution<float> random_distribution(fa, fsigma);
   boost::variate_generator<caffe::rng_t*,
-    boost::normal_distribution<float>> variate_generator(
+    boost::normal_distribution<float> > variate_generator(
         caffe_rng(), random_distribution);
   for (int_tp i = 0; i < n; ++i) {
     r[i] = variate_generator();
@@ -57,7 +57,7 @@ void caffe_rng_gaussian<int8_t>(const int_tp n,
   float fa = a;
   boost::normal_distribution<float> random_distribution(fa, fsigma);
   boost::variate_generator<caffe::rng_t*,
-    boost::normal_distribution<float>> variate_generator(
+    boost::normal_distribution<float> > variate_generator(
         caffe_rng(), random_distribution);
   for (int_tp i = 0; i < n; ++i) {
     r[i] = variate_generator();

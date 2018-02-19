@@ -679,16 +679,14 @@ inline Dtype Layer<Dtype, MItype, MOtype>::Forward(
     const vector<Blob<MOtype>*>& top) {
   Dtype loss = 0;
   Reshape(bottom, top);
+  for (int_tp bottom_id = 0; bottom_id < bottom.size(); ++bottom_id) {
+    bottom_quant_->Observe_in(bottom[bottom_id]->count(),
+                              bottom[bottom_id]->data());
+  }
   switch (Caffe::mode()) {
     case Caffe::CPU:
-      for (int_tp bottom_id = 0; bottom_id < bottom.size(); ++bottom_id) {
-        bottom_quant_->Observe_in_cpu(bottom[bottom_id]->count(),
-                                      bottom[bottom_id]->cpu_data());
-      }
       Forward_cpu(bottom, top);
       for (int_tp top_id = 0; top_id < top.size(); ++top_id) {
-        top_quant_->Observe_out_cpu(top[top_id]->count(),
-                                    top[top_id]->cpu_data());
         if (!this->loss(top_id)) {
           continue;
         }
@@ -699,17 +697,9 @@ inline Dtype Layer<Dtype, MItype, MOtype>::Forward(
       }
       break;
     case Caffe::GPU:
-#ifndef CPU_ONLY
-      for (int_tp bottom_id = 0; bottom_id < bottom.size(); ++bottom_id) {
-        bottom_quant_->Observe_in_gpu(bottom[bottom_id]->count(),
-                                  bottom[bottom_id]->gpu_data());
-      }
-      #endif  // !CPU_ONLY
       Forward_gpu(bottom, top);
 #ifndef CPU_ONLY
       for (int_tp top_id = 0; top_id < top.size(); ++top_id) {
-        top_quant_->Observe_out_gpu(top[top_id]->count(),
-                                    top[top_id]->gpu_data());
         if (!this->loss(top_id)) {
           continue;
         }
@@ -719,12 +709,21 @@ inline Dtype Layer<Dtype, MItype, MOtype>::Forward(
         MOtype blob_loss = 0;
         device_->template dot<MOtype>(count, data, loss_weights, &blob_loss);
         // TODO: Type conversion may be necessary
+        // TODO: Compute on CPU if Forward_gpu uses CPU fallback?
         loss += blob_loss;
       }
 #endif  // !CPU_ONLY
     break;
   default:
     LOG(FATAL) << "Unknown caffe mode.";
+  }
+  for (int_tp top_id = 0; top_id < top.size(); ++top_id) {
+    top_quant_->Observe_out(top[top_id]->count(),
+                            top[top_id]->data());
+  }
+  for (int_tp blob_id = 0; blob_id < blobs_.size(); ++blob_id) {
+    blobs_quant_->Observe_out(blobs_[blob_id]->count(),
+                              blobs_[blob_id]->data());
   }
   return loss;
 }
@@ -734,37 +733,28 @@ inline void Layer<Dtype, MItype, MOtype>::Backward(
                       const vector<Blob<MOtype>*>& top,
                       const vector<bool>& propagate_down,
                       const vector<Blob<MItype>*>& bottom) {
+  for (int_tp top_id = 0; top_id < top.size(); ++top_id) {
+    top_quant_->Observe_out(top[top_id]->count(), top[top_id]->diff());
+  }
   switch (Caffe::mode()) {
     case Caffe::CPU:
-      for (int_tp top_id = 0; top_id < top.size(); ++top_id) {
-        top_quant_->Observe_out_cpu(top[top_id]->count(),
-                                    top[top_id]->cpu_diff());
-      }
       Backward_cpu(top, propagate_down, bottom);
-      for (int_tp bottom_id = 0; bottom_id < bottom.size(); ++bottom_id) {
-        bottom_quant_->Observe_in_cpu(bottom[bottom_id]->count(),
-                                  bottom[bottom_id]->cpu_diff());
-      }
       break;
     case Caffe::GPU:
-#ifndef CPU_ONLY
-      for (int_tp top_id = 0; top_id < top.size(); ++top_id) {
-        top_quant_->Observe_out_gpu(top[top_id]->count(),
-                                    top[top_id]->gpu_diff());
-      }
-#endif  // !CPU_ONLY
       Backward_gpu(top, propagate_down, bottom);
-#ifndef CPU_ONLY
-      for (int_tp bottom_id = 0; bottom_id < bottom.size(); ++bottom_id) {
-        bottom_quant_->Observe_in_gpu(bottom[bottom_id]->count(),
-                                  bottom[bottom_id]->gpu_diff());
-      }
-#endif  // !CPU_ONLY
       break;
     default:
       LOG(FATAL)<< "Unknown caffe mode.";
-    }
   }
+  for (int_tp bottom_id = 0; bottom_id < bottom.size(); ++bottom_id) {
+    bottom_quant_->Observe_in(bottom[bottom_id]->count(),
+                              bottom[bottom_id]->diff());
+  }
+  for (int_tp blob_id = 0; blob_id < blobs_.size(); ++blob_id) {
+    blobs_quant_->Observe_out(blobs_[blob_id]->count(),
+                              blobs_[blob_id]->diff());
+  }
+}
 
 // Serialize LayerParameter to protocol buffer
 template<typename Dtype, typename MItype, typename MOtype>

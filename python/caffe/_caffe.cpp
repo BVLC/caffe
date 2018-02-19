@@ -335,11 +335,12 @@ shared_ptr<NetBase> Net_Init(string network_file, int phase, int level,
   return net;
 }
 
-void Net_Save(const NetBase& net, string filename) {
+void Net_Save(const NetBase& net, string filename, bool write_diff = false) {
   NetParameter net_param;
-  net.ToProto(&net_param, false);
+  net.ToProto(&net_param, write_diff);
   WriteProtoToBinaryFile(net_param, filename.c_str());
 }
+BOOST_PYTHON_FUNCTION_OVERLOADS(Net_SaveOverloads, Net_Save, 2, 3);
 
 void Net_SaveHDF5(const NetBase& net, string filename) {
   net.ToHDF5(filename);
@@ -694,11 +695,13 @@ variant_proto_types Step_NoGIL(SolverBase* solver, int_tp iters) {
 }
 
 // NOLINT_NEXT_LINE(runtime/references)
-void Solve_NoGIL(SolverBase* solver, const char* resume_file) {
+void Solver_Solve_NoGIL(SolverBase* solver, const char* resume_file = nullptr) {
   Py_BEGIN_ALLOW_THREADS
   solver->Solve(resume_file);
   Py_END_ALLOW_THREADS
 }
+BOOST_PYTHON_FUNCTION_OVERLOADS(Solver_SolveOverloads,
+                                       Solver_Solve_NoGIL, 1, 2);
 
 class SolverCallback: public SolverBase::Callback {
  protected:
@@ -886,7 +889,6 @@ bp::object NCCL_New_Uid() {
 }
 #endif
 
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(SolveOverloads, Solve, 0, 1);
 
 variant_proto_ptr_types Blob_mutable_cpu_data(BlobBase* blob) {
   switch(blob->data_type()) {
@@ -1032,6 +1034,7 @@ BOOST_PYTHON_MODULE(_caffe) {
     .def("_forward", &ForwardFromTo_NoGIL)
     .def("_backward", &BackwardFromTo_NoGIL)
     .def("reshape", &NetBase::Reshape)
+    .add_property("quant_mode", &NetBase::quant_mode, &NetBase::set_quant_mode)
     .def("clear_param_diffs", &NetBase::ClearParamDiffs)
     // The cast is to select a particular overload.
     .def("copy_from", static_cast<void (NetBase::*)(const string)>(
@@ -1061,7 +1064,7 @@ BOOST_PYTHON_MODULE(_caffe) {
     .def("_set_layer_input_arrays", &Net_SetLayerInputArrays,
         bp::with_custodian_and_ward<1, 3,
         bp::with_custodian_and_ward<1, 4> > ())
-    .def("save", &Net_Save)
+    .def("save", &Net_Save, Net_SaveOverloads())
     .def("save_hdf5", &Net_SaveHDF5)
     .def("load_hdf5", &Net_LoadHDF5)
     .def("before_forward", &Net_before_forward)
@@ -1145,11 +1148,9 @@ BOOST_PYTHON_MODULE(_caffe) {
                       bp::return_value_policy<bp::copy_const_reference>()),
                       &SolverBase::update_solver_param)
     .def("step", &Step_NoGIL)
-    .def("solve", &Solve_NoGIL)
     .def("add_callback", &Solver_add_callback)
     .def("add_callback", &Solver_add_nccl)
-    .def("solve", static_cast<void (SolverBase::*)(const char*)>(
-          &SolverBase::Solve), SolveOverloads())
+    .def("solve", &Solver_Solve_NoGIL, Solver_SolveOverloads())
     .def("restore", &SolverBase::Restore)
     .def("snapshot", &SolverBase::Snapshot)
     .def("share_weights", &share_weights);
@@ -1254,7 +1255,7 @@ BOOST_PYTHON_MODULE(_caffe) {
       .value("HDF5", SolverParameter_SnapshotFormat_HDF5)
       .value("BINARYPROTO", SolverParameter_SnapshotFormat_BINARYPROTO);
 
-  bp::enum_<::caffe::DataType>("caffe_data_type")
+  bp::enum_<::caffe::DataType>("data_type")
       .value("CAFFE_HALF", CAFFE_HALF)
       .value("CAFFE_FLOAT", CAFFE_FLOAT)
       .value("CAFFE_DOUBLE", CAFFE_DOUBLE)
@@ -1262,6 +1263,11 @@ BOOST_PYTHON_MODULE(_caffe) {
       .value("CAFFE_INT16_QUANTIZED", CAFFE_INT16_QUANTIZED)
       .value("CAFFE_INT32_QUANTIZED", CAFFE_INT32_QUANTIZED)
       .value("CAFFE_INT64_QUANTIZED", CAFFE_INT64_QUANTIZED);
+
+
+  bp::enum_<::caffe::QuantizerMode>("quantizer_mode")
+      .value("CAFFE_QUANT_PASSIVE", CAFFE_QUANT_PASSIVE)
+      .value("CAFFE_QUANT_OBSERVE", CAFFE_QUANT_OBSERVE);
 
 #define REGISTER_SOLVERS_TO_PYTHON(Dtype, Name) \
   bp::class_<Solver<Dtype>, bp::bases<SolverBase>, \

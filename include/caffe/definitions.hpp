@@ -20,6 +20,7 @@
 
 #include "caffe/trait_helper.hpp"
 #include "caffe/util/half_fp.hpp"
+#include "caffe/util/inline_math.hpp"
 
 
 #ifdef USE_INDEX_64

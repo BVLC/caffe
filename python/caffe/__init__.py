@@ -34,7 +34,7 @@ from ._caffe import init_log, log, set_mode_cpu, set_mode_gpu, set_device, \
                     get_solver, get_solver_from_file, layer_type_list, \
                     set_random_seed, solver_count, set_solver_count, \
                     solver_rank, set_solver_rank, set_multiprocess, has_nccl, \
-                    caffe_data_type
+                    data_type, quantizer_mode
                     
 from ._caffe import __version__
 

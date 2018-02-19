@@ -26,8 +26,10 @@ class QuantizerBase {
   virtual void Backward_gpu(size_t n, vptr<const void> input,
                             vptr<void> output) = 0;
 
+  virtual void Observe_in(size_t n, const shared_ptr<SyncedMemory> data);
   virtual void Observe_in_cpu(size_t n, const void* data) = 0;
   virtual void Observe_in_gpu(size_t n, vptr<const void> data) = 0;
+  virtual void Observe_out(size_t n, const shared_ptr<SyncedMemory> data);
   virtual void Observe_out_cpu(size_t n, const void* data) = 0;
   virtual void Observe_out_gpu(size_t n, vptr<const void> data) = 0;
 
