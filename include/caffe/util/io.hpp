@@ -290,6 +290,10 @@ void EncodeCVMatToDatum(const cv::Mat& cv_img, const string& encoding,
                         Datum* datum);
 
 void CVMatToDatum(const cv::Mat& cv_img, Datum* datum);
+
+void ReadImagesList(const string& source,
+                    std::vector<std::pair<std::string, std::vector<int> > >* images_vec);
+
 #endif  // USE_OPENCV
 
 }  // namespace caffe
