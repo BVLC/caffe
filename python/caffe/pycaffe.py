@@ -9,7 +9,7 @@ except:
     from itertools import zip_longest as izip_longest
 import numpy as np
 
-from ._caffe import caffe_data_type, NCCL, Timer, NetParameter, NetState, Net, \
+from ._caffe import data_type, NCCL, Timer, NetParameter, NetState, Net, \
                     SolverParameter
     
 import caffe.io

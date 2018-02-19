@@ -172,11 +172,12 @@ shared_ptr<Blob<Dtype> > Device::Buffer(vector<int_tp> shape, int_tp* lock_id) {
   for(size_t i = 0; i < shape.size(); ++i) {
     buffer_shape[0] *= shape[i];
   }
+  CHECK_GT(buffer_shape[0], 0) << "Trying to create a device buffer of size 0.";
 
   // Classify buffers by their log-size to pick reasonable sized buffers from
   // the existing ones (or create a new one otherwise)
   size_t log_size = static_cast<size_t>(std::floor(
-                    std::log2(static_cast<double>(buffer_shape[0]))));
+                    std::log(static_cast<double>(buffer_shape[0]))));
   size_t min_size = static_cast<size_t>(
                     std::exp(static_cast<double>(log_size)));
   size_t max_size = static_cast<size_t>(
@@ -189,7 +190,8 @@ shared_ptr<Blob<Dtype> > Device::Buffer(vector<int_tp> shape, int_tp* lock_id) {
     // Do not use buffers that are disproportionally different in size
     if (buffers_[i]->byte_count() >= min_size &&
         buffers_[i]->byte_count() <= max_size) {
-      if (buffer_mutex_[i]->try_lock()) {
+      bool expected = false;
+      if (buffer_flags_[i]->compare_exchange_strong(expected, true)) {
         buffer_id = i;
         break;
       }
@@ -200,13 +202,11 @@ shared_ptr<Blob<Dtype> > Device::Buffer(vector<int_tp> shape, int_tp* lock_id) {
   if (buffer_id == -1) {
     buffer_id = buffers_.size();
     buffers_.push_back(make_shared<Blob<int8_t> >(this));
-    buffer_mutex_.push_back(make_shared<std::mutex>());
-    buffer_mutex_[buffer_id]->lock();
+    buffer_flags_.push_back(std::make_shared<std::atomic<bool> >(true));
   }
 
-  buffer_vec_mutex_.unlock();
-
   Blob<int8_t>* buffer = buffers_[buffer_id].get();
+  buffer_vec_mutex_.unlock();
 
   // Ensure the buffer is big enough for the request
   buffer->Reshape(buffer_shape);
@@ -244,10 +244,14 @@ template shared_ptr<Blob<uint64_t> > Device::Buffer(vector<int_tp> shape,
                                                    int_tp* lock_id);
 
 void Device::unlock_buffer(int_tp* lock_id) {
-  if (*lock_id < buffer_mutex_.size()) {
-    buffer_mutex_[*lock_id]->unlock();
+  buffer_vec_mutex_.lock();
+  if (*lock_id < buffer_flags_.size() && lock_id > 0) {
+    bool expected = true;
+    while (!(buffer_flags_[*lock_id]->
+             compare_exchange_weak(expected, false))) { }
   }
   *lock_id = -1;
+  buffer_vec_mutex_.unlock();
 }
 
 }  // namespace caffe

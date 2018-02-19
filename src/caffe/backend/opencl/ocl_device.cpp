@@ -30,26 +30,27 @@ void OclDevice::Init() {
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(id_);
 
   {
+    clGetDeviceInfo(ctx.devices()[0].id(),
+                    CL_DEVICE_MAX_WORK_GROUP_SIZE,
+                    1 * sizeof(size_t), &max_local_size_, NULL);
+  }
+
+  {
     vector<size_t> temp(3);
     clGetDeviceInfo(ctx.devices()[0].id(),
                     CL_DEVICE_MAX_WORK_ITEM_SIZES,
                     3 * sizeof(size_t), &temp[0], NULL);
-    max_local_sizes_[0] = temp[0];
-    max_local_sizes_[1] = temp[1];
-    max_local_sizes_[2] = temp[2];
-  }
-
-  {
-    clGetDeviceInfo(ctx.devices()[0].id(),
-                    CL_DEVICE_MAX_WORK_GROUP_SIZE,
-                    1 * sizeof(size_t), &max_local_size_, NULL);
+    max_local_sizes_[0] = std::min(temp[0], max_local_size_);
+    max_local_sizes_[1] = std::min(temp[1], max_local_size_);
+    max_local_sizes_[2] = std::min(temp[2], max_local_size_);
   }
 
    max_group_sizes_[0] = SIZE_MAX;
    max_group_sizes_[1] = SIZE_MAX;
    max_group_sizes_[2] = SIZE_MAX;
 
-  {
+
+   {
 #ifdef DISABLE_DEVICE_HOST_UNIFIED_MEMORY
     host_unified_ = false;
     LOG(INFO) << "CL_DEVICE_HOST_UNIFIED_MEMORY: disabled";
@@ -62,7 +63,7 @@ void OclDevice::Init() {
     host_unified_ = host_unified
         || ctx.devices()[0].type() == CL_DEVICE_TYPE_CPU;
 #endif  // DISABLE_DEVICE_HOST_UNIFIED_MEMORY
-  }
+   }
 
   for (int q = 0; q < OPENCL_QUEUE_COUNT - 1; ++q) {
     ctx.add_queue(ctx.devices()[0]);
@@ -78,6 +79,12 @@ shared_ptr<DeviceProgram> OclDevice::CreateProgram() {
   return make_shared<OclDeviceProgram>(this);
 }
 
+void OclDevice::unlock_buffer(int_tp* lock_id) {
+  // Make sure the buffer is no longer in use
+  // TODO: Only flush related queue(s) (?)
+  FinishQueues();
+  Device::unlock_buffer(lock_id);
+}
 
 string OclDevice::name() {
   if (name_ == "") {

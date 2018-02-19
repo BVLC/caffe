@@ -12,6 +12,7 @@
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/backend/device.hpp"
+#include "caffe/util/io.hpp"
 
 
 namespace caffe {
@@ -58,10 +59,12 @@ class NetBase {
   inline Phase phase() const {
     return phase_;
   }
-  /// @brief returns the quantizer mode: PASSIVE or OBSERVE
+  /// @brief returns the quantizer mode: CAFFE_QUANT_PASSIVE or CAFFE_QUANT_OBSERVE
   inline QuantizerMode quant_mode() const {
     return quant_mode_;
   }
+  /// @brief sets the quantizer mode for all quantizers in the network
+  void set_quant_mode(QuantizerMode quant_mode);
   /**
    * @brief returns the bottom vecs for each layer -- usually you won't
    *        need this unless you do per-layer checks such as gradients.
@@ -94,6 +97,13 @@ class NetBase {
 
   /// @brief Writes the net to a proto.
   virtual void ToProto(NetParameter* param, bool write_diff = false) const = 0;
+
+  /// @brief Writes the net to a proto file.
+  inline void ToProto(const string& filename, bool write_diff = false) const {
+    NetParameter net_param;
+    this->ToProto(&net_param, write_diff);
+    WriteProtoToBinaryFile(net_param, filename);
+  }
 
   /// @brief Writes the network quantizers to a proto.
   virtual void QuantizerToProto(NetParameter* param) const = 0;
@@ -179,7 +189,7 @@ class NetBase {
   string name_;
   /// @brief The phase: TRAIN or TEST
   Phase phase_;
-  /// @brief The quantizer mode: PASSIVE or OBSERVE
+  /// @brief The quantizer mode: CAFFE_QUANT_PASSIVE or CAFFE_QUANT_OBSERVE
   QuantizerMode quant_mode_;
   /// @brief Individual layers in the net
   vector<shared_ptr<LayerBase> > layers_;

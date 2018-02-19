@@ -5,6 +5,7 @@
 #include "caffe_config.h"
 #endif
 
+#include <atomic>
 #include <mutex>
 #include <string>
 #include <vector>
@@ -87,7 +88,7 @@ class Device {
 
   template<typename Dtype>
   shared_ptr<Blob<Dtype> > Buffer(vector<int_tp> shape, int_tp* lock_id);
-  void unlock_buffer(int_tp* lock_id);
+  virtual void unlock_buffer(int_tp* lock_id);
 
   uint_tp memory_usage();
   uint_tp peak_memory_usage();
@@ -565,7 +566,7 @@ class Device {
   uint_tp peak_memory_usage_;
   vector<shared_ptr<Blob<int8_t> > > buffers_;
   std::mutex buffer_vec_mutex_;
-  vector<shared_ptr<std::mutex> > buffer_mutex_;
+  vector<shared_ptr<std::atomic<bool> > > buffer_flags_;
   bool host_unified_;
   bool fast_unsafe_math_;
   string name_;

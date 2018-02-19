@@ -30,6 +30,26 @@ NetBase::NetBase(Device* device_context) :
 
 }
 
+void NetBase::set_quant_mode(QuantizerMode quant_mode) {
+  quant_mode_ = quant_mode;
+
+  // Update the quantizer mode for all quantizers
+  for (int_tp i = 0; i < this->layers().size(); ++i) {
+    vector<shared_ptr<QuantizerBase> > quantizers =
+        this->layers()[i]->get_all_quantizers();
+    vector<shared_ptr<QuantizerBase> > quant_base_vec =
+        layers_[i]->get_all_quantizers();
+    for (int_tp j = 0; j < quant_base_vec.size(); ++j) {
+      const QuantizerParameter& quant_param = quant_base_vec[j]->quant_param();
+      QuantizerParameter quant_param_copy;
+      quant_param_copy.CopyFrom(quant_param);
+      quant_param_copy.set_mode(quant_mode_);
+      quant_base_vec[j]->update_param(quant_param_copy);
+    }
+  }
+}
+
+
 template<typename Dtype>
 Net<Dtype>::Net(const NetParameter& param, Device* device_context)
     : NetBase(device_context) {
@@ -57,9 +77,6 @@ template<typename Dtype>
 void Net<Dtype>::Init(const NetParameter& in_param) {
   // Set phase from the state.
   phase_ = in_param.state().phase();
-
-  // Set quantizer mode
-  quant_mode_ = in_param.state().quantizer_mode();
 
   // Filter layers based on their include/exclude rules and
   // the current NetState.
@@ -108,7 +125,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     LayerParameter layer_param = c_layer_param;
 
     // Set device
-    layer_param.set_device(Caffe::GetDefaultDevice()->list_id());
+    layer_param.set_device(Caffe::GetDefaultDevice()->id());
 
     // Set data types
     if (!layer_param.has_bottom_data_type()) {
@@ -340,6 +357,9 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     LOG(INFO) << "Network initialization done.";
     LOG(INFO) << "Memory required for data: " << memory_used_ << " B";
   }
+
+  // Set quantizer mode
+  set_quant_mode(param_.state().quantizer_mode());
 }
 
 template<typename Dtype>
@@ -1002,7 +1022,7 @@ void Net<Dtype>::ToProto(NetParameter* param, bool write_diff) const {
   param->Clear();
   param->set_name(name_);
   // Add bottom and top
-  DLOG(INFO) << "Serializing " << layers_.size() << " layers";
+  DLOG(INFO) << "Serializing " << layers_.size() << " layers.";
   for (int_tp i = 0; i < layers_.size(); ++i) {
     LayerParameter* layer_param = param->add_layer();
     layers_[i]->ToProto(layer_param, write_diff);
@@ -1030,12 +1050,18 @@ void Net<Dtype>::QuantizerToProto(NetParameter* param) const {
     }
   }
 
+  param->clear_quantizer();
+
+  DLOG(INFO) << "Serializing " << quantizer_map.size() << " quantizer zones.";
   for (std::map<int_tp, std::pair<double, double> >::iterator iter =
        quantizer_map.begin(); iter != quantizer_map.end(); ++iter) {
     QuantizerParameter* quant_param = param->add_quantizer();
     quant_param->set_index(iter->first);
     quant_param->set_observed_min(std::get<0>(iter->second));
     quant_param->set_observed_max(std::get<1>(iter->second));
+    DLOG(INFO) << "Zone " << iter->first << ": ["
+               << std::get<0>(iter->second) << ","
+               << std::get<1>(iter->second) << "].";
   }
 }
 

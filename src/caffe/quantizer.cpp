@@ -17,6 +17,51 @@ QuantizerBase::QuantizerBase(Device* dev_ptr)
   this->device_ = dev_ptr;
 }
 
+void QuantizerBase::Observe_in(size_t n, const shared_ptr<SyncedMemory> data) {
+  if (mode_ == CAFFE_QUANT_PASSIVE) {
+    return;
+  }
+  switch(data->head()) {
+    case SyncedMemory::HEAD_AT_CPU:
+      this->Observe_in_cpu(n, data->cpu_data());
+      break;
+    case SyncedMemory::HEAD_AT_GPU:
+    case SyncedMemory::SYNCED:
+    case SyncedMemory::UNINITIALIZED:
+      if (this->device_->backend() == BACKEND_CPU) {
+        this->Observe_in_cpu(n, data->cpu_data());
+      } else {
+        this->Observe_in_gpu(n, data->gpu_data());
+      }
+      break;
+    default:
+      LOG(FATAL) << "SyncedMemory in invalid state";
+  }
+}
+
+void QuantizerBase::Observe_out(size_t n, const shared_ptr<SyncedMemory> data) {
+  if (mode_ == CAFFE_QUANT_PASSIVE) {
+    return;
+  }
+  switch(data->head()) {
+    case SyncedMemory::HEAD_AT_CPU:
+      this->Observe_out_cpu(n, data->cpu_data());
+      break;
+    case SyncedMemory::HEAD_AT_GPU:
+    case SyncedMemory::SYNCED:
+    case SyncedMemory::UNINITIALIZED:
+      if (this->device_->backend() == BACKEND_CPU) {
+        this->Observe_out_cpu(n, data->cpu_data());
+      } else {
+        this->Observe_out_gpu(n, data->gpu_data());
+      }
+      break;
+    default:
+      LOG(FATAL) << "SyncedMemory in invalid state";
+  }
+}
+
+
 template<typename MItype, typename MOtype>
 void Quantizer<MItype, MOtype>::update_param(const QuantizerParameter& param) {
   quant_mutex_.lock();
@@ -88,7 +133,7 @@ template<typename MItype, typename MOtype>
 void Quantizer<MItype, MOtype>::init() {
   this->program_ = this->device_->CreateProgram();
 
-  this->mode_ = PASSIVE;
+  this->mode_ = CAFFE_QUANT_PASSIVE;
 
   this->observed_min_ = type_max_val<double>();
   this->observed_max_ = type_min_val<double>();
@@ -496,7 +541,7 @@ void Quantizer<MItype, MOtype>::Observe_in_cpu(size_t n, const void* data) {
 template<typename MItype, typename MOtype>
 void Quantizer<MItype, MOtype>::Observe_in_cpu(size_t n,
                                                  const MItype* data) {
-  if (mode_ == PASSIVE) {
+  if (mode_ == CAFFE_QUANT_PASSIVE) {
     return;
   }
   double local_min = type_max_val<double>();
@@ -527,7 +572,7 @@ void Quantizer<MItype, MOtype>::Observe_out_cpu(size_t n, const void* data) {
 template<typename MItype, typename MOtype>
 void Quantizer<MItype, MOtype>::Observe_out_cpu(size_t n,
                                                   const MOtype* data) {
-  if (mode_ == PASSIVE) {
+  if (mode_ == CAFFE_QUANT_PASSIVE) {
     return;
   }
   double local_min = type_max_val<double>();
@@ -562,7 +607,7 @@ void Quantizer<MItype, MOtype>::GenerateKernels() {
   // Quantizer forward
   {
     KernelArgs args;
-    args.push_back(this->program_->template create_kernel_arg<size_t>("n",
+    args.push_back(this->program_->template create_kernel_arg<uint_tp>("n",
                                                              KERNEL_ARG_CONST));
     args.push_back(this->program_->template create_kernel_arg<MItype>("in",
                KERNEL_ARG_RESTRICT | KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_CONST |
@@ -586,7 +631,7 @@ void Quantizer<MItype, MOtype>::GenerateKernels() {
   // Quantizer backward
   {
     KernelArgs args;
-    args.push_back(this->program_->template create_kernel_arg<size_t>("n",
+    args.push_back(this->program_->template create_kernel_arg<uint_tp>("n",
                                                              KERNEL_ARG_CONST));
     args.push_back(this->program_->template create_kernel_arg<MOtype>("in",
                KERNEL_ARG_RESTRICT | KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_CONST |
@@ -610,7 +655,7 @@ void Quantizer<MItype, MOtype>::GenerateKernels() {
   // Observe in
   {
     KernelArgs args;
-    args.push_back(this->program_->template create_kernel_arg<size_t>("n",
+    args.push_back(this->program_->template create_kernel_arg<uint_tp>("n",
                                                              KERNEL_ARG_CONST));
     args.push_back(this->program_->template create_kernel_arg<MItype>("data",
                KERNEL_ARG_RESTRICT | KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_CONST |
@@ -624,10 +669,12 @@ void Quantizer<MItype, MOtype>::GenerateKernels() {
     args.push_back(this->program_->template create_kernel_arg<float>(
         "inter_max", KERNEL_ARG_RESTRICT | KERNEL_ARG_GLOBAL_MEM));
     ss << this->program_->function("quantizer_observe_in", args);
-    ss << this->program_->local_mem("float", "local_min[64]") << ";"
-       << std::endl;
-    ss << this->program_->local_mem("float", "local_max[64]") << ";"
-       << std::endl;
+    ss << this->program_->local_mem("float", "local_min[" +
+                   std::to_string(flp2(this->device_->workgroup_size(0))) + "]")
+                       << ";" << std::endl;
+    ss << this->program_->local_mem("float", "local_max[" +
+                   std::to_string(flp2(this->device_->workgroup_size(0))) + "]")
+                       << ";" << std::endl;
     ss << "local_min[" << this->program_->local_id(0) << "] = FLT_MAX;"
        << std::endl;
     ss << "local_max[" << this->program_->local_id(0) << "] = -FLT_MAX;"
@@ -651,7 +698,8 @@ void Quantizer<MItype, MOtype>::GenerateKernels() {
     ss << "}" << std::endl;  // Kernel loop
     // Reduction
     ss << this->program_->local_barrier() << std::endl;
-    ss << "uint_tp i = 32;" << std::endl;
+    ss << "uint_tp i = " << flp2(this->device_->workgroup_size(0)/2) << ";"
+       << std::endl;
     ss << "while (i != 0) {" << std::endl;
     ss << "if(" << this->program_->local_id(0) << " < i) {" << std::endl;
     ss << "if (local_min[" << this->program_->local_id(0) << "] > "
@@ -682,7 +730,7 @@ void Quantizer<MItype, MOtype>::GenerateKernels() {
   // Observe out
   {
     KernelArgs args;
-    args.push_back(this->program_->template create_kernel_arg<size_t>("n",
+    args.push_back(this->program_->template create_kernel_arg<uint_tp>("n",
                                                              KERNEL_ARG_CONST));
     args.push_back(this->program_->template create_kernel_arg<MOtype>("data",
                KERNEL_ARG_RESTRICT | KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_CONST |
@@ -696,12 +744,14 @@ void Quantizer<MItype, MOtype>::GenerateKernels() {
     args.push_back(this->program_->template create_kernel_arg<float>(
         "inter_max", KERNEL_ARG_RESTRICT | KERNEL_ARG_GLOBAL_MEM));
     ss << this->program_->function("quantizer_observe_out", args);
-    ss << this->program_->local_mem("float", "local_min[64]") << ";"
-       << std::endl;
-    ss << this->program_->local_mem("float", "local_max[64]") << ";"
-       << std::endl;
+    ss << this->program_->local_mem("float", "local_min[" +
+                   std::to_string(flp2(this->device_->workgroup_size(0))) + "]")
+                       << ";" << std::endl;
+    ss << this->program_->local_mem("float", "local_max[" +
+                   std::to_string(flp2(this->device_->workgroup_size(0))) + "]")
+                       << ";" << std::endl;
     ss << "local_min[" << this->program_->local_id(0) << "] = FLT_MAX;"
-       << std::endl;
+        << std::endl;
     ss << "local_max[" << this->program_->local_id(0) << "] = -FLT_MAX;"
        << std::endl;
     ss << this->program_->kernel_loop("uint_tp", "i", "n");
@@ -723,7 +773,8 @@ void Quantizer<MItype, MOtype>::GenerateKernels() {
     ss << "}" << std::endl;  // Kernel loop
     // Reduction
     ss << this->program_->local_barrier() << std::endl;
-    ss << "uint_tp i = 32;" << std::endl;
+    ss << "uint_tp i = " << flp2(this->device_->workgroup_size(0)/2) << ";"
+       << std::endl;
     ss << "while (i != 0) {" << std::endl;
     ss << "if(" << this->program_->local_id(0) << " < i) {" << std::endl;
     ss << "if (local_min[" << this->program_->local_id(0) << "] > "
@@ -772,7 +823,9 @@ void Quantizer<MItype, MOtype>::Forward_gpu(size_t n, vptr<const MItype> input,
 
   shared_ptr<DeviceKernel> kernel =
                           this->program_->GetKernel("quantizer_forward");
-  kernel->add_arg(&n);
+
+  uint_tp n_arg = n;
+  kernel->add_arg(&n_arg);
   kernel->add_arg(&input);
   kernel->add_arg(&output);
   if (fw_scale_before_cast()) {
@@ -828,7 +881,8 @@ void Quantizer<MItype, MOtype>::Backward_gpu(size_t n, vptr<const MOtype> input,
 
   shared_ptr<DeviceKernel> kernel =
                                 this->program_->GetKernel("quantizer_backward");
-  kernel->add_arg(&n);
+  uint_tp n_arg = n;
+  kernel->add_arg(&n_arg);
   kernel->add_arg(&input);
   kernel->add_arg(&output);
   if (bw_scale_before_cast()) {
@@ -877,7 +931,7 @@ void Quantizer<MItype, MOtype>::Observe_in_gpu(size_t n,
 template<typename MItype, typename MOtype>
 void Quantizer<MItype, MOtype>::Observe_in_gpu(size_t n,
                                                vptr<const MItype> data) {
-  if (mode_ == PASSIVE) {
+  if (mode_ == CAFFE_QUANT_PASSIVE) {
     return;
   }
   this->quant_mutex_.lock();
@@ -889,27 +943,31 @@ void Quantizer<MItype, MOtype>::Observe_in_gpu(size_t n,
   float scal = std::max(std::abs(max_in_), std::abs(min_in_))
                              / std::max(std::abs(flt_max_), std::abs(flt_min_));
 
-  vector<size_t> local(1, 64);
-  vector<size_t> group(1, (n - 1) / 64 + 1);
+  vector<size_t> local(1, flp2(this->device_->workgroup_size(0)));
+  vector<size_t> group(1, (n - 1) / local[0] + 1);
 
   int_tp min_buffer_lock_id = -1;
   int_tp max_buffer_lock_id = -1;
 
   shared_ptr<Blob<float> > min_blob =
-      this->device_->template Buffer<float>(vector<int_tp>(1, group[1]),
-                            &min_buffer_lock_id);
+      this->device_->template Buffer<float>(vector<int_tp>(1, group[0]),
+                                            &min_buffer_lock_id);
   shared_ptr<Blob<float> > max_blob =
-      this->device_->template Buffer<float>(vector<int_tp>(1, group[1]),
-                            &max_buffer_lock_id);
+      this->device_->template Buffer<float>(vector<int_tp>(1, group[0]),
+                                            &max_buffer_lock_id);
 
   vptr<float> min_gpu_data = min_blob->mutable_gpu_data();
-  this->device_->template set<float>(n, type_max_val<float>(), min_gpu_data);
+  this->device_->template set<float>(group[0], type_max_val<float>(),
+                                     min_gpu_data);
   vptr<float> max_gpu_data = max_blob->mutable_gpu_data();
-  this->device_->template set<float>(n, type_min_val<float>(), max_gpu_data);
+  this->device_->template set<float>(group[0], type_min_val<float>(),
+                                     max_gpu_data);
 
   shared_ptr<DeviceKernel> kernel =
                           this->program_->GetKernel("quantizer_observe_in");
-  kernel->add_arg(&n);
+
+  uint_tp n_arg = n;
+  kernel->add_arg(&n_arg);
   kernel->add_arg(&data);
   if (is_signed_integer_type<MItype>()) {
     kernel->add_arg(&scal);
@@ -923,9 +981,9 @@ void Quantizer<MItype, MOtype>::Observe_in_gpu(size_t n,
 
   this->quant_mutex_.lock();
   for (size_t i = 0; i < group[0]; ++i) {
-    observed_max_ = std::max(static_cast<double>(min_cpu_data[i]),
+    observed_min_ = std::min(static_cast<double>(min_cpu_data[i]),
                              observed_min_);
-    observed_min_ = std::min(static_cast<double>(max_cpu_data[i]),
+    observed_max_ = std::max(static_cast<double>(max_cpu_data[i]),
                              observed_max_);
   }
   this->quant_mutex_.unlock();
@@ -943,7 +1001,7 @@ void Quantizer<MItype, MOtype>::Observe_out_gpu(size_t n,
 template<typename MItype, typename MOtype>
 void Quantizer<MItype, MOtype>::Observe_out_gpu(size_t n,
                                                 vptr<const MOtype> data) {
-  if (mode_ == PASSIVE) {
+  if (mode_ == CAFFE_QUANT_PASSIVE) {
     return;
   }
   this->quant_mutex_.lock();
@@ -955,27 +1013,31 @@ void Quantizer<MItype, MOtype>::Observe_out_gpu(size_t n,
   float scal = std::max(std::abs(max_out_), std::abs(min_out_))
                              / std::max(std::abs(flt_max_), std::abs(flt_min_));
 
-  vector<size_t> local(1, 64);
-  vector<size_t> group(1, (n - 1) / 64 + 1);
+  vector<size_t> local(1, flp2(this->device_->workgroup_size(0)));
+  vector<size_t> group(1, (n - 1) / local[0] + 1);
 
   int_tp min_buffer_lock_id = -1;
   int_tp max_buffer_lock_id = -1;
 
   shared_ptr<Blob<float> > min_blob =
-      this->device_->template Buffer<float>(vector<int_tp>(1, group[1]),
+      this->device_->template Buffer<float>(vector<int_tp>(1, group[0]),
                                             &min_buffer_lock_id);
   shared_ptr<Blob<float> > max_blob =
-      this->device_->template Buffer<float>(vector<int_tp>(1, group[1]),
+      this->device_->template Buffer<float>(vector<int_tp>(1, group[0]),
                                             &max_buffer_lock_id);
 
   vptr<float> min_gpu_data = min_blob->mutable_gpu_data();
-  this->device_->template set<float>(n, type_max_val<float>(), min_gpu_data);
+  this->device_->template set<float>(group[0], type_max_val<float>(),
+                                     min_gpu_data);
   vptr<float> max_gpu_data = max_blob->mutable_gpu_data();
-  this->device_->template set<float>(n, type_min_val<float>(), max_gpu_data);
+  this->device_->template set<float>(group[0], type_min_val<float>(),
+                                     max_gpu_data);
 
   shared_ptr<DeviceKernel> kernel =
                           this->program_->GetKernel("quantizer_observe_out");
-  kernel->add_arg(&n);
+
+  uint_tp n_arg = n;
+  kernel->add_arg(&n_arg);
   kernel->add_arg(&data);
   if (is_signed_integer_type<MItype>()) {
     kernel->add_arg(&scal);
@@ -989,9 +1051,9 @@ void Quantizer<MItype, MOtype>::Observe_out_gpu(size_t n,
 
   this->quant_mutex_.lock();
   for (size_t i = 0; i < group[0]; ++i) {
-    observed_max_ = std::max(static_cast<double>(min_cpu_data[i]),
+    observed_min_ = std::min(static_cast<double>(min_cpu_data[i]),
                              observed_min_);
-    observed_min_ = std::min(static_cast<double>(max_cpu_data[i]),
+    observed_max_ = std::max(static_cast<double>(max_cpu_data[i]),
                              observed_max_);
   }
   this->quant_mutex_.unlock();
