@@ -80,7 +80,7 @@ The main requirements are `numpy` and `boost.python` (provided by boost). `panda
 
 You can install the dependencies with
 
-    for req in $(cat requirements.txt); do pip install $req; done
+    pip install -r requirements.txt
 
 but we suggest first installing the [Anaconda](https://store.continuum.io/cshop/anaconda/) Python distribution, which provides most of the necessary packages, as well as the `hdf5` library dependency.
 
