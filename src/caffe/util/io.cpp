@@ -112,10 +112,9 @@ cv::Mat ReadImageToCVMat(const string& filename) {
 }
 
 // Do the file extension and encoding match?
-static bool matchExt(const string & fn,
-                     string en) {
-  uint_tp p = fn.rfind('.');
-  string ext = p != fn.npos ? fn.substr(p) : fn;
+static bool matchExt(const string & fn, string en) {
+  size_t p = fn.rfind('.');
+  string ext = p != fn.npos ? fn.substr(p+1) : fn;
   std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
   std::transform(en.begin(), en.end(), en.begin(), ::tolower);
   if ( ext == en )
