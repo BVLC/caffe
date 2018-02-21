@@ -31,13 +31,18 @@ CUDA_DIR := /usr/local/cuda
 # CUDA_DIR := /usr
 
 # CUDA architecture setting: going with all of them.
-# For CUDA < 6.0, comment the *_50 lines for compatibility.
+# For CUDA < 6.0, comment the *_50 through *_61 lines for compatibility.
+# For CUDA < 8.0, comment the *_60 and *_61 lines for compatibility.
+# For CUDA >= 9.0, comment the *_20 and *_21 lines for compatibility.
 CUDA_ARCH := -gencode arch=compute_20,code=sm_20 \
 		-gencode arch=compute_20,code=sm_21 \
 		-gencode arch=compute_30,code=sm_30 \
 		-gencode arch=compute_35,code=sm_35 \
 		-gencode arch=compute_50,code=sm_50 \
-		-gencode arch=compute_50,code=compute_50
+		-gencode arch=compute_52,code=sm_52 \
+		-gencode arch=compute_60,code=sm_60 \
+		-gencode arch=compute_61,code=sm_61 \
+		-gencode arch=compute_61,code=compute_61
 
 # BLAS choice:
 # atlas for ATLAS (default)
@@ -68,7 +73,7 @@ PYTHON_INCLUDE := /usr/include/python2.7 \
 # ANACONDA_HOME := $(HOME)/anaconda
 # PYTHON_INCLUDE := $(ANACONDA_HOME)/include \
 		# $(ANACONDA_HOME)/include/python2.7 \
-		# $(ANACONDA_HOME)/lib/python2.7/site-packages/numpy/core/include \
+		# $(ANACONDA_HOME)/lib/python2.7/site-packages/numpy/core/include
 
 # Uncomment to use Python 3 (default is Python 2)
 # PYTHON_LIBRARIES := boost_python3 python3.5m
@@ -93,6 +98,10 @@ LIBRARY_DIRS := $(PYTHON_LIB) /usr/local/lib /usr/lib
 # If Homebrew is installed at a non standard location (for example your home directory) and you use it for general dependencies
 # INCLUDE_DIRS += $(shell brew --prefix)/include
 # LIBRARY_DIRS += $(shell brew --prefix)/lib
+
+# NCCL acceleration switch (uncomment to build with NCCL)
+# https://github.com/NVIDIA/nccl (last tested version: v1.2.3-1+cuda8.0)
+# USE_NCCL := 1
 
 # Uncomment to use `pkg-config` to specify OpenCV library paths.
 # (Usually not necessary -- OpenCV libraries are normally installed in one of the above $LIBRARY_DIRS.)

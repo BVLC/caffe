@@ -28,7 +28,6 @@ env:
     - BUILD_NAME="cudnn-cmake" WITH_CMAKE=true WITH_CUDA=true WITH_CUDNN=true
 
 cache:
-  timeout: 604800  # 1 week
   apt: true
   directories:
     - ~/protobuf3

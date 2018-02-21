@@ -36,9 +36,8 @@ void SoftmaxWithLossLayer<Dtype>::Forward_gpu(
   const Dtype* label = bottom[1]->gpu_data();
   const int dim = prob_.count() / outer_num_;
   const int nthreads = outer_num_ * inner_num_;
-  // Since this memory is not used for anything until it is overwritten
-  // on the backward pass, we use it here to avoid having to allocate new GPU
-  // memory to accumulate intermediate results in the kernel.
+  // Since this memory is not used for anything, we use it here to avoid having
+  // to allocate new GPU memory to accumulate intermediate results.
   Dtype* loss_data = bottom[0]->mutable_gpu_diff();
   // Similarly, this memory is never used elsewhere, and thus we can use it
   // to avoid having to allocate additional GPU memory.
@@ -61,6 +60,9 @@ void SoftmaxWithLossLayer<Dtype>::Forward_gpu(
   if (top.size() == 2) {
     top[1]->ShareData(prob_);
   }
+
+  // Clear scratch memory to prevent interfering with backward (see #6202).
+  caffe_gpu_set(bottom[0]->count(), Dtype(0), bottom[0]->mutable_gpu_diff());
 }
 
 template <typename Dtype>

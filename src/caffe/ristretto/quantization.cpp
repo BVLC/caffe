@@ -185,7 +185,7 @@ void Quantization::Quantize2DynamicFixedPoint() {
   for (int bitwidth = 16; bitwidth > 0; bitwidth /= 2) {
     EditNetDescriptionDynamicFixedPoint(&param, "Convolution", "Parameters",
         bitwidth, -1, -1, -1);
-    net_test = new Net<float>(param, NULL);
+    net_test = new Net<float>(param);
     net_test->CopyTrainedLayersFrom(weights_);
     RunForwardBatches(iterations_, net_test, &accuracy);
     test_bw_conv_params.push_back(bitwidth);
@@ -203,7 +203,7 @@ void Quantization::Quantize2DynamicFixedPoint() {
   for (int bitwidth = 16; bitwidth > 0; bitwidth /= 2) {
     EditNetDescriptionDynamicFixedPoint(&param, "InnerProduct", "Parameters",
         -1, bitwidth, -1, -1);
-    net_test = new Net<float>(param, NULL);
+    net_test = new Net<float>(param);
     net_test->CopyTrainedLayersFrom(weights_);
     RunForwardBatches(iterations_, net_test, &accuracy);
     test_bw_fc_params.push_back(bitwidth);
@@ -221,7 +221,7 @@ void Quantization::Quantize2DynamicFixedPoint() {
   for (int bitwidth = 16; bitwidth > 0; bitwidth /= 2) {
     EditNetDescriptionDynamicFixedPoint(&param, "Convolution_and_InnerProduct",
         "Activations", -1, -1, bitwidth, bitwidth);
-    net_test = new Net<float>(param, NULL);
+    net_test = new Net<float>(param);
     net_test->CopyTrainedLayersFrom(weights_);
     RunForwardBatches(iterations_, net_test, &accuracy);
     test_bw_layer_activations.push_back(bitwidth);
@@ -265,7 +265,7 @@ void Quantization::Quantize2DynamicFixedPoint() {
   EditNetDescriptionDynamicFixedPoint(&param, "Convolution_and_InnerProduct",
       "Parameters_and_Activations", bw_conv_params_, bw_fc_params_, bw_in_,
       bw_out_);
-  net_test = new Net<float>(param, NULL);
+  net_test = new Net<float>(param);
   net_test->CopyTrainedLayersFrom(weights_);
   RunForwardBatches(iterations_, net_test, &accuracy);
   delete net_test;
@@ -326,7 +326,7 @@ void Quantization::Quantize2MiniFloat() {
   // Test the net with different bit-widths
   for (int bitwidth = 16; bitwidth - 1 - exp_bits_ > 0; bitwidth /= 2) {
     EditNetDescriptionMiniFloat(&param, bitwidth);
-    net_test = new Net<float>(param, NULL);
+    net_test = new Net<float>(param);
     net_test->CopyTrainedLayersFrom(weights_);
     RunForwardBatches(iterations_, net_test, &accuracy);
     test_bitwidth.push_back(bitwidth);
@@ -382,7 +382,7 @@ void Quantization::Quantize2IntegerPowerOf2Weights() {
   // Bit-width of layer activations is hard-coded to 8-bit.
   EditNetDescriptionDynamicFixedPoint(&param, "Convolution_and_InnerProduct",
       "Activations", -1, -1, 8, 8);
-  net_test = new Net<float>(param, NULL);
+  net_test = new Net<float>(param);
   net_test->CopyTrainedLayersFrom(weights_);
   RunForwardBatches(iterations_, net_test, &accuracy);
   delete net_test;
