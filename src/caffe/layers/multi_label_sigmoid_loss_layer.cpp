@@ -14,8 +14,8 @@ void MultiLabelSigmoidLossLayer<Dtype>::LayerSetUp(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   LossLayer<Dtype>::LayerSetUp(bottom, top);
 
-   LOG(ERROR) << bottom[0]->num() << " " << bottom[0]->channels() << " " << bottom[0]->height() << " " << bottom[0]->width() ;
-   LOG(ERROR) << bottom[1]->num() << " " << bottom[1]->channels() << " " << bottom[1]->height() << " " << bottom[1]->width() ;
+   LOG(INFO) << bottom[0]->num() << " " << bottom[0]->channels() << " " << bottom[0]->height() << " " << bottom[0]->width() ;
+   LOG(INFO) << bottom[1]->num() << " " << bottom[1]->channels() << " " << bottom[1]->height() << " " << bottom[1]->width() ;
 
   // number of channels of bottom[0] has to be number of classes
   CHECK_EQ(bottom[0]->channels(), bottom[1]->channels());
