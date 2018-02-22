@@ -308,9 +308,9 @@ def accuracy_blob_name_parser(prototxt):
     for i in net.layer:
         if i.type == 'Accuracy':
             if i.HasField('accuracy_param'):
-                res[i.accuracy_param.top_k] = i.name
+                res[i.accuracy_param.top_k] = i.top[0]
             else:
-                res[1] = i.name
+                res[1] = i.top[0]
     return res[sorted(res.keys())[0]] if res else ''
 
 def check_blob_name_existence(prototxt, blob_name):
