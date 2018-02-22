@@ -783,7 +783,7 @@ layer {
     num_output: 128
     kernel_size: 1
     pad: 0
-    stride: 1
+    stride: 2
     bias_term: false
     weight_filler {
       type: "msra"
@@ -841,7 +841,7 @@ layer {
     num_output: 128
     kernel_size: 3
     pad: 1
-    stride: 2
+    stride: 1
     bias_term: false
     weight_filler {
       type: "msra"
@@ -1569,7 +1569,7 @@ layer {
     num_output: 256
     kernel_size: 1
     pad: 0
-    stride: 1
+    stride: 2
     bias_term: false
     weight_filler {
       type: "msra"
@@ -1627,7 +1627,7 @@ layer {
     num_output: 256
     kernel_size: 3
     pad: 1
-    stride: 2
+    stride: 1
     bias_term: false
     weight_filler {
       type: "msra"
@@ -2727,7 +2727,7 @@ layer {
     num_output: 512
     kernel_size: 1
     pad: 0
-    stride: 1
+    stride: 2
     bias_term: false
     weight_filler {
       type: "msra"
@@ -2785,7 +2785,7 @@ layer {
     num_output: 512
     kernel_size: 3
     pad: 1
-    stride: 2
+    stride: 1
     bias_term: false
     weight_filler {
       type: "msra"
@@ -3302,6 +3302,9 @@ layer {
   top: "loss"
   name: "prob"
   type: "SoftmaxWithLoss"
+  include {
+      phase: TRAIN
+  }
 }
 layer {
   name: "loss3/top-1"
