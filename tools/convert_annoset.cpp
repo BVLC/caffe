@@ -226,7 +226,7 @@ int main(int argc, char** argv) {
     {
       std::ofstream fout_mean("mean_values.txt");
       for (auto v: meanv)
-	fout_mean << v << " ";
+	fout_mean << v/static_cast<float>(count) << " ";
       fout_mean << std::endl;
       fout_mean.close();
     }
