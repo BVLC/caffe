@@ -26,11 +26,12 @@ class CaffeBenchmark(object):
         self.iterations = 100
         self.caffe_root = os.path.dirname(os.path.dirname(__file__))
         # model template path
-        self.model_path = self.caffe_root + "models/intel_optimized_models/benchmark"
+        self.model_path = os.path.join(self.caffe_root, "models/intel_optimized_models/benchmark")
         # specific script used to run intelcaffe 
-        self.caffe_run_script = self.caffe_root + "scripts/run_intelcaffe.sh"
+        self.caffe_run_script = os.path.join(self.caffe_root, "scripts/run_intelcaffe.sh")
         self.bkm_batch_size = bench_params.bkm_batch_size
         self.support_topologies = self.bkm_batch_size.keys()
+        self.support_topologies.append('all')
         self.check_parameters()
         current_time = time.strftime("%Y%m%d%H%M%S")
         logging.basicConfig(filename = 'result-benchmark-{}.log'.format(current_time),level = logging.INFO)
@@ -90,10 +91,10 @@ class CaffeBenchmark(object):
     def gen_model_file(self, model):
         '''generate model file with new batch size which equal to bkm batch size'''
         prototxt_file = "train_val_dummydata.prototxt" if self.dummy_data_use else "train_val.prototxt"
-        dst_model_file = "/".join([self.model_path, model, '-'.join([self.cpu_model, prototxt_file])])
+        dst_model_file = os.path.join(self.model_path, model, '-'.join([self.cpu_model, prototxt_file]))
         if os.path.isfile(dst_model_file):
             os.remove(dst_model_file)
-        src_model_file = "/".join([self.model_path, model, prototxt_file])
+        src_model_file = os.path.join(self.model_path, model, prototxt_file)
         if not os.path.isfile(src_model_file):
             logging.exception("template model file {} doesn't exist.".format(src_model_file))
         batch_size_pattern = re.compile(".*shape:.*") if self.dummy_data_use else re.compile("^\s+batch_size:.*")
@@ -115,10 +116,10 @@ class CaffeBenchmark(object):
     def gen_solver_file(self, model):
         '''generate suitable solver file for training benchmark'''
         solver_prototxt_file = "solver_dummydata.prototxt" if self.dummy_data_use else "solver.prototxt"
-        dst_solver_file = "/".join([self.model_path, model, '-'.join([self.cpu_model, solver_prototxt_file])])
+        dst_solver_file = os.path.join(self.model_path, model, '-'.join([self.cpu_model, solver_prototxt_file]))
         if os.path.isfile(dst_solver_file):
             os.remove(dst_solver_file)
-        src_solver_file = "/".join([self.model_path, model, solver_prototxt_file])
+        src_solver_file = os.path.join(self.model_path, model, solver_prototxt_file)
         if not os.path.isfile(src_solver_file):
             logging.exception("template solver file {} doesn't exist.".format(src_solver_file))
         dst_model_file = self.gen_model_file(model)
@@ -182,7 +183,7 @@ class CaffeBenchmark(object):
             caffe_log_file = "-".join(["outputCluster", self.cpu_model, str(self.num_nodes) + '.txt'])
         else:
             caffe_log_file = "-".join(["outputCluster", "unknown", str(self.num_nodes) + '.txt'])
-        intelcaffe_log = "/".join([result_dir, caffe_log_file])
+        intelcaffe_log = os.path.join(result_dir, caffe_log_file)
         logging.info('intelcaffe log: %s' % intelcaffe_log)
         return intelcaffe_log
     
@@ -364,10 +365,9 @@ class BenchmarkParams(object):
         
 def parse_args():
     '''parse arguments'''
-    description = 'Used to run throughput performance or scaling efficiency benchmarking.'
+    description = 'Used to run intelcaffe throughput performance or scaling efficiency benchmarking.'
     arg_parser = argparse.ArgumentParser(description = description)
-    arg_parser = argparse.ArgumentParser(description = "Used to run intelcaffe training benchmark")
-    arg_parser.add_argument('-c', '--configfile', help = "config file which contains the parameters you want and the batch size you want to use on all topologies and platforms")
+    arg_parser.add_argument('-c', '--configfile', default = 'scripts/benchmark_config_default.json', help = "config file which contains the parameters you want and the batch size you want to use on all topologies and platforms. Please check https://github.com/intel/caffe/wiki/Run-benchmark to see how to use it, default is 'scripts/benchmark_config_default.json'")
     return arg_parser.parse_args()
 
 def main():
