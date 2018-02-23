@@ -43,16 +43,27 @@ class QuantizerBase {
   virtual string bw_scale_term(int_tp vec_len, string scale_var,
                                string src_val) const = 0;
 
-  int_tp get_index() const {
+  virtual double in_scale_term() = 0;
+  virtual double out_scale_term() = 0;
+
+  inline int_tp get_index() const {
     return index_;
   }
 
-  double get_observed_max() const {
+  inline double get_observed_max() const {
     return observed_max_;
   }
 
-  double get_observed_min() const {
+  inline double get_observed_min() const {
     return observed_min_;
+  }
+
+  inline double get_in_zero_point() const {
+    return in_zero_point_;
+  }
+
+  inline double get_out_zero_point() const {
+    return out_zero_point_;
   }
 
   const QuantizerParameter& quant_param() const {
@@ -86,6 +97,10 @@ class QuantizerBase {
   // Output value range
   double max_out_;
   double min_out_;
+
+  // Zero values
+  double in_zero_point_;
+  double out_zero_point_;
 
   QuantizerMode mode_;
 };
@@ -155,6 +170,10 @@ class Quantizer : public QuantizerBase {
                                string src_val) const;
   virtual string bw_scale_term(int_tp vec_len, string scale_var,
                                string src_val) const;
+
+  virtual double in_scale_term();
+  virtual double out_scale_term();
+
  private:
   void init();
 };

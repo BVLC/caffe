@@ -282,19 +282,19 @@ inline double type_min_val<double>() {
 }
 template<>
 inline double type_min_val<int8_t>() {
-  return -static_cast<double>(std::numeric_limits<int8_t>::max());
+  return static_cast<double>(std::numeric_limits<int8_t>::min());
 }
 template<>
 inline double type_min_val<int16_t>() {
-  return -static_cast<double>(std::numeric_limits<int16_t>::max());
+  return static_cast<double>(std::numeric_limits<int16_t>::min());
 }
 template<>
 inline double type_min_val<int32_t>() {
-  return -static_cast<double>(std::numeric_limits<int32_t>::max());
+  return static_cast<double>(std::numeric_limits<int32_t>::min());
 }
 template<>
 inline double type_min_val<int64_t>() {
-  return -static_cast<double>(std::numeric_limits<int64_t>::max());
+  return static_cast<double>(std::numeric_limits<int64_t>::min());
 }
 
 template<typename T>

@@ -80,9 +80,9 @@ void Quantizer<MItype, MOtype>::update_param(const QuantizerParameter& param) {
     this->observed_max_ = param_.observed_max();
   }
 
-  // Set floating point (symmetric) maximum and minimum
-  this->flt_min_ = std::min(this->observed_min_, -this->observed_max_);
-  this->flt_max_ = std::max(this->observed_max_, -this->observed_min_);
+  // Set floating point maximum and minimum
+  this->flt_min_ = this->observed_min_;
+  this->flt_max_ = this->observed_max_;
 
   if (this->param_.has_min_in()) {
     this->min_in_ = param_.min_in();
@@ -125,6 +125,35 @@ void Quantizer<MItype, MOtype>::update_param(const QuantizerParameter& param) {
       this->max_out_ = type_max_val<MOtype>();
     }
   }
+
+  if (is_float_type<MItype>()) {
+    this->in_zero_point_ = this->flt_max_;
+  } else {
+    double initial_zero_point = this->min_in_ - this->flt_min_
+        / this->in_scale_term();
+      if (initial_zero_point < this->min_in_) {
+        this->in_zero_point_ = this->min_in_;
+      } else if (initial_zero_point > this->max_in_) {
+        this->in_zero_point_ = this->max_in_;
+      } else {
+        this->in_zero_point_ = std::round(initial_zero_point);
+    }
+  }
+
+  if (is_float_type<MOtype>()) {
+    this->out_zero_point_ = this->flt_max_;
+  } else {
+    double initial_zero_point = this->min_out_ - this->flt_min_
+        / this->out_scale_term();
+      if (initial_zero_point < this->min_out_) {
+        this->out_zero_point_ = this->min_out_;
+      } else if (initial_zero_point > this->max_out_) {
+        this->out_zero_point_ = this->max_out_;
+      } else {
+        this->out_zero_point_ = std::round(initial_zero_point);
+    }
+  }
+
   program_ready_ = false;
   quant_mutex_.unlock();
 }
@@ -144,6 +173,8 @@ void Quantizer<MItype, MOtype>::init() {
   this->max_in_ = type_max_val<MItype>();
   this->min_out_ = type_min_val<MOtype>();
   this->max_out_ = type_max_val<MOtype>();
+  this->in_zero_point_ = 0.0;
+  this->out_zero_point_ = 0.0;
 }
 
 template<typename MItype, typename MOtype>
@@ -159,7 +190,8 @@ bool Quantizer<MItype, MOtype>::needs_quantization() const {
   }
   if (is_integer_type<MItype>() && is_integer_type<MOtype>()) {
     if (std::is_same<MItype, MOtype>::value) {
-      if (this->min_in_ == this->min_out_ && this->max_in_ == this->max_out_) {
+      if (this->min_in_ == this->min_out_ && this->max_in_ == this->max_out_ &&
+          this->in_zero_point_ == this->out_zero_point_) {
         // Identical integer type with same value range does not need quantization
         return false;
       }
@@ -169,6 +201,27 @@ bool Quantizer<MItype, MOtype>::needs_quantization() const {
   }
   return true;
 }
+
+template<typename MItype, typename MOtype>
+double Quantizer<MItype, MOtype>::in_scale_term() {
+  if (is_float_type<MItype>()) {
+    return 1.0;
+  } else {
+    return (this->flt_max_ - this->flt_min_)
+        / (this->max_in_ - this->min_in_);
+  }
+}
+
+template<typename MItype, typename MOtype>
+double  Quantizer<MItype, MOtype>::out_scale_term() {
+  if (is_float_type<MOtype>()) {
+    return 1.0;
+  } else {
+    return (this->flt_max_ - this->flt_min_)
+        / (this->max_out_ - this->min_out_);
+  }
+}
+
 
 template<typename MItype, typename MOtype>
 Quantizer<MItype, MOtype>::Quantizer(const QuantizerParameter& param)
@@ -222,44 +275,71 @@ void Quantizer<MItype, MOtype>::Forward_cpu(
   CHECK(output);
 
   if (!needs_quantization()) {
-    if (std::is_same<MItype, MOtype>::value) {
 #pragma omp parallel for
-      for (size_t i = 0; i < n; ++i) {
-        output[i] = input[i];
-      }
-    } else {
-#pragma omp parallel for
-      for (size_t i = 0; i < n; ++i) {
-        output[i] = static_cast<MOtype>(input[i]);
-      }
+    for (size_t i = 0; i < n; ++i) {
+      output[i] = static_cast<MOtype>(input[i]);
     }
     return;
   }
 
   if (fw_scale_before_cast()) {
-    MItype scal = fw_scale_before_cast_val();
+    const MItype scal = fw_scale_before_cast_val();
+    const MItype in_zero = static_cast<MItype>(this->in_zero_point_);
+    const MItype out_zero = static_cast<MItype>(this->out_zero_point_);
+    const MItype min_in = static_cast<MItype>(this->min_in_);
+    const MItype max_in = static_cast<MItype>(this->max_in_);
+    const MItype min_out = static_cast<MItype>(this->min_out_);
+    const MItype max_out = static_cast<MItype>(this->max_out_);
     if (fw_scale_divide()) {
 #pragma omp parallel for
       for (size_t i = 0; i < n; ++i) {
-        output[i] = static_cast<MOtype>(input[i] / scal);
+        // Zero-adjust, clamp, divide-scale, zero-adjust, clamp, cast
+        bool uf = (input[i] < min_in + in_zero) && in_zero > 0;
+        bool of = (input[i] > max_in + in_zero) && in_zero < 0;
+        MItype centered_input = input[i] - in_zero;
+        output[i] = static_cast<MOtype>(std::min(std::max(static_cast<MItype>(
+            (uf ? min_in : (of ? max_in : centered_input)) / scal
+            + out_zero), min_out), max_out));
       }
     } else {
 #pragma omp parallel for
       for (size_t i = 0; i < n; ++i) {
-        output[i] = static_cast<MOtype>(input[i] * scal);
+        // Zero-adjust, clamp, multiply-scale, zero-adjust, clamp, cast
+        bool uf = (input[i] < min_in + in_zero) && in_zero > 0;
+        bool of = (input[i] > max_in + in_zero) && in_zero < 0;
+        MItype centered_input = input[i] - in_zero;
+        output[i] = static_cast<MOtype>(std::min(std::max(static_cast<MItype>(
+            (uf ? min_in : (of ? max_in : centered_input)) * scal
+            + out_zero), min_out), max_out));
       }
     }
   } else {
-    MOtype scal = fw_scale_after_cast_val();
+    const MOtype scal = fw_scale_after_cast_val();
+    const MOtype in_zero = static_cast<MOtype>(this->in_zero_point_);
+    const MOtype out_zero = static_cast<MOtype>(this->out_zero_point_);
+    const MOtype min_in = static_cast<MOtype>(this->min_in_);
+    const MOtype max_in = static_cast<MOtype>(this->max_in_);
+    const MOtype min_out = static_cast<MOtype>(this->min_out_);
+    const MOtype max_out = static_cast<MOtype>(this->max_out_);
     if (fw_scale_divide()) {
 #pragma omp parallel for
       for (size_t i = 0; i < n; ++i) {
-        output[i] = static_cast<MOtype>(input[i]) / scal;
+        // Cast, zero-adjust, clamp, divide-scale, zero-adjust, clamp
+        MOtype centered_output = std::min(std::max(static_cast<MOtype>(
+            static_cast<MOtype>(input[i]) - in_zero), min_in), max_in) / scal;
+        bool uf = (input[i] < min_in - out_zero) && out_zero < 0;
+        bool of = (input[i] > max_in - out_zero) && out_zero > 0;
+        output[i] = uf ? min_out : (of ? max_out : centered_output + out_zero);
       }
     } else {
 #pragma omp parallel for
       for (size_t i = 0; i < n; ++i) {
-        output[i] = static_cast<MOtype>(input[i]) * scal;
+        // Cast, zero-adjust, clamp, multiply-scale, zero-adjust, clamp
+        MOtype centered_output = std::min(std::max(static_cast<MOtype>(
+            static_cast<MOtype>(input[i]) - in_zero), min_in), max_in) * scal;
+        bool uf = (input[i] < min_in - out_zero) && out_zero < 0;
+        bool of = (input[i] > max_in - out_zero) && out_zero > 0;
+        output[i] = uf ? min_out : (of ? max_out : centered_output + out_zero);
       }
     }
   }
@@ -297,44 +377,73 @@ void Quantizer<MItype, MOtype>::Backward_cpu(
   CHECK(output);
 
   if (!needs_quantization()) {
-    if (std::is_same<MItype, MOtype>::value) {
 #pragma omp parallel for
-      for (size_t i = 0; i < n; ++i) {
-        output[i] = input[i];
-      }
-    } else {
-#pragma omp parallel for
-      for (size_t i = 0; i < n; ++i) {
-        output[i] = static_cast<MItype>(input[i]);
-      }
+    for (size_t i = 0; i < n; ++i) {
+      output[i] = static_cast<MItype>(input[i]);
     }
     return;
   }
 
   if (bw_scale_before_cast()) {
-    MOtype scal = bw_scale_before_cast_val();
+    const MOtype scal = bw_scale_before_cast_val();
+    const MOtype out_zero = static_cast<MOtype>(this->out_zero_point_);
+    const MOtype in_zero = static_cast<MOtype>(this->in_zero_point_);
+    const MOtype min_out = static_cast<MOtype>(this->min_out_);
+    const MOtype max_out = static_cast<MOtype>(this->max_out_);
+    const MOtype min_in = static_cast<MOtype>(this->min_in_);
+    const MOtype max_in = static_cast<MOtype>(this->max_in_);
     if (bw_scale_divide()) {
 #pragma omp parallel for
       for (size_t i = 0; i < n; ++i) {
-        output[i] = static_cast<MItype>(input[i] / scal);
+        // Zero-adjust, clamp, divide-scale, zero-adjust, clamp, cast
+        bool uf = (input[i] < min_out + out_zero) && out_zero > 0;
+        bool of = (input[i] > max_out + out_zero) && out_zero < 0;
+        MOtype centered_input = input[i] - out_zero;
+        output[i] = static_cast<MItype>(std::min(std::max(static_cast<MOtype>(
+            (uf ? min_out : (of ? max_out : centered_input)) / scal
+            + in_zero), min_in), max_in));
       }
     } else {
 #pragma omp parallel for
       for (size_t i = 0; i < n; ++i) {
-        output[i] = static_cast<MItype>(input[i] * scal);
+        // Zero-adjust, clamp, multiply-scale, zero-adjust, clamp, cast
+        bool uf = (input[i] < min_out + out_zero) && out_zero > 0;
+        bool of = (input[i] > max_out + out_zero) && out_zero < 0;
+        MOtype centered_input = input[i] - out_zero;
+        output[i] = static_cast<MItype>(std::min(std::max(static_cast<MOtype>(
+            (uf ? min_out : (of ? max_out : centered_input)) * scal
+            + in_zero), min_in), max_in));
       }
     }
   } else {
-    MItype scal = bw_scale_after_cast_val();
+    const MItype scal = bw_scale_after_cast_val();
+    const MItype out_zero = static_cast<MItype>(this->out_zero_point_);
+    const MItype in_zero = static_cast<MItype>(this->in_zero_point_);
+    const MItype min_out = static_cast<MItype>(this->min_out_);
+    const MItype max_out = static_cast<MItype>(this->max_out_);
+    const MItype min_in = static_cast<MItype>(this->min_in_);
+    const MItype max_in = static_cast<MItype>(this->max_in_);
     if (bw_scale_divide()) {
 #pragma omp parallel for
       for (size_t i = 0; i < n; ++i) {
-        output[i] = static_cast<MItype>(input[i]) / scal;
+        // Cast, zero-adjust, clamp, divide-scale, zero-adjust, clamp
+        MItype centered_output = std::min(std::max(static_cast<MItype>(
+            static_cast<MItype>(input[i]) - out_zero),
+            min_out), max_out) / scal;
+        bool uf = (input[i] < min_out - in_zero) && in_zero < 0;
+        bool of = (input[i] > max_out - in_zero) && in_zero > 0;
+        output[i] = uf ? min_in : (of ? max_in : centered_output + in_zero);
       }
     } else {
 #pragma omp parallel for
       for (size_t i = 0; i < n; ++i) {
-        output[i] = static_cast<MItype>(input[i]) * scal;
+        // Cast, zero-adjust, clamp, multiply-scale, zero-adjust, clamp
+        MItype centered_output = std::min(std::max(static_cast<MItype>(
+            static_cast<MItype>(input[i]) - out_zero),
+            min_out), max_out) * scal;
+        bool uf = (input[i] < min_out - in_zero) && in_zero < 0;
+        bool of = (input[i] > max_out - in_zero) && in_zero > 0;
+        output[i] = uf ? min_in : (of ? max_in : centered_output + in_zero);
       }
     }
   }
@@ -434,11 +543,11 @@ template<typename MItype, typename MOtype>
 MItype Quantizer<MItype, MOtype>::fw_scale_before_cast_val() const {
   double val = 0.0;
   if (this->fw_scale_divide()) {
-    val = std::max(std::abs(max_in_), std::abs(min_in_))
-      / std::max(std::abs(max_out_), std::abs(min_out_));
+    val = (this->max_in_ - this->min_in_)
+      / (this->max_out_ - this->min_out_);
   } else {
-    val = std::max(std::abs(max_out_), std::abs(min_out_)
-      / std::max(std::abs(max_in_), std::abs(min_in_)));
+    val = (this->max_out_ - this->min_out_)
+      / (this->max_in_ - this->min_in_);
   }
   return static_cast<MItype>(val);
 }
@@ -447,11 +556,11 @@ template<typename MItype, typename MOtype>
 MOtype Quantizer<MItype, MOtype>::fw_scale_after_cast_val() const {
   double val = 0.0;
   if (this->fw_scale_divide()) {
-    val = std::max(std::abs(max_in_), std::abs(min_in_))
-        / std::max(std::abs(max_out_), std::abs(min_out_));
+    val = (this->max_in_ - this->min_in_)
+      / (this->max_out_ - this->min_out_);
   } else {
-    val = std::max(std::abs(max_out_), std::abs(min_out_)
-        / std::max(std::abs(max_in_), std::abs(min_in_)));
+    val = (this->max_out_ - this->min_out_)
+      / (this->max_in_ - this->min_in_);
   }
   return static_cast<MOtype>(val);
 }
@@ -460,11 +569,11 @@ template<typename MItype, typename MOtype>
 MOtype Quantizer<MItype, MOtype>::bw_scale_before_cast_val() const {
   double val = 0.0;
   if (this->fw_scale_divide()) {
-    val = std::max(std::abs(max_out_), std::abs(min_out_)
-        / std::max(std::abs(max_in_), std::abs(min_in_)));
+    val = (this->max_out_ - this->min_out_)
+      / (this->max_in_ - this->min_in_);
   } else {
-    val = std::max(std::abs(max_in_), std::abs(min_in_))
-        / std::max(std::abs(max_out_), std::abs(min_out_));
+    val = (this->max_in_ - this->min_in_)
+      / (this->max_out_ - this->min_out_);
   }
   return static_cast<MOtype>(val);
 }
@@ -473,11 +582,11 @@ template<typename MItype, typename MOtype>
 MItype Quantizer<MItype, MOtype>::bw_scale_after_cast_val() const {
   double val = 0.0;
   if (this->fw_scale_divide()) {
-    val = std::max(std::abs(max_out_), std::abs(min_out_)
-        / std::max(std::abs(max_in_), std::abs(min_in_)));
+    val = (this->max_out_ - this->min_out_)
+      / (this->max_in_ - this->min_in_);
   } else {
-    val = std::max(std::abs(max_in_), std::abs(min_in_))
-        / std::max(std::abs(max_out_), std::abs(min_out_));
+    val = (this->max_in_ - this->min_in_)
+      / (this->max_out_ - this->min_out_);
   }
   return static_cast<MItype>(val);
 }
@@ -539,22 +648,16 @@ void Quantizer<MItype, MOtype>::Observe_in_cpu(size_t n, const void* data) {
 }
 
 template<typename MItype, typename MOtype>
-void Quantizer<MItype, MOtype>::Observe_in_cpu(size_t n,
-                                                 const MItype* data) {
+void Quantizer<MItype, MOtype>::Observe_in_cpu(size_t n, const MItype* data) {
   if (mode_ == CAFFE_QUANT_PASSIVE) {
     return;
   }
   double local_min = type_max_val<double>();
   double local_max = type_min_val<double>();
-  double scal = std::max(std::abs(max_in_), std::abs(min_in_))
-              / std::max(std::abs(flt_max_), std::abs(flt_min_));
+  double scal = in_scale_term();
+  double zero_point = get_in_zero_point();
   for (size_t i = 0; i < n; ++i) {
-    double value;
-    if (is_signed_integer_type<MItype>()) {
-      value = static_cast<double>(data[i])/scal;
-    } else {
-      value = data[i];
-    }
+    double value = (static_cast<double>(data[i]) + zero_point) * scal;
     local_min = std::min(local_min, value);
     local_max = std::max(local_max, value);
   }
@@ -570,22 +673,16 @@ void Quantizer<MItype, MOtype>::Observe_out_cpu(size_t n, const void* data) {
 }
 
 template<typename MItype, typename MOtype>
-void Quantizer<MItype, MOtype>::Observe_out_cpu(size_t n,
-                                                  const MOtype* data) {
+void Quantizer<MItype, MOtype>::Observe_out_cpu(size_t n, const MOtype* data) {
   if (mode_ == CAFFE_QUANT_PASSIVE) {
     return;
   }
   double local_min = type_max_val<double>();
   double local_max = type_min_val<double>();
-  double scal = std::max(std::abs(max_in_), std::abs(min_in_))
-              / std::max(std::abs(flt_max_), std::abs(flt_min_));
+  double scal = out_scale_term();
+  double zero_point = get_out_zero_point();
   for (size_t i = 0; i < n; ++i) {
-    double value;
-    if (is_signed_integer_type<MItype>()) {
-      value = static_cast<double>(data[i])/scal;
-    } else {
-      value = data[i];
-    }
+    double value = (static_cast<double>(data[i]) + zero_point) * scal;
     local_min = std::min(local_min, value);
     local_max = std::max(local_max, value);
   }
@@ -660,10 +757,11 @@ void Quantizer<MItype, MOtype>::GenerateKernels() {
     args.push_back(this->program_->template create_kernel_arg<MItype>("data",
                KERNEL_ARG_RESTRICT | KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_CONST |
                KERNEL_ARG_MEM_OFFSET));
-    if (is_signed_integer_type<MItype>()) {
-      args.push_back(this->program_->template create_kernel_arg<float>("scal",
+    args.push_back(this->program_->template create_kernel_arg<float>("scal",
                                                              KERNEL_ARG_CONST));
-    }
+    args.push_back(this->program_->template create_kernel_arg<float>(
+                                               "zero_point", KERNEL_ARG_CONST));
+
     args.push_back(this->program_->template create_kernel_arg<float>(
         "inter_min", KERNEL_ARG_RESTRICT | KERNEL_ARG_GLOBAL_MEM));
     args.push_back(this->program_->template create_kernel_arg<float>(
@@ -680,11 +778,8 @@ void Quantizer<MItype, MOtype>::GenerateKernels() {
     ss << "local_max[" << this->program_->local_id(0) << "] = -FLT_MAX;"
        << std::endl;
     ss << this->program_->kernel_loop("uint_tp", "i", "n");
-    if (is_signed_integer_type<MItype>()) {
-      ss << "float value = ((float)(data[i]))/scal;" << std::endl;
-    } else {
-      ss << "float value = data[i];" << std::endl;
-    }
+    ss << "float value = ((float)(data[i]) - zero_point) * scal;"
+       << std::endl;
     ss << "if (local_min[" << this->program_->local_id(0) << "] > "
        << "value) {" << std::endl;
     ss << "local_min[" << this->program_->local_id(0) << "] = value;"
@@ -735,10 +830,11 @@ void Quantizer<MItype, MOtype>::GenerateKernels() {
     args.push_back(this->program_->template create_kernel_arg<MOtype>("data",
                KERNEL_ARG_RESTRICT | KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_CONST |
                KERNEL_ARG_MEM_OFFSET));
-    if (is_signed_integer_type<MOtype>()) {
-      args.push_back(this->program_->template create_kernel_arg<float>("scal",
+    args.push_back(this->program_->template create_kernel_arg<float>("scal",
                                                              KERNEL_ARG_CONST));
-    }
+    args.push_back(this->program_->template create_kernel_arg<float>(
+                                               "zero_point", KERNEL_ARG_CONST));
+
     args.push_back(this->program_->template create_kernel_arg<float>(
         "inter_min", KERNEL_ARG_RESTRICT | KERNEL_ARG_GLOBAL_MEM));
     args.push_back(this->program_->template create_kernel_arg<float>(
@@ -755,11 +851,8 @@ void Quantizer<MItype, MOtype>::GenerateKernels() {
     ss << "local_max[" << this->program_->local_id(0) << "] = -FLT_MAX;"
        << std::endl;
     ss << this->program_->kernel_loop("uint_tp", "i", "n");
-    if (is_signed_integer_type<MOtype>()) {
-      ss << "float value = ((float)(data[i]))/scal;" << std::endl;
-    } else {
-      ss << "float value = data[i];" << std::endl;
-    }
+    ss << "float value = ((float)(data[i]) - zero_point) * scal;"
+       << std::endl;
     ss << "if (local_min[" << this->program_->local_id(0) << "] > "
        << "value) {" << std::endl;
     ss << "local_min[" << this->program_->local_id(0) << "] = value;"
@@ -940,8 +1033,8 @@ void Quantizer<MItype, MOtype>::Observe_in_gpu(size_t n,
   }
   this->quant_mutex_.unlock();
 
-  float scal = std::max(std::abs(max_in_), std::abs(min_in_))
-                             / std::max(std::abs(flt_max_), std::abs(flt_min_));
+  float scal = in_scale_term();
+  float zero_point = get_in_zero_point();
 
   vector<size_t> local(1, flp2(this->device_->workgroup_size(0)));
   vector<size_t> group(1, (n - 1) / local[0] + 1);
@@ -964,14 +1057,13 @@ void Quantizer<MItype, MOtype>::Observe_in_gpu(size_t n,
                                      max_gpu_data);
 
   shared_ptr<DeviceKernel> kernel =
-                          this->program_->GetKernel("quantizer_observe_in");
+                              this->program_->GetKernel("quantizer_observe_in");
 
   uint_tp n_arg = n;
   kernel->add_arg(&n_arg);
   kernel->add_arg(&data);
-  if (is_signed_integer_type<MItype>()) {
-    kernel->add_arg(&scal);
-  }
+  kernel->add_arg(&scal);
+  kernel->add_arg(&zero_point);
   kernel->add_arg(&min_gpu_data);
   kernel->add_arg(&max_gpu_data);
   kernel->Execute(group, local);
@@ -1010,8 +1102,8 @@ void Quantizer<MItype, MOtype>::Observe_out_gpu(size_t n,
   }
   this->quant_mutex_.unlock();
 
-  float scal = std::max(std::abs(max_out_), std::abs(min_out_))
-                             / std::max(std::abs(flt_max_), std::abs(flt_min_));
+  float scal = out_scale_term();
+  float zero_point = get_out_zero_point();
 
   vector<size_t> local(1, flp2(this->device_->workgroup_size(0)));
   vector<size_t> group(1, (n - 1) / local[0] + 1);
@@ -1034,14 +1126,13 @@ void Quantizer<MItype, MOtype>::Observe_out_gpu(size_t n,
                                      max_gpu_data);
 
   shared_ptr<DeviceKernel> kernel =
-                          this->program_->GetKernel("quantizer_observe_out");
+                             this->program_->GetKernel("quantizer_observe_out");
 
   uint_tp n_arg = n;
   kernel->add_arg(&n_arg);
   kernel->add_arg(&data);
-  if (is_signed_integer_type<MItype>()) {
-    kernel->add_arg(&scal);
-  }
+  kernel->add_arg(&scal);
+  kernel->add_arg(&zero_point);
   kernel->add_arg(&min_gpu_data);
   kernel->add_arg(&max_gpu_data);
   kernel->Execute(group, local);
