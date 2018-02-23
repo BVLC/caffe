@@ -44,12 +44,20 @@ caffe_option(ALLOW_LMDB_NOLOCK "Allow MDB_NOLOCK when reading LMDB files (only i
 caffe_option(USE_SYSTEMTAP "Build for SystemTap" OFF)
 caffe_option(PERFORMANCE_MONITORING "Build Caffe with PERFORMANCE_MONITORING " OFF)
 #caffe_option(USE_GITHUB_MKLDNN "Download and use MKL-DNN available on github" OFF)
+caffe_option(CODE_COVERAGE "Build with code coverage instrumentation" OFF)
 caffe_option(CO_SIM "Build readonly cpu blob data/diff pycaffe interface" OFF)
  
 # ---[ Dependencies
 include(cmake/MKLDNN.cmake)
 include(cmake/DLCP.cmake)
 include(cmake/Dependencies.cmake)
+
+if(CODE_COVERAGE)
+  # code coverage necessary
+  include(CodeCoverage)
+  APPEND_CCOV_COMPILER_FLAGS()
+endif()
+#end code coverage
 
 # ---[ Flags
 if(UNIX OR APPLE)
