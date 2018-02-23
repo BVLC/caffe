@@ -71,7 +71,7 @@ void MultiLabelAccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bot
   Dtype specificity = (count_neg > 0)? (true_negative / count_neg) : 0;
   Dtype harmmean = ((count_pos + count_neg) > 0)?
     2 / (count_pos / true_positive + count_neg / true_negative) : 0;
-  Dtype precission = (true_positive > 0)?
+  Dtype precision = (true_positive > 0)?
     (true_positive / (true_positive + false_positive)) : 0;
   Dtype f1_score = (true_positive > 0)?
     2 * true_positive /
@@ -80,13 +80,13 @@ void MultiLabelAccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bot
   DLOG(INFO) << "Sensitivity: " << sensitivity;
   DLOG(INFO) << "Specificity: " << specificity;
   DLOG(INFO) << "Harmonic Mean of Sens and Spec: " << harmmean;
-  DLOG(INFO) << "Precision: " << precission;
+  DLOG(INFO) << "Precision: " << precision;
   DLOG(INFO) << "F1 Score: " << f1_score;
 
   top[0]->mutable_cpu_data()[0] = sensitivity;
   top[0]->mutable_cpu_data()[1] = specificity;
   top[0]->mutable_cpu_data()[2] = harmmean;
-  top[0]->mutable_cpu_data()[3] = precission;
+  top[0]->mutable_cpu_data()[3] = precision;
   top[0]->mutable_cpu_data()[4] = f1_score;
 
   //by hueifang. July 1, 2015
