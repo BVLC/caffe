@@ -549,11 +549,6 @@ BOOST_PYTHON_MODULE(_caffe) {
           bp::return_internal_reference<>()));
   BP_REGISTER_SHARED_PTR_TO_PYTHON(Layer<Dtype>);
 
-  bp::class_<SolverParameter>("SolverParameter", bp::no_init)
-    .add_property("max_iter", &SolverParameter::max_iter)
-    .add_property("display", &SolverParameter::display)
-    .add_property("layer_wise_reduce", &SolverParameter::layer_wise_reduce);
-
   bp::class_<LayerParameter>("LayerParameter", bp::no_init)
     .add_property("name",          bp::make_function(
                           static_cast<const string& (LayerParameter::*)
@@ -622,6 +617,7 @@ BOOST_PYTHON_MODULE(_caffe) {
                                &SolverParameter::set_base_lr)
     .add_property("max_iter",  &SolverParameter::max_iter,
                                &SolverParameter::set_max_iter)
+    .add_property("layer_wise_reduce", &SolverParameter::layer_wise_reduce)
     .add_property("lr_policy",
                       bp::make_function(&SolverParameter::lr_policy,
                       bp::return_value_policy<bp::copy_const_reference>()),
