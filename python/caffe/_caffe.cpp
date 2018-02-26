@@ -1123,12 +1123,12 @@ BOOST_PYTHON_MODULE(_caffe) {
                           (void) const>(&LayerParameter::name),
                           bp::return_value_policy<bp::return_by_value>()))
     .add_property("bottom_size",   &LayerParameter::bottom_size)
-    .def("get_bottom",    bp::make_function(
+    .def("bottom",    bp::make_function(
                           static_cast<const string& (LayerParameter::*)
                           (int) const>(&LayerParameter::bottom),  // NOLINT
                           bp::return_value_policy<bp::return_by_value>()))
     .add_property("top_size",      &LayerParameter::top_size)
-    .def("get_top",       bp::make_function(
+    .def("top",       bp::make_function(
                           static_cast<const string& (LayerParameter::*)
                           (int) const>(&LayerParameter::top),     // NOLINT
                           bp::return_value_policy<bp::return_by_value>()));
