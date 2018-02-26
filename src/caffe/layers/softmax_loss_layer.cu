@@ -12,12 +12,14 @@ __global__ void SoftmaxLossForwardGPU(const int nthreads,
           const Dtype* prob_data, const Dtype* label, Dtype* loss,
           const int num, const int dim, const int spatial_dim,
           const bool has_ignore_label_, const int ignore_label_,
+          const bool has_only_care_label, const int only_care_label,
           Dtype* counts) {
   CUDA_KERNEL_LOOP(index, nthreads) {
     const int n = index / spatial_dim;
     const int s = index % spatial_dim;
     const int label_value = static_cast<int>(label[n * spatial_dim + s]);
-    if (has_ignore_label_ && label_value == ignore_label_) {
+    if ((has_ignore_label_ && label_value == ignore_label_) ||
+        (has_only_care_label && label_value != only_care_label)) {
       loss[index] = 0;
       counts[index] = 0;
     } else {
@@ -45,14 +47,15 @@ void SoftmaxWithLossLayer<Dtype>::Forward_gpu(
   // NOLINT_NEXT_LINE(whitespace/operators)
   SoftmaxLossForwardGPU<Dtype><<<CAFFE_GET_BLOCKS(nthreads),
       CAFFE_CUDA_NUM_THREADS>>>(nthreads, prob_data, label, loss_data,
-      outer_num_, dim, inner_num_, has_ignore_label_, ignore_label_, counts);
+      outer_num_, dim, inner_num_, has_ignore_label_, ignore_label_,
+      has_only_care_label, only_care_label, counts);
   Dtype loss;
   caffe_gpu_asum(nthreads, loss_data, &loss);
   Dtype valid_count = -1;
   // Only launch another CUDA kernel if we actually need the count of valid
   // outputs.
   if (normalization_ == LossParameter_NormalizationMode_VALID &&
-      has_ignore_label_) {
+      (has_ignore_label_ || has_only_care_label)) {
     caffe_gpu_asum(nthreads, counts, &valid_count);
   }
   top[0]->mutable_cpu_data()[0] = loss / get_normalizer(normalization_,
@@ -69,7 +72,8 @@ template <typename Dtype>
 __global__ void SoftmaxLossBackwardGPU(const int nthreads, const Dtype* top,
           const Dtype* label, Dtype* bottom_diff, const int num, const int dim,
           const int spatial_dim, const bool has_ignore_label_,
-          const int ignore_label_, Dtype* counts) {
+          const int ignore_label_, const bool has_only_care_label,
+          const int only_care_label, Dtype* counts) {
   const int channels = dim / spatial_dim;
 
   CUDA_KERNEL_LOOP(index, nthreads) {
@@ -77,7 +81,8 @@ __global__ void SoftmaxLossBackwardGPU(const int nthreads, const Dtype* top,
     const int s = index % spatial_dim;
     const int label_value = static_cast<int>(label[n * spatial_dim + s]);
 
-    if (has_ignore_label_ && label_value == ignore_label_) {
+    if ((has_ignore_label_ && label_value == ignore_label_) ||
+        (has_only_care_label && label_value != only_care_label)) {
       for (int c = 0; c < channels; ++c) {
         bottom_diff[n * dim + c * spatial_dim + s] = 0;
       }
@@ -110,13 +115,14 @@ void SoftmaxWithLossLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
     // NOLINT_NEXT_LINE(whitespace/operators)
     SoftmaxLossBackwardGPU<Dtype><<<CAFFE_GET_BLOCKS(nthreads),
         CAFFE_CUDA_NUM_THREADS>>>(nthreads, top_data, label, bottom_diff,
-        outer_num_, dim, inner_num_, has_ignore_label_, ignore_label_, counts);
+        outer_num_, dim, inner_num_, has_ignore_label_, ignore_label_,
+        has_only_care_label, only_care_label, counts);
 
     Dtype valid_count = -1;
     // Only launch another CUDA kernel if we actually need the count of valid
     // outputs.
     if (normalization_ == LossParameter_NormalizationMode_VALID &&
-        has_ignore_label_) {
+        (has_ignore_label_ || has_only_care_label)) {
       caffe_gpu_asum(nthreads, counts, &valid_count);
     }
     const Dtype loss_weight = top[0]->cpu_diff()[0] /

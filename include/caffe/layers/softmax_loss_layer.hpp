@@ -119,6 +119,10 @@ class SoftmaxWithLossLayer : public LossLayer<Dtype> {
   bool has_ignore_label_;
   /// The label indicating that an instance should be ignored.
   int ignore_label_;
+  /// Whether to only care about an instance with certain label.
+  bool has_only_care_label;
+  /// The only label we care about in this loss-layer.
+  int only_care_label;
   /// How to normalize the output loss.
   LossParameter_NormalizationMode normalization_;
 
