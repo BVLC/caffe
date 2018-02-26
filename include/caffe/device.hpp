@@ -37,6 +37,7 @@ class device {
   viennacl::ocl::program &program();
   viennacl::ocl::program &common_program();
   bool is_host_unified();
+  std::string get_extra_build_options(void) { return extra_build_options_; }
 #endif  // USE_GREENTEA
 
   template<typename Dtype>
@@ -57,7 +58,6 @@ class device {
   bool CheckCapability(std::string cap);
   bool CheckVendor(std::string vendor);
   bool CheckType(std::string type);
-  std::string get_extra_build_options(void) { return extra_build_options_; }
 
  private:
   int current_queue_id_;
