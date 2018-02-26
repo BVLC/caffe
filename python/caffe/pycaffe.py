@@ -32,6 +32,36 @@ def _Net_blobs(self):
     return self._blobs_dict
 
 @property
+def _Net_layer_bottom_blobs(self):
+    """
+    An OrderedDict of network layer bottom blobs indexed by layer name
+    """
+    if not hasattr(self, '_layer_bottom_blobs_dict'):
+        layer_names = []
+        blobs = []
+        for layer in self.layers:
+            layer_blobs = [self.blobs[blob_name] for blob_name in layer.layer_param.bottom]
+            blobs.append(layer_blobs)
+            layer_names.append(layer.layer_param.name)
+        self._layer_bottom_blobs_dict = OrderedDict(zip(layer_names, blobs))
+    return self._layer_bottom_blobs_dict
+
+@property
+def _Net_layer_top_blobs(self):
+    """
+    An OrderedDict of network layer bottom blobs indexed by layer name
+    """
+    if not hasattr(self, '_layer_top_blobs_dict'):
+        layer_names = []
+        blobs = []
+        for layer in self.layers:
+            layer_blobs = [self.blobs[blob_name] for blob_name in layer.layer_param.top]
+            blobs.append(layer_blobs)
+            layer_names.append(layer.layer_param.name)
+        self._layer_top_blobs_dict = OrderedDict(zip(layer_names, blobs))
+    return self._layer_top_blobs_dict
+
+@property
 def _Net_blob_loss_weights(self):
     """
     An OrderedDict (bottom to top, i.e., input to output) of network
@@ -41,17 +71,6 @@ def _Net_blob_loss_weights(self):
         self._blob_loss_weights_dict = OrderedDict(zip(self._blob_names,
                                                        self._blob_loss_weights))
     return self._blob_loss_weights_dict
-
-@property
-def _Net_layer_dict(self):
-    """
-    An OrderedDict (bottom to top, i.e., input to output) of network
-    layers indexed by name
-    """
-    if not hasattr(self, '_layer_dict'):
-        self._layer_dict = OrderedDict(zip(self._layer_names, self.layers))
-    return self._layer_dict
-
 
 @property
 def _Net_params(self):
@@ -345,8 +364,9 @@ def _Net_get_id_name(func, field):
     return get_id_name
 
 # Attach methods to Net.
-Net.layers_dict = _Net_layers_dict
 Net.blobs = _Net_blobs
+Net.layer_bottom_blobs = _Net_layer_bottom_blobs
+Net.layer_top_blobs = _Net_layer_top_blobs
 Net.blob_loss_weights = _Net_blob_loss_weights
 Net.layer_dict = _Net_layer_dict
 Net.params = _Net_params
