@@ -552,7 +552,7 @@ void MKLDNNMemoryDescriptor<Dtype, is_diff>::sync_before_read()
         this->convert_to_prv(const_cast<Dtype*>(is_diff ? this->_blob->cpu_diff() : this->_blob->cpu_data()));
         // if blob has not prv descriptor then set it to avoid conversions on next iterations
         if (is_diff) {
-            this->_blob->set_prv_diff_descriptor(this->get_shared_ptr(), true);
+            this->_blob->set_prv_diff_descriptor(this->get_shared_ptr(), false);
             // Original:
             // below line designated to set correspondent SyncedMemory->_head to HEAD_AT_CPU
             // TODO: need to optimize
