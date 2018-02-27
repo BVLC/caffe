@@ -43,13 +43,23 @@ void device::Init() {
 #ifdef USE_GREENTEA
     viennacl::ocl::context &ctx = viennacl::ocl::get_context(id_);
 
-    std::vector<size_t> temp(3);
-    clGetDeviceInfo(ctx.devices()[0].id(),
-                    CL_DEVICE_MAX_WORK_ITEM_SIZES,
-                    3 * sizeof(size_t), &temp[0], NULL);
-    workgroup_sizes_[0] = temp[0];
-    workgroup_sizes_[1] = temp[1];
-    workgroup_sizes_[2] = temp[2];
+    size_t max_local_size = 1;
+
+    {
+      clGetDeviceInfo(ctx.devices()[0].id(),
+                      CL_DEVICE_MAX_WORK_GROUP_SIZE,
+                      1 * sizeof(size_t), &max_local_size, NULL);
+    }
+
+    {
+      std::vector<size_t> temp(3);
+      clGetDeviceInfo(ctx.devices()[0].id(),
+                      CL_DEVICE_MAX_WORK_ITEM_SIZES,
+                      3 * sizeof(size_t), &temp[0], NULL);
+      workgroup_sizes_[0] = std::min(temp[0], max_local_size);
+      workgroup_sizes_[1] = std::min(temp[1], max_local_size);
+      workgroup_sizes_[2] = std::min(temp[2], max_local_size);
+    }
 
 #ifdef DISABLE_DEVICE_HOST_UNIFIED_MEMORY
     host_unified_ = false;
