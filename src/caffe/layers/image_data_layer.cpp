@@ -33,7 +33,7 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   const bool is_color  = this->layer_param_.image_data_param().is_color();
   const int label_size  = this->layer_param_.image_data_param().label_size();
   label_size_ = label_size;
-  // string root_folder = this->layer_param_.image_data_param().root_folder();
+  string root_folder = this->layer_param_.image_data_param().root_folder();
 
 
 
@@ -43,7 +43,7 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   // Read the file with filenames and labels
   const string& source = this->layer_param_.image_data_param().source();
   size_t found=source.find_last_of("/\\");
-  string root_folder = source.substr(0,found) + "/";
+  //string root_folder = source.substr(0,found) + "/";
 
   LOG(INFO) << "Opening file " << source;
   // Extend image_data_layer from single label to multilabel inputs
@@ -142,10 +142,10 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   const int new_height = image_data_param.new_height();
   const int new_width = image_data_param.new_width();
   const bool is_color = image_data_param.is_color();
-  const string& source = this->layer_param_.image_data_param().source();
+  const string& source = image_data_param.source();
   size_t found=source.find_last_of("/\\");
-  string root_folder = source.substr(0,found) + "/";
-  //  string root_folder = image_data_param.root_folder();
+  //string root_folder = source.substr(0,found) + "/";
+  string root_folder = image_data_param.root_folder();
 
   // Reshape according to the first image of each batch
   // on single input batches allows for inputs of varying dimension.
@@ -170,7 +170,11 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     CHECK_GT(lines_size, lines_id_);
     cv::Mat cv_img = ReadImageToCVMat(root_folder + lines_[lines_id_].first,
         new_height, new_width, is_color);
-    CHECK(cv_img.data) << "Could not load " << lines_[lines_id_].first;
+    if (!cv_img.data)
+      {
+	LOG(ERROR) << "failed loading = " << lines_[lines_id_].first << std::endl;
+	continue;
+      }
     read_time += timer.MicroSeconds();
     timer.Start();
     // Apply transformations (mirror, crop...) to the image

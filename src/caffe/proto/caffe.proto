@@ -1263,6 +1263,7 @@ message ImageDataParameter {
   // data.
   optional bool mirror = 6 [default = false];
   optional uint32 label_size = 13 [default = 1];
+  optional string root_folder = 14 [default = ""];
 
     // This is the value set for pixels or images where we don't know the label
   optional int32 ignore_label = 15 [default = 255];
