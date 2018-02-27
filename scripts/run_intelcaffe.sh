@@ -55,6 +55,8 @@ mpibench_param="allreduce"
 script_dir=$(dirname $0)
 
 caffe_bin=""
+msg_priority="off"
+msg_priority_threshold=10000
 
 function usage
 {
@@ -73,6 +75,7 @@ function usage
     echo "               [--mpibench_param mpibench_param]"
     echo "               [--caffe_bin  caffe_binary_path]"
     echo "               [--cpu cpu_model]"
+    echo "               [--msg_priority on/off] [--msg_priority_threshold 10000]"
     echo ""
     echo "  Parameters:"
     echo "    hostfile: host file includes list of nodes. Only used if you're running with multinode"
@@ -98,6 +101,8 @@ function usage
     echo "               included in supported list. Value: bdw, knl, skx and knm."
     echo "               bdw - Broadwell, knl - Knights Landing, skx - Skylake,"
     echo "               knm - Knights Mill."
+    echo "    msg_priority: off (default). Enable/disable message priority in MLSL."
+    echo "    msg_priority_threshold: 10000 (default), if message priority is on."
     echo ""
 }
 
@@ -504,6 +509,14 @@ do
             cpu_model=$2
             shift
             ;;
+        --msg_priority)
+            msg_priority=$2
+            shift
+            ;;
+        --msg_priority_threshold)
+            msg_priority_threshold=$2
+            shift
+            ;;
         *)
             echo "Unknown option: $key"
             usage
@@ -619,6 +632,7 @@ if [ ! -d $result_dir ]; then
 fi
 
 env_params="--cpu $cpu_model --debug $debug --network $network --num_mlsl_servers $num_mlsl_servers"
+env_params+=" --msg_priority $msg_priority --msg_priority_threshold $msg_priority_threshold"
 if [ "$network" == "tcp" ]; then
     env_params+=" --netmask $tcp_netmask"
 fi

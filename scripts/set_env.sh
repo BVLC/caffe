@@ -27,6 +27,9 @@ numservers=0
 # pin internal threads to 2 CPU cores for reading data
 internal_thread_pin="on"
 
+msg_priority="off"
+msg_priority_threshold=""
+
 function init_mpi_envs
 {
     if [ ${numnodes} -eq 1 ]; then
@@ -149,6 +152,16 @@ function set_mlsl_vars
     else
         export MLSL_LOG_LEVEL=1
     fi
+
+    if [ "$msg_priority" == "on" ]; then
+        echo "Enable priority queue."
+        export MLSL_MSG_PRIORITY=1
+
+        if [ "$msg_priority_threshold" != "" ]; then
+            echo "Priority queue threshold: $msg_priority_threshold"
+            export MLSL_MSG_PRIORITY_THRESHOLD=$msg_priority_threshold
+        fi
+    fi
 }
 
 function set_openmp_envs
@@ -244,6 +257,14 @@ do
             ;;
         --internal_thread_pin)
             internal_thread_pin=$2
+            shift
+            ;;
+        --msg_priority)
+            msg_priority=$2
+            shift
+            ;;
+        --msg_priority_threshold)
+            msg_priority_threshold=$2
             shift
             ;;
         *)
