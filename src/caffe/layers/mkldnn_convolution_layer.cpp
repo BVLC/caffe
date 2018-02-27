@@ -439,69 +439,73 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
     fwd_top_data->name = "fwd_top_data      @ " + this->layer_param_.name();
     fwd_top_data_memory = fwd_top_data->create_output_memory();
 
-    if (this->need_quantize_){
-      int count = 1; //single channel
-      if(this->is_float_ || bottom_is_float){
-        if(this->scale_params_.size() > 1){
-            count = oc;  //multi channel
+    if (fwd_weights_data == NULL) {
+      if (this->need_quantize_){
+        int count = 1; //single channel
+        if(this->is_float_ || bottom_is_float){
+          if(this->scale_params_.size() > 1){
+              count = oc;  //multi channel
+          }
+          std::vector<float> scale_weight(count);
+          #pragma omp parallel for if (count > 1)
+          for(int i=0; i<count; i++){
+            scale_weight[i] = this->scale_params_[i];
+          }
+          fwd_weights_data.reset(new MKLDNNData<Dtype>(usr_weights_data_memory_pd, prv_fwd_weights_data_memory_pd, this->blobs_[0].get(), this, true, scale_weight));
+        } else{
+          if(this->fl_params_.size() > 1){
+              count = oc;  //multi channel
+          }
+          std::vector<int> fl_weight(count);
+          #pragma omp parallel for if (count > 1)
+          for(int i=0; i<count; i++){
+            fl_weight[i] = this->fl_params_[i];
+          }
+          fwd_weights_data.reset(new MKLDNNData<Dtype>(usr_weights_data_memory_pd, prv_fwd_weights_data_memory_pd, this->blobs_[0].get(), this, fl_weight));
         }
-        std::vector<float> scale_weight(count);
-        #pragma omp parallel for if (count > 1)
-        for(int i=0; i<count; i++){
-          scale_weight[i] = this->scale_params_[i];
-        }
-        fwd_weights_data.reset(new MKLDNNData<Dtype>(usr_weights_data_memory_pd, prv_fwd_weights_data_memory_pd, this->blobs_[0].get(), this, true, scale_weight));
+      } else if(bottom_is_float){
+        fwd_weights_data.reset(new MKLDNNData<Dtype>(usr_weights_data_memory_pd, prv_fwd_weights_data_memory_pd, this->blobs_[0].get(), this, false));
       } else{
-        if(this->fl_params_.size() > 1){
-            count = oc;  //multi channel
-        }
-        std::vector<int> fl_weight(count);
-        #pragma omp parallel for if (count > 1)
-        for(int i=0; i<count; i++){
-          fl_weight[i] = this->fl_params_[i];
-        }
-        fwd_weights_data.reset(new MKLDNNData<Dtype>(usr_weights_data_memory_pd, prv_fwd_weights_data_memory_pd, this->blobs_[0].get(), this, fl_weight));
+        fwd_weights_data.reset(new MKLDNNData<Dtype>(usr_weights_data_memory_pd, prv_fwd_weights_data_memory_pd, this->blobs_[0].get(), this));
       }
-    } else if(bottom_is_float){
-      fwd_weights_data.reset(new MKLDNNData<Dtype>(usr_weights_data_memory_pd, prv_fwd_weights_data_memory_pd, this->blobs_[0].get(), this, false));
-    } else{
-      fwd_weights_data.reset(new MKLDNNData<Dtype>(usr_weights_data_memory_pd, prv_fwd_weights_data_memory_pd, this->blobs_[0].get(), this));
+      fwd_weights_data->name = "fwd_weights_data  @ " + this->layer_param_.name();
+      fwd_weights_data_primitive = fwd_weights_data->create_input(true);
     }
-    fwd_weights_data->name = "fwd_weights_data  @ " + this->layer_param_.name();
-    fwd_weights_data_primitive = fwd_weights_data->create_input(true);
 
     if (this->bias_term_) {
-        shared_ptr<MemPD> prv_fwd_bias_data_memory_pd(new MemPD(convFwd_pd->bias_primitive_desc()));
-        if (this->need_quantize_){
-          int count = 1;  //single channel
-          if(this->is_float_ || bottom_is_float){
-            if(this->scale_params_.size() > 1){
-                count = oc;  //multi channel
+        if (fwd_bias_data == NULL) {
+          shared_ptr<MemPD> prv_fwd_bias_data_memory_pd(new MemPD(convFwd_pd->bias_primitive_desc()));
+          if (this->need_quantize_){
+            int count = 1;  //single channel
+            if(this->is_float_ || bottom_is_float){
+              if(this->scale_params_.size() > 1){
+                  count = oc;  //multi channel
+              }
+              std::vector<float> scale_bias(count);
+              #pragma omp parallel for if (count > 1)
+              for(int i=0; i<count; i++){
+                scale_bias[i] = this->scale_in_[0] * this->scale_params_[i];
+              }
+              fwd_bias_data.reset(new MKLDNNData<Dtype>(usr_bias_data_memory_pd, prv_fwd_bias_data_memory_pd, this->blobs_[1].get(), this, true, scale_bias));
+            } else{
+              if(this->fl_params_.size() > 1){
+                  count = oc;  //multi channel
+              }
+              std::vector<int> fl_bias(count);
+              #pragma omp parallel for if (count > 1)
+              for(int i=0; i<count; i++){
+                fl_bias[i] = this->fl_layer_in_[0] + this->fl_params_[i];
+              }
+              fwd_bias_data.reset(new MKLDNNData<Dtype>(usr_bias_data_memory_pd, prv_fwd_bias_data_memory_pd, this->blobs_[1].get(), this, fl_bias));
             }
-            std::vector<float> scale_bias(count);
-            #pragma omp parallel for if (count > 1)
-            for(int i=0; i<count; i++){
-              scale_bias[i] = this->scale_in_[0] * this->scale_params_[i];
-            }
-            fwd_bias_data.reset(new MKLDNNData<Dtype>(usr_bias_data_memory_pd, prv_fwd_bias_data_memory_pd, this->blobs_[1].get(), this, true, scale_bias));
+          } else if(bottom_is_float){
+            fwd_bias_data.reset(new MKLDNNData<Dtype>(usr_bias_data_memory_pd, prv_fwd_bias_data_memory_pd, this->blobs_[1].get(), this, false));
           } else{
-            if(this->fl_params_.size() > 1){
-                count = oc;  //multi channel
-            }
-            std::vector<int> fl_bias(count);
-            #pragma omp parallel for if (count > 1)
-            for(int i=0; i<count; i++){
-              fl_bias[i] = this->fl_layer_in_[0] + this->fl_params_[i];
-            }
-            fwd_bias_data.reset(new MKLDNNData<Dtype>(usr_bias_data_memory_pd, prv_fwd_bias_data_memory_pd, this->blobs_[1].get(), this, fl_bias));
+            fwd_bias_data.reset(new MKLDNNData<Dtype>(usr_bias_data_memory_pd, prv_fwd_bias_data_memory_pd, this->blobs_[1].get(), this));
           }
-        } else if(bottom_is_float){
-          fwd_bias_data.reset(new MKLDNNData<Dtype>(usr_bias_data_memory_pd, prv_fwd_bias_data_memory_pd, this->blobs_[1].get(), this, false));
-        } else{
-          fwd_bias_data.reset(new MKLDNNData<Dtype>(usr_bias_data_memory_pd, prv_fwd_bias_data_memory_pd, this->blobs_[1].get(), this));
+          fwd_bias_data->name = "fwd_bias_data     @ " + this->layer_param_.name();
+          fwd_bias_data_primitive = fwd_bias_data->create_input(true);
         }
-        fwd_bias_data->name = "fwd_bias_data     @ " + this->layer_param_.name();
-        fwd_bias_data_primitive = fwd_bias_data->create_input(true);
         convFwd.reset(new convolution_forward(*convFwd_pd
                         , *fwd_bottom_data_primitive, *fwd_weights_data_primitive
                         , *fwd_bias_data_primitive, *fwd_top_data_memory));

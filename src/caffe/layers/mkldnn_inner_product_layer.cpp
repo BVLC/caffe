@@ -242,15 +242,19 @@ void MKLDNNInnerProductLayer<Dtype>::InitInnerProductFwd(const vector<Blob<Dtype
     fwd_top_data    ->name = "fwd_top_data      @ " + this->layer_param_.name();
     fwd_top_data_memory = fwd_top_data->create_output_memory();
 
-    fwd_weights_data.reset(new MKLDNNData<Dtype>(usr_weights_data_memory_pd, prv_fwd_weights_data_memory_pd, this->blobs_[0].get(), this));
-    fwd_weights_data->name = "fwd_weights_data  @ " + this->layer_param_.name();
-    fwd_weights_data_primitive = fwd_weights_data->create_input(true);
+    if (fwd_weights_data == NULL) {
+      fwd_weights_data.reset(new MKLDNNData<Dtype>(usr_weights_data_memory_pd, prv_fwd_weights_data_memory_pd, this->blobs_[0].get(), this));
+      fwd_weights_data->name = "fwd_weights_data  @ " + this->layer_param_.name();
+      fwd_weights_data_primitive = fwd_weights_data->create_input(true);
+    }
 
     if (this->bias_term_) {
-        shared_ptr<MemPD> prv_fwd_bias_data_memory_pd(new MemPD(ipFwd_pd->bias_primitive_desc()));
-        fwd_bias_data.reset(new MKLDNNData<Dtype>(usr_bias_data_memory_pd, prv_fwd_bias_data_memory_pd, this->blobs_[1].get(), this));
-        fwd_bias_data   ->name = "fwd_bias_data     @ " + this->layer_param_.name();
-        fwd_bias_data_primitive = fwd_bias_data->create_input(true);
+        if (fwd_bias_data == NULL) {
+          shared_ptr<MemPD> prv_fwd_bias_data_memory_pd(new MemPD(ipFwd_pd->bias_primitive_desc()));
+          fwd_bias_data.reset(new MKLDNNData<Dtype>(usr_bias_data_memory_pd, prv_fwd_bias_data_memory_pd, this->blobs_[1].get(), this));
+          fwd_bias_data   ->name = "fwd_bias_data     @ " + this->layer_param_.name();
+          fwd_bias_data_primitive = fwd_bias_data->create_input(true);
+        }
         ipFwd.reset(new inner_product_forward(*ipFwd_pd
                             , *fwd_bottom_data_primitive, *fwd_weights_data_primitive
                             , *fwd_bias_data_primitive, *fwd_top_data_memory));
