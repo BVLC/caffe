@@ -210,9 +210,6 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     fflush(0);
   }
 
-#ifdef USE_MLSL
-  int global_batch_size = -1;
-#endif
   // Basically, build all the layers and set up their connections.
   name_ = param.name();
   map<string, int> blob_name_to_idx;
@@ -301,10 +298,13 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
 #ifdef USE_MLSL
     if (caffe::TRAIN == param.state().phase()) {
       // global batch size must be a multiple of data_parts
-      if (global_batch_size < 0) {
-        global_batch_size = mn::get_distrib()->get_data_parts();
-        LOG(WARNING) << "SetMinibatchSize " << global_batch_size;
-        mn::train::set_global_minibatch_size(global_batch_size);
+      int global_batch_size = mn::train::get_global_minibatch_size();
+      int fake_batch_size = mn::get_distrib()->get_data_parts();
+      if (global_batch_size == 0) {
+        LOG(WARNING) << "SetMinibatchSize " << fake_batch_size;
+        mn::train::set_global_minibatch_size(fake_batch_size);
+      } else {
+        CHECK_EQ(global_batch_size, fake_batch_size);
       }
     }
 #endif /* USE_MLSL */
