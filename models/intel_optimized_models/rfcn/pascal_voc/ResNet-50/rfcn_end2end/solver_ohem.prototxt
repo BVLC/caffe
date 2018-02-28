@@ -1,0 +1,16 @@
+train_net: "models/pascal_voc/ResNet-50/rfcn_end2end/train_agnostic_ohem.prototxt"
+base_lr: 0.001
+lr_policy: "step"
+gamma: 0.1
+stepsize: 80000
+display: 20
+
+momentum: 0.9
+weight_decay: 0.0005
+# We disable standard caffe solver snapshotting and implement our own snapshot
+# function
+snapshot: 0
+# We still use the snapshot prefix, though
+snapshot_prefix: "resnet50_rfcn_ohem"
+iter_size: 2
+# debug_info: true
