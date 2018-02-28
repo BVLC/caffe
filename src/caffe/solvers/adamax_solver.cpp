@@ -5,21 +5,10 @@
 
 namespace caffe {
 
-template <typename Dtype>
-void AdaMaxSolver<Dtype>::AdaMaxPreSolve() {
-  // Essentially the same as with Adam
-  const vector<Blob<Dtype>*>& net_params = this->net_->learnable_params();
-  for (int i = 0; i < net_params.size(); ++i) {
-    const vector<int>& shape = net_params[i]->shape();
-    this->history_.push_back(
-            shared_ptr<Blob<Dtype> >(new Blob<Dtype>(shape)));
-  }
-}
-
 #ifndef CPU_ONLY
 template <typename Dtype>
 void adamax_update_gpu(int N, Dtype* g, Dtype* m, Dtype* v, Dtype beta1,
-    Dtype beta2, Dtype corrected_local_rate);
+    Dtype beta2, Dtype eps_hat, Dtype corrected_local_rate);
 #endif
 
 template <typename Dtype>
@@ -39,6 +28,7 @@ void AdaMaxSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
   const int t = this->iter_ + 1;
   const Dtype correction = Dtype(1) / (Dtype(1) - pow(beta1, t));
   const int N = net_params[param_id]->count();
+  const Dtype eps_hat = this->param_.delta();
 
   switch (Caffe::mode()) {
     case Caffe::CPU: {
@@ -52,7 +42,7 @@ void AdaMaxSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
     caffe_abs(N, net_params[param_id]->cpu_diff(), val_t->mutable_cpu_data());
     for (int i = 0; i < N; ++i) {
       val_v->mutable_cpu_data()[i] = std::max(
-          val_v->cpu_data()[i] * beta2 + Dtype(1e-7),
+          val_v->cpu_data()[i] * beta2 + eps_hat,
           val_t->cpu_data()[i]);
     }
 
@@ -70,7 +60,7 @@ void AdaMaxSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
 #ifndef CPU_ONLY
     adamax_update_gpu(N, net_params[param_id]->mutable_gpu_diff(),
         val_m->mutable_gpu_data(), val_v->mutable_gpu_data(), beta1, beta2,
-        local_rate*correction);
+        eps_hat, local_rate*correction);
 #else
     NO_GPU;
 #endif

@@ -148,16 +148,15 @@ class AdamSolver : public SGDSolver<Dtype> {
 */
 
 template <typename Dtype>
-class AdaMaxSolver : public SGDSolver <Dtype> {
+class AdaMaxSolver : public AdamSolver <Dtype> {
  public:
   explicit AdaMaxSolver(const SolverParameter& param)
-      : SGDSolver<Dtype>(param) { AdaMaxPreSolve(); }
+      : AdamSolver<Dtype>(param) { }
   explicit AdaMaxSolver(const string& param_file)
-      : SGDSolver<Dtype>(param_file) { AdaMaxPreSolve(); }
+      : AdamSolver<Dtype>(param_file) { }
   virtual inline const char* type() const { return "AdaMax"; }
 
  protected:
-  void AdaMaxPreSolve();
   virtual void ComputeUpdateValue(int param_id, Dtype rate);
 
   DISABLE_COPY_AND_ASSIGN(AdaMaxSolver);
