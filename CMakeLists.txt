@@ -46,7 +46,8 @@ caffe_option(PERFORMANCE_MONITORING "Build Caffe with PERFORMANCE_MONITORING " O
 #caffe_option(USE_GITHUB_MKLDNN "Download and use MKL-DNN available on github" OFF)
 caffe_option(CODE_COVERAGE "Build with code coverage instrumentation" OFF)
 caffe_option(CO_SIM "Build readonly cpu blob data/diff pycaffe interface" OFF)
- 
+caffe_option(USE_MLSL "Build Caffe with Intel(r) Machine Learning Scaling Library for multinode training" ON)
+
 # ---[ Dependencies
 include(cmake/MKLDNN.cmake)
 include(cmake/DLCP.cmake)
