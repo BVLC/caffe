@@ -226,12 +226,11 @@ class CaffeBenchmark(object):
         if not os.path.isfile(log_file):
             logging.exception("Error: log file {} does not exist...".format(log_file))
         with open(log_file, 'r') as f:
-            batch_size_pattern_time = re.compile(".*SetMinibatchSize.*")
             batch_size_pattern_dummy = re.compile(".*dim:.*")
-            batch_size_pattern_real = re.compile("^\s+batch_size:.*")
+            batch_size_pattern_real = re.compile(".*\s+batch_size:.*")
             batch_size = ''
             for line in f.readlines():
-                if re.match(batch_size_pattern_time, line) or re.match(batch_size_pattern_real, line) or re.match(batch_size_pattern_dummy, line):
+                if re.match(batch_size_pattern_real, line) or re.match(batch_size_pattern_dummy, line):
                     batch_size = line.split()[-1]
                     break
         if batch_size == '':
