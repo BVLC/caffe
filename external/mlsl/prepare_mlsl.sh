@@ -58,42 +58,26 @@ fi
 }
 
 # Clean up the previous MLSL version
-CleanUpPreviousMLSL2017_1_016()
+# Can be used for l_mlsl_2017.1.016, l_mlsl_2017.2.018
+function CleanUpPreviousMLSL()
 {
+version_year=$1
+version_num=$2
+subversion_num=$3
 OLD_ARCHIVE_TARGZ=files.tar.gz
-OLD_ARCHIVE_BASENAME=l_mlsl_2017.1.016.tgz
-OLD_ARCHIVE_INSTALL_FOLDERNAME=l_mlsl_2017.1.016
+OLD_ARCHIVE_BASENAME=l_mlsl_$version_year.$version_num.$subversion_num.tgz
+OLD_ARCHIVE_INSTALL_FOLDERNAME=l_mlsl_$version_year.$version_num.$subversion_num
 if [ -f $ABS_DST/$OLD_ARCHIVE_TARGZ ]; then
   rm $ABS_DST/$OLD_ARCHIVE_TARGZ
   #echo "[Debug] Delete old files.tar.gz!"
 fi
 if [ -f $ABS_DST/$OLD_ARCHIVE_BASENAME ]; then
   rm $ABS_DST/$OLD_ARCHIVE_BASENAME
-  #echo "[Debug] Delete old l_mlsl_2017.1.016.tgz file!"
+  #echo "[Debug] Delete old l_mlsl_$version_year.$version_num.$subversion_num.tgz file!"
 fi
 if [ -d $ABS_DST/$OLD_ARCHIVE_INSTALL_FOLDERNAME ]; then 
   rm -rf $ABS_DST/$OLD_ARCHIVE_INSTALL_FOLDERNAME
-  #echo "[Debug] Delete old l_mlsl_2017.1.016 folder!"
-fi
-}
-
-# Clean up the previous MLSL version
-CleanUpPreviousMLSL2017_2_018()
-{
-OLD_ARCHIVE_TARGZ=files.tar.gz
-OLD_ARCHIVE_BASENAME=l_mlsl_2017.2.018.tgz
-OLD_ARCHIVE_INSTALL_FOLDERNAME=l_mlsl_2017.2.018
-if [ -f $ABS_DST/$OLD_ARCHIVE_TARGZ ]; then
-  rm $ABS_DST/$OLD_ARCHIVE_TARGZ
-  #echo "[Debug] Delete old files.tar.gz!"
-fi
-if [ -f $ABS_DST/$OLD_ARCHIVE_BASENAME ]; then
-  rm $ABS_DST/$OLD_ARCHIVE_BASENAME
-  #echo "[Debug] Delete old l_mlsl_2017.2.018.tgz file!"
-fi
-if [ -d $ABS_DST/$OLD_ARCHIVE_INSTALL_FOLDERNAME ]; then 
-  rm -rf $ABS_DST/$OLD_ARCHIVE_INSTALL_FOLDERNAME
-  #echo "[Debug] Delete old l_mlsl_2017.2.018 folder!"
+  #echo "[Debug] Delete old l_mlsl_$version_year.$version_num.$subversion_num folder!"
 fi
 } 
 
@@ -105,9 +89,10 @@ ABS_DST=`readlink -f $DST`
 #echo "[Debug] ABS_DST value: $ABS_DST"
 
 if [ -z $MLSL_ROOT ]; then
+  #l_mlsl_p_2017.0.014 version has the different structure, so keep a seprate version
   CleanUpPreviousMLSL2017_0_014
-  CleanUpPreviousMLSL2017_1_016
-  CleanUpPreviousMLSL2017_2_018
+  CleanUpPreviousMLSL 2017 1 016
+  CleanUpPreviousMLSL 2017 2 018
 fi
 
 VERSION_MATCH=20180003
