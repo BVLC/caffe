@@ -5,6 +5,7 @@ MAINTAINER caffe-maint@googlegroups.com
 #ENV https_proxy proxy:port
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
+	cpio \
         build-essential \
         cmake \
         git \
@@ -57,3 +58,18 @@ ENV PATH $CAFFE_ROOT/build/tools:$PYCAFFE_ROOT:$PATH
 RUN echo "$CAFFE_ROOT/build/lib" >> /etc/ld.so.conf.d/caffe.conf && ldconfig
 
 WORKDIR /opt/caffe
+
+RUN mkdir /var/run/sshd
+RUN echo 'root:123456' | chpasswd
+RUN sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+RUN sed -i 's/Port 22/Port 10010/' /etc/ssh/sshd_config
+
+# SSH login fix. Otherwise user is kicked off after login
+RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd
+
+ENV NOTVISIBLE "in users profile"
+RUN echo "export VISIBLE=now" >> /etc/profile
+
+EXPOSE 10010
+
+CMD ["/usr/sbin/sshd", "-D"]
