@@ -64,13 +64,16 @@ def get_layer_label(layer, rankdir):
 
     Parameters
     ----------
-    layer : ?
+    layer : caffe_pb2.LayerParameter
     rankdir : {'LR', 'TB', 'BT'}
         Direction of graph layout.
+    display_lrm : boolean, optional
+        If True include the learning rate multipliers in the label (default is
+        False).
 
     Returns
     -------
-    string :
+    node_label : string
         A label for the current layer
     """
 
@@ -81,36 +84,47 @@ def get_layer_label(layer, rankdir):
     else:
         # If graph orientation is horizontal, vertical space is free and
         # horizontal space is not; separate words with newlines
-        separator = '\\n'
+        separator = r'\n'
 
-    if layer.type == 'Convolution' or layer.type == 'Deconvolution':
-        # Outer double quotes needed or else colon characters don't parse
-        # properly
-        node_label = '"%s%s(%s)%skernel size: %d%sstride: %d%spad: %d"' %\
-                     (layer.name,
-                      separator,
-                      layer.type,
-                      separator,
-                      layer.convolution_param.kernel_size[0] if len(layer.convolution_param.kernel_size) else 1,
-                      separator,
-                      layer.convolution_param.stride[0] if len(layer.convolution_param.stride) else 1,
-                      separator,
-                      layer.convolution_param.pad[0] if len(layer.convolution_param.pad) else 0)
-    elif layer.type == 'Pooling':
+    # Initializes a list of descriptors that will be concatenated into the
+    # `node_label`
+    descriptors_list = []
+    # Add the layer's name
+    descriptors_list.append(layer.name)
+    # Add layer's type
+    if layer.type == 'Pooling':
         pooling_types_dict = get_pooling_types_dict()
-        node_label = '"%s%s(%s %s)%skernel size: %d%sstride: %d%spad: %d"' %\
-                     (layer.name,
-                      separator,
-                      pooling_types_dict[layer.pooling_param.pool],
-                      layer.type,
-                      separator,
-                      layer.pooling_param.kernel_size,
-                      separator,
-                      layer.pooling_param.stride,
-                      separator,
-                      layer.pooling_param.pad)
+        layer_type = '(%s %s)' % (layer.type,
+                                  pooling_types_dict[layer.pooling_param.pool])
     else:
-        node_label = '"%s%s(%s)"' % (layer.name, separator, layer.type)
+        layer_type = '(%s)' % layer.type
+    descriptors_list.append(layer_type)
+
+    # Describe parameters for spatial operation layers
+    if layer.type in ['Convolution', 'Deconvolution', 'Pooling']:
+        if layer.type == 'Pooling':
+            kernel_size = layer.pooling_param.kernel_size
+            stride = layer.pooling_param.stride
+            padding = layer.pooling_param.pad
+        else:
+            kernel_size = layer.convolution_param.kernel_size[0] if \
+                len(layer.convolution_param.kernel_size) else 1
+            stride = layer.convolution_param.stride[0] if \
+                len(layer.convolution_param.stride) else 1
+            padding = layer.convolution_param.pad[0] if \
+                len(layer.convolution_param.pad) else 0
+        spatial_descriptor = separator.join([
+            "kernel size: %d" % kernel_size,
+            "stride: %d" % stride,
+            "pad: %d" % padding,
+        ])
+        descriptors_list.append(spatial_descriptor)
+
+    # Concatenate the descriptors into one label
+    node_label = separator.join(descriptors_list)
+    # Outer double quotes needed or else colon characters don't parse
+    # properly
+    node_label = '"%s"' % node_label
     return node_label
 
 
