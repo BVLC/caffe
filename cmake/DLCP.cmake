@@ -5,7 +5,7 @@ function(Download_DLCP)
   elseif(HAS_ICPC)
     set(DLCP_CXX "icpc" PARENT_SCOPE)
   else()
-    message(WARNING "weight grad compression is disabled because intel compiler is not found")
+    message("weight grad compression is disabled because intel compiler is not found")
     return()  
   endif()  
 
