@@ -88,7 +88,7 @@ class PowerLayerTest : public MultiDeviceTest<TypeParam> {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-TYPED_TEST_CASE(PowerLayerTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(PowerLayerTest, TestDtypesFloatAndDevices);
 
 TYPED_TEST(PowerLayerTest, TestPower) {
   typedef typename TypeParam::Dtype Dtype;

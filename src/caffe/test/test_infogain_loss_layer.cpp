@@ -62,7 +62,7 @@ class InfogainLossLayerTest : public MultiDeviceTest<TypeParam> {
   int inner_, outer_, num_labels_;
 };
 
-TYPED_TEST_CASE(InfogainLossLayerTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(InfogainLossLayerTest, TestDtypesFloatAndDevices);
 
 TYPED_TEST(InfogainLossLayerTest, TestInfogainLoss) {
   typedef typename TypeParam::Dtype Dtype;

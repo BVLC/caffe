@@ -33,7 +33,7 @@ class MVNLayerTest : public MultiDeviceTest<TypeParam> {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-TYPED_TEST_CASE(MVNLayerTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(MVNLayerTest, TestDtypesFloatAndDevices);
 
 TYPED_TEST(MVNLayerTest, TestForward) {
   typedef typename TypeParam::Dtype Dtype;

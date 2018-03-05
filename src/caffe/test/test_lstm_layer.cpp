@@ -87,7 +87,7 @@ class LSTMLayerTest : public MultiDeviceTest<TypeParam> {
   vector<Blob<Dtype>*> unit_blob_top_vec_;
 };
 
-TYPED_TEST_CASE(LSTMLayerTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(LSTMLayerTest, TestDtypesFloatAndDevices);
 
 TYPED_TEST(LSTMLayerTest, TestSetUp) {
   typedef typename TypeParam::Dtype Dtype;

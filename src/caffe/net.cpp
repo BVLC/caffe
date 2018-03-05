@@ -1037,9 +1037,9 @@ void Net<Dtype>::QuantizerToProto(NetParameter* param) const {
     vector<shared_ptr<QuantizerBase> > quant_base_vec =
         layers_[i]->get_all_quantizers();
     for (size_t j = 0; j < quant_base_vec.size(); ++j) {
-      int_tp idx = quant_base_vec[j]->get_index();
-      double l_min = quant_base_vec[j]->get_observed_min();
-      double l_max = quant_base_vec[j]->get_observed_max();
+      int_tp idx = quant_base_vec[j]->index();
+      double l_min = quant_base_vec[j]->observed_min();
+      double l_max = quant_base_vec[j]->observed_max();
       std::map<int_tp, std::pair<double, double> >::iterator iter =
           quantizer_map.find(idx);
       if (iter != quantizer_map.end()) {
@@ -1129,9 +1129,9 @@ void Net<Dtype>::ToHDF5(const string& filename, bool write_diff) const {
     vector<shared_ptr<QuantizerBase> > quant_base_vec =
         layers_[i]->get_all_quantizers();
     for (size_t j = 0; j < quant_base_vec.size(); ++j) {
-      int_tp idx = quant_base_vec[j]->get_index();
-      double l_min = quant_base_vec[j]->get_observed_min();
-      double l_max = quant_base_vec[j]->get_observed_max();
+      int_tp idx = quant_base_vec[j]->index();
+      double l_min = quant_base_vec[j]->observed_min();
+      double l_max = quant_base_vec[j]->observed_max();
       std::map<int_tp, std::pair<double, double> >::iterator iter =
           quantizer_map.find(idx);
       if (iter != quantizer_map.end()) {

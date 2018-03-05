@@ -268,7 +268,7 @@ class BilinearFillerTest : public ::testing::Test {
   shared_ptr<BilinearFiller<Dtype> > filler_;
 };
 
-TYPED_TEST_CASE(BilinearFillerTest, TestDtypes);
+TYPED_TEST_CASE(BilinearFillerTest, TestDtypesFloat);
 
 TYPED_TEST(BilinearFillerTest, TestFillOdd) {
   const int n = 7;

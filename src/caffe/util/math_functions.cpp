@@ -21,9 +21,9 @@ void caffe_set(const int_tp n, const Dtype alpha, Dtype* y) {
 }
 
 template void caffe_set<int8_t>(const int_tp n, const int8_t alpha,
-                                int8_t* y);
+                                 int8_t* y);
 template void caffe_set<uint8_t>(const int_tp n, const uint8_t alpha,
-                                 uint8_t* y);
+                                uint8_t* y);
 template void caffe_set<int16_t>(const int_tp n, const int16_t alpha,
                                  int16_t* y);
 template void caffe_set<uint16_t>(const int_tp n, const uint16_t alpha,
@@ -53,10 +53,10 @@ void caffe_add_scalar(const int_tp n, const Dtype alpha, Dtype* y) {
 template void caffe_add_scalar(const int_tp n, const half_fp alpha, half_fp* y);
 template void caffe_add_scalar(const int_tp n, const float alpha, float* y);
 template void caffe_add_scalar(const int_tp n, const double alpha, double* y);
-template void caffe_add_scalar(const int_tp n, const int8_t alpha, int8_t* y);
-template void caffe_add_scalar(const int_tp n, const int16_t alpha, int16_t* y);
-template void caffe_add_scalar(const int_tp n, const int32_t alpha, int32_t* y);
-template void caffe_add_scalar(const int_tp n, const int64_t alpha, int64_t* y);
+template void caffe_add_scalar(const int_tp n, const uint8_t alpha, uint8_t* y);
+template void caffe_add_scalar(const int_tp n, const uint16_t alpha, uint16_t* y);
+template void caffe_add_scalar(const int_tp n, const uint32_t alpha, uint32_t* y);
+template void caffe_add_scalar(const int_tp n, const uint64_t alpha, uint64_t* y);
 
 // COPy
 template<typename Dtype>
@@ -101,14 +101,14 @@ void caffe_add(const int_tp n, const Dtype* a,
 
 template void caffe_add<half_fp>(const int_tp n, const half_fp* a,
                                  const half_fp* b, half_fp* y);
-template void caffe_add<int8_t>(const int_tp n, const int8_t* a,
-                                 const int8_t* b, int8_t* y);
-template void caffe_add<int16_t>(const int_tp n, const int16_t* a,
-                                 const int16_t* b, int16_t* y);
-template void caffe_add<int32_t>(const int_tp n, const int32_t* a,
-                                 const int32_t* b, int32_t* y);
-template void caffe_add<int64_t>(const int_tp n, const int64_t* a,
-                                 const int64_t* b, int64_t* y);
+template void caffe_add<uint8_t>(const int_tp n, const uint8_t* a,
+                                 const uint8_t* b, uint8_t* y);
+template void caffe_add<uint16_t>(const int_tp n, const uint16_t* a,
+                                 const uint16_t* b, uint16_t* y);
+template void caffe_add<uint32_t>(const int_tp n, const uint32_t* a,
+                                 const uint32_t* b, uint32_t* y);
+template void caffe_add<uint64_t>(const int_tp n, const uint64_t* a,
+                                 const uint64_t* b, uint64_t* y);
 
 template<>
 void caffe_add<float>(const int_tp n, const float* a, const float* b,
@@ -133,14 +133,14 @@ void caffe_sub(const int_tp n, const Dtype* a,
 
 template void caffe_sub<half_fp>(const int_tp n, const half_fp* a,
                                  const half_fp* b, half_fp* y);
-template void caffe_sub<int8_t>(const int_tp n, const int8_t* a,
-                                 const int8_t* b, int8_t* y);
-template void caffe_sub<int16_t>(const int_tp n, const int16_t* a,
-                                 const int16_t* b, int16_t* y);
-template void caffe_sub<int32_t>(const int_tp n, const int32_t* a,
-                                 const int32_t* b, int32_t* y);
-template void caffe_sub<int64_t>(const int_tp n, const int64_t* a,
-                                 const int64_t* b, int64_t* y);
+template void caffe_sub<uint8_t>(const int_tp n, const uint8_t* a,
+                                 const uint8_t* b, uint8_t* y);
+template void caffe_sub<uint16_t>(const int_tp n, const uint16_t* a,
+                                 const uint16_t* b, uint16_t* y);
+template void caffe_sub<uint32_t>(const int_tp n, const uint32_t* a,
+                                 const uint32_t* b, uint32_t* y);
+template void caffe_sub<uint64_t>(const int_tp n, const uint64_t* a,
+                                 const uint64_t* b, uint64_t* y);
 
 template<>
 void caffe_sub<float>(const int_tp n, const float* a, const float* b,
@@ -164,14 +164,14 @@ void caffe_mul(const int_tp n, const Dtype* a, const Dtype* b, Dtype* y) {
 
 template void caffe_mul<half_fp>(const int_tp n, const half_fp* a,
                                  const half_fp* b, half_fp* y);
-template void caffe_mul<int8_t>(const int_tp n, const int8_t* a,
-                                 const int8_t* b, int8_t* y);
-template void caffe_mul<int16_t>(const int_tp n, const int16_t* a,
-                                 const int16_t* b, int16_t* y);
-template void caffe_mul<int32_t>(const int_tp n, const int32_t* a,
-                                 const int32_t* b, int32_t* y);
-template void caffe_mul<int64_t>(const int_tp n, const int64_t* a,
-                                 const int64_t* b, int64_t* y);
+template void caffe_mul<uint8_t>(const int_tp n, const uint8_t* a,
+                                 const uint8_t* b, uint8_t* y);
+template void caffe_mul<uint16_t>(const int_tp n, const uint16_t* a,
+                                 const uint16_t* b, uint16_t* y);
+template void caffe_mul<uint32_t>(const int_tp n, const uint32_t* a,
+                                 const uint32_t* b, uint32_t* y);
+template void caffe_mul<uint64_t>(const int_tp n, const uint64_t* a,
+                                 const uint64_t* b, uint64_t* y);
 
 template<>
 void caffe_mul<float>(const int_tp n, const float* a, const float* b,
@@ -194,14 +194,14 @@ void caffe_div(const int_tp n, const Dtype* a, const Dtype* b, Dtype* y) {
 
 template void caffe_div<half_fp>(const int_tp n, const half_fp* a,
                                  const half_fp* b, half_fp* y);
-template void caffe_div<int8_t>(const int_tp n, const int8_t* a,
-                                 const int8_t* b, int8_t* y);
-template void caffe_div<int16_t>(const int_tp n, const int16_t* a,
-                                 const int16_t* b, int16_t* y);
-template void caffe_div<int32_t>(const int_tp n, const int32_t* a,
-                                 const int32_t* b, int32_t* y);
-template void caffe_div<int64_t>(const int_tp n, const int64_t* a,
-                                 const int64_t* b, int64_t* y);
+template void caffe_div<uint8_t>(const int_tp n, const uint8_t* a,
+                                 const uint8_t* b, uint8_t* y);
+template void caffe_div<uint16_t>(const int_tp n, const uint16_t* a,
+                                 const uint16_t* b, uint16_t* y);
+template void caffe_div<uint32_t>(const int_tp n, const uint32_t* a,
+                                 const uint32_t* b, uint32_t* y);
+template void caffe_div<uint64_t>(const int_tp n, const uint64_t* a,
+                                 const uint64_t* b, uint64_t* y);
 
 template<>
 void caffe_div<float>(const int_tp n, const float* a, const float* b,
@@ -225,14 +225,14 @@ void caffe_powx(const int_tp n, const Dtype* a, const Dtype b, Dtype* y) {
 
 template void caffe_powx<half_fp>(const int_tp n, const half_fp* a,
                                 const half_fp b, half_fp* y);
-template void caffe_powx<int8_t>(const int_tp n, const int8_t* a,
-                                const int8_t b, int8_t* y);
-template void caffe_powx<int16_t>(const int_tp n, const int16_t* a,
-                                const int16_t b, int16_t* y);
-template void caffe_powx<int32_t>(const int_tp n, const int32_t* a,
-                                const int32_t b, int32_t* y);
-template void caffe_powx<int64_t>(const int_tp n, const int64_t* a,
-                                const int64_t b, int64_t* y);
+template void caffe_powx<uint8_t>(const int_tp n, const uint8_t* a,
+                                const uint8_t b, uint8_t* y);
+template void caffe_powx<uint16_t>(const int_tp n, const uint16_t* a,
+                                const uint16_t b, uint16_t* y);
+template void caffe_powx<uint32_t>(const int_tp n, const uint32_t* a,
+                                const uint32_t b, uint32_t* y);
+template void caffe_powx<uint64_t>(const int_tp n, const uint64_t* a,
+                                const uint64_t b, uint64_t* y);
 
 template<>
 void caffe_powx<float>(const int_tp n, const float* a, const float b,
@@ -254,10 +254,10 @@ void caffe_sqr(const int_tp n, const Dtype* a, Dtype* y) {
 }
 
 template void caffe_sqr<half_fp>(const int_tp n, const half_fp* a, half_fp* y);
-template void caffe_sqr<int8_t>(const int_tp n, const int8_t* a, int8_t* y);
-template void caffe_sqr<int16_t>(const int_tp n, const int16_t* a, int16_t* y);
-template void caffe_sqr<int32_t>(const int_tp n, const int32_t* a, int32_t* y);
-template void caffe_sqr<int64_t>(const int_tp n, const int64_t* a, int64_t* y);
+template void caffe_sqr<uint8_t>(const int_tp n, const uint8_t* a, uint8_t* y);
+template void caffe_sqr<uint16_t>(const int_tp n, const uint16_t* a, uint16_t* y);
+template void caffe_sqr<uint32_t>(const int_tp n, const uint32_t* a, uint32_t* y);
+template void caffe_sqr<uint64_t>(const int_tp n, const uint64_t* a, uint64_t* y);
 
 
 template<>
@@ -278,10 +278,10 @@ void caffe_sqrt(const int_tp n, const Dtype* a, Dtype* y) {
 }
 
 template void caffe_sqrt(const int_tp n, const half_fp* a, half_fp* y);
-template void caffe_sqrt(const int_tp n, const int8_t* a, int8_t* y);
-template void caffe_sqrt(const int_tp n, const int16_t* a, int16_t* y);
-template void caffe_sqrt(const int_tp n, const int32_t* a, int32_t* y);
-template void caffe_sqrt(const int_tp n, const int64_t* a, int64_t* y);
+template void caffe_sqrt(const int_tp n, const uint8_t* a, uint8_t* y);
+template void caffe_sqrt(const int_tp n, const uint16_t* a, uint16_t* y);
+template void caffe_sqrt(const int_tp n, const uint32_t* a, uint32_t* y);
+template void caffe_sqrt(const int_tp n, const uint64_t* a, uint64_t* y);
 
 template<>
 void caffe_sqrt<float>(const int_tp n, const float* a, float* y) {
@@ -302,10 +302,10 @@ void caffe_exp(const int_tp n, const Dtype* a, Dtype* y) {
 }
 
 template void caffe_exp<half_fp>(const int_tp n, const half_fp* a, half_fp* y);
-template void caffe_exp<int8_t>(const int_tp n, const int8_t* a, int8_t* y);
-template void caffe_exp<int16_t>(const int_tp n, const int16_t* a, int16_t* y);
-template void caffe_exp<int32_t>(const int_tp n, const int32_t* a, int32_t* y);
-template void caffe_exp<int64_t>(const int_tp n, const int64_t* a, int64_t* y);
+template void caffe_exp<uint8_t>(const int_tp n, const uint8_t* a, uint8_t* y);
+template void caffe_exp<uint16_t>(const int_tp n, const uint16_t* a, uint16_t* y);
+template void caffe_exp<uint32_t>(const int_tp n, const uint32_t* a, uint32_t* y);
+template void caffe_exp<uint64_t>(const int_tp n, const uint64_t* a, uint64_t* y);
 
 template<>
 void caffe_exp<float>(const int_tp n, const float* a, float* y) {
@@ -326,10 +326,10 @@ void caffe_log(const int_tp n, const Dtype* a, Dtype* y) {
 }
 
 template void caffe_log<half_fp>(const int_tp n, const half_fp* a, half_fp* y);
-template void caffe_log<int8_t>(const int_tp n, const int8_t* a, int8_t* y);
-template void caffe_log<int16_t>(const int_tp n, const int16_t* a, int16_t* y);
-template void caffe_log<int32_t>(const int_tp n, const int32_t* a, int32_t* y);
-template void caffe_log<int64_t>(const int_tp n, const int64_t* a, int64_t* y);
+template void caffe_log<uint8_t>(const int_tp n, const uint8_t* a, uint8_t* y);
+template void caffe_log<uint16_t>(const int_tp n, const uint16_t* a, uint16_t* y);
+template void caffe_log<uint32_t>(const int_tp n, const uint32_t* a, uint32_t* y);
+template void caffe_log<uint64_t>(const int_tp n, const uint64_t* a, uint64_t* y);
 
 template<>
 void caffe_log<float>(const int_tp n, const float* a, float* y) {
@@ -349,10 +349,14 @@ void caffe_abs(const int_tp n, const Dtype* a, Dtype* y) {
   }
 }
 
-template void caffe_abs<int8_t>(const int_tp n, const int8_t* a, int8_t* y);
-template void caffe_abs<int16_t>(const int_tp n, const int16_t* a, int16_t* y);
-template void caffe_abs<int32_t>(const int_tp n, const int32_t* a, int32_t* y);
-template void caffe_abs<int64_t>(const int_tp n, const int64_t* a, int64_t* y);
+template void caffe_abs<uint8_t>(const int_tp n, const uint8_t* a,
+                                 uint8_t* y);
+template void caffe_abs<uint16_t>(const int_tp n, const uint16_t* a,
+                                  uint16_t* y);
+template void caffe_abs<uint32_t>(const int_tp n, const uint32_t* a,
+                                  uint32_t* y);
+template void caffe_abs<uint64_t>(const int_tp n, const uint64_t* a,
+                                  uint64_t* y);
 
 template<>
 void caffe_abs<half_fp>(const int_tp n, const half_fp* a,

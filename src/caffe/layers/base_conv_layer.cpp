@@ -331,13 +331,13 @@ INSTANTIATE_CLASS_3T_GUARDED(BaseConvolutionLayer, (float), (float),
                              PROTO_TYPES);
 INSTANTIATE_CLASS_3T_GUARDED(BaseConvolutionLayer, (double), (double),
                              PROTO_TYPES);
-INSTANTIATE_CLASS_3T_GUARDED(BaseConvolutionLayer, (int8_t), (int8_t),
+INSTANTIATE_CLASS_3T_GUARDED(BaseConvolutionLayer, (uint8_t), (uint8_t),
                              PROTO_TYPES);
-INSTANTIATE_CLASS_3T_GUARDED(BaseConvolutionLayer, (int16_t), (int16_t),
+INSTANTIATE_CLASS_3T_GUARDED(BaseConvolutionLayer, (uint16_t), (uint16_t),
                              PROTO_TYPES);
-INSTANTIATE_CLASS_3T_GUARDED(BaseConvolutionLayer, (int32_t), (int32_t),
+INSTANTIATE_CLASS_3T_GUARDED(BaseConvolutionLayer, (uint32_t), (uint32_t),
                              PROTO_TYPES);
-INSTANTIATE_CLASS_3T_GUARDED(BaseConvolutionLayer, (int64_t), (int64_t),
+INSTANTIATE_CLASS_3T_GUARDED(BaseConvolutionLayer, (uint64_t), (uint64_t),
                              PROTO_TYPES);
 
 }  // namespace caffe

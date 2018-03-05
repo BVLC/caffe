@@ -113,6 +113,16 @@ if(USE_LEVELDB)
   list(APPEND Caffe_LINKER_LIBS PRIVATE ${Snappy_LIBRARIES})
 endif()
 
+# --- [Gemmlowp
+if (USE_GEMMLOWP)
+  find_package(Gemmlowp)
+  if (NOT GEMMLOWP_FOUND)
+    message(FATAL_ERROR "Gemmlowp required but not found.")
+  endif()
+  list(APPEND Caffe_INCLUDE_DIRS PUBLIC "${GEMMLOWP_INCLUDE_DIRS}")
+  list(APPEND Caffe_DEFINITIONS PUBLIC -DUSE_GEMMLOWP)
+endif()
+
 # ---[ ViennaCL
 if (USE_OPENCL)
   find_package(ViennaCL)

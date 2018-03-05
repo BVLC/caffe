@@ -57,7 +57,7 @@ caffe_option(USE_HALF "Build Caffe with FP16 support" ON)
 caffe_option(USE_SINGLE "Build Caffe with FP32 support" ON)
 caffe_option(USE_DOUBLE "Build Caffe with FP64 support" OFF)
 caffe_option(USE_INT_QUANT_8 "Build Caffe with 8 bit integer quantization support" ON)
-caffe_option(USE_INT_QUANT_16 "Build Caffe with 16 bit integer quantization support" ON)
+caffe_option(USE_INT_QUANT_16 "Build Caffe with 16 bit integer quantization support" OFF)
 caffe_option(USE_INT_QUANT_32 "Build Caffe with 32 bit integer quantization support" OFF)
 caffe_option(USE_INT_QUANT_64 "Build Caffe with 64 bit integer quantization support" OFF)
 caffe_option(USE_CUDA "Build Caffe with CUDA support" OFF)
@@ -89,6 +89,8 @@ caffe_option(ALLOW_LMDB_NOLOCK "Allow MDB_NOLOCK when reading LMDB files (only i
 caffe_option(USE_OPENMP "Link with OpenMP (when your BLAS wants OpenMP and you get linker errors)" OFF)
 caffe_option(USE_FFT "Build with fftw3 or/and clFFT" OFF)
 caffe_option(USE_SQLITE "Build with SQLITE kernel cache" ON)
+caffe_option(USE_GEMMLOWP "Build with Gemmlowp support" OFF)
+caffe_option(USE_NATIVE_MARCH "Build with -march=native flag, if supported" ON)
 
 # ---[ Option to force a persistent storage path
 set(CAFFE_STORAGE_PATH_OVERRIDE "" CACHE STRING "Caffe persistent storage path override (for sqlite cache)")
@@ -145,6 +147,13 @@ endif()
 
 if(UNIX OR APPLE)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wall -std=c++11 -DCMAKE_BUILD")
+endif()
+
+if(USE_NATIVE_MARCH)
+  CHECK_CXX_COMPILER_FLAG("-march=native" COMPILER_SUPPORTS_MARCH_NATIVE)
+  if(COMPILER_SUPPORTS_MARCH_NATIVE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
+  endif()
 endif()
 
 if(DISABLE_DOUBLE_SUPPORT)

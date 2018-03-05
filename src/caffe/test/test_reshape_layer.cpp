@@ -35,7 +35,7 @@ class ReshapeLayerTest : public MultiDeviceTest<TypeParam> {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-TYPED_TEST_CASE(ReshapeLayerTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(ReshapeLayerTest, TestDtypesFloatAndDevices);
 
 TYPED_TEST(ReshapeLayerTest, TestFlattenOutputSizes) {
   typedef typename TypeParam::Dtype Dtype;

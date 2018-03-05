@@ -181,56 +181,56 @@ void Device::scal_double(const uint_tp n, const double alpha, vptr<double> x) {
 #endif  // USE_DOUBLE
 
 #ifdef USE_INT_QUANT_8
-void Device::axpy_int8(const uint_tp n, const int8_t alpha,
-                          vptr<const int8_t> x,
-                          vptr<int8_t> y) {
-  this->axpby_int8(n, alpha, x, int8_t(1), y);
+void Device::axpy_uint8(const uint_tp n, const uint8_t alpha,
+                          vptr<const uint8_t> x,
+                          vptr<uint8_t> y) {
+  this->axpby_uint8(n, alpha, x, uint8_t(1), y);
 }
-void Device::axpby_int8(const uint_tp n, const int8_t alpha,
-                   vptr<const int8_t> x,
-                   const int8_t beta, vptr<int8_t> y) {
+void Device::axpby_uint8(const uint_tp n, const uint8_t alpha,
+                   vptr<const uint8_t> x,
+                   const uint8_t beta, vptr<uint8_t> y) {
 #ifdef USE_LIBDNN
-  this->template GetLibDNNBlas<int8_t, int8_t>()->axpby(n, alpha, x,
-                      beta, y, make_shared<Quantizer<int8_t, int8_t> >(this));
+  this->template GetLibDNNBlas<uint8_t, uint8_t>()->axpby(n, alpha, x,
+                      beta, y, make_shared<Quantizer<uint8_t, uint8_t> >(this));
 #else  // USE_LIBDNN
   NOT_IMPLEMENTED;
 #endif  // USE_LIBDNN
 }
-void Device::dot_int8(const uint_tp n, vptr<const int8_t> x,
-                         vptr<const int8_t> y,
-                         int8_t* out) {
+void Device::dot_uint8(const uint_tp n, vptr<const uint8_t> x,
+                         vptr<const uint8_t> y,
+                         uint8_t* out) {
 #ifdef USE_LIBDNN
-  this->template GetLibDNNBlas<int8_t, int8_t>()->dot(n, x, y, out,
+  this->template GetLibDNNBlas<uint8_t, uint8_t>()->dot(n, x, y, out,
                                LIBDNN_ACCUMULATE_PREC_NATIVE,
-                               make_shared<Quantizer<int8_t, int8_t> >(this));
+                               make_shared<Quantizer<uint8_t, uint8_t> >(this));
 #else  // USE_LIBDNN
   NOT_IMPLEMENTED;
 #endif  // USE_LIBDNN
 }
-void Device::asum_int8(const uint_tp n, vptr<const int8_t> x,
-                           int8_t* y) {
+void Device::asum_uint8(const uint_tp n, vptr<const uint8_t> x,
+                           uint8_t* y) {
 #ifdef USE_LIBDNN
-  this->template GetLibDNNBlas<int8_t, int8_t>()->asum(n, x, y,
+  this->template GetLibDNNBlas<uint8_t, uint8_t>()->asum(n, x, y,
                                LIBDNN_ACCUMULATE_PREC_NATIVE,
-                               make_shared<Quantizer<int8_t, int8_t> >(this));
+                               make_shared<Quantizer<uint8_t, uint8_t> >(this));
 #else  // USE_LIBDNN
   NOT_IMPLEMENTED;
 #endif  // USE_LIBDNN
 }
-void Device::scale_int8(const uint_tp n, const int8_t alpha,
-                           vptr<const int8_t> x,
-                           vptr<int8_t> y) {
+void Device::scale_uint8(const uint_tp n, const uint8_t alpha,
+                           vptr<const uint8_t> x,
+                           vptr<uint8_t> y) {
 #ifdef USE_LIBDNN
-  this->template GetLibDNNBlas<int8_t, int8_t>()->scale(n, alpha, x, y,
-                               make_shared<Quantizer<int8_t, int8_t> >(this));
+  this->template GetLibDNNBlas<uint8_t, uint8_t>()->scale(n, alpha, x, y,
+                               make_shared<Quantizer<uint8_t, uint8_t> >(this));
 #else  // USE_LIBDNN
   NOT_IMPLEMENTED;
 #endif  // USE_LIBDNN
 }
-void Device::scal_int8(const uint_tp n, const int8_t alpha, vptr<int8_t> x) {
+void Device::scal_uint8(const uint_tp n, const uint8_t alpha, vptr<uint8_t> x) {
 #ifdef USE_LIBDNN
-  this->template GetLibDNNBlas<int8_t, int8_t>()->scal(n, alpha, x,
-                               make_shared<Quantizer<int8_t, int8_t> >(this));
+  this->template GetLibDNNBlas<uint8_t, uint8_t>()->scal(n, alpha, x,
+                               make_shared<Quantizer<uint8_t, uint8_t> >(this));
 #else  // USE_LIBDNN
   NOT_IMPLEMENTED;
 #endif  // USE_LIBDNN
@@ -238,56 +238,56 @@ void Device::scal_int8(const uint_tp n, const int8_t alpha, vptr<int8_t> x) {
 #endif  // USE_INT_QUANT_8
 
 #ifdef USE_INT_QUANT_16
-void Device::axpy_int16(const uint_tp n, const int16_t alpha,
-                          vptr<const int16_t> x,
-                          vptr<int16_t> y) {
-  this->axpby_int16(n, alpha, x, int16_t(1), y);
+void Device::axpy_uint16(const uint_tp n, const uint16_t alpha,
+                          vptr<const uint16_t> x,
+                          vptr<uint16_t> y) {
+  this->axpby_uint16(n, alpha, x, uint16_t(1), y);
 }
-void Device::axpby_int16(const uint_tp n, const int16_t alpha,
-                   vptr<const int16_t> x,
-                   const int16_t beta, vptr<int16_t> y) {
+void Device::axpby_uint16(const uint_tp n, const uint16_t alpha,
+                   vptr<const uint16_t> x,
+                   const uint16_t beta, vptr<uint16_t> y) {
 #ifdef USE_LIBDNN
-  this->template GetLibDNNBlas<int16_t, int16_t>()->axpby(n, alpha, x,
-                      beta, y, make_shared<Quantizer<int16_t, int16_t> >(this));
+  this->template GetLibDNNBlas<uint16_t, uint16_t>()->axpby(n, alpha, x,
+                      beta, y, make_shared<Quantizer<uint16_t, uint16_t> >(this));
 #else  // USE_LIBDNN
   NOT_IMPLEMENTED;
 #endif  // USE_LIBDNN
 }
-void Device::dot_int16(const uint_tp n, vptr<const int16_t> x,
-                         vptr<const int16_t> y,
-                         int16_t* out) {
+void Device::dot_uint16(const uint_tp n, vptr<const uint16_t> x,
+                         vptr<const uint16_t> y,
+                         uint16_t* out) {
 #ifdef USE_LIBDNN
-  this->template GetLibDNNBlas<int16_t, int16_t>()->dot(n, x, y, out,
+  this->template GetLibDNNBlas<uint16_t, uint16_t>()->dot(n, x, y, out,
                                LIBDNN_ACCUMULATE_PREC_NATIVE,
-                               make_shared<Quantizer<int16_t, int16_t> >(this));
+                               make_shared<Quantizer<uint16_t, uint16_t> >(this));
 #else  // USE_LIBDNN
   NOT_IMPLEMENTED;
 #endif  // USE_LIBDNN
 }
-void Device::asum_int16(const uint_tp n, vptr<const int16_t> x,
-                           int16_t* y) {
+void Device::asum_uint16(const uint_tp n, vptr<const uint16_t> x,
+                           uint16_t* y) {
 #ifdef USE_LIBDNN
-  this->template GetLibDNNBlas<int16_t, int16_t>()->asum(n, x, y,
+  this->template GetLibDNNBlas<uint16_t, uint16_t>()->asum(n, x, y,
                                LIBDNN_ACCUMULATE_PREC_NATIVE,
-                               make_shared<Quantizer<int16_t, int16_t> >(this));
+                               make_shared<Quantizer<uint16_t, uint16_t> >(this));
 #else  // USE_LIBDNN
   NOT_IMPLEMENTED;
 #endif  // USE_LIBDNN
 }
-void Device::scale_int16(const uint_tp n, const int16_t alpha,
-                           vptr<const int16_t> x,
-                           vptr<int16_t> y) {
+void Device::scale_uint16(const uint_tp n, const uint16_t alpha,
+                           vptr<const uint16_t> x,
+                           vptr<uint16_t> y) {
 #ifdef USE_LIBDNN
-  this->template GetLibDNNBlas<int16_t, int16_t>()->scale(n, alpha, x, y,
-                               make_shared<Quantizer<int16_t, int16_t> >(this));
+  this->template GetLibDNNBlas<uint16_t, uint16_t>()->scale(n, alpha, x, y,
+                               make_shared<Quantizer<uint16_t, uint16_t> >(this));
 #else  // USE_LIBDNN
   NOT_IMPLEMENTED;
 #endif  // USE_LIBDNN
 }
-void Device::scal_int16(const uint_tp n, const int16_t alpha, vptr<int16_t> x) {
+void Device::scal_uint16(const uint_tp n, const uint16_t alpha, vptr<uint16_t> x) {
 #ifdef USE_LIBDNN
-  this->template GetLibDNNBlas<int16_t, int16_t>()->scal(n, alpha, x,
-                               make_shared<Quantizer<int16_t, int16_t> >(this));
+  this->template GetLibDNNBlas<uint16_t, uint16_t>()->scal(n, alpha, x,
+                               make_shared<Quantizer<uint16_t, uint16_t> >(this));
 #else  // USE_LIBDNN
   NOT_IMPLEMENTED;
 #endif  // USE_LIBDNN
@@ -295,56 +295,56 @@ void Device::scal_int16(const uint_tp n, const int16_t alpha, vptr<int16_t> x) {
 #endif  // USE_INT_QUANT_16
 
 #ifdef USE_INT_QUANT_32
-void Device::axpy_int32(const uint_tp n, const int32_t alpha,
-                          vptr<const int32_t> x,
-                          vptr<int32_t> y) {
-  this->axpby_int32(n, alpha, x, int32_t(1), y);
+void Device::axpy_uint32(const uint_tp n, const uint32_t alpha,
+                          vptr<const uint32_t> x,
+                          vptr<uint32_t> y) {
+  this->axpby_uint32(n, alpha, x, uint32_t(1), y);
 }
-void Device::axpby_int32(const uint_tp n, const int32_t alpha,
-                   vptr<const int32_t> x,
-                   const int32_t beta, vptr<int32_t> y) {
+void Device::axpby_uint32(const uint_tp n, const uint32_t alpha,
+                   vptr<const uint32_t> x,
+                   const uint32_t beta, vptr<uint32_t> y) {
 #ifdef USE_LIBDNN
-  this->template GetLibDNNBlas<int32_t, int32_t>()->axpby(n, alpha, x,
-                      beta, y, make_shared<Quantizer<int32_t, int32_t> >(this));
+  this->template GetLibDNNBlas<uint32_t, uint32_t>()->axpby(n, alpha, x,
+                      beta, y, make_shared<Quantizer<uint32_t, uint32_t> >(this));
 #else  // USE_LIBDNN
   NOT_IMPLEMENTED;
 #endif  // USE_LIBDNN
 }
-void Device::dot_int32(const uint_tp n, vptr<const int32_t> x,
-                         vptr<const int32_t> y,
-                         int32_t* out) {
+void Device::dot_uint32(const uint_tp n, vptr<const uint32_t> x,
+                         vptr<const uint32_t> y,
+                         uint32_t* out) {
 #ifdef USE_LIBDNN
-  this->template GetLibDNNBlas<int32_t, int32_t>()->dot(n, x, y, out,
+  this->template GetLibDNNBlas<uint32_t, uint32_t>()->dot(n, x, y, out,
                                LIBDNN_ACCUMULATE_PREC_NATIVE,
-                               make_shared<Quantizer<int32_t, int32_t> >(this));
+                               make_shared<Quantizer<uint32_t, uint32_t> >(this));
 #else  // USE_LIBDNN
   NOT_IMPLEMENTED;
 #endif  // USE_LIBDNN
 }
-void Device::asum_int32(const uint_tp n, vptr<const int32_t> x,
-                           int32_t* y) {
+void Device::asum_uint32(const uint_tp n, vptr<const uint32_t> x,
+                           uint32_t* y) {
 #ifdef USE_LIBDNN
-  this->template GetLibDNNBlas<int32_t, int32_t>()->asum(n, x, y,
+  this->template GetLibDNNBlas<uint32_t, uint32_t>()->asum(n, x, y,
                                LIBDNN_ACCUMULATE_PREC_NATIVE,
-                               make_shared<Quantizer<int32_t, int32_t> >(this));
+                               make_shared<Quantizer<uint32_t, uint32_t> >(this));
 #else  // USE_LIBDNN
   NOT_IMPLEMENTED;
 #endif  // USE_LIBDNN
 }
-void Device::scale_int32(const uint_tp n, const int32_t alpha,
-                           vptr<const int32_t> x,
-                           vptr<int32_t> y) {
+void Device::scale_uint32(const uint_tp n, const uint32_t alpha,
+                           vptr<const uint32_t> x,
+                           vptr<uint32_t> y) {
 #ifdef USE_LIBDNN
-  this->template GetLibDNNBlas<int32_t, int32_t>()->scale(n, alpha, x, y,
-                               make_shared<Quantizer<int32_t, int32_t> >(this));
+  this->template GetLibDNNBlas<uint32_t, uint32_t>()->scale(n, alpha, x, y,
+                               make_shared<Quantizer<uint32_t, uint32_t> >(this));
 #else  // USE_LIBDNN
   NOT_IMPLEMENTED;
 #endif  // USE_LIBDNN
 }
-void Device::scal_int32(const uint_tp n, const int32_t alpha, vptr<int32_t> x) {
+void Device::scal_uint32(const uint_tp n, const uint32_t alpha, vptr<uint32_t> x) {
 #ifdef USE_LIBDNN
-  this->template GetLibDNNBlas<int32_t, int32_t>()->scal(n, alpha, x,
-                               make_shared<Quantizer<int32_t, int32_t> >(this));
+  this->template GetLibDNNBlas<uint32_t, uint32_t>()->scal(n, alpha, x,
+                               make_shared<Quantizer<uint32_t, uint32_t> >(this));
 #else  // USE_LIBDNN
   NOT_IMPLEMENTED;
 #endif  // USE_LIBDNN
@@ -352,56 +352,56 @@ void Device::scal_int32(const uint_tp n, const int32_t alpha, vptr<int32_t> x) {
 #endif  // USE_INT_QUANT_32
 
 #ifdef USE_INT_QUANT_64
-void Device::axpy_int64(const uint_tp n, const int64_t alpha,
-                          vptr<const int64_t> x,
-                          vptr<int64_t> y) {
-  this->axpby_int64(n, alpha, x, int64_t(1), y);
+void Device::axpy_uint64(const uint_tp n, const uint64_t alpha,
+                          vptr<const uint64_t> x,
+                          vptr<uint64_t> y) {
+  this->axpby_uint64(n, alpha, x, uint64_t(1), y);
 }
-void Device::axpby_int64(const uint_tp n, const int64_t alpha,
-                   vptr<const int64_t> x,
-                   const int64_t beta, vptr<int64_t> y) {
+void Device::axpby_uint64(const uint_tp n, const uint64_t alpha,
+                   vptr<const uint64_t> x,
+                   const uint64_t beta, vptr<uint64_t> y) {
 #ifdef USE_LIBDNN
-  this->template GetLibDNNBlas<int64_t, int64_t>()->axpby(n, alpha, x,
-                      beta, y, make_shared<Quantizer<int64_t, int64_t> >(this));
+  this->template GetLibDNNBlas<uint64_t, uint64_t>()->axpby(n, alpha, x,
+                      beta, y, make_shared<Quantizer<uint64_t, uint64_t> >(this));
 #else  // USE_LIBDNN
   NOT_IMPLEMENTED;
 #endif  // USE_LIBDNN
 }
-void Device::dot_int64(const uint_tp n, vptr<const int64_t> x,
-                         vptr<const int64_t> y,
-                         int64_t* out) {
+void Device::dot_uint64(const uint_tp n, vptr<const uint64_t> x,
+                         vptr<const uint64_t> y,
+                         uint64_t* out) {
 #ifdef USE_LIBDNN
-  this->template GetLibDNNBlas<int64_t, int64_t>()->dot(n, x, y, out,
+  this->template GetLibDNNBlas<uint64_t, uint64_t>()->dot(n, x, y, out,
                                LIBDNN_ACCUMULATE_PREC_NATIVE,
-                               make_shared<Quantizer<int64_t, int64_t> >(this));
+                               make_shared<Quantizer<uint64_t, uint64_t> >(this));
 #else  // USE_LIBDNN
   NOT_IMPLEMENTED;
 #endif  // USE_LIBDNN
 }
-void Device::asum_int64(const uint_tp n, vptr<const int64_t> x,
-                           int64_t* y) {
+void Device::asum_uint64(const uint_tp n, vptr<const uint64_t> x,
+                           uint64_t* y) {
 #ifdef USE_LIBDNN
-  this->template GetLibDNNBlas<int64_t, int64_t>()->asum(n, x, y,
+  this->template GetLibDNNBlas<uint64_t, uint64_t>()->asum(n, x, y,
                                LIBDNN_ACCUMULATE_PREC_NATIVE,
-                               make_shared<Quantizer<int64_t, int64_t> >(this));
+                               make_shared<Quantizer<uint64_t, uint64_t> >(this));
 #else  // USE_LIBDNN
   NOT_IMPLEMENTED;
 #endif  // USE_LIBDNN
 }
-void Device::scale_int64(const uint_tp n, const int64_t alpha,
-                           vptr<const int64_t> x,
-                           vptr<int64_t> y) {
+void Device::scale_uint64(const uint_tp n, const uint64_t alpha,
+                           vptr<const uint64_t> x,
+                           vptr<uint64_t> y) {
 #ifdef USE_LIBDNN
-  this->template GetLibDNNBlas<int64_t, int64_t>()->scale(n, alpha, x, y,
-                               make_shared<Quantizer<int64_t, int64_t> >(this));
+  this->template GetLibDNNBlas<uint64_t, uint64_t>()->scale(n, alpha, x, y,
+                               make_shared<Quantizer<uint64_t, uint64_t> >(this));
 #else  // USE_LIBDNN
   NOT_IMPLEMENTED;
 #endif  // USE_LIBDNN
 }
-void Device::scal_int64(const uint_tp n, const int64_t alpha, vptr<int64_t> x) {
+void Device::scal_uint64(const uint_tp n, const uint64_t alpha, vptr<uint64_t> x) {
 #ifdef USE_LIBDNN
-  this->template GetLibDNNBlas<int64_t, int64_t>()->scal(n, alpha, x,
-                               make_shared<Quantizer<int64_t, int64_t> >(this));
+  this->template GetLibDNNBlas<uint64_t, uint64_t>()->scal(n, alpha, x,
+                               make_shared<Quantizer<uint64_t, uint64_t> >(this));
 #else  // USE_LIBDNN
   NOT_IMPLEMENTED;
 #endif  // USE_LIBDNN

@@ -134,12 +134,12 @@ INSTANTIATE_CLASS_3T_GUARDED(MOELayer, (float), (float),
                              PROTO_TYPES);
 INSTANTIATE_CLASS_3T_GUARDED(MOELayer, (double), (double),
                              PROTO_TYPES);
-INSTANTIATE_CLASS_3T_GUARDED(MOELayer, (int8_t), (int8_t),
+INSTANTIATE_CLASS_3T_GUARDED(MOELayer, (uint8_t), (uint8_t),
                              PROTO_TYPES);
-INSTANTIATE_CLASS_3T_GUARDED(MOELayer, (int16_t), (int16_t),
+INSTANTIATE_CLASS_3T_GUARDED(MOELayer, (uint16_t), (uint16_t),
                              PROTO_TYPES);
-INSTANTIATE_CLASS_3T_GUARDED(MOELayer, (int32_t), (int32_t),
+INSTANTIATE_CLASS_3T_GUARDED(MOELayer, (uint32_t), (uint32_t),
                              PROTO_TYPES);
-INSTANTIATE_CLASS_3T_GUARDED(MOELayer, (int64_t), (int64_t),
+INSTANTIATE_CLASS_3T_GUARDED(MOELayer, (uint64_t), (uint64_t),
                              PROTO_TYPES);
 }  // namespace caffe

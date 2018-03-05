@@ -116,7 +116,7 @@ void LRNLayerTest<TypeParam>::ReferenceLRNForward(
   }
 }
 
-TYPED_TEST_CASE(LRNLayerTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(LRNLayerTest, TestDtypesFloatAndDevices);
 
 TYPED_TEST(LRNLayerTest, TestSetupAcrossChannels) {
   typedef typename TypeParam::Dtype Dtype;

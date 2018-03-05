@@ -31,7 +31,7 @@ class SolverFactoryTest : public MultiDeviceTest<TypeParam> {
   }
 };
 
-TYPED_TEST_CASE(SolverFactoryTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(SolverFactoryTest, TestDtypesFloatAndDevices);
 
 TYPED_TEST(SolverFactoryTest, TestCreateSolver) {
   typedef typename TypeParam::Dtype Dtype;

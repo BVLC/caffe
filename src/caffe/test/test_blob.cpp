@@ -131,7 +131,7 @@ class BlobMathTest : public MultiDeviceTest<TypeParam> {
   Dtype epsilon_;
 };
 
-TYPED_TEST_CASE(BlobMathTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(BlobMathTest, TestDtypesFloatAndDevices);
 
 TYPED_TEST(BlobMathTest, TestSumOfSquares) {
   typedef typename TypeParam::Dtype Dtype;

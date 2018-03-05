@@ -64,10 +64,10 @@ string LibDNNBlas<MItype, MOtype>::generate_gemv_source(
     case LIBDNN_ACCUMULATE_PREC_NATIVE:
       break;
     case LIBDNN_ACCUMULATE_PREC_8:
-      accreg_type = program->template device_type_name<int8_t>();
+      accreg_type = program->template device_type_name<uint8_t>();
       break;
     case LIBDNN_ACCUMULATE_PREC_16:
-      accreg_type = program->template device_type_name<int16_t>();
+      accreg_type = program->template device_type_name<uint16_t>();
       break;
     case LIBDNN_ACCUMULATE_PREC_32:
       accreg_type = program->template device_type_name<int32_t>();
@@ -267,19 +267,19 @@ string LibDNNBlas<MItype, MOtype>::generate_gemv_source(
           src_term << " Areg[wm * VWM + " << m << "][wn] * xreg[wn]";
           switch (prec) {
             case LIBDNN_ACCUMULATE_PREC_8:
-              ss << this->program_->template convert_type<int8_t>(vwn,
+              ss << this->program_->template convert_type<uint8_t>(vwn,
                                                                 src_term.str());
               break;
             case LIBDNN_ACCUMULATE_PREC_16:
-              ss << this->program_->template convert_type<int16_t>(vwn,
+              ss << this->program_->template convert_type<uint16_t>(vwn,
                                                                 src_term.str());
               break;
             case LIBDNN_ACCUMULATE_PREC_32:
-              ss << this->program_->template convert_type<int32_t>(vwn,
+              ss << this->program_->template convert_type<uint32_t>(vwn,
                                                                 src_term.str());
               break;
             case LIBDNN_ACCUMULATE_PREC_64:
-              ss << this->program_->template convert_type<int64_t>(vwn,
+              ss << this->program_->template convert_type<uint64_t>(vwn,
                                                                 src_term.str());
               break;
             case LIBDNN_ACCUMULATE_PREC_NATIVE:

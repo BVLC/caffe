@@ -155,14 +155,14 @@ DataType npy_to_proto_type(NPY_TYPES npy_data_type) {
 }
 
 typedef boost::variant<half_fp, float, double,
-                       int8_t, int16_t, int32_t,
-                       int64_t> variant_proto_types;
+                       uint8_t, uint16_t, uint32_t,
+                       uint64_t> variant_proto_types;
 typedef boost::variant<half_fp*, float*, double*,
-                       int8_t*, int16_t*, int32_t*,
-                       int64_t*> variant_proto_ptr_types;
+                       uint8_t*, uint16_t*, uint32_t*,
+                       uint64_t*> variant_proto_ptr_types;
 typedef boost::variant<vector<half_fp>, vector<float>, vector<double>,
-                       vector<int8_t>, vector<int16_t>, vector<int32_t>,
-                       vector<int64_t> > variant_proto_vec_types;
+                       vector<uint8_t>, vector<uint16_t>, vector<uint32_t>,
+                       vector<uint64_t> > variant_proto_vec_types;
 
 struct variant_proto_types_to_object : boost::static_visitor<PyObject*> {
   static result_type convert(variant_proto_types const &v) {
@@ -431,22 +431,22 @@ void Net_SetLayerInputArrays(NetBase* net, LayerBase* layer,
       break;
     case NPY_BYTE:
 #ifdef USE_INT_QUANT_8
-      Net_SetInputArraysHelper<int8_t>(net, layer, data_arr, labels_arr);
+      Net_SetInputArraysHelper<uint8_t>(net, layer, data_arr, labels_arr);
 #endif  // USE_INT_QUANT_8
       break;
     case NPY_SHORT:
 #ifdef USE_INT_QUANT_16
-      Net_SetInputArraysHelper<int16_t>(net, layer, data_arr, labels_arr);
+      Net_SetInputArraysHelper<uint16_t>(net, layer, data_arr, labels_arr);
 #endif  // USE_INT_QUANT_16
       break;
     case NPY_INT:
 #ifdef USE_INT_QUANT_32
-      Net_SetInputArraysHelper<int32_t>(net, layer, data_arr, labels_arr);
+      Net_SetInputArraysHelper<uint32_t>(net, layer, data_arr, labels_arr);
 #endif  // USE_INT_QUANT_32
       break;
     case NPY_INT64:
 #ifdef USE_INT_QUANT_64
-      Net_SetInputArraysHelper<int64_t>(net, layer, data_arr, labels_arr);
+      Net_SetInputArraysHelper<uint64_t>(net, layer, data_arr, labels_arr);
 #endif  // USE_INT_QUANT_64
       break;
     case NPY_FLOAT32:
@@ -538,19 +538,19 @@ struct NdarrayConverterGenerator::apply<variant_proto_ptr_types> {
           break;
         case 3:
           return PyArray_SimpleNewFromData(0, NULL, NPY_BYTE,
-                                           boost::get<int8_t*>(data));
+                                           boost::get<uint8_t*>(data));
           break;
         case 4:
           return PyArray_SimpleNewFromData(0, NULL, NPY_SHORT,
-                                           boost::get<int16_t*>(data));
+                                           boost::get<uint16_t*>(data));
           break;
         case 5:
           return PyArray_SimpleNewFromData(0, NULL, NPY_INT,
-                                           boost::get<int32_t*>(data));
+                                           boost::get<uint32_t*>(data));
           break;
         case 6:
           return PyArray_SimpleNewFromData(0, NULL, NPY_INT64,
-                                           boost::get<int64_t*>(data));
+                                           boost::get<uint64_t*>(data));
           break;
       }
     }
@@ -902,19 +902,19 @@ variant_proto_ptr_types Blob_mutable_cpu_data(BlobBase* blob) {
 #endif  // USE_HALF
     case CAFFE_INT8_QUANTIZED:
 #ifdef USE_HALF
-      return static_cast<Blob<int8_t>*>(blob)->mutable_cpu_data();
+      return static_cast<Blob<uint8_t>*>(blob)->mutable_cpu_data();
 #endif  // USE_HALF
     case CAFFE_INT16_QUANTIZED:
 #ifdef USE_HALF
-      return static_cast<Blob<int16_t>*>(blob)->mutable_cpu_data();
+      return static_cast<Blob<uint16_t>*>(blob)->mutable_cpu_data();
 #endif  // USE_HALF
     case CAFFE_INT32_QUANTIZED:
 #ifdef USE_HALF
-      return static_cast<Blob<int32_t>*>(blob)->mutable_cpu_data();
+      return static_cast<Blob<uint32_t>*>(blob)->mutable_cpu_data();
 #endif  // USE_HALF
     case CAFFE_INT64_QUANTIZED:
 #ifdef USE_HALF
-      return static_cast<Blob<int64_t>*>(blob)->mutable_cpu_data();
+      return static_cast<Blob<uint64_t>*>(blob)->mutable_cpu_data();
 #endif  // USE_HALF
     case CAFFE_FLOAT:
     default:
@@ -936,19 +936,19 @@ variant_proto_ptr_types Blob_mutable_cpu_diff(BlobBase* blob) {
 #endif  // USE_DOUBLE
     case CAFFE_INT8_QUANTIZED:
 #ifdef USE_INT_QUANT_8
-      return static_cast<Blob<int8_t>*>(blob)->mutable_cpu_diff();
+      return static_cast<Blob<uint8_t>*>(blob)->mutable_cpu_diff();
 #endif  // USE_INT_QUANT_8
     case CAFFE_INT16_QUANTIZED:
 #ifdef USE_INT_QUANT_16
-      return static_cast<Blob<int16_t>*>(blob)->mutable_cpu_diff();
+      return static_cast<Blob<uint16_t>*>(blob)->mutable_cpu_diff();
 #endif  // USE_INT_QUANT_16
     case CAFFE_INT32_QUANTIZED:
 #ifdef USE_INT_QUANT_32
-      return static_cast<Blob<int32_t>*>(blob)->mutable_cpu_diff();
+      return static_cast<Blob<uint32_t>*>(blob)->mutable_cpu_diff();
 #endif  // USE_INT_QUANT_32
     case CAFFE_INT64_QUANTIZED:
 #ifdef USE_INT_QUANT_64
-      return static_cast<Blob<int64_t>*>(blob)->mutable_cpu_diff();
+      return static_cast<Blob<uint64_t>*>(blob)->mutable_cpu_diff();
 #endif  // USE_INT_QUANT_64
     case CAFFE_FLOAT:
     default:
@@ -978,26 +978,26 @@ BOOST_PYTHON_MODULE(_caffe) {
   bp::implicitly_convertible<half_fp, variant_proto_types>();
   bp::implicitly_convertible<float, variant_proto_types>();
   bp::implicitly_convertible<double, variant_proto_types>();
-  bp::implicitly_convertible<int8_t, variant_proto_types>();
-  bp::implicitly_convertible<int16_t, variant_proto_types>();
-  bp::implicitly_convertible<int32_t, variant_proto_types>();
-  bp::implicitly_convertible<int64_t, variant_proto_types>();
+  bp::implicitly_convertible<uint8_t, variant_proto_types>();
+  bp::implicitly_convertible<uint16_t, variant_proto_types>();
+  bp::implicitly_convertible<uint32_t, variant_proto_types>();
+  bp::implicitly_convertible<uint64_t, variant_proto_types>();
 
   bp::implicitly_convertible<half_fp*, variant_proto_ptr_types>();
   bp::implicitly_convertible<float*, variant_proto_ptr_types>();
   bp::implicitly_convertible<double*, variant_proto_ptr_types>();
-  bp::implicitly_convertible<int8_t*, variant_proto_ptr_types>();
-  bp::implicitly_convertible<int16_t*, variant_proto_ptr_types>();
-  bp::implicitly_convertible<int32_t*, variant_proto_ptr_types>();
-  bp::implicitly_convertible<int64_t*, variant_proto_ptr_types>();
+  bp::implicitly_convertible<uint8_t*, variant_proto_ptr_types>();
+  bp::implicitly_convertible<uint16_t*, variant_proto_ptr_types>();
+  bp::implicitly_convertible<uint32_t*, variant_proto_ptr_types>();
+  bp::implicitly_convertible<uint64_t*, variant_proto_ptr_types>();
 
   bp::implicitly_convertible<vector<half_fp>, variant_proto_vec_types>();
   bp::implicitly_convertible<vector<float>, variant_proto_vec_types>();
   bp::implicitly_convertible<vector<double>, variant_proto_vec_types>();
-  bp::implicitly_convertible<vector<int8_t>, variant_proto_vec_types>();
-  bp::implicitly_convertible<vector<int16_t>, variant_proto_vec_types>();
-  bp::implicitly_convertible<vector<int32_t>, variant_proto_vec_types>();
-  bp::implicitly_convertible<vector<int64_t>, variant_proto_vec_types>();
+  bp::implicitly_convertible<vector<uint8_t>, variant_proto_vec_types>();
+  bp::implicitly_convertible<vector<uint16_t>, variant_proto_vec_types>();
+  bp::implicitly_convertible<vector<uint32_t>, variant_proto_vec_types>();
+  bp::implicitly_convertible<vector<uint64_t>, variant_proto_vec_types>();
 
 
   // Caffe utility functions
@@ -1331,10 +1331,10 @@ BOOST_PYTHON_MODULE(_caffe) {
   REGISTER_DTYPE_VECTORS_TO_PYTHON(half_fp, "_half");
   REGISTER_DTYPE_VECTORS_TO_PYTHON(float, "_float");
   REGISTER_DTYPE_VECTORS_TO_PYTHON(double, "_double");
-  REGISTER_DTYPE_VECTORS_TO_PYTHON(int8_t, "_int8");
-  REGISTER_DTYPE_VECTORS_TO_PYTHON(int16_t, "_int16");
-  REGISTER_DTYPE_VECTORS_TO_PYTHON(int32_t, "_int32");
-  REGISTER_DTYPE_VECTORS_TO_PYTHON(int64_t, "_int64");
+  REGISTER_DTYPE_VECTORS_TO_PYTHON(uint8_t, "_uint8");
+  REGISTER_DTYPE_VECTORS_TO_PYTHON(uint16_t, "_uint16");
+  REGISTER_DTYPE_VECTORS_TO_PYTHON(uint32_t, "_uint32");
+  REGISTER_DTYPE_VECTORS_TO_PYTHON(uint64_t, "_uint64");
 
   bp::class_<vector<shared_ptr<NetBase> > >("NetVec")
     .def(bp::vector_indexing_suite<vector<shared_ptr<NetBase> >, true>());

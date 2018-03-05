@@ -460,25 +460,25 @@ void Device::CreateIm2ColProgram() {
 #endif  // USE_DOUBLE
         break;
       }
-      case INT8_DATA_INDEX: {
+      case UINT8_DATA_INDEX: {
 #ifdef USE_INT_QUANT_8
         ss << create_source<int8_t>(this, this->im2col_programs_[i]);
 #endif  // USE_INT_QUANT_8
         break;
       }
-      case INT16_DATA_INDEX: {
+      case UINT16_DATA_INDEX: {
 #ifdef USE_INT_QUANT_16
         ss << create_source<int16_t>(this, this->im2col_programs_[i]);
 #endif  // USE_INT_QUANT_16
         break;
       }
-      case INT32_DATA_INDEX: {
+      case UINT32_DATA_INDEX: {
 #ifdef USE_INT_QUANT_32
         ss << create_source<int32_t>(this, this->im2col_programs_[i]);
 #endif  // USE_INT_QUANT_32
         break;
       }
-      case INT64_DATA_INDEX: {
+      case UINT64_DATA_INDEX: {
 #ifdef USE_INT_QUANT_64
         ss << create_source<int64_t>(this, this->im2col_programs_[i]);
 #endif  // USE_INT_QUANT_64

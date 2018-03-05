@@ -107,13 +107,13 @@ INSTANTIATE_CLASS_FUNC_3T_GUARDED(MOELayer, Forward_gpu,
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(MOELayer, Forward_gpu,
                                  (double), (double), PROTO_TYPES);
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(MOELayer, Forward_gpu,
-                                  (int8_t), (int8_t),  PROTO_TYPES);
+                                  (uint8_t), (uint8_t),  PROTO_TYPES);
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(MOELayer, Forward_gpu,
-                                  (int16_t), (int16_t),  PROTO_TYPES);
+                                  (uint16_t), (uint16_t),  PROTO_TYPES);
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(MOELayer, Forward_gpu,
-                                  (int32_t), (int32_t),  PROTO_TYPES);
+                                  (uint32_t), (uint32_t),  PROTO_TYPES);
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(MOELayer, Forward_gpu,
-                                  (int64_t), (int64_t),  PROTO_TYPES);
+                                  (uint64_t), (uint64_t),  PROTO_TYPES);
 
 
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(MOELayer, Backward_gpu,
@@ -123,11 +123,11 @@ INSTANTIATE_CLASS_FUNC_3T_GUARDED(MOELayer, Backward_gpu,
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(MOELayer, Backward_gpu,
                                  (double), (double), PROTO_TYPES);
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(MOELayer, Backward_gpu,
-                                  (int8_t), (int8_t),  PROTO_TYPES);
+                                  (uint8_t), (uint8_t),  PROTO_TYPES);
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(MOELayer, Backward_gpu,
-                                  (int16_t), (int16_t),  PROTO_TYPES);
+                                  (uint16_t), (uint16_t),  PROTO_TYPES);
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(MOELayer, Backward_gpu,
-                                  (int32_t), (int32_t),  PROTO_TYPES);
+                                  (uint32_t), (uint32_t),  PROTO_TYPES);
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(MOELayer, Backward_gpu,
-                                  (int64_t), (int64_t),  PROTO_TYPES);
+                                  (uint64_t), (uint64_t),  PROTO_TYPES);
 }  // namespace caffe

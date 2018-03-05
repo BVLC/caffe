@@ -38,7 +38,7 @@ namespace caffe {
     vector<Blob<Dtype>*> blob_top_vec_;
   };
 
-  TYPED_TEST_CASE(BatchNormLayerTest, TestDtypesAndDevices);
+  TYPED_TEST_CASE(BatchNormLayerTest, TestDtypesFloatAndDevices);
 
   TYPED_TEST(BatchNormLayerTest, TestForward) {
     typedef typename TypeParam::Dtype Dtype;

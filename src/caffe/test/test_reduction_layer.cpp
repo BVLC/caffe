@@ -99,7 +99,7 @@ class ReductionLayerTest : public MultiDeviceTest<TypeParam> {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-TYPED_TEST_CASE(ReductionLayerTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(ReductionLayerTest, TestDtypesFloatAndDevices);
 
 TYPED_TEST(ReductionLayerTest, TestSetUp) {
   typedef typename TypeParam::Dtype Dtype;

@@ -4,7 +4,9 @@ variant_types  = ['int8_t', 'int16_t', 'int32_t', 'int64_t',
 
 float_types = ['half_fp', 'float', 'double']
 float_types_no_half = ['float', 'double']
-int_types = ['int8_t', 'int16_t', 'int32_t', 'uint8_t', 'uint16_t', 'uint32_t']
+int_types = ['int8_t', 'int16_t', 'int32_t', 'int64_t'
+             'uint8_t', 'uint16_t', 'uint32_t', 'uint64_t']
+unsigned_int_types = ['uint8_t', 'uint16_t', 'uint32_t', 'uint64_t']
 
 pointer_variant_types = variant_types + ['bool', 'char', 'void']
 
@@ -29,7 +31,7 @@ proto_types = dict()
 proto_types['half_fp'] = 'CAFFE_HALF'
 proto_types['float'] = 'CAFFE_FLOAT'
 proto_types['double'] = 'CAFFE_DOUBLE'
-proto_types['int8_t'] = 'CAFFE_INT8_QUANTIZED'
-proto_types['int16_t'] = 'CAFFE_INT16_QUANTIZED'
-proto_types['int32_t'] = 'CAFFE_INT32_QUANTIZED'
-proto_types['int64_t'] = 'CAFFE_INT64_QUANTIZED'
+proto_types['uint8_t'] = 'CAFFE_INT8_QUANTIZED'
+proto_types['uint16_t'] = 'CAFFE_INT16_QUANTIZED'
+proto_types['uint32_t'] = 'CAFFE_INT32_QUANTIZED'
+proto_types['uint64_t'] = 'CAFFE_INT64_QUANTIZED'

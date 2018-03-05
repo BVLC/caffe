@@ -21,14 +21,6 @@ void Device::copy(const uint_tp n, vptr<const float> x, vptr<float> y);
 template
 void Device::copy(const uint_tp n, vptr<const double> x, vptr<double> y);
 template
-void Device::copy(const uint_tp n, vptr<const int8_t> x, vptr<int8_t> y);
-template
-void Device::copy(const uint_tp n, vptr<const int16_t> x, vptr<int16_t> y);
-template
-void Device::copy(const uint_tp n, vptr<const int32_t> x, vptr<int32_t> y);
-template
-void Device::copy(const uint_tp n, vptr<const int64_t> x, vptr<int64_t> y);
-template
 void Device::copy(const uint_tp n, vptr<const uint8_t> x, vptr<uint8_t> y);
 template
 void Device::copy(const uint_tp n, vptr<const uint16_t> x, vptr<uint16_t> y);
@@ -36,6 +28,14 @@ template
 void Device::copy(const uint_tp n, vptr<const uint32_t> x, vptr<uint32_t> y);
 template
 void Device::copy(const uint_tp n, vptr<const uint64_t> x, vptr<uint64_t> y);
+template
+void Device::copy(const uint_tp n, vptr<const int8_t> x, vptr<int8_t> y);
+template
+void Device::copy(const uint_tp n, vptr<const int16_t> x, vptr<int16_t> y);
+template
+void Device::copy(const uint_tp n, vptr<const int32_t> x, vptr<int32_t> y);
+template
+void Device::copy(const uint_tp n, vptr<const int64_t> x, vptr<int64_t> y);
 template
 void Device::copy(const uint_tp n, vptr<const void> x, vptr<void> y);
 
@@ -55,14 +55,6 @@ void Device::copy(const uint_tp n, const float* x, vptr<float> y);
 template
 void Device::copy(const uint_tp n, const double* x, vptr<double> y);
 template
-void Device::copy(const uint_tp n, const int8_t* x, vptr<int8_t> y);
-template
-void Device::copy(const uint_tp n, const int16_t* x, vptr<int16_t> y);
-template
-void Device::copy(const uint_tp n, const int32_t* x, vptr<int32_t> y);
-template
-void Device::copy(const uint_tp n, const int64_t* x, vptr<int64_t> y);
-template
 void Device::copy(const uint_tp n, const uint8_t* x, vptr<uint8_t> y);
 template
 void Device::copy(const uint_tp n, const uint16_t* x, vptr<uint16_t> y);
@@ -70,6 +62,14 @@ template
 void Device::copy(const uint_tp n, const uint32_t* x, vptr<uint32_t> y);
 template
 void Device::copy(const uint_tp n, const uint64_t* x, vptr<uint64_t> y);
+template
+void Device::copy(const uint_tp n, const int8_t* x, vptr<int8_t> y);
+template
+void Device::copy(const uint_tp n, const int16_t* x, vptr<int16_t> y);
+template
+void Device::copy(const uint_tp n, const int32_t* x, vptr<int32_t> y);
+template
+void Device::copy(const uint_tp n, const int64_t* x, vptr<int64_t> y);
 template
 void Device::copy(const uint_tp n, const void* x, vptr<void> y);
 
@@ -87,14 +87,6 @@ void Device::copy(const uint_tp n, vptr<const float> x, float* y);
 template
 void Device::copy(const uint_tp n, vptr<const double> x, double* y);
 template
-void Device::copy(const uint_tp n, vptr<const int8_t> x, int8_t* y);
-template
-void Device::copy(const uint_tp n, vptr<const int16_t> x, int16_t* y);
-template
-void Device::copy(const uint_tp n, vptr<const int32_t> x, int32_t* y);
-template
-void Device::copy(const uint_tp n, vptr<const int64_t> x, int64_t* y);
-template
 void Device::copy(const uint_tp n, vptr<const uint8_t> x, uint8_t* y);
 template
 void Device::copy(const uint_tp n, vptr<const uint16_t> x, uint16_t* y);
@@ -102,6 +94,14 @@ template
 void Device::copy(const uint_tp n, vptr<const uint32_t> x, uint32_t* y);
 template
 void Device::copy(const uint_tp n, vptr<const uint64_t> x, uint64_t* y);
+template
+void Device::copy(const uint_tp n, vptr<const int8_t> x, int8_t* y);
+template
+void Device::copy(const uint_tp n, vptr<const int16_t> x, int16_t* y);
+template
+void Device::copy(const uint_tp n, vptr<const int32_t> x, int32_t* y);
+template
+void Device::copy(const uint_tp n, vptr<const int64_t> x, int64_t* y);
 template
 void Device::copy(const uint_tp n, vptr<const void> x, void* y);
 
@@ -252,46 +252,46 @@ void Device::scal(const uint_tp n, const double alpha, vptr<double> x) {
 template<>
 void Device::gemm(const CBLAS_TRANSPOSE trans_a, const CBLAS_TRANSPOSE trans_b,
                   const uint_tp m, const uint_tp n, const uint_tp k,
-                  const int8_t alpha, vptr<const int8_t> a,
-                  vptr<const int8_t> b, const int8_t beta, vptr<int8_t> c) {
-  this->gemm_int8(trans_a, trans_b, m, n, k, alpha, a, b, beta, c);
+                  const uint8_t alpha, vptr<const uint8_t> a,
+                  vptr<const uint8_t> b, const uint8_t beta, vptr<uint8_t> c) {
+  this->gemm_uint8(trans_a, trans_b, m, n, k, alpha, a, b, beta, c);
 }
 template<>
 void Device::gemv(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
-                  const uint_tp n, const int8_t alpha,
-                  vptr<const int8_t> a,
-                  vptr<const int8_t> x, const int8_t beta,
-                  vptr<int8_t> y) {
-  this->gemv_int8(trans_a, m, n, alpha, a, x, beta, y);
+                  const uint_tp n, const uint8_t alpha,
+                  vptr<const uint8_t> a,
+                  vptr<const uint8_t> x, const uint8_t beta,
+                  vptr<uint8_t> y) {
+  this->gemv_uint8(trans_a, m, n, alpha, a, x, beta, y);
 }
 template<>
-void Device::axpy(const uint_tp n, const int8_t alpha,
-                  vptr<const int8_t> x, vptr<int8_t> y) {
-  this->axpy_int8(n, alpha, x, y);
+void Device::axpy(const uint_tp n, const uint8_t alpha,
+                  vptr<const uint8_t> x, vptr<uint8_t> y) {
+  this->axpy_uint8(n, alpha, x, y);
 }
 template<>
-void Device::axpby(const uint_tp n, const int8_t alpha,
-                   vptr<const int8_t> x,
-                   const int8_t beta, vptr<int8_t> y) {
-  this->axpby_int8(n, alpha, x, beta, y);
+void Device::axpby(const uint_tp n, const uint8_t alpha,
+                   vptr<const uint8_t> x,
+                   const uint8_t beta, vptr<uint8_t> y) {
+  this->axpby_uint8(n, alpha, x, beta, y);
 }
 template<>
-void Device::dot(const uint_tp n, vptr<const int8_t> x, vptr<const int8_t> y,
-                 int8_t *out) {
-  this->dot_int8(n, x, y, out);
+void Device::dot(const uint_tp n, vptr<const uint8_t> x, vptr<const uint8_t> y,
+                 uint8_t *out) {
+  this->dot_uint8(n, x, y, out);
 }
 template<>
-void Device::asum(const uint_tp n, vptr<const int8_t> x, int8_t* y) {
-  this->asum_int8(n, x, y);
+void Device::asum(const uint_tp n, vptr<const uint8_t> x, uint8_t* y) {
+  this->asum_uint8(n, x, y);
 }
 template<>
-void Device::scale(const uint_tp n, const int8_t alpha,
-                   vptr<const int8_t> x, vptr<int8_t> y) {
-  this->scale_int8(n, alpha, x, y);
+void Device::scale(const uint_tp n, const uint8_t alpha,
+                   vptr<const uint8_t> x, vptr<uint8_t> y) {
+  this->scale_uint8(n, alpha, x, y);
 }
 template<>
-void Device::scal(const uint_tp n, const int8_t alpha, vptr<int8_t> x) {
-  this->scal_int8(n, alpha, x);
+void Device::scal(const uint_tp n, const uint8_t alpha, vptr<uint8_t> x) {
+  this->scal_uint8(n, alpha, x);
 }
 #endif  // USE_INT_QUANT_8
 
@@ -299,46 +299,46 @@ void Device::scal(const uint_tp n, const int8_t alpha, vptr<int8_t> x) {
 template<>
 void Device::gemm(const CBLAS_TRANSPOSE trans_a, const CBLAS_TRANSPOSE trans_b,
                   const uint_tp m, const uint_tp n, const uint_tp k,
-                  const int16_t alpha, vptr<const int16_t> a,
-                  vptr<const int16_t> b, const int16_t beta, vptr<int16_t> c) {
-  this->gemm_int16(trans_a, trans_b, m, n, k, alpha, a, b, beta, c);
+                  const uint16_t alpha, vptr<const uint16_t> a,
+                  vptr<const uint16_t> b, const uint16_t beta, vptr<uint16_t> c) {
+  this->gemm_uint16(trans_a, trans_b, m, n, k, alpha, a, b, beta, c);
 }
 template<>
 void Device::gemv(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
-                  const uint_tp n, const int16_t alpha,
-                  vptr<const int16_t> a,
-                  vptr<const int16_t> x, const int16_t beta,
-                  vptr<int16_t> y) {
-  this->gemv_int16(trans_a, m, n, alpha, a, x, beta, y);
+                  const uint_tp n, const uint16_t alpha,
+                  vptr<const uint16_t> a,
+                  vptr<const uint16_t> x, const uint16_t beta,
+                  vptr<uint16_t> y) {
+  this->gemv_uint16(trans_a, m, n, alpha, a, x, beta, y);
 }
 template<>
-void Device::axpy(const uint_tp n, const int16_t alpha,
-                  vptr<const int16_t> x, vptr<int16_t> y) {
-  this->axpy_int16(n, alpha, x, y);
+void Device::axpy(const uint_tp n, const uint16_t alpha,
+                  vptr<const uint16_t> x, vptr<uint16_t> y) {
+  this->axpy_uint16(n, alpha, x, y);
 }
 template<>
-void Device::axpby(const uint_tp n, const int16_t alpha,
-                   vptr<const int16_t> x,
-                   const int16_t beta, vptr<int16_t> y) {
-  this->axpby_int16(n, alpha, x, beta, y);
+void Device::axpby(const uint_tp n, const uint16_t alpha,
+                   vptr<const uint16_t> x,
+                   const uint16_t beta, vptr<uint16_t> y) {
+  this->axpby_uint16(n, alpha, x, beta, y);
 }
 template<>
-void Device::dot(const uint_tp n, vptr<const int16_t> x, vptr<const int16_t> y,
-                 int16_t *out) {
-  this->dot_int16(n, x, y, out);
+void Device::dot(const uint_tp n, vptr<const uint16_t> x, vptr<const uint16_t> y,
+                 uint16_t *out) {
+  this->dot_uint16(n, x, y, out);
 }
 template<>
-void Device::asum(const uint_tp n, vptr<const int16_t> x, int16_t* y) {
-  this->asum_int16(n, x, y);
+void Device::asum(const uint_tp n, vptr<const uint16_t> x, uint16_t* y) {
+  this->asum_uint16(n, x, y);
 }
 template<>
-void Device::scale(const uint_tp n, const int16_t alpha,
-                   vptr<const int16_t> x, vptr<int16_t> y) {
-  this->scale_int16(n, alpha, x, y);
+void Device::scale(const uint_tp n, const uint16_t alpha,
+                   vptr<const uint16_t> x, vptr<uint16_t> y) {
+  this->scale_uint16(n, alpha, x, y);
 }
 template<>
-void Device::scal(const uint_tp n, const int16_t alpha, vptr<int16_t> x) {
-  this->scal_int16(n, alpha, x);
+void Device::scal(const uint_tp n, const uint16_t alpha, vptr<uint16_t> x) {
+  this->scal_uint16(n, alpha, x);
 }
 #endif  // USE_INT_QUANT_16
 
@@ -346,46 +346,46 @@ void Device::scal(const uint_tp n, const int16_t alpha, vptr<int16_t> x) {
 template<>
 void Device::gemm(const CBLAS_TRANSPOSE trans_a, const CBLAS_TRANSPOSE trans_b,
                   const uint_tp m, const uint_tp n, const uint_tp k,
-                  const int32_t alpha, vptr<const int32_t> a,
-                  vptr<const int32_t> b, const int32_t beta, vptr<int32_t> c) {
-  this->gemm_int32(trans_a, trans_b, m, n, k, alpha, a, b, beta, c);
+                  const uint32_t alpha, vptr<const uint32_t> a,
+                  vptr<const uint32_t> b, const uint32_t beta, vptr<uint32_t> c) {
+  this->gemm_uint32(trans_a, trans_b, m, n, k, alpha, a, b, beta, c);
 }
 template<>
 void Device::gemv(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
-                  const uint_tp n, const int32_t alpha,
-                  vptr<const int32_t> a,
-                  vptr<const int32_t> x, const int32_t beta,
-                  vptr<int32_t> y) {
-  this->gemv_int32(trans_a, m, n, alpha, a, x, beta, y);
+                  const uint_tp n, const uint32_t alpha,
+                  vptr<const uint32_t> a,
+                  vptr<const uint32_t> x, const uint32_t beta,
+                  vptr<uint32_t> y) {
+  this->gemv_uint32(trans_a, m, n, alpha, a, x, beta, y);
 }
 template<>
-void Device::axpy(const uint_tp n, const int32_t alpha,
-                  vptr<const int32_t> x, vptr<int32_t> y) {
-  this->axpy_int32(n, alpha, x, y);
+void Device::axpy(const uint_tp n, const uint32_t alpha,
+                  vptr<const uint32_t> x, vptr<uint32_t> y) {
+  this->axpy_uint32(n, alpha, x, y);
 }
 template<>
-void Device::axpby(const uint_tp n, const int32_t alpha,
-                   vptr<const int32_t> x,
-                   const int32_t beta, vptr<int32_t> y) {
-  this->axpby_int32(n, alpha, x, beta, y);
+void Device::axpby(const uint_tp n, const uint32_t alpha,
+                   vptr<const uint32_t> x,
+                   const uint32_t beta, vptr<uint32_t> y) {
+  this->axpby_uint32(n, alpha, x, beta, y);
 }
 template<>
-void Device::dot(const uint_tp n, vptr<const int32_t> x, vptr<const int32_t> y,
-                 int32_t *out) {
-  this->dot_int32(n, x, y, out);
+void Device::dot(const uint_tp n, vptr<const uint32_t> x, vptr<const uint32_t> y,
+                 uint32_t *out) {
+  this->dot_uint32(n, x, y, out);
 }
 template<>
-void Device::asum(const uint_tp n, vptr<const int32_t> x, int32_t* y) {
-  this->asum_int32(n, x, y);
+void Device::asum(const uint_tp n, vptr<const uint32_t> x, uint32_t* y) {
+  this->asum_uint32(n, x, y);
 }
 template<>
-void Device::scale(const uint_tp n, const int32_t alpha,
-                   vptr<const int32_t> x, vptr<int32_t> y) {
-  this->scale_int32(n, alpha, x, y);
+void Device::scale(const uint_tp n, const uint32_t alpha,
+                   vptr<const uint32_t> x, vptr<uint32_t> y) {
+  this->scale_uint32(n, alpha, x, y);
 }
 template<>
-void Device::scal(const uint_tp n, const int32_t alpha, vptr<int32_t> x) {
-  this->scal_int32(n, alpha, x);
+void Device::scal(const uint_tp n, const uint32_t alpha, vptr<uint32_t> x) {
+  this->scal_uint32(n, alpha, x);
 }
 #endif  // USE_INT_QUANT_32
 
@@ -393,46 +393,46 @@ void Device::scal(const uint_tp n, const int32_t alpha, vptr<int32_t> x) {
 template<>
 void Device::gemm(const CBLAS_TRANSPOSE trans_a, const CBLAS_TRANSPOSE trans_b,
                   const uint_tp m, const uint_tp n, const uint_tp k,
-                  const int64_t alpha, vptr<const int64_t> a,
-                  vptr<const int64_t> b, const int64_t beta, vptr<int64_t> c) {
-  this->gemm_int64(trans_a, trans_b, m, n, k, alpha, a, b, beta, c);
+                  const uint64_t alpha, vptr<const uint64_t> a,
+                  vptr<const uint64_t> b, const uint64_t beta, vptr<uint64_t> c) {
+  this->gemm_uint64(trans_a, trans_b, m, n, k, alpha, a, b, beta, c);
 }
 template<>
 void Device::gemv(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
-                  const uint_tp n, const int64_t alpha,
-                  vptr<const int64_t> a,
-                  vptr<const int64_t> x, const int64_t beta,
-                  vptr<int64_t> y) {
-  this->gemv_int64(trans_a, m, n, alpha, a, x, beta, y);
+                  const uint_tp n, const uint64_t alpha,
+                  vptr<const uint64_t> a,
+                  vptr<const uint64_t> x, const uint64_t beta,
+                  vptr<uint64_t> y) {
+  this->gemv_uint64(trans_a, m, n, alpha, a, x, beta, y);
 }
 template<>
-void Device::axpy(const uint_tp n, const int64_t alpha,
-                  vptr<const int64_t> x, vptr<int64_t> y) {
-  this->axpy_int64(n, alpha, x, y);
+void Device::axpy(const uint_tp n, const uint64_t alpha,
+                  vptr<const uint64_t> x, vptr<uint64_t> y) {
+  this->axpy_uint64(n, alpha, x, y);
 }
 template<>
-void Device::axpby(const uint_tp n, const int64_t alpha,
-                   vptr<const int64_t> x,
-                   const int64_t beta, vptr<int64_t> y) {
-  this->axpby_int64(n, alpha, x, beta, y);
+void Device::axpby(const uint_tp n, const uint64_t alpha,
+                   vptr<const uint64_t> x,
+                   const uint64_t beta, vptr<uint64_t> y) {
+  this->axpby_uint64(n, alpha, x, beta, y);
 }
 template<>
-void Device::dot(const uint_tp n, vptr<const int64_t> x, vptr<const int64_t> y,
-                 int64_t *out) {
-  this->dot_int64(n, x, y, out);
+void Device::dot(const uint_tp n, vptr<const uint64_t> x, vptr<const uint64_t> y,
+                 uint64_t *out) {
+  this->dot_uint64(n, x, y, out);
 }
 template<>
-void Device::asum(const uint_tp n, vptr<const int64_t> x, int64_t* y) {
-  this->asum_int64(n, x, y);
+void Device::asum(const uint_tp n, vptr<const uint64_t> x, uint64_t* y) {
+  this->asum_uint64(n, x, y);
 }
 template<>
-void Device::scale(const uint_tp n, const int64_t alpha,
-                   vptr<const int64_t> x, vptr<int64_t> y) {
-  this->scale_int64(n, alpha, x, y);
+void Device::scale(const uint_tp n, const uint64_t alpha,
+                   vptr<const uint64_t> x, vptr<uint64_t> y) {
+  this->scale_uint64(n, alpha, x, y);
 }
 template<>
-void Device::scal(const uint_tp n, const int64_t alpha, vptr<int64_t> x) {
-  this->scal_int64(n, alpha, x);
+void Device::scal(const uint_tp n, const uint64_t alpha, vptr<uint64_t> x) {
+  this->scal_uint64(n, alpha, x);
 }
 #endif  // USE_INT_QUANT_64
 

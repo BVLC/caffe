@@ -17,7 +17,7 @@ namespace caffe {
 template <typename TypeParam>
 class LayerFactoryTest : public MultiDeviceTest<TypeParam> {};
 
-TYPED_TEST_CASE(LayerFactoryTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(LayerFactoryTest, TestDtypesFloatAndDevices);
 
 TYPED_TEST(LayerFactoryTest, TestCreateLayer) {
   typedef typename TypeParam::Dtype Dtype;

@@ -34,7 +34,7 @@ class Im2colLayerTest : public MultiDeviceTest<TypeParam> {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-TYPED_TEST_CASE(Im2colLayerTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(Im2colLayerTest, TestDtypesFloatAndDevices);
 
 TYPED_TEST(Im2colLayerTest, TestSetup) {
   typedef typename TypeParam::Dtype Dtype;

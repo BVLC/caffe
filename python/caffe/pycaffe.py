@@ -73,6 +73,16 @@ def _Net_blob_loss_weights(self):
     return self._blob_loss_weights_dict
 
 @property
+def _Net_layer_dict(self):
+    """
+    An OrderedDict (bottom to top, i.e., input to output) of network
+    layers indexed by name
+    """
+    if not hasattr(self, '_layer_dict'):
+        self._layer_dict = OrderedDict(zip(self._layer_names, self.layers))
+    return self._layer_dict
+
+@property
 def _Net_params(self):
     """
     An OrderedDict (bottom to top, i.e., input to output) of network

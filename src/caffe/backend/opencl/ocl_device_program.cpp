@@ -565,23 +565,23 @@ string OclDeviceProgram::convert_type_double(int_tp vec_len,
   return "convert_double" + (vec_len > 0 ? std::to_string(vec_len) : "")
       + "(" + src_val + ")";
 }
-string OclDeviceProgram::convert_type_int8(int_tp vec_len,
-                                           string src_val) const {
+string OclDeviceProgram::convert_type_uint8(int_tp vec_len,
+                                            string src_val) const {
   return "convert_char" + (vec_len > 0 ? std::to_string(vec_len) : "")
       + "(" + src_val + ")";
 }
-string OclDeviceProgram::convert_type_int16(int_tp vec_len,
-                                            string src_val) const {
+string OclDeviceProgram::convert_type_uint16(int_tp vec_len,
+                                             string src_val) const {
    return "convert_short" + (vec_len > 0 ? std::to_string(vec_len) : "")
        + "(" + src_val + ")";
  }
-string OclDeviceProgram::convert_type_int32(int_tp vec_len,
-                                            string src_val) const {
+string OclDeviceProgram::convert_type_uint32(int_tp vec_len,
+                                             string src_val) const {
    return "convert_int" + (vec_len > 0 ? std::to_string(vec_len) : "")
        + "(" + src_val + ")";
  }
-string OclDeviceProgram::convert_type_int64(int_tp vec_len,
-                                            string src_val) const {
+string OclDeviceProgram::convert_type_uint64(int_tp vec_len,
+                                             string src_val) const {
    return "convert_long" + (vec_len > 0 ? std::to_string(vec_len) : "")
        + "(" + src_val + ")";
  }
@@ -595,16 +595,16 @@ string OclDeviceProgram::helper_functions_float() const {
 string OclDeviceProgram::helper_functions_double() const {
   return "";
 }
-string OclDeviceProgram::helper_functions_int8() const {
+string OclDeviceProgram::helper_functions_uint8() const {
   return "";
 }
-string OclDeviceProgram::helper_functions_int16() const {
+string OclDeviceProgram::helper_functions_uint16() const {
   return "";
 }
-string OclDeviceProgram::helper_functions_int32() const {
+string OclDeviceProgram::helper_functions_uint32() const {
   return "";
 }
-string OclDeviceProgram::helper_functions_int64() const {
+string OclDeviceProgram::helper_functions_uint64() const {
   return "";
 }
 

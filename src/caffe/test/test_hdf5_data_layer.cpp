@@ -54,7 +54,7 @@ class HDF5DataLayerTest : public MultiDeviceTest<TypeParam> {
   vector<BlobBase*> blob_top_base_vec_;
 };
 
-TYPED_TEST_CASE(HDF5DataLayerTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(HDF5DataLayerTest, TestDtypesFloatAndDevices);
 
 TYPED_TEST(HDF5DataLayerTest, TestRead) {
   typedef typename TypeParam::Dtype Dtype;

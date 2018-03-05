@@ -19,7 +19,7 @@ const float kMillisecondsThreshold = 30;
 template <typename TypeParam>
 class BenchmarkTest : public MultiDeviceTest<TypeParam> {};
 
-TYPED_TEST_CASE(BenchmarkTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(BenchmarkTest, TestDtypesFloatAndDevices);
 
 TYPED_TEST(BenchmarkTest, TestTimerConstructor) {
   Timer timer;

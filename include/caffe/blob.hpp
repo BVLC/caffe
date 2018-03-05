@@ -437,45 +437,45 @@ class Blob : public BlobBase {
 };  // class Blob
 
 
-template<> void Blob<uint8_t>::Init();
-template<> void Blob<uint16_t>::Init();
-template<> void Blob<uint32_t>::Init();
-template<> void Blob<uint64_t>::Init();
+template<> void Blob<int8_t>::Init();
+template<> void Blob<int16_t>::Init();
+template<> void Blob<int32_t>::Init();
+template<> void Blob<int64_t>::Init();
 
-template<> void Blob<uint8_t>::Update();
-template<> void Blob<uint16_t>::Update();
-template<> void Blob<uint32_t>::Update();
-template<> void Blob<uint64_t>::Update();
+template<> void Blob<int8_t>::Update();
+template<> void Blob<int16_t>::Update();
+template<> void Blob<int32_t>::Update();
+template<> void Blob<int64_t>::Update();
 
-template<> uint8_t Blob<uint8_t>::asum_data() const;
-template<> uint16_t Blob<uint16_t>::asum_data() const;
-template<> uint32_t Blob<uint32_t>::asum_data() const;
-template<> uint64_t Blob<uint64_t>::asum_data() const;
+template<> int8_t Blob<int8_t>::asum_data() const;
+template<> int16_t Blob<int16_t>::asum_data() const;
+template<> int32_t Blob<int32_t>::asum_data() const;
+template<> int64_t Blob<int64_t>::asum_data() const;
 
-template<> uint8_t Blob<uint8_t>::asum_diff() const;
-template<> uint16_t Blob<uint16_t>::asum_diff() const;
-template<> uint32_t Blob<uint32_t>::asum_diff() const;
-template<> uint64_t Blob<uint64_t>::asum_diff() const;
+template<> int8_t Blob<int8_t>::asum_diff() const;
+template<> int16_t Blob<int16_t>::asum_diff() const;
+template<> int32_t Blob<int32_t>::asum_diff() const;
+template<> int64_t Blob<int64_t>::asum_diff() const;
 
-template<> uint8_t Blob<uint8_t>::sumsq_data() const;
-template<> uint16_t Blob<uint16_t>::sumsq_data() const;
-template<> uint32_t Blob<uint32_t>::sumsq_data() const;
-template<> uint64_t Blob<uint64_t>::sumsq_data() const;
+template<> int8_t Blob<int8_t>::sumsq_data() const;
+template<> int16_t Blob<int16_t>::sumsq_data() const;
+template<> int32_t Blob<int32_t>::sumsq_data() const;
+template<> int64_t Blob<int64_t>::sumsq_data() const;
 
-template<> uint8_t Blob<uint8_t>::sumsq_diff() const;
-template<> uint16_t Blob<uint16_t>::sumsq_diff() const;
-template<> uint32_t Blob<uint32_t>::sumsq_diff() const;
-template<> uint64_t Blob<uint64_t>::sumsq_diff() const;
+template<> int8_t Blob<int8_t>::sumsq_diff() const;
+template<> int16_t Blob<int16_t>::sumsq_diff() const;
+template<> int32_t Blob<int32_t>::sumsq_diff() const;
+template<> int64_t Blob<int64_t>::sumsq_diff() const;
 
-template<> void Blob<uint8_t>::scale_data(uint8_t scale_factor);
-template<> void Blob<uint16_t>::scale_data(uint16_t scale_factor);
-template<> void Blob<uint32_t>::scale_data(uint32_t scale_factor);
-template<> void Blob<uint64_t>::scale_data(uint64_t scale_factor);
+template<> void Blob<int8_t>::scale_data(int8_t scale_factor);
+template<> void Blob<int16_t>::scale_data(int16_t scale_factor);
+template<> void Blob<int32_t>::scale_data(int32_t scale_factor);
+template<> void Blob<int64_t>::scale_data(int64_t scale_factor);
 
-template<> void Blob<uint8_t>::scale_diff(uint8_t scale_factor);
-template<> void Blob<uint16_t>::scale_diff(uint16_t scale_factor);
-template<> void Blob<uint32_t>::scale_diff(uint32_t scale_factor);
-template<> void Blob<uint64_t>::scale_diff(uint64_t scale_factor);
+template<> void Blob<int8_t>::scale_diff(int8_t scale_factor);
+template<> void Blob<int16_t>::scale_diff(int16_t scale_factor);
+template<> void Blob<int32_t>::scale_diff(int32_t scale_factor);
+template<> void Blob<int64_t>::scale_diff(int64_t scale_factor);
 
 template<> void Blob<float>::ToProto(BlobProto* proto, bool write_diff) const;
 template<> void Blob<double>::ToProto(BlobProto* proto, bool write_diff) const;

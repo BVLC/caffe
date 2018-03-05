@@ -10,19 +10,18 @@ void Device::rng_uniform(const uint_tp n, const half_fp a,
   this->rng_uniform_half(n, a, b, r);
 }
 void Device::rng_uniform_half(const uint_tp n, const half_fp a,
-                        const half_fp b, vptr<half_fp> r) {
+                              const half_fp b, vptr<half_fp> r) {
   vector<half_fp> random(n);  // NOLINT
   caffe_rng_uniform(n, a, b, &random[0]);
   this->memcpy(sizeof(half_fp) * n, &random[0], vptr<void>(r));
 }
 template<>
 void Device::rng_gaussian(const uint_tp n, const half_fp mu,
-                  const half_fp sigma, vptr<half_fp> r) {
+                          const half_fp sigma, vptr<half_fp> r) {
   this->rng_gaussian_half(n, mu, sigma, r);
 }
 void Device::rng_gaussian_half(const uint_tp n, const half_fp mu,
-                               const half_fp sigma,
-                               vptr<half_fp> r) {
+                               const half_fp sigma, vptr<half_fp> r) {
   vector<half_fp> random(n);  // NOLINT
   caffe_rng_gaussian(n, mu, sigma, &random[0]);
   this->memcpy(sizeof(half_fp) * n, &random[0], vptr<void>(r));
@@ -347,58 +346,58 @@ void Device::rng_bernoulli_double(const uint_tp n, const double p,
 
 #ifdef USE_INT_QUANT_8
 template<>
-void Device::rng_uniform(const uint_tp n, const int8_t a,
-                                const int8_t b, vptr<int8_t> r) {
-  this->rng_uniform_int8(n, a, b, r);
+void Device::rng_uniform(const uint_tp n, const uint8_t a,
+                                const uint8_t b, vptr<uint8_t> r) {
+  this->rng_uniform_uint8(n, a, b, r);
 }
-void Device::rng_uniform_int8(const uint_tp n, const int8_t a,
-                                   const int8_t b, vptr<int8_t> r) {
-  vector<int8_t> random(n);  // NOLINT
+void Device::rng_uniform_uint8(const uint_tp n, const uint8_t a,
+                               const uint8_t b, vptr<uint8_t> r) {
+  vector<uint8_t> random(n);  // NOLINT
   caffe_rng_uniform(n, a, b, &random[0]);
-  this->memcpy(sizeof(int8_t) * n, &random[0], vptr<void>(r));
+  this->memcpy(sizeof(uint8_t) * n, &random[0], vptr<void>(r));
 }
 #endif  // USE_INT_QUANT_8
 
 #ifdef USE_INT_QUANT_16
 template<>
-void Device::rng_uniform(const uint_tp n, const int16_t a,
-                                const int16_t b, vptr<int16_t> r) {
-  this->rng_uniform_int16(n, a, b, r);
+void Device::rng_uniform(const uint_tp n, const uint16_t a,
+                                const uint16_t b, vptr<uint16_t> r) {
+  this->rng_uniform_uint16(n, a, b, r);
 }
-void Device::rng_uniform_int16(const uint_tp n, const int16_t a,
-                                   const int16_t b, vptr<int16_t> r) {
-  vector<int16_t> random(n);  // NOLINT
+void Device::rng_uniform_uint16(const uint_tp n, const uint16_t a,
+                                const uint16_t b, vptr<uint16_t> r) {
+  vector<uint16_t> random(n);  // NOLINT
   caffe_rng_uniform(n, a, b, &random[0]);
-  this->memcpy(sizeof(int16_t) * n, &random[0], vptr<void>(r));
+  this->memcpy(sizeof(uint16_t) * n, &random[0], vptr<void>(r));
 }
 #endif  // USE_INT_QUANT_16
 
 #ifdef USE_INT_QUANT_32
 template<>
-void Device::rng_uniform(const uint_tp n, const int32_t a,
-                                const int32_t b, vptr<int32_t> r) {
-  this->rng_uniform_int32(n, a, b, r);
+void Device::rng_uniform(const uint_tp n, const uint32_t a,
+                         const uint32_t b, vptr<uint32_t> r) {
+  this->rng_uniform_uint32(n, a, b, r);
 }
-void Device::rng_uniform_int32(const uint_tp n, const int32_t a,
-                                   const int32_t b, vptr<int32_t> r) {
-  vector<int32_t> random(n);  // NOLINT
+void Device::rng_uniform_uint32(const uint_tp n, const uint32_t a,
+                                const uint32_t b, vptr<uint32_t> r) {
+  vector<uint32_t> random(n);  // NOLINT
   caffe_rng_uniform(n, a, b, &random[0]);
-  this->memcpy(sizeof(int32_t) * n, &random[0], vptr<void>(r));
+  this->memcpy(sizeof(uint32_t) * n, &random[0], vptr<void>(r));
 }
 #endif  // USE_INT_QUANT_32
 
 
 #ifdef USE_INT_QUANT_64
 template<>
-void Device::rng_uniform(const uint_tp n, const int64_t a,
-                                const int64_t b, vptr<int64_t> r) {
-  this->rng_uniform_int64(n, a, b, r);
+void Device::rng_uniform(const uint_tp n, const uint64_t a,
+                         const uint64_t b, vptr<uint64_t> r) {
+  this->rng_uniform_uint64(n, a, b, r);
 }
-void Device::rng_uniform_int64(const uint_tp n, const int64_t a,
-                                   const int64_t b, vptr<int64_t> r) {
-  vector<int64_t> random(n);  // NOLINT
+void Device::rng_uniform_uint64(const uint_tp n, const uint64_t a,
+                                const uint64_t b, vptr<uint64_t> r) {
+  vector<uint64_t> random(n);  // NOLINT
   caffe_rng_uniform(n, a, b, &random[0]);
-  this->memcpy(sizeof(int64_t) * n, &random[0], vptr<void>(r));
+  this->memcpy(sizeof(uint64_t) * n, &random[0], vptr<void>(r));
 }
 #endif  // USE_INT_QUANT_64
 

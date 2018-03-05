@@ -41,7 +41,7 @@ class SolverTest : public MultiDeviceTest<TypeParam> {
   shared_ptr<Solver<Dtype> > solver_;
 };
 
-TYPED_TEST_CASE(SolverTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(SolverTest, TestDtypesFloatAndDevices);
 
 TYPED_TEST(SolverTest, TestInitTrainTestNets) {
   const string& proto =

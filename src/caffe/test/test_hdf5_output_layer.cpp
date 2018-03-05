@@ -68,7 +68,7 @@ void HDF5OutputLayerTest<TypeParam>::CheckBlobEqual(const Blob<Dtype>& b1,
   }
 }
 
-TYPED_TEST_CASE(HDF5OutputLayerTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(HDF5OutputLayerTest, TestDtypesFloatAndDevices);
 
 TYPED_TEST(HDF5OutputLayerTest, TestForward) {
   typedef typename TypeParam::Dtype Dtype;

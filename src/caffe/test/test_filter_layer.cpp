@@ -62,7 +62,7 @@ class FilterLayerTest : public MultiDeviceTest<TypeParam> {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-TYPED_TEST_CASE(FilterLayerTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(FilterLayerTest, TestDtypesFloatAndDevices);
 
 TYPED_TEST(FilterLayerTest, TestReshape) {
   typedef typename TypeParam::Dtype Dtype;

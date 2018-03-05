@@ -72,10 +72,10 @@ class DeviceProgram {
   virtual string convert_type_half(int_tp vec_len, string src_val) const = 0;
   virtual string convert_type_float(int_tp vec_len, string src_val) const = 0;
   virtual string convert_type_double(int_tp vec_len, string src_val) const = 0;
-  virtual string convert_type_int8(int_tp vec_len, string src_val) const = 0;
-  virtual string convert_type_int16(int_tp vec_len, string src_val) const = 0;
-  virtual string convert_type_int32(int_tp vec_len, string src_val) const = 0;
-  virtual string convert_type_int64(int_tp vec_len, string src_val) const = 0;
+  virtual string convert_type_uint8(int_tp vec_len, string src_val) const = 0;
+  virtual string convert_type_uint16(int_tp vec_len, string src_val) const = 0;
+  virtual string convert_type_uint32(int_tp vec_len, string src_val) const = 0;
+  virtual string convert_type_uint64(int_tp vec_len, string src_val) const = 0;
 
   template<typename Dtype>
   string atomic_add(string source, string operand);
@@ -125,10 +125,10 @@ class DeviceProgram {
   virtual string helper_functions_half() const = 0;
   virtual string helper_functions_float() const = 0;
   virtual string helper_functions_double() const = 0;
-  virtual string helper_functions_int8() const = 0;
-  virtual string helper_functions_int16() const = 0;
-  virtual string helper_functions_int32() const = 0;
-  virtual string helper_functions_int64() const = 0;
+  virtual string helper_functions_uint8() const = 0;
+  virtual string helper_functions_uint16() const = 0;
+  virtual string helper_functions_uint32() const = 0;
+  virtual string helper_functions_uint64() const = 0;
 
 
   uint64_t compile_flags_;

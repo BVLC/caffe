@@ -56,7 +56,7 @@ class SliceLayerTest : public MultiDeviceTest<TypeParam> {
   vector<Blob<Dtype>*> blob_bottom_vec_;
 };
 
-TYPED_TEST_CASE(SliceLayerTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(SliceLayerTest, TestDtypesFloatAndDevices);
 
 TYPED_TEST(SliceLayerTest, TestSetupNum) {
   typedef typename TypeParam::Dtype Dtype;

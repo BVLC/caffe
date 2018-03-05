@@ -190,7 +190,7 @@ class ConvolutionLayerTest : public MultiDeviceTest<TypeParam> {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-TYPED_TEST_CASE(ConvolutionLayerTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(ConvolutionLayerTest, TestDtypesFloatAndDevices);
 
 TYPED_TEST(ConvolutionLayerTest, TestSetup) {
   typedef typename TypeParam::Dtype Dtype;

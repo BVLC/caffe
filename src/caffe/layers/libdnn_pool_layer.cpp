@@ -200,13 +200,13 @@ INSTANTIATE_CLASS_3T_GUARDED(LibDNNPoolingLayer, (float), (float),
                              PROTO_TYPES);
 INSTANTIATE_CLASS_3T_GUARDED(LibDNNPoolingLayer, (double), (double),
                              PROTO_TYPES);
-INSTANTIATE_CLASS_3T_GUARDED(LibDNNPoolingLayer, (int8_t), (int8_t),
+INSTANTIATE_CLASS_3T_GUARDED(LibDNNPoolingLayer, (uint8_t), (uint8_t),
                              PROTO_TYPES);
-INSTANTIATE_CLASS_3T_GUARDED(LibDNNPoolingLayer, (int16_t), (int16_t),
+INSTANTIATE_CLASS_3T_GUARDED(LibDNNPoolingLayer, (uint16_t), (uint16_t),
                              PROTO_TYPES);
-INSTANTIATE_CLASS_3T_GUARDED(LibDNNPoolingLayer, (int32_t), (int32_t),
+INSTANTIATE_CLASS_3T_GUARDED(LibDNNPoolingLayer, (uint32_t), (uint32_t),
                              PROTO_TYPES);
-INSTANTIATE_CLASS_3T_GUARDED(LibDNNPoolingLayer, (int64_t), (int64_t),
+INSTANTIATE_CLASS_3T_GUARDED(LibDNNPoolingLayer, (uint64_t), (uint64_t),
                              PROTO_TYPES);
 
 REGISTER_LAYER_CLASS(LibDNNPooling);

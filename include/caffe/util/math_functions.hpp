@@ -12,29 +12,45 @@
 
 namespace caffe {
 
+// Forward declare
+class QuantizerValues;
+
 // Caffe gemm provides a simpler interface to the gemm functions, with the
 // limitation that the data has to be contiguous in memory.
 template<typename Dtype>
-void caffe_gemm(const CBLAS_TRANSPOSE trans_a, const CBLAS_TRANSPOSE trans_b,
-                    const int_tp m, const int_tp n, const int_tp k,
-                    const Dtype alpha, const Dtype* a, const Dtype* b,
-                    const Dtype beta, Dtype* c);
+typename std::enable_if<unsigned_integer_is_same<Dtype>::value, void>::type
+caffe_gemm(const CBLAS_TRANSPOSE trans_A, const CBLAS_TRANSPOSE trans_B,
+           const int_tp M, const int_tp N, const int_tp K,
+           const Dtype alpha, const Dtype* A, const Dtype* B,
+           const Dtype beta, Dtype* C,
+           const QuantizerValues* a_quant = nullptr,
+           const QuantizerValues* b_quant = nullptr,
+           const QuantizerValues* c_quant = nullptr);
 
 template<typename Dtype>
-void caffe_gemv(const CBLAS_TRANSPOSE trans_a, const int_tp m,
-                    const int_tp n, const Dtype alpha, const Dtype* a,
-                    const Dtype* X, const Dtype beta, Dtype* Y);
+typename std::enable_if<float_is_same<Dtype>::value, void>::type
+caffe_gemm(const CBLAS_TRANSPOSE trans_A, const CBLAS_TRANSPOSE trans_B,
+           const int_tp M, const int_tp N, const int_tp K,
+           const Dtype alpha, const Dtype* A, const Dtype* B,
+           const Dtype beta, Dtype* C,
+           const QuantizerValues* a_quant = nullptr,
+           const QuantizerValues* b_quant = nullptr,
+           const QuantizerValues* c_quant = nullptr);
 
 template<typename Dtype>
-void caffe_axpy(const int_tp n, const Dtype alpha, const Dtype* X,
-                    Dtype* Y);
+void caffe_gemv(const CBLAS_TRANSPOSE trans_A, const int_tp M,
+                const int_tp N, const Dtype alpha, const Dtype* A,
+                const Dtype* x, const Dtype beta, Dtype* y);
 
 template<typename Dtype>
-void caffe_axpby(const int_tp n, const Dtype alpha, const Dtype* X,
-                     const Dtype beta, Dtype* Y);
+void caffe_axpy(const int_tp N, const Dtype alpha, const Dtype* x, Dtype* y);
 
 template<typename Dtype>
-void caffe_copy(const int_tp n, const Dtype* X, Dtype* Y);
+void caffe_axpby(const int_tp N, const Dtype alpha, const Dtype* x,
+                 const Dtype beta, Dtype* y);
+
+template<typename Dtype>
+void caffe_copy(const int_tp n, const Dtype* x, Dtype* y);
 
 template<typename Dtype>
 void caffe_set(const int_tp n, const Dtype alpha, Dtype *X);

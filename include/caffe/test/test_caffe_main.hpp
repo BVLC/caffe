@@ -101,6 +101,30 @@ template<> bool isSupported<CPUDevice<double> >(void);
 template<> bool isSupported<GPUDevice<double> >(void);
 #endif  // USE_DOUBLE
 
+#ifdef USE_INT_QUANT_8
+template<> bool isSupported<uint8_t>(void);
+template<> bool isSupported<CPUDevice<uint8_t> >(void);
+template<> bool isSupported<GPUDevice<uint8_t> >(void);
+#endif  // USE_INT_QUANT_8
+
+#ifdef USE_INT_QUANT_16
+template<> bool isSupported<uint16_t>(void);
+template<> bool isSupported<CPUDevice<uint16_t> >(void);
+template<> bool isSupported<GPUDevice<uint16_t> >(void);
+#endif  // USE_INT_QUANT_16
+
+#ifdef USE_INT_QUANT_32
+template<> bool isSupported<uint32_t>(void);
+template<> bool isSupported<CPUDevice<uint32_t> >(void);
+template<> bool isSupported<GPUDevice<uint32_t> >(void);
+#endif  // USE_INT_QUANT_32
+
+#ifdef USE_INT_QUANT_64
+template<> bool isSupported<uint64_t>(void);
+template<> bool isSupported<CPUDevice<uint64_t> >(void);
+template<> bool isSupported<GPUDevice<uint64_t> >(void);
+#endif  // USE_INT_QUANT_64
+
 #if defined(USE_LEVELDB)
 template<> bool isSupported<TypeLevelDB>(void);
 #endif  // USE_LEVELDB

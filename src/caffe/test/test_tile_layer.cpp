@@ -41,7 +41,7 @@ class TileLayerTest : public MultiDeviceTest<TypeParam> {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-TYPED_TEST_CASE(TileLayerTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(TileLayerTest, TestDtypesFloatAndDevices);
 
 TYPED_TEST(TileLayerTest, TestTrivialSetup) {
   typedef typename TypeParam::Dtype Dtype;

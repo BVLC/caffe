@@ -47,7 +47,7 @@ class HingeLossLayerTest : public MultiDeviceTest<TypeParam> {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-TYPED_TEST_CASE(HingeLossLayerTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(HingeLossLayerTest, TestDtypesFloatAndDevices);
 
 
 TYPED_TEST(HingeLossLayerTest, TestGradientL1) {
