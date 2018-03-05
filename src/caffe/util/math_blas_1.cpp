@@ -30,14 +30,14 @@ void caffe_axpy(const int_tp n, const Dtype alpha,
 }
 template void caffe_axpy<half_fp>(const int_tp n, const half_fp alpha,
                          const half_fp* X, half_fp* Y);
-template void caffe_axpy<int8_t>(const int_tp n, const int8_t alpha,
-                         const int8_t* X, int8_t* Y);
-template void caffe_axpy<int16_t>(const int_tp n, const int16_t alpha,
-                         const int16_t* X, int16_t* Y);
-template void caffe_axpy<int32_t>(const int_tp n, const int32_t alpha,
-                         const int32_t* X, int32_t* Y);
-template void caffe_axpy<int64_t>(const int_tp n, const int64_t alpha,
-                         const int64_t* X, int64_t* Y);
+template void caffe_axpy<uint8_t>(const int_tp n, const uint8_t alpha,
+                         const uint8_t* X, uint8_t* Y);
+template void caffe_axpy<uint16_t>(const int_tp n, const uint16_t alpha,
+                         const uint16_t* X, uint16_t* Y);
+template void caffe_axpy<uint32_t>(const int_tp n, const uint32_t alpha,
+                         const uint32_t* X, uint32_t* Y);
+template void caffe_axpy<uint64_t>(const int_tp n, const uint64_t alpha,
+                         const uint64_t* X, uint64_t* Y);
 
 // AXPBY
 template<>
@@ -66,14 +66,14 @@ void caffe_axpby(const int_tp n, const Dtype alpha, const Dtype* X,
 }
 template void caffe_axpby<half_fp>(const int_tp n, const half_fp alpha,
                          const half_fp* X, const half_fp beta, half_fp* Y);
-template void caffe_axpby<int8_t>(const int_tp n, const int8_t alpha,
-                         const int8_t* X, const int8_t beta, int8_t* Y);
-template void caffe_axpby<int16_t>(const int_tp n, const int16_t alpha,
-                         const int16_t* X, const int16_t beta, int16_t* Y);
-template void caffe_axpby<int32_t>(const int_tp n, const int32_t alpha,
-                         const int32_t* X, const int32_t beta, int32_t* Y);
-template void caffe_axpby<int64_t>(const int_tp n, const int64_t alpha,
-                         const int64_t* X, const int64_t beta, int64_t* Y);
+template void caffe_axpby<uint8_t>(const int_tp n, const uint8_t alpha,
+                         const uint8_t* X, const uint8_t beta, uint8_t* Y);
+template void caffe_axpby<uint16_t>(const int_tp n, const uint16_t alpha,
+                         const uint16_t* X, const uint16_t beta, uint16_t* Y);
+template void caffe_axpby<uint32_t>(const int_tp n, const uint32_t alpha,
+                         const uint32_t* X, const uint32_t beta, uint32_t* Y);
+template void caffe_axpby<uint64_t>(const int_tp n, const uint64_t alpha,
+                         const uint64_t* X, const uint64_t beta, uint64_t* Y);
 
 // DOT
 template<typename Dtype>
@@ -90,18 +90,18 @@ Dtype caffe_strided_dot(const int_tp n,
 template half_fp caffe_strided_dot(const int_tp n,
                                    const half_fp* x, const int_tp incx,
                                    const half_fp* y, const int_tp incy);
-template int8_t caffe_strided_dot(const int_tp n,
-                                  const int8_t* x, const int_tp incx,
-                                  const int8_t* y, const int_tp incy);
-template int16_t caffe_strided_dot(const int_tp n,
-                                   const int16_t* x, const int_tp incx,
-                                   const int16_t* y, const int_tp incy);
-template int32_t caffe_strided_dot(const int_tp n,
-                                   const int32_t* x, const int_tp incx,
-                                   const int32_t* y, const int_tp incy);
-template int64_t caffe_strided_dot(const int_tp n,
-                                   const int64_t* x, const int_tp incx,
-                                   const int64_t* y, const int_tp incy);
+template uint8_t caffe_strided_dot(const int_tp n,
+                                  const uint8_t* x, const int_tp incx,
+                                  const uint8_t* y, const int_tp incy);
+template uint16_t caffe_strided_dot(const int_tp n,
+                                   const uint16_t* x, const int_tp incx,
+                                   const uint16_t* y, const int_tp incy);
+template uint32_t caffe_strided_dot(const int_tp n,
+                                   const uint32_t* x, const int_tp incx,
+                                   const uint32_t* y, const int_tp incy);
+template uint64_t caffe_strided_dot(const int_tp n,
+                                   const uint64_t* x, const int_tp incx,
+                                   const uint64_t* y, const int_tp incy);
 
 template<>
 float caffe_strided_dot<float>(const int_tp n, const float* X,
@@ -129,14 +129,14 @@ Dtype caffe_dot(const int_tp n, const Dtype* X, const Dtype* Y) {
 
 template half_fp caffe_dot<half_fp>(const int_tp n,
                                const half_fp* X, const half_fp* Y);
-template int8_t caffe_dot<int8_t>(const int_tp n, const int8_t* X,
-                              const int8_t* Y);
-template int16_t caffe_dot<int16_t>(const int_tp n, const int16_t* X,
-                              const int16_t* Y);
-template int32_t caffe_dot<int32_t>(const int_tp n, const int32_t* X,
-                              const int32_t* Y);
-template int64_t caffe_dot<int64_t>(const int_tp n, const int64_t* X,
-                              const int64_t* Y);
+template uint8_t caffe_dot<uint8_t>(const int_tp n, const uint8_t* X,
+                              const uint8_t* Y);
+template uint16_t caffe_dot<uint16_t>(const int_tp n, const uint16_t* X,
+                              const uint16_t* Y);
+template uint32_t caffe_dot<uint32_t>(const int_tp n, const uint32_t* X,
+                              const uint32_t* Y);
+template uint64_t caffe_dot<uint64_t>(const int_tp n, const uint64_t* X,
+                              const uint64_t* Y);
 
 template<>
 float caffe_dot(const int_tp n, const float* X, const float* Y) {
@@ -167,13 +167,13 @@ template<typename Dtype>
 Dtype caffe_asum(const int_tp n, const Dtype* x) {
   Dtype sum = 0;
   for (int_tp i = 0; i < n; i++)
-    sum += abs(x[i]);
+    sum += x[i];
   return sum;
 }
-template int8_t caffe_asum<int8_t>(const int_tp n, const int8_t* x);
-template int16_t caffe_asum<int16_t>(const int_tp n, const int16_t* x);
-template int32_t caffe_asum<int32_t>(const int_tp n, const int32_t* x);
-template int64_t caffe_asum<int64_t>(const int_tp n, const int64_t* x);
+template uint8_t caffe_asum<uint8_t>(const int_tp n, const uint8_t* x);
+template uint16_t caffe_asum<uint16_t>(const int_tp n, const uint16_t* x);
+template uint32_t caffe_asum<uint32_t>(const int_tp n, const uint32_t* x);
+template uint64_t caffe_asum<uint64_t>(const int_tp n, const uint64_t* x);
 
 // SCALE
 template<typename Dtype>
@@ -187,14 +187,14 @@ void caffe_scale(const int_tp n, const Dtype alpha, const Dtype *X,
 
 template void caffe_scale<half_fp>(const int_tp n, const half_fp alpha,
                                    const half_fp *X, half_fp* Y);
-template void caffe_scale<int8_t>(const int_tp n, const int8_t alpha,
-                                   const int8_t *X, int8_t* Y);
-template void caffe_scale<int16_t>(const int_tp n, const int16_t alpha,
-                                   const int16_t *X, int16_t* Y);
-template void caffe_scale<int32_t>(const int_tp n, const int32_t alpha,
-                                   const int32_t *X, int32_t* Y);
-template void caffe_scale<int64_t>(const int_tp n, const int64_t alpha,
-                                   const int64_t *X, int64_t* Y);
+template void caffe_scale<uint8_t>(const int_tp n, const uint8_t alpha,
+                                   const uint8_t *X, uint8_t* Y);
+template void caffe_scale<uint16_t>(const int_tp n, const uint16_t alpha,
+                                   const uint16_t *X, uint16_t* Y);
+template void caffe_scale<uint32_t>(const int_tp n, const uint32_t alpha,
+                                   const uint32_t *X, uint32_t* Y);
+template void caffe_scale<uint64_t>(const int_tp n, const uint64_t alpha,
+                                   const uint64_t *X, uint64_t* Y);
 
 template<>
 void caffe_scale<float>(const int_tp n, const float alpha, const float *X,
@@ -228,14 +228,14 @@ void caffe_scal(const int_tp n, const Dtype alpha, Dtype *X) {
 }
 template void caffe_scal<half_fp>(const int_tp n, const half_fp alpha,
                                   half_fp *X);
-template void caffe_scal<int8_t>(const int_tp n, const int8_t alpha,
-                                 int8_t *X);
-template void caffe_scal<int16_t>(const int_tp n, const int16_t alpha,
-                                  int16_t *X);
-template void caffe_scal<int32_t>(const int_tp n, const int32_t alpha,
-                                  int32_t *X);
-template void caffe_scal<int64_t>(const int_tp n, const int64_t alpha,
-                                  int64_t *X);
+template void caffe_scal<uint8_t>(const int_tp n, const uint8_t alpha,
+                                 uint8_t *X);
+template void caffe_scal<uint16_t>(const int_tp n, const uint16_t alpha,
+                                  uint16_t *X);
+template void caffe_scal<uint32_t>(const int_tp n, const uint32_t alpha,
+                                  uint32_t *X);
+template void caffe_scal<uint64_t>(const int_tp n, const uint64_t alpha,
+                                  uint64_t *X);
 
 }  // namespace caffe
 

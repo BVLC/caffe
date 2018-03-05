@@ -10,8 +10,75 @@
 
 namespace caffe {
 
+struct QuantizerValues {
+ public:
+  double zero;
+  double one;
+  double max;
+  double min;
+  double scale;
+
+  template<typename Dtype>
+  typename std::enable_if<float_is_same<Dtype>::value, Dtype>::type
+  get_zero() const {
+    return static_cast<Dtype>(this->zero);
+  }
+  template<typename Dtype>
+  typename std::enable_if<integer_is_same<Dtype>::value, Dtype>::type
+  get_zero() const {
+    return static_cast<Dtype>(std::round(this->zero));
+  }
+  template<typename Dtype>
+  typename std::enable_if<float_is_same<Dtype>::value, Dtype>::type
+  get_one() const {
+    return static_cast<Dtype>(this->one);
+  }
+  template<typename Dtype>
+  typename std::enable_if<integer_is_same<Dtype>::value, Dtype>::type
+  get_one() const {
+    return static_cast<Dtype>(std::round(this->one));
+  }
+  template<typename Dtype>
+  typename std::enable_if<float_is_same<Dtype>::value, Dtype>::type
+  get_max() const {
+    return static_cast<Dtype>(this->max);
+  }
+  template<typename Dtype>
+  typename std::enable_if<integer_is_same<Dtype>::value, Dtype>::type
+  get_max() const {
+    return static_cast<Dtype>(std::round(this->max));
+  }
+  template<typename Dtype>
+  typename std::enable_if<float_is_same<Dtype>::value, Dtype>::type
+  get_min() const {
+    return static_cast<Dtype>(this->min);
+  }
+  template<typename Dtype>
+  typename std::enable_if<integer_is_same<Dtype>::value, Dtype>::type
+  get_min() const {
+    return static_cast<Dtype>(std::round(this->min));
+  }
+  template<typename Dtype>
+  typename std::enable_if<float_is_same<Dtype>::value, Dtype>::type
+  get_scale() const {
+    return static_cast<Dtype>(this->scale);
+  }
+  template<typename Dtype>
+  typename std::enable_if<integer_is_same<Dtype>::value, Dtype>::type
+  get_scale() const {
+    return static_cast<Dtype>(std::round(this->scale));
+  }
+};
+
 class QuantizerBase {
  public:
+  template<typename Dtype>
+  static void MultiplicativeQuantVals(
+      const QuantizerValues* lhs, const QuantizerValues* rhs,
+      const QuantizerValues* rs, Dtype* rsmult, Dtype* rsshift,
+      const uint8_t shift_bits = 0);
+
+  virtual void update() = 0;
   virtual void update_param(const QuantizerParameter& param) = 0;
 
   virtual bool needs_quantization() const = 0;
@@ -38,32 +105,43 @@ class QuantizerBase {
   virtual bool fw_scale_before_cast() const = 0;
   virtual bool bw_scale_before_cast() const = 0;
 
-  virtual string fw_scale_term(int_tp vec_len, string scale_var,
-                               string src_val) const = 0;
-  virtual string bw_scale_term(int_tp vec_len, string scale_var,
-                               string src_val) const = 0;
+  virtual double in_scale_val() = 0;
+  virtual double out_scale_val() = 0;
 
-  virtual double in_scale_term() = 0;
-  virtual double out_scale_term() = 0;
+  inline const QuantizerValues& in_quantizer_values() {
+    return in_vals_;
+  }
 
-  inline int_tp get_index() const {
+  inline const QuantizerValues& out_quantizer_values() {
+    return out_vals_;
+  }
+
+  inline int_tp index() const {
     return index_;
   }
 
-  inline double get_observed_max() const {
+  inline double observed_max() const {
     return observed_max_;
   }
 
-  inline double get_observed_min() const {
+  inline double observed_min() const {
     return observed_min_;
   }
 
-  inline double get_in_zero_point() const {
-    return in_zero_point_;
+  inline double in_zero() const {
+    return in_vals_.zero;
   }
 
-  inline double get_out_zero_point() const {
-    return out_zero_point_;
+  inline double in_one() const {
+    return in_vals_.one;
+  }
+
+  inline double out_zero() const {
+    return out_vals_.zero;
+  }
+
+  inline double out_one() const {
+    return out_vals_.one;
   }
 
   const QuantizerParameter& quant_param() const {
@@ -90,17 +168,8 @@ class QuantizerBase {
   double flt_max_;
   double flt_min_;
 
-  // Input value range
-  double max_in_;
-  double min_in_;
-
-  // Output value range
-  double max_out_;
-  double min_out_;
-
-  // Zero values
-  double in_zero_point_;
-  double out_zero_point_;
+  QuantizerValues in_vals_;
+  QuantizerValues out_vals_;
 
   QuantizerMode mode_;
 };
@@ -111,6 +180,7 @@ class Quantizer : public QuantizerBase {
   explicit Quantizer(const QuantizerParameter& param);
   explicit Quantizer(Device* dev_ptr);
 
+  virtual void update();
   virtual void update_param(const QuantizerParameter& param);
 
   virtual bool needs_quantization() const;
@@ -166,13 +236,19 @@ class Quantizer : public QuantizerBase {
   MOtype bw_scale_before_cast_val() const;
   MItype bw_scale_after_cast_val() const;
 
-  virtual string fw_scale_term(int_tp vec_len, string scale_var,
-                               string src_val) const;
-  virtual string bw_scale_term(int_tp vec_len, string scale_var,
-                               string src_val) const;
+  string fw_gpu_term(int_tp vec_len, string src_var, string tar_var,
+                     string scal_var, string in_zero_var,
+                     string out_zero_var,
+                     string min_in_var, string max_in_var,
+                     string min_out_var, string max_out_var) const;
+  string bw_gpu_term(int_tp vec_len, string src_var, string tar_var,
+                     string scal_var, string in_zero_var,
+                     string out_zero_var,
+                     string min_in_var, string max_in_var,
+                     string min_out_var, string max_out_var) const;
 
-  virtual double in_scale_term();
-  virtual double out_scale_term();
+  virtual double in_scale_val();
+  virtual double out_scale_val();
 
  private:
   void init();

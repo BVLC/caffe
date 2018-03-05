@@ -69,7 +69,7 @@ class BiasLayerTest : public MultiDeviceTest<TypeParam> {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-TYPED_TEST_CASE(BiasLayerTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(BiasLayerTest, TestDtypesFloatAndDevices);
 
 TYPED_TEST(BiasLayerTest, TestForwardEltwise) {
   typedef typename TypeParam::Dtype Dtype;

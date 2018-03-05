@@ -331,13 +331,13 @@ INSTANTIATE_CLASS_FUNC_3T_GUARDED(SoftmaxLayer, GenerateProgram,
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(SoftmaxLayer, GenerateProgram,
                                   (double), (double), (double));
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(SoftmaxLayer, GenerateProgram,
-                                  (int8_t), (int8_t), (int8_t));
+                                  (uint8_t), (uint8_t), (uint8_t));
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(SoftmaxLayer, GenerateProgram,
-                                  (int16_t), (int16_t), (int16_t));
+                                  (uint16_t), (uint16_t), (uint16_t));
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(SoftmaxLayer, GenerateProgram,
-                                  (int32_t), (int32_t), (int32_t));
+                                  (uint32_t), (uint32_t), (uint32_t));
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(SoftmaxLayer, GenerateProgram,
-                                  (int64_t), (int64_t), (int64_t));
+                                  (uint64_t), (uint64_t), (uint64_t));
 
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(SoftmaxLayer, Forward_gpu,
                                   (half_fp), (half_fp), (half_fp));
@@ -346,13 +346,13 @@ INSTANTIATE_CLASS_FUNC_3T_GUARDED(SoftmaxLayer, Forward_gpu,
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(SoftmaxLayer, Forward_gpu,
                                   (double), (double), (double));
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(SoftmaxLayer, Forward_gpu,
-                                  (int8_t), (int8_t), (int8_t));
+                                  (uint8_t), (uint8_t), (uint8_t));
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(SoftmaxLayer, Forward_gpu,
-                                  (int16_t), (int16_t), (int16_t));
+                                  (uint16_t), (uint16_t), (uint16_t));
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(SoftmaxLayer, Forward_gpu,
-                                  (int32_t), (int32_t), (int32_t));
+                                  (uint32_t), (uint32_t), (uint32_t));
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(SoftmaxLayer, Forward_gpu,
-                                  (int64_t), (int64_t), (int64_t));
+                                  (uint64_t), (uint64_t), (uint64_t));
 
 
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(SoftmaxLayer, Backward_gpu,
@@ -362,11 +362,11 @@ INSTANTIATE_CLASS_FUNC_3T_GUARDED(SoftmaxLayer, Backward_gpu,
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(SoftmaxLayer, Backward_gpu,
                                   (double), (double), (double));
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(SoftmaxLayer, Backward_gpu,
-                                  (int8_t), (int8_t), (int8_t));
+                                  (uint8_t), (uint8_t), (uint8_t));
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(SoftmaxLayer, Backward_gpu,
-                                  (int16_t), (int16_t), (int16_t));
+                                  (uint16_t), (uint16_t), (uint16_t));
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(SoftmaxLayer, Backward_gpu,
-                                  (int32_t), (int32_t), (int32_t));
+                                  (uint32_t), (uint32_t), (uint32_t));
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(SoftmaxLayer, Backward_gpu,
-                                  (int64_t), (int64_t), (int64_t));
+                                  (uint64_t), (uint64_t), (uint64_t));
 }  // namespace caffe

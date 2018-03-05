@@ -8,7 +8,9 @@
 
 namespace caffe {
 
-Device::Device() {}
+Device::Device() {
+  backend_ = BACKEND_CPU;
+}
 
 void Device::Init() {
 #ifdef USE_SQLITE
@@ -201,11 +203,11 @@ shared_ptr<Blob<Dtype> > Device::Buffer(vector<int_tp> shape, int_tp* lock_id) {
   // No buffers available, create a new one
   if (buffer_id == -1) {
     buffer_id = buffers_.size();
-    buffers_.push_back(make_shared<Blob<int8_t> >(this));
+    buffers_.push_back(make_shared<Blob<uint8_t> >(this));
     buffer_flags_.push_back(std::make_shared<std::atomic<bool> >(true));
   }
 
-  Blob<int8_t>* buffer = buffers_[buffer_id].get();
+  Blob<uint8_t>* buffer = buffers_[buffer_id].get();
   buffer_vec_mutex_.unlock();
 
   // Ensure the buffer is big enough for the request

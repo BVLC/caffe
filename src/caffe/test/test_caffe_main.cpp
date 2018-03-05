@@ -28,11 +28,11 @@ bool caffe::isSupported<half_fp>(void) {
       CheckCapability(caffe::DEVICE_FP16_SUPPORT);
 }
 template<>
-bool caffe::isSupported<caffe::CPUDevice<half_fp>>(void) {
+bool caffe::isSupported<caffe::CPUDevice<half_fp> >(void) {
   return true;
 }
 template<>
-bool caffe::isSupported<caffe::GPUDevice<half_fp>>(void) {
+bool caffe::isSupported<caffe::GPUDevice<half_fp> >(void) {
   return caffe::Caffe::GetDefaultDevice()->
       CheckCapability(caffe::DEVICE_FP16_SUPPORT);
 }
@@ -60,16 +60,75 @@ bool caffe::isSupported<double>(void) {
       CheckCapability(DEVICE_FP64_SUPPORT);
 }
 template<>
-bool caffe::isSupported<caffe::CPUDevice<double>>(void) {
+bool caffe::isSupported<caffe::CPUDevice<double> >(void) {
   return true;
 }
 template<>
-bool caffe::isSupported<caffe::GPUDevice<double>>(void) {
+bool caffe::isSupported<caffe::GPUDevice<double> >(void) {
   return caffe::Caffe::GetDefaultDevice()->
       CheckCapability(DEVICE_FP64_SUPPORT);
 }
 #endif  // USE_DOUBLE
 
+#ifdef USE_INT_QUANT_8
+template<>
+bool caffe::isSupported<uint8_t>(void) {
+  return true;
+}
+template<>
+bool caffe::isSupported<caffe::CPUDevice<uint8_t> >(void) {
+  return true;
+}
+template<>
+bool caffe::isSupported<caffe::GPUDevice<uint8_t> >(void) {
+  return true;
+}
+#endif  // USE_INT_QUANT_8
+
+#ifdef USE_INT_QUANT_16
+template<>
+bool caffe::isSupported<uint16_t>(void) {
+  return true;
+}
+template<>
+bool caffe::isSupported<caffe::CPUDevice<uint16_t> >(void) {
+  return true;
+}
+template<>
+bool caffe::isSupported<caffe::GPUDevice<uint16_t> >(void) {
+  return true;
+}
+#endif  // USE_INT_QUANT_16
+
+#ifdef USE_INT_QUANT_32
+template<>
+bool caffe::isSupported<uint32_t>(void) {
+  return true;
+}
+template<>
+bool caffe::isSupported<caffe::CPUDevice<uint32_t> >(void) {
+  return true;
+}
+template<>
+bool caffe::isSupported<caffe::GPUDevice<uint32_t> >(void) {
+  return true;
+}
+#endif  // USE_INT_QUANT_32
+
+#ifdef USE_INT_QUANT_64
+template<>
+bool caffe::isSupported<uint64_t>(void) {
+  return true;
+}
+template<>
+bool caffe::isSupported<caffe::CPUDevice<uint64_t> >(void) {
+  return true;
+}
+template<>
+bool caffe::isSupported<caffe::GPUDevice<uint64_t> >(void) {
+  return true;
+}
+#endif  // USE_INT_QUANT_64
 
 
 #if defined(USE_LEVELDB) && defined(USE_LMDB)

@@ -190,7 +190,7 @@ class NeuronLayerTest : public MultiDeviceTest<TypeParam> {
   }
 };
 
-TYPED_TEST_CASE(NeuronLayerTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(NeuronLayerTest, TestDtypesFloatAndDevices);
 
 TYPED_TEST(NeuronLayerTest, TestAbsVal) {
   typedef typename TypeParam::Dtype Dtype;

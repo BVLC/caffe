@@ -33,7 +33,7 @@ class ThresholdLayerTest : public MultiDeviceTest<TypeParam> {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-TYPED_TEST_CASE(ThresholdLayerTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(ThresholdLayerTest, TestDtypesFloatAndDevices);
 
 
 TYPED_TEST(ThresholdLayerTest, TestSetup) {

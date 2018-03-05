@@ -29,7 +29,7 @@ inline void SyncedMemory::to_cpu() {
   switch (head_) {
     case UNINITIALIZED: {
 #ifndef CPU_ONLY
-      if (device_->is_host_unified()) {
+      if (device_->backend() != BACKEND_CPU && device_->is_host_unified()) {
         gpu_ptr_ = device_->MallocMemDevice(size_, &cpu_ptr_,
                                             device_->is_host_unified());
         device_->increase_memory_usage(size_);

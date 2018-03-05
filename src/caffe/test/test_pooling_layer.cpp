@@ -371,7 +371,7 @@ class PoolingLayerTest : public MultiDeviceTest<TypeParam> {
   }
 };
 
-TYPED_TEST_CASE(PoolingLayerTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(PoolingLayerTest, TestDtypesFloatAndDevices);
 
 TYPED_TEST(PoolingLayerTest, TestSetup) {
   typedef typename TypeParam::Dtype Dtype;

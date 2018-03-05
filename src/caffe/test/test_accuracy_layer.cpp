@@ -71,7 +71,7 @@ class AccuracyLayerTest : public MultiDeviceTest<TypeParam> {
   int_tp top_k_;
 };
 
-TYPED_TEST_CASE(AccuracyLayerTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(AccuracyLayerTest, TestDtypesFloatAndDevices);
 
 TYPED_TEST(AccuracyLayerTest, TestSetup) {
   typedef typename TypeParam::Dtype Dtype;

@@ -53,7 +53,7 @@ class SPPLayerTest : public MultiDeviceTest<TypeParam> {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-TYPED_TEST_CASE(SPPLayerTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(SPPLayerTest, TestDtypesFloatAndDevices);
 
 TYPED_TEST(SPPLayerTest, TestSetup) {
   typedef typename TypeParam::Dtype Dtype;

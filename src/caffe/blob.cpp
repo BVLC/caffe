@@ -15,7 +15,7 @@ namespace caffe {
 
 // GPU AXPY helper
 inline void gpu_axpy(Device* dev, const uint_tp n, const half_fp alpha,
-                        vptr<const half_fp> x, vptr<half_fp> y) {
+                     vptr<const half_fp> x, vptr<half_fp> y) {
 #ifdef USE_HALF
   dev->template axpy<half_fp>(n, alpha, x, y);
 #else  // USE_HALF
@@ -23,7 +23,7 @@ inline void gpu_axpy(Device* dev, const uint_tp n, const half_fp alpha,
 #endif  // USE_HALF
 }
 inline void gpu_axpy(Device* dev, const uint_tp n, const float alpha,
-                        vptr<const float> x, vptr<float> y) {
+                     vptr<const float> x, vptr<float> y) {
 #ifdef USE_SINGLE
   dev->template axpy<float>(n, alpha, x, y);
 #else  // USE_SINGLE
@@ -31,41 +31,41 @@ inline void gpu_axpy(Device* dev, const uint_tp n, const float alpha,
 #endif  // USE_SINGLE
 }
 inline void gpu_axpy(Device* dev, const uint_tp n, const double alpha,
-                        vptr<const double> x, vptr<double> y) {
+                     vptr<const double> x, vptr<double> y) {
 #ifdef USE_DOUBLE
   dev->template axpy<double>(n, alpha, x, y);
 #else  // USE_DOUBLE
   NOT_IMPLEMENTED;
 #endif  // USE_DOUBLE
 }
-inline void gpu_axpy(Device* dev, const uint_tp n, const int8_t alpha,
-                        vptr<const int8_t> x, vptr<int8_t> y) {
+inline void gpu_axpy(Device* dev, const uint_tp n, const uint8_t alpha,
+                     vptr<const uint8_t> x, vptr<uint8_t> y) {
 #ifdef USE_INT_QUANT_8
-  dev->template axpy<int8_t>(n, alpha, x, y);
+  dev->template axpy<uint8_t>(n, alpha, x, y);
 #else  // SE_INT_QUANT_8
   NOT_IMPLEMENTED;
 #endif  // SE_INT_QUANT_8
 }
-inline void gpu_axpy(Device* dev, const uint_tp n, const int16_t alpha,
-                        vptr<const int16_t> x, vptr<int16_t> y) {
+inline void gpu_axpy(Device* dev, const uint_tp n, const uint16_t alpha,
+                     vptr<const uint16_t> x, vptr<uint16_t> y) {
 #ifdef USE_INT_QUANT_16
-  dev->template axpy<int16_t>(n, alpha, x, y);
+  dev->template axpy<uint16_t>(n, alpha, x, y);
 #else  // USE_INT_QUANT_16
   NOT_IMPLEMENTED;
 #endif  // USE_INT_QUANT_16
 }
-inline void gpu_axpy(Device* dev, const uint_tp n, const int32_t alpha,
-                        vptr<const int32_t> x, vptr<int32_t> y) {
+inline void gpu_axpy(Device* dev, const uint_tp n, const uint32_t alpha,
+                     vptr<const uint32_t> x, vptr<uint32_t> y) {
 #ifdef USE_INT_QUANT_32
-  dev->template axpy<int32_t>(n, alpha, x, y);
+  dev->template axpy<uint32_t>(n, alpha, x, y);
 #else  // USE_INT_QUANT_32
   NOT_IMPLEMENTED;
 #endif  // USE_INT_QUANT_32
 }
-inline void gpu_axpy(Device* dev, const uint_tp n, const int64_t alpha,
-                        vptr<const int64_t> x, vptr<int64_t> y) {
+inline void gpu_axpy(Device* dev, const uint_tp n, const uint64_t alpha,
+                     vptr<const uint64_t> x, vptr<uint64_t> y) {
 #ifdef USE_INT_QUANT_64
-  dev->template axpy<int64_t>(n, alpha, x, y);
+  dev->template axpy<uint64_t>(n, alpha, x, y);
 #else  // USE_INT_QUANT_64
   NOT_IMPLEMENTED;
 #endif  // USE_INT_QUANT_64
@@ -97,33 +97,33 @@ inline void gpu_dot(Device* dev, const uint_tp n,
 #endif  // USE_DOUBLE
 }
 inline void gpu_dot(Device* dev, const uint_tp n,
-                    vptr<const int8_t> x, vptr<const int8_t> y, int8_t* out) {
+                   vptr<const uint8_t> x, vptr<const uint8_t> y, uint8_t* out) {
 #ifdef USE_INT_QUANT_8
-  dev->template dot<int8_t>(n, x, y, out);
+  dev->template dot<uint8_t>(n, x, y, out);
 #else  // SE_INT_QUANT_8
   NOT_IMPLEMENTED;
 #endif  // SE_INT_QUANT_8
 }
 inline void gpu_dot(Device* dev, const uint_tp n,
-                   vptr<const int16_t> x, vptr<const int16_t> y, int16_t* out) {
+                vptr<const uint16_t> x, vptr<const uint16_t> y, uint16_t* out) {
 #ifdef USE_INT_QUANT_16
-  dev->template dot<int16_t>(n, x, y, out);
+  dev->template dot<uint16_t>(n, x, y, out);
 #else  // USE_INT_QUANT_16
   NOT_IMPLEMENTED;
 #endif  // USE_INT_QUANT_16
 }
 inline void gpu_dot(Device* dev, const uint_tp n,
-                   vptr<const int32_t> x, vptr<const int32_t> y, int32_t* out) {
+                vptr<const uint32_t> x, vptr<const uint32_t> y, uint32_t* out) {
 #ifdef USE_INT_QUANT_32
-  dev->template dot<int32_t>(n, x, y, out);
+  dev->template dot<uint32_t>(n, x, y, out);
 #else  // USE_INT_QUANT_32
   NOT_IMPLEMENTED;
 #endif  // USE_INT_QUANT_32
 }
 inline void gpu_dot(Device* dev, const uint_tp n,
-                   vptr<const int64_t> x, vptr<const int64_t> y, int64_t* out) {
+                vptr<const uint64_t> x, vptr<const uint64_t> y, uint64_t* out) {
 #ifdef USE_INT_QUANT_64
-  dev->template dot<int64_t>(n, x, y, out);
+  dev->template dot<uint64_t>(n, x, y, out);
 #else  // USE_INT_QUANT_64
   NOT_IMPLEMENTED;
 #endif  // USE_INT_QUANT_64
@@ -131,7 +131,7 @@ inline void gpu_dot(Device* dev, const uint_tp n,
 
 // GPU ASUM helper
 inline void gpu_asum(Device* dev, const uint_tp n,
-                    vptr<const half_fp> x, half_fp* out) {
+                     vptr<const half_fp> x, half_fp* out) {
 #ifdef USE_HALF
   dev->template asum<half_fp>(n, x, out);
 #else  // USE_HALF
@@ -139,7 +139,7 @@ inline void gpu_asum(Device* dev, const uint_tp n,
 #endif  // USE_HALF
 }
 inline void gpu_asum(Device* dev, const uint_tp n,
-                    vptr<const float> x, float* out) {
+                     vptr<const float> x, float* out) {
 #ifdef USE_SINGLE
   dev->template asum<float>(n, x, out);
 #else  // USE_SINGLE
@@ -147,7 +147,7 @@ inline void gpu_asum(Device* dev, const uint_tp n,
 #endif  // USE_SINGLE
 }
 inline void gpu_asum(Device* dev, const uint_tp n,
-                    vptr<const double> x, double* out) {
+                     vptr<const double> x, double* out) {
 #ifdef USE_DOUBLE
   dev->template asum<double>(n, x, out);
 #else  // USE_DOUBLE
@@ -155,33 +155,33 @@ inline void gpu_asum(Device* dev, const uint_tp n,
 #endif  // USE_DOUBLE
 }
 inline void gpu_asum(Device* dev, const uint_tp n,
-                    vptr<const int8_t> x, int8_t* out) {
+                     vptr<const uint8_t> x, uint8_t* out) {
 #ifdef USE_INT_QUANT_8
-  dev->template asum<int8_t>(n, x, out);
+  dev->template asum<uint8_t>(n, x, out);
 #else  // SE_INT_QUANT_8
   NOT_IMPLEMENTED;
 #endif  // SE_INT_QUANT_8
 }
 inline void gpu_asum(Device* dev, const uint_tp n,
-                   vptr<const int16_t> x, int16_t* out) {
+                     vptr<const uint16_t> x, uint16_t* out) {
 #ifdef USE_INT_QUANT_16
-  dev->template asum<int16_t>(n, x, out);
+  dev->template asum<uint16_t>(n, x, out);
 #else  // USE_INT_QUANT_16
   NOT_IMPLEMENTED;
 #endif  // USE_INT_QUANT_16
 }
 inline void gpu_asum(Device* dev, const uint_tp n,
-                   vptr<const int32_t> x, int32_t* out) {
+                     vptr<const uint32_t> x, uint32_t* out) {
 #ifdef USE_INT_QUANT_32
-  dev->template asum<int32_t>(n, x, out);
+  dev->template asum<uint32_t>(n, x, out);
 #else  // USE_INT_QUANT_32
   NOT_IMPLEMENTED;
 #endif  // USE_INT_QUANT_32
 }
 inline void gpu_asum(Device* dev, const uint_tp n,
-                   vptr<const int64_t> x, int64_t* out) {
+                     vptr<const uint64_t> x, uint64_t* out) {
 #ifdef USE_INT_QUANT_64
-  dev->template asum<int64_t>(n, x, out);
+  dev->template asum<uint64_t>(n, x, out);
 #else  // USE_INT_QUANT_64
   NOT_IMPLEMENTED;
 #endif  // USE_INT_QUANT_64
@@ -213,34 +213,34 @@ inline void gpu_scal(Device* dev, const uint_tp n, const double alpha,
   NOT_IMPLEMENTED;
 #endif  // USE_DOUBLE
 }
-inline void gpu_scal(Device* dev, const uint_tp n, const int8_t alpha,
-                     vptr<int8_t> x) {
+inline void gpu_scal(Device* dev, const uint_tp n, const uint8_t alpha,
+                     vptr<uint8_t> x) {
 #ifdef USE_INT_QUANT_8
-  dev->template scal<int8_t>(n, alpha, x);
+  dev->template scal<uint8_t>(n, alpha, x);
 #else  // SE_INT_QUANT_8
   NOT_IMPLEMENTED;
 #endif  // SE_INT_QUANT_8
 }
-inline void gpu_scal(Device* dev, const uint_tp n, const int16_t alpha,
-                     vptr<int16_t> x) {
+inline void gpu_scal(Device* dev, const uint_tp n, const uint16_t alpha,
+                     vptr<uint16_t> x) {
 #ifdef USE_INT_QUANT_16
-  dev->template scal<int16_t>(n, alpha, x);
+  dev->template scal<uint16_t>(n, alpha, x);
 #else  // USE_INT_QUANT_16
   NOT_IMPLEMENTED;
 #endif  // USE_INT_QUANT_16
 }
-inline void gpu_scal(Device* dev, const uint_tp n, const int32_t alpha,
-                     vptr<int32_t> x) {
+inline void gpu_scal(Device* dev, const uint_tp n, const uint32_t alpha,
+                     vptr<uint32_t> x) {
 #ifdef USE_INT_QUANT_32
-  dev->template scal<int32_t>(n, alpha, x);
+  dev->template scal<uint32_t>(n, alpha, x);
 #else  // USE_INT_QUANT_32
   NOT_IMPLEMENTED;
 #endif  // USE_INT_QUANT_32
 }
-inline void gpu_scal(Device* dev, const uint_tp n, const int64_t alpha,
-                     vptr<int64_t> x) {
+inline void gpu_scal(Device* dev, const uint_tp n, const uint64_t alpha,
+                     vptr<uint64_t> x) {
 #ifdef USE_INT_QUANT_64
-  dev->template axpy<int64_t>(n, alpha, x, y);
+  dev->template axpy<uint64_t>(n, alpha, x, y);
 #else  // USE_INT_QUANT_64
   NOT_IMPLEMENTED;
 #endif  // USE_INT_QUANT_64
@@ -252,14 +252,15 @@ void Blob<Dtype>::Init() {
   this->quant_ = make_shared<Quantizer<Dtype, Dtype> >(this->device_);
 }
 
-template<> void Blob<uint8_t>::Init() {
+template<> void Blob<int8_t>::Init() {
 }
-template<> void Blob<uint16_t>::Init() {
+template<> void Blob<int16_t>::Init() {
 }
-template<> void Blob<uint32_t>::Init() {
+template<> void Blob<int32_t>::Init() {
 }
-template<> void Blob<uint64_t>::Init() {
+template<> void Blob<int64_t>::Init() {
 }
+
 
 template<typename Dtype>
 Blob<Dtype>::Blob(Device *dev) : BlobBase(dev) {
@@ -524,16 +525,16 @@ void Blob<Dtype>::Update() {
   }
 }
 
-template<> void Blob<uint8_t>::Update() {
+template<> void Blob<int8_t>::Update() {
   NOT_IMPLEMENTED;
 }
-template<> void Blob<uint16_t>::Update() {
+template<> void Blob<int16_t>::Update() {
   NOT_IMPLEMENTED;
 }
-template<> void Blob<uint32_t>::Update() {
+template<> void Blob<int32_t>::Update() {
   NOT_IMPLEMENTED;
 }
-template<> void Blob<uint64_t>::Update() {
+template<> void Blob<int64_t>::Update() {
   NOT_IMPLEMENTED;
 }
 
@@ -563,19 +564,19 @@ Dtype Blob<Dtype>::asum_data() const {
   return 0;
 }
 
-template<> uint8_t Blob<uint8_t>::asum_data() const {
+template<> int8_t Blob<int8_t>::asum_data() const {
   NOT_IMPLEMENTED;
   return 0;
 }
-template<> uint16_t Blob<uint16_t>::asum_data() const {
+template<> int16_t Blob<int16_t>::asum_data() const {
   NOT_IMPLEMENTED;
   return 0;
 }
-template<> uint32_t Blob<uint32_t>::asum_data() const {
+template<> int32_t Blob<int32_t>::asum_data() const {
   NOT_IMPLEMENTED;
   return 0;
 }
-template<> uint64_t Blob<uint64_t>::asum_data() const {
+template<> int64_t Blob<int64_t>::asum_data() const {
   NOT_IMPLEMENTED;
   return 0;
 }
@@ -606,19 +607,19 @@ Dtype Blob<Dtype>::asum_diff() const {
   return 0;
 }
 
-template<> uint8_t Blob<uint8_t>::asum_diff() const {
+template<> int8_t Blob<int8_t>::asum_diff() const {
   NOT_IMPLEMENTED;
   return 0;
 }
-template<> uint16_t Blob<uint16_t>::asum_diff() const {
+template<> int16_t Blob<int16_t>::asum_diff() const {
   NOT_IMPLEMENTED;
   return 0;
 }
-template<> uint32_t Blob<uint32_t>::asum_diff() const {
+template<> int32_t Blob<int32_t>::asum_diff() const {
   NOT_IMPLEMENTED;
   return 0;
 }
-template<> uint64_t Blob<uint64_t>::asum_diff() const {
+template<> int64_t Blob<int64_t>::asum_diff() const {
   NOT_IMPLEMENTED;
   return 0;
 }
@@ -655,19 +656,19 @@ Dtype Blob<Dtype>::sumsq_data() const {
   return sumsq;
 }
 
-template<> uint8_t Blob<uint8_t>::sumsq_data() const {
+template<> int8_t Blob<int8_t>::sumsq_data() const {
   NOT_IMPLEMENTED;
   return 0;
 }
-template<> uint16_t Blob<uint16_t>::sumsq_data() const {
+template<> int16_t Blob<int16_t>::sumsq_data() const {
   NOT_IMPLEMENTED;
   return 0;
 }
-template<> uint32_t Blob<uint32_t>::sumsq_data() const {
+template<> int32_t Blob<int32_t>::sumsq_data() const {
   NOT_IMPLEMENTED;
   return 0;
 }
-template<> uint64_t Blob<uint64_t>::sumsq_data() const {
+template<> int64_t Blob<int64_t>::sumsq_data() const {
   NOT_IMPLEMENTED;
   return 0;
 }
@@ -706,19 +707,19 @@ Dtype Blob<Dtype>::sumsq_diff() const {
   return sumsq;
 }
 
-template<> uint8_t Blob<uint8_t>::sumsq_diff() const {
+template<> int8_t Blob<int8_t>::sumsq_diff() const {
   NOT_IMPLEMENTED;
   return 0;
 }
-template<> uint16_t Blob<uint16_t>::sumsq_diff() const {
+template<> int16_t Blob<int16_t>::sumsq_diff() const {
   NOT_IMPLEMENTED;
   return 0;
 }
-template<> uint32_t Blob<uint32_t>::sumsq_diff() const {
+template<> int32_t Blob<int32_t>::sumsq_diff() const {
   NOT_IMPLEMENTED;
   return 0;
 }
-template<> uint64_t Blob<uint64_t>::sumsq_diff() const {
+template<> int64_t Blob<int64_t>::sumsq_diff() const {
   NOT_IMPLEMENTED;
   return 0;
 }
@@ -753,16 +754,16 @@ void Blob<Dtype>::scale_data(Dtype scale_factor) {
     }
   }
 
-template<> void Blob<uint8_t>::scale_data(uint8_t scale_factor) {
+template<> void Blob<int8_t>::scale_data(int8_t scale_factor) {
   NOT_IMPLEMENTED;
 }
-template<> void Blob<uint16_t>::scale_data(uint16_t scale_factor) {
+template<> void Blob<int16_t>::scale_data(int16_t scale_factor) {
   NOT_IMPLEMENTED;
 }
-template<> void Blob<uint32_t>::scale_data(uint32_t scale_factor) {
+template<> void Blob<int32_t>::scale_data(int32_t scale_factor) {
   NOT_IMPLEMENTED;
 }
-template<> void Blob<uint64_t>::scale_data(uint64_t scale_factor) {
+template<> void Blob<int64_t>::scale_data(int64_t scale_factor) {
   NOT_IMPLEMENTED;
 }
 
@@ -803,16 +804,16 @@ void Blob<Dtype>::scale_diff(Dtype scale_factor) {
   }
 }
 
-template<> void Blob<uint8_t>::scale_diff(uint8_t scale_factor) {
+template<> void Blob<int8_t>::scale_diff(int8_t scale_factor) {
   NOT_IMPLEMENTED;
 }
-template<> void Blob<uint16_t>::scale_diff(uint16_t scale_factor) {
+template<> void Blob<int16_t>::scale_diff(int16_t scale_factor) {
   NOT_IMPLEMENTED;
 }
-template<> void Blob<uint32_t>::scale_diff(uint32_t scale_factor) {
+template<> void Blob<int32_t>::scale_diff(int32_t scale_factor) {
   NOT_IMPLEMENTED;
 }
-template<> void Blob<uint64_t>::scale_diff(uint64_t scale_factor) {
+template<> void Blob<int64_t>::scale_diff(int64_t scale_factor) {
   NOT_IMPLEMENTED;
 }
 
@@ -1144,8 +1145,8 @@ void Blob<Dtype>::Clear() {
 }
 
 INSTANTIATE_CLASS_1T(Blob, (half_fp)(float)(double));
-INSTANTIATE_CLASS_1T(Blob, (int8_t)(int16_t)(int32_t)(int64_t));
 INSTANTIATE_CLASS_1T(Blob, (uint8_t)(uint16_t)(uint32_t)(uint64_t));
+INSTANTIATE_CLASS_1T(Blob, (int8_t)(int16_t)(int32_t)(int64_t));
 
 }  // namespace caffe
 

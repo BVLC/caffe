@@ -34,7 +34,7 @@ class FlattenLayerTest : public MultiDeviceTest<TypeParam> {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-TYPED_TEST_CASE(FlattenLayerTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(FlattenLayerTest, TestDtypesFloatAndDevices);
 
 TYPED_TEST(FlattenLayerTest, TestSetup) {
   typedef typename TypeParam::Dtype Dtype;

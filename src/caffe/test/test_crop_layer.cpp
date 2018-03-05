@@ -46,7 +46,7 @@ class CropLayerTest : public MultiDeviceTest<TypeParam> {
 };
 
 
-TYPED_TEST_CASE(CropLayerTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(CropLayerTest, TestDtypesFloatAndDevices);
 
 TYPED_TEST(CropLayerTest, TestSetupShapeAll) {
   typedef typename TypeParam::Dtype Dtype;

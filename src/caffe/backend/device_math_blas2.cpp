@@ -61,17 +61,17 @@ void Device::gemv_double(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
 #endif  // USE_DOUBLE
 
 #ifdef USE_INT_QUANT_8
-void Device::gemv_int8(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
-                          const uint_tp n, const int8_t alpha,
-                          vptr<const int8_t> a,
-                          vptr<const int8_t> x,
-                          const int8_t beta,
-                          vptr<int8_t> y) {
+void Device::gemv_uint8(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
+                          const uint_tp n, const uint8_t alpha,
+                          vptr<const uint8_t> a,
+                          vptr<const uint8_t> x,
+                          const uint8_t beta,
+                          vptr<uint8_t> y) {
 #ifdef USE_LIBDNN
-  this->template GetLibDNNBlas<int8_t, int8_t>()->gemv(trans_a, m, n, alpha,
+  this->template GetLibDNNBlas<uint8_t, uint8_t>()->gemv(trans_a, m, n, alpha,
                                a, x, beta, y,
                                LIBDNN_ACCUMULATE_PREC_NATIVE,
-                               make_shared<Quantizer<int8_t, int8_t> >(this));
+                               make_shared<Quantizer<uint8_t, uint8_t> >(this));
 #else  // USE_LIBDNN
   NOT_IMPLEMENTED;
 #endif  // USE_LIBDNN
@@ -79,17 +79,17 @@ void Device::gemv_int8(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
 #endif  // USE_INT_QUANT_8
 
 #ifdef USE_INT_QUANT_16
-void Device::gemv_int16(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
-                          const uint_tp n, const int16_t alpha,
-                          vptr<const int16_t> a,
-                          vptr<const int16_t> x,
-                          const int16_t beta,
-                          vptr<int16_t> y) {
+void Device::gemv_uint16(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
+                          const uint_tp n, const uint16_t alpha,
+                          vptr<const uint16_t> a,
+                          vptr<const uint16_t> x,
+                          const uint16_t beta,
+                          vptr<uint16_t> y) {
 #ifdef USE_LIBDNN
-  this->template GetLibDNNBlas<int16_t, int16_t>()->gemv(trans_a, m, n, alpha,
+  this->template GetLibDNNBlas<uint16_t, uint16_t>()->gemv(trans_a, m, n, alpha,
                                a, x, beta, y,
                                LIBDNN_ACCUMULATE_PREC_NATIVE,
-                               make_shared<Quantizer<int16_t, int16_t> >(this));
+                               make_shared<Quantizer<uint16_t, uint16_t> >(this));
 #else  // USE_LIBDNN
   NOT_IMPLEMENTED;
 #endif  // USE_LIBDNN
@@ -97,17 +97,17 @@ void Device::gemv_int16(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
 #endif  // USE_INT_QUANT_16
 
 #ifdef USE_INT_QUANT_32
-void Device::gemv_int32(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
-                          const uint_tp n, const int32_t alpha,
-                          vptr<const int32_t> a,
-                          vptr<const int32_t> x,
-                          const int32_t beta,
-                          vptr<int32_t> y) {
+void Device::gemv_uint32(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
+                          const uint_tp n, const uint32_t alpha,
+                          vptr<const uint32_t> a,
+                          vptr<const uint32_t> x,
+                          const uint32_t beta,
+                          vptr<uint32_t> y) {
 #ifdef USE_LIBDNN
-  this->template GetLibDNNBlas<int32_t, int32_t>()->gemv(trans_a, m, n, alpha,
+  this->template GetLibDNNBlas<uint32_t, uint32_t>()->gemv(trans_a, m, n, alpha,
                                a, x, beta, y,
                                LIBDNN_ACCUMULATE_PREC_NATIVE,
-                               make_shared<Quantizer<int32_t, int32_t> >(this));
+                               make_shared<Quantizer<uint32_t, uint32_t> >(this));
 #else  // USE_LIBDNN
   NOT_IMPLEMENTED;
 #endif  // USE_LIBDNN
@@ -115,17 +115,17 @@ void Device::gemv_int32(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
 #endif  // USE_INT_QUANT_32
 
 #ifdef USE_INT_QUANT_64
-void Device::gemv_int64(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
-                          const uint_tp n, const int64_t alpha,
-                          vptr<const int64_t> a,
-                          vptr<const int64_t> x,
-                          const int64_t beta,
-                          vptr<int64_t> y) {
+void Device::gemv_uint64(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
+                          const uint_tp n, const uint64_t alpha,
+                          vptr<const uint64_t> a,
+                          vptr<const uint64_t> x,
+                          const uint64_t beta,
+                          vptr<uint64_t> y) {
 #ifdef USE_LIBDNN
-  this->template GetLibDNNBlas<int64_t, int64_t>()->gemv(trans_a, m, n, alpha,
+  this->template GetLibDNNBlas<uint64_t, uint64_t>()->gemv(trans_a, m, n, alpha,
                                a, x, beta, y,
                                LIBDNN_ACCUMULATE_PREC_NATIVE,
-                               make_shared<Quantizer<int64_t, int64_t> >(this));
+                               make_shared<Quantizer<uint64_t, uint64_t> >(this));
 #else  // USE_LIBDNN
   NOT_IMPLEMENTED;
 #endif  // USE_LIBDNN

@@ -589,16 +589,16 @@ string CudaDeviceProgram::helper_functions_float() const {
 string CudaDeviceProgram::helper_functions_double() const {
   return "";
 }
-string CudaDeviceProgram::helper_functions_int8() const {
+string CudaDeviceProgram::helper_functions_uint8() const {
   return "";
 }
-string CudaDeviceProgram::helper_functions_int16() const {
+string CudaDeviceProgram::helper_functions_uint16() const {
   return "";
 }
-string CudaDeviceProgram::helper_functions_int32() const {
+string CudaDeviceProgram::helper_functions_uint32() const {
   return "";
 }
-string CudaDeviceProgram::helper_functions_int64() const {
+string CudaDeviceProgram::helper_functions_uint64() const {
   return "";
 }
 

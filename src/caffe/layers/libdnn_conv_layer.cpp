@@ -177,13 +177,13 @@ INSTANTIATE_CLASS_3T_GUARDED(LibDNNConvolutionLayer, (float), (float),
                              PROTO_TYPES);
 INSTANTIATE_CLASS_3T_GUARDED(LibDNNConvolutionLayer, (double), (double),
                              PROTO_TYPES);
-INSTANTIATE_CLASS_3T_GUARDED(LibDNNConvolutionLayer, (int8_t), (int8_t),
+INSTANTIATE_CLASS_3T_GUARDED(LibDNNConvolutionLayer, (uint8_t), (uint8_t),
                              PROTO_TYPES);
-INSTANTIATE_CLASS_3T_GUARDED(LibDNNConvolutionLayer, (int16_t), (int16_t),
+INSTANTIATE_CLASS_3T_GUARDED(LibDNNConvolutionLayer, (uint16_t), (uint16_t),
                              PROTO_TYPES);
-INSTANTIATE_CLASS_3T_GUARDED(LibDNNConvolutionLayer, (int32_t), (int32_t),
+INSTANTIATE_CLASS_3T_GUARDED(LibDNNConvolutionLayer, (uint32_t), (uint32_t),
                              PROTO_TYPES);
-INSTANTIATE_CLASS_3T_GUARDED(LibDNNConvolutionLayer, (int64_t), (int64_t),
+INSTANTIATE_CLASS_3T_GUARDED(LibDNNConvolutionLayer, (uint64_t), (uint64_t),
                              PROTO_TYPES);
 
 REGISTER_LAYER_CLASS(LibDNNConvolution);

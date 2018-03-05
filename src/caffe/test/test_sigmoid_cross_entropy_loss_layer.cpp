@@ -100,7 +100,7 @@ class SigmoidCrossEntropyLossLayerTest : public MultiDeviceTest<TypeParam> {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-TYPED_TEST_CASE(SigmoidCrossEntropyLossLayerTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(SigmoidCrossEntropyLossLayerTest, TestDtypesFloatAndDevices);
 
 TYPED_TEST(SigmoidCrossEntropyLossLayerTest, TestSigmoidCrossEntropyLoss) {
   this->TestForward();

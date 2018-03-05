@@ -70,18 +70,18 @@ STUB_GPU(QuantizerLayer);
 INSTANTIATE_CLASS_3T_GUARDED(QuantizerLayer, (half_fp), (half_fp), PROTO_TYPES);
 INSTANTIATE_CLASS_3T_GUARDED(QuantizerLayer, (float), (float), PROTO_TYPES);
 INSTANTIATE_CLASS_3T_GUARDED(QuantizerLayer, (double), (double), PROTO_TYPES);
-INSTANTIATE_CLASS_3T_GUARDED(QuantizerLayer, (int8_t), (int8_t), PROTO_TYPES);
-INSTANTIATE_CLASS_3T_GUARDED(QuantizerLayer, (int16_t), (int16_t), PROTO_TYPES);
-INSTANTIATE_CLASS_3T_GUARDED(QuantizerLayer, (int32_t), (int32_t), PROTO_TYPES);
-INSTANTIATE_CLASS_3T_GUARDED(QuantizerLayer, (int64_t), (int64_t), PROTO_TYPES);
+INSTANTIATE_CLASS_3T_GUARDED(QuantizerLayer, (uint8_t), (uint8_t), PROTO_TYPES);
+INSTANTIATE_CLASS_3T_GUARDED(QuantizerLayer, (uint16_t), (uint16_t), PROTO_TYPES);
+INSTANTIATE_CLASS_3T_GUARDED(QuantizerLayer, (uint32_t), (uint32_t), PROTO_TYPES);
+INSTANTIATE_CLASS_3T_GUARDED(QuantizerLayer, (uint64_t), (uint64_t), PROTO_TYPES);
 
 REGISTER_LAYER_CLASS(Quantizer);
 REGISTER_LAYER_CLASS_INST(Quantizer, (half_fp), (half_fp), PROTO_TYPES);
 REGISTER_LAYER_CLASS_INST(Quantizer, (float), (float), PROTO_TYPES);
 REGISTER_LAYER_CLASS_INST(Quantizer, (double), (double), PROTO_TYPES);
-REGISTER_LAYER_CLASS_INST(Quantizer, (int8_t), (int8_t), PROTO_TYPES);
-REGISTER_LAYER_CLASS_INST(Quantizer, (int16_t), (int16_t), PROTO_TYPES);
-REGISTER_LAYER_CLASS_INST(Quantizer, (int32_t), (int32_t), PROTO_TYPES);
-REGISTER_LAYER_CLASS_INST(Quantizer, (int64_t), (int64_t), PROTO_TYPES);
+REGISTER_LAYER_CLASS_INST(Quantizer, (uint8_t), (uint8_t), PROTO_TYPES);
+REGISTER_LAYER_CLASS_INST(Quantizer, (uint16_t), (uint16_t), PROTO_TYPES);
+REGISTER_LAYER_CLASS_INST(Quantizer, (uint32_t), (uint32_t), PROTO_TYPES);
+REGISTER_LAYER_CLASS_INST(Quantizer, (uint64_t), (uint64_t), PROTO_TYPES);
 
 }

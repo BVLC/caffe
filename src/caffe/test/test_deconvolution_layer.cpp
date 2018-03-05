@@ -51,7 +51,7 @@ class DeconvolutionLayerTest : public MultiDeviceTest<TypeParam> {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-TYPED_TEST_CASE(DeconvolutionLayerTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(DeconvolutionLayerTest, TestDtypesFloatAndDevices);
 
 TYPED_TEST(DeconvolutionLayerTest, TestSetup) {
   typedef typename TypeParam::Dtype Dtype;
@@ -344,7 +344,7 @@ class CuDNNDeconvolutionLayerTest : public MultiDeviceTest<TypeParam> {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-TYPED_TEST_CASE(CuDNNDeconvolutionLayerTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(CuDNNDeconvolutionLayerTest, TestDtypesFloatAndDevices);
 
 TYPED_TEST(CuDNNDeconvolutionLayerTest, TestSetup) {
   typedef typename TypeParam::Dtype Dtype;

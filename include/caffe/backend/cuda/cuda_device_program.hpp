@@ -87,10 +87,10 @@ class CudaDeviceProgram : public DeviceProgram {
   virtual string helper_functions_half() const;
   virtual string helper_functions_float() const;
   virtual string helper_functions_double() const;
-  virtual string helper_functions_int8() const;
-  virtual string helper_functions_int16() const;
-  virtual string helper_functions_int32() const;
-  virtual string helper_functions_int64() const;
+  virtual string helper_functions_uint8() const;
+  virtual string helper_functions_uint16() const;
+  virtual string helper_functions_uint32() const;
+  virtual string helper_functions_uint64() const;
 
  private:
   shared_ptr<nvrtcProgram> cuda_program_;

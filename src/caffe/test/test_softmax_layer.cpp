@@ -38,7 +38,7 @@ class SoftmaxLayerTest : public MultiDeviceTest<TypeParam> {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-TYPED_TEST_CASE(SoftmaxLayerTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(SoftmaxLayerTest, TestDtypesFloatAndDevices);
 
 TYPED_TEST(SoftmaxLayerTest, TestForward) {
   typedef typename TypeParam::Dtype Dtype;

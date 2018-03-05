@@ -63,7 +63,7 @@ class RNNLayerTest : public MultiDeviceTest<TypeParam> {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-TYPED_TEST_CASE(RNNLayerTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(RNNLayerTest, TestDtypesFloatAndDevices);
 
 TYPED_TEST(RNNLayerTest, TestSetUp) {
   typedef typename TypeParam::Dtype Dtype;

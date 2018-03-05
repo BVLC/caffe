@@ -54,7 +54,7 @@ class ContrastiveLossLayerTest : public MultiDeviceTest<TypeParam> {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-TYPED_TEST_CASE(ContrastiveLossLayerTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(ContrastiveLossLayerTest, TestDtypesFloatAndDevices);
 
 TYPED_TEST(ContrastiveLossLayerTest, TestForward) {
   typedef typename TypeParam::Dtype Dtype;

@@ -14,14 +14,14 @@ namespace caffe {
 #define HALF_DATA_INDEX 3
 #define FLOAT_DATA_INDEX 1
 #define DOUBLE_DATA_INDEX 2
-#define INT8_DATA_INDEX 4
-#define INT16_DATA_INDEX 5
-#define INT32_DATA_INDEX 6
-#define INT64_DATA_INDEX 7
-#define UINT8_DATA_INDEX 8
-#define UINT16_DATA_INDEX 9
-#define UINT32_DATA_INDEX 10
-#define UINT64_DATA_INDEX 11
+#define UINT8_DATA_INDEX 4
+#define UINT16_DATA_INDEX 5
+#define UINT32_DATA_INDEX 6
+#define UINT64_DATA_INDEX 7
+#define INT8_DATA_INDEX 8
+#define INT16_DATA_INDEX 9
+#define INT32_DATA_INDEX 10
+#define INT64_DATA_INDEX 11
 
 #define PROTO_DATA_INDEX_MIN 1
 #define PROTO_DATA_INDEX_MAX 11
@@ -139,6 +139,22 @@ template<>
 inline DataType proto_data_type<int64_t>() {
   return CAFFE_INT64_QUANTIZED;
 }
+template<>
+inline DataType proto_data_type<uint8_t>() {
+  return CAFFE_INT8_QUANTIZED;
+}
+template<>
+inline DataType proto_data_type<uint16_t>() {
+  return CAFFE_INT16_QUANTIZED;
+}
+template<>
+inline DataType proto_data_type<uint32_t>() {
+  return CAFFE_INT32_QUANTIZED;
+}
+template<>
+inline DataType proto_data_type<uint64_t>() {
+  return CAFFE_INT64_QUANTIZED;
+}
 
 
 template<typename T>
@@ -192,41 +208,6 @@ inline int_tp data_type_index<uint64_t>() {
   return UINT64_DATA_INDEX;
 }
 
-template<typename Dtype>
-inline bool is_signed_integer_type() {
-  return std::is_same<Dtype, int8_t>::value
-      || std::is_same<Dtype, int16_t>::value
-      || std::is_same<Dtype, int32_t>::value
-      || std::is_same<Dtype, int64_t>::value;
-}
-
-template<typename Dtype>
-inline bool is_unsigned_integer_type() {
-  return std::is_same<Dtype, uint8_t>::value
-      || std::is_same<Dtype, uint16_t>::value
-      || std::is_same<Dtype, uint32_t>::value
-      || std::is_same<Dtype, uint64_t>::value;
-}
-
-template<typename Dtype>
-inline bool is_integer_type() {
-  return std::is_same<Dtype, int8_t>::value
-      || std::is_same<Dtype, int16_t>::value
-      || std::is_same<Dtype, int32_t>::value
-      || std::is_same<Dtype, int64_t>::value
-      || std::is_same<Dtype, uint8_t>::value
-      || std::is_same<Dtype, uint16_t>::value
-      || std::is_same<Dtype, uint32_t>::value
-      || std::is_same<Dtype, uint64_t>::value;
-}
-
-template<typename Dtype>
-inline bool is_float_type() {
-  return std::is_same<Dtype, half_fp>::value
-      || std::is_same<Dtype, float>::value
-      || std::is_same<Dtype, double>::value;
-}
-
 template<typename T>
 inline double type_max_val() {
   LOG(FATAL) << "Unknown type" << std::endl;
@@ -260,6 +241,22 @@ inline double type_max_val<int32_t>() {
 template<>
 inline double type_max_val<int64_t>() {
   return static_cast<double>(std::numeric_limits<int64_t>::max());
+}
+template<>
+inline double type_max_val<uint8_t>() {
+  return static_cast<double>(std::numeric_limits<uint8_t>::max());
+}
+template<>
+inline double type_max_val<uint16_t>() {
+  return static_cast<double>(std::numeric_limits<uint16_t>::max());
+}
+template<>
+inline double type_max_val<uint32_t>() {
+  return static_cast<double>(std::numeric_limits<uint32_t>::max());
+}
+template<>
+inline double type_max_val<uint64_t>() {
+  return static_cast<double>(std::numeric_limits<uint64_t>::max());
 }
 
 template<typename T>
@@ -295,6 +292,22 @@ inline double type_min_val<int32_t>() {
 template<>
 inline double type_min_val<int64_t>() {
   return static_cast<double>(std::numeric_limits<int64_t>::min());
+}
+template<>
+inline double type_min_val<uint8_t>() {
+  return static_cast<double>(std::numeric_limits<uint8_t>::min());
+}
+template<>
+inline double type_min_val<uint16_t>() {
+  return static_cast<double>(std::numeric_limits<uint16_t>::min());
+}
+template<>
+inline double type_min_val<uint32_t>() {
+  return static_cast<double>(std::numeric_limits<uint32_t>::min());
+}
+template<>
+inline double type_min_val<uint64_t>() {
+  return static_cast<double>(std::numeric_limits<uint64_t>::min());
 }
 
 template<typename T>
@@ -338,6 +351,25 @@ inline size_t type_max_integer_representable<int64_t>() {
   return std::numeric_limits<int64_t>::max();
 }
 
+template<>
+inline size_t type_max_integer_representable<uint8_t>() {
+  return std::numeric_limits<uint8_t>::max();
+}
+
+template<>
+inline size_t type_max_integer_representable<uint16_t>() {
+  return std::numeric_limits<uint16_t>::max();
+}
+
+template<>
+inline size_t type_max_integer_representable<uint32_t>() {
+  return std::numeric_limits<uint32_t>::max();
+}
+
+template<>
+inline size_t type_max_integer_representable<uint64_t>() {
+  return std::numeric_limits<uint64_t>::max();
+}
 
 }  // namespace caffe
 

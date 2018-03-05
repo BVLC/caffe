@@ -7,6 +7,6 @@ namespace caffe {
 
 string persistent_storage_path();
 
-}
+}  // namespace caffe
 
 #endif  //CAFFE_UTIL_PERSISTENT_STORAGE_HPP_

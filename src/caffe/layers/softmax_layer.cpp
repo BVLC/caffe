@@ -101,9 +101,9 @@ STUB_GPU(SoftmaxLayer);
 INSTANTIATE_CLASS_3T_GUARDED(SoftmaxLayer, (half_fp), (half_fp), (half_fp));
 INSTANTIATE_CLASS_3T_GUARDED(SoftmaxLayer, (float), (float), (float));
 INSTANTIATE_CLASS_3T_GUARDED(SoftmaxLayer, (double), (double), (double));
-INSTANTIATE_CLASS_3T_GUARDED(SoftmaxLayer, (int8_t), (int8_t), (int8_t));
-INSTANTIATE_CLASS_3T_GUARDED(SoftmaxLayer, (int16_t), (int16_t), (int16_t));
-INSTANTIATE_CLASS_3T_GUARDED(SoftmaxLayer, (int32_t), (int32_t), (int32_t));
-INSTANTIATE_CLASS_3T_GUARDED(SoftmaxLayer, (int64_t), (int64_t), (int64_t));
+INSTANTIATE_CLASS_3T_GUARDED(SoftmaxLayer, (uint8_t), (uint8_t), (uint8_t));
+INSTANTIATE_CLASS_3T_GUARDED(SoftmaxLayer, (uint16_t), (uint16_t), (uint16_t));
+INSTANTIATE_CLASS_3T_GUARDED(SoftmaxLayer, (uint32_t), (uint32_t), (uint32_t));
+INSTANTIATE_CLASS_3T_GUARDED(SoftmaxLayer, (uint64_t), (uint64_t), (uint64_t));
 
 }  // namespace caffe

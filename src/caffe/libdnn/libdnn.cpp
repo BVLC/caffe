@@ -97,19 +97,19 @@ string LibDNN<MItype, MOtype>::generate_gemm_core(
       ss << "Dreg[wm] += ";
       switch (prec) {
         case LIBDNN_ACCUMULATE_PREC_8:
-          ss << this->program_->template convert_type<int8_t>(vwm,
+          ss << this->program_->template convert_type<uint8_t>(vwm,
                                                        "Areg * (MItype)v_bmul");
           break;
         case LIBDNN_ACCUMULATE_PREC_16:
-          ss << this->program_->template convert_type<int16_t>(vwm,
+          ss << this->program_->template convert_type<uint16_t>(vwm,
                                                        "Areg * (MItype)v_bmul");
           break;
         case LIBDNN_ACCUMULATE_PREC_32:
-          ss << this->program_->template convert_type<int32_t>(vwm,
+          ss << this->program_->template convert_type<uint32_t>(vwm,
                                                        "Areg * (MItype)v_bmul");
           break;
         case LIBDNN_ACCUMULATE_PREC_64:
-          ss << this->program_->template convert_type<int64_t>(vwm,
+          ss << this->program_->template convert_type<uint64_t>(vwm,
                                                        "Areg * (MItype)v_bmul");
           break;
         case LIBDNN_ACCUMULATE_PREC_NATIVE:
@@ -152,19 +152,19 @@ string LibDNN<MItype, MOtype>::generate_gemm_core(
                << " * (Breg[wn]))" << std::endl;
       switch (prec) {
         case LIBDNN_ACCUMULATE_PREC_8:
-          ss << this->program_->template convert_type<int8_t>(vwn,
+          ss << this->program_->template convert_type<uint8_t>(vwn,
                                                               src_term.str());
           break;
         case LIBDNN_ACCUMULATE_PREC_16:
-          ss << this->program_->template convert_type<int16_t>(vwn,
+          ss << this->program_->template convert_type<uint16_t>(vwn,
                                                                src_term.str());
           break;
         case LIBDNN_ACCUMULATE_PREC_32:
-          ss << this->program_->template convert_type<int32_t>(vwn,
+          ss << this->program_->template convert_type<uint32_t>(vwn,
                                                                src_term.str());
           break;
         case LIBDNN_ACCUMULATE_PREC_64:
-          ss << this->program_->template convert_type<int64_t>(vwn,
+          ss << this->program_->template convert_type<uint64_t>(vwn,
                                                                src_term.str());
           break;
         case LIBDNN_ACCUMULATE_PREC_NATIVE:

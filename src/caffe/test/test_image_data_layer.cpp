@@ -69,7 +69,7 @@ class ImageDataLayerTest : public MultiDeviceTest<TypeParam> {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-TYPED_TEST_CASE(ImageDataLayerTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(ImageDataLayerTest, TestDtypesFloatAndDevices);
 
 TYPED_TEST(ImageDataLayerTest, TestRead) {
   typedef typename TypeParam::Dtype Dtype;

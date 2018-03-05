@@ -70,7 +70,7 @@ class EuclideanLossLayerTest : public MultiDeviceTest<TypeParam> {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-TYPED_TEST_CASE(EuclideanLossLayerTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(EuclideanLossLayerTest, TestDtypesFloatAndDevices);
 
 TYPED_TEST(EuclideanLossLayerTest, TestForward) {
   this->TestForward();

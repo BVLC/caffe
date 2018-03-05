@@ -65,13 +65,13 @@ string DeviceProgram::atomic_add<float>(string source, string operand);
 template
 string DeviceProgram::atomic_add<double>(string source, string operand);
 template
-string DeviceProgram::atomic_add<int8_t>(string source, string operand);
+string DeviceProgram::atomic_add<uint8_t>(string source, string operand);
 template
-string DeviceProgram::atomic_add<int16_t>(string source, string operand);
+string DeviceProgram::atomic_add<uint16_t>(string source, string operand);
 template
-string DeviceProgram::atomic_add<int32_t>(string source, string operand);
+string DeviceProgram::atomic_add<uint32_t>(string source, string operand);
 template
-string DeviceProgram::atomic_add<int64_t>(string source, string operand);
+string DeviceProgram::atomic_add<uint64_t>(string source, string operand);
 
 template<typename Dtype>
 string DeviceProgram::define_type(const char* name) {
@@ -455,24 +455,24 @@ string DeviceProgram::convert_type<double>(int_tp vec_len,
   return convert_type_double(vec_len, src_val);
 }
 template<>
-string DeviceProgram::convert_type<int8_t>(int_tp vec_len,
-                                           string src_val) const {
-  return convert_type_int8(vec_len, src_val);
+string DeviceProgram::convert_type<uint8_t>(int_tp vec_len,
+                                            string src_val) const {
+  return convert_type_uint8(vec_len, src_val);
 }
 template<>
-string DeviceProgram::convert_type<int16_t>(int_tp vec_len,
-                                            string src_val) const {
-  return convert_type_int16(vec_len, src_val);
+string DeviceProgram::convert_type<uint16_t>(int_tp vec_len,
+                                             string src_val) const {
+  return convert_type_uint16(vec_len, src_val);
 }
 template<>
-string DeviceProgram::convert_type<int32_t>(int_tp vec_len,
-                                            string src_val) const {
-  return convert_type_int32(vec_len, src_val);
+string DeviceProgram::convert_type<uint32_t>(int_tp vec_len,
+                                             string src_val) const {
+  return convert_type_uint32(vec_len, src_val);
 }
 template<>
-string DeviceProgram::convert_type<int64_t>(int_tp vec_len,
-                                            string src_val) const {
-  return convert_type_int64(vec_len, src_val);
+string DeviceProgram::convert_type<uint64_t>(int_tp vec_len,
+                                             string src_val) const {
+  return convert_type_uint64(vec_len, src_val);
 }
 
 
@@ -489,20 +489,20 @@ string DeviceProgram::helper_functions<double>() {
   return helper_functions_double();
 }
 template<>
-string DeviceProgram::helper_functions<int8_t>() {
-  return helper_functions_int8();
+string DeviceProgram::helper_functions<uint8_t>() {
+  return helper_functions_uint8();
 }
 template<>
-string DeviceProgram::helper_functions<int16_t>() {
-  return helper_functions_int16();
+string DeviceProgram::helper_functions<uint16_t>() {
+  return helper_functions_uint16();
 }
 template<>
-string DeviceProgram::helper_functions<int32_t>() {
-  return helper_functions_int32();
+string DeviceProgram::helper_functions<uint32_t>() {
+  return helper_functions_uint32();
 }
 template<>
-string DeviceProgram::helper_functions<int64_t>() {
-  return helper_functions_int64();
+string DeviceProgram::helper_functions<uint64_t>() {
+  return helper_functions_uint64();
 }
 
 

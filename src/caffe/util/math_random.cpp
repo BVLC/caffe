@@ -46,9 +46,8 @@ void caffe_rng_gaussian<half_fp>(const int_tp n,
 }
 
 template<>
-void caffe_rng_gaussian<int8_t>(const int_tp n,
-                         const int8_t a, const int8_t sigma,
-                         int8_t* r) {
+void caffe_rng_gaussian<uint8_t>(const int_tp n, const uint8_t a,
+                                 const uint8_t sigma, uint8_t* r) {
   // FIXME
   CHECK_GE(n, 0);
   CHECK(r);
@@ -65,9 +64,8 @@ void caffe_rng_gaussian<int8_t>(const int_tp n,
 }
 
 template<>
-void caffe_rng_gaussian<int16_t>(const int_tp n,
-                         const int16_t a, const int16_t sigma,
-                         int16_t* r) {
+void caffe_rng_gaussian<uint16_t>(const int_tp n, const uint16_t a,
+                                  const uint16_t sigma, uint16_t* r) {
   CHECK_GE(n, 0);
   CHECK(r);
   CHECK_GT(sigma, 0);
@@ -83,9 +81,8 @@ void caffe_rng_gaussian<int16_t>(const int_tp n,
 }
 
 template<>
-void caffe_rng_gaussian<int32_t>(const int_tp n,
-                         const int32_t a, const int32_t sigma,
-                         int32_t* r) {
+void caffe_rng_gaussian<uint32_t>(const int_tp n, const uint32_t a,
+                                  const uint32_t sigma, uint32_t* r) {
   CHECK_GE(n, 0);
   CHECK(r);
   CHECK_GT(sigma, 0);
@@ -101,9 +98,8 @@ void caffe_rng_gaussian<int32_t>(const int_tp n,
 }
 
 template<>
-void caffe_rng_gaussian<int64_t>(const int_tp n,
-                         const int64_t a, const int64_t sigma,
-                         int64_t* r) {
+void caffe_rng_gaussian<uint64_t>(const int_tp n, const uint64_t a,
+                                  const uint64_t sigma, uint64_t* r) {
   CHECK_GE(n, 0);
   CHECK(r);
   CHECK_GT(sigma, 0);
@@ -243,14 +239,14 @@ template void caffe_rng_uniform<float>(const int_tp n, const float a,
                                        const float b, float* r);
 template void caffe_rng_uniform<double>(const int_tp n, const double a,
                                         const double b, double* r);
-template void caffe_rng_uniform<int8_t>(const int_tp n, const int8_t a,
-                                        const int8_t b, int8_t* r);
-template void caffe_rng_uniform<int16_t>(const int_tp n, const int16_t a,
-                                        const int16_t b, int16_t* r);
-template void caffe_rng_uniform<int32_t>(const int_tp n, const int32_t a,
-                                        const int32_t b, int32_t* r);
-template void caffe_rng_uniform<int64_t>(const int_tp n, const int64_t a,
-                                        const int64_t b, int64_t* r);
+template void caffe_rng_uniform<uint8_t>(const int_tp n, const uint8_t a,
+                                         const uint8_t b, uint8_t* r);
+template void caffe_rng_uniform<uint16_t>(const int_tp n, const uint16_t a,
+                                          const uint16_t b, uint16_t* r);
+template void caffe_rng_uniform<uint32_t>(const int_tp n, const uint32_t a,
+                                          const uint32_t b, uint32_t* r);
+template void caffe_rng_uniform<uint64_t>(const int_tp n, const uint64_t a,
+                                          const uint64_t b, uint64_t* r);
 
 
 template<typename Dtype>
@@ -342,72 +338,72 @@ template void caffe_rng_bernoulli<double, uint32_t>(const int_tp n,
 template void caffe_rng_bernoulli<double, uint64_t>(const int_tp n,
                                   const double p, uint64_t* r);
 
-template void caffe_rng_bernoulli<int8_t, int8_t>(const int_tp n,
-                                  const int8_t p, int8_t* r);
-template void caffe_rng_bernoulli<int8_t, int16_t>(const int_tp n,
-                                  const int8_t p, int16_t* r);
-template void caffe_rng_bernoulli<int8_t, int32_t>(const int_tp n,
-                                  const int8_t p, int32_t* r);
-template void caffe_rng_bernoulli<int8_t, int64_t>(const int_tp n,
-                                  const int8_t p, int64_t* r);
-template void caffe_rng_bernoulli<int8_t, uint8_t>(const int_tp n,
-                                  const int8_t p, uint8_t* r);
-template void caffe_rng_bernoulli<int8_t, uint16_t>(const int_tp n,
-                                  const int8_t p, uint16_t* r);
-template void caffe_rng_bernoulli<int8_t, uint32_t>(const int_tp n,
-                                  const int8_t p, uint32_t* r);
-template void caffe_rng_bernoulli<int8_t, uint64_t>(const int_tp n,
-                                  const int8_t p, uint64_t* r);
+template void caffe_rng_bernoulli<uint8_t, int8_t>(const int_tp n,
+                                  const uint8_t p, int8_t* r);
+template void caffe_rng_bernoulli<uint8_t, int16_t>(const int_tp n,
+                                  const uint8_t p, int16_t* r);
+template void caffe_rng_bernoulli<uint8_t, int32_t>(const int_tp n,
+                                  const uint8_t p, int32_t* r);
+template void caffe_rng_bernoulli<uint8_t, int64_t>(const int_tp n,
+                                  const uint8_t p, int64_t* r);
+template void caffe_rng_bernoulli<uint8_t, uint8_t>(const int_tp n,
+                                  const uint8_t p, uint8_t* r);
+template void caffe_rng_bernoulli<uint8_t, uint16_t>(const int_tp n,
+                                  const uint8_t p, uint16_t* r);
+template void caffe_rng_bernoulli<uint8_t, uint32_t>(const int_tp n,
+                                  const uint8_t p, uint32_t* r);
+template void caffe_rng_bernoulli<uint8_t, uint64_t>(const int_tp n,
+                                  const uint8_t p, uint64_t* r);
 
-template void caffe_rng_bernoulli<int16_t, int8_t>(const int_tp n,
-                                  const int16_t p, int8_t* r);
-template void caffe_rng_bernoulli<int16_t, int16_t>(const int_tp n,
-                                  const int16_t p, int16_t* r);
-template void caffe_rng_bernoulli<int16_t, int32_t>(const int_tp n,
-                                  const int16_t p, int32_t* r);
-template void caffe_rng_bernoulli<int16_t, int64_t>(const int_tp n,
-                                  const int16_t p, int64_t* r);
-template void caffe_rng_bernoulli<int16_t, uint8_t>(const int_tp n,
-                                  const int16_t p, uint8_t* r);
-template void caffe_rng_bernoulli<int16_t, uint16_t>(const int_tp n,
-                                  const int16_t p, uint16_t* r);
-template void caffe_rng_bernoulli<int16_t, uint32_t>(const int_tp n,
-                                  const int16_t p, uint32_t* r);
-template void caffe_rng_bernoulli<int16_t, uint64_t>(const int_tp n,
-                                  const int16_t p, uint64_t* r);
+template void caffe_rng_bernoulli<uint16_t, int8_t>(const int_tp n,
+                                  const uint16_t p, int8_t* r);
+template void caffe_rng_bernoulli<uint16_t, int16_t>(const int_tp n,
+                                  const uint16_t p, int16_t* r);
+template void caffe_rng_bernoulli<uint16_t, int32_t>(const int_tp n,
+                                  const uint16_t p, int32_t* r);
+template void caffe_rng_bernoulli<uint16_t, int64_t>(const int_tp n,
+                                  const uint16_t p, int64_t* r);
+template void caffe_rng_bernoulli<uint16_t, uint8_t>(const int_tp n,
+                                  const uint16_t p, uint8_t* r);
+template void caffe_rng_bernoulli<uint16_t, uint16_t>(const int_tp n,
+                                  const uint16_t p, uint16_t* r);
+template void caffe_rng_bernoulli<uint16_t, uint32_t>(const int_tp n,
+                                  const uint16_t p, uint32_t* r);
+template void caffe_rng_bernoulli<uint16_t, uint64_t>(const int_tp n,
+                                  const uint16_t p, uint64_t* r);
 
-template void caffe_rng_bernoulli<int32_t, int8_t>(const int_tp n,
-                                  const int32_t p, int8_t* r);
-template void caffe_rng_bernoulli<int32_t, int16_t>(const int_tp n,
-                                  const int32_t p, int16_t* r);
-template void caffe_rng_bernoulli<int32_t, int32_t>(const int_tp n,
-                                  const int32_t p, int32_t* r);
-template void caffe_rng_bernoulli<int32_t, int64_t>(const int_tp n,
-                                  const int32_t p, int64_t* r);
-template void caffe_rng_bernoulli<int32_t, uint8_t>(const int_tp n,
-                                  const int32_t p, uint8_t* r);
-template void caffe_rng_bernoulli<int32_t, uint16_t>(const int_tp n,
-                                  const int32_t p, uint16_t* r);
-template void caffe_rng_bernoulli<int32_t, uint32_t>(const int_tp n,
-                                  const int32_t p, uint32_t* r);
-template void caffe_rng_bernoulli<int32_t, uint64_t>(const int_tp n,
-                                  const int32_t p, uint64_t* r);
+template void caffe_rng_bernoulli<uint32_t, int8_t>(const int_tp n,
+                                  const uint32_t p, int8_t* r);
+template void caffe_rng_bernoulli<uint32_t, int16_t>(const int_tp n,
+                                  const uint32_t p, int16_t* r);
+template void caffe_rng_bernoulli<uint32_t, int32_t>(const int_tp n,
+                                  const uint32_t p, int32_t* r);
+template void caffe_rng_bernoulli<uint32_t, int64_t>(const int_tp n,
+                                  const uint32_t p, int64_t* r);
+template void caffe_rng_bernoulli<uint32_t, uint8_t>(const int_tp n,
+                                  const uint32_t p, uint8_t* r);
+template void caffe_rng_bernoulli<uint32_t, uint16_t>(const int_tp n,
+                                  const uint32_t p, uint16_t* r);
+template void caffe_rng_bernoulli<uint32_t, uint32_t>(const int_tp n,
+                                  const uint32_t p, uint32_t* r);
+template void caffe_rng_bernoulli<uint32_t, uint64_t>(const int_tp n,
+                                  const uint32_t p, uint64_t* r);
 
-template void caffe_rng_bernoulli<int64_t, int8_t>(const int_tp n,
-                                  const int64_t p, int8_t* r);
-template void caffe_rng_bernoulli<int64_t, int16_t>(const int_tp n,
-                                  const int64_t p, int16_t* r);
-template void caffe_rng_bernoulli<int64_t, int32_t>(const int_tp n,
-                                  const int64_t p, int32_t* r);
-template void caffe_rng_bernoulli<int64_t, int64_t>(const int_tp n,
-                                  const int64_t p, int64_t* r);
-template void caffe_rng_bernoulli<int64_t, uint8_t>(const int_tp n,
-                                  const int64_t p, uint8_t* r);
-template void caffe_rng_bernoulli<int64_t, uint16_t>(const int_tp n,
-                                  const int64_t p, uint16_t* r);
-template void caffe_rng_bernoulli<int64_t, uint32_t>(const int_tp n,
-                                  const int64_t p, uint32_t* r);
-template void caffe_rng_bernoulli<int64_t, uint64_t>(const int_tp n,
-                                  const int64_t p, uint64_t* r);
+template void caffe_rng_bernoulli<uint64_t, int8_t>(const int_tp n,
+                                  const uint64_t p, int8_t* r);
+template void caffe_rng_bernoulli<uint64_t, int16_t>(const int_tp n,
+                                  const uint64_t p, int16_t* r);
+template void caffe_rng_bernoulli<uint64_t, int32_t>(const int_tp n,
+                                  const uint64_t p, int32_t* r);
+template void caffe_rng_bernoulli<uint64_t, int64_t>(const int_tp n,
+                                  const uint64_t p, int64_t* r);
+template void caffe_rng_bernoulli<uint64_t, uint8_t>(const int_tp n,
+                                  const uint64_t p, uint8_t* r);
+template void caffe_rng_bernoulli<uint64_t, uint16_t>(const int_tp n,
+                                  const uint64_t p, uint16_t* r);
+template void caffe_rng_bernoulli<uint64_t, uint32_t>(const int_tp n,
+                                  const uint64_t p, uint32_t* r);
+template void caffe_rng_bernoulli<uint64_t, uint64_t>(const int_tp n,
+                                  const uint64_t p, uint64_t* r);
 
 }  // namespace caffe

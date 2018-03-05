@@ -49,7 +49,7 @@ class SoftmaxWithLossLayerTest : public MultiDeviceTest<TypeParam> {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-TYPED_TEST_CASE(SoftmaxWithLossLayerTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(SoftmaxWithLossLayerTest, TestDtypesFloatAndDevices);
 
 TYPED_TEST(SoftmaxWithLossLayerTest, TestGradient) {
   typedef typename TypeParam::Dtype Dtype;

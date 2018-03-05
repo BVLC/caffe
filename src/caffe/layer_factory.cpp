@@ -129,13 +129,13 @@ INSTANTIATE_CLASS_3T_GUARDED(LayerRegistry,
 INSTANTIATE_CLASS_3T_GUARDED(LayerRegistry,
                              (double), PROTO_TYPES, PROTO_TYPES);
 INSTANTIATE_CLASS_3T_GUARDED(LayerRegistry,
-                             (int8_t), PROTO_TYPES, PROTO_TYPES);
+                             (uint8_t), PROTO_TYPES, PROTO_TYPES);
 INSTANTIATE_CLASS_3T_GUARDED(LayerRegistry,
-                             (int16_t), PROTO_TYPES, PROTO_TYPES);
+                             (uint16_t), PROTO_TYPES, PROTO_TYPES);
 INSTANTIATE_CLASS_3T_GUARDED(LayerRegistry,
-                             (int32_t), PROTO_TYPES, PROTO_TYPES);
+                             (uint32_t), PROTO_TYPES, PROTO_TYPES);
 INSTANTIATE_CLASS_3T_GUARDED(LayerRegistry,
-                             (int64_t), PROTO_TYPES, PROTO_TYPES);
+                             (uint64_t), PROTO_TYPES, PROTO_TYPES);
 
 INSTANTIATE_CLASS_3T_GUARDED(LayerRegisterer,
                              (half_fp), PROTO_TYPES, PROTO_TYPES);
@@ -144,13 +144,13 @@ INSTANTIATE_CLASS_3T_GUARDED(LayerRegisterer,
 INSTANTIATE_CLASS_3T_GUARDED(LayerRegisterer,
                              (double), PROTO_TYPES, PROTO_TYPES);
 INSTANTIATE_CLASS_3T_GUARDED(LayerRegisterer,
-                             (int8_t), PROTO_TYPES, PROTO_TYPES);
+                             (uint8_t), PROTO_TYPES, PROTO_TYPES);
 INSTANTIATE_CLASS_3T_GUARDED(LayerRegisterer,
-                             (int16_t), PROTO_TYPES, PROTO_TYPES);
+                             (uint16_t), PROTO_TYPES, PROTO_TYPES);
 INSTANTIATE_CLASS_3T_GUARDED(LayerRegisterer,
-                             (int32_t), PROTO_TYPES, PROTO_TYPES);
+                             (uint32_t), PROTO_TYPES, PROTO_TYPES);
 INSTANTIATE_CLASS_3T_GUARDED(LayerRegisterer,
-                             (int64_t), PROTO_TYPES, PROTO_TYPES);
+                             (uint64_t), PROTO_TYPES, PROTO_TYPES);
 
 bool checkConvolutionDilated(ConvolutionParameter param) {
   for (int i = 0; i < param.dilation_size(); ++i) {
@@ -515,13 +515,13 @@ shared_ptr<Layer<Dtype, MItype, MOtype> > GetCaffeSoftmaxLayer(
 REGISTER_LAYER_CREATOR(Softmax, GetCaffeSoftmaxLayer,
                        (half_fp), (half_fp), (half_fp));
 REGISTER_LAYER_CREATOR(Softmax, GetCaffeSoftmaxLayer,
-                       (int8_t), (int8_t), (int8_t));
+                       (uint8_t), (uint8_t), (uint8_t));
 REGISTER_LAYER_CREATOR(Softmax, GetCaffeSoftmaxLayer,
-                       (int16_t), (int16_t), (int16_t));
+                       (uint16_t), (uint16_t), (uint16_t));
 REGISTER_LAYER_CREATOR(Softmax, GetCaffeSoftmaxLayer,
-                       (int32_t), (int32_t), (int32_t));
+                       (uint32_t), (uint32_t), (uint32_t));
 REGISTER_LAYER_CREATOR(Softmax, GetCaffeSoftmaxLayer,
-                       (int64_t), (int64_t), (int64_t));
+                       (uint64_t), (uint64_t), (uint64_t));
 
 // Get tanh layer according to engine.
 template<typename Dtype, typename MItype, typename MOtype>

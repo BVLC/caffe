@@ -70,7 +70,7 @@ class ScaleLayerTest : public MultiDeviceTest<TypeParam> {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-TYPED_TEST_CASE(ScaleLayerTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(ScaleLayerTest, TestDtypesFloatAndDevices);
 
 TYPED_TEST(ScaleLayerTest, TestForwardEltwise) {
   typedef typename TypeParam::Dtype Dtype;

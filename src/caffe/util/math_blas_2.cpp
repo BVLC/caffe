@@ -36,26 +36,26 @@ template void caffe_gemv<half_fp>(const CBLAS_TRANSPOSE trans_A,
                                   const half_fp alpha,
                                   const half_fp* a, const half_fp* x,
                                   const half_fp beta, half_fp* y);
-template void caffe_gemv<int8_t>(const CBLAS_TRANSPOSE trans_A,
+template void caffe_gemv<uint8_t>(const CBLAS_TRANSPOSE trans_A,
                                   const int_tp M, const int_tp N,
-                                  const int8_t alpha,
-                                  const int8_t* a, const int8_t* x,
-                                  const int8_t beta, int8_t* y);
-template void caffe_gemv<int16_t>(const CBLAS_TRANSPOSE trans_A,
+                                  const uint8_t alpha,
+                                  const uint8_t* a, const uint8_t* x,
+                                  const uint8_t beta, uint8_t* y);
+template void caffe_gemv<uint16_t>(const CBLAS_TRANSPOSE trans_A,
                                   const int_tp M, const int_tp N,
-                                  const int16_t alpha,
-                                  const int16_t* a, const int16_t* x,
-                                  const int16_t beta, int16_t* y);
-template void caffe_gemv<int32_t>(const CBLAS_TRANSPOSE trans_A,
+                                  const uint16_t alpha,
+                                  const uint16_t* a, const uint16_t* x,
+                                  const uint16_t beta, uint16_t* y);
+template void caffe_gemv<uint32_t>(const CBLAS_TRANSPOSE trans_A,
                                   const int_tp M, const int_tp N,
-                                  const int32_t alpha,
-                                  const int32_t* a, const int32_t* x,
-                                  const int32_t beta, int32_t* y);
-template void caffe_gemv<int64_t>(const CBLAS_TRANSPOSE trans_A,
+                                  const uint32_t alpha,
+                                  const uint32_t* a, const uint32_t* x,
+                                  const uint32_t beta, uint32_t* y);
+template void caffe_gemv<uint64_t>(const CBLAS_TRANSPOSE trans_A,
                                   const int_tp M, const int_tp N,
-                                  const int64_t alpha,
-                                  const int64_t* a, const int64_t* x,
-                                  const int64_t beta, int64_t* y);
+                                  const uint64_t alpha,
+                                  const uint64_t* a, const uint64_t* x,
+                                  const uint64_t beta, uint64_t* y);
 
 template<>
 void caffe_gemv<float>(const CBLAS_TRANSPOSE trans_A, const int_tp M,

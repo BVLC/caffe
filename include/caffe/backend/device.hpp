@@ -431,127 +431,129 @@ class Device {
 #endif  // USE_DOUBLE
 
 #ifdef USE_INT_QUANT_8
-  virtual void gemm_int8
+  virtual void gemm_uint8
                 (const CBLAS_TRANSPOSE trans_a, const CBLAS_TRANSPOSE trans_b,
                  const uint_tp m, const uint_tp n, const uint_tp k,
-                 const int8_t alpha, vptr<const int8_t> a,
-                 vptr<const int8_t> b,
-                 const int8_t beta,
-                 vptr<int8_t> c);
-  virtual void gemv_int8
+                 const uint8_t alpha, vptr<const uint8_t> a,
+                 vptr<const uint8_t> b,
+                 const uint8_t beta,
+                 vptr<uint8_t> c);
+  virtual void gemv_uint8
                 (const CBLAS_TRANSPOSE trans_a, const uint_tp m,
-                 const uint_tp n, const int8_t alpha,
-                 vptr<const int8_t> a,
-                 vptr<const int8_t> x, const int8_t beta,
-                 vptr<int8_t> y);
-  virtual void axpy_int8(const uint_tp n,
-                         const int8_t alpha,
-                         vptr<const int8_t> x,
-                         vptr<int8_t> y);
-  virtual void axpby_int8(const uint_tp n, const int8_t alpha,
-                    vptr<const int8_t> x, const int8_t beta, vptr<int8_t> y);
-  virtual void dot_int8(const uint_tp n, vptr<const int8_t> x,
-                        vptr<const int8_t> y, int8_t *out);
-  virtual void asum_int8(const uint_tp n, vptr<const int8_t> x, int8_t* y);
-  virtual void scale_int8(const uint_tp n, const int8_t alpha,
-                          vptr<const int8_t> x, vptr<int8_t> y);
-  virtual void scal_int8(const uint_tp n, const int8_t alpha, vptr<int8_t> x);
-  virtual void rng_uniform_int8(const uint_tp n, const int8_t a,
-                                 const int8_t b, vptr<int8_t> r);
+                 const uint_tp n, const uint8_t alpha,
+                 vptr<const uint8_t> a,
+                 vptr<const uint8_t> x, const uint8_t beta,
+                 vptr<uint8_t> y);
+  virtual void axpy_uint8(const uint_tp n,
+                         const uint8_t alpha,
+                         vptr<const uint8_t> x,
+                         vptr<uint8_t> y);
+  virtual void axpby_uint8(const uint_tp n, const uint8_t alpha,
+                    vptr<const uint8_t> x, const uint8_t beta, vptr<uint8_t> y);
+  virtual void dot_uint8(const uint_tp n, vptr<const uint8_t> x,
+                        vptr<const uint8_t> y, uint8_t *out);
+  virtual void asum_uint8(const uint_tp n, vptr<const uint8_t> x, uint8_t* y);
+  virtual void scale_uint8(const uint_tp n, const uint8_t alpha,
+                          vptr<const uint8_t> x, vptr<uint8_t> y);
+  virtual void scal_uint8(const uint_tp n, const uint8_t alpha, vptr<uint8_t> x);
+  virtual void rng_uniform_uint8(const uint_tp n, const uint8_t a,
+                                 const uint8_t b, vptr<uint8_t> r);
 
 #endif  // USE_INT_QUANT_8
 
 #ifdef USE_INT_QUANT_16
-  virtual void gemm_int16
+  virtual void gemm_uint16
                 (const CBLAS_TRANSPOSE trans_a, const CBLAS_TRANSPOSE trans_b,
                  const uint_tp m, const uint_tp n, const uint_tp k,
-                 const int16_t alpha, vptr<const int16_t> a,
-                 vptr<const int16_t> b,
-                 const int16_t beta,
-                 vptr<int16_t> c);
-  virtual void gemv_int16
+                 const uint16_t alpha, vptr<const uint16_t> a,
+                 vptr<const uint16_t> b,
+                 const uint16_t beta,
+                 vptr<uint16_t> c);
+  virtual void gemv_uint16
                 (const CBLAS_TRANSPOSE trans_a, const uint_tp m,
-                 const uint_tp n, const int16_t alpha,
-                 vptr<const int16_t> a,
-                 vptr<const int16_t> x, const int16_t beta,
-                 vptr<int16_t> y);
-  virtual void axpy_int16(const uint_tp n,
-                         const int16_t alpha,
-                         vptr<const int16_t> x,
-                         vptr<int16_t> y);
-  virtual void axpby_int16(const uint_tp n, const int16_t alpha,
-                    vptr<const int16_t> x, const int16_t beta, vptr<int16_t> y);
-  virtual void dot_int16(const uint_tp n, vptr<const int16_t> x,
-                        vptr<const int16_t> y, int16_t *out);
-  virtual void asum_int16(const uint_tp n, vptr<const int16_t> x, int16_t* y);
-  virtual void scale_int16(const uint_tp n, const int16_t alpha,
-                          vptr<const int16_t> x, vptr<int16_t> y);
-  virtual void scal_int16(const uint_tp n, const int16_t alpha,
-                          vptr<int16_t> x);
-  virtual void rng_uniform_int16(const uint_tp n, const int16_t a,
-                                 const int16_t b, vptr<int16_t> r);
+                 const uint_tp n, const uint16_t alpha,
+                 vptr<const uint16_t> a,
+                 vptr<const uint16_t> x, const uint16_t beta,
+                 vptr<uint16_t> y);
+  virtual void axpy_uint16(const uint_tp n,
+                         const uint16_t alpha,
+                         vptr<const uint16_t> x,
+                         vptr<uint16_t> y);
+  virtual void axpby_uint16(const uint_tp n, const uint16_t alpha,
+                    vptr<const uint16_t> x, const uint16_t beta, vptr<uint16_t> y);
+  virtual void dot_uint16(const uint_tp n, vptr<const uint16_t> x,
+                        vptr<const uint16_t> y, uint16_t *out);
+  virtual void asum_uint16(const uint_tp n, vptr<const uint16_t> x, uint16_t* y);
+  virtual void scale_uint16(const uint_tp n, const uint16_t alpha,
+                          vptr<const uint16_t> x, vptr<uint16_t> y);
+  virtual void scal_uint16(const uint_tp n, const uint16_t alpha,
+                          vptr<uint16_t> x);
+  virtual void rng_uniform_uint16(const uint_tp n, const uint16_t a,
+                                 const uint16_t b, vptr<uint16_t> r);
 #endif  // USE_INT_QUANT_16
 
 #ifdef USE_INT_QUANT_32
-  virtual void gemm_int32
+  virtual void gemm_uint32
                 (const CBLAS_TRANSPOSE trans_a, const CBLAS_TRANSPOSE trans_b,
                  const uint_tp m, const uint_tp n, const uint_tp k,
-                 const int32_t alpha, vptr<const int32_t> a,
-                 vptr<const int32_t> b,
-                 const int32_t beta,
-                 vptr<int32_t> c);
-  virtual void gemv_int32
+                 const uint32_t alpha, vptr<const uint32_t> a,
+                 vptr<const uint32_t> b,
+                 const uint32_t beta,
+                 vptr<uint32_t> c);
+  virtual void gemv_uint32
                 (const CBLAS_TRANSPOSE trans_a, const uint_tp m,
-                 const uint_tp n, const int32_t alpha,
-                 vptr<const int32_t> a,
-                 vptr<const int32_t> x, const int32_t beta,
-                 vptr<int32_t> y);
-  virtual void axpy_int32(const uint_tp n,
-                         const int32_t alpha,
-                         vptr<const int32_t> x,
-                         vptr<int32_t> y);
-  virtual void axpby_int32(const uint_tp n, const int32_t alpha,
-                    vptr<const int32_t> x, const int32_t beta, vptr<int32_t> y);
-  virtual void dot_int32(const uint_tp n, vptr<const int32_t> x,
-                        vptr<const int32_t> y, int32_t *out);
-  virtual void asum_int32(const uint_tp n, vptr<const int32_t> x, int32_t* y);
-  virtual void scale_int32(const uint_tp n, const int32_t alpha,
-                          vptr<const int32_t> x, vptr<int32_t> y);
-  virtual void scal_int32(const uint_tp n, const int32_t alpha,
-                          vptr<int32_t> x);
-  virtual void rng_uniform_int32(const uint_tp n, const int32_t a,
-                                 const int32_t b, vptr<int32_t> r);
+                 const uint_tp n, const uint32_t alpha,
+                 vptr<const uint32_t> a,
+                 vptr<const uint32_t> x, const uint32_t beta,
+                 vptr<uint32_t> y);
+  virtual void axpy_uint32(const uint_tp n,
+                         const uint32_t alpha,
+                         vptr<const uint32_t> x,
+                         vptr<uint32_t> y);
+  virtual void axpby_uint32(const uint_tp n, const uint32_t alpha,
+                    vptr<const uint32_t> x, const uint32_t beta, vptr<uint32_t> y);
+  virtual void dot_uint32(const uint_tp n, vptr<const uint32_t> x,
+                        vptr<const uint32_t> y, uint32_t *out);
+  virtual void asum_uint32(const uint_tp n, vptr<const uint32_t> x, uint32_t* y);
+  virtual void scale_uint32(const uint_tp n, const uint32_t alpha,
+                          vptr<const uint32_t> x, vptr<uint32_t> y);
+  virtual void scal_uint32(const uint_tp n, const uint32_t alpha,
+                          vptr<uint32_t> x);
+  virtual void rng_uniform_uint32(const uint_tp n, const uint32_t a,
+                                 const uint32_t b, vptr<uint32_t> r);
 #endif  // USE_INT_QUANT_32
 
 #ifdef USE_INT_QUANT_64
-  virtual void gemm_int64
+  virtual void gemm_uint64
                 (const CBLAS_TRANSPOSE trans_a, const CBLAS_TRANSPOSE trans_b,
                  const uint_tp m, const uint_tp n, const uint_tp k,
-                 const int64_t alpha, vptr<const int64_t> a,
-                 vptr<const int64_t> b,
-                 const int64_t beta,
-                 vptr<int64_t> c);
-  virtual void gemv_int64
+                 const uint64_t alpha, vptr<const uint64_t> a,
+                 vptr<const uint64_t> b,
+                 const uint64_t beta,
+                 vptr<uint64_t> c);
+  virtual void gemv_uint64
                 (const CBLAS_TRANSPOSE trans_a, const uint_tp m,
-                 const uint_tp n, const int64_t alpha,
-                 vptr<const int64_t> a,
-                 vptr<const int64_t> x, const int64_t beta,
-                 vptr<int64_t> y);
-  virtual void axpy_int64(const uint_tp n,
-                         const int64_t alpha,
-                         vptr<const int64_t> x,
-                         vptr<int64_t> y);
-  virtual void axpby_int64(const uint_tp n, const int64_t alpha,
-                    vptr<const int64_t> x, const int64_t beta, vptr<int64_t> y);
-  virtual void dot_int64(const uint_tp n, vptr<const int64_t> x,
-                        vptr<const int64_t> y, int64_t *out);
-  virtual void asum_int64(const uint_tp n, vptr<const int64_t> x, int64_t* y);
-  virtual void scale_int64(const uint_tp n, const int64_t alpha,
-                          vptr<const int64_t> x, vptr<int64_t> y);
-  virtual void scal_int64(const uint_tp n, const int64_t alpha,
-                          vptr<int64_t> x);
-  virtual void rng_uniform_int64(const uint_tp n, const int64_t a,
-                                 const int64_t b, vptr<int64_t> r);
+                 const uint_tp n, const uint64_t alpha,
+                 vptr<const uint64_t> a,
+                 vptr<const uint64_t> x, const uint64_t beta,
+                 vptr<uint64_t> y);
+  virtual void axpy_uint64(const uint_tp n,
+                         const uint64_t alpha,
+                         vptr<const uint64_t> x,
+                         vptr<uint64_t> y);
+  virtual void axpby_uint64(const uint_tp n, const uint64_t alpha,
+                    vptr<const uint64_t> x, const uint64_t beta,
+                    vptr<uint64_t> y);
+  virtual void dot_uint64(const uint_tp n, vptr<const uint64_t> x,
+                        vptr<const uint64_t> y, uint64_t *out);
+  virtual void asum_uint64(const uint_tp n, vptr<const uint64_t> x,
+                           uint64_t* y);
+  virtual void scale_uint64(const uint_tp n, const uint64_t alpha,
+                          vptr<const uint64_t> x, vptr<uint64_t> y);
+  virtual void scal_uint64(const uint_tp n, const uint64_t alpha,
+                          vptr<uint64_t> x);
+  virtual void rng_uniform_uint64(const uint_tp n, const uint64_t a,
+                                 const uint64_t b, vptr<uint64_t> r);
 #endif  // USE_INT_QUANT_64
 
 
@@ -564,7 +566,7 @@ class Device {
   Backend backend_;
   uint_tp memory_usage_;
   uint_tp peak_memory_usage_;
-  vector<shared_ptr<Blob<int8_t> > > buffers_;
+  vector<shared_ptr<Blob<uint8_t> > > buffers_;
   std::mutex buffer_vec_mutex_;
   vector<shared_ptr<std::atomic<bool> > > buffer_flags_;
   bool host_unified_;

@@ -158,15 +158,50 @@ struct non_const_is_same {
 template<typename Dtype>
 struct proto_type_is_same {
   constexpr static bool value =
-      std::is_same<Dtype, int8_t>::value ||
-      std::is_same<Dtype, int16_t>::value ||
-      std::is_same<Dtype, int32_t>::value ||
-      std::is_same<Dtype, int64_t>::value ||
+      std::is_same<Dtype, uint8_t>::value ||
+      std::is_same<Dtype, uint16_t>::value ||
+      std::is_same<Dtype, uint32_t>::value ||
+      std::is_same<Dtype, uint64_t>::value ||
       std::is_same<Dtype, half_fp>::value ||
       std::is_same<Dtype, float>::value ||
       std::is_same<Dtype, double>::value;
 };
 
+
+template<typename Dtype>
+inline bool is_signed_integer_type() {
+  return std::is_same<Dtype, int8_t>::value
+      || std::is_same<Dtype, int16_t>::value
+      || std::is_same<Dtype, int32_t>::value
+      || std::is_same<Dtype, int64_t>::value;
+}
+
+template<typename Dtype>
+inline bool is_unsigned_integer_type() {
+  return std::is_same<Dtype, uint8_t>::value
+      || std::is_same<Dtype, uint16_t>::value
+      || std::is_same<Dtype, uint32_t>::value
+      || std::is_same<Dtype, uint64_t>::value;
+}
+
+template<typename Dtype>
+inline bool is_integer_type() {
+  return std::is_same<Dtype, int8_t>::value
+      || std::is_same<Dtype, int16_t>::value
+      || std::is_same<Dtype, int32_t>::value
+      || std::is_same<Dtype, int64_t>::value
+      || std::is_same<Dtype, uint8_t>::value
+      || std::is_same<Dtype, uint16_t>::value
+      || std::is_same<Dtype, uint32_t>::value
+      || std::is_same<Dtype, uint64_t>::value;
+}
+
+template<typename Dtype>
+inline bool is_float_type() {
+  return std::is_same<Dtype, half_fp>::value
+      || std::is_same<Dtype, float>::value
+      || std::is_same<Dtype, double>::value;
+}
 
 }  // namespace caffe
 

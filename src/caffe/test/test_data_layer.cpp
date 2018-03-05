@@ -374,7 +374,7 @@ class DataLayerTest : public MultiDeviceTest<TypeParam> {
   int_tp seed_;
 };
 
-TYPED_TEST_CASE(DataLayerTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(DataLayerTest, TestDtypesFloatAndDevices);
 
 #ifdef USE_LEVELDB
 TYPED_TEST(DataLayerTest, TestReadLevelDB) {

@@ -1831,13 +1831,13 @@ INSTANTIATE_CLASS_FUNC_3T_GUARDED(PoolingLayer, GenerateProgram,
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(PoolingLayer, GenerateProgram,
                                   (double), (double),  PROTO_TYPES);
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(PoolingLayer, GenerateProgram,
-                                  (int8_t), (int8_t),  PROTO_TYPES);
+                                  (uint8_t), (uint8_t),  PROTO_TYPES);
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(PoolingLayer, GenerateProgram,
-                                  (int16_t), (int16_t),  PROTO_TYPES);
+                                  (uint16_t), (uint16_t),  PROTO_TYPES);
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(PoolingLayer, GenerateProgram,
-                                  (int32_t), (int32_t),  PROTO_TYPES);
+                                  (uint32_t), (uint32_t),  PROTO_TYPES);
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(PoolingLayer, GenerateProgram,
-                                  (int64_t), (int64_t),  PROTO_TYPES);
+                                  (uint64_t), (uint64_t),  PROTO_TYPES);
 
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(PoolingLayer, Forward_gpu,
                                   (half_fp), (half_fp), PROTO_TYPES);
@@ -1846,13 +1846,13 @@ INSTANTIATE_CLASS_FUNC_3T_GUARDED(PoolingLayer, Forward_gpu,
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(PoolingLayer, Forward_gpu,
                                   (double), (double), PROTO_TYPES);
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(PoolingLayer, Forward_gpu,
-                                  (int8_t), (int8_t),  PROTO_TYPES);
+                                  (uint8_t), (uint8_t),  PROTO_TYPES);
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(PoolingLayer, Forward_gpu,
-                                  (int16_t), (int16_t),  PROTO_TYPES);
+                                  (uint16_t), (uint16_t),  PROTO_TYPES);
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(PoolingLayer, Forward_gpu,
-                                  (int32_t), (int32_t),  PROTO_TYPES);
+                                  (uint32_t), (uint32_t),  PROTO_TYPES);
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(PoolingLayer, Forward_gpu,
-                                  (int64_t), (int64_t),  PROTO_TYPES);
+                                  (uint64_t), (uint64_t),  PROTO_TYPES);
 
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(PoolingLayer, Backward_gpu,
                                   (half_fp), (half_fp), PROTO_TYPES);
@@ -1861,12 +1861,12 @@ INSTANTIATE_CLASS_FUNC_3T_GUARDED(PoolingLayer, Backward_gpu,
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(PoolingLayer, Backward_gpu,
                                   (double), (double), PROTO_TYPES);
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(PoolingLayer, Backward_gpu,
-                                  (int8_t), (int8_t),  PROTO_TYPES);
+                                  (uint8_t), (uint8_t),  PROTO_TYPES);
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(PoolingLayer, Backward_gpu,
-                                  (int16_t), (int16_t),  PROTO_TYPES);
+                                  (uint16_t), (uint16_t),  PROTO_TYPES);
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(PoolingLayer, Backward_gpu,
-                                  (int32_t), (int32_t),  PROTO_TYPES);
+                                  (uint32_t), (uint32_t),  PROTO_TYPES);
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(PoolingLayer, Backward_gpu,
-                                  (int64_t), (int64_t),  PROTO_TYPES);
+                                  (uint64_t), (uint64_t),  PROTO_TYPES);
 
 }  // namespace caffe

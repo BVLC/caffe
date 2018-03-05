@@ -45,7 +45,7 @@ class SplitLayerTest : public MultiDeviceTest<TypeParam> {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-TYPED_TEST_CASE(SplitLayerTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(SplitLayerTest, TestDtypesFloatAndDevices);
 
 TYPED_TEST(SplitLayerTest, TestSetup) {
   typedef typename TypeParam::Dtype Dtype;

@@ -48,7 +48,7 @@ class InnerProductLayerTest : public MultiDeviceTest<TypeParam> {
   shared_ptr<Blob<Dtype> > ref_blob_top_;
 };
 
-TYPED_TEST_CASE(InnerProductLayerTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(InnerProductLayerTest, TestDtypesFloatAndDevices);
 
 TYPED_TEST(InnerProductLayerTest, TestSetUp) {
   typedef typename TypeParam::Dtype Dtype;

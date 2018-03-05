@@ -31,7 +31,7 @@ class MalisAffinityGraphCompare {
   explicit MalisAffinityGraphCompare(const Dtype * EdgeWeightArray) {
     mEdgeWeightArray = EdgeWeightArray;
   }
-  bool operator()(const int64_t& ind1, const int64_t& ind2) const {
+  bool operator()(const uint64_t& ind1, const uint64_t& ind2) const {
     return (mEdgeWeightArray[ind1] > mEdgeWeightArray[ind2]);
   }
 };
@@ -56,16 +56,16 @@ void MalisLossLayer<Dtype, MItype, MOtype>::Malis(const Dtype* conn_data,
 
   /* Cache for speed to access neighbors */
   // nVert stores (X * Y * z)
-  int64_t nVert = 1;
-  for (int64_t i = 1; i < conn_num_dims; ++i) {
+  uint64_t nVert = 1;
+  for (uint64_t i = 1; i < conn_num_dims; ++i) {
     nVert *= conn_dims[i];
     // std::cout << i << " nVert: " << nVert << std::endl;
   }
 
   // prodDims stores X, X*Y, X*Y*z offsets
-  vector<int64_t> prodDims(conn_num_dims - 1);
+  vector<uint64_t> prodDims(conn_num_dims - 1);
   prodDims[conn_num_dims - 2] = 1;
-  for (int64_t i = 1; i < conn_num_dims - 1; ++i) {
+  for (uint64_t i = 1; i < conn_num_dims - 1; ++i) {
     prodDims[conn_num_dims - 2 - i] = prodDims[conn_num_dims - 1 - i]
                                       * conn_dims[conn_num_dims - i];
     // std::cout << conn_num_dims - 2 - i << " dims: "
@@ -75,37 +75,37 @@ void MalisLossLayer<Dtype, MItype, MOtype>::Malis(const Dtype* conn_data,
   /* convert n-d offset vectors into linear array offset scalars */
   // nHood is a vector of size #edges
 
-  vector<int32_t> nHood(nhood_dims[0]);
-  for (int64_t i = 0; i < nhood_dims[0]; ++i) {
+  vector<uint32_t> nHood(nhood_dims[0]);
+  for (uint64_t i = 0; i < nhood_dims[0]; ++i) {
     nHood[i] = 0;
-    for (int64_t j = 0; j < nhood_dims[1]; ++j) {
-      nHood[i] += (int32_t) nhood_data[j + i * nhood_dims[1]] * prodDims[j];
+    for (uint64_t j = 0; j < nhood_dims[1]; ++j) {
+      nHood[i] += (uint32_t) nhood_data[j + i * nhood_dims[1]] * prodDims[j];
     }
     // std::cout << i << " nHood: " << nHood[i] << std::endl;
   }
 
   /* Disjoint sets and sparse overlap vectors */
-  vector<std::map<int64_t, int64_t> > overlap(nVert);
-  vector<int64_t> rank(nVert);
-  vector<int64_t> parent(nVert);
-  std::map<int64_t, int64_t> segSizes;
-  int64_t nLabeledVert = 0;
-  int64_t nPairPos = 0;
-  boost::disjoint_sets<int64_t*, int64_t*> dsets(&rank[0], &parent[0]);
+  vector<std::map<uint64_t, uint64_t> > overlap(nVert);
+  vector<uint64_t> rank(nVert);
+  vector<uint64_t> parent(nVert);
+  std::map<uint64_t, uint64_t> segSizes;
+  uint64_t nLabeledVert = 0;
+  uint64_t nPairPos = 0;
+  boost::disjoint_sets<uint64_t*, uint64_t*> dsets(&rank[0], &parent[0]);
   // Loop over all seg data items
-  for (int64_t i = 0; i < nVert; ++i) {
+  for (uint64_t i = 0; i < nVert; ++i) {
     dsets.make_set(i);
     if (0 != seg_data[i]) {
-      overlap[i].insert(std::pair<int64_t, int64_t>(seg_data[i], 1));
+      overlap[i].insert(std::pair<uint64_t, uint64_t>(seg_data[i], 1));
       ++nLabeledVert;
       ++segSizes[seg_data[i]];
       nPairPos += (segSizes[seg_data[i]] - 1);
     }
   }
 
-  int64_t nPairTot = (nLabeledVert * (nLabeledVert - 1)) / 2;
-  int64_t nPairNeg = nPairTot - nPairPos;
-  int64_t nPairNorm;
+  uint64_t nPairTot = (nLabeledVert * (nLabeledVert - 1)) / 2;
+  uint64_t nPairNeg = nPairTot - nPairPos;
+  uint64_t nPairNorm;
 
   if (pos) {
     nPairNorm = nPairPos;
@@ -113,15 +113,15 @@ void MalisLossLayer<Dtype, MItype, MOtype>::Malis(const Dtype* conn_data,
     nPairNorm = nPairNeg;
   }
 
-  int64_t edgeCount = 0;
+  uint64_t edgeCount = 0;
   // Loop over #edges
-  for (int64_t d = 0, i = 0; d < conn_dims[0]; ++d) {
+  for (uint64_t d = 0, i = 0; d < conn_dims[0]; ++d) {
     // Loop over Z
-    for (int64_t z = 0; z < conn_dims[1]; ++z) {
+    for (uint64_t z = 0; z < conn_dims[1]; ++z) {
       // Loop over Y
-      for (int64_t Y = 0; Y < conn_dims[2]; ++Y) {
+      for (uint64_t Y = 0; Y < conn_dims[2]; ++Y) {
         // Loop over X
-        for (int64_t X = 0; X < conn_dims[3]; ++X, ++i) {
+        for (uint64_t X = 0; X < conn_dims[3]; ++X, ++i) {
           // Out-of-bounds check:
           if (!((z + nhood_data[d * nhood_dims[1] + 0] < 0)
               ||(z + nhood_data[d * nhood_dims[1] + 0] >= conn_dims[1])
@@ -137,16 +137,16 @@ void MalisLossLayer<Dtype, MItype, MOtype>::Malis(const Dtype* conn_data,
   }
 
   /* Sort all the edges in increasing order of weight */
-  vector<int64_t> pqueue(edgeCount);
-  int64_t j = 0;
+  vector<uint64_t> pqueue(edgeCount);
+  uint64_t j = 0;
   // Loop over #edges
-  for (int64_t d = 0, i = 0; d < conn_dims[0]; ++d) {
+  for (uint64_t d = 0, i = 0; d < conn_dims[0]; ++d) {
     // Loop over Z
-    for (int64_t z = 0; z < conn_dims[1]; ++z) {
+    for (uint64_t z = 0; z < conn_dims[1]; ++z) {
       // Loop over Y
-      for (int64_t Y = 0; Y < conn_dims[2]; ++Y) {
+      for (uint64_t Y = 0; Y < conn_dims[2]; ++Y) {
         // Loop over X
-        for (int64_t X = 0; X < conn_dims[3]; ++X, ++i) {
+        for (uint64_t X = 0; X < conn_dims[3]; ++X, ++i) {
           // Out-of-bounds check:
           if (!((z + nhood_data[d * nhood_dims[1] + 0] < 0)
               ||(z + nhood_data[d * nhood_dims[1] + 0] >= conn_dims[1])
@@ -167,16 +167,16 @@ void MalisLossLayer<Dtype, MItype, MOtype>::Malis(const Dtype* conn_data,
        MalisAffinityGraphCompare<Dtype>(conn_data));
 
   /* Start MST */
-  int64_t minEdge;
-  int64_t e, v1, v2;
-  int64_t set1, set2;
-  int64_t nPair = 0;
+  uint64_t minEdge;
+  uint64_t e, v1, v2;
+  uint64_t set1, set2;
+  uint64_t nPair = 0;
   double loss = 0, dl = 0;
-  int64_t nPairIncorrect = 0;
-  std::map<int64_t, int64_t>::iterator it1, it2;
+  uint64_t nPairIncorrect = 0;
+  std::map<uint64_t, uint64_t>::iterator it1, it2;
 
   /* Start Kruskal's */
-  for (int64_t i = 0; i < pqueue.size(); ++i) {
+  for (uint64_t i = 0; i < pqueue.size(); ++i) {
     minEdge = pqueue[i];
     // nVert = X * Y * z, minEdge in [0, X * Y * z * #edges]
 
@@ -240,7 +240,7 @@ void MalisLossLayer<Dtype, MItype, MOtype>::Malis(const Dtype* conn_data,
           it2 != overlap[set2].end(); ++it2) {
         it1 = overlap[set1].find(it2->first);
         if (it1 == overlap[set1].end()) {
-          overlap[set1].insert(pair<int64_t, int64_t>
+          overlap[set1].insert(pair<uint64_t, uint64_t>
             (it2->first, it2->second));
         } else {
           it1->second += it2->second;

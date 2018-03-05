@@ -170,20 +170,20 @@ void MemoryDataLayer<Dtype, MItype, MOtype>::Forward_cpu(
 INSTANTIATE_CLASS_3T_GUARDED(MemoryDataLayer, (half_fp), (half_fp), (half_fp));
 INSTANTIATE_CLASS_3T_GUARDED(MemoryDataLayer, (float), (float), (float));
 INSTANTIATE_CLASS_3T_GUARDED(MemoryDataLayer, (double), (double), (double));
-INSTANTIATE_CLASS_3T_GUARDED(MemoryDataLayer, (int8_t), (int8_t), (int8_t));
-INSTANTIATE_CLASS_3T_GUARDED(MemoryDataLayer, (int16_t), (int16_t), (int16_t));
-INSTANTIATE_CLASS_3T_GUARDED(MemoryDataLayer, (int32_t), (int32_t), (int32_t));
-INSTANTIATE_CLASS_3T_GUARDED(MemoryDataLayer, (int64_t), (int64_t), (int64_t));
+INSTANTIATE_CLASS_3T_GUARDED(MemoryDataLayer, (uint8_t), (uint8_t), (uint8_t));
+INSTANTIATE_CLASS_3T_GUARDED(MemoryDataLayer, (uint16_t), (uint16_t), (uint16_t));
+INSTANTIATE_CLASS_3T_GUARDED(MemoryDataLayer, (uint32_t), (uint32_t), (uint32_t));
+INSTANTIATE_CLASS_3T_GUARDED(MemoryDataLayer, (uint64_t), (uint64_t), (uint64_t));
 
 
 REGISTER_LAYER_CLASS(MemoryData);
 REGISTER_LAYER_CLASS_INST(MemoryData, (half_fp), (half_fp), (half_fp));
 REGISTER_LAYER_CLASS_INST(MemoryData, (float), (float), (float));
 REGISTER_LAYER_CLASS_INST(MemoryData, (double), (double), (double));
-REGISTER_LAYER_CLASS_INST(MemoryData, (int8_t), (int8_t), (int8_t));
-REGISTER_LAYER_CLASS_INST(MemoryData, (int16_t), (int16_t), (int16_t));
-REGISTER_LAYER_CLASS_INST(MemoryData, (int32_t), (int32_t), (int32_t));
-REGISTER_LAYER_CLASS_INST(MemoryData, (int64_t), (int64_t), (int64_t));
+REGISTER_LAYER_CLASS_INST(MemoryData, (uint8_t), (uint8_t), (uint8_t));
+REGISTER_LAYER_CLASS_INST(MemoryData, (uint16_t), (uint16_t), (uint16_t));
+REGISTER_LAYER_CLASS_INST(MemoryData, (uint32_t), (uint32_t), (uint32_t));
+REGISTER_LAYER_CLASS_INST(MemoryData, (uint64_t), (uint64_t), (uint64_t));
 
 
 }  // namespace caffe

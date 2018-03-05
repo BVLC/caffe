@@ -90,18 +90,24 @@ void InnerProductLayer<Dtype, MItype, MOtype>::Reshape(
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void InnerProductLayer<Dtype, MItype, MOtype>::Forward_cpu(const vector<Blob<MItype>*>& bottom,
-                                           const vector<Blob<MOtype>*>& top) {
+void InnerProductLayer<Dtype, MItype, MOtype>::Forward_cpu(
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = top[0]->mutable_cpu_data();
   const Dtype* weight = this->blobs_[0]->cpu_data();
   caffe_gemm<Dtype>(CblasNoTrans, transpose_ ? CblasNoTrans : CblasTrans,
-      M_, N_, K_, (Dtype)1.,
-      bottom_data, weight, (Dtype)0., top_data);
+      M_, N_, K_, Dtype(1), bottom_data, weight, Dtype(0), top_data,
+      &(this->top_quant_->out_quantizer_values()),
+      &(this->blobs_quant_->out_quantizer_values()),
+      &(this->bottom_quant_->in_quantizer_values()));
   if (bias_term_) {
-    caffe_gemm<Dtype>(CblasNoTrans, CblasNoTrans, M_, N_, 1, (Dtype) 1.,
-                          bias_multiplier_.cpu_data(),
-                          this->blobs_[1]->cpu_data(), (Dtype) 1., top_data);
+    caffe_gemm<Dtype>(CblasNoTrans, CblasNoTrans, M_, N_, 1, Dtype(1),
+                      bias_multiplier_.cpu_data(), this->blobs_[1]->cpu_data(),
+                      Dtype(1), top_data,
+                      &(this->top_quant_->out_quantizer_values()),
+                      &(this->blobs_quant_->out_quantizer_values()),
+                      &(this->bottom_quant_->in_quantizer_values()));
   }
 }
 
@@ -160,22 +166,22 @@ INSTANTIATE_CLASS_3T_GUARDED(InnerProductLayer,
 INSTANTIATE_CLASS_3T_GUARDED(InnerProductLayer,
                              (double), (double), (double));
 INSTANTIATE_CLASS_3T_GUARDED(InnerProductLayer,
-                             (int8_t), (int8_t), (int8_t));
+                             (uint8_t), (uint8_t), (uint8_t));
 INSTANTIATE_CLASS_3T_GUARDED(InnerProductLayer,
-                             (int16_t), (int16_t), (int16_t));
+                             (uint16_t), (uint16_t), (uint16_t));
 INSTANTIATE_CLASS_3T_GUARDED(InnerProductLayer,
-                             (int32_t), (int32_t), (int32_t));
+                             (uint32_t), (uint32_t), (uint32_t));
 INSTANTIATE_CLASS_3T_GUARDED(InnerProductLayer,
-                             (int64_t), (int64_t), (int64_t));
+                             (uint64_t), (uint64_t), (uint64_t));
 
 REGISTER_LAYER_CLASS(InnerProduct);
 REGISTER_LAYER_CLASS_INST(InnerProduct, (half_fp), (half_fp), (half_fp));
 REGISTER_LAYER_CLASS_INST(InnerProduct, (float), (float), (float));
 REGISTER_LAYER_CLASS_INST(InnerProduct, (double), (double), (double));
-REGISTER_LAYER_CLASS_INST(InnerProduct, (int8_t), (int8_t), (int8_t));
-REGISTER_LAYER_CLASS_INST(InnerProduct, (int16_t), (int16_t), (int16_t));
-REGISTER_LAYER_CLASS_INST(InnerProduct, (int32_t), (int32_t), (int32_t));
-REGISTER_LAYER_CLASS_INST(InnerProduct, (int64_t), (int64_t), (int64_t));
+REGISTER_LAYER_CLASS_INST(InnerProduct, (uint8_t), (uint8_t), (uint8_t));
+REGISTER_LAYER_CLASS_INST(InnerProduct, (uint16_t), (uint16_t), (uint16_t));
+REGISTER_LAYER_CLASS_INST(InnerProduct, (uint32_t), (uint32_t), (uint32_t));
+REGISTER_LAYER_CLASS_INST(InnerProduct, (uint64_t), (uint64_t), (uint64_t));
 
 
 }  // namespace caffe

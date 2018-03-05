@@ -100,7 +100,7 @@ class BatchReindexLayerTest : public MultiDeviceTest<TypeParam> {
   }
 };
 
-TYPED_TEST_CASE(BatchReindexLayerTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(BatchReindexLayerTest, TestDtypesFloatAndDevices);
 
 TYPED_TEST(BatchReindexLayerTest, TestForward) {
   this->TestForward();
