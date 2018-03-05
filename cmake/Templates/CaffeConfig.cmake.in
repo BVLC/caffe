@@ -51,7 +51,6 @@ set(Caffe_LIBRARIES caffe)
 
 # Cuda support variables
 set(Caffe_CPU_ONLY @CPU_ONLY@)
-set(Caffe_WITH_PYTHON_LAYER @BUILD_python_layer@)
 set(Caffe_HAVE_CUDA @HAVE_CUDA@)
 set(Caffe_HAVE_CUDNN @HAVE_CUDNN@)
 set(Caffe_USE_CUDNN @USE_CUDNN@)
