@@ -28,6 +28,18 @@
             "knl" : "192",
             "knm" : "128"
         },
+        "googlenet_v3" : {
+            "bdw" : "128",
+            "skx" : "512",
+            "knl" : "128",
+            "knm" : "64"
+        },
+        "vgg16" : {
+            "bdw" : "128",
+            "skx" : "128",
+            "knl" : "64",
+            "knm" : "96"
+        },
         "resnet_50" : {
             "bdw" : "32",
             "skx" : "96",
@@ -39,6 +51,8 @@
         "alexnet" : "256",
         "googlenet" : "64",
         "googlenet_v2" : "64",
+        "googlenet_v3" : "64",
+        "vgg16" : "64",
         "resnet_50" : "64"
     }
 } 
