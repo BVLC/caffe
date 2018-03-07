@@ -59,16 +59,17 @@ namespace caffe {
           distrib_map =
             new std::map<std::pair<int,int>, boost::shared_ptr<Distribution>>();
           if (use_param_server()) {
+            std::string config_str;
             if (is_param_server()) {
-              // this is for paramter servers
-              MLSL::Environment::GetEnv().Configure("color=0");
+              // this is for parameter servers
+              config_str = "color=0";
             }
             else {
               // this is for workers
               int group_id = get_group_id();
-              std::string config_str = "color=" + std::to_string(group_id + 1);
-              MLSL::Environment::GetEnv().Configure(config_str.c_str());
+              config_str = "color=" + std::to_string(group_id + 1);
             }
+            MLSL::Environment::GetEnv().Configure(config_str.c_str());
           }
 #ifdef ENABLE_WEIGHT_GRAD_COMPRESSION
           get_weight_grad_compress_info();

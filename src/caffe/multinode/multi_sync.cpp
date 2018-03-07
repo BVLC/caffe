@@ -50,8 +50,8 @@ MultiSync<Dtype>::MultiSync(shared_ptr<Solver<Dtype> > root_solver)
           reduce_req_vec(net_params.size(), NULL),
           irecv_req_vec(net_params.size(), MPI_REQUEST_NULL),
           broadcast_req_vec(net_params.size(), NULL),
-          irecv_done(net_params.size(), true),
-          broadcast_launched(net_params.size(), true),
+          irecv_done(net_params.size(), false),
+          broadcast_launched(net_params.size(), false),
           distrib_bcast(NULL) {
   root_solver->param().set_disabled_update(true);
 

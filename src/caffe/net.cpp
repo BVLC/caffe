@@ -300,6 +300,10 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
       // global batch size must be a multiple of data_parts
       int global_batch_size = mn::train::get_global_minibatch_size();
       int fake_batch_size = mn::get_distrib()->get_data_parts();
+      if (mn::use_param_server() && mn::is_param_server()) {
+        fake_batch_size = mn::nServer;
+      }
+
       if (global_batch_size == 0) {
         LOG(WARNING) << "SetMinibatchSize " << fake_batch_size;
         mn::train::set_global_minibatch_size(fake_batch_size);

@@ -374,7 +374,6 @@ void Solver_add_callback(Solver<Dtype> * solver, bp::object on_start,
 }
 
 #ifdef USE_MLSL
-
 template<typename Dtype>
 void MultiSolverBackward(MultiSolver<Dtype> * solver)
 {

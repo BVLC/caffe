@@ -108,7 +108,7 @@ inline bool MultiSolver<Dtype>::IsSkipSyncGradient(int layer_id) {
 
   if (!layer_need_backward[layer_id] || ((layers[layer_id]->layerOp != nullptr)
         && !layers[layer_id]->layerOp->HasParameterSets())) {
-    DLOG(INFO) << "No need for synchronizing gradients for layer # " << layer_id;
+    DLOG(INFO) << "No need for synchronizing gradients for layer #" << layer_id;
     return true;
   }
   return false;
@@ -140,13 +140,13 @@ inline void MultiSolver<Dtype>::UpdateGradient(int layer_id) {
 }
 
 template <typename Dtype>
-Dtype MultiSolver<Dtype>::ForwardFromTo(int start, int end) {
+inline Dtype MultiSolver<Dtype>::ForwardFromTo(int start, int end) {
   Net<Dtype>& net = *root_solver_->net();
   return net.ForwardFromTo(start, end);
 }
 
 template <typename Dtype>
-void MultiSolver<Dtype>::BackwardFromTo(int start, int end, bool last) {
+inline void MultiSolver<Dtype>::BackwardFromTo(int start, int end, bool last) {
   Net<Dtype>& net = *root_solver_->net();
   const std::vector<bool>& layer_need_backward{ net.layer_need_backward() };
 
@@ -168,7 +168,7 @@ void MultiSolver<Dtype>::BackwardFromTo(int start, int end, bool last) {
 }
 
 template <typename Dtype>
-void MultiSolver<Dtype>::Backward(bool last) {
+inline void MultiSolver<Dtype>::Backward(bool last) {
   Net<Dtype>& net = *root_solver_->net();
   const std::vector<shared_ptr<Layer<Dtype>>>& layers{ net.layers() };
 
@@ -230,7 +230,7 @@ void MultiSolver<Dtype>::WaitAndUpdateBeforeFwd(int layer_id) {
 }
 
 template <typename Dtype>
-Dtype MultiSolver<Dtype>::UpdateAndForward(bool first) {
+inline Dtype MultiSolver<Dtype>::UpdateAndForward(bool first) {
   Dtype loss = 0;
   Net<Dtype>& net = *root_solver_->net();
   const std::vector<shared_ptr<Layer<Dtype>>>& layers{ net.layers() };
@@ -246,7 +246,7 @@ Dtype MultiSolver<Dtype>::UpdateAndForward(bool first) {
 #endif
 
 template <typename Dtype>
-Dtype MultiSolver<Dtype>::Forward() {
+inline Dtype MultiSolver<Dtype>::Forward() {
   Dtype loss = 0;
   Net<Dtype>& net = *root_solver_->net();
   const std::vector<shared_ptr<Layer<Dtype>>>& layers{ net.layers() };
@@ -258,7 +258,7 @@ Dtype MultiSolver<Dtype>::Forward() {
 }
 
 template <typename Dtype>
-void MultiSolver<Dtype>::WaitAndUpdate() {
+inline void MultiSolver<Dtype>::WaitAndUpdate() {
   Net<Dtype>& net = *root_solver_->net();
   const std::vector<shared_ptr<Layer<Dtype>>>& layers{ net.layers() };
 
