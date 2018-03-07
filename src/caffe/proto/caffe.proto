@@ -935,6 +935,12 @@ message PoolingParameter {
   // If global_pooling then it will pool over the size of the bottom by doing
   // kernel_h = bottom->height and kernel_w = bottom->width
   optional bool global_pooling = 12 [default = false];
+  // How to calculate the output size - using ceil (default) or floor rounding.
+  enum RoundMode {
+    CEIL = 0;
+    FLOOR = 1;
+  }
+  optional RoundMode round_mode = 13 [default = CEIL];
 }
 
 message PowerParameter {
