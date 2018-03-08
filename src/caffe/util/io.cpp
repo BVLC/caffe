@@ -750,5 +750,38 @@ void CVMatToDatum(const cv::Mat& cv_img, Datum* datum) {
   }
   datum->set_data(buffer);
 }
+
+void ReadImagesList(const string& source,
+                    std::vector<std::pair<std::string, std::vector<int> > >* images_vec) {
+  // Read the file with filenames and labels
+  LOG(INFO) << "Opening file " << source;
+  std::ifstream infile(source.c_str());
+  CHECK(infile) << "Error opening file";
+  std::string line;
+  int line_num = 1;
+  int num_labels = 0;
+  while (std::getline(infile, line)) {
+    std::istringstream iss(line);
+    string filename;
+    std::vector<int> labels;
+    int label;
+    CHECK(iss >> filename) << "Error reading line " << line_num;
+    while (iss >> label) {
+      labels.push_back(label);
+    }
+    if (line_num == 1) {
+      // Use first line to set the number of labels
+      num_labels = labels.size();
+    }
+    CHECK_EQ(labels.size(), num_labels) <<
+      filename << " error at line " << line_num << std::endl <<
+      " All images should have the same number of labels";
+    line_num++;
+    images_vec->push_back(std::make_pair(filename, labels));
+  }
+  LOG(INFO) << "Read " << line_num - 1 << " images with " <<
+    num_labels << " labels";
+}
+
 #endif  // USE_OPENCV
 }  // namespace caffe
