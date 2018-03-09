@@ -30,6 +30,8 @@ internal_thread_pin="on"
 msg_priority="off"
 msg_priority_threshold=""
 
+mpi_iallreduce_algo=""
+
 function init_mpi_envs
 {
     if [ ${numnodes} -eq 1 ]; then
@@ -59,6 +61,10 @@ function init_mpi_envs
 
     export I_MPI_FALLBACK=0
     export I_MPI_DEBUG=6
+
+    if [ "${mpi_iallreduce_algo}" != "" ]; then
+        export I_MPI_ADJUST_IALLREDUCE=${mpi_iallreduce_algo}
+    fi
 }
 
 
@@ -265,6 +271,10 @@ do
             ;;
         --msg_priority_threshold)
             msg_priority_threshold=$2
+            shift
+            ;;
+        --mpi_iallreduce_algo)
+            mpi_iallreduce_algo=$2
             shift
             ;;
         *)
