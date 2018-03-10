@@ -159,8 +159,10 @@ class XavierFiller : public Filler<Dtype> {
   virtual void Fill(Blob<Dtype>* blob) {
     CHECK(blob->count());
     int_tp fan_in = blob->count() / blob->shape(0);
-    // Compatible for ND Convolution
-    int_tp fan_out = blob->count() / blob->shape(1);
+    // Compatibility with ND blobs
+    int_tp fan_out = blob->num_axes() > 1 ?
+                     blob->count() / blob->shape(1) :
+                     blob->count();
     Dtype n = fan_in;  // default to fan_in
     if (this->filler_param_.variance_norm()
         == FillerParameter_VarianceNorm_AVERAGE) {
@@ -204,8 +206,10 @@ class MSRAFiller : public Filler<Dtype> {
   virtual void Fill(Blob<Dtype>* blob) {
     CHECK(blob->count());
     int_tp fan_in = blob->count() / blob->shape(0);
-    // Compatible for ND Convolution
-    int_tp fan_out = blob->count() / blob->shape(1);
+    // Compatibility with ND blobs
+    int_tp fan_out = blob->num_axes() > 1 ?
+                     blob->count() / blob->shape(1) :
+                     blob->count();
     Dtype n = fan_in;  // default to fan_in
     if (this->filler_param_.variance_norm()
         == FillerParameter_VarianceNorm_AVERAGE) {
