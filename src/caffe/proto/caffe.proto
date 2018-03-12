@@ -322,7 +322,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 147 (last added: recurrent_param)
+// LayerParameter next available layer-specific ID: 148 (last added: equiv_pooling_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -388,6 +388,7 @@ message LayerParameter {
   optional EltwiseParameter eltwise_param = 110;
   optional ELUParameter elu_param = 140;
   optional EmbedParameter embed_param = 137;
+  optional EquivPoolingParameter equiv_pooling_param = 147;
   optional ExpParameter exp_param = 111;
   optional FlattenParameter flatten_param = 135;
   optional HDF5DataParameter hdf5_data_param = 112;
@@ -743,6 +744,20 @@ message EmbedParameter {
   optional FillerParameter weight_filler = 4; // The filler for the weight
   optional FillerParameter bias_filler = 5; // The filler for the bias
 
+}
+
+// Message that stores parameters used by EquivPooling layer
+message EquivPoolingParameter {
+  enum PoolMethod {
+    MAX = 0;
+    AVE = 1;
+  }
+  optional PoolMethod pool = 1 [default = MAX]; // The pooling method
+  // Pad, kernel size, and stride are all given as a single value for equal
+  // dimensions in height and width
+  optional uint32 pad = 4 [default = 0]; // The padding size (equal in Y, X)
+  optional uint32 kernel_size = 2; // The kernel size (square)
+  optional uint32 stride = 3 [default = 1]; // The stride (equal in Y, X)
 }
 
 // Message that stores parameters used by ExpLayer
