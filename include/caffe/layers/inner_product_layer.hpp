@@ -43,6 +43,10 @@ class InnerProductLayer : public Layer<Dtype> {
   int K_;
   int N_;
   bool bias_term_;
+  bool pruned_;
+  // contain masks for deep compression
+  vector<shared_ptr<Blob<Dtype> > > masks_;
+  Dtype pruning_coeff_;  // pruning rate for deep compression
   Blob<Dtype> bias_multiplier_;
   bool transpose_;  ///< if true, assume transposed weights
 };
