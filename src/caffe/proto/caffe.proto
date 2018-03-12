@@ -322,7 +322,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 147 (last added: recurrent_param)
+// LayerParameter next available layer-specific ID: 148 (last added: double_margin_contrastive_loss_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -383,6 +383,7 @@ message LayerParameter {
   optional ConvolutionParameter convolution_param = 106;
   optional CropParameter crop_param = 144;
   optional DataParameter data_param = 107;
+  optional DoubleMarginContrastiveLossParameter double_margin_contrastive_loss_param = 147;
   optional DropoutParameter dropout_param = 108;
   optional DummyDataParameter dummy_data_param = 109;
   optional EltwiseParameter eltwise_param = 110;
@@ -684,6 +685,14 @@ message DataParameter {
   // Prefetch queue (Increase if data feeding bandwidth varies, within the
   // limit of device memory for GPU training)
   optional uint32 prefetch = 10 [default = 4];
+}
+
+// Message that stores parameters used by DoubleMarginContrastiveLossLayer
+message DoubleMarginContrastiveLossParameter {
+  // margin for genuine pairs
+  optional float margin_gen = 1 [default = 1.0];
+  // margin for impostor pairs
+  optional float margin_imp = 2 [default = 1.0];
 }
 
 message DropoutParameter {
