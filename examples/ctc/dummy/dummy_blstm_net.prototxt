@@ -1,0 +1,113 @@
+
+layer {
+  name: "data"
+  type: "HDF5Data"
+  top: "data"
+  top: "seq_ind"
+  top: "labels"
+  hdf5_data_param {
+    source: "dummy_data.txt"
+    batch_size: 40
+  }
+}
+
+layer {
+  name: "lstm1"
+  type: "LSTM"
+  bottom: "data"
+  bottom: "seq_ind"
+  top: "lstm1"
+  recurrent_param {
+    # num + 1 for blank label! (last one)
+    num_output: 40
+    weight_filler {
+      type: "gaussian"
+      std: 0.1
+    }
+    bias_filler {
+      type: "constant"
+    }
+  }
+}
+
+layer {
+  name: "ip1"
+  type: "InnerProduct"
+  bottom: "lstm1"
+  top: "ip1"
+  inner_product_param {
+    num_output: 6
+    weight_filler {
+      type: "gaussian"
+      std: 0.1
+    }
+    axis: 2
+  }
+}
+
+layer {
+  name: "rev1"
+  type: "Reverse"
+  bottom: "data"
+  top: "rev_data"
+}
+
+layer {
+  name: "lstm2"
+  type: "LSTM"
+  bottom: "rev_data"
+  bottom: "seq_ind"
+  top: "lstm2"
+  recurrent_param {
+    # num + 1 for blank label! (last one)
+    num_output: 40
+    weight_filler {
+      type: "gaussian"
+      std: 0.1
+    }
+    bias_filler {
+      type: "constant"
+    }
+  }
+}
+
+
+layer {
+  name: "ip2"
+  type: "InnerProduct"
+  bottom: "lstm2"
+  top: "ip2"
+  inner_product_param {
+    num_output: 6
+    weight_filler {
+      type: "gaussian"
+      std: 0.1
+    }
+    axis: 2
+  }
+}
+
+layer {
+  name: "rev2"
+  type: "Reverse"
+  bottom: "ip2"
+  top: "rev2"
+}
+
+layer {
+  name: "eltwise-sum"
+  type: "Eltwise"
+  bottom: "ip1"
+  bottom: "rev2"
+  eltwise_param { operation: SUM }
+  top: "sum"
+}
+
+layer {
+  name: "loss"
+  type: "CTCLoss"
+  bottom: "sum"
+  bottom: "seq_ind"
+  bottom: "labels"
+  top: "ctc_loss"
+}

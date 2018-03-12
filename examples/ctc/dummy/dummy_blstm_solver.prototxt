@@ -1,0 +1,11 @@
+net: "dummy_blstm_net.prototxt"
+base_lr: 0.01
+lr_policy: "fixed"
+display: 100
+max_iter: 100000
+solver_mode: CPU
+average_loss: 1
+solver_type: SGD
+random_seed: 9602
+clip_gradients: 10
+debug_info: false
