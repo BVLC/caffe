@@ -63,5 +63,6 @@ STUB_GPU(SwishLayer);
 #endif
 
 INSTANTIATE_CLASS(SwishLayer);
+REGISTER_LAYER_CLASS(Swish);
 
 }  // namespace caffe
