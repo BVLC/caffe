@@ -115,7 +115,7 @@ int main(int argc, char** argv) {
       size_t p = fn.rfind('.');
       if ( p == fn.npos )
         LOG(WARNING) << "Failed to guess the encoding of '" << fn << "'";
-      enc = fn.substr(p);
+      enc = fn.substr(p+1);
       std::transform(enc.begin(), enc.end(), enc.begin(), ::tolower);
     }
     status = ReadImageToDatum(root_folder + lines[line_id].first,

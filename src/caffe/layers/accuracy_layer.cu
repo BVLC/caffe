@@ -71,9 +71,8 @@ void AccuracyLayer<Dtype>::Forward_gpu(
   const int dim = bottom[0]->count() / outer_num_;
   const int num_labels = bottom[0]->shape(label_axis_);
   const int nthreads = outer_num_ * inner_num_;
-  // Since this memory is not used for anything,
-  // we use it here to avoid having to allocate new GPU
-  // memory to accumulate intermediate results in the kernel.
+  // Since this memory is not used for anything, we use it here to avoid having
+  // to allocate new GPU memory to accumulate intermediate results.
   Dtype* acc_data = bottom[0]->mutable_gpu_diff();
   if (top.size() == 1) {
     // simple case - report only global accuracy.
@@ -134,6 +133,8 @@ void AccuracyLayer<Dtype>::Forward_gpu(
       }
     }
   }
+  // Clear scratch memory to prevent interfering with backward (see #6202).
+  caffe_gpu_set(bottom[0]->count(), Dtype(0), bottom[0]->mutable_gpu_diff());
 }
 
 
