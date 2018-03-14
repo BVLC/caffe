@@ -752,7 +752,7 @@ void CVMatToDatum(const cv::Mat& cv_img, Datum* datum) {
 }
 
 void ReadImagesList(const string& source,
-                    std::vector<std::pair<std::string, std::vector<int> > >* images_vec) {
+                    std::vector<std::pair<std::string, std::vector<float> > >* images_vec) {
   // Read the file with filenames and labels
   LOG(INFO) << "Opening file " << source;
   std::ifstream infile(source.c_str());
@@ -763,8 +763,8 @@ void ReadImagesList(const string& source,
   while (std::getline(infile, line)) {
     std::istringstream iss(line);
     string filename;
-    std::vector<int> labels;
-    int label;
+    std::vector<float> labels;
+    float label;
     CHECK(iss >> filename) << "Error reading line " << line_num;
     while (iss >> label) {
       labels.push_back(label);

@@ -292,7 +292,7 @@ void EncodeCVMatToDatum(const cv::Mat& cv_img, const string& encoding,
 void CVMatToDatum(const cv::Mat& cv_img, Datum* datum);
 
 void ReadImagesList(const string& source,
-                    std::vector<std::pair<std::string, std::vector<int> > >* images_vec);
+                    std::vector<std::pair<std::string, std::vector<float> > >* images_vec);
 
 #endif  // USE_OPENCV
 
