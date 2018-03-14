@@ -131,9 +131,6 @@ bool UpgradeV0Net(const NetParameter& v0_net_param_padding_layers,
   for (int i = 0; i < v0_net_param.input_dim_size(); ++i) {
     net_param->add_input_dim(v0_net_param.input_dim(i));
   }
-  if (v0_net_param.has_force_backward()) {
-    net_param->set_force_backward(v0_net_param.force_backward());
-  }
   return is_fully_compatible;
 }
 

@@ -8,8 +8,6 @@
 #include <utility>
 #include <vector>
 
-#include "boost/iterator/counting_iterator.hpp"
-
 #include "caffe/util/bbox_util.hpp"
 
 namespace caffe {
@@ -119,124 +117,6 @@ void ScaleBBox(const NormalizedBBox& bbox, const int height, const int width,
   scale_bbox->set_difficult(bbox.difficult());
 }
 
-void OutputBBox(const NormalizedBBox& bbox, const pair<int, int>& img_size,
-                const bool has_resize, const ResizeParameter& resize_param,
-                NormalizedBBox* out_bbox) {
-  const int height = img_size.first;
-  const int width = img_size.second;
-  NormalizedBBox temp_bbox = bbox;
-  if (has_resize && resize_param.resize_mode()) {
-    float resize_height = resize_param.height();
-    CHECK_GT(resize_height, 0);
-    float resize_width = resize_param.width();
-    CHECK_GT(resize_width, 0);
-    float resize_aspect = resize_width / resize_height;
-    int height_scale = resize_param.height_scale();
-    int width_scale = resize_param.width_scale();
-    float aspect = static_cast<float>(width) / height;
-
-    float padding;
-    NormalizedBBox source_bbox;
-    switch (resize_param.resize_mode()) {
-      case ResizeParameter_Resize_mode_WARP:
-        ClipBBox(temp_bbox, &temp_bbox);
-        ScaleBBox(temp_bbox, height, width, out_bbox);
-        break;
-      case ResizeParameter_Resize_mode_FIT_LARGE_SIZE_AND_PAD:
-        if (aspect > resize_aspect) {
-          padding = (resize_height - resize_width / aspect) / 2;
-          source_bbox.set_xmin(0.);
-          source_bbox.set_ymin(padding / resize_height);
-          source_bbox.set_xmax(1.);
-          source_bbox.set_ymax(1. - padding / resize_height);
-        } else {
-          padding = (resize_width - resize_height * aspect) / 2;
-          source_bbox.set_xmin(padding / resize_width);
-          source_bbox.set_ymin(0.);
-          source_bbox.set_xmax(1. - padding / resize_width);
-          source_bbox.set_ymax(1.);
-        }
-        ProjectBBox(source_bbox, bbox, &temp_bbox);
-        ClipBBox(temp_bbox, &temp_bbox);
-        ScaleBBox(temp_bbox, height, width, out_bbox);
-        break;
-      case ResizeParameter_Resize_mode_FIT_SMALL_SIZE:
-        if (height_scale == 0 || width_scale == 0) {
-          ClipBBox(temp_bbox, &temp_bbox);
-          ScaleBBox(temp_bbox, height, width, out_bbox);
-        } else {
-          ScaleBBox(temp_bbox, height_scale, width_scale, out_bbox);
-          ClipBBox(*out_bbox, height, width, out_bbox);
-        }
-        break;
-      default:
-        LOG(FATAL) << "Unknown resize mode.";
-    }
-  } else {
-    // Clip the normalized bbox first.
-    ClipBBox(temp_bbox, &temp_bbox);
-    // Scale the bbox according to the original image size.
-    ScaleBBox(temp_bbox, height, width, out_bbox);
-  }
-}
-
-void LocateBBox(const NormalizedBBox& src_bbox, const NormalizedBBox& bbox,
-                NormalizedBBox* loc_bbox) {
-  float src_width = src_bbox.xmax() - src_bbox.xmin();
-  float src_height = src_bbox.ymax() - src_bbox.ymin();
-  loc_bbox->set_xmin(src_bbox.xmin() + bbox.xmin() * src_width);
-  loc_bbox->set_ymin(src_bbox.ymin() + bbox.ymin() * src_height);
-  loc_bbox->set_xmax(src_bbox.xmin() + bbox.xmax() * src_width);
-  loc_bbox->set_ymax(src_bbox.ymin() + bbox.ymax() * src_height);
-  loc_bbox->set_difficult(bbox.difficult());
-}
-
-bool ProjectBBox(const NormalizedBBox& src_bbox, const NormalizedBBox& bbox,
-                 NormalizedBBox* proj_bbox) {
-  if (bbox.xmin() >= src_bbox.xmax() || bbox.xmax() <= src_bbox.xmin() ||
-      bbox.ymin() >= src_bbox.ymax() || bbox.ymax() <= src_bbox.ymin()) {
-    return false;
-  }
-  float src_width = src_bbox.xmax() - src_bbox.xmin();
-  float src_height = src_bbox.ymax() - src_bbox.ymin();
-  proj_bbox->set_xmin((bbox.xmin() - src_bbox.xmin()) / src_width);
-  proj_bbox->set_ymin((bbox.ymin() - src_bbox.ymin()) / src_height);
-  proj_bbox->set_xmax((bbox.xmax() - src_bbox.xmin()) / src_width);
-  proj_bbox->set_ymax((bbox.ymax() - src_bbox.ymin()) / src_height);
-  proj_bbox->set_difficult(bbox.difficult());
-  ClipBBox(*proj_bbox, proj_bbox);
-  if (BBoxSize(*proj_bbox) > 0) {
-    return true;
-  } else {
-    return false;
-  }
-}
-
-void ExtrapolateBBox(const ResizeParameter& param, const int height,
-    const int width, const NormalizedBBox& crop_bbox, NormalizedBBox* bbox) {
-  float height_scale = param.height_scale();
-  float width_scale = param.width_scale();
-  if (height_scale > 0 && width_scale > 0 &&
-      param.resize_mode() == ResizeParameter_Resize_mode_FIT_SMALL_SIZE) {
-    float orig_aspect = static_cast<float>(width) / height;
-    float resize_height = param.height();
-    float resize_width = param.width();
-    float resize_aspect = resize_width / resize_height;
-    if (orig_aspect < resize_aspect) {
-      resize_height = resize_width / orig_aspect;
-    } else {
-      resize_width = resize_height * orig_aspect;
-    }
-    float crop_height = resize_height * (crop_bbox.ymax() - crop_bbox.ymin());
-    float crop_width = resize_width * (crop_bbox.xmax() - crop_bbox.xmin());
-    CHECK_GE(crop_width, width_scale);
-    CHECK_GE(crop_height, height_scale);
-    bbox->set_xmin(bbox->xmin() * crop_width / width_scale);
-    bbox->set_xmax(bbox->xmax() * crop_width / width_scale);
-    bbox->set_ymin(bbox->ymin() * crop_height / height_scale);
-    bbox->set_ymax(bbox->ymax() * crop_height / height_scale);
-  }
-}
 
 float JaccardOverlap(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2,
                      const bool normalized) {
@@ -284,93 +164,6 @@ Dtype JaccardOverlap(const Dtype* bbox1, const Dtype* bbox2) {
 
 template float JaccardOverlap(const float* bbox1, const float* bbox2);
 template double JaccardOverlap(const double* bbox1, const double* bbox2);
-
-
-void EncodeBBox(
-    const NormalizedBBox& prior_bbox, const vector<float>& prior_variance,
-    const CodeType code_type, const bool encode_variance_in_target,
-    const NormalizedBBox& bbox, NormalizedBBox* encode_bbox) {
-  if (code_type == PriorBoxParameter_CodeType_CORNER) {
-    if (encode_variance_in_target) {
-      encode_bbox->set_xmin(bbox.xmin() - prior_bbox.xmin());
-      encode_bbox->set_ymin(bbox.ymin() - prior_bbox.ymin());
-      encode_bbox->set_xmax(bbox.xmax() - prior_bbox.xmax());
-      encode_bbox->set_ymax(bbox.ymax() - prior_bbox.ymax());
-    } else {
-      // Encode variance in bbox.
-      CHECK_EQ(prior_variance.size(), 4);
-      for (int i = 0; i < prior_variance.size(); ++i) {
-        CHECK_GT(prior_variance[i], 0);
-      }
-      encode_bbox->set_xmin(
-          (bbox.xmin() - prior_bbox.xmin()) / prior_variance[0]);
-      encode_bbox->set_ymin(
-          (bbox.ymin() - prior_bbox.ymin()) / prior_variance[1]);
-      encode_bbox->set_xmax(
-          (bbox.xmax() - prior_bbox.xmax()) / prior_variance[2]);
-      encode_bbox->set_ymax(
-          (bbox.ymax() - prior_bbox.ymax()) / prior_variance[3]);
-    }
-  } else if (code_type == PriorBoxParameter_CodeType_CENTER_SIZE) {
-    float prior_width = prior_bbox.xmax() - prior_bbox.xmin();
-    CHECK_GT(prior_width, 0);
-    float prior_height = prior_bbox.ymax() - prior_bbox.ymin();
-    CHECK_GT(prior_height, 0);
-    float prior_center_x = (prior_bbox.xmin() + prior_bbox.xmax()) / 2.;
-    float prior_center_y = (prior_bbox.ymin() + prior_bbox.ymax()) / 2.;
-
-    float bbox_width = bbox.xmax() - bbox.xmin();
-    CHECK_GT(bbox_width, 0);
-    float bbox_height = bbox.ymax() - bbox.ymin();
-    CHECK_GT(bbox_height, 0);
-    float bbox_center_x = (bbox.xmin() + bbox.xmax()) / 2.;
-    float bbox_center_y = (bbox.ymin() + bbox.ymax()) / 2.;
-
-    if (encode_variance_in_target) {
-      encode_bbox->set_xmin((bbox_center_x - prior_center_x) / prior_width);
-      encode_bbox->set_ymin((bbox_center_y - prior_center_y) / prior_height);
-      encode_bbox->set_xmax(log(bbox_width / prior_width));
-      encode_bbox->set_ymax(log(bbox_height / prior_height));
-    } else {
-      // Encode variance in bbox.
-      encode_bbox->set_xmin(
-          (bbox_center_x - prior_center_x) / prior_width / prior_variance[0]);
-      encode_bbox->set_ymin(
-          (bbox_center_y - prior_center_y) / prior_height / prior_variance[1]);
-      encode_bbox->set_xmax(
-          log(bbox_width / prior_width) / prior_variance[2]);
-      encode_bbox->set_ymax(
-          log(bbox_height / prior_height) / prior_variance[3]);
-    }
-  } else if (code_type == PriorBoxParameter_CodeType_CORNER_SIZE) {
-    float prior_width = prior_bbox.xmax() - prior_bbox.xmin();
-    CHECK_GT(prior_width, 0);
-    float prior_height = prior_bbox.ymax() - prior_bbox.ymin();
-    CHECK_GT(prior_height, 0);
-    if (encode_variance_in_target) {
-      encode_bbox->set_xmin((bbox.xmin() - prior_bbox.xmin()) / prior_width);
-      encode_bbox->set_ymin((bbox.ymin() - prior_bbox.ymin()) / prior_height);
-      encode_bbox->set_xmax((bbox.xmax() - prior_bbox.xmax()) / prior_width);
-      encode_bbox->set_ymax((bbox.ymax() - prior_bbox.ymax()) / prior_height);
-    } else {
-      // Encode variance in bbox.
-      CHECK_EQ(prior_variance.size(), 4);
-      for (int i = 0; i < prior_variance.size(); ++i) {
-        CHECK_GT(prior_variance[i], 0);
-      }
-      encode_bbox->set_xmin(
-          (bbox.xmin() - prior_bbox.xmin()) / prior_width / prior_variance[0]);
-      encode_bbox->set_ymin(
-          (bbox.ymin() - prior_bbox.ymin()) / prior_height / prior_variance[1]);
-      encode_bbox->set_xmax(
-          (bbox.xmax() - prior_bbox.xmax()) / prior_width / prior_variance[2]);
-      encode_bbox->set_ymax(
-          (bbox.ymax() - prior_bbox.ymax()) / prior_height / prior_variance[3]);
-    }
-  } else {
-    LOG(FATAL) << "Unknown LocLossType.";
-  }
-}
 
 void DecodeBBox(
     const NormalizedBBox& prior_bbox, const vector<float>& prior_variance,
@@ -653,39 +446,6 @@ template void GetPriorBBoxes(const double* prior_data, const int num_priors,
       vector<NormalizedBBox>* prior_bboxes,
       vector<vector<float> >* prior_variances);
 
-template <typename Dtype>
-void GetDetectionResults(const Dtype* det_data, const int num_det,
-      const int background_label_id,
-      map<int, map<int, vector<NormalizedBBox> > >* all_detections) {
-  all_detections->clear();
-  for (int i = 0; i < num_det; ++i) {
-    int start_idx = i * 7;
-    int item_id = det_data[start_idx];
-    if (item_id == -1) {
-      continue;
-    }
-    int label = det_data[start_idx + 1];
-    CHECK_NE(background_label_id, label)
-        << "Found background label in the detection results.";
-    NormalizedBBox bbox;
-    bbox.set_score(det_data[start_idx + 2]);
-    bbox.set_xmin(det_data[start_idx + 3]);
-    bbox.set_ymin(det_data[start_idx + 4]);
-    bbox.set_xmax(det_data[start_idx + 5]);
-    bbox.set_ymax(det_data[start_idx + 6]);
-    float bbox_size = BBoxSize(bbox);
-    bbox.set_size(bbox_size);
-    (*all_detections)[item_id][label].push_back(bbox);
-  }
-}
-
-// Explicit initialization.
-template void GetDetectionResults(const float* det_data, const int num_det,
-      const int background_label_id,
-      map<int, map<int, vector<NormalizedBBox> > >* all_detections);
-template void GetDetectionResults(const double* det_data, const int num_det,
-      const int background_label_id,
-      map<int, map<int, vector<NormalizedBBox> > >* all_detections);
 
 void GetTopKScoreIndex(const vector<float>& scores, const vector<int>& indices,
       const int top_k, vector<pair<float, int> >* score_index_vec) {
@@ -725,24 +485,30 @@ void GetMaxScoreIndex(const vector<float>& scores, const float threshold,
   }
 }
 
+
 template <typename Dtype>
 void GetMaxScoreIndex(const Dtype* scores, const int num, const float threshold,
       const int top_k, vector<pair<Dtype, int> >* score_index_vec) {
   // Generate index score pairs.
+  if(top_k<1){
+     return;
+  }
   for (int i = 0; i < num; ++i) {
     if (scores[i] > threshold) {
       score_index_vec->push_back(std::make_pair(scores[i], i));
     }
+  }
+  if (top_k < score_index_vec->size()) {
+    std::partial_sort(score_index_vec->begin(), score_index_vec->begin()+top_k,
+	      score_index_vec->end(),SortScorePairDescend<int>); 
+    score_index_vec->resize(top_k);
+    return;
   }
 
   // Sort the score pair according to the scores in descending order
   std::sort(score_index_vec->begin(), score_index_vec->end(),
             SortScorePairDescend<int>);
 
-  // Keep top_k scores if needed.
-  if (top_k > -1 && top_k < score_index_vec->size()) {
-    score_index_vec->resize(top_k);
-  }
 }
 
 template
@@ -753,116 +519,6 @@ void GetMaxScoreIndex(const double* scores, const int num,
       const float threshold, const int top_k,
       vector<pair<double, int> >* score_index_vec);
 
-void ApplyNMS(const vector<NormalizedBBox>& bboxes, const vector<float>& scores,
-      const float threshold, const int top_k, const bool reuse_overlaps,
-      map<int, map<int, float> >* overlaps, vector<int>* indices) {
-  // Sanity check.
-  CHECK_EQ(bboxes.size(), scores.size())
-      << "bboxes and scores have different size.";
-
-  // Get top_k scores (with corresponding indices).
-  vector<int> idx(boost::counting_iterator<int>(0),
-                  boost::counting_iterator<int>(scores.size()));
-  vector<pair<float, int> > score_index_vec;
-  GetTopKScoreIndex(scores, idx, top_k, &score_index_vec);
-
-  // Do nms.
-  indices->clear();
-  while (score_index_vec.size() != 0) {
-    // Get the current highest score box.
-    int best_idx = score_index_vec.front().second;
-    const NormalizedBBox& best_bbox = bboxes[best_idx];
-    if (BBoxSize(best_bbox) < 1e-5) {
-      // Erase small box.
-      score_index_vec.erase(score_index_vec.begin());
-      continue;
-    }
-    indices->push_back(best_idx);
-    // Erase the best box.
-    score_index_vec.erase(score_index_vec.begin());
-
-    if (top_k > -1 && indices->size() >= top_k) {
-      // Stop if finding enough bboxes for nms.
-      break;
-    }
-
-    // Compute overlap between best_bbox and other remaining bboxes.
-    // Remove a bbox if the overlap with best_bbox is larger than nms_threshold.
-    for (vector<pair<float, int> >::iterator it = score_index_vec.begin();
-         it != score_index_vec.end(); ) {
-      int cur_idx = it->second;
-      const NormalizedBBox& cur_bbox = bboxes[cur_idx];
-      if (BBoxSize(cur_bbox) < 1e-5) {
-        // Erase small box.
-        it = score_index_vec.erase(it);
-        continue;
-      }
-      float cur_overlap = 0.;
-      if (reuse_overlaps) {
-        if (overlaps->find(best_idx) != overlaps->end() &&
-            overlaps->find(best_idx)->second.find(cur_idx) !=
-            (*overlaps)[best_idx].end()) {
-          // Use the computed overlap.
-          cur_overlap = (*overlaps)[best_idx][cur_idx];
-        } else if (overlaps->find(cur_idx) != overlaps->end() &&
-                   overlaps->find(cur_idx)->second.find(best_idx) !=
-                   (*overlaps)[cur_idx].end()) {
-          // Use the computed overlap.
-          cur_overlap = (*overlaps)[cur_idx][best_idx];
-        } else {
-          cur_overlap = JaccardOverlap(best_bbox, cur_bbox);
-          // Store the overlap for future use.
-          (*overlaps)[best_idx][cur_idx] = cur_overlap;
-        }
-      } else {
-        cur_overlap = JaccardOverlap(best_bbox, cur_bbox);
-      }
-
-      // Remove it if necessary
-      if (cur_overlap > threshold) {
-        it = score_index_vec.erase(it);
-      } else {
-        ++it;
-      }
-    }
-  }
-}
-
-void ApplyNMS(const vector<NormalizedBBox>& bboxes, const vector<float>& scores,
-      const float threshold, const int top_k, vector<int>* indices) {
-  bool reuse_overlap = false;
-  map<int, map<int, float> > overlaps;
-  ApplyNMS(bboxes, scores, threshold, top_k, reuse_overlap, &overlaps, indices);
-}
-
-void ApplyNMS(const bool* overlapped, const int num, vector<int>* indices) {
-  vector<int> index_vec(boost::counting_iterator<int>(0),
-                        boost::counting_iterator<int>(num));
-  // Do nms.
-  indices->clear();
-  while (index_vec.size() != 0) {
-    // Get the current highest score box.
-    int best_idx = index_vec.front();
-    indices->push_back(best_idx);
-    // Erase the best box.
-    index_vec.erase(index_vec.begin());
-
-    for (vector<int>::iterator it = index_vec.begin(); it != index_vec.end();) {
-      int cur_idx = *it;
-
-      // Remove it if necessary
-      if (overlapped[best_idx * num + cur_idx]) {
-        it = index_vec.erase(it);
-      } else {
-        ++it;
-      }
-    }
-  }
-}
-
-inline int clamp(const int v, const int a, const int b) {
-  return v < a ? a : v > b ? b : v;
-}
 
 void ApplyNMSFast(const vector<NormalizedBBox>& bboxes,
       const vector<float>& scores, const float score_threshold,
@@ -901,6 +557,7 @@ void ApplyNMSFast(const vector<NormalizedBBox>& bboxes,
   }
 }
 
+
 template <typename Dtype>
 void ApplyNMSFast(const Dtype* bboxes, const Dtype* scores, const int num,
       const float score_threshold, const float nms_threshold,
@@ -912,23 +569,21 @@ void ApplyNMSFast(const Dtype* bboxes, const Dtype* scores, const int num,
   // Do nms.
   float adaptive_threshold = nms_threshold;
   indices->clear();
-  while (score_index_vec.size() != 0) {
-    const int idx = score_index_vec.front().second;
+  for(auto& it:score_index_vec){
+    const int idx = it.second;
     bool keep = true;
     for (int k = 0; k < indices->size(); ++k) {
-      if (keep) {
         const int kept_idx = (*indices)[k];
-        float overlap = JaccardOverlap(bboxes + idx * 4, bboxes + kept_idx * 4);
-        keep = overlap <= adaptive_threshold;
-      } else {
-        break;
-      }
+        if(JaccardOverlap(bboxes + idx * 4, bboxes + kept_idx * 4) >  adaptive_threshold){
+	   keep = false;
+	   break;
+	}
     }
-    if (keep) {
-      indices->push_back(idx);
+    if (!keep) {
+       continue;
     }
-    score_index_vec.erase(score_index_vec.begin());
-    if (keep && eta < 1 && adaptive_threshold > 0.5) {
+    indices->push_back(idx);
+    if (eta < 1 && adaptive_threshold > 0.5) {
       adaptive_threshold *= eta;
     }
   }

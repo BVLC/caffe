@@ -17,8 +17,6 @@ void CuDNNConvolutionLayer<Dtype>::LayerSetUp(
 
   // Set the indexing parameters.
   bias_offset_ = (this->num_output_ / this->group_);
-
-  handles_setup_ = true;
 }
 
 template <typename Dtype>

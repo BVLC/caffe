@@ -210,18 +210,6 @@ public:
    */
   virtual inline bool AutoTopBlobs() const { return false; }
 
-  /**
-   * @brief Return whether to allow force_backward for a given bottom blob
-   *        index.
-   *
-   * If AllowForceBackward(i) == false, we will ignore the force_backward
-   * setting and backpropagate to blob i only if it needs gradient information
-   * (as is done when force_backward == false).
-   */
-  virtual inline bool AllowForceBackward(const int bottom_index) const {
-    return true;
-  }
-
 public:
   /** The protobuf that stores the layer parameters */
   LayerParameter layer_param_;

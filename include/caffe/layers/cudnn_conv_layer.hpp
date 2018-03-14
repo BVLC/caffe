@@ -31,7 +31,7 @@ template <typename Dtype>
 class CuDNNConvolutionLayer : public ConvolutionLayer<Dtype> {
 public:
   explicit CuDNNConvolutionLayer(const LayerParameter &param)
-      : ConvolutionLayer<Dtype>(param), handles_setup_(false) {}
+      : ConvolutionLayer<Dtype>(param) {}
   virtual void LayerSetUp(const vector<Blob<Dtype> *> &bottom,
                           const vector<Blob<Dtype> *> &top);
   virtual void Reshape(const vector<Blob<Dtype> *> &bottom,
@@ -47,24 +47,6 @@ protected:
   virtual void
   Forward_const_gpu(const vector<Blob<Dtype> *> &bottom,
                     const vector<Blob<Dtype> *> &top) const override;
-
-  bool handles_setup_;
-
-  /*
-  mutable ::boost::thread_specific_ptr<vector<cudnnHandle_t>> handle_ptr_{
-      [](vector<cudnnHandle_t> *handles) {
-        for (int i = 0; i < handles->size(); i++) {
-          cudnnDestroy((*handles)[i]);
-        }
-      }};
-
-  mutable ::boost::thread_specific_ptr<vector<cudaStream_t>> stream_ptr_{
-      [](vector<cudaStream_t> *streams) {
-        for (int i = 0; i < streams->size(); i++) {
-          cudaStreamDestroy((*streams)[i]);
-        }
-      }};
-      */
 
   mutable ::boost::thread_specific_ptr<vector<cudnnTensorDescriptor_t>>
       bottom_descs_ptr_{[](vector<cudnnTensorDescriptor_t> *descs) {

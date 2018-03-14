@@ -1,9 +1,3 @@
-#ifdef USE_OPENCV
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#endif  // USE_OPENCV
-
 #ifndef CAFFE_UTIL_BBOX_UTIL_H_
 #define CAFFE_UTIL_BBOX_UTIL_H_
 
@@ -13,8 +7,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-
-#include "glog/logging.h"
 
 #include "caffe/caffe.hpp"
 
@@ -51,23 +43,6 @@ void ClipBBox(const NormalizedBBox& bbox, const float height, const float width,
 void ScaleBBox(const NormalizedBBox& bbox, const int height, const int width,
                NormalizedBBox* scale_bbox);
 
-// Output predicted bbox on the actual image.
-void OutputBBox(const NormalizedBBox& bbox, const pair<int, int>& img_size,
-                const bool has_resize, const ResizeParameter& resize_param,
-                NormalizedBBox* out_bbox);
-
-// Locate bbox in the coordinate system that src_bbox sits.
-void LocateBBox(const NormalizedBBox& src_bbox, const NormalizedBBox& bbox,
-                NormalizedBBox* loc_bbox);
-
-// Project bbox onto the coordinate system defined by src_bbox.
-bool ProjectBBox(const NormalizedBBox& src_bbox, const NormalizedBBox& bbox,
-                 NormalizedBBox* proj_bbox);
-
-// Extrapolate the transformed bbox if height_scale and width_scale is
-// explicitly provided, and it is only effective for FIT_SMALL_SIZE case.
-void ExtrapolateBBox(const ResizeParameter& param, const int height,
-    const int width, const NormalizedBBox& crop_bbox, NormalizedBBox* bbox);
 
 // Compute the jaccard (intersection over union IoU) overlap between two bboxes.
 float JaccardOverlap(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2,
@@ -75,16 +50,6 @@ float JaccardOverlap(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2,
 
 template <typename Dtype>
 Dtype JaccardOverlap(const Dtype* bbox1, const Dtype* bbox2);
-
-// Compute the coverage of bbox1 by bbox2.
-//float BBoxCoverage(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2);
-
-// Encode a bbox according to a prior bbox.
-void EncodeBBox(const NormalizedBBox& prior_bbox,
-    const vector<float>& prior_variance, const CodeType code_type,
-    const bool encode_variance_in_target, const NormalizedBBox& bbox,
-    NormalizedBBox* encode_bbox);
-
 
 // Decode a bbox according to a prior bbox.
 void DecodeBBox(const NormalizedBBox& prior_bbox,
@@ -168,17 +133,6 @@ void GetPriorBBoxes(const Dtype* prior_data, const int num_priors,
       vector<NormalizedBBox>* prior_bboxes,
       vector<vector<float> >* prior_variances);
 
-// Get detection results from det_data.
-//    det_data: 1 x 1 x num_det x 7 blob.
-//    num_det: the number of detections.
-//    background_label_id: the label for background class which is used to do
-//      santity check so that no detection contains it.
-//    all_detections: stores detection results for each class from each image.
-template <typename Dtype>
-void GetDetectionResults(const Dtype* det_data, const int num_det,
-      const int background_label_id,
-      map<int, LabelBBox>* all_detections);
-
 // Get top_k scores with corresponding indices.
 //    scores: a set of scores.
 //    indices: a set of corresponding indices.
@@ -212,25 +166,6 @@ void GetMaxScoreIndex(const Dtype* scores, const int num, const float threshold,
 //    score_index_vec: store the sorted (score, index) pair.
 void GetMaxScoreIndex(const vector<float>& scores, const float threshold,
       const int top_k, vector<pair<float, int> >* score_index_vec);
-
-// Do non maximum suppression given bboxes and scores.
-//    bboxes: a set of bounding boxes.
-//    scores: a set of corresponding confidences.
-//    threshold: the threshold used in non maximum suppression.
-//    top_k: if not -1, keep at most top_k picked indices.
-//    reuse_overlaps: if true, use and update overlaps; otherwise, always
-//      compute overlap.
-//    overlaps: a temp place to optionally store the overlaps between pairs of
-//      bboxes if reuse_overlaps is true.
-//    indices: the kept indices of bboxes after nms.
-void ApplyNMS(const vector<NormalizedBBox>& bboxes, const vector<float>& scores,
-      const float threshold, const int top_k, const bool reuse_overlaps,
-      map<int, map<int, float> >* overlaps, vector<int>* indices);
-
-void ApplyNMS(const vector<NormalizedBBox>& bboxes, const vector<float>& scores,
-      const float threshold, const int top_k, vector<int>* indices);
-
-void ApplyNMS(const bool* overlapped, const int num, vector<int>* indices);
 
 // Do non maximum suppression given bboxes and scores.
 // Inspired by Piotr Dollar's NMS implementation in EdgeBox.
@@ -294,17 +229,6 @@ template <typename Dtype>
 void ComputeOverlappedGPU(const int nthreads,
           const Dtype* bbox_data, const int num_bboxes, const int num_classes,
           const Dtype overlap_threshold, bool* overlapped_data);
-
-template <typename Dtype>
-void ComputeOverlappedByIdxGPU(const int nthreads,
-          const Dtype* bbox_data, const Dtype overlap_threshold,
-          const int* idx, const int num_idx, bool* overlapped_data);
-
-
-template <typename Dtype>
-void GetDetectionsGPU(const Dtype* bbox_data, const Dtype* conf_data,
-          const int image_id, const int label, const vector<int>& indices,
-          const bool clip_bbox, Blob<Dtype>* detection_blob);
 
 #endif  // !CPU_ONLY
 

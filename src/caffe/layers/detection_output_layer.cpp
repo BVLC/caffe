@@ -1,9 +1,9 @@
 #include <algorithm>
-#include <fstream>  // NOLINT(readability/streams)
 #include <map>
 #include <string>
 #include <utility>
 #include <vector>
+#include <cfloat>
 
 
 #include "caffe/layers/detection_output_layer.hpp"

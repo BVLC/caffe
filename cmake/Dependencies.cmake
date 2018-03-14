@@ -7,33 +7,15 @@ set(Caffe_COMPILE_OPTIONS "")
 # ---[ Boost
 if(WIN32)
   SET(BOOST_ROOT C:/local/boost_1_65_1)
-  LINK_DIRECTORIES(C:/local/boost_1_65_1/lib64-msvc-14.1)
-  SET(Boost_COMPILER "-vc141")
-  SET(BOOST_LIBRARYDIR C:/local/boost_1_65_1/lib64-msvc-14.1)
+  #SET(Boost_DEBUG ON)
+  SET(Boost_COMPILER "-vc140")
+  LINK_DIRECTORIES(C:/local/boost_1_65_1/lib64-msvc-14.0)
+  SET(BOOST_LIBRARYDIR C:/local/boost_1_65_1/lib64-msvc-14.0)
+  add_definitions(-DBOOST_THREAD_BUILD_DLL)
 endif()
-find_package(Boost REQUIRED COMPONENTS system filesystem thread)
+find_package(Boost REQUIRED COMPONENTS thread)
 list(APPEND Caffe_INCLUDE_DIRS PRIVATE ${Boost_INCLUDE_DIRS})
 list(APPEND Caffe_LINKER_LIBS PRIVATE ${Boost_LIBRARIES})
-
-# ---[ Threads
-find_package(Threads REQUIRED)
-list(APPEND Caffe_LINKER_LIBS PRIVATE ${CMAKE_THREAD_LIBS_INIT})
-
-# ---[ OpenMP
-if(USE_OPENMP)
-  # Ideally, this should be provided by the BLAS library IMPORTED target. However,
-  # nobody does this, so we need to link to OpenMP explicitly and have the maintainer
-  # to flick the switch manually as needed.
-  #
-  # Moreover, OpenMP package does not provide an IMPORTED target as well, and the
-  # suggested way of linking to OpenMP is to append to CMAKE_{C,CXX}_FLAGS.
-  # However, this naïve method will force any user of Caffe to add the same kludge
-  # into their buildsystem again, so we put these options into per-target PUBLIC
-  # compile options and link flags, so that they will be exported properly.
-  find_package(OpenMP REQUIRED)
-  list(APPEND Caffe_LINKER_LIBS PRIVATE ${OpenMP_CXX_FLAGS})
-  list(APPEND Caffe_COMPILE_OPTIONS PRIVATE ${OpenMP_CXX_FLAGS})
-endif()
 
 # ---[ Google-glog
 if (WIN32)
@@ -128,52 +110,6 @@ elseif(APPLE)
   if(VECLIB_FOUND)
     if(NOT vecLib_INCLUDE_DIR MATCHES "^/System/Library/Frameworks/vecLib.framework.*")
       list(APPEND Caffe_DEFINITIONS PUBLIC -DUSE_ACCELERATE)
-    endif()
-  endif()
-endif()
-
-# ---[ Python
-if(BUILD_python)
-  if(NOT "${python_version}" VERSION_LESS "3.0.0")
-    # use python3
-    find_package(PythonInterp 3.0)
-    find_package(PythonLibs 3.0)
-    find_package(NumPy 1.7.1)
-    # Find the matching boost python implementation
-    set(version ${PYTHONLIBS_VERSION_STRING})
-
-    STRING( REGEX REPLACE "[^0-9]" "" boost_py_version ${version} )
-    find_package(Boost COMPONENTS "python-py${boost_py_version}")
-    set(Boost_PYTHON_FOUND ${Boost_PYTHON-PY${boost_py_version}_FOUND})
-
-    while(NOT "${version}" STREQUAL "" AND NOT Boost_PYTHON_FOUND)
-      STRING( REGEX REPLACE "([0-9.]+).[0-9]+" "\\1" version ${version} )
-
-      STRING( REGEX REPLACE "[^0-9]" "" boost_py_version ${version} )
-      find_package(Boost COMPONENTS "python-py${boost_py_version}")
-      set(Boost_PYTHON_FOUND ${Boost_PYTHON-PY${boost_py_version}_FOUND})
-
-      STRING( REGEX MATCHALL "([0-9.]+).[0-9]+" has_more_version ${version} )
-      if("${has_more_version}" STREQUAL "")
-        break()
-      endif()
-    endwhile()
-    if(NOT Boost_PYTHON_FOUND)
-      find_package(Boost COMPONENTS python)
-    endif()
-  else()
-    # disable Python 3 search
-    find_package(PythonInterp 2.7)
-    find_package(PythonLibs 2.7)
-    find_package(NumPy 1.7.1)
-    find_package(Boost COMPONENTS python)
-  endif()
-  if(PYTHONLIBS_FOUND AND NUMPY_FOUND AND Boost_PYTHON_FOUND)
-    set(HAVE_PYTHON TRUE)
-    if(BUILD_python_layer)
-      list(APPEND Caffe_DEFINITIONS PUBLIC -DWITH_PYTHON_LAYER)
-      list(APPEND Caffe_INCLUDE_DIRS PRIVATE ${PYTHON_INCLUDE_DIRS} ${NUMPY_INCLUDE_DIR} PUBLIC ${Boost_INCLUDE_DIRS})
-      list(APPEND Caffe_LINKER_LIBS PRIVATE ${PYTHON_LIBRARIES} PUBLIC ${Boost_LIBRARIES})
     endif()
   endif()
 endif()
