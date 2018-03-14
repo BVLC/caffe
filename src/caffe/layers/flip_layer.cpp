@@ -13,8 +13,8 @@
 namespace caffe {
 
 template <typename Dtype>
-void FlipLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-    const vector<Blob<Dtype>*>& top) {
+void FlipLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>&  /*bottom*/,
+    const vector<Blob<Dtype>*>&  /*top*/) {
   flip_width_ = this->layer_param_.flip_param().flip_width();
   flip_height_ = this->layer_param_.flip_param().flip_height();
 }

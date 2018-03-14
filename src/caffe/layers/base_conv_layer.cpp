@@ -9,7 +9,7 @@ namespace caffe {
 
 template <typename Dtype>
 void BaseConvolutionLayer<Dtype>::LayerSetUp(
-    const vector<Blob<Dtype> *> &bottom, const vector<Blob<Dtype> *> &top) {
+    const vector<Blob<Dtype> *> &bottom, const vector<Blob<Dtype> *> & /*top*/) {
   // Configure the kernel size, padding, stride, and inputs.
   ConvolutionParameter conv_param = this->layer_param_.convolution_param();
   force_nd_im2col_ = conv_param.force_nd_im2col();
@@ -137,7 +137,7 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(
   }
   bias_term_ = this->layer_param_.convolution_param().bias_term();
   vector<int> bias_shape(bias_term_, num_output_);
-  if (this->blobs_.size() > 0) {
+  if (!this->blobs_.empty()) {
     CHECK_EQ(1 + bias_term_, this->blobs_.size())
         << "Incorrect number of weight blobs.";
     if (weight_shape != this->blobs_[0]->shape()) {
@@ -184,7 +184,7 @@ void BaseConvolutionLayer<Dtype>::Reshape_const(
       << "bottom num_axes may not change.";
   CHECK_EQ(bottom[0]->shape(channel_axis_), channels_)
       << "Input size incompatible with convolution kernel.";
-  // TODO: generalize to handle inputs of different shapes.
+  // TODO(root): generalize to handle inputs of different shapes.
   for (int bottom_id = 1; bottom_id < bottom.size(); ++bottom_id) {
     CHECK(bottom[0]->shape() == bottom[bottom_id]->shape())
         << "All inputs must have the same shape.";

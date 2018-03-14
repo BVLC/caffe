@@ -79,13 +79,13 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
   const Dtype scale = param_.scale();
   const bool do_mirror = param_.mirror();
   const bool has_mean_file = param_.has_mean_file();
-  const bool has_mean_values = mean_values_.size() > 0;
+  const bool has_mean_values = !mean_values_.empty();
 
   CHECK_GT(img_channels, 0);
   CHECK_GE(img_height, crop_size);
   CHECK_GE(img_width, crop_size);
 
-  Dtype* mean = NULL;
+  Dtype* mean = nullptr;
   if (has_mean_file) {
     CHECK_EQ(img_channels, data_mean_.channels());
     CHECK_EQ(img_height, data_mean_.height());
@@ -133,7 +133,7 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
           top_index = (c * height + h) * width + w;
         }
         // int top_index = (c * height + h) * width + w;
-        Dtype pixel = static_cast<Dtype>(ptr[img_index++]);
+        auto pixel = static_cast<Dtype>(ptr[img_index++]);
         if (has_mean_file) {
           int mean_index = (c * img_height + h_off + h) * img_width + w_off + w;
           transformed_data[top_index] =
@@ -187,7 +187,7 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
   const Dtype scale = param_.scale();
   const bool do_mirror = param_.mirror();
   const bool has_mean_file = param_.has_mean_file();
-  const bool has_mean_values = mean_values_.size() > 0;
+  const bool has_mean_values = !mean_values_.empty();
 
   int h_off = 0;
   int w_off = 0;

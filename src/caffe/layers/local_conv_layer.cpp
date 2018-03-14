@@ -157,7 +157,7 @@ void LocalConvolutionLayer<Dtype>::crop_loc_patch_cpu(
 
 template <typename Dtype>
 void LocalConvolutionLayer<Dtype>::LayerSetUp(
-    const vector<Blob<Dtype> *> &bottom, const vector<Blob<Dtype> *> &top) {
+    const vector<Blob<Dtype> *> &bottom, const vector<Blob<Dtype> *> & /*top*/) {
   CHECK_EQ(4, bottom[0]->num_axes())
       << "Input must have 4 axes, "
       << "corresponding to (num, channels, height, width)";
@@ -295,7 +295,7 @@ void LocalConvolutionLayer<Dtype>::LayerSetUp(
   // - blobs_[0] holds the filter weights
   // - blobs_[1] holds the biases (optional)
   this->bias_term_ = loc_conv_param.bias_term();
-  if (this->blobs_.size() > 0) {
+  if (!this->blobs_.empty()) {
     LOG(INFO) << "Skipping parameter initialization";
   } else {
     if (this->bias_term_) {
@@ -334,7 +334,7 @@ void LocalConvolutionLayer<Dtype>::Reshape_const(const vector<Blob<Dtype> *> &bo
   auto bottom_height = bottom[0]->height();
   auto bottom_width = bottom[0]->width();
 
-  // TODO: generalize to handle inputs of different shapes.
+  // TODO(root): generalize to handle inputs of different shapes.
   for (int bottom_id = 1; bottom_id < bottom.size(); ++bottom_id) {
     CHECK_EQ(num, bottom[bottom_id]->num()) << "Inputs must have same num.";
     CHECK_EQ(this->channels_, bottom[bottom_id]->channels())

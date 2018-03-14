@@ -12,7 +12,7 @@ using std::max;
 
 template <typename Dtype>
 void PoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {
+      const vector<Blob<Dtype>*>&  /*top*/) {
   PoolingParameter pool_param = this->layer_param_.pooling_param();
   if (pool_param.global_pooling()) {
     CHECK(!(pool_param.has_kernel_size() ||
@@ -138,7 +138,7 @@ void PoolingLayer<Dtype>::Forward_const_cpu(const vector<Blob<Dtype>*>& bottom,
   int pooled_height = top[0]->height();
   int pooled_width =  top[0]->width();
 
-  Dtype* top_mask = NULL;
+  Dtype* top_mask = nullptr;
   // Different pooling methods. We explicitly do the switch outside the for
   // loop to save time, although this results in more code.
   switch (this->layer_param_.pooling_param().pool()) {

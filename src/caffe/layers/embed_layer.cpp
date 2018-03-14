@@ -7,15 +7,15 @@
 namespace caffe {
 
 template <typename Dtype>
-void EmbedLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {
+void EmbedLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>&  /*bottom*/,
+      const vector<Blob<Dtype>*>&  /*top*/) {
   N_ = this->layer_param_.embed_param().num_output();
   CHECK_GT(N_, 0) << "EmbedLayer num_output must be positive.";
   K_ = this->layer_param_.embed_param().input_dim();
   CHECK_GT(K_, 0) << "EmbedLayer input_dim must be positive.";
   bias_term_ = this->layer_param_.embed_param().bias_term();
   // Check if we need to set up the weights
-  if (this->blobs_.size() > 0) {
+  if (!this->blobs_.empty()) {
     LOG(INFO) << "Skipping parameter initialization";
   } else {
     if (bias_term_) {

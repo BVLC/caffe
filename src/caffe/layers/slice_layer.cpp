@@ -7,8 +7,8 @@
 namespace caffe {
 
 template <typename Dtype>
-void SliceLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {
+void SliceLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>&  /*bottom*/,
+      const vector<Blob<Dtype>*>&  /*top*/) {
   const SliceParameter& slice_param = this->layer_param_.slice_param();
   CHECK(!(slice_param.has_axis() && slice_param.has_slice_dim()))
       << "Either axis or slice_dim should be specified; not both.";
@@ -50,7 +50,7 @@ void SliceLayer<Dtype>::Reshape_const(const vector<Blob<Dtype>*>& bottom,
   vector<int> top_shape = bottom[0]->shape();
   const int bottom_slice_axis = bottom[0]->shape(slice_axis);
   int count = 0;
-  if (slice_point_.size() != 0) {
+  if (!slice_point_.empty()) {
     CHECK_EQ(slice_point_.size(), top.size() - 1);
     CHECK_LE(top.size(), bottom_slice_axis);
     int prev = 0;

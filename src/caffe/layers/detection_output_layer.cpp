@@ -1,9 +1,9 @@
 #include <algorithm>
+#include <cfloat>
 #include <map>
 #include <string>
 #include <utility>
 #include <vector>
-#include <cfloat>
 
 
 #include "caffe/layers/detection_output_layer.hpp"
@@ -11,8 +11,8 @@
 namespace caffe {
 
 template <typename Dtype>
-void DetectionOutputLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {
+void DetectionOutputLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>&  /*bottom*/,
+      const vector<Blob<Dtype>*>&  /*top*/) {
   const DetectionOutputParameter& detection_output_param =
       this->layer_param_.detection_output_param();
   CHECK(detection_output_param.has_num_classes()) << "Must specify num_classes";
@@ -135,21 +135,19 @@ void DetectionOutputLayer<Dtype>::Forward_const_cpu(
     }
     if (keep_top_k_ > -1 && num_det > keep_top_k_) {
       vector<pair<float, pair<int, int> > > score_index_pairs;
-      for (map<int, vector<int> >::iterator it = indices.begin();
-           it != indices.end(); ++it) {
-        int label = it->first;
-        const vector<int>& label_indices = it->second;
+      for (auto & indice : indices) {
+        int label = indice.first;
+        const vector<int>& label_indices = indice.second;
         if (conf_scores.find(label) == conf_scores.end()) {
           // Something bad happened for current label.
           LOG(FATAL) << "Could not find location predictions for " << label;
           continue;
         }
         const vector<float>& scores = conf_scores.find(label)->second;
-        for (int j = 0; j < label_indices.size(); ++j) {
-          int idx = label_indices[j];
+        for (int idx : label_indices) {
           CHECK_LT(idx, scores.size());
-          score_index_pairs.push_back(std::make_pair(
-                  scores[idx], std::make_pair(label, idx)));
+          score_index_pairs.emplace_back(
+                  scores[idx], std::make_pair(label, idx));
         }
       }
       // Keep top k results per image.
@@ -158,9 +156,9 @@ void DetectionOutputLayer<Dtype>::Forward_const_cpu(
       score_index_pairs.resize(keep_top_k_);
       // Store the new indices.
       map<int, vector<int> > new_indices;
-      for (int j = 0; j < score_index_pairs.size(); ++j) {
-        int label = score_index_pairs[j].second.first;
-        int idx = score_index_pairs[j].second.second;
+      for (auto & score_index_pair : score_index_pairs) {
+        int label = score_index_pair.second.first;
+        int idx = score_index_pair.second.second;
         new_indices[label].push_back(idx);
       }
       all_indices.push_back(new_indices);
@@ -195,7 +193,7 @@ void DetectionOutputLayer<Dtype>::Forward_const_cpu(
   for (int i = 0; i < num; ++i) {
     const map<int, vector<float> >& conf_scores = all_conf_scores[i];
     const LabelBBox& decode_bboxes = all_decode_bboxes[i];
-    for (map<int, vector<int> >::iterator it = all_indices[i].begin();
+    for (auto it = all_indices[i].begin();
          it != all_indices[i].end(); ++it) {
       int label = it->first;
       if (conf_scores.find(label) == conf_scores.end()) {
@@ -213,8 +211,7 @@ void DetectionOutputLayer<Dtype>::Forward_const_cpu(
       const vector<NormalizedBBox>& bboxes =
           decode_bboxes.find(loc_label)->second;
       vector<int>& indices = it->second;
-      for (int j = 0; j < indices.size(); ++j) {
-        int idx = indices[j];
+      for (int idx : indices) {
         top_data[count * 7] = i;
         top_data[count * 7 + 1] = label;
         top_data[count * 7 + 2] = scores[idx];
