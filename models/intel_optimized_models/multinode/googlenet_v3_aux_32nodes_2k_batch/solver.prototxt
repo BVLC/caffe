@@ -1,0 +1,26 @@
+net: "models/intel_optimized_models/multinode/googlenet_v3_aux_32nodes_2k_batch/train_val.prototxt"
+# global batch size: 2048
+# local batch size: 64
+warmup_iter: 3125
+warmup_start_lr: 0.05
+
+test_iter: 1000
+test_interval: 6250
+test_initialization: false
+
+display: 100
+
+max_iter: 62500        # 100 epoch
+base_lr: 0.6
+
+lr_policy: "poly"
+power: 3
+momentum: 0.9
+weight_decay: 0.0002
+
+snapshot: 62500
+snapshot_prefix: "models/intel_optimized_models/multinode/googlenet_v3_aux_32nodes_2k_batch/snapshots/googlenet_v3-2k"
+
+random_seed: 1
+
+solver_mode: CPU
