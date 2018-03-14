@@ -340,6 +340,7 @@ std::map<std::string, std::shared_ptr<Blob<Dtype>>> Net<Dtype>::ForwardConst(
   std::map<int, std::vector<std::shared_ptr<Blob<Dtype>>>> top_blobs;
   std::map<std::string, std::shared_ptr<Blob<Dtype>>> output_blobs;
 
+  auto output_blob_names_tmp = output_blob_names;
   for (int i = 0; i < layers_.size(); ++i) {
     for (auto const &blob_name : bottom_blob_names_[i]) {
       auto it = input_blobs.find(blob_name);
@@ -362,15 +363,21 @@ std::map<std::string, std::shared_ptr<Blob<Dtype>>> Net<Dtype>::ForwardConst(
         top_blobs[i].emplace_back(it->second);
       }
 
-      bool is_output_blob =
-          (output_blob_names.find(blob_name) != output_blob_names.end());
-
-      if (is_output_blob) {
-        end = i;
-        output_blobs[blob_name] = input_blobs[blob_name];
+      {
+        auto it = output_blob_names_tmp.find(blob_name);
+        if (it != output_blob_names_tmp.end()) {
+          end = i;
+          output_blobs[blob_name] = input_blobs[blob_name];
+          output_blob_names_tmp.erase(it);
+        }
       }
     }
   }
+
+  if (!output_blob_names_tmp.empty()) {
+    LOG(FATAL) << "Unknown output blob " << *(output_blob_names_tmp.begin());
+  }
+
   input_blobs.clear();
 
   CHECK_GE(end, 0);
