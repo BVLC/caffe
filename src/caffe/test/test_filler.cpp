@@ -504,19 +504,19 @@ class BilinearFillerTest : public ::testing::Test {
     : blob_(new Blob<Dtype>()),
       filler_param_() {
   }
-  virtual void test_params(const vector<int>& shape) {
+  virtual void test_params(const vector<int_tp>& shape) {
     EXPECT_TRUE(blob_);
     blob_->Reshape(shape);
     filler_.reset(new BilinearFiller<Dtype>(filler_param_));
     filler_->Fill(blob_);
     CHECK_EQ(blob_->num_axes(), 4);
-    const int outer_num = blob_->count(0, 2);
-    const int inner_num = blob_->count(2, 4);
+    const int_tp outer_num = blob_->count(0, 2);
+    const int_tp inner_num = blob_->count(2, 4);
     const Dtype* data = blob_->cpu_data();
-    int f = ceil(blob_->shape(3) / 2.);
+    int_tp f = ceil(blob_->shape(3) / 2.);
     Dtype c = (blob_->shape(3) - 1) / (2. * f);
-    for (int i = 0; i < outer_num; ++i) {
-      for (int j = 0; j < inner_num; ++j) {
+    for (int_tp i = 0; i < outer_num; ++i) {
+      for (int_tp j = 0; j < inner_num; ++j) {
         Dtype x = j % blob_->shape(3);
         Dtype y = (j / blob_->shape(3)) % blob_->shape(2);
         Dtype expected_value = (1 - fabs(x / f - c)) * (1 - fabs(y / f - c));
@@ -534,31 +534,22 @@ class BilinearFillerTest : public ::testing::Test {
 TYPED_TEST_CASE(BilinearFillerTest, TestDtypesFloat);
 
 TYPED_TEST(BilinearFillerTest, TestFillOdd) {
-<<<<<<< HEAD
   const int_tp n = 7;
-  this->test_params(n);
+  vector<int_tp> blob_shape;
+  blob_shape.push_back(1000);
+  blob_shape.push_back(2);
+  blob_shape.push_back(n);
+  blob_shape.push_back(n);
+  this->test_params(blob_shape);
 }
 TYPED_TEST(BilinearFillerTest, TestFillEven) {
   const int_tp n = 6;
-  this->test_params(n);
-=======
-  const int n = 7;
-  vector<int> blob_shape;
+  vector<int_tp> blob_shape;
   blob_shape.push_back(1000);
   blob_shape.push_back(2);
   blob_shape.push_back(n);
   blob_shape.push_back(n);
   this->test_params(blob_shape);
-}
-TYPED_TEST(BilinearFillerTest, TestFillEven) {
-  const int n = 6;
-  vector<int> blob_shape;
-  blob_shape.push_back(1000);
-  blob_shape.push_back(2);
-  blob_shape.push_back(n);
-  blob_shape.push_back(n);
-  this->test_params(blob_shape);
->>>>>>> f0495226b0f3170382217bc97cc937c9d38a84e2
 }
 
 }  // namespace caffe
