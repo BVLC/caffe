@@ -30,8 +30,6 @@ class Net {
   /// @brief Initialize a network with a NetParameter.
   void Init(const NetParameter& param);
 
-  Dtype ForwardTo(int end=-1);
-
   std::map<std::string,std::shared_ptr<Blob<Dtype>>> ForwardConst(std::map<std::string,std::shared_ptr<Blob<Dtype>>> & input_blobs,const std::set<std::string> &output_blob_names,int gpu_no);
 
   // For an already initialized net, CopyTrainedLayersFrom() copies the already
