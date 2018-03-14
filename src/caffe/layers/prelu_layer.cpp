@@ -10,13 +10,13 @@ namespace caffe {
 
 template <typename Dtype>
 void PReLULayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-    const vector<Blob<Dtype>*>& top) {
+    const vector<Blob<Dtype>*>&  /*top*/) {
   CHECK_GE(bottom[0]->num_axes(), 2)
       << "Number of axes of bottom blob must be >=2.";
   PReLUParameter prelu_param = this->layer_param().prelu_param();
   int channels = bottom[0]->channels();
   channel_shared_ = prelu_param.channel_shared();
-  if (this->blobs_.size() > 0) {
+  if (!this->blobs_.empty()) {
     LOG(INFO) << "Skipping parameter initialization";
   } else {
     this->blobs_.resize(1);

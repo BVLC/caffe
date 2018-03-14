@@ -7,7 +7,7 @@ namespace caffe {
 
 template <typename Dtype>
 void Normalize2Layer<Dtype>::LayerSetUp(const vector<Blob<Dtype> *> &bottom,
-                                        const vector<Blob<Dtype> *> &top) {
+                                        const vector<Blob<Dtype> *> & /*top*/) {
   CHECK_GE(bottom[0]->num_axes(), 2)
       << "Number of axes of bottom blob must be >=2.";
   NormalizeParameter2 norm_param = this->layer_param().norm_param();
@@ -15,7 +15,7 @@ void Normalize2Layer<Dtype>::LayerSetUp(const vector<Blob<Dtype> *> &bottom,
   eps_ = norm_param.eps();
   int channels = bottom[0]->channels();
   channel_shared_ = norm_param.channel_shared();
-  if (this->blobs_.size() > 0) {
+  if (!this->blobs_.empty()) {
     LOG(INFO) << "Skipping parameter initialization";
   } else {
     this->blobs_.resize(1);

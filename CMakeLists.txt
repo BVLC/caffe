@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.7)
+cmake_minimum_required(VERSION 3.9)
 if(POLICY CMP0046)
   cmake_policy(SET CMP0046 NEW)
 endif()
@@ -11,20 +11,20 @@ project(Caffe C CXX)
 
 set(CMAKE_CXX_STANDARD 14)
 
-#if(${CMAKE_VERSION} VERSION_GREATER "3.9.0")
-#  cmake_policy(SET CMP0069 NEW)
-#  include(CheckIPOSupported)
-#  check_ipo_supported(RESULT result OUTPUT output)
-#  if(result)
-#    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
-#  else()
-#    message(WARNING "IPO is not supported: ${output}")
-#  endif()
-#endif()
-
 IF (WIN32)
   SET(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
 ENDIF()
+
+SET(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+IF (NOT WIN32)
+    SET(CLANG-TIDY-PATH "/usr/bin/clang-tidy-7")
+ENDIF()
+
+IF (EXISTS "${CLANG-TIDY-PATH}")
+  SET(CMAKE_CXX_CLANG_TIDY "${CLANG-TIDY-PATH}" "-extra-arg-before=-std=c++17" "-analyze-temporary-dtors" "-checks=*,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-cppcoreguidelines-pro-type-reinterpret-cast,-cppcoreguidelines-pro-type-vararg,-readability-implicit-bool-cast,-google-readability-braces-around-statements,-cppcoreguidelines-pro-type-union-access,-readability-braces-around-statements,-cppcoreguidelines-pro-bounds-pointer-arithmetic,-google-readability-namespace-comments,-fuchsia-default-arguments,-hicpp-no-array-decay,-llvm-namespace-comment,-readability-implicit-bool-conversion,-modernize-pass-by-value,-fuchsia-overloaded-operator,-cert-err58-cpp,-hicpp-vararg")
+ENDIF()
+
+
 
 # ---[ Caffe version
 set(CAFFE_TARGET_VERSION "1.0.0" CACHE STRING "Caffe logical version")

@@ -12,7 +12,7 @@ template <typename Dtype>
 void ScaleLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   const ScaleParameter& param = this->layer_param_.scale_param();
-  if (bottom.size() == 1 && this->blobs_.size() > 0) {
+  if (bottom.size() == 1 && !this->blobs_.empty()) {
     LOG(INFO) << "Skipping parameter initialization";
   } else if (bottom.size() == 1) {
     // scale is a learned parameter; initialize it

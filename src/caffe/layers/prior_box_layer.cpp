@@ -8,8 +8,8 @@
 namespace caffe {
 
 template <typename Dtype>
-void PriorBoxLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {
+void PriorBoxLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>&  /*bottom*/,
+      const vector<Blob<Dtype>*>&  /*top*/) {
   const PriorBoxParameter& prior_box_param =
       this->layer_param_.prior_box_param();
   CHECK_GT(prior_box_param.min_size_size(), 0) << "must provide min_size.";
@@ -170,7 +170,7 @@ void PriorBoxLayer<Dtype>::Forward_const_cpu(const vector<Blob<Dtype>*>& bottom,
         // ymax
         top_data[idx++] = (center_y + box_height / 2.) / img_height;
 
-        if (max_sizes_.size() > 0) {
+        if (!max_sizes_.empty()) {
           CHECK_EQ(min_sizes_.size(), max_sizes_.size());
           int max_size_ = max_sizes_[s];
           // second prior: aspect_ratio = 1, size = sqrt(min_size * max_size)
