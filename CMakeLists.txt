@@ -47,6 +47,7 @@ caffe_option(PERFORMANCE_MONITORING "Build Caffe with PERFORMANCE_MONITORING " O
 caffe_option(CODE_COVERAGE "Build with code coverage instrumentation" OFF)
 caffe_option(CO_SIM "Build readonly cpu blob data/diff pycaffe interface" OFF)
 caffe_option(USE_MLSL "Build Caffe with Intel(r) Machine Learning Scaling Library for multinode training" ON)
+caffe_option(ICC_STATIC_BUILD "Build Intel Caffe static link with Intel compiler" OFF)
 
 # ---[ Dependencies
 include(cmake/MKLDNN.cmake)
@@ -94,6 +95,10 @@ if(UNIX OR APPLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fstack-protector -wd2196")
     # Auto enable SGD Fusion if use intel compiler
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DENABLE_SGD_FUSION")
+    # ICC static build
+    if(ICC_STATIC_BUILD)
+      set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -static-intel")
+    endif()
   endif()
   
   # Generic flags.

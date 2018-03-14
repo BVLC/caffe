@@ -5,6 +5,12 @@ function(Download_MKLDNN)
   set(MKLDNN_SOURCE_DIR ${MKLDNN_DIR}/src)
   set(MKLDNN_BUILD_DIR ${MKLDNN_DIR}/build)
   set(MKLDNN_INSTALL_DIR ${MKLDNN_DIR}/install CACHE PATH "Installation path of MKLDNN")
+  # Enable MKLDNN intel compiler static build
+  if(${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel" )
+    if(ICC_STATIC_BUILD)
+      set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -static-intel")
+    endif()
+  endif()
   execute_process(COMMAND cat mkldnn.commit
   		  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 		  OUTPUT_VARIABLE MKLDNN_COMMIT)
@@ -18,13 +24,13 @@ function(Download_MKLDNN)
  
   ExternalProject_add(MKLDNN_Build
                       SOURCE_DIR ${MKLDNN_SOURCE_DIR}
-                      CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${MKLDNN_INSTALL_DIR} -DMKLROOT=${MKL_ROOT_DIR}
+                      CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${MKLDNN_INSTALL_DIR} -DMKLROOT=${MKL_ROOT_DIR} -DCMAKE_SHARED_LINKER_FLAGS=${CMAKE_SHARED_LINKER_FLAGS}
 #--Download step
                       GIT_REPOSITORY https://github.com/01org/mkl-dnn.git
-		      GIT_TAG ${MKLDNN_COMMIT}
+                      GIT_TAG ${MKLDNN_COMMIT}
 #--Build step
                       BINARY_DIR ${MKLDNN_BUILD_DIR}
-                      BUILD_COMMAND cmake ${MKLDNN_SOURCE_DIR}
+                      BUILD_COMMAND cmake ${MKLDNN_SOURCE_DIR} 
 #--Install step
                       INSTALL_DIR ${MKLDNN_INSTALL_DIR}
                       INSTALL_COMMAND make install -j${NCORE}
