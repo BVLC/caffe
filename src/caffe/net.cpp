@@ -330,6 +330,16 @@ int Net<Dtype>::AppendBottom(const NetParameter &param, const int layer_id,
 }
 
 template <typename Dtype>
+void Net<Dtype>::ForwardFromTo(int start, int end) {
+  CHECK_GE(start, 0);
+  CHECK_LT(end, layers_.size());
+  for (int i = start; i <= end; ++i) {
+    layers_[i]->Forward(bottom_vecs_[i], top_vecs_[i]);
+  }
+  return;
+}
+
+template <typename Dtype>
 std::map<std::string, std::shared_ptr<Blob<Dtype>>> Net<Dtype>::ForwardConst(
     std::map<std::string, std::shared_ptr<Blob<Dtype>>> &input_blobs,
     const std::set<std::string> &output_blob_names, int gpu_no) {
