@@ -198,11 +198,12 @@ void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
             int wstart = pw * stride_w_ - pad_w_;
             int hend = min(hstart + kernel_h_, height_ + pad_h_);
             int wend = min(wstart + kernel_w_, width_ + pad_w_);
-            int pool_size = (hend - hstart) * (wend - wstart);
+            int pool_size;
             hstart = max(hstart, 0);
             wstart = max(wstart, 0);
             hend = min(hend, height_);
             wend = min(wend, width_);
+	    pool_size = (hend - hstart) * (wend - wstart);
             for (int h = hstart; h < hend; ++h) {
               for (int w = wstart; w < wend; ++w) {
                 top_data[ph * pooled_width_ + pw] +=
@@ -279,11 +280,12 @@ void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
             int wstart = pw * stride_w_ - pad_w_;
             int hend = min(hstart + kernel_h_, height_ + pad_h_);
             int wend = min(wstart + kernel_w_, width_ + pad_w_);
-            int pool_size = (hend - hstart) * (wend - wstart);
+            int pool_size;
             hstart = max(hstart, 0);
             wstart = max(wstart, 0);
             hend = min(hend, height_);
             wend = min(wend, width_);
+	    pool_size = (hend - hstart) * (wend - wstart);
             for (int h = hstart; h < hend; ++h) {
               for (int w = wstart; w < wend; ++w) {
                 bottom_diff[h * width_ + w] +=
