@@ -465,7 +465,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 160 (last added: labelsequenceaccuracy_param)
+// LayerParameter next available layer-specific ID: 161 (last added: swish_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -572,6 +572,7 @@ message LayerParameter {
   optional FocalLossParameter focal_loss_param = 156;
   optional SPPParameter spp_param = 132;
   optional SliceParameter slice_param = 126;
+  optional SwishParameter swish_param = 160;
   optional TanHParameter tanh_param = 127;
   optional SeLuParameter selu_param = 149;
   optional SeLuDropoutParameter selu_dropout_param = 150;
@@ -1799,6 +1800,15 @@ message FocalLossParameter {
   optional float alpha = 3 [default = 0.25];
   optional float gamma = 4 [default = 2.0];
 }    
+
+// Message that stores parameters used by SwishLayer
+message SwishParameter {
+  // Beta parameter for the Swish activation function
+  // Described in:
+  // Prajit Ramachandran, Barret Zoph, Quoc V. Le. (2017). Searching for
+  // Activation Functions. https://arxiv.org/abs/1710.05941v2
+  optional float beta = 1 [default = 1];
+}
 
 // Message that stores parameters used by TanHLayer
 message TanHParameter {
