@@ -5,8 +5,9 @@
 namespace caffe {
 
 template<typename Dtype, typename MItype, typename MOtype>
-void InputLayer<Dtype, MItype, MOtype>::LayerSetUp(const vector<Blob<MItype>*>& bottom,
-      const vector<Blob<MOtype>*>& top) {
+void InputLayer<Dtype, MItype, MOtype>::LayerSetUp(
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
   const int num_top = top.size();
   const InputParameter& param = this->layer_param_.input_param();
   const int num_shape = param.shape_size();
@@ -19,6 +20,7 @@ void InputLayer<Dtype, MItype, MOtype>::LayerSetUp(const vector<Blob<MItype>*>& 
       top[i]->Reshape(param.shape(shape_index));
     }
   }
+  this->InitializeQuantizers(bottom, top);
 }
 
 INSTANTIATE_CLASS_3T_GUARDED(InputLayer, (half_fp), (half_fp), (half_fp));

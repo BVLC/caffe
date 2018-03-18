@@ -6,8 +6,9 @@
 namespace caffe {
 
 template<typename Dtype, typename MItype, typename MOtype>
-void ExpLayer<Dtype, MItype, MOtype>::LayerSetUp(const vector<Blob<MItype>*>& bottom,
-      const vector<Blob<MOtype>*>& top) {
+void ExpLayer<Dtype, MItype, MOtype>::LayerSetUp(
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
   NeuronLayer<Dtype, MItype, MOtype>::LayerSetUp(bottom, top);
   const Dtype base = this->layer_param_.exp_param().base();
   if (base != Dtype(-1)) {
@@ -25,10 +26,13 @@ void ExpLayer<Dtype, MItype, MOtype>::LayerSetUp(const vector<Blob<MItype>*>& bo
   inner_scale_ = log_base * input_scale;
   outer_scale_ = (input_shift == Dtype(0)) ? Dtype(1) :
      ( (base != Dtype(-1)) ? pow(base, input_shift) : exp(input_shift) );
+
+  this->InitializeQuantizers(bottom, top);
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void ExpLayer<Dtype, MItype, MOtype>::Forward_cpu(const vector<Blob<MItype>*>& bottom,
+void ExpLayer<Dtype, MItype, MOtype>::Forward_cpu(
+    const vector<Blob<MItype>*>& bottom,
     const vector<Blob<MOtype>*>& top) {
   const int_tp count = bottom[0]->count();
   const Dtype* bottom_data = bottom[0]->cpu_data();

@@ -85,6 +85,10 @@ class OclDeviceProgram : public DeviceProgram {
   virtual string convert_type_uint16(int_tp vec_len, string src_val) const;
   virtual string convert_type_uint32(int_tp vec_len, string src_val) const;
   virtual string convert_type_uint64(int_tp vec_len, string src_val) const;
+  virtual string convert_type_int8(int_tp vec_len, string src_val) const;
+  virtual string convert_type_int16(int_tp vec_len, string src_val) const;
+  virtual string convert_type_int32(int_tp vec_len, string src_val) const;
+  virtual string convert_type_int64(int_tp vec_len, string src_val) const;
 
   virtual string helper_functions_half() const;
   virtual string helper_functions_float() const;

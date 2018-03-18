@@ -23,9 +23,11 @@ caffe_gemm(const CBLAS_TRANSPOSE trans_A, const CBLAS_TRANSPOSE trans_B,
            const int_tp M, const int_tp N, const int_tp K,
            const Dtype alpha, const Dtype* A, const Dtype* B,
            const Dtype beta, Dtype* C,
-           const QuantizerValues* a_quant = nullptr,
-           const QuantizerValues* b_quant = nullptr,
-           const QuantizerValues* c_quant = nullptr);
+           const QuantizerValues* const alpha_quant = nullptr,
+           const QuantizerValues* const a_quant = nullptr,
+           const QuantizerValues* const b_quant = nullptr,
+           const QuantizerValues* const beta_quant = nullptr,
+           const QuantizerValues* const c_quant = nullptr);
 
 template<typename Dtype>
 typename std::enable_if<float_is_same<Dtype>::value, void>::type
@@ -33,9 +35,11 @@ caffe_gemm(const CBLAS_TRANSPOSE trans_A, const CBLAS_TRANSPOSE trans_B,
            const int_tp M, const int_tp N, const int_tp K,
            const Dtype alpha, const Dtype* A, const Dtype* B,
            const Dtype beta, Dtype* C,
-           const QuantizerValues* a_quant = nullptr,
-           const QuantizerValues* b_quant = nullptr,
-           const QuantizerValues* c_quant = nullptr);
+           const QuantizerValues* const alpha_quant = nullptr,
+           const QuantizerValues* const a_quant = nullptr,
+           const QuantizerValues* const b_quant = nullptr,
+           const QuantizerValues* const beta_quant = nullptr,
+           const QuantizerValues* const c_quant = nullptr);
 
 template<typename Dtype>
 void caffe_gemv(const CBLAS_TRANSPOSE trans_A, const int_tp M,
@@ -119,7 +123,7 @@ Dtype caffe_dot(const int_tp n, const Dtype* x, const Dtype* y);
 
 template<typename Dtype>
 Dtype caffe_strided_dot(const int_tp n, const Dtype* x, const int_tp incx,
-                            const Dtype* y, const int_tp incy);
+                        const Dtype* y, const int_tp incy);
 
 // Returns the sum of the absolute values of the elements of vector x
 template<typename Dtype>

@@ -12,6 +12,10 @@ class Device;
 class DeviceProgram {
 
  public:
+  inline const Device* device() {
+    return device_;
+  }
+
   virtual bool Compile(bool load_cache, bool store_cache) = 0;
   virtual shared_ptr<DeviceKernel> GetKernel(string name) = 0;
 
@@ -76,6 +80,10 @@ class DeviceProgram {
   virtual string convert_type_uint16(int_tp vec_len, string src_val) const = 0;
   virtual string convert_type_uint32(int_tp vec_len, string src_val) const = 0;
   virtual string convert_type_uint64(int_tp vec_len, string src_val) const = 0;
+  virtual string convert_type_int8(int_tp vec_len, string src_val) const = 0;
+  virtual string convert_type_int16(int_tp vec_len, string src_val) const = 0;
+  virtual string convert_type_int32(int_tp vec_len, string src_val) const = 0;
+  virtual string convert_type_int64(int_tp vec_len, string src_val) const = 0;
 
   template<typename Dtype>
   string atomic_add(string source, string operand);

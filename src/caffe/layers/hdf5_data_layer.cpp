@@ -128,6 +128,8 @@ void HDF5DataLayer<Dtype, MItype, MOtype>::LayerSetUp(
     }
     top[i]->Reshape(top_shape);
   }
+
+  this->InitializeQuantizers(bottom, top);
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
@@ -197,7 +199,7 @@ void HDF5DataLayer<Dtype, MItype, MOtype>::Forward_cpu(
       data_copy_to_top<Dtype, MOtype>(data_dim,
           &hdf_blobs_[j]->cpu_data()[data_permutation_[current_row_]
             * data_dim], &top[j]->mutable_cpu_data()[i * data_dim],
-            this->top_quant_.get());
+            this->top_quants_[j].get());
     }
     Next();
   }

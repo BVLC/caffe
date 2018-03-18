@@ -11,19 +11,22 @@
 namespace caffe {
 
 template<typename Dtype, typename MItype, typename MOtype>
-void RNNLayer<Dtype, MItype, MOtype>::RecurrentInputBlobNames(vector<string>* names) const {
+void RNNLayer<Dtype, MItype, MOtype>::RecurrentInputBlobNames(
+    vector<string>* names) const {
   names->resize(1);
   (*names)[0] = "h_0";
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void RNNLayer<Dtype, MItype, MOtype>::RecurrentOutputBlobNames(vector<string>* names) const {
+void RNNLayer<Dtype, MItype, MOtype>::RecurrentOutputBlobNames(
+    vector<string>* names) const {
   names->resize(1);
   (*names)[0] = "h_" + format_int(this->T_);
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void RNNLayer<Dtype, MItype, MOtype>::RecurrentInputShapes(vector<BlobShape>* shapes) const {
+void RNNLayer<Dtype, MItype, MOtype>::RecurrentInputShapes(
+    vector<BlobShape>* shapes) const {
   const int num_output = this->layer_param_.recurrent_param().num_output();
   shapes->resize(1);
   (*shapes)[0].Clear();
@@ -33,13 +36,15 @@ void RNNLayer<Dtype, MItype, MOtype>::RecurrentInputShapes(vector<BlobShape>* sh
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void RNNLayer<Dtype, MItype, MOtype>::OutputBlobNames(vector<string>* names) const {
+void RNNLayer<Dtype, MItype, MOtype>::OutputBlobNames(
+    vector<string>* names) const {
   names->resize(1);
   (*names)[0] = "o";
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void RNNLayer<Dtype, MItype, MOtype>::FillUnrolledNet(NetParameter* net_param) const {
+void RNNLayer<Dtype, MItype, MOtype>::FillUnrolledNet(
+    NetParameter* net_param) const {
   const int num_output = this->layer_param_.recurrent_param().num_output();
   CHECK_GT(num_output, 0) << "num_output must be positive";
   const FillerParameter& weight_filler =

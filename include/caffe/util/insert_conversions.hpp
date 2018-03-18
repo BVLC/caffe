@@ -11,7 +11,7 @@ void InsertConversions(const NetParameter& param, NetParameter* param_convert);
 void ConfigureConversionLayer(const string& layer_name, const string& blob_name,
     const int_tp blob_idx, const float loss_weight,
     LayerParameter* convert_layer_param, DataType bottom_data_type,
-    DataType top_data_type, size_t quantizer_index);
+    DataType top_data_type, const QuantizerParameter* ref_quant_param);
 
 string ConversionLayerName(const string& layer_name, const string& blob_name,
     const int_tp blob_idx);

@@ -31,6 +31,8 @@ void ArgMaxLayer<Dtype, MItype, MOtype>::LayerSetUp(
   CHECK_LE(bottom[0]->count(1), type_max_integer_representable<MOtype>())
     << "flattened bottom blob dimension must be less than or equal to the "
         "highest representable integer of the top data type.";
+
+  this->InitializeQuantizers(bottom, top);
 }
 
 template<typename Dtype, typename MItype, typename MOtype>

@@ -40,7 +40,6 @@ void InnerProductLayer<Dtype, MItype, MOtype>::LayerSetUp(
       weight_shape[1] = K_;
     }
     this->blobs_[0].reset(new Blob<Dtype>(weight_shape, this->device_));
-    this->blobs_[0]->set_quant(this->blobs_quant_);
     // fill the weights (for float types only)
     if (is_float_type<Dtype>()) {
       shared_ptr<Filler<Dtype> > weight_filler(GetFiller<Dtype>(
@@ -51,7 +50,6 @@ void InnerProductLayer<Dtype, MItype, MOtype>::LayerSetUp(
     if (bias_term_) {
       vector<int_tp> bias_shape(1, N_);
       this->blobs_[1].reset(new Blob<Dtype>(bias_shape, this->device_));
-      this->blobs_[1]->set_quant(this->blobs_quant_);
       if (is_float_type<Dtype>()) {
         shared_ptr<Filler<Dtype> > bias_filler(GetFiller<Dtype>(
                 this->layer_param_.inner_product_param().bias_filler()));
@@ -60,6 +58,8 @@ void InnerProductLayer<Dtype, MItype, MOtype>::LayerSetUp(
     }
   }  // parameter initialization
   this->param_propagate_down_.resize(this->blobs_.size(), true);
+
+  this->InitializeQuantizers(bottom, top);
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
@@ -85,6 +85,11 @@ void InnerProductLayer<Dtype, MItype, MOtype>::Reshape(
   if (bias_term_) {
     vector<int_tp> bias_shape(1, M_);
     bias_multiplier_.Reshape(bias_shape);
+    bias_multiplier_qv_.scale = 1.0;
+    bias_multiplier_qv_.zero = 0.0;
+    bias_multiplier_qv_.one = 1.0;
+    bias_multiplier_qv_.max = 1.0;
+    bias_multiplier_qv_.min = 0.0;
     caffe_set(M_, Dtype(1), bias_multiplier_.mutable_cpu_data());
   }
 }
@@ -96,18 +101,20 @@ void InnerProductLayer<Dtype, MItype, MOtype>::Forward_cpu(
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = top[0]->mutable_cpu_data();
   const Dtype* weight = this->blobs_[0]->cpu_data();
+
   caffe_gemm<Dtype>(CblasNoTrans, transpose_ ? CblasNoTrans : CblasTrans,
       M_, N_, K_, Dtype(1), bottom_data, weight, Dtype(0), top_data,
-      &(this->top_quant_->out_quantizer_values()),
-      &(this->blobs_quant_->out_quantizer_values()),
-      &(this->bottom_quant_->in_quantizer_values()));
+      &(this->bottom_quants_[0]->out_quantizer_values()),
+      &(this->blobs_quants_[0]->out_quantizer_values()),
+      &(this->top_quants_[0]->in_quantizer_values()));
+
   if (bias_term_) {
     caffe_gemm<Dtype>(CblasNoTrans, CblasNoTrans, M_, N_, 1, Dtype(1),
                       bias_multiplier_.cpu_data(), this->blobs_[1]->cpu_data(),
                       Dtype(1), top_data,
-                      &(this->top_quant_->out_quantizer_values()),
-                      &(this->blobs_quant_->out_quantizer_values()),
-                      &(this->bottom_quant_->in_quantizer_values()));
+                      &bias_multiplier_qv_,
+                      &(this->blobs_quants_[1]->out_quantizer_values()),
+                      &(this->top_quants_[0]->in_quantizer_values()));
   }
 }
 

@@ -10,6 +10,7 @@ void ReductionLayer<Dtype, MItype, MOtype>::LayerSetUp(
       const vector<Blob<MItype>*>& bottom,
       const vector<Blob<MOtype>*>& top) {
   op_ = this->layer_param_.reduction_param().operation();
+  this->InitializeQuantizers(bottom, top);
 }
 
 template<typename Dtype, typename MItype, typename MOtype>

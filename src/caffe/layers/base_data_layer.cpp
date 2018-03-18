@@ -18,8 +18,9 @@ BaseDataLayer<Dtype, MItype, MOtype>::BaseDataLayer(const LayerParameter& param)
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void BaseDataLayer<Dtype, MItype, MOtype>::LayerSetUp(const vector<Blob<MItype>*>& bottom,
-      const vector<Blob<MOtype>*>& top) {
+void BaseDataLayer<Dtype, MItype, MOtype>::LayerSetUp(
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
   if (top.size() == 1) {
     output_labels_ = false;
   } else {
@@ -31,6 +32,7 @@ void BaseDataLayer<Dtype, MItype, MOtype>::LayerSetUp(const vector<Blob<MItype>*
   data_transformer_->InitRand();
   // The subclasses should setup the size of bottom and top
   DataLayerSetUp(bottom, top);
+  this->InitializeQuantizers(bottom, top);
 }
 
 template<typename Dtype, typename MItype, typename MOtype>

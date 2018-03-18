@@ -6,8 +6,9 @@
 namespace caffe {
 
 template<typename Dtype, typename MItype, typename MOtype>
-void CuDNNReLULayer<Dtype, MItype, MOtype>::LayerSetUp(const vector<Blob<MItype>*>& bottom,
-      const vector<Blob<MOtype>*>& top) {
+void CuDNNReLULayer<Dtype, MItype, MOtype>::LayerSetUp(
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
   ReLULayer<Dtype, MItype, MOtype>::LayerSetUp(bottom, top);
   // initialize cuDNN
   CUDNN_CHECK(cudnnCreate(&handle_));
@@ -18,8 +19,9 @@ void CuDNNReLULayer<Dtype, MItype, MOtype>::LayerSetUp(const vector<Blob<MItype>
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void CuDNNReLULayer<Dtype, MItype, MOtype>::Reshape(const vector<Blob<MItype>*>& bottom,
-      const vector<Blob<MOtype>*>& top) {
+void CuDNNReLULayer<Dtype, MItype, MOtype>::Reshape(
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
   ReLULayer<Dtype, MItype, MOtype>::Reshape(bottom, top);
   cudnn::setTensorNdDesc<Dtype>(&bottom_desc_, bottom[0]->shape().size(),
                                 &(bottom[0]->shape()[0]));

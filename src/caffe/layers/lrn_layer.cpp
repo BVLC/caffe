@@ -64,6 +64,7 @@ void LRNLayer<Dtype, MItype, MOtype>::LayerSetUp(
     product_layer_.reset(new EltwiseLayer<Dtype, MItype, MOtype>(product_param));
     product_layer_->SetUp(product_bottom_vec_, top);
   }
+  this->InitializeQuantizers(bottom, top);
 }
 
 template<typename Dtype, typename MItype, typename MOtype>

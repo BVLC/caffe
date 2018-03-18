@@ -9,8 +9,7 @@ namespace caffe {
 
 template<typename Dtype, typename MItype, typename MOtype>
 void SoftmaxWithLossLayer<Dtype, MItype, MOtype>::LayerSetUp(
-    const vector<Blob<MItype>*>& bottom,
-    const vector<Blob<MOtype>*>& top) {
+    const vector<Blob<MItype>*>& bottom, const vector<Blob<MOtype>*>& top) {
   LossLayer<Dtype, MItype, MOtype>::LayerSetUp(bottom, top);
   LayerParameter softmax_param(this->layer_param_);
   softmax_param.set_type("Softmax");
@@ -39,8 +38,7 @@ void SoftmaxWithLossLayer<Dtype, MItype, MOtype>::LayerSetUp(
 
 template<typename Dtype, typename MItype, typename MOtype>
 void SoftmaxWithLossLayer<Dtype, MItype, MOtype>::Reshape(
-    const vector<Blob<MItype>*>& bottom,
-    const vector<Blob<MOtype>*>& top) {
+    const vector<Blob<MItype>*>& bottom, const vector<Blob<MOtype>*>& top) {
   LossLayer<Dtype, MItype, MOtype>::Reshape(bottom, top);
   softmax_layer_->Reshape(softmax_bottom_vec_, softmax_top_vec_);
   softmax_axis_ =

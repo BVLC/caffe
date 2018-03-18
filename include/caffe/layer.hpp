@@ -216,6 +216,11 @@ class LayerBase {
    * @brief Returns the vector of all initialized quantizers in the layers.
    */
   virtual vector<shared_ptr<QuantizerBase> > get_all_quantizers() = 0;
+  virtual shared_ptr<QuantizerBase> get_net_quantizer() = 0;
+  virtual vector<shared_ptr<QuantizerBase> > get_blobs_quantizers() = 0;
+  virtual vector<shared_ptr<QuantizerBase> > get_bottom_quantizers() = 0;
+  virtual vector<shared_ptr<QuantizerBase> > get_top_quantizers() = 0;
+
 
  protected:
   LayerBase(const LayerParameter& param) {
@@ -235,7 +240,7 @@ class LayerBase {
   vector<bool> param_propagate_down_;
 
   shared_ptr<QuantizerBase> net_quant_;
-  shared_ptr<QuantizerBase> blobs_quant_;
+  vector<shared_ptr<QuantizerBase> > blobs_quants_;
 };
 
 /**
@@ -257,56 +262,89 @@ class Layer : public LayerBase {
    * layer.
    */
   explicit Layer(const LayerParameter& param) : LayerBase(param) {
-    if (layer_param_.has_net_quantizer()) {
-      net_quant_ = CreateQuantizer(layer_param_.net_quantizer());
-    } else {
-      QuantizerParameter quant_param;
-      quant_param.set_device(this->device_->id());
-      quant_param.set_input_data_type(proto_data_type<float>());
-      quant_param.set_output_data_type(layer_param_.top_data_type());
-      quant_param.set_index(layer_param_.quantizer_index());
-      net_quant_ = make_shared<Quantizer<float, MOtype> >(quant_param);
-    }
-    if (layer_param_.has_blobs_quantizer()) {
-      blobs_quant_ = CreateQuantizer(layer_param_.blobs_quantizer());
-    } else {
-      QuantizerParameter quant_param;
-      quant_param.set_device(this->device_->id());
-      quant_param.set_input_data_type(proto_data_type<float>());
-      quant_param.set_output_data_type(layer_param_.compute_data_type());
-      quant_param.set_index(layer_param_.quantizer_index());
-      blobs_quant_ = make_shared<Quantizer<float, Dtype> >(quant_param);
-    }
-    if (layer_param_.has_bottom_quantizer()) {
-      bottom_quant_ = make_shared<Quantizer<MItype, Dtype> >(
-          layer_param_.bottom_quantizer());
-    } else {
-      QuantizerParameter quant_param;
-      quant_param.set_device(this->device_->id());
-      quant_param.set_input_data_type(layer_param_.bottom_data_type());
-      quant_param.set_output_data_type(layer_param_.compute_data_type());
-      quant_param.set_index(layer_param_.quantizer_index());
-      bottom_quant_ = make_shared<Quantizer<MItype, Dtype> >(quant_param);
-    }
-    if (layer_param_.has_top_quantizer()) {
-      top_quant_ = make_shared<Quantizer<Dtype, MOtype> >(
-          layer_param_.top_quantizer());
-    } else {
-      QuantizerParameter quant_param;
-      quant_param.set_device(this->device_->id());
-      quant_param.set_input_data_type(layer_param_.compute_data_type());
-      quant_param.set_output_data_type(layer_param_.top_data_type());
-      quant_param.set_index(layer_param_.quantizer_index());
-      top_quant_ = make_shared<Quantizer<Dtype, MOtype> >(quant_param);
-    }
-
     if (layer_param_.blobs_size() > 0) {
       blobs_.resize(layer_param_.blobs_size());
       for (int_tp i = 0; i < layer_param_.blobs_size(); ++i) {
         blobs_[i].reset(new Blob<Dtype>(device_));
-        blobs_[i]->set_quant(blobs_quant_);
         blobs_[i]->FromProto(layer_param_.blobs(i));
       }
+    }
+  }
+
+  void InitializeQuantizers(const vector<Blob<MItype>*>& bottom,
+                            const vector<Blob<MOtype>*>& top) {
+    net_quant_ = nullptr;
+    blobs_quants_.clear();
+    bottom_quants_.clear();
+    top_quants_.clear();
+
+
+    QuantizerParameter net_quant_param;
+    if (layer_param_.has_net_quantizer()) {
+      net_quant_param.CopyFrom(layer_param_.net_quantizer());
+    } else {
+      net_quant_param.set_input_data_type(proto_data_type<float>());
+    }
+    net_quant_param.set_device(this->device_->id());
+    net_quant_param.set_output_data_type(layer_param_.top_data_type());
+    if (!net_quant_param.has_name()) {
+      net_quant_param.set_name(this->layer_param_.name() + "_net_quant");
+    }
+    net_quant_ = CreateQuantizer(net_quant_param);
+
+    for (size_t i = 0; i < blobs_.size(); ++i) {
+      QuantizerParameter quant_param;
+      if (layer_param_.blobs_quantizer_size() > i) {
+        quant_param.CopyFrom(layer_param_.blobs_quantizer(i));
+      } else {
+        quant_param.set_input_data_type(proto_data_type<float>());
+      }
+      quant_param.set_input_data_type(net_quant_param.input_data_type());
+      quant_param.set_device(this->device_->id());
+      quant_param.set_output_data_type(layer_param_.compute_data_type());
+      if (!quant_param.has_name()) {
+        quant_param.set_name(this->layer_param_.name()
+                                    + "_blobs_" + std::to_string(i) + "_quant");
+      }
+      blobs_quants_.push_back(CreateQuantizer(quant_param));
+    }
+
+    if (blobs_quants_.size() > 0) {
+      for (size_t i = 0; i < blobs_.size(); ++i) {
+        blobs_[i]->set_quant(blobs_quants_[i % blobs_quants_.size()]);
+      }
+    }
+
+    for (size_t i = 0; i < bottom.size(); ++i) {
+      QuantizerParameter quant_param;
+      if (layer_param_.bottom_quantizer_size() > i) {
+        quant_param.CopyFrom(layer_param_.bottom_quantizer(i));
+      }
+      quant_param.set_device(this->device_->id());
+      quant_param.set_input_data_type(layer_param_.bottom_data_type());
+      quant_param.set_output_data_type(layer_param_.compute_data_type());
+      if (!quant_param.has_name()) {
+        quant_param.set_name(layer_param_.bottom_size() > i ?
+            layer_param_.bottom(i) : this->layer_param_.name() + "_bottom_"
+            + std::to_string(i) + "_quant");
+      }
+      bottom_quants_.push_back(
+          make_shared<Quantizer<MItype, Dtype> >(quant_param));
+    }
+    for (size_t i = 0; i < top.size(); ++i) {
+      QuantizerParameter quant_param;
+      if (layer_param_.top_quantizer_size() > i) {
+        quant_param.CopyFrom(layer_param_.top_quantizer(i));
+      }
+      quant_param.set_device(this->device_->id());
+      quant_param.set_input_data_type(layer_param_.compute_data_type());
+      quant_param.set_output_data_type(layer_param_.top_data_type());
+      if (!quant_param.has_name()) {
+        quant_param.set_name(layer_param_.bottom_size() > i ?
+            layer_param_.top(i) : this->layer_param_.name() + "_top_"
+            + std::to_string(i) + "_quant");      }
+      top_quants_.push_back(
+          make_shared<Quantizer<Dtype, MOtype> >(quant_param));
     }
   }
 
@@ -366,6 +404,7 @@ class Layer : public LayerBase {
    */
   virtual void LayerSetUp(const vector<Blob<MItype>*>& bottom,
                           const vector<Blob<MOtype>*>& top) {
+    this->InitializeQuantizers(bottom, top);
   }
 
   virtual void LayerSetUp(const vector<BlobBase*>& bottom,
@@ -503,19 +542,46 @@ class Layer : public LayerBase {
     return blob_base_vec;
   }
 
+  /**
+   * @brief Returns all quantizers used in this layer
+   */
   virtual vector<shared_ptr<QuantizerBase> > get_all_quantizers() {
     vector<shared_ptr<QuantizerBase> > quant_base_vec;
     if (this->net_quant_ != nullptr) {
       quant_base_vec.push_back(this->net_quant_);
     }
-    if (this->blobs_quant_ != nullptr) {
-      quant_base_vec.push_back(this->blobs_quant_);
+    for (size_t i = 0; i < blobs_quants_.size(); ++i) {
+      quant_base_vec.push_back(this->blobs_quants_[i]);
     }
-    if (this->bottom_quant_ != nullptr) {
-      quant_base_vec.push_back(this->bottom_quant_);
+    for (size_t i = 0; i < bottom_quants_.size(); ++i) {
+      quant_base_vec.push_back(this->bottom_quants_[i]);
     }
-    if (this->top_quant_ != nullptr) {
-      quant_base_vec.push_back(this->top_quant_);
+    for (size_t i = 0; i < top_quants_.size(); ++i) {
+      quant_base_vec.push_back(this->top_quants_[i]);
+    }
+    return quant_base_vec;
+  }
+  virtual shared_ptr<QuantizerBase> get_net_quantizer() {
+    return net_quant_;
+  }
+  virtual vector<shared_ptr<QuantizerBase> > get_blobs_quantizers() {
+    vector<shared_ptr<QuantizerBase> > quant_base_vec;
+    for (size_t i = 0; i < blobs_quants_.size(); ++i) {
+      quant_base_vec.push_back(this->blobs_quants_[i]);
+    }
+    return quant_base_vec;
+  }
+  virtual vector<shared_ptr<QuantizerBase> > get_bottom_quantizers() {
+    vector<shared_ptr<QuantizerBase> > quant_base_vec;
+    for (size_t i = 0; i < bottom_quants_.size(); ++i) {
+      quant_base_vec.push_back(this->bottom_quants_[i]);
+    }
+    return quant_base_vec;
+  }
+  virtual vector<shared_ptr<QuantizerBase> > get_top_quantizers() {
+    vector<shared_ptr<QuantizerBase> > quant_base_vec;
+    for (size_t i = 0; i < top_quants_.size(); ++i) {
+      quant_base_vec.push_back(this->top_quants_[i]);
     }
     return quant_base_vec;
   }
@@ -556,8 +622,8 @@ class Layer : public LayerBase {
   vector<Dtype> loss_;
 
   /** Quantizers */
-  shared_ptr<Quantizer<MItype, Dtype> > bottom_quant_;
-  shared_ptr<Quantizer<Dtype, MOtype> > top_quant_;
+  vector<shared_ptr<Quantizer<MItype, Dtype> > > bottom_quants_;
+  vector<shared_ptr<Quantizer<Dtype, MOtype> > > top_quants_;
 
   /** Device program */
   shared_ptr<DeviceProgram> device_program_;
@@ -680,8 +746,10 @@ inline Dtype Layer<Dtype, MItype, MOtype>::Forward(
   Dtype loss = 0;
   Reshape(bottom, top);
   for (int_tp bottom_id = 0; bottom_id < bottom.size(); ++bottom_id) {
-    bottom_quant_->Observe_in(bottom[bottom_id]->count(),
-                              bottom[bottom_id]->data());
+    if (bottom_quants_.size() > 0) {
+      bottom_quants_[bottom_id % bottom_quants_.size()]
+            ->Observe_in(bottom[bottom_id]->count(), bottom[bottom_id]->data());
+    }
   }
   switch (Caffe::mode()) {
     case Caffe::CPU:
@@ -718,12 +786,16 @@ inline Dtype Layer<Dtype, MItype, MOtype>::Forward(
     LOG(FATAL) << "Unknown caffe mode.";
   }
   for (int_tp top_id = 0; top_id < top.size(); ++top_id) {
-    top_quant_->Observe_out(top[top_id]->count(),
-                            top[top_id]->data());
+    if (top_quants_.size() > 0) {
+      top_quants_[top_id % top_quants_.size()]
+                       ->Observe_out(top[top_id]->count(), top[top_id]->data());
+    }
   }
   for (int_tp blob_id = 0; blob_id < blobs_.size(); ++blob_id) {
-    blobs_quant_->Observe_out(blobs_[blob_id]->count(),
-                              blobs_[blob_id]->data());
+    if (blobs_quants_.size() > 0) {
+      blobs_quants_[blob_id % blobs_quants_.size()]
+               ->Observe_out(blobs_[blob_id]->count(), blobs_[blob_id]->data());
+    }
   }
   return loss;
 }
@@ -734,7 +806,10 @@ inline void Layer<Dtype, MItype, MOtype>::Backward(
                       const vector<bool>& propagate_down,
                       const vector<Blob<MItype>*>& bottom) {
   for (int_tp top_id = 0; top_id < top.size(); ++top_id) {
-    top_quant_->Observe_out(top[top_id]->count(), top[top_id]->diff());
+    if (top_quants_.size() > 0) {
+      top_quants_[top_id % top_quants_.size()]
+                       ->Observe_out(top[top_id]->count(), top[top_id]->diff());
+    }
   }
   switch (Caffe::mode()) {
     case Caffe::CPU:
@@ -747,12 +822,16 @@ inline void Layer<Dtype, MItype, MOtype>::Backward(
       LOG(FATAL)<< "Unknown caffe mode.";
   }
   for (int_tp bottom_id = 0; bottom_id < bottom.size(); ++bottom_id) {
-    bottom_quant_->Observe_in(bottom[bottom_id]->count(),
-                              bottom[bottom_id]->diff());
+    if (top_quants_.size() > 0) {
+      bottom_quants_[bottom_id % bottom_quants_.size()]
+            ->Observe_in(bottom[bottom_id]->count(), bottom[bottom_id]->diff());
+    }
   }
   for (int_tp blob_id = 0; blob_id < blobs_.size(); ++blob_id) {
-    blobs_quant_->Observe_out(blobs_[blob_id]->count(),
-                              blobs_[blob_id]->diff());
+    if (blobs_quants_.size() > 0) {
+      blobs_quants_[blob_id % blobs_quants_.size()]
+               ->Observe_out(blobs_[blob_id]->count(), blobs_[blob_id]->diff());
+    }
   }
 }
 
@@ -771,10 +850,10 @@ void Layer<Dtype, MItype, MOtype>::ToProto(
 EXTERN_CLASS_3T_GUARDED(Layer, (half_fp), PROTO_TYPES, PROTO_TYPES);
 EXTERN_CLASS_3T_GUARDED(Layer, (float), PROTO_TYPES, PROTO_TYPES);
 EXTERN_CLASS_3T_GUARDED(Layer, (double), PROTO_TYPES, PROTO_TYPES);
-EXTERN_CLASS_3T_GUARDED(Layer, (int8_t), PROTO_TYPES, PROTO_TYPES);
-EXTERN_CLASS_3T_GUARDED(Layer, (int16_t), PROTO_TYPES, PROTO_TYPES);
-EXTERN_CLASS_3T_GUARDED(Layer, (int32_t), PROTO_TYPES, PROTO_TYPES);
-EXTERN_CLASS_3T_GUARDED(Layer, (int64_t), PROTO_TYPES, PROTO_TYPES);
+EXTERN_CLASS_3T_GUARDED(Layer, (uint8_t), PROTO_TYPES, PROTO_TYPES);
+EXTERN_CLASS_3T_GUARDED(Layer, (uint16_t), PROTO_TYPES, PROTO_TYPES);
+EXTERN_CLASS_3T_GUARDED(Layer, (uint32_t), PROTO_TYPES, PROTO_TYPES);
+EXTERN_CLASS_3T_GUARDED(Layer, (uint64_t), PROTO_TYPES, PROTO_TYPES);
 
 }  // namespace caffe
 

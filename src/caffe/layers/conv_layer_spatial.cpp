@@ -104,7 +104,6 @@ void ConvolutionLayerSpatial<Dtype>::LayerSetUp(
   if (hasCacheDir != true) {
     std::cout << "Failed to create cache directory,"
               << "will tune again for next running" << std::endl;
-    return;
   }
 }
 

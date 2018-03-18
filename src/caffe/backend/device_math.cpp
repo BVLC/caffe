@@ -111,27 +111,47 @@ void Device::gemm(const CBLAS_TRANSPOSE trans_a, const CBLAS_TRANSPOSE trans_b,
                   const uint_tp m, const uint_tp n, const uint_tp k,
                   const half_fp alpha, vptr<const half_fp> a,
                   vptr<const half_fp> b,
-                  const half_fp beta, vptr<half_fp> c) {
-  this->gemm_half(trans_a, trans_b, m, n, k, alpha, a, b, beta, c);
+                  const half_fp beta, vptr<half_fp> c,
+                  const QuantizerValues* const alpha_quant,
+                  const QuantizerValues* const a_quant,
+                  const QuantizerValues* const b_quant,
+                  const QuantizerValues* const beta_quant,
+                  const QuantizerValues* const c_quant) {
+  this->gemm_half(trans_a, trans_b, m, n, k, alpha, a, b, beta, c,
+                  alpha_quant, a_quant, b_quant, beta_quant, c_quant);
 }
 template<>
 void Device::gemv(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
                   const uint_tp n, const half_fp alpha,
                   vptr<const half_fp> a,
                   vptr<const half_fp> x, const half_fp beta,
-                  vptr<half_fp> y) {
-  this->gemv_half(trans_a, m, n, alpha, a, x, beta, y);
+                  vptr<half_fp> y,
+                  const QuantizerValues* const alpha_quant,
+                  const QuantizerValues* const a_quant,
+                  const QuantizerValues* const x_quant,
+                  const QuantizerValues* const beta_quant,
+                  const QuantizerValues* const y_quant) {
+  this->gemv_half(trans_a, m, n, alpha, a, x, beta, y,
+                  alpha_quant, a_quant, x_quant, beta_quant, y_quant);
 }
 template<>
 void Device::axpy(const uint_tp n, const half_fp alpha,
-                  vptr<const half_fp> x, vptr<half_fp> y) {
-  this->axpy_half(n, alpha, x, y);
+                  vptr<const half_fp> x, vptr<half_fp> y,
+                  const QuantizerValues* const alpha_quant,
+                  const QuantizerValues* const x_quant,
+                  const QuantizerValues* const y_quant) {
+  this->axpy_half(n, alpha, x, y, alpha_quant, x_quant, y_quant);
 }
 template<>
 void Device::axpby(const uint_tp n, const half_fp alpha,
                    vptr<const half_fp> x,
-                   const half_fp beta, vptr<half_fp> y) {
-  this->axpby_half(n, alpha, x, beta, y);
+                   const half_fp beta, vptr<half_fp> y,
+                   const QuantizerValues* const alpha_quant,
+                   const QuantizerValues* const x_quant,
+                   const QuantizerValues* const beta_quant,
+                   const QuantizerValues* const y_quant) {
+  this->axpby_half(n, alpha, x, beta, y, alpha_quant, x_quant, beta_quant,
+                   y_quant);
 }
 template<>
 void Device::dot(const uint_tp n, vptr<const half_fp> x,
@@ -160,26 +180,46 @@ template<>
 void Device::gemm(const CBLAS_TRANSPOSE trans_a, const CBLAS_TRANSPOSE trans_b,
                   const uint_tp m, const uint_tp n, const uint_tp k,
                   const float alpha, vptr<const float> a,
-                  vptr<const float> b, const float beta, vptr<float> c) {
-  this->gemm_float(trans_a, trans_b, m, n, k, alpha, a, b, beta, c);
+                  vptr<const float> b, const float beta, vptr<float> c,
+                  const QuantizerValues* const alpha_quant,
+                  const QuantizerValues* const a_quant,
+                  const QuantizerValues* const b_quant,
+                  const QuantizerValues* const beta_quant,
+                  const QuantizerValues* const c_quant) {
+  this->gemm_float(trans_a, trans_b, m, n, k, alpha, a, b, beta, c,
+                   alpha_quant, a_quant, b_quant, beta_quant, c_quant);
 }
 template<>
 void Device::gemv(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
                   const uint_tp n, const float alpha,
                   vptr<const float> a,
                   vptr<const float> x, const float beta,
-                  vptr<float> y) {
-  this->gemv_float(trans_a, m, n, alpha, a, x, beta, y);
+                  vptr<float> y,
+                  const QuantizerValues* const alpha_quant,
+                  const QuantizerValues* const a_quant,
+                  const QuantizerValues* const x_quant,
+                  const QuantizerValues* const beta_quant,
+                  const QuantizerValues* const y_quant) {
+  this->gemv_float(trans_a, m, n, alpha, a, x, beta, y,
+                   alpha_quant, a_quant, x_quant, beta_quant, y_quant);
 }
 template<>
 void Device::axpy(const uint_tp n, const float alpha,
-                  vptr<const float> x, vptr<float> y) {
-  this->axpy_float(n, alpha, x, y);
+                  vptr<const float> x, vptr<float> y,
+                  const QuantizerValues* const alpha_quant,
+                  const QuantizerValues* const x_quant,
+                  const QuantizerValues* const y_quant) {
+  this->axpy_float(n, alpha, x, y, alpha_quant, x_quant, y_quant);
 }
 template<>
 void Device::axpby(const uint_tp n, const float alpha, vptr<const float> x,
-                   const float beta, vptr<float> y) {
-  this->axpby_float(n, alpha, x, beta, y);
+                   const float beta, vptr<float> y,
+                   const QuantizerValues* const alpha_quant,
+                   const QuantizerValues* const x_quant,
+                   const QuantizerValues* const beta_quant,
+                   const QuantizerValues* const y_quant) {
+  this->axpby_float(n, alpha, x, beta, y, alpha_quant, x_quant, beta_quant,
+                    y_quant);
 }
 template<>
 void Device::dot(const uint_tp n, vptr<const float> x, vptr<const float> y,
@@ -206,27 +246,47 @@ template<>
 void Device::gemm(const CBLAS_TRANSPOSE trans_a, const CBLAS_TRANSPOSE trans_b,
                   const uint_tp m, const uint_tp n, const uint_tp k,
                   const double alpha, vptr<const double> a,
-                  vptr<const double> b, const double beta, vptr<double> c) {
-  this->gemm_double(trans_a, trans_b, m, n, k, alpha, a, b, beta, c);
+                  vptr<const double> b, const double beta, vptr<double> c,
+                  const QuantizerValues* const alpha_quant,
+                  const QuantizerValues* const a_quant,
+                  const QuantizerValues* const b_quant,
+                  const QuantizerValues* const beta_quant,
+                  const QuantizerValues* const c_quant) {
+  this->gemm_double(trans_a, trans_b, m, n, k, alpha, a, b, beta, c,
+                    alpha_quant, a_quant, b_quant, beta_quant, c_quant);
 }
 template<>
 void Device::gemv(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
                   const uint_tp n, const double alpha,
                   vptr<const double> a,
                   vptr<const double> x, const double beta,
-                  vptr<double> y) {
-  this->gemv_double(trans_a, m, n, alpha, a, x, beta, y);
+                  vptr<double> y,
+                  const QuantizerValues* const alpha_quant,
+                  const QuantizerValues* const a_quant,
+                  const QuantizerValues* const x_quant,
+                  const QuantizerValues* const beta_quant,
+                  const QuantizerValues* const y_quant) {
+  this->gemv_double(trans_a, m, n, alpha, a, x, beta, y,
+                    alpha_quant, a_quant, x_quant, beta_quant, y_quant);
 }
 template<>
 void Device::axpy(const uint_tp n, const double alpha,
-                  vptr<const double> x, vptr<double> y) {
-  this->axpy_double(n, alpha, x, y);
+                  vptr<const double> x, vptr<double> y,
+                  const QuantizerValues* const alpha_quant,
+                  const QuantizerValues* const x_quant,
+                  const QuantizerValues* const y_quant) {
+  this->axpy_double(n, alpha, x, y, alpha_quant, x_quant, y_quant);
 }
 template<>
 void Device::axpby(const uint_tp n, const double alpha,
                    vptr<const double> x,
-                   const double beta, vptr<double> y) {
-  this->axpby_double(n, alpha, x, beta, y);
+                   const double beta, vptr<double> y,
+                   const QuantizerValues* const alpha_quant,
+                   const QuantizerValues* const x_quant,
+                   const QuantizerValues* const beta_quant,
+                   const QuantizerValues* const y_quant) {
+  this->axpby_double(n, alpha, x, beta, y, alpha_quant, x_quant,
+                     beta_quant, y_quant);
 }
 template<>
 void Device::dot(const uint_tp n, vptr<const double> x, vptr<const double> y,
@@ -253,27 +313,47 @@ template<>
 void Device::gemm(const CBLAS_TRANSPOSE trans_a, const CBLAS_TRANSPOSE trans_b,
                   const uint_tp m, const uint_tp n, const uint_tp k,
                   const uint8_t alpha, vptr<const uint8_t> a,
-                  vptr<const uint8_t> b, const uint8_t beta, vptr<uint8_t> c) {
-  this->gemm_uint8(trans_a, trans_b, m, n, k, alpha, a, b, beta, c);
+                  vptr<const uint8_t> b, const uint8_t beta, vptr<uint8_t> c,
+                  const QuantizerValues* const alpha_quant,
+                  const QuantizerValues* const a_quant,
+                  const QuantizerValues* const b_quant,
+                  const QuantizerValues* const beta_quant,
+                  const QuantizerValues* const c_quant) {
+  this->gemm_uint8(trans_a, trans_b, m, n, k, alpha, a, b, beta, c,
+                   alpha_quant, a_quant, b_quant, beta_quant, c_quant);
 }
 template<>
 void Device::gemv(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
                   const uint_tp n, const uint8_t alpha,
                   vptr<const uint8_t> a,
                   vptr<const uint8_t> x, const uint8_t beta,
-                  vptr<uint8_t> y) {
-  this->gemv_uint8(trans_a, m, n, alpha, a, x, beta, y);
+                  vptr<uint8_t> y,
+                  const QuantizerValues* const alpha_quant,
+                  const QuantizerValues* const a_quant,
+                  const QuantizerValues* const x_quant,
+                  const QuantizerValues* const beta_quant,
+                  const QuantizerValues* const y_quant) {
+  this->gemv_uint8(trans_a, m, n, alpha, a, x, beta, y,
+                   alpha_quant, a_quant, x_quant, beta_quant, y_quant);
 }
 template<>
 void Device::axpy(const uint_tp n, const uint8_t alpha,
-                  vptr<const uint8_t> x, vptr<uint8_t> y) {
-  this->axpy_uint8(n, alpha, x, y);
+                  vptr<const uint8_t> x, vptr<uint8_t> y,
+                  const QuantizerValues* const alpha_quant,
+                  const QuantizerValues* const x_quant,
+                  const QuantizerValues* const y_quant) {
+  this->axpy_uint8(n, alpha, x, y, alpha_quant, x_quant, y_quant);
 }
 template<>
 void Device::axpby(const uint_tp n, const uint8_t alpha,
                    vptr<const uint8_t> x,
-                   const uint8_t beta, vptr<uint8_t> y) {
-  this->axpby_uint8(n, alpha, x, beta, y);
+                   const uint8_t beta, vptr<uint8_t> y,
+                   const QuantizerValues* const alpha_quant,
+                   const QuantizerValues* const x_quant,
+                   const QuantizerValues* const beta_quant,
+                   const QuantizerValues* const y_quant) {
+  this->axpby_uint8(n, alpha, x, beta, y, alpha_quant, x_quant, beta_quant,
+                    y_quant);
 }
 template<>
 void Device::dot(const uint_tp n, vptr<const uint8_t> x, vptr<const uint8_t> y,
@@ -300,31 +380,52 @@ template<>
 void Device::gemm(const CBLAS_TRANSPOSE trans_a, const CBLAS_TRANSPOSE trans_b,
                   const uint_tp m, const uint_tp n, const uint_tp k,
                   const uint16_t alpha, vptr<const uint16_t> a,
-                  vptr<const uint16_t> b, const uint16_t beta, vptr<uint16_t> c) {
-  this->gemm_uint16(trans_a, trans_b, m, n, k, alpha, a, b, beta, c);
+                  vptr<const uint16_t> b, const uint16_t beta,
+                  vptr<uint16_t> c,
+                  const QuantizerValues* const alpha_quant,
+                  const QuantizerValues* const a_quant,
+                  const QuantizerValues* const b_quant,
+                  const QuantizerValues* const beta_quant,
+                  const QuantizerValues* const c_quant) {
+  this->gemm_uint16(trans_a, trans_b, m, n, k, alpha, a, b, beta, c,
+                    alpha_quant, a_quant, b_quant, beta_quant, c_quant);
 }
 template<>
 void Device::gemv(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
                   const uint_tp n, const uint16_t alpha,
                   vptr<const uint16_t> a,
                   vptr<const uint16_t> x, const uint16_t beta,
-                  vptr<uint16_t> y) {
-  this->gemv_uint16(trans_a, m, n, alpha, a, x, beta, y);
+                  vptr<uint16_t> y,
+                  const QuantizerValues* const alpha_quant,
+                  const QuantizerValues* const a_quant,
+                  const QuantizerValues* const x_quant,
+                  const QuantizerValues* const beta_quant,
+                  const QuantizerValues* const y_quant) {
+  this->gemv_uint16(trans_a, m, n, alpha, a, x, beta, y,
+                    alpha_quant, a_quant, x_quant, beta_quant, y_quant);
 }
 template<>
 void Device::axpy(const uint_tp n, const uint16_t alpha,
-                  vptr<const uint16_t> x, vptr<uint16_t> y) {
-  this->axpy_uint16(n, alpha, x, y);
+                  vptr<const uint16_t> x, vptr<uint16_t> y,
+                  const QuantizerValues* const alpha_quant,
+                  const QuantizerValues* const x_quant,
+                  const QuantizerValues* const y_quant) {
+  this->axpy_uint16(n, alpha, x, y, alpha_quant, x_quant, y_quant);
 }
 template<>
 void Device::axpby(const uint_tp n, const uint16_t alpha,
                    vptr<const uint16_t> x,
-                   const uint16_t beta, vptr<uint16_t> y) {
-  this->axpby_uint16(n, alpha, x, beta, y);
+                   const uint16_t beta, vptr<uint16_t> y,
+                   const QuantizerValues* const alpha_quant,
+                   const QuantizerValues* const x_quant,
+                   const QuantizerValues* const beta_quant,
+                   const QuantizerValues* const y_quant) {
+  this->axpby_uint16(n, alpha, x, beta, y, alpha_quant, x_quant, beta_quant,
+                     y_quant);
 }
 template<>
-void Device::dot(const uint_tp n, vptr<const uint16_t> x, vptr<const uint16_t> y,
-                 uint16_t *out) {
+void Device::dot(const uint_tp n, vptr<const uint16_t> x,
+                 vptr<const uint16_t> y, uint16_t *out) {
   this->dot_uint16(n, x, y, out);
 }
 template<>
@@ -347,27 +448,48 @@ template<>
 void Device::gemm(const CBLAS_TRANSPOSE trans_a, const CBLAS_TRANSPOSE trans_b,
                   const uint_tp m, const uint_tp n, const uint_tp k,
                   const uint32_t alpha, vptr<const uint32_t> a,
-                  vptr<const uint32_t> b, const uint32_t beta, vptr<uint32_t> c) {
-  this->gemm_uint32(trans_a, trans_b, m, n, k, alpha, a, b, beta, c);
+                  vptr<const uint32_t> b, const uint32_t beta,
+                  vptr<uint32_t> c,
+                  const QuantizerValues* const alpha_quant,
+                  const QuantizerValues* const a_quant,
+                  const QuantizerValues* const b_quant,
+                  const QuantizerValues* const beta_quant,
+                  const QuantizerValues* const c_quant) {
+  this->gemm_uint32(trans_a, trans_b, m, n, k, alpha, a, b, beta, c,
+                    alpha_quant, a_quant, b_quant, beta_quant, c_quant);
 }
 template<>
 void Device::gemv(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
                   const uint_tp n, const uint32_t alpha,
                   vptr<const uint32_t> a,
                   vptr<const uint32_t> x, const uint32_t beta,
-                  vptr<uint32_t> y) {
-  this->gemv_uint32(trans_a, m, n, alpha, a, x, beta, y);
+                  vptr<uint32_t> y,
+                  const QuantizerValues* const alpha_quant,
+                  const QuantizerValues* const a_quant,
+                  const QuantizerValues* const x_quant,
+                  const QuantizerValues* const beta_quant,
+                  const QuantizerValues* const y_quant) {
+  this->gemv_uint32(trans_a, m, n, alpha, a, x, beta, y,
+                    alpha_quant, a_quant, x_quant, beta_quant, y_quant);
 }
 template<>
 void Device::axpy(const uint_tp n, const uint32_t alpha,
-                  vptr<const uint32_t> x, vptr<uint32_t> y) {
-  this->axpy_uint32(n, alpha, x, y);
+                  vptr<const uint32_t> x, vptr<uint32_t> y,
+                  const QuantizerValues* const alpha_quant,
+                  const QuantizerValues* const x_quant,
+                  const QuantizerValues* const y_quant) {
+  this->axpy_uint32(n, alpha, x, y, alpha_quant, x_quant, y_quant);
 }
 template<>
 void Device::axpby(const uint_tp n, const uint32_t alpha,
                    vptr<const uint32_t> x,
-                   const uint32_t beta, vptr<uint32_t> y) {
-  this->axpby_uint32(n, alpha, x, beta, y);
+                   const uint32_t beta, vptr<uint32_t> y,
+                   const QuantizerValues* const alpha_quant,
+                   const QuantizerValues* const x_quant,
+                   const QuantizerValues* const beta_quant,
+                   const QuantizerValues* const y_quant) {
+  this->axpby_uint32(n, alpha, x, beta, y, alpha_quant, x_quant, beta_quant,
+                     y_quant);
 }
 template<>
 void Device::dot(const uint_tp n, vptr<const uint32_t> x, vptr<const uint32_t> y,
@@ -394,31 +516,52 @@ template<>
 void Device::gemm(const CBLAS_TRANSPOSE trans_a, const CBLAS_TRANSPOSE trans_b,
                   const uint_tp m, const uint_tp n, const uint_tp k,
                   const uint64_t alpha, vptr<const uint64_t> a,
-                  vptr<const uint64_t> b, const uint64_t beta, vptr<uint64_t> c) {
-  this->gemm_uint64(trans_a, trans_b, m, n, k, alpha, a, b, beta, c);
+                  vptr<const uint64_t> b, const uint64_t beta,
+                  vptr<uint64_t> c,
+                  const QuantizerValues* const alpha_quant,
+                  const QuantizerValues* const a_quant,
+                  const QuantizerValues* const b_quant,
+                  const QuantizerValues* const beta_quant,
+                  const QuantizerValues* const c_quant) {
+  this->gemm_uint64(trans_a, trans_b, m, n, k, alpha, a, b, beta, c,
+                    alpha_quant, a_quant, b_quant, beta_quant, c_quant);
 }
 template<>
 void Device::gemv(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
                   const uint_tp n, const uint64_t alpha,
                   vptr<const uint64_t> a,
                   vptr<const uint64_t> x, const uint64_t beta,
-                  vptr<uint64_t> y) {
-  this->gemv_uint64(trans_a, m, n, alpha, a, x, beta, y);
+                  vptr<uint64_t> y,
+                  const QuantizerValues* const alpha_quant,
+                  const QuantizerValues* const a_quant,
+                  const QuantizerValues* const x_quant,
+                  const QuantizerValues* const beta_quant,
+                  const QuantizerValues* const y_quant) {
+  this->gemv_uint64(trans_a, m, n, alpha, a, x, beta, y,
+                    alpha_quant, a_quant, x_quant, beta_quant, y_quant);
 }
 template<>
 void Device::axpy(const uint_tp n, const uint64_t alpha,
-                  vptr<const uint64_t> x, vptr<uint64_t> y) {
-  this->axpy_uint64(n, alpha, x, y);
+                  vptr<const uint64_t> x, vptr<uint64_t> y,
+                  const QuantizerValues* const alpha_quant,
+                  const QuantizerValues* const x_quant,
+                  const QuantizerValues* const y_quant) {
+  this->axpy_uint64(n, alpha, x, y, alpha_quant, x_quant, y_quant);
 }
 template<>
 void Device::axpby(const uint_tp n, const uint64_t alpha,
                    vptr<const uint64_t> x,
-                   const uint64_t beta, vptr<uint64_t> y) {
-  this->axpby_uint64(n, alpha, x, beta, y);
+                   const uint64_t beta, vptr<uint64_t> y,
+                   const QuantizerValues* const alpha_quant,
+                   const QuantizerValues* const x_quant,
+                   const QuantizerValues* const beta_quant,
+                   const QuantizerValues* const y_quant) {
+  this->axpby_uint64(n, alpha, x, beta, y, alpha_quant, x_quant,
+                     beta_quant, y_quant);
 }
 template<>
-void Device::dot(const uint_tp n, vptr<const uint64_t> x, vptr<const uint64_t> y,
-                 uint64_t *out) {
+void Device::dot(const uint_tp n, vptr<const uint64_t> x,
+                 vptr<const uint64_t> y, uint64_t *out) {
   this->dot_uint64(n, x, y, out);
 }
 template<>

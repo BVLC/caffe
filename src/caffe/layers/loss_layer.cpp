@@ -12,6 +12,7 @@ void LossLayer<Dtype, MItype, MOtype>::LayerSetUp(
   if (this->layer_param_.loss_weight_size() == 0) {
     this->layer_param_.add_loss_weight(Dtype(1));
   }
+  this->InitializeQuantizers(bottom, top);
 }
 
 template<typename Dtype, typename MItype, typename MOtype>

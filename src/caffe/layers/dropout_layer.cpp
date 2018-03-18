@@ -9,8 +9,9 @@
 namespace caffe {
 
 template<typename Dtype, typename MItype, typename MOtype>
-void DropoutLayer<Dtype, MItype, MOtype>::LayerSetUp(const vector<Blob<MItype>*>& bottom,
-      const vector<Blob<MOtype>*>& top) {
+void DropoutLayer<Dtype, MItype, MOtype>::LayerSetUp(
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
   NeuronLayer<Dtype, MItype, MOtype>::LayerSetUp(bottom, top);
   threshold_ = this->layer_param_.dropout_param().dropout_ratio();
   DCHECK(threshold_ > 0.);
@@ -20,12 +21,13 @@ void DropoutLayer<Dtype, MItype, MOtype>::LayerSetUp(const vector<Blob<MItype>*>
       static_cast<uint_tp>(static_cast<long double>
           (std::numeric_limits<uint_tp>::max())
           * static_cast<long double>(threshold_));
+  this->InitializeQuantizers(bottom, top);
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
 void DropoutLayer<Dtype, MItype, MOtype>::Reshape(
-                            const vector<Blob<MItype>*>& bottom,
-                            const vector<Blob<MOtype>*>& top) {
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
   NeuronLayer<Dtype, MItype, MOtype>::Reshape(bottom, top);
   // Set up the cache for random number generation
   // ReshapeLike does not work because rand_vec_ is of Dtype uint

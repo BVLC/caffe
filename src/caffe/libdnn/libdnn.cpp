@@ -24,8 +24,7 @@ LibDNN<MItype, MOtype>::LibDNN(Device* dev_ptr)
 
 template<typename MItype, typename MOtype>
 string LibDNN<MItype, MOtype>::generate_gemm_core(
-    shared_ptr<LibDNNTuner> tuner, bool dterm, bool alpha_term,
-    libdnnAccumulatePrecision_t prec) {
+    shared_ptr<LibDNNTuner> tuner, bool dterm, bool alpha_term) {
   stringstream ss;
   int vwm = tuner->get_param<int>("VWM");
   int vwn = tuner->get_param<int>("VWN");
@@ -34,24 +33,6 @@ string LibDNN<MItype, MOtype>::generate_gemm_core(
   bool unroll = tuner->get_param<bool>("vector_unroll");
 
   string accreg_type = "MItype";
-  switch (prec) {
-    case LIBDNN_ACCUMULATE_PREC_NATIVE:
-      break;
-    case LIBDNN_ACCUMULATE_PREC_8:
-      accreg_type = program_->device_type_name<int8_t>();
-      break;
-    case LIBDNN_ACCUMULATE_PREC_16:
-      accreg_type = program_->device_type_name<int16_t>();
-      break;
-    case LIBDNN_ACCUMULATE_PREC_32:
-      accreg_type = program_->device_type_name<int32_t>();
-      break;
-    case LIBDNN_ACCUMULATE_PREC_64:
-      accreg_type = program_->device_type_name<int64_t>();
-      break;
-    default:
-      break;
-  }
 
   // Temporary registers for A and B
   ss << "MItype" << vwm << " Areg;" << std::endl;
@@ -87,36 +68,13 @@ string LibDNN<MItype, MOtype>::generate_gemm_core(
     if (unroll) {
       for (int i = 0; i < vwm; ++i) {
         ss << "VEC_" << vwm << "_" << i << "(Dreg[wm]) " << "+= ";
-        if (prec != LIBDNN_ACCUMULATE_PREC_NATIVE) {
-          ss << "(" << accreg_type << ")";
-        }
+        ss << "(" << accreg_type << ")";
         ss << "(VEC_" << vwm << "_" << i << "(Areg) * (MItype)v_bmul);"
            << std::endl;
       }
     } else {
       ss << "Dreg[wm] += ";
-      switch (prec) {
-        case LIBDNN_ACCUMULATE_PREC_8:
-          ss << this->program_->template convert_type<uint8_t>(vwm,
-                                                       "Areg * (MItype)v_bmul");
-          break;
-        case LIBDNN_ACCUMULATE_PREC_16:
-          ss << this->program_->template convert_type<uint16_t>(vwm,
-                                                       "Areg * (MItype)v_bmul");
-          break;
-        case LIBDNN_ACCUMULATE_PREC_32:
-          ss << this->program_->template convert_type<uint32_t>(vwm,
-                                                       "Areg * (MItype)v_bmul");
-          break;
-        case LIBDNN_ACCUMULATE_PREC_64:
-          ss << this->program_->template convert_type<uint64_t>(vwm,
-                                                       "Areg * (MItype)v_bmul");
-          break;
-        case LIBDNN_ACCUMULATE_PREC_NATIVE:
-        default:
-          ss << "Areg * (MItype)v_bmul";
-          break;
-      }
+      ss << "Areg * (MItype)v_bmul";
       ss << ";" << std::endl;
     }
   }
@@ -127,9 +85,7 @@ string LibDNN<MItype, MOtype>::generate_gemm_core(
       for (int_tp m = 0; m < vwm; ++m) {
         ss << "VEC_" << vwn << "_" << n << "(Creg[wm * VWM + " << m << "][wn])"
            << " += ";
-        if (prec != LIBDNN_ACCUMULATE_PREC_NATIVE) {
-          ss << "(" << accreg_type << ")";
-        }
+        ss << "(" << accreg_type << ")";
         if (alpha_term) {
           ss << "(alpha *";
         } else {
@@ -150,28 +106,6 @@ string LibDNN<MItype, MOtype>::generate_gemm_core(
       }
       src_term << " * VEC_"<< vwm << "_" << m << "(Areg)"
                << " * (Breg[wn]))" << std::endl;
-      switch (prec) {
-        case LIBDNN_ACCUMULATE_PREC_8:
-          ss << this->program_->template convert_type<uint8_t>(vwn,
-                                                              src_term.str());
-          break;
-        case LIBDNN_ACCUMULATE_PREC_16:
-          ss << this->program_->template convert_type<uint16_t>(vwn,
-                                                               src_term.str());
-          break;
-        case LIBDNN_ACCUMULATE_PREC_32:
-          ss << this->program_->template convert_type<uint32_t>(vwn,
-                                                               src_term.str());
-          break;
-        case LIBDNN_ACCUMULATE_PREC_64:
-          ss << this->program_->template convert_type<uint64_t>(vwn,
-                                                               src_term.str());
-          break;
-        case LIBDNN_ACCUMULATE_PREC_NATIVE:
-        default:
-          ss << src_term.str() << ";" << std::endl;
-          break;
-      }
     }
   }
   ss << "}" << std::endl;
@@ -186,8 +120,7 @@ string LibDNN<MItype, MOtype>::generate_gemm_core(
 
 template<typename MItype, typename MOtype>
 string LibDNN<MItype, MOtype>::generate_accreg_init(
-    shared_ptr<LibDNNTuner> tuner, bool dterm, bool load, bool beta_term,
-    libdnnAccumulatePrecision_t prec) {
+    shared_ptr<LibDNNTuner> tuner, bool dterm, bool load, bool beta_term) {
   stringstream ss;
 
   int vwm = tuner->get_param<int>("VWM");
@@ -195,24 +128,6 @@ string LibDNN<MItype, MOtype>::generate_accreg_init(
   bool unroll = tuner->get_param<bool>("vector_unroll");
 
   string accreg_type = "MItype";
-  switch (prec) {
-    case LIBDNN_ACCUMULATE_PREC_NATIVE:
-      break;
-    case LIBDNN_ACCUMULATE_PREC_8:
-      accreg_type = program_->device_type_name<int8_t>();
-      break;
-    case LIBDNN_ACCUMULATE_PREC_16:
-      accreg_type = program_->device_type_name<int16_t>();
-      break;
-    case LIBDNN_ACCUMULATE_PREC_32:
-      accreg_type = program_->device_type_name<int32_t>();
-      break;
-    case LIBDNN_ACCUMULATE_PREC_64:
-      accreg_type = program_->device_type_name<int64_t>();
-      break;
-    default:
-      break;
-  }
 
   if (dterm) {
     ss << accreg_type << vwm << " Dreg[WPTM / VWM];" << std::endl;
@@ -228,9 +143,7 @@ string LibDNN<MItype, MOtype>::generate_accreg_init(
       ss << "int_tp globalRow = offM + tidm + wm * RTSM;"
          << std::endl;
       ss << "((" << accreg_type << "*)(&(Dreg[wm / VWM])))[wm % VWM] = ";
-      if (prec != LIBDNN_ACCUMULATE_PREC_NATIVE) {
-        ss << "(" << accreg_type << ")";
-      }
+      ss << "(" << accreg_type << ")";
       ss << "(Dptr[globalRow]);" << std::endl;
       ss << "}" << std::endl;
     }
@@ -244,9 +157,7 @@ string LibDNN<MItype, MOtype>::generate_accreg_init(
        << std::endl;
     ss << "if (globalRow < M && globalCol < N) {" << std::endl;
     ss << "((" << accreg_type << "*)(&(Creg[wm][wn / VWN])))[wn % VWN] = ";
-    if (prec != LIBDNN_ACCUMULATE_PREC_NATIVE) {
-      ss << "(" << accreg_type << ")";
-    }
+    ss << "(" << accreg_type << ")";
     if (beta_term) {
       ss << "(beta * ";
     } else {

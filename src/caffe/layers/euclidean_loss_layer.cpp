@@ -6,8 +6,9 @@
 namespace caffe {
 
 template<typename Dtype, typename MItype, typename MOtype>
-void EuclideanLossLayer<Dtype, MItype, MOtype>::Reshape(const vector<Blob<MItype>*>& bottom,
-                                        const vector<Blob<MOtype>*>& top) {
+void EuclideanLossLayer<Dtype, MItype, MOtype>::Reshape(
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
   LossLayer<Dtype, MItype, MOtype>::Reshape(bottom, top);
   CHECK_EQ(bottom[0]->count(1), bottom[1]->count(1))
       << "Inputs must have the same dimension.";

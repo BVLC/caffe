@@ -68,8 +68,8 @@ void SoftmaxLayer<Dtype, MItype, MOtype>::Forward_cpu(
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void SoftmaxLayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob<MOtype>*>& top,
-    const vector<bool>& propagate_down,
+void SoftmaxLayer<Dtype, MItype, MOtype>::Backward_cpu(
+    const vector<Blob<MOtype>*>& top, const vector<bool>& propagate_down,
     const vector<Blob<MItype>*>& bottom) {
   const Dtype* top_diff = top[0]->cpu_diff();
   const Dtype* top_data = top[0]->cpu_data();

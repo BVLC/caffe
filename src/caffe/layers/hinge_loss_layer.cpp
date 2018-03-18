@@ -7,7 +7,8 @@
 namespace caffe {
 
 template<typename Dtype, typename MItype, typename MOtype>
-void HingeLossLayer<Dtype, MItype, MOtype>::Forward_cpu(const vector<Blob<MItype>*>& bottom,
+void HingeLossLayer<Dtype, MItype, MOtype>::Forward_cpu(
+    const vector<Blob<MItype>*>& bottom,
     const vector<Blob<MOtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
@@ -40,8 +41,9 @@ void HingeLossLayer<Dtype, MItype, MOtype>::Forward_cpu(const vector<Blob<MItype
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void HingeLossLayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob<MOtype>*>& top,
-    const vector<bool>& propagate_down, const vector<Blob<MItype>*>& bottom) {
+void HingeLossLayer<Dtype, MItype, MOtype>::Backward_cpu(
+    const vector<Blob<MOtype>*>& top, const vector<bool>& propagate_down,
+    const vector<Blob<MItype>*>& bottom) {
   if (propagate_down[1]) {
     LOG(FATAL) << this->type()
                << " Layer cannot backpropagate to label inputs.";

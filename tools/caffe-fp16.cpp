@@ -212,9 +212,9 @@ int train() {
   if (FLAGS_gpu.size() == 0
       && solver_param.has_solver_mode()
       && solver_param.solver_mode() == caffe::SolverParameter_SolverMode_GPU) {
-      if (solver_param.has_device_id()) {
+      if (solver_param.has_device()) {
           FLAGS_gpu = "" +
-              boost::lexical_cast<string>(solver_param.device_id());
+              boost::lexical_cast<string>(solver_param.device());
       } else {  // Set default GPU if unspecified
           FLAGS_gpu = "" + boost::lexical_cast<string>(0);
       }
@@ -235,7 +235,7 @@ int train() {
       s << (i ? ", " : "") << gpus[i];
     }
     LOG(INFO) << "Using GPUs " << s.str();
-    solver_param.set_device_id(gpus[0]);
+    solver_param.set_device(gpus[0]);
     // Initialize the first device
     Caffe::SetDevice(gpus[0]);
     Caffe::set_mode(Caffe::GPU);

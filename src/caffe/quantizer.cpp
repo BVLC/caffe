@@ -19,49 +19,47 @@ QuantizerBase::QuantizerBase(Device* dev_ptr)
 
 template<typename Dtype>
 void QuantizerBase::MultiplicativeQuantVals(
-    const QuantizerValues* lhs, const QuantizerValues* rhs,
-    const QuantizerValues* rs, Dtype* rsmult, Dtype* rsshift,
+    const QuantizerValues* const lhs, const QuantizerValues* const rhs,
+    const QuantizerValues* const rs, Dtype* rsmult, int8_t* rsshift,
     const uint8_t shift_bits) {
-  if (lhs && rhs && rs) {
-    double multiplier = (lhs->scale * rhs->scale) / rs->scale;
-    if (multiplier == 0) {
-      *rsmult = Dtype(0);
-      *rsshift = Dtype(0);
-    }
-    if (is_float_type<Dtype>()) {
-      // Float can be scaled without shift
-      *rsmult = static_cast<Dtype>(multiplier);
-    } else {
-      int64_t lshift = shift_bits ? (static_cast<int64_t>(shift_bits)) :
-                                    (sizeof(Dtype) * 8ll - 1ll);
-      Dtype s = 0;
-      while (multiplier < 0.5 && s < lshift) {
-        multiplier *= 2.0;
-        ++s;
-      }
-      while (multiplier > 1.0 && s > -lshift) {
-        multiplier /= 2.0;
-        --s;
-      }
-      int64_t q = static_cast<int64_t>(std::round(multiplier
-                                                  * double(1ll << lshift)));
-      if (q == (1ll << lshift)) {
-        q /= 2;
-        --s;
-      }
-      CHECK_LE(q, type_max_integer_representable<Dtype>());
-      *rsmult = static_cast<Dtype>(q);
-      *rsshift = s;
-    }
+  double multiplier = ((lhs ? lhs->scale : 1.0)  *
+                       (rhs ? rhs->scale : 1.0)) /
+                       (rs ? rs->scale : 1.0);
+  if (multiplier == 0.0) {
+    *rsmult = Dtype(0);
+    *rsshift = int8_t(0);
+  }
+  if (is_float_type<Dtype>()) {
+    // Float can be scaled without shift
+    *rsmult = static_cast<Dtype>(multiplier);
   } else {
-    *rsmult = Dtype(1);
-    *rsshift = Dtype(0);
+    int64_t lshift = shift_bits ? (static_cast<int64_t>(shift_bits)) :
+                                  (sizeof(Dtype) * 8ll - 1ll);
+    Dtype s = 0;
+    while (multiplier < 0.5 && s < lshift) {
+      multiplier *= 2.0;
+      ++s;
+    }
+    while (multiplier > 1.0 && s > -lshift) {
+      multiplier /= 2.0;
+      --s;
+    }
+    int64_t q = static_cast<int64_t>(std::round(multiplier
+                                                * double(1ll << lshift)));
+    if (q == (1ll << lshift)) {
+      q /= 2;
+      --s;
+    }
+    CHECK_LE(q, type_max_integer_representable<Dtype>());
+    *rsmult = static_cast<Dtype>(q);
+    *rsshift = s;
   }
 }
 
 INSTANTIATE_FUNC_1T(QuantizerBase::MultiplicativeQuantVals,
-                    (int8_t)(int16_t)(int32_t)(int64_t));
-
+                            (int8_t)(int16_t)(int32_t)(int64_t));
+INSTANTIATE_FUNC_1T(QuantizerBase::MultiplicativeQuantVals,
+                            (half_fp)(float)(double));
 
 void QuantizerBase::Observe_in(size_t n, const shared_ptr<SyncedMemory> data) {
   if (mode_ == CAFFE_QUANT_PASSIVE) {
@@ -122,7 +120,6 @@ void Quantizer<MItype, MOtype>::update_param(const QuantizerParameter& param) {
   this->param_.set_input_data_type(proto_data_type<MItype>());
   this->param_.set_output_data_type(proto_data_type<MOtype>());
   this->program_ready_ = false;
-  this->index_ = param_.index();
   this->mode_ = param_.mode();
 
   // Load estimated max/min values
@@ -192,7 +189,7 @@ void Quantizer<MItype, MOtype>::update_param(const QuantizerParameter& param) {
     } else {
       this->in_vals_.zero = std::round(initial_zero);
     }
-    this->in_vals_.one = 1.0/in_scale_val();
+    this->in_vals_.one = 1.0/in_scale_val() + this->in_vals_.zero;
   }
   this->in_vals_.scale = in_scale_val();
 
@@ -209,7 +206,7 @@ void Quantizer<MItype, MOtype>::update_param(const QuantizerParameter& param) {
     } else {
       this->out_vals_.zero = std::round(initial_zero);
     }
-    this->out_vals_.one = 1.0/out_scale_val();
+    this->out_vals_.one = 1.0/out_scale_val() + this->out_vals_.zero;
   }
   this->out_vals_.scale = out_scale_val();
 
@@ -299,7 +296,7 @@ Quantizer<MItype, MOtype>::Quantizer(Device* dev_ptr)
   param.set_device(dev_ptr->id());
   param.set_input_data_type(proto_data_type<MItype>());
   param.set_output_data_type(proto_data_type<MOtype>());
-  param.set_index(0);
+  param.set_zone(0);
   update_param(param);
 }
 
@@ -344,63 +341,65 @@ void Quantizer<MItype, MOtype>::Forward_cpu(
   }
 
   if (fw_scale_before_cast()) {
-    const MItype scal = fw_scale_before_cast_val();
-    const MItype in_zero = static_cast<MItype>(this->in_vals_.zero);
-    const MItype out_zero = static_cast<MItype>(this->out_vals_.zero);
-    const MItype min_in = static_cast<MItype>(this->in_vals_.min);
-    const MItype max_in = static_cast<MItype>(this->in_vals_.max);
-    const MItype min_out = static_cast<MItype>(this->out_vals_.min);
-    const MItype max_out = static_cast<MItype>(this->out_vals_.max);
+    typedef typename std::conditional<float_is_same<MItype>::value, MItype,
+            typename std::conditional<sizeof(MItype) == 1, int16_t,
+            typename std::conditional<sizeof(MItype) == 2, int32_t, int64_t>
+                                                  ::type>::type>::type Difftype;
+
+    const Difftype scal = static_cast<Difftype>(fw_scale_before_cast_val());
+    const Difftype in_zero = static_cast<Difftype>(this->in_vals_.zero);
+    const Difftype out_zero = static_cast<Difftype>(this->out_vals_.zero);
+    const Difftype min_out = static_cast<Difftype>(this->out_vals_.min);
+    const Difftype max_out = static_cast<Difftype>(this->out_vals_.max);
     if (fw_scale_divide()) {
 #pragma omp parallel for
       for (size_t i = 0; i < n; ++i) {
-        // Zero-adjust, clamp, divide-scale, zero-adjust, clamp, cast
-        bool uf = (input[i] < min_in + in_zero) && in_zero > 0;
-        bool of = (input[i] > max_in + in_zero) && in_zero < 0;
-        MItype centered_input = input[i] - in_zero;
-        output[i] = static_cast<MOtype>(std::min(std::max(static_cast<MItype>(
-            (uf ? min_in : (of ? max_in : centered_input)) / scal
-            + out_zero), min_out), max_out));
+        Difftype centered_input = static_cast<Difftype>(input[i]) - in_zero;
+        output[i] = static_cast<MOtype>(std::min(std::max(
+            static_cast<Difftype>(centered_input / scal + out_zero),
+            min_out), max_out));
       }
     } else {
 #pragma omp parallel for
       for (size_t i = 0; i < n; ++i) {
-        // Zero-adjust, clamp, multiply-scale, zero-adjust, clamp, cast
-        bool uf = (input[i] < min_in + in_zero) && in_zero > 0;
-        bool of = (input[i] > max_in + in_zero) && in_zero < 0;
-        MItype centered_input = input[i] - in_zero;
-        output[i] = static_cast<MOtype>(std::min(std::max(static_cast<MItype>(
-            (uf ? min_in : (of ? max_in : centered_input)) * scal
-            + out_zero), min_out), max_out));
+        Difftype centered_input = static_cast<Difftype>(input[i]) - in_zero;
+        output[i] = static_cast<MOtype>(std::min(std::max(
+            static_cast<Difftype>(centered_input * scal + out_zero),
+            min_out), max_out));
       }
     }
   } else {
-    const MOtype scal = fw_scale_after_cast_val();
-    const MOtype in_zero = static_cast<MOtype>(this->in_vals_.zero);
-    const MOtype out_zero = static_cast<MOtype>(this->out_vals_.zero);
-    const MOtype min_in = static_cast<MOtype>(this->in_vals_.min);
-    const MOtype max_in = static_cast<MOtype>(this->in_vals_.max);
-    const MOtype min_out = static_cast<MOtype>(this->out_vals_.min);
-    const MOtype max_out = static_cast<MOtype>(this->out_vals_.max);
+    typedef typename std::conditional<float_is_same<MOtype>::value, MOtype,
+            typename std::conditional<sizeof(MOtype) == 1, int16_t,
+            typename std::conditional<sizeof(MOtype) == 2, int32_t, int64_t>
+                                                  ::type>::type>::type Difftype;
+
+    const Difftype scal = static_cast<Difftype>(fw_scale_after_cast_val());
+    const Difftype in_zero = static_cast<Difftype>(this->in_vals_.zero);
+    const Difftype out_zero = static_cast<Difftype>(this->out_vals_.zero);
+    const Difftype min_out = static_cast<Difftype>(this->out_vals_.min);
+    const Difftype max_out = static_cast<Difftype>(this->out_vals_.max);
     if (fw_scale_divide()) {
 #pragma omp parallel for
       for (size_t i = 0; i < n; ++i) {
-        // Cast, zero-adjust, clamp, divide-scale, zero-adjust, clamp
-        MOtype centered_output = std::min(std::max(static_cast<MOtype>(
-            static_cast<MOtype>(input[i]) - in_zero), min_in), max_in) / scal;
+        Difftype centered_output = (static_cast<Difftype>(input[i]) - in_zero)
+                                   / scal;
         bool uf = (centered_output < min_out - out_zero) && out_zero < 0;
         bool of = (centered_output > max_out - out_zero) && out_zero > 0;
-        output[i] = uf ? min_out : (of ? max_out : centered_output + out_zero);
+        output[i] = static_cast<MOtype>(uf ? min_out :
+                                       (of ? max_out :
+                                        centered_output + out_zero));
       }
     } else {
 #pragma omp parallel for
       for (size_t i = 0; i < n; ++i) {
-        // Cast, zero-adjust, clamp, multiply-scale, zero-adjust, clamp
-        MOtype centered_output = std::min(std::max(static_cast<MOtype>(
-            static_cast<MOtype>(input[i]) - in_zero), min_in), max_in) * scal;
+        Difftype centered_output = (static_cast<Difftype>(input[i]) - in_zero)
+                                   * scal;
         bool uf = (centered_output < min_out - out_zero) && out_zero < 0;
         bool of = (centered_output > max_out - out_zero) && out_zero > 0;
-        output[i] = uf ? min_out : (of ? max_out : centered_output + out_zero);
+        output[i] = static_cast<MOtype>(uf ? min_out :
+                                       (of ? max_out :
+                                        centered_output + out_zero));
       }
     }
   }
@@ -446,61 +445,65 @@ void Quantizer<MItype, MOtype>::Backward_cpu(
   }
 
   if (bw_scale_before_cast()) {
-    const MOtype scal = bw_scale_before_cast_val();
-    const MOtype in_zero = static_cast<MOtype>(this->out_vals_.zero);
-    const MOtype out_zero = static_cast<MOtype>(this->in_vals_.zero);
-    const MOtype min_in = static_cast<MOtype>(this->out_vals_.min);
-    const MOtype max_in = static_cast<MOtype>(this->out_vals_.max);
-    const MOtype min_out = static_cast<MOtype>(this->in_vals_.min);
-    const MOtype max_out = static_cast<MOtype>(this->in_vals_.max);
+    typedef typename std::conditional<float_is_same<MOtype>::value, MOtype,
+            typename std::conditional<sizeof(MOtype) == 1, int16_t,
+            typename std::conditional<sizeof(MOtype) == 2, int32_t, int64_t>
+                                                  ::type>::type>::type Difftype;
+
+    const Difftype scal = static_cast<Difftype>(bw_scale_before_cast_val());
+    const Difftype in_zero = static_cast<Difftype>(this->out_vals_.zero);
+    const Difftype out_zero = static_cast<Difftype>(this->in_vals_.zero);
+    const Difftype min_out = static_cast<Difftype>(this->in_vals_.min);
+    const Difftype max_out = static_cast<Difftype>(this->in_vals_.max);
     if (bw_scale_divide()) {
 #pragma omp parallel for
       for (size_t i = 0; i < n; ++i) {
-        // Zero-adjust, clamp, divide-scale, zero-adjust, clamp, cast
-        bool uf = (input[i] < min_in + in_zero) && in_zero > 0;
-        bool of = (input[i] > max_in + in_zero) && in_zero < 0;
-        MOtype centered_input = input[i] - in_zero;
-        output[i] = static_cast<MItype>(std::min(std::max(static_cast<MOtype>(
-            (uf ? min_in : (of ? max_in : centered_input)) / scal
-            + out_zero), min_out), max_out));
+        Difftype centered_input = static_cast<Difftype>(input[i]) - in_zero;
+        output[i] = static_cast<MItype>(std::min(std::max(
+            static_cast<Difftype>(centered_input / scal + out_zero),
+            min_out), max_out));
       }
     } else {
 #pragma omp parallel for
       for (size_t i = 0; i < n; ++i) {
-        // Zero-adjust, clamp, multiply-scale, zero-adjust, clamp, cast
-        bool uf = (input[i] < min_in + in_zero) && in_zero > 0;
-        bool of = (input[i] > max_in + in_zero) && in_zero < 0;
-        MOtype centered_input = input[i] - in_zero;
-        output[i] = static_cast<MItype>(std::min(std::max(static_cast<MOtype>(
-            (uf ? min_in : (of ? max_in : centered_input)) * scal
-            + out_zero), min_out), max_out));
+        Difftype centered_input = static_cast<Difftype>(input[i]) - in_zero;
+        output[i] = static_cast<MItype>(std::min(std::max(
+            static_cast<Difftype>(centered_input * scal + out_zero),
+            min_out), max_out));
       }
     }
   } else {
-    const MItype scal = bw_scale_after_cast_val();
-    const MItype in_zero = static_cast<MItype>(this->out_vals_.zero);
-    const MItype out_zero = static_cast<MItype>(this->in_vals_.zero);
-    const MItype min_out = static_cast<MItype>(this->in_vals_.min);
-    const MItype max_out = static_cast<MItype>(this->in_vals_.max);
+    typedef typename std::conditional<float_is_same<MItype>::value, MItype,
+            typename std::conditional<sizeof(MItype) == 1, int16_t,
+            typename std::conditional<sizeof(MItype) == 2, int32_t, int64_t>
+                                                  ::type>::type>::type Difftype;
+
+    const Difftype scal = static_cast<Difftype>(bw_scale_after_cast_val());
+    const Difftype in_zero = static_cast<Difftype>(this->out_vals_.zero);
+    const Difftype out_zero = static_cast<Difftype>(this->in_vals_.zero);
+    const Difftype min_out = static_cast<Difftype>(this->in_vals_.min);
+    const Difftype max_out = static_cast<Difftype>(this->in_vals_.max);
     if (bw_scale_divide()) {
 #pragma omp parallel for
       for (size_t i = 0; i < n; ++i) {
-        // Cast, zero-adjust, divide-scale, zero-adjust, clamp
-        MItype centered_output = (static_cast<MItype>(input[i]) - in_zero)
-                                 / scal;
+        Difftype centered_output = (static_cast<Difftype>(input[i]) - in_zero)
+                                   / scal;
         bool uf = (centered_output < min_out - out_zero) && out_zero < 0;
         bool of = (centered_output > max_out - out_zero) && out_zero > 0;
-        output[i] = uf ? min_out : (of ? max_out : centered_output + out_zero);
+        output[i] = static_cast<MItype>(uf ? min_out :
+                                       (of ? max_out :
+                                        centered_output + out_zero));
       }
     } else {
 #pragma omp parallel for
       for (size_t i = 0; i < n; ++i) {
-        // Cast, zero-adjust, multiply-scale, zero-adjust, clamp
-        MItype centered_output = (static_cast<MItype>(input[i]) - in_zero)
-                                 * scal;
+        Difftype centered_output = (static_cast<Difftype>(input[i]) - in_zero)
+                                   * scal;
         bool uf = (centered_output < min_out - out_zero) && out_zero < 0;
         bool of = (centered_output > max_out - out_zero) && out_zero > 0;
-        output[i] = uf ? min_out : (of ? max_out : centered_output + out_zero);
+        output[i] = static_cast<MItype>(uf ? min_out :
+                                       (of ? max_out :
+                                        centered_output + out_zero));
       }
     }
   }
@@ -649,165 +652,113 @@ MItype Quantizer<MItype, MOtype>::bw_scale_after_cast_val() const {
 }
 
 template<typename MItype, typename MOtype>
+string quant_gpu_term(DeviceProgram* program, bool needs_quantization,
+                      bool scale_divide, bool scale_before_cast,
+                      int_tp vec_len, string src_var, string tar_var,
+                      string scal_var, string in_zero_var, string out_zero_var,
+                      string min_out_var, string max_out_var) {
+  stringstream ss;
+   string op = "";
+   if (!needs_quantization) {
+     if (std::is_same<MItype, MOtype>::value) {
+       ss << tar_var << " = " << src_var << ";" << std::endl;
+       return ss.str();
+     } else {
+       ss << tar_var << " = "
+          << program->template convert_type<MOtype>(vec_len, src_var)
+          << ";" << std::endl;
+       return ss.str();
+     }
+   } else {
+     if (scale_divide) {
+       op = " / ";
+     } else {
+       op = " * ";
+     }
+   }
+
+   stringstream ss_s0;
+   ss << "{" << std::endl;
+   if (scale_before_cast) {
+     typedef typename std::conditional<float_is_same<MItype>::value, MItype,
+             typename std::conditional<sizeof(MItype) == 1, int16_t,
+             typename std::conditional<sizeof(MItype) == 2, int32_t, int64_t>
+                                                 ::type>::type>::type Difftype;
+
+     string min_gpu_func = "min";
+     string max_gpu_func = "max";
+     if (program->device()->backend() == BACKEND_OPENCL &&
+         is_float_type<Difftype>()) {
+       min_gpu_func = "fmin";
+       max_gpu_func = "fmax";
+     }
+
+     ss << (program->template device_type_name<Difftype>()) << vec_len
+        << " fw_gpu_centered_input = "
+        << program->template convert_type<Difftype>(vec_len, src_var) << " - "
+        << in_zero_var << ";" << std::endl;
+
+     ss_s0 << min_gpu_func << "(" << max_gpu_func << "(fw_gpu_centered_input"
+           << op << scal_var << " + "  << out_zero_var << "," << min_out_var
+           << "), " << max_out_var << ")";
+
+     ss << tar_var << " = " << program->template convert_type<MOtype>(vec_len,
+                               ss_s0.str()) << ";" << std::endl;
+   } else {
+     typedef typename std::conditional<float_is_same<MOtype>::value, MOtype,
+             typename std::conditional<sizeof(MOtype) == 1, int16_t,
+             typename std::conditional<sizeof(MOtype) == 2, int32_t, int64_t>
+                                                 ::type>::type>::type Difftype;
+
+     string min_gpu_func = "min";
+     string max_gpu_func = "max";
+     if (program->device()->backend() == BACKEND_OPENCL &&
+         is_float_type<Difftype>()) {
+       min_gpu_func = "fmin";
+       max_gpu_func = "fmax";
+     }
+
+     ss << (program->template device_type_name<Difftype>()) << vec_len
+        << " fw_gpu_centered_output = ("
+        << program->template convert_type<Difftype>(vec_len, src_var) << " - "
+        << in_zero_var << ")" << op << scal_var << ";" << std::endl;
+
+     ss << "int" << vec_len << " fw_gpu_uf = (fw_gpu_centered_output < "
+        << min_out_var << " - " << out_zero_var << ") && " << out_zero_var
+        << " < 0;" << std::endl;
+     ss << "int" << vec_len << " fw_gpu_of = (" << src_var << " > "
+        << max_out_var << " - " << out_zero_var << ") && " << out_zero_var
+        << " > 0;" << std::endl;
+     ss_s0 << "fw_gpu_uf ? " << min_out_var << " : (fw_gpu_of ? "
+        << max_out_var << " : fw_gpu_centered_output + " << out_zero_var << ")";
+     ss << tar_var << " = "
+        << program->template convert_type<MOtype>(vec_len, ss_s0.str()) << ";"
+        << std::endl;
+   }
+   ss << "}" << std::endl;
+   return ss.str();
+}
+
+template<typename MItype, typename MOtype>
 string Quantizer<MItype, MOtype>::fw_gpu_term(
     int_tp vec_len, string src_var, string tar_var,
     string scal_var, string in_zero_var, string out_zero_var,
-    string min_in_var, string max_in_var, string min_out_var,
-    string max_out_var) const {
-  stringstream ss;
-  string op = "";
-  if (!needs_quantization()) {
-    if (std::is_same<MItype, MOtype>::value) {
-      ss << tar_var << " = " << src_var << ";" << std::endl;
-      return ss.str();
-    } else {
-      ss << tar_var << " = "
-         << program_->template convert_type<MOtype>(vec_len, src_var)
-         << ";" << std::endl;
-      return ss.str();
-    }
-  } else {
-    if (this->fw_scale_divide()) {
-      op = " / ";
-    } else {
-      op = " * ";
-    }
-  }
-  string i_min_gpu_func = "min";
-  string i_max_gpu_func = "max";
-  string o_min_gpu_func = "min";
-  string o_max_gpu_func = "max";
-  if (device_->backend() == BACKEND_OPENCL && is_float_type<MItype>()) {
-    i_min_gpu_func = "fmin";
-    i_max_gpu_func = "fmax";
-  }
-  if (device_->backend() == BACKEND_OPENCL && is_float_type<MOtype>()) {
-    o_min_gpu_func = "fmin";
-    o_max_gpu_func = "fmax";
-  }
-  stringstream ss_s0;
-  ss << "{" << std::endl;
-  if (this->fw_scale_before_cast()) {
-    // Zero-adjust, clamp, divide-scale, zero-adjust, clamp, cast
-    ss << "int" << vec_len << " fw_gpu_uf = (" << src_var << " < "
-       << min_in_var << " + " << in_zero_var << ") && " << in_zero_var
-       << " > 0;" << std::endl;
-    ss << "int" << vec_len << " fw_gpu_of = (" << src_var << " > "
-       << max_in_var << " + " << in_zero_var << ") && " << in_zero_var
-       << " < 0;" << std::endl;
-    ss << (program_->template device_type_name<MItype>()) << vec_len
-       << " fw_gpu_centered_input = " << src_var << " - in_zero;"
-       << std::endl;
-
-    ss_s0 << i_min_gpu_func << "(" << i_max_gpu_func << "((fw_gpu_uf ?"
-          << min_in_var << ": (fw_gpu_of ? " << max_in_var
-          << " : fw_gpu_centered_input))" << op << scal_var << " + "
-          << out_zero_var << "," << min_out_var << ")," << max_out_var << ")";
-
-    ss << tar_var << " = " << program_->template convert_type<MOtype>(vec_len,
-                              ss_s0.str()) << ";" << std::endl;
-  } else {
-    // Zero-adjust, clamp, divide-scale, zero-adjust, clamp, cast
-    ss_s0 << program_->template convert_type<MOtype>(vec_len, src_var)
-          << std::endl;
-    ss << (program_->template device_type_name<MOtype>()) << vec_len
-       << " fw_gpu_centered_output = " << i_min_gpu_func << "("
-       << i_max_gpu_func << "(" << ss_s0.str()  << " - " << in_zero_var
-       << ", " << min_in_var << ")," << max_in_var << ")" << op << scal_var
-       << ";" << std::endl;
-    ss << "int" << vec_len << " fw_gpu_uf = (fw_gpu_centered_output < "
-       << min_out_var << " - " << out_zero_var << ") && " << out_zero_var
-       << " < 0;" << std::endl;
-    ss << "int" << vec_len << " fw_gpu_of = (" << src_var << " > "
-       << max_in_var << " - " << out_zero_var << ") && " << out_zero_var
-       << " > 0;" << std::endl;
-    ss << tar_var << " = fw_gpu_uf ? " << min_out_var << " : (fw_gpu_of ?"
-       << max_out_var << " : fw_gpu_centered_output + " << out_zero_var << ");"
-       << std::endl;
-  }
-  ss << "}" << std::endl;
-  return ss.str();
+    string min_out_var, string max_out_var) const {
+  return quant_gpu_term<MItype, MOtype>(this->program_.get(),
+              needs_quantization(), fw_scale_divide(),
+              fw_scale_after_cast_val(), vec_len, src_var, tar_var, scal_var,
+              in_zero_var, out_zero_var, min_out_var, max_out_var);
 }
 
 template<typename MItype, typename MOtype>
 string Quantizer<MItype, MOtype>::bw_gpu_term(
     int_tp vec_len, string src_var, string tar_var,
     string scal_var, string in_zero_var, string out_zero_var,
-    string min_in_var, string max_in_var, string min_out_var,
-    string max_out_var) const {
-  stringstream ss;
-  string op = "";
-  if (!needs_quantization()) {
-    if (std::is_same<MItype, MOtype>::value) {
-      ss << tar_var << " = " << src_var << ";" << std::endl;
-      return ss.str();
-    } else {
-      ss << tar_var << " = "
-         << program_->template convert_type<MOtype>(vec_len, src_var)
-         << ";" << std::endl;
-      return ss.str();
-    }
-  } else {
-    if (this->bw_scale_divide()) {
-      op = " / ";
-    } else {
-      op = " * ";
-    }
-  }
-  string i_min_gpu_func = "min";
-  string i_max_gpu_func = "max";
-  string o_min_gpu_func = "min";
-  string o_max_gpu_func = "max";
-  if (device_->backend() == BACKEND_OPENCL && is_float_type<MOtype>()) {
-    i_min_gpu_func = "fmin";
-    i_max_gpu_func = "fmax";
-  }
-  if (device_->backend() == BACKEND_OPENCL && is_float_type<MItype>()) {
-    o_min_gpu_func = "fmin";
-    o_max_gpu_func = "fmax";
-  }
-  stringstream ss_s0;
-  ss << "{" << std::endl;
-  if (this->bw_scale_before_cast()) {
-    // Zero-adjust, clamp, divide-scale, zero-adjust, clamp, cast
-    ss << "int" << vec_len << " fw_gpu_uf = (" << src_var << " < "
-       << min_in_var << " + " << in_zero_var << ") && " << in_zero_var
-       << " > 0;" << std::endl;
-    ss << "int" << vec_len << " fw_gpu_of = (" << src_var << " > "
-       << max_in_var << " + " << in_zero_var << ") && " << in_zero_var
-       << " < 0;" << std::endl;
-    ss << (program_->template device_type_name<MOtype>()) << vec_len
-       << " fw_gpu_centered_input = " << src_var << " - in_zero;"
-       << std::endl;
-
-    ss_s0 << i_min_gpu_func << "(" << i_max_gpu_func << "((fw_gpu_uf ?"
-          << min_in_var << ": (fw_gpu_of ? " << max_in_var
-          << " : fw_gpu_centered_input))" << op << scal_var << " + "
-          << out_zero_var << "," << min_out_var << ")," << max_out_var << ")";
-
-    ss << tar_var << " = " << program_->template convert_type<MItype>(vec_len,
-                              ss_s0.str()) << ";" << std::endl;
-  } else {
-    // Zero-adjust, clamp, divide-scale, zero-adjust, clamp, cast
-    ss_s0 << program_->template convert_type<MItype>(vec_len, src_var)
-          << std::endl;
-    ss << (program_->template device_type_name<MItype>()) << vec_len
-       << " fw_gpu_centered_output = " << i_min_gpu_func << "("
-       << i_max_gpu_func << "(" << ss_s0.str()  << " - " << in_zero_var
-       << ", " << min_in_var << ")," << max_in_var << ")" << op << scal_var
-       << ";" << std::endl;
-    ss << "int" << vec_len << " fw_gpu_uf = (fw_gpu_centered_output < "
-       << min_out_var << " - " << out_zero_var << ") && " << out_zero_var
-       << " < 0;" << std::endl;
-    ss << "int" << vec_len << " fw_gpu_of = (" << src_var << " > "
-       << max_in_var << " - " << out_zero_var << ") && " << out_zero_var
-       << " > 0;" << std::endl;
-    ss << tar_var << " = fw_gpu_uf ? " << min_out_var << " : (fw_gpu_of ?"
-       << max_out_var << " : fw_gpu_centered_output + " << out_zero_var << ");"
-       << std::endl;
-  }
-  ss << "}" << std::endl;
-  return ss.str();
+    string min_out_var, string max_out_var) const {
+  return quant_gpu_term<MOtype, MItype>(this->program_.get(),
+              needs_quantization(), bw_scale_divide(),
+              bw_scale_after_cast_val(), vec_len, src_var, tar_var, scal_var,
+              in_zero_var, out_zero_var, min_out_var, max_out_var);
 }
 
 template<typename MItype, typename MOtype>
@@ -867,6 +818,20 @@ void Quantizer<MItype, MOtype>::GenerateKernels() {
   ss << this->program_->setup();
   ss << this->program_->template define_type<MItype>("MItype");
   ss << this->program_->template define_type<MOtype>("MOtype");
+  ss << this->program_->template define_vector_type<MItype>("MItype", 0, 4);
+  ss << this->program_->template define_vector_type<MOtype>("MOtype", 0, 4);
+  ss << this->program_->template define_vector_type<MItype>(
+        this->program_->template device_type_name<MItype>(), 0, 4);
+  ss << this->program_->template define_vector_type<MOtype>(
+        this->program_->template device_type_name<MOtype>(), 0, 4);
+  ss << this->program_->template define_vector_type<int8_t>(
+        this->program_->template device_type_name<int8_t>(), 0, 4);
+  ss << this->program_->template define_vector_type<int16_t>(
+        this->program_->template device_type_name<int16_t>(), 0, 4);
+  ss << this->program_->template define_vector_type<int32_t>(
+        this->program_->template device_type_name<int32_t>(), 0, 4);
+  ss << this->program_->template define_vector_type<int64_t>(
+        this->program_->template device_type_name<int64_t>(), 0, 4);
 
 
   // Quantizer forward
@@ -880,42 +845,42 @@ void Quantizer<MItype, MOtype>::GenerateKernels() {
     args.push_back(this->program_->template create_kernel_arg<MOtype>("out",
           KERNEL_ARG_MEM_OFFSET | KERNEL_ARG_RESTRICT | KERNEL_ARG_GLOBAL_MEM));
     if (fw_scale_before_cast()) {
-      args.push_back(this->program_->template create_kernel_arg<MItype>("scal",
-                                                             KERNEL_ARG_CONST));
-      args.push_back(this->program_->template create_kernel_arg<MItype>(
+      typedef typename std::conditional<float_is_same<MItype>::value, MItype,
+              typename std::conditional<sizeof(MItype) == 1, int16_t,
+              typename std::conditional<sizeof(MItype) == 2, int32_t, int64_t>
+                                                  ::type>::type>::type Difftype;
+
+      args.push_back(this->program_->template create_kernel_arg<Difftype>(
+                                                     "scal", KERNEL_ARG_CONST));
+      args.push_back(this->program_->template create_kernel_arg<Difftype>(
                                                   "in_zero", KERNEL_ARG_CONST));
-      args.push_back(this->program_->template create_kernel_arg<MItype>(
+      args.push_back(this->program_->template create_kernel_arg<Difftype>(
                                                  "out_zero", KERNEL_ARG_CONST));
-      args.push_back(this->program_->template create_kernel_arg<MItype>(
-                                                   "min_in", KERNEL_ARG_CONST));
-      args.push_back(this->program_->template create_kernel_arg<MItype>(
-                                                   "max_in", KERNEL_ARG_CONST));
-      args.push_back(this->program_->template create_kernel_arg<MItype>(
+      args.push_back(this->program_->template create_kernel_arg<Difftype>(
                                                   "min_out", KERNEL_ARG_CONST));
-      args.push_back(this->program_->template create_kernel_arg<MItype>(
+      args.push_back(this->program_->template create_kernel_arg<Difftype>(
                                                   "max_out", KERNEL_ARG_CONST));
     } else {
-      args.push_back(this->program_->template create_kernel_arg<MOtype>("scal",
-                                                             KERNEL_ARG_CONST));
-      args.push_back(this->program_->template create_kernel_arg<MOtype>(
+      typedef typename std::conditional<float_is_same<MOtype>::value, MOtype,
+              typename std::conditional<sizeof(MOtype) == 1, int16_t,
+              typename std::conditional<sizeof(MOtype) == 2, int32_t, int64_t>
+                                                  ::type>::type>::type Difftype;
+
+      args.push_back(this->program_->template create_kernel_arg<Difftype>(
+                                                     "scal", KERNEL_ARG_CONST));
+      args.push_back(this->program_->template create_kernel_arg<Difftype>(
                                                   "in_zero", KERNEL_ARG_CONST));
-      args.push_back(this->program_->template create_kernel_arg<MOtype>(
+      args.push_back(this->program_->template create_kernel_arg<Difftype>(
                                                  "out_zero", KERNEL_ARG_CONST));
-      args.push_back(this->program_->template create_kernel_arg<MOtype>(
-                                                   "min_in", KERNEL_ARG_CONST));
-      args.push_back(this->program_->template create_kernel_arg<MOtype>(
-                                                   "max_in", KERNEL_ARG_CONST));
-      args.push_back(this->program_->template create_kernel_arg<MOtype>(
+      args.push_back(this->program_->template create_kernel_arg<Difftype>(
                                                   "min_out", KERNEL_ARG_CONST));
-      args.push_back(this->program_->template create_kernel_arg<MOtype>(
+      args.push_back(this->program_->template create_kernel_arg<Difftype>(
                                                   "max_out", KERNEL_ARG_CONST));
     }
     ss << this->program_->function("quantizer_forward", args);
     ss << this->program_->kernel_loop("uint_tp", "i", "n");
     ss << fw_gpu_term(0, "in[i]", "out[i]", "scal",
-                      "in_zero_var", "out_zero_var",
-                      "min_in", "max_in",
-                      "min_out", "max_out") << ";" << std::endl;
+                      "in_zero", "out_zero", "min_out", "max_out") << std::endl;
     ss << "}" << std::endl;
     ss << "}" << std::endl;
   }
@@ -931,42 +896,42 @@ void Quantizer<MItype, MOtype>::GenerateKernels() {
     args.push_back(this->program_->template create_kernel_arg<MItype>("out",
           KERNEL_ARG_MEM_OFFSET | KERNEL_ARG_RESTRICT | KERNEL_ARG_GLOBAL_MEM));
     if (bw_scale_before_cast()) {
-      args.push_back(this->program_->template create_kernel_arg<MOtype>("scal",
-                                                             KERNEL_ARG_CONST));
-      args.push_back(this->program_->template create_kernel_arg<MOtype>(
+      typedef typename std::conditional<float_is_same<MOtype>::value, MOtype,
+              typename std::conditional<sizeof(MOtype) == 1, int16_t,
+              typename std::conditional<sizeof(MOtype) == 2, int32_t, int64_t>
+                                                  ::type>::type>::type Difftype;
+
+      args.push_back(this->program_->template create_kernel_arg<Difftype>(
+                                                     "scal", KERNEL_ARG_CONST));
+      args.push_back(this->program_->template create_kernel_arg<Difftype>(
                                                   "in_zero", KERNEL_ARG_CONST));
-      args.push_back(this->program_->template create_kernel_arg<MOtype>(
+      args.push_back(this->program_->template create_kernel_arg<Difftype>(
                                                  "out_zero", KERNEL_ARG_CONST));
-      args.push_back(this->program_->template create_kernel_arg<MOtype>(
-                                                   "min_in", KERNEL_ARG_CONST));
-      args.push_back(this->program_->template create_kernel_arg<MOtype>(
-                                                   "max_in", KERNEL_ARG_CONST));
-      args.push_back(this->program_->template create_kernel_arg<MOtype>(
+      args.push_back(this->program_->template create_kernel_arg<Difftype>(
                                                   "min_out", KERNEL_ARG_CONST));
-      args.push_back(this->program_->template create_kernel_arg<MOtype>(
+      args.push_back(this->program_->template create_kernel_arg<Difftype>(
                                                   "max_out", KERNEL_ARG_CONST));
     } else {
-      args.push_back(this->program_->template create_kernel_arg<MItype>("scal",
-                                                             KERNEL_ARG_CONST));
-      args.push_back(this->program_->template create_kernel_arg<MItype>(
+      typedef typename std::conditional<float_is_same<MItype>::value, MItype,
+              typename std::conditional<sizeof(MItype) == 1, int16_t,
+              typename std::conditional<sizeof(MItype) == 2, int32_t, int64_t>
+                                                  ::type>::type>::type Difftype;
+
+      args.push_back(this->program_->template create_kernel_arg<Difftype>(
+                                                     "scal", KERNEL_ARG_CONST));
+      args.push_back(this->program_->template create_kernel_arg<Difftype>(
                                                   "in_zero", KERNEL_ARG_CONST));
-      args.push_back(this->program_->template create_kernel_arg<MItype>(
+      args.push_back(this->program_->template create_kernel_arg<Difftype>(
                                                  "out_zero", KERNEL_ARG_CONST));
-      args.push_back(this->program_->template create_kernel_arg<MItype>(
-                                                   "min_in", KERNEL_ARG_CONST));
-      args.push_back(this->program_->template create_kernel_arg<MItype>(
-                                                   "max_in", KERNEL_ARG_CONST));
-      args.push_back(this->program_->template create_kernel_arg<MItype>(
+      args.push_back(this->program_->template create_kernel_arg<Difftype>(
                                                   "min_out", KERNEL_ARG_CONST));
-      args.push_back(this->program_->template create_kernel_arg<MItype>(
+      args.push_back(this->program_->template create_kernel_arg<Difftype>(
                                                   "max_out", KERNEL_ARG_CONST));
     }
     ss << this->program_->function("quantizer_backward", args);
     ss << this->program_->kernel_loop("uint_tp", "i", "n");
     ss << bw_gpu_term(0, "in[i]", "out[i]", "scal",
-                      "in_zero_var", "out_zero_var",
-                      "min_in", "max_in",
-                      "min_out", "max_out") << ";" << std::endl;
+                      "in_zero", "out_zero", "min_out", "max_out") << std::endl;
     ss << "}" << std::endl;
     ss << "}" << std::endl;
   }
@@ -1133,7 +1098,7 @@ void Quantizer<MItype, MOtype>::Forward_gpu(size_t n, vptr<const MItype> input,
 
 
   shared_ptr<DeviceKernel> kernel =
-                                this->program_->GetKernel("quantizer_forward");
+                                 this->program_->GetKernel("quantizer_forward");
 
   vector<size_t> work_size(1, n);
   vector<size_t> group;
@@ -1144,35 +1109,37 @@ void Quantizer<MItype, MOtype>::Forward_gpu(size_t n, vptr<const MItype> input,
   kernel->add_arg(&n_arg);
   kernel->add_arg(&input);
   kernel->add_arg(&output);
-  if (bw_scale_before_cast()) {
-    const MItype scal = fw_scale_before_cast_val();
-    const MItype in_zero = static_cast<MItype>(this->in_vals_.zero);
-    const MItype out_zero = static_cast<MItype>(this->out_vals_.zero);
-    const MItype min_in = static_cast<MItype>(this->in_vals_.min);
-    const MItype max_in = static_cast<MItype>(this->in_vals_.max);
-    const MItype min_out = static_cast<MItype>(this->out_vals_.min);
-    const MItype max_out = static_cast<MItype>(this->out_vals_.max);
+  if (fw_scale_before_cast()) {
+    typedef typename std::conditional<float_is_same<MItype>::value, MItype,
+            typename std::conditional<sizeof(MItype) == 1, int16_t,
+            typename std::conditional<sizeof(MItype) == 2, int32_t, int64_t>
+                                                  ::type>::type>::type Difftype;
+
+    const Difftype scal = static_cast<Difftype>(fw_scale_before_cast_val());
+    const Difftype in_zero = static_cast<Difftype>(this->in_vals_.zero);
+    const Difftype out_zero = static_cast<Difftype>(this->out_vals_.zero);
+    const Difftype min_out = static_cast<Difftype>(this->out_vals_.min);
+    const Difftype max_out = static_cast<Difftype>(this->out_vals_.max);
     kernel->add_arg(&scal);
     kernel->add_arg(&in_zero);
     kernel->add_arg(&out_zero);
-    kernel->add_arg(&min_in);
-    kernel->add_arg(&max_in);
     kernel->add_arg(&min_out);
     kernel->add_arg(&max_out);
     kernel->Execute(group, local);
   } else {
-    const MOtype scal = fw_scale_after_cast_val();
-    const MOtype in_zero = static_cast<MOtype>(this->in_vals_.zero);
-    const MOtype out_zero = static_cast<MOtype>(this->out_vals_.zero);
-    const MOtype min_in = static_cast<MOtype>(this->in_vals_.min);
-    const MOtype max_in = static_cast<MOtype>(this->in_vals_.max);
-    const MOtype min_out = static_cast<MOtype>(this->out_vals_.min);
-    const MOtype max_out = static_cast<MOtype>(this->out_vals_.max);
+    typedef typename std::conditional<float_is_same<MOtype>::value, MOtype,
+            typename std::conditional<sizeof(MOtype) == 1, int16_t,
+            typename std::conditional<sizeof(MOtype) == 2, int32_t, int64_t>
+                                                  ::type>::type>::type Difftype;
+
+    const Difftype scal = static_cast<Difftype>(fw_scale_after_cast_val());
+    const Difftype in_zero = static_cast<Difftype>(this->in_vals_.zero);
+    const Difftype out_zero = static_cast<Difftype>(this->out_vals_.zero);
+    const Difftype min_out = static_cast<Difftype>(this->out_vals_.min);
+    const Difftype max_out = static_cast<Difftype>(this->out_vals_.max);
     kernel->add_arg(&scal);
     kernel->add_arg(&in_zero);
     kernel->add_arg(&out_zero);
-    kernel->add_arg(&min_in);
-    kernel->add_arg(&max_in);
     kernel->add_arg(&min_out);
     kernel->add_arg(&max_out);
     kernel->Execute(group, local);
@@ -1226,34 +1193,36 @@ void Quantizer<MItype, MOtype>::Backward_gpu(size_t n, vptr<const MOtype> input,
   kernel->add_arg(&input);
   kernel->add_arg(&output);
   if (bw_scale_before_cast()) {
-    const MOtype scal = bw_scale_before_cast_val();
-    const MOtype in_zero = static_cast<MOtype>(this->out_vals_.zero);
-    const MOtype out_zero = static_cast<MOtype>(this->in_vals_.zero);
-    const MOtype min_in = static_cast<MOtype>(this->out_vals_.min);
-    const MOtype max_in = static_cast<MOtype>(this->out_vals_.max);
-    const MOtype min_out = static_cast<MOtype>(this->in_vals_.min);
-    const MOtype max_out = static_cast<MOtype>(this->in_vals_.max);
+    typedef typename std::conditional<float_is_same<MOtype>::value, MItype,
+            typename std::conditional<sizeof(MOtype) == 1, int16_t,
+            typename std::conditional<sizeof(MOtype) == 2, int32_t, int64_t>
+                                                  ::type>::type>::type Difftype;
+
+    const Difftype scal = static_cast<Difftype>(bw_scale_before_cast_val());
+    const Difftype in_zero = static_cast<Difftype>(this->out_vals_.zero);
+    const Difftype out_zero = static_cast<Difftype>(this->in_vals_.zero);
+    const Difftype min_out = static_cast<Difftype>(this->in_vals_.min);
+    const Difftype max_out = static_cast<Difftype>(this->in_vals_.max);
     kernel->add_arg(&scal);
     kernel->add_arg(&in_zero);
     kernel->add_arg(&out_zero);
-    kernel->add_arg(&min_in);
-    kernel->add_arg(&max_in);
     kernel->add_arg(&min_out);
     kernel->add_arg(&max_out);
     kernel->Execute(group, local);
   } else {
-    const MItype scal = bw_scale_after_cast_val();
-    const MItype in_zero = static_cast<MItype>(this->out_vals_.zero);
-    const MItype out_zero = static_cast<MItype>(this->in_vals_.zero);
-    const MItype min_in = static_cast<MItype>(this->out_vals_.min);
-    const MItype max_in = static_cast<MItype>(this->out_vals_.max);
-    const MItype min_out = static_cast<MItype>(this->in_vals_.min);
-    const MItype max_out = static_cast<MItype>(this->in_vals_.max);
+    typedef typename std::conditional<float_is_same<MItype>::value, MItype,
+            typename std::conditional<sizeof(MItype) == 1, int16_t,
+            typename std::conditional<sizeof(MItype) == 2, int32_t, int64_t>
+                                                  ::type>::type>::type Difftype;
+
+    const Difftype scal = static_cast<Difftype>(bw_scale_after_cast_val());
+    const Difftype in_zero = static_cast<Difftype>(this->out_vals_.zero);
+    const Difftype out_zero = static_cast<Difftype>(this->in_vals_.zero);
+    const Difftype min_out = static_cast<Difftype>(this->in_vals_.min);
+    const Difftype max_out = static_cast<Difftype>(this->in_vals_.max);
     kernel->add_arg(&scal);
     kernel->add_arg(&in_zero);
     kernel->add_arg(&out_zero);
-    kernel->add_arg(&min_in);
-    kernel->add_arg(&max_in);
     kernel->add_arg(&min_out);
     kernel->add_arg(&max_out);
     kernel->Execute(group, local);

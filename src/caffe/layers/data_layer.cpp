@@ -27,8 +27,9 @@ DataLayer<Dtype, MItype, MOtype>::~DataLayer() {
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void DataLayer<Dtype, MItype, MOtype>::DataLayerSetUp(const vector<Blob<MItype>*>& bottom,
-                                      const vector<Blob<MOtype>*>& top) {
+void DataLayer<Dtype, MItype, MOtype>::DataLayerSetUp(
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
   const int_tp batch_size = this->layer_param_.data_param().batch_size();
   // Read a data point, and use it to initialize the top blob.
   Datum datum;
@@ -55,6 +56,7 @@ void DataLayer<Dtype, MItype, MOtype>::DataLayerSetUp(const vector<Blob<MItype>*
       this->prefetch_[i]->label_.Reshape(label_shape);
     }
   }
+  this->InitializeQuantizers(bottom, top);
 }
 
 template<typename Dtype, typename MItype, typename MOtype>

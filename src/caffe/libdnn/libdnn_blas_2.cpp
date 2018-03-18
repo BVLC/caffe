@@ -49,9 +49,7 @@ template<typename MItype, typename MOtype>
 string LibDNNBlas<MItype, MOtype>::generate_gemv_source(
     shared_ptr<DeviceProgram> program, shared_ptr<LibDNNTuner> tuner,
     bool trans_A, const uint_tp M, const uint_tp N,
-    bool alpha_term, bool beta_term,
-    libdnnAccumulatePrecision_t prec,
-    shared_ptr<Quantizer<MItype, MOtype> > top_quantize) {
+    bool alpha_term, bool beta_term) {
   stringstream ss;
 
   ss << program->setup();
@@ -60,24 +58,6 @@ string LibDNNBlas<MItype, MOtype>::generate_gemv_source(
   ss << program->vector_accessors();
 
   string accreg_type = "MItype";
-  switch (prec) {
-    case LIBDNN_ACCUMULATE_PREC_NATIVE:
-      break;
-    case LIBDNN_ACCUMULATE_PREC_8:
-      accreg_type = program->template device_type_name<uint8_t>();
-      break;
-    case LIBDNN_ACCUMULATE_PREC_16:
-      accreg_type = program->template device_type_name<uint16_t>();
-      break;
-    case LIBDNN_ACCUMULATE_PREC_32:
-      accreg_type = program->template device_type_name<int32_t>();
-      break;
-    case LIBDNN_ACCUMULATE_PREC_64:
-      accreg_type = program->template device_type_name<int64_t>();
-      break;
-    default:
-      break;
-  }
 
   int wptm = tuner->get_param<int>("WPTM");
   int wptn = tuner->get_param<int>("WPTN");
@@ -251,9 +231,7 @@ string LibDNNBlas<MItype, MOtype>::generate_gemv_source(
           for (int_tp n = 0; n < vwn; ++n) {
             ss << "VEC_" << vwm << "_" << m << "(yreg[wm])"
                << " += ";
-            if (prec != LIBDNN_ACCUMULATE_PREC_NATIVE) {
-              ss << "(" << accreg_type << ")";
-            }
+            ss << "(" << accreg_type << ")";
             ss << "(VEC_" << vwn << "_" << n << "(Areg[wm * VWM + " << m
                << "][wn])" << " * VEC_" << vwn << "_" << n << "(xreg[wn]));"
                << std::endl;
@@ -265,28 +243,7 @@ string LibDNNBlas<MItype, MOtype>::generate_gemv_source(
           ss << "tmp = " << std::endl;
           stringstream src_term;
           src_term << " Areg[wm * VWM + " << m << "][wn] * xreg[wn]";
-          switch (prec) {
-            case LIBDNN_ACCUMULATE_PREC_8:
-              ss << this->program_->template convert_type<uint8_t>(vwn,
-                                                                src_term.str());
-              break;
-            case LIBDNN_ACCUMULATE_PREC_16:
-              ss << this->program_->template convert_type<uint16_t>(vwn,
-                                                                src_term.str());
-              break;
-            case LIBDNN_ACCUMULATE_PREC_32:
-              ss << this->program_->template convert_type<uint32_t>(vwn,
-                                                                src_term.str());
-              break;
-            case LIBDNN_ACCUMULATE_PREC_64:
-              ss << this->program_->template convert_type<uint64_t>(vwn,
-                                                                src_term.str());
-              break;
-            case LIBDNN_ACCUMULATE_PREC_NATIVE:
-            default:
-              ss << src_term.str() << ";" << std::endl;
-              break;
-          }
+          ss << src_term.str() << ";" << std::endl;
           for (int_tp n = 0; n < vwn; ++n) {
             ss << "VEC_" << vwm << "_" << m << "(yreg[wm])"
                << " += VEC_" << vwn << "_" << n << "(tmp)";
@@ -330,8 +287,7 @@ string LibDNNBlas<MItype, MOtype>::generate_gemv_source(
 template<typename MItype, typename MOtype>
 string LibDNNBlas<MItype, MOtype>::gemv_string_identifier(
     const CBLAS_TRANSPOSE trans_A, const uint_tp M, const uint_tp N,
-    bool alpha_term, bool beta_term, libdnnAccumulatePrecision_t prec,
-    shared_ptr<Quantizer<MItype, MOtype> > quantizer) {
+    bool alpha_term, bool beta_term) {
   stringstream ss;
   ss << "gemv_";
   ss << (trans_A == CblasNoTrans ? "TA_" : "NTA_");
@@ -341,25 +297,8 @@ string LibDNNBlas<MItype, MOtype>::gemv_string_identifier(
     ss << "alpha_";
   }
   if (beta_term) {
-    ss << "beta_";
+    ss << "beta";
   }
-  switch (prec) {
-    case LIBDNN_ACCUMULATE_PREC_8:
-      ss << "prec_8_";
-      break;
-    case LIBDNN_ACCUMULATE_PREC_16:
-      ss << "prec_16_";
-      break;
-    case LIBDNN_ACCUMULATE_PREC_32:
-      ss << "prec_32_";
-      break;
-    case LIBDNN_ACCUMULATE_PREC_64:
-      ss << "prec_64_";
-      break;
-    default:
-      break;
-  }
-  ss << "q_" << (quantizer->needs_quantization() ? "a" : "p");
   return ss.str();
 }
 
@@ -368,18 +307,21 @@ template<typename MItype, typename MOtype>
 void LibDNNBlas<MItype, MOtype>::gemv(
                const CBLAS_TRANSPOSE trans_A,
                const uint_tp M, const uint_tp N,
-               const MItype alpha, vptr<const MItype> A, vptr<const MItype> x,
-               const MItype beta, vptr<MOtype> y,
-               libdnnAccumulatePrecision_t prec,
-               shared_ptr<Quantizer<MItype, MOtype> > quantizer) {
-  bool alpha_term = alpha != (MItype)1;
-  bool beta_term = beta != (MItype)0;
+               const MOtype alpha, vptr<const MItype> A, vptr<const MItype> x,
+               const MOtype beta, vptr<MOtype> y,
+               const QuantizerValues* const alpha_quant,
+               const QuantizerValues* const a_quant,
+               const QuantizerValues* const x_quant,
+               const QuantizerValues* const beta_quant,
+               const QuantizerValues* const y_quant) {
+  bool alpha_term = alpha != MOtype(1);
+  bool beta_term = beta != MOtype(0);
 
   uint_tp MT = trans_A == CblasNoTrans ? M : N;
   uint_tp NT = trans_A == CblasNoTrans ? N : M;
 
   string identifier = gemv_string_identifier(trans_A, MT, NT,
-                               alpha_term, beta_term, prec, quantizer);
+                                             alpha_term, beta_term);
 
   int_tp id = get_id(identifier);
   if (id < 0) {
@@ -397,8 +339,7 @@ void LibDNNBlas<MItype, MOtype>::gemv(
       stringstream ss;
       ss << generate_gemv_source(program, tuner,
                                  trans_A == CblasTrans,
-                                 MT, NT, alpha_term, beta_term, prec,
-                                 quantizer);
+                                 MT, NT, alpha_term, beta_term);
       program->set_source(ss.str());
       program->Compile(true, true);
       program_ready_[id] = true;

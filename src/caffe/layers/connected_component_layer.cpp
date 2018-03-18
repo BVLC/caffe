@@ -43,11 +43,12 @@ template<typename Dtype, typename MItype, typename MOtype>
 void ConnectedComponentLayer<Dtype, MItype, MOtype>::LayerSetUp(
               const vector<Blob<MItype>*>& bottom,
               const vector<Blob<MOtype>*>& top) {
+  this->InitializeQuantizers(bottom, top);
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void ConnectedComponentLayer<Dtype, MItype, MOtype>::Reshape(const vector<Blob<MItype>*>& bottom,
-                                    const vector<Blob<MOtype>*>& top) {
+void ConnectedComponentLayer<Dtype, MItype, MOtype>::Reshape(
+    const vector<Blob<MItype>*>& bottom, const vector<Blob<MOtype>*>& top) {
   top[0]->ReshapeLike(*bottom[0]);
 }
 

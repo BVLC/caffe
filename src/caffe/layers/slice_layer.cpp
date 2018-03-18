@@ -7,7 +7,8 @@
 namespace caffe {
 
 template<typename Dtype, typename MItype, typename MOtype>
-void SliceLayer<Dtype, MItype, MOtype>::LayerSetUp(const vector<Blob<MItype>*>& bottom,
+void SliceLayer<Dtype, MItype, MOtype>::LayerSetUp(
+    const vector<Blob<MItype>*>& bottom,
       const vector<Blob<MOtype>*>& top) {
   const SliceParameter& slice_param = this->layer_param_.slice_param();
   CHECK(!(slice_param.has_axis() && slice_param.has_slice_dim()))
@@ -16,11 +17,13 @@ void SliceLayer<Dtype, MItype, MOtype>::LayerSetUp(const vector<Blob<MItype>*>& 
   std::copy(slice_param.slice_point().begin(),
       slice_param.slice_point().end(),
       std::back_inserter(slice_point_));
+  this->InitializeQuantizers(bottom, top);
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void SliceLayer<Dtype, MItype, MOtype>::Reshape(const vector<Blob<MItype>*>& bottom,
-      const vector<Blob<MOtype>*>& top) {
+void SliceLayer<Dtype, MItype, MOtype>::Reshape(
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
   const int_tp num_axes = bottom[0]->num_axes();
   const SliceParameter& slice_param = this->layer_param_.slice_param();
   if (slice_param.has_slice_dim()) {
@@ -79,8 +82,9 @@ void SliceLayer<Dtype, MItype, MOtype>::Reshape(const vector<Blob<MItype>*>& bot
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void SliceLayer<Dtype, MItype, MOtype>::Forward_cpu(const vector<Blob<MItype>*>& bottom,
-      const vector<Blob<MOtype>*>& top) {
+void SliceLayer<Dtype, MItype, MOtype>::Forward_cpu(
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
   if (top.size() == 1) { return; }
   int_tp offset_slice_axis = 0;
   const Dtype* bottom_data = bottom[0]->cpu_data();
@@ -100,8 +104,9 @@ void SliceLayer<Dtype, MItype, MOtype>::Forward_cpu(const vector<Blob<MItype>*>&
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void SliceLayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob<MOtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<MItype>*>& bottom) {
+void SliceLayer<Dtype, MItype, MOtype>::Backward_cpu(
+    const vector<Blob<MOtype>*>& top, const vector<bool>& propagate_down,
+    const vector<Blob<MItype>*>& bottom) {
   if (!propagate_down[0] || top.size() == 1) { return; }
   int_tp offset_slice_axis = 0;
   Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();

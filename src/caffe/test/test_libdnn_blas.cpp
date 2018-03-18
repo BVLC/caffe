@@ -52,9 +52,8 @@ TYPED_TEST(LibDNNBlasTest, TestGemmCPUGPU) {
   }
 
   dc->GetLibDNNBlas<TypeParam, TypeParam>()->gemm(CblasNoTrans, CblasNoTrans,
-              2, 4, 3, 1., A.gpu_data(), B.gpu_data(), 0., C.mutable_gpu_data(),
-              LIBDNN_ACCUMULATE_PREC_NATIVE,
-              make_shared<Quantizer<TypeParam, TypeParam> >(dc));
+              2, 4, 3, 1., A.gpu_data(), B.gpu_data(), 0.,
+              C.mutable_gpu_data());
 
   for (int_tp i = 0; i < 8; ++i) {
     EXPECT_EQ(C.cpu_data()[i], result[i]);
@@ -70,9 +69,8 @@ TYPED_TEST(LibDNNBlasTest, TestGemmCPUGPU) {
   }
 
   dc->GetLibDNNBlas<TypeParam, TypeParam>()->gemm(CblasTrans, CblasNoTrans,
-              2, 4, 3, 1., A.gpu_data(), B.gpu_data(), 0., C.mutable_gpu_data(),
-              LIBDNN_ACCUMULATE_PREC_NATIVE,
-              make_shared<Quantizer<TypeParam, TypeParam> >(dc));
+              2, 4, 3, 1., A.gpu_data(), B.gpu_data(), 0.,
+              C.mutable_gpu_data());
 
   for (int_tp i = 0; i < 8; ++i) {
     EXPECT_EQ(C.cpu_data()[i], result[i]);
@@ -88,9 +86,8 @@ TYPED_TEST(LibDNNBlasTest, TestGemmCPUGPU) {
   }
 
   dc->GetLibDNNBlas<TypeParam, TypeParam>()->gemm(CblasTrans, CblasTrans,
-              2, 4, 3, 1., A.gpu_data(), B.gpu_data(), 0., C.mutable_gpu_data(),
-              LIBDNN_ACCUMULATE_PREC_NATIVE,
-              make_shared<Quantizer<TypeParam, TypeParam> >(dc));
+              2, 4, 3, 1., A.gpu_data(), B.gpu_data(), 0.,
+              C.mutable_gpu_data());
 
   for (int_tp i = 0; i < 8; ++i) {
     EXPECT_EQ(C.cpu_data()[i], result[i]);
@@ -106,9 +103,8 @@ TYPED_TEST(LibDNNBlasTest, TestGemmCPUGPU) {
   }
 
   dc->GetLibDNNBlas<TypeParam, TypeParam>()->gemm(CblasNoTrans, CblasTrans,
-              2, 4, 3, 1., A.gpu_data(), B.gpu_data(), 0., C.mutable_gpu_data(),
-              LIBDNN_ACCUMULATE_PREC_NATIVE,
-              make_shared<Quantizer<TypeParam, TypeParam> >(dc));
+              2, 4, 3, 1., A.gpu_data(), B.gpu_data(), 0.,
+              C.mutable_gpu_data());
 
   for (int_tp i = 0; i < 8; ++i) {
     EXPECT_EQ(C.cpu_data()[i], result[i]);
@@ -188,9 +184,7 @@ TYPED_TEST(LibDNNBlasTest, TestGemmComparativeCPUGPU) {
                 has_alpha ? alpha_val: (TypeParam)1.,
                 A.gpu_data(), B.gpu_data(),
                 has_beta ? beta_val : (TypeParam)0.,
-                C_GPU.mutable_gpu_data(),
-                LIBDNN_ACCUMULATE_PREC_NATIVE,
-                make_shared<Quantizer<TypeParam, TypeParam> >(dc));
+                C_GPU.mutable_gpu_data());
 
     caffe_gemm<TypeParam>(
                 trans_A, trans_B,
@@ -233,9 +227,7 @@ TYPED_TEST(LibDNNBlasTest, TestGemvCPUGPU) {
 
   dc->GetLibDNNBlas<TypeParam, TypeParam>()->gemv(CblasNoTrans,
                       2, 3, 1., A.gpu_data(),
-                      x.gpu_data(), 0., y.mutable_gpu_data(),
-                      LIBDNN_ACCUMULATE_PREC_NATIVE,
-                      make_shared<Quantizer<TypeParam, TypeParam> >(dc));
+                      x.gpu_data(), 0., y.mutable_gpu_data());
 
   for (int_tp i = 0; i < 2; ++i) {
     EXPECT_EQ(y.cpu_data()[i], result_2[i]);
@@ -251,9 +243,7 @@ TYPED_TEST(LibDNNBlasTest, TestGemvCPUGPU) {
 
   dc->GetLibDNNBlas<TypeParam, TypeParam>()->gemv(CblasTrans,
                       2, 3, 1., A.gpu_data(),
-                      y.gpu_data(), 0., x.mutable_gpu_data(),
-                      LIBDNN_ACCUMULATE_PREC_NATIVE,
-                      make_shared<Quantizer<TypeParam, TypeParam> >(dc));
+                      y.gpu_data(), 0., x.mutable_gpu_data());
 
   for (int_tp i = 0; i < 3; ++i) {
     EXPECT_EQ(x.cpu_data()[i], result_3[i]);
@@ -329,9 +319,7 @@ TYPED_TEST(LibDNNBlasTest, TestGemvComparativeCPUGPU) {
                 has_alpha ? alpha_val: (TypeParam)1.,
                 A.gpu_data(), x.gpu_data(),
                 has_beta ? beta_val : (TypeParam)0.,
-                y_GPU.mutable_gpu_data(),
-                LIBDNN_ACCUMULATE_PREC_NATIVE,
-                make_shared<Quantizer<TypeParam, TypeParam> >(dc));
+                y_GPU.mutable_gpu_data());
 
     caffe_gemv<TypeParam>(
                 trans_A,

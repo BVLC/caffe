@@ -567,24 +567,44 @@ string OclDeviceProgram::convert_type_double(int_tp vec_len,
 }
 string OclDeviceProgram::convert_type_uint8(int_tp vec_len,
                                             string src_val) const {
-  return "convert_char" + (vec_len > 0 ? std::to_string(vec_len) : "")
+  return "convert_uchar" + (vec_len > 0 ? std::to_string(vec_len) : "")
       + "(" + src_val + ")";
 }
 string OclDeviceProgram::convert_type_uint16(int_tp vec_len,
                                              string src_val) const {
-   return "convert_short" + (vec_len > 0 ? std::to_string(vec_len) : "")
+   return "convert_ushort" + (vec_len > 0 ? std::to_string(vec_len) : "")
        + "(" + src_val + ")";
- }
+}
 string OclDeviceProgram::convert_type_uint32(int_tp vec_len,
                                              string src_val) const {
-   return "convert_int" + (vec_len > 0 ? std::to_string(vec_len) : "")
+   return "convert_uint" + (vec_len > 0 ? std::to_string(vec_len) : "")
        + "(" + src_val + ")";
- }
+}
 string OclDeviceProgram::convert_type_uint64(int_tp vec_len,
                                              string src_val) const {
+   return "convert_ulong" + (vec_len > 0 ? std::to_string(vec_len) : "")
+       + "(" + src_val + ")";
+}
+string OclDeviceProgram::convert_type_int8(int_tp vec_len,
+                                           string src_val) const {
+  return "convert_char" + (vec_len > 0 ? std::to_string(vec_len) : "")
+      + "(" + src_val + ")";
+}
+string OclDeviceProgram::convert_type_int16(int_tp vec_len,
+                                            string src_val) const {
+   return "convert_short" + (vec_len > 0 ? std::to_string(vec_len) : "")
+       + "(" + src_val + ")";
+}
+string OclDeviceProgram::convert_type_int32(int_tp vec_len,
+                                            string src_val) const {
+   return "convert_int" + (vec_len > 0 ? std::to_string(vec_len) : "")
+       + "(" + src_val + ")";
+}
+string OclDeviceProgram::convert_type_int64(int_tp vec_len,
+                                            string src_val) const {
    return "convert_long" + (vec_len > 0 ? std::to_string(vec_len) : "")
        + "(" + src_val + ")";
- }
+}
 
 string OclDeviceProgram::helper_functions_half() const {
   return "";

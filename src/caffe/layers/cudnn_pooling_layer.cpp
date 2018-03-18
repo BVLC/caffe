@@ -6,7 +6,8 @@
 namespace caffe {
 
 template<typename Dtype, typename MItype, typename MOtype>
-void CuDNNPoolingLayer<Dtype, MItype, MOtype>::LayerSetUp(const vector<Blob<MItype>*>& bottom,
+void CuDNNPoolingLayer<Dtype, MItype, MOtype>::LayerSetUp(
+    const vector<Blob<MItype>*>& bottom,
     const vector<Blob<MOtype>*>& top) {
   CUDNN_CHECK(cudnnCreate(&handle_));
   cudnn::createTensorNdDesc<Dtype>(&bottom_desc_);
@@ -25,7 +26,8 @@ void CuDNNPoolingLayer<Dtype, MItype, MOtype>::LayerSetUp(const vector<Blob<MIty
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void CuDNNPoolingLayer<Dtype, MItype, MOtype>::Reshape(const vector<Blob<MItype>*>& bottom,
+void CuDNNPoolingLayer<Dtype, MItype, MOtype>::Reshape(
+    const vector<Blob<MItype>*>& bottom,
     const vector<Blob<MOtype>*>& top) {
   PoolingLayer<Dtype, MItype, MOtype>::Reshape(bottom, top);
 

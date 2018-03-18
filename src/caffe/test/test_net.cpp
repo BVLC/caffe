@@ -968,7 +968,7 @@ TYPED_TEST(NetTest, TestLossWeight) {
     this->InitUnsharedWeightsNet(&kLossWeights[i], NULL, kForceBackward);
     const Dtype weighted_loss = this->net_->ForwardBackward();
     const Dtype error_margin = kErrorMargin * fabs(kLossWeights[i])
-      * std::is_same<Dtype, half_fp>::value ? 100 : 1;
+      * (std::is_same<Dtype, half_fp>::value ? Dtype(100) : Dtype(1));
     EXPECT_NEAR(loss * kLossWeights[i], weighted_loss, error_margin)
         << "loss weight = " << kLossWeights[i];
     const vector<shared_ptr<BlobBase > >& weighted_blobs = this->net_->blobs();
@@ -1014,7 +1014,7 @@ TYPED_TEST(NetTest, TestLossWeightMidNet) {
   const Dtype kMinLossAbsValue = 1e-2;
   ASSERT_GE(fabs(loss), kMinLossAbsValue);
   const Dtype kErrorMargin = 1e-4
-    * std::is_same<Dtype, half_fp>::value ? 100 : 1;
+    * (std::is_same<Dtype, half_fp>::value ? Dtype(100) : Dtype(1));
   const int_tp kNumLossWeights = 6;
   Dtype kLossWeights[kNumLossWeights] = {2, 0, 1, -1, -2.5, 3.7};
   for (int_tp i = 0; i < kNumLossWeights; ++i) {
@@ -1041,7 +1041,7 @@ TYPED_TEST(NetTest, TestComboLossWeight) {
   Dtype midnet_loss_weight;
   const bool kForceBackward = true;
   const Dtype kErrorMargin = 1e-4
-    * is_same<Dtype, half_fp>::value ? 100 : 1;
+    * (std::is_same<Dtype, half_fp>::value ? Dtype(100) : Dtype(1));
 
   // Get the loss and gradients with 'EuclideanLoss' weight 1,
   // 'InnerProduct' weight 1.

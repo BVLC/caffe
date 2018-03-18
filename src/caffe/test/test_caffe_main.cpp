@@ -166,7 +166,6 @@ int main(int argc, char** argv) {
   }
   cout << "Setting to use device " << device << endl;
   Caffe::SetDevices(vector<int>{device});
-  Caffe::SetDevice(device);
 #endif
   // invoke the test.
   int r =  RUN_ALL_TESTS();

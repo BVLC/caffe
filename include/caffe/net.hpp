@@ -30,7 +30,7 @@ class NetBase {
   virtual void CopyTrainedLayersFrom(const NetParameter& param) = 0;
   virtual void CopyTrainedLayersFrom(const string trained_filename) = 0;
   virtual void CopyTrainedLayersFromBinaryProto(
-                                          const string trained_filename)= 0;
+                                          const string trained_filename) = 0;
   virtual void CopyTrainedLayersFromHDF5(const string trained_filename) = 0;
   virtual void ClearParamDiffs() = 0;
 
@@ -335,6 +335,7 @@ class Net : public NetBase {
    *        additional memory) the pre-trained layers from another Net.
    */
   virtual void ShareTrainedLayersWith(const NetBase* other);
+
   // For an already initialized net, CopyTrainedLayersFrom() copies the already
   // trained layers from another net parameter instance.
   /**

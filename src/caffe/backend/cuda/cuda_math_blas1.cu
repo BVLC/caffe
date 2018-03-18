@@ -20,15 +20,22 @@ namespace caffe {
 
 #ifdef USE_SINGLE
 void CudaDevice::axpy_float(const uint_tp n, const float alpha,
-                            vptr<const float> x, vptr<float> y) {
+                            vptr<const float> x, vptr<float> y,
+                            const QuantizerValues* const alpha_quant,
+                            const QuantizerValues* const x_quant,
+                            const QuantizerValues* const y_quant) {
   CUBLAS_CHECK(cublasSaxpy(Caffe::cublas_handle(), n, &alpha,
                            x.get_cuda_ptr(), 1, y.get_cuda_ptr(), 1));
 }
 void CudaDevice::axpby_float(const uint_tp n, const float alpha,
                              vptr<const float> x, const float beta,
-                             vptr<float> y) {
+                             vptr<float> y,
+                             const QuantizerValues* const alpha_quant,
+                             const QuantizerValues* const x_quant,
+                             const QuantizerValues* const beta_quant,
+                             const QuantizerValues* const y_quant) {
   this->scal_float(n, beta, y);
-  this->axpy_float(n, alpha, x, y);
+  this->axpy_float(n, alpha, x, y, alpha_quant, x_quant, y_quant);
 }
 void CudaDevice::scal_float(const uint_tp n, const float alpha,
                             vptr<float> x) {
@@ -65,15 +72,22 @@ void CudaDevice::scal_str<float>(const int_tp n, const float alpha,
 
 #ifdef USE_DOUBLE
 void CudaDevice::axpy_double(const uint_tp n, const double alpha,
-                             vptr<const double> x, vptr<double> y) {
+                             vptr<const double> x, vptr<double> y,
+                             const QuantizerValues* const alpha_quant,
+                             const QuantizerValues* const x_quant,
+                             const QuantizerValues* const y_quant) {
   CUBLAS_CHECK(cublasDaxpy(Caffe::cublas_handle(), n, &alpha,
                            x.get_cuda_ptr(), 1, y.get_cuda_ptr(), 1));
 }
 void CudaDevice::axpby_double(const uint_tp n, const double alpha,
                               vptr<const double> x,
-                              const double beta, vptr<double> y) {
+                              const double beta, vptr<double> y,
+                              const QuantizerValues* const alpha_quant,
+                              const QuantizerValues* const x_quant,
+                              const QuantizerValues* const beta_quant,
+                              const QuantizerValues* const y_quant) {
   this->scal_double(n, beta, y);
-  this->axpy_double(n, alpha, x, y);
+  this->axpy_double(n, alpha, x, y, alpha_quant, x_quant, y_quant);
 }
 void CudaDevice::scal_double(const uint_tp n, const double alpha,
                              vptr<double> x) {
