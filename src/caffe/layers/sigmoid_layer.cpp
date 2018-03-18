@@ -6,8 +6,8 @@
 namespace caffe {
 
 template<typename Dtype, typename MItype, typename MOtype>
-inline Dtype sigmoid(Dtype X) {
-  return 0.5 * tanh(0.5 * X) + 0.5;
+inline Dtype sigmoid(Dtype x) {
+  return 0.5 * tanh(0.5 * x) + 0.5;
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
@@ -28,6 +28,7 @@ void SigmoidLayer<Dtype, MItype, MOtype>::Forward_cpu(
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = top[0]->mutable_cpu_data();
   const int_tp count = bottom[0]->count();
+#pragma omp parallel for
   for (int_tp i = 0; i < count; ++i) {
     top_data[i] = sigmoid<Dtype, MItype, MOtype>(bottom_data[i]);
   }
@@ -43,6 +44,7 @@ void SigmoidLayer<Dtype, MItype, MOtype>::Backward_cpu(
     const Dtype* top_diff = top[0]->cpu_diff();
     Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
     const int_tp count = bottom[0]->count();
+#pragma omp parallel for
     for (int_tp i = 0; i < count; ++i) {
       const Dtype sigmoid_x = top_data[i];
       bottom_diff[i] = top_diff[i] * sigmoid_x * (1. - sigmoid_x);
