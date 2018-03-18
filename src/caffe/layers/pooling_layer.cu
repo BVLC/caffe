@@ -62,11 +62,12 @@ __global__ void AvePoolForward(const int nthreads,
     int wstart = pw * stride_w - pad_w;
     int hend = min(hstart + kernel_h, height + pad_h);
     int wend = min(wstart + kernel_w, width + pad_w);
-    const int pool_size = (hend - hstart) * (wend - wstart);
+    int pool_size;
     hstart = max(hstart, 0);
     wstart = max(wstart, 0);
     hend = min(hend, height);
     wend = min(wend, width);
+    pool_size = (hend - hstart) * (wend - wstart);
     Dtype aveval = 0;
     const Dtype* const bottom_slice =
         bottom_data + (n * channels + c) * height * width;
