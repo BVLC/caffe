@@ -13,7 +13,8 @@
 namespace caffe {
 
 template<typename Dtype, typename MItype, typename MOtype>
-void CropLayer<Dtype, MItype, MOtype>::LayerSetUp(const vector<Blob<MItype>*>& bottom,
+void CropLayer<Dtype, MItype, MOtype>::LayerSetUp(
+    const vector<Blob<MItype>*>& bottom,
     const vector<Blob<MOtype>*>& top) {
   // LayerSetup() handles the number of dimensions; Reshape() handles the sizes.
   // bottom[0] supplies the data
@@ -30,10 +31,12 @@ void CropLayer<Dtype, MItype, MOtype>::LayerSetUp(const vector<Blob<MItype>*>& b
       << "number of offset values specified must be equal to the number of "
       << "dimensions following axis.";
   }
+  this->InitializeQuantizers(bottom, top);
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void CropLayer<Dtype, MItype, MOtype>::Reshape(const vector<Blob<MItype>*>& bottom,
+void CropLayer<Dtype, MItype, MOtype>::Reshape(
+    const vector<Blob<MItype>*>& bottom,
     const vector<Blob<MOtype>*>& top) {
   const CropParameter& param = this->layer_param_.crop_param();
   int_tp input_dim = bottom[0]->num_axes();

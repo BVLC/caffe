@@ -5,18 +5,16 @@
 namespace caffe {
 
 template<typename MItype, typename MOtype>
-string LibDNNBlas<MItype, MOtype>::scale_string_identifier(
-    shared_ptr<Quantizer<MItype, MOtype> > quantizer) {
+string LibDNNBlas<MItype, MOtype>::scale_string_identifier() {
   stringstream ss;
-  ss << "scale_";
-  ss << "q_" << (quantizer->needs_quantization() ? "a" : "p");
+  ss << "scale";
   return ss.str();
 }
 
 template<typename MItype, typename MOtype>
 string LibDNNBlas<MItype, MOtype>::generate_scale_source(
-            shared_ptr<DeviceProgram> program, shared_ptr<LibDNNTuner> tuner,
-            shared_ptr<Quantizer<MItype, MOtype> > quantizer) {
+            shared_ptr<DeviceProgram> program,
+            shared_ptr<LibDNNTuner> tuner) {
   stringstream ss;
   ss << program->setup();
   ss << program->template define_vector_type<MItype>("MItype", 0, 16);
@@ -40,8 +38,10 @@ string LibDNNBlas<MItype, MOtype>::generate_scale_source(
 template<typename MItype, typename MOtype>
 void LibDNNBlas<MItype, MOtype>::scale(const uint_tp n,
            const MItype alpha, vptr<const MItype> x, vptr<MOtype> y,
-           shared_ptr<Quantizer<MItype, MOtype> > quantizer) {
-  string identifier = scale_string_identifier(quantizer);
+           const QuantizerValues* const alpha_quant,
+           const QuantizerValues* const x_quant,
+           const QuantizerValues* const y_quant) {
+  string identifier = scale_string_identifier();
 
   int_tp id = get_id(identifier);
   if (id < 0) {
@@ -56,7 +56,7 @@ void LibDNNBlas<MItype, MOtype>::scale(const uint_tp n,
     boost::unique_lock<boost::shared_mutex> ulock(program_mutex_);
     if (!program_ready_[id]) {
       stringstream ss;
-      ss << generate_scale_source(program, tuner, quantizer);
+      ss << generate_scale_source(program, tuner);
       program->set_source(ss.str());
       program->Compile(true, true);
       program_ready_[id] = true;
@@ -81,23 +81,22 @@ void LibDNNBlas<MItype, MOtype>::scale(const uint_tp n,
 template<typename MItype, typename MOtype>
 void LibDNNBlas<MItype, MOtype>::scal(const uint_tp n, const MItype alpha,
           vptr<MItype> x,
-          shared_ptr<Quantizer<MItype, MOtype> > quantizer) {
-  this->scale(n, alpha, x, x, quantizer);
+          const QuantizerValues* const alpha_quant,
+          const QuantizerValues* const x_quant) {
+  this->scale(n, alpha, x, x, alpha_quant, x_quant, x_quant);
 }
 
 template<typename MItype, typename MOtype>
-string LibDNNBlas<MItype, MOtype>::axpby_string_identifier(
-    shared_ptr<Quantizer<MItype, MOtype> > quantizer) {
+string LibDNNBlas<MItype, MOtype>::axpby_string_identifier() {
   stringstream ss;
-  ss << "axpby_";
-  ss << "q_" << (quantizer->needs_quantization() ? "a" : "p");
+  ss << "axpby";
   return ss.str();
 }
 
 template<typename MItype, typename MOtype>
 string LibDNNBlas<MItype, MOtype>::generate_axpby_source(
-            shared_ptr<DeviceProgram> program, shared_ptr<LibDNNTuner> tuner,
-            shared_ptr<Quantizer<MItype, MOtype> > quantizer) {
+                                            shared_ptr<DeviceProgram> program,
+                                            shared_ptr<LibDNNTuner> tuner) {
   stringstream ss;
   ss << program->setup();
   ss << program->template define_vector_type<MItype>("MItype", 0, 16);
@@ -122,8 +121,11 @@ string LibDNNBlas<MItype, MOtype>::generate_axpby_source(
 template<typename MItype, typename MOtype>
 void LibDNNBlas<MItype, MOtype>::axpby(const uint_tp n, const MItype alpha,
            vptr<const MItype> x, const MOtype beta, vptr<MOtype> y,
-           shared_ptr<Quantizer<MItype, MOtype> > quantizer) {
-  string identifier = axpby_string_identifier(quantizer);
+           const QuantizerValues* const alpha_quant,
+           const QuantizerValues* const x_quant,
+           const QuantizerValues* const beta_quant,
+           const QuantizerValues* const y_quant) {
+  string identifier = axpby_string_identifier();
 
   int_tp id = get_id(identifier);
   if (id < 0) {
@@ -138,8 +140,7 @@ void LibDNNBlas<MItype, MOtype>::axpby(const uint_tp n, const MItype alpha,
     boost::unique_lock<boost::shared_mutex> ulock(program_mutex_);
     if (!program_ready_[id]) {
       stringstream ss;
-      ss << generate_axpby_source(program, tuner,
-                                  quantizer);
+      ss << generate_axpby_source(program, tuner);
       program->set_source(ss.str());
       program->Compile(true, true);
       program_ready_[id] = true;
@@ -163,37 +164,16 @@ void LibDNNBlas<MItype, MOtype>::axpby(const uint_tp n, const MItype alpha,
 }
 
 template<typename MItype, typename MOtype>
-string LibDNNBlas<MItype, MOtype>::dot_string_identifier(
-    libdnnAccumulatePrecision_t prec,
-    shared_ptr<Quantizer<MItype, MOtype> > quantizer) {
+string LibDNNBlas<MItype, MOtype>::dot_string_identifier() {
   stringstream ss;
-  ss << "dot_";
-  switch (prec) {
-    case LIBDNN_ACCUMULATE_PREC_8:
-      ss << "prec_8_";
-      break;
-    case LIBDNN_ACCUMULATE_PREC_16:
-      ss << "prec_16_";
-      break;
-    case LIBDNN_ACCUMULATE_PREC_32:
-      ss << "prec_32_";
-      break;
-    case LIBDNN_ACCUMULATE_PREC_64:
-      ss << "prec_64_";
-      break;
-    default:
-      break;
-  }
-  ss << "q_" << (quantizer->needs_quantization() ? "a" : "p");
+  ss << "dot";
   return ss.str();
 }
 
 template<typename MItype, typename MOtype>
 string LibDNNBlas<MItype, MOtype>::generate_dot_source(
                              shared_ptr<DeviceProgram> program,
-                             shared_ptr<LibDNNTuner> tuner,
-                             libdnnAccumulatePrecision_t prec,
-                             shared_ptr<Quantizer<MItype, MOtype> > quantizer) {
+                             shared_ptr<LibDNNTuner> tuner) {
   stringstream ss;
   ss << program->setup();
   ss << program->template define_vector_type<MItype>("MItype", 0, 16);
@@ -222,9 +202,11 @@ string LibDNNBlas<MItype, MOtype>::generate_dot_source(
 
 template<typename MItype, typename MOtype>
 void LibDNNBlas<MItype, MOtype>::dot(const uint_tp n, vptr<const MItype> x,
-         vptr<const MItype> y, MOtype* out, libdnnAccumulatePrecision_t prec,
-         shared_ptr<Quantizer<MItype, MOtype> > quantizer) {
-  string identifier = dot_string_identifier(prec, quantizer);
+         vptr<const MItype> y, MOtype* out,
+         const QuantizerValues* const x_quant,
+         const QuantizerValues* const y_quant,
+         const QuantizerValues* const out_quant) {
+  string identifier = dot_string_identifier();
 
   int_tp id = get_id(identifier);
   if (id < 0) {
@@ -239,7 +221,7 @@ void LibDNNBlas<MItype, MOtype>::dot(const uint_tp n, vptr<const MItype> x,
     boost::unique_lock<boost::shared_mutex> ulock(program_mutex_);
     if (!program_ready_[id]) {
       stringstream ss;
-      ss << generate_dot_source(program, tuner, prec, quantizer);
+      ss << generate_dot_source(program, tuner);
       program->set_source(ss.str());
       program->Compile(true, true);
       program_ready_[id] = true;
@@ -269,37 +251,16 @@ void LibDNNBlas<MItype, MOtype>::dot(const uint_tp n, vptr<const MItype> x,
 
 
 template<typename MItype, typename MOtype>
-string LibDNNBlas<MItype, MOtype>::asum_string_identifier(
-    libdnnAccumulatePrecision_t prec,
-    shared_ptr<Quantizer<MItype, MOtype> > quantizer) {
+string LibDNNBlas<MItype, MOtype>::asum_string_identifier() {
   stringstream ss;
-  ss << "asum_";
-  switch (prec) {
-    case LIBDNN_ACCUMULATE_PREC_8:
-      ss << "prec_8_";
-      break;
-    case LIBDNN_ACCUMULATE_PREC_16:
-      ss << "prec_16_";
-      break;
-    case LIBDNN_ACCUMULATE_PREC_32:
-      ss << "prec_32_";
-      break;
-    case LIBDNN_ACCUMULATE_PREC_64:
-      ss << "prec_64_";
-      break;
-    default:
-      break;
-  }
-  ss << "q_" << (quantizer->needs_quantization() ? "a" : "p");
+  ss << "asum";
   return ss.str();
 }
 
 template<typename MItype, typename MOtype>
 string LibDNNBlas<MItype, MOtype>::generate_asum_source(
                              shared_ptr<DeviceProgram> program,
-                             shared_ptr<LibDNNTuner> tuner,
-                             libdnnAccumulatePrecision_t prec,
-                             shared_ptr<Quantizer<MItype, MOtype> > quantizer) {
+                             shared_ptr<LibDNNTuner> tuner) {
   stringstream ss;
   ss << program->setup();
   ss << program->template define_vector_type<MItype>("MItype", 0, 16);
@@ -328,9 +289,10 @@ string LibDNNBlas<MItype, MOtype>::generate_asum_source(
 
 template<typename MItype, typename MOtype>
 void LibDNNBlas<MItype, MOtype>::asum(const uint_tp n, vptr<const MItype> x,
-          MOtype* y, libdnnAccumulatePrecision_t prec,
-          shared_ptr<Quantizer<MItype, MOtype> > quantizer) {
-  string identifier = asum_string_identifier(prec, quantizer);
+                                      MOtype* y,
+                                      const QuantizerValues* const x_quant,
+                                      const QuantizerValues* const y_quant) {
+  string identifier = asum_string_identifier();
 
   int_tp id = get_id(identifier);
   if (id < 0) {
@@ -345,7 +307,7 @@ void LibDNNBlas<MItype, MOtype>::asum(const uint_tp n, vptr<const MItype> x,
     boost::unique_lock<boost::shared_mutex> ulock(program_mutex_);
     if (!program_ready_[id]) {
       stringstream ss;
-      ss << generate_asum_source(program, tuner, prec, quantizer);
+      ss << generate_asum_source(program, tuner);
       program->set_source(ss.str());
       program->Compile(true, true);
       program_ready_[id] = true;

@@ -19,10 +19,11 @@ class ParameterLayer : public Layer<Dtype, MItype, MOtype> {
     } else {
       this->blobs_.resize(1);
       this->blobs_[0].reset(new Blob<Dtype>());
-      this->blobs_[0]->set_quant(this->blobs_quant_);
       this->blobs_[0]->Reshape(this->layer_param_.parameter_param().shape());
     }
     top[0]->Reshape(this->layer_param_.parameter_param().shape());
+
+    this->InitializeQuantizers(bottom, top);
   }
   virtual void Reshape(const vector<Blob<MItype>*>& bottom,
       const vector<Blob<MOtype>*>& top) { }

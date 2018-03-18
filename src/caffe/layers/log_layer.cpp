@@ -6,8 +6,9 @@
 namespace caffe {
 
 template<typename Dtype, typename MItype, typename MOtype>
-void LogLayer<Dtype, MItype, MOtype>::LayerSetUp(const vector<Blob<MItype>*>& bottom,
-      const vector<Blob<MOtype>*>& top) {
+void LogLayer<Dtype, MItype, MOtype>::LayerSetUp(
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
   NeuronLayer<Dtype, MItype, MOtype>::LayerSetUp(bottom, top);
   const Dtype base = this->layer_param_.log_param().base();
   if (base != Dtype(-1)) {
@@ -28,10 +29,12 @@ void LogLayer<Dtype, MItype, MOtype>::LayerSetUp(const vector<Blob<MItype>*>& bo
   input_scale_ = this->layer_param_.log_param().scale();
   input_shift_ = this->layer_param_.log_param().shift();
   backward_num_scale_ = input_scale_ / log_base;
+  this->InitializeQuantizers(bottom, top);
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void LogLayer<Dtype, MItype, MOtype>::Forward_cpu(const vector<Blob<MItype>*>& bottom,
+void LogLayer<Dtype, MItype, MOtype>::Forward_cpu(
+    const vector<Blob<MItype>*>& bottom,
     const vector<Blob<MOtype>*>& top) {
   const int_tp count = bottom[0]->count();
   const Dtype* bottom_data = bottom[0]->cpu_data();
@@ -54,8 +57,9 @@ void LogLayer<Dtype, MItype, MOtype>::Forward_cpu(const vector<Blob<MItype>*>& b
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void LogLayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob<MOtype>*>& top,
-    const vector<bool>& propagate_down, const vector<Blob<MItype>*>& bottom) {
+void LogLayer<Dtype, MItype, MOtype>::Backward_cpu(
+    const vector<Blob<MOtype>*>& top, const vector<bool>& propagate_down,
+    const vector<Blob<MItype>*>& bottom) {
   if (!propagate_down[0]) { return; }
   const int_tp count = bottom[0]->count();
   const Dtype* bottom_data = bottom[0]->cpu_data();

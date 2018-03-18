@@ -24,7 +24,12 @@ void CudaDevice::gemv_float(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
                             const uint_tp n, const float alpha,
                             vptr<const float> a,
                             vptr<const float> x, const float beta,
-                            vptr<float> y) {
+                            vptr<float> y,
+                            const QuantizerValues* const alpha_quant,
+                            const QuantizerValues* const a_quant,
+                            const QuantizerValues* const x_quant,
+                            const QuantizerValues* const beta_quant,
+                            const QuantizerValues* const y_quant) {
   cublasOperation_t cuTransA =
       (trans_a == CblasNoTrans) ? CUBLAS_OP_T : CUBLAS_OP_N;
   CUBLAS_CHECK(cublasSgemv(Caffe::cublas_handle(), cuTransA,
@@ -38,7 +43,12 @@ void CudaDevice::gemv_double(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
                              const uint_tp n, const double alpha,
                              vptr<const double> a,
                              vptr<const double> x, const double beta,
-                             vptr<double> y) {
+                             vptr<double> y,
+                             const QuantizerValues* const alpha_quant,
+                             const QuantizerValues* const a_quant,
+                             const QuantizerValues* const x_quant,
+                             const QuantizerValues* const beta_quant,
+                             const QuantizerValues* const y_quant) {
   cublasOperation_t cuTransA =
       (trans_a == CblasNoTrans) ? CUBLAS_OP_T : CUBLAS_OP_N;
   CUBLAS_CHECK(cublasDgemv(Caffe::cublas_handle(), cuTransA,

@@ -32,7 +32,6 @@ void ScaleLayer<Dtype, MItype, MOtype>::LayerSetUp(const vector<Blob<MItype>*>& 
         (num_axes == -1) ? bottom[0]->shape().end() : (shape_start + num_axes);
     vector<int_tp> scale_shape(shape_start, shape_end);
     this->blobs_[0].reset(new Blob<Dtype>(scale_shape));
-    this->blobs_[0]->set_quant(this->blobs_quant_);
     FillerParameter filler_param(param.filler());
     if (!param.has_filler()) {
       // Default to unit (1) filler for identity operation.
@@ -72,6 +71,8 @@ void ScaleLayer<Dtype, MItype, MOtype>::LayerSetUp(const vector<Blob<MItype>*>& 
     bias_propagate_down_.resize(1, false);
   }
   this->param_propagate_down_.resize(this->blobs_.size(), true);
+
+  this->InitializeQuantizers(bottom, top);
 }
 
 template<typename Dtype, typename MItype, typename MOtype>

@@ -7,8 +7,9 @@
 namespace caffe {
 
 template<typename Dtype, typename MItype, typename MOtype>
-void BatchNormLayer<Dtype, MItype, MOtype>::LayerSetUp(const vector<Blob<MItype>*>& bottom,
-                                       const vector<Blob<MOtype>*>& top) {
+void BatchNormLayer<Dtype, MItype, MOtype>::LayerSetUp(
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
   BatchNormParameter param = this->layer_param_.batch_norm_param();
   moving_average_fraction_ = param.moving_average_fraction();
   use_global_stats_ = this->phase_ == TEST;
@@ -26,12 +27,9 @@ void BatchNormLayer<Dtype, MItype, MOtype>::LayerSetUp(const vector<Blob<MItype>
     vector<int_tp> sz;
     sz.push_back(channels_);
     this->blobs_[0].reset(new Blob<Dtype>(sz, this->device_));
-    this->blobs_[0]->set_quant(this->blobs_quant_);
     this->blobs_[1].reset(new Blob<Dtype>(sz, this->device_));
-    this->blobs_[1]->set_quant(this->blobs_quant_);
     sz[0]=1;
     this->blobs_[2].reset(new Blob<Dtype>(sz, this->device_));
-    this->blobs_[2]->set_quant(this->blobs_quant_);
     for (int_tp i = 0; i < 3; ++i) {
       caffe_set(this->blobs_[i]->count(), Dtype(0),
           this->blobs_[i]->mutable_cpu_data());
@@ -49,11 +47,14 @@ void BatchNormLayer<Dtype, MItype, MOtype>::LayerSetUp(const vector<Blob<MItype>
           << "parameters.";
     }
   }
+
+  this->InitializeQuantizers(bottom, top);
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void BatchNormLayer<Dtype, MItype, MOtype>::Reshape(const vector<Blob<MItype>*>& bottom,
-                                    const vector<Blob<MOtype>*>& top) {
+void BatchNormLayer<Dtype, MItype, MOtype>::Reshape(
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
   if (bottom[0]->num_axes() >= 1)
     CHECK_EQ(bottom[0]->shape(1), channels_);
   top[0]->ReshapeLike(*bottom[0]);
@@ -86,8 +87,9 @@ void BatchNormLayer<Dtype, MItype, MOtype>::Reshape(const vector<Blob<MItype>*>&
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void BatchNormLayer<Dtype, MItype, MOtype>::Forward_cpu(const vector<Blob<MItype>*>& bottom,
-                                        const vector<Blob<MOtype>*>& top) {
+void BatchNormLayer<Dtype, MItype, MOtype>::Forward_cpu(
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = top[0]->mutable_cpu_data();
   int_tp num = bottom[0]->shape(0);
@@ -168,7 +170,8 @@ void BatchNormLayer<Dtype, MItype, MOtype>::Forward_cpu(const vector<Blob<MItype
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void BatchNormLayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob<MOtype>*>& top,
+void BatchNormLayer<Dtype, MItype, MOtype>::Backward_cpu(
+    const vector<Blob<MOtype>*>& top,
     const vector<bool>& propagate_down,
     const vector<Blob<MItype>*>& bottom) {
   const Dtype* top_diff;

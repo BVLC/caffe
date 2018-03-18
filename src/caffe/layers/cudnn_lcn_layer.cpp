@@ -6,7 +6,8 @@
 namespace caffe {
 
 template<typename Dtype, typename MItype, typename MOtype>
-void CuDNNLCNLayer<Dtype, MItype, MOtype>::LayerSetUp(const vector<Blob<MItype>*>& bottom,
+void CuDNNLCNLayer<Dtype, MItype, MOtype>::LayerSetUp(
+    const vector<Blob<MItype>*>& bottom,
     const vector<Blob<MOtype>*>& top) {
   LRNLayer<Dtype, MItype, MOtype>::LayerSetUp(bottom, top);
 
@@ -26,7 +27,8 @@ void CuDNNLCNLayer<Dtype, MItype, MOtype>::LayerSetUp(const vector<Blob<MItype>*
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void CuDNNLCNLayer<Dtype, MItype, MOtype>::Reshape(const vector<Blob<MItype>*>& bottom,
+void CuDNNLCNLayer<Dtype, MItype, MOtype>::Reshape(
+    const vector<Blob<MItype>*>& bottom,
     const vector<Blob<MOtype>*>& top) {
   LRNLayer<Dtype, MItype, MOtype>::Reshape(bottom, top);
   vector<int_tp> shape;

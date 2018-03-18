@@ -10,17 +10,20 @@
 namespace caffe {
 
 template<typename Dtype, typename MItype, typename MOtype>
-void HDF5OutputLayer<Dtype, MItype, MOtype>::LayerSetUp(const vector<Blob<MItype>*>& bottom,
+void HDF5OutputLayer<Dtype, MItype, MOtype>::LayerSetUp(
+    const vector<Blob<MItype>*>& bottom,
     const vector<Blob<MOtype>*>& top) {
   file_name_ = this->layer_param_.hdf5_output_param().file_name();
   file_id_ = H5Fcreate(file_name_.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT,
                        H5P_DEFAULT);
   CHECK_GE(file_id_, 0) << "Failed to open HDF5 file" << file_name_;
   file_opened_ = true;
+  this->InitializeQuantizers(bottom, top);
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-HDF5OutputLayer<Dtype, MItype, MOtype>::~HDF5OutputLayer<Dtype, MItype, MOtype>() {
+HDF5OutputLayer<Dtype, MItype, MOtype>::
+    ~HDF5OutputLayer<Dtype, MItype, MOtype>() {
   if (file_opened_) {
     herr_t status = H5Fclose(file_id_);
     CHECK_GE(status, 0) << "Failed to close HDF5 file " << file_name_;
@@ -39,8 +42,9 @@ void HDF5OutputLayer<Dtype, MItype, MOtype>::SaveBlobs() {
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void HDF5OutputLayer<Dtype, MItype, MOtype>::Forward_cpu(const vector<Blob<MItype>*>& bottom,
-      const vector<Blob<MOtype>*>& top) {
+void HDF5OutputLayer<Dtype, MItype, MOtype>::Forward_cpu(
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
   CHECK_GE(bottom.size(), 2);
   CHECK_EQ(bottom[0]->num(), bottom[1]->num());
   data_blob_.Reshape(bottom[0]->num(), bottom[0]->channels(),

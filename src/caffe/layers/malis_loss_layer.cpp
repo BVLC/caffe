@@ -272,8 +272,8 @@ void MalisLossLayer<Dtype, MItype, MOtype>::Malis(const Dtype* conn_data,
 
 
 template<typename Dtype, typename MItype, typename MOtype>
-void MalisLossLayer<Dtype, MItype, MOtype>::LayerSetUp(const vector<Blob<MItype>*>& bottom,
-                                       const vector<Blob<MOtype>*>& top) {
+void MalisLossLayer<Dtype, MItype, MOtype>::LayerSetUp(
+    const vector<Blob<MItype>*>& bottom, const vector<Blob<MOtype>*>& top) {
   LossLayer<Dtype, MItype, MOtype>::LayerSetUp(bottom, top);
 
   // Expected inputs:
@@ -288,8 +288,8 @@ void MalisLossLayer<Dtype, MItype, MOtype>::LayerSetUp(const vector<Blob<MItype>
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void MalisLossLayer<Dtype, MItype, MOtype>::Reshape(const vector<Blob<MItype>*>& bottom,
-                                    const vector<Blob<MOtype>*>& top) {
+void MalisLossLayer<Dtype, MItype, MOtype>::Reshape(
+    const vector<Blob<MItype>*>& bottom, const vector<Blob<MOtype>*>& top) {
   LossLayer<Dtype, MItype, MOtype>::Reshape(bottom, top);
 
   if (top.size() >= 2) {

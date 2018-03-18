@@ -18,13 +18,15 @@
 namespace caffe {
 
 template<typename Dtype, typename MItype, typename MOtype>
-ImageDataLayer<Dtype, MItype, MOtype>::~ImageDataLayer<Dtype, MItype, MOtype>() {
+ImageDataLayer<Dtype, MItype, MOtype>::
+    ~ImageDataLayer<Dtype, MItype, MOtype>() {
   this->StopInternalThread();
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void ImageDataLayer<Dtype, MItype, MOtype>::DataLayerSetUp(const vector<Blob<MItype>*>& bottom,
-      const vector<Blob<MOtype>*>& top) {
+void ImageDataLayer<Dtype, MItype, MOtype>::DataLayerSetUp(
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
   const int_tp new_height = this->layer_param_.image_data_param().new_height();
   const int_tp new_width  = this->layer_param_.image_data_param().new_width();
   const bool is_color  = this->layer_param_.image_data_param().is_color();

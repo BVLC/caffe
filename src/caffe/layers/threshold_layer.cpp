@@ -10,6 +10,8 @@ void ThresholdLayer<Dtype, MItype, MOtype>::LayerSetUp(
                                           const vector<Blob<MOtype>*>& top) {
   NeuronLayer<Dtype, MItype, MOtype>::LayerSetUp(bottom, top);
   threshold_ = this->layer_param_.threshold_param().threshold();
+
+  this->InitializeQuantizers(bottom, top);
 }
 
 template<typename Dtype, typename MItype, typename MOtype>

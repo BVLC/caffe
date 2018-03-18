@@ -47,6 +47,7 @@ void InfogainLossLayer<Dtype, MItype, MOtype>::LayerSetUp(
       this->layer_param_.infogain_loss_param().source(), &blob_proto);
     infogain_.FromProto(blob_proto);
   }
+  this->InitializeQuantizers(bottom, top);
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
@@ -115,7 +116,8 @@ Dtype InfogainLossLayer<Dtype, MItype, MOtype>::get_normalizer(
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void InfogainLossLayer<Dtype, MItype, MOtype>::sum_rows_of_H(const Blob<Dtype>* H) {
+void InfogainLossLayer<Dtype, MItype, MOtype>::sum_rows_of_H(
+    const Blob<Dtype>* H) {
   CHECK_EQ(H->count(), num_labels_*num_labels_)
     << "H must be " << num_labels_ << "X" << num_labels_;
   const Dtype* infogain_mat = H->cpu_data();
@@ -129,7 +131,8 @@ void InfogainLossLayer<Dtype, MItype, MOtype>::sum_rows_of_H(const Blob<Dtype>* 
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void InfogainLossLayer<Dtype, MItype, MOtype>::Forward_cpu(const vector<Blob<MItype>*>& bottom,
+void InfogainLossLayer<Dtype, MItype, MOtype>::Forward_cpu(
+    const vector<Blob<MItype>*>& bottom,
     const vector<Blob<MOtype>*>& top) {
   // The forward pass computes the softmax prob values.
   softmax_layer_->Forward(softmax_bottom_vec_, softmax_top_vec_);
@@ -168,8 +171,8 @@ void InfogainLossLayer<Dtype, MItype, MOtype>::Forward_cpu(const vector<Blob<MIt
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void InfogainLossLayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob<MOtype>*>& top,
-    const vector<bool>& propagate_down,
+void InfogainLossLayer<Dtype, MItype, MOtype>::Backward_cpu(
+    const vector<Blob<MOtype>*>& top, const vector<bool>& propagate_down,
     const vector<Blob<MItype>*>& bottom) {
   if (propagate_down[1]) {
     LOG(FATAL) << this->type()

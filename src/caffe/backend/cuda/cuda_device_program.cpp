@@ -539,32 +539,58 @@ string CudaDeviceProgram::convert_type_char(int_tp vec_len,
 string CudaDeviceProgram::convert_type_half(int_tp vec_len,
                                             string src_val) const {
   return "((half" + (vec_len > 0 ? std::to_string(vec_len) : "")
-       + ")(" + src_val + "))";}
+       + ")(" + src_val + "))";
+}
 string CudaDeviceProgram::convert_type_float(int_tp vec_len,
                                              string src_val) const {
   return "((float" + (vec_len > 0 ? std::to_string(vec_len) : "")
-       + ")(" + src_val + "))";}
+       + ")(" + src_val + "))";
+}
 string CudaDeviceProgram::convert_type_double(int_tp vec_len,
                                               string src_val) const {
   return "((double" + (vec_len > 0 ? std::to_string(vec_len) : "")
-       + ")(" + src_val + "))";}
-string CudaDeviceProgram::convert_type_int8(int_tp vec_len,
+       + ")(" + src_val + "))";
+}
+string CudaDeviceProgram::convert_type_uint8(int_tp vec_len,
                                             string src_val) const {
   return "((char" + (vec_len > 0 ? std::to_string(vec_len) : "")
-       + ")(" + src_val + "))";}
-string CudaDeviceProgram::convert_type_int16(int_tp vec_len,
+       + ")(" + src_val + "))";
+}
+string CudaDeviceProgram::convert_type_uint16(int_tp vec_len,
                                              string src_val) const {
   return "((short" + (vec_len > 0 ? std::to_string(vec_len) : "")
-       + ")(" + src_val + "))";}
-string CudaDeviceProgram::convert_type_int32(int_tp vec_len,
+       + ")(" + src_val + "))";
+}
+string CudaDeviceProgram::convert_type_uint32(int_tp vec_len,
                                              string src_val) const {
   return "((int" + (vec_len > 0 ? std::to_string(vec_len) : "")
-       + ")(" + src_val + "))";}
+       + ")(" + src_val + "))";
+}
+string CudaDeviceProgram::convert_type_uint64(int_tp vec_len,
+                                             string src_val) const {
+  return "((long" + (vec_len > 0 ? std::to_string(vec_len) : "")
+       + ")(" + src_val + "))";
+}
+string CudaDeviceProgram::convert_type_int8(int_tp vec_len,
+                                            string src_val) const {
+  return "((uchar" + (vec_len > 0 ? std::to_string(vec_len) : "")
+       + ")(" + src_val + "))";
+}
+string CudaDeviceProgram::convert_type_int16(int_tp vec_len,
+                                             string src_val) const {
+  return "((ushort" + (vec_len > 0 ? std::to_string(vec_len) : "")
+       + ")(" + src_val + "))";
+}
+string CudaDeviceProgram::convert_type_int32(int_tp vec_len,
+                                             string src_val) const {
+  return "((uint" + (vec_len > 0 ? std::to_string(vec_len) : "")
+       + ")(" + src_val + "))";
+}
 string CudaDeviceProgram::convert_type_int64(int_tp vec_len,
                                              string src_val) const {
-  return "((longlong" + (vec_len > 0 ? std::to_string(vec_len) : "")
-       + ")(" + src_val + "))";}
-
+  return "((ulong" + (vec_len > 0 ? std::to_string(vec_len) : "")
+       + ")(" + src_val + "))";
+}
 
 string CudaDeviceProgram::helper_functions_half() const {
   stringstream ss;

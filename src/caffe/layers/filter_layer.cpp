@@ -6,15 +6,18 @@
 namespace caffe {
 
 template<typename Dtype, typename MItype, typename MOtype>
-void FilterLayer<Dtype, MItype, MOtype>::LayerSetUp(const vector<Blob<MItype>*>& bottom,
-      const vector<Blob<MOtype>*>& top) {
+void FilterLayer<Dtype, MItype, MOtype>::LayerSetUp(
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
   CHECK_EQ(top.size(), bottom.size() - 1);
   first_reshape_ = true;
+  this->InitializeQuantizers(bottom, top);
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void FilterLayer<Dtype, MItype, MOtype>::Reshape(const vector<Blob<MItype>*>& bottom,
-      const vector<Blob<MOtype>*>& top) {
+void FilterLayer<Dtype, MItype, MOtype>::Reshape(
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
   // bottom[0...k-1] are the blobs to filter
   // bottom[last] is the "selector_blob"
   int_tp selector_index = bottom.size() - 1;

@@ -14,12 +14,16 @@ void Device::gemv_half(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
                           vptr<const half_fp> a,
                           vptr<const half_fp> x,
                           const half_fp beta,
-                          vptr<half_fp> y) {
+                          vptr<half_fp> y,
+                          const QuantizerValues* const alpha_quant,
+                          const QuantizerValues* const a_quant,
+                          const QuantizerValues* const x_quant,
+                          const QuantizerValues* const beta_quant,
+                          const QuantizerValues* const y_quant) {
 #ifdef USE_LIBDNN
   this->template GetLibDNNBlas<half_fp, half_fp>()->gemv(trans_a, m, n, alpha,
-                               a, x, beta, y,
-                               LIBDNN_ACCUMULATE_PREC_NATIVE,
-                               make_shared<Quantizer<half_fp, half_fp> >(this));
+                               a, x, beta, y, alpha_quant, a_quant, x_quant,
+                               beta_quant, y_quant);
 #else  // USE_LIBDNN
   NOT_IMPLEMENTED;
 #endif  // USE_LIBDNN
@@ -31,12 +35,16 @@ void Device::gemv_float(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
                         const uint_tp n, const float alpha,
                         vptr<const float> a,
                         vptr<const float> x, const float beta,
-                        vptr<float> y) {
+                        vptr<float> y,
+                        const QuantizerValues* const alpha_quant,
+                        const QuantizerValues* const a_quant,
+                        const QuantizerValues* const x_quant,
+                        const QuantizerValues* const beta_quant,
+                        const QuantizerValues* const y_quant) {
 #ifdef USE_LIBDNN
   this->template GetLibDNNBlas<float, float>()->gemv(trans_a, m, n, alpha,
-                               a, x, beta, y,
-                               LIBDNN_ACCUMULATE_PREC_NATIVE,
-                               make_shared<Quantizer<float, float> >(this));
+                               a, x, beta, y, alpha_quant, a_quant, x_quant,
+                               beta_quant, y_quant);
 #else  // USE_LIBDNN
   NOT_IMPLEMENTED;
 #endif  // USE_LIBDNN
@@ -48,12 +56,16 @@ void Device::gemv_double(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
                          const uint_tp n, const double alpha,
                          vptr<const double> a,
                          vptr<const double> x, const double beta,
-                         vptr<double> y) {
+                         vptr<double> y,
+                         const QuantizerValues* const alpha_quant,
+                         const QuantizerValues* const a_quant,
+                         const QuantizerValues* const x_quant,
+                         const QuantizerValues* const beta_quant,
+                         const QuantizerValues* const y_quant) {
 #ifdef USE_LIBDNN
   this->template GetLibDNNBlas<double, double>()->gemv(trans_a, m, n, alpha,
-                               a, x, beta, y,
-                               LIBDNN_ACCUMULATE_PREC_NATIVE,
-                               make_shared<Quantizer<double, double> >(this));
+                               a, x, beta, y, alpha_quant, a_quant, a_quant,
+                               beta_quant, y_quant);
 #else  // USE_LIBDNN
   NOT_IMPLEMENTED;
 #endif  // USE_LIBDNN
@@ -66,12 +78,16 @@ void Device::gemv_uint8(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
                           vptr<const uint8_t> a,
                           vptr<const uint8_t> x,
                           const uint8_t beta,
-                          vptr<uint8_t> y) {
+                          vptr<uint8_t> y,
+                          const QuantizerValues* const alpha_quant,
+                          const QuantizerValues* const a_quant,
+                          const QuantizerValues* const x_quant,
+                          const QuantizerValues* const beta_quant,
+                          const QuantizerValues* const y_quant) {
 #ifdef USE_LIBDNN
   this->template GetLibDNNBlas<uint8_t, uint8_t>()->gemv(trans_a, m, n, alpha,
-                               a, x, beta, y,
-                               LIBDNN_ACCUMULATE_PREC_NATIVE,
-                               make_shared<Quantizer<uint8_t, uint8_t> >(this));
+                               a, x, beta, y, alpha_quant, a_quant,
+                               x_quant, beta_quant, y_quant);
 #else  // USE_LIBDNN
   NOT_IMPLEMENTED;
 #endif  // USE_LIBDNN
@@ -80,16 +96,20 @@ void Device::gemv_uint8(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
 
 #ifdef USE_INT_QUANT_16
 void Device::gemv_uint16(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
-                          const uint_tp n, const uint16_t alpha,
-                          vptr<const uint16_t> a,
-                          vptr<const uint16_t> x,
-                          const uint16_t beta,
-                          vptr<uint16_t> y) {
+                         const uint_tp n, const uint16_t alpha,
+                         vptr<const uint16_t> a,
+                         vptr<const uint16_t> x,
+                         const uint16_t beta,
+                         vptr<uint16_t> y,
+                         const QuantizerValues* const alpha_quant,
+                         const QuantizerValues* const a_quant,
+                         const QuantizerValues* const x_quant,
+                         const QuantizerValues* const beta_quant,
+                         const QuantizerValues* const y_quant) {
 #ifdef USE_LIBDNN
   this->template GetLibDNNBlas<uint16_t, uint16_t>()->gemv(trans_a, m, n, alpha,
-                               a, x, beta, y,
-                               LIBDNN_ACCUMULATE_PREC_NATIVE,
-                               make_shared<Quantizer<uint16_t, uint16_t> >(this));
+                               a, x, beta, y, alpha_quant, a_quant, x_quant,
+                               beta_quant, y_quant);
 #else  // USE_LIBDNN
   NOT_IMPLEMENTED;
 #endif  // USE_LIBDNN

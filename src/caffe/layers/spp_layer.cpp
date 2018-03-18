@@ -14,10 +14,9 @@ using std::min;
 using std::max;
 
 template<typename Dtype, typename MItype, typename MOtype>
-LayerParameter SPPLayer<Dtype, MItype, MOtype>::GetPoolingParam(const int_tp pyramid_level,
-                                                const int_tp bottom_h,
-                                                const int_tp bottom_w,
-                                                const SPPParameter spp_param) {
+LayerParameter SPPLayer<Dtype, MItype, MOtype>::GetPoolingParam(
+    const int_tp pyramid_level, const int_tp bottom_h, const int_tp bottom_w,
+    const SPPParameter spp_param) {
   LayerParameter pooling_param;
   int_tp num_bins = pow(2, pyramid_level);
 
@@ -64,8 +63,9 @@ LayerParameter SPPLayer<Dtype, MItype, MOtype>::GetPoolingParam(const int_tp pyr
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void SPPLayer<Dtype, MItype, MOtype>::LayerSetUp(const vector<Blob<MItype>*>& bottom,
-      const vector<Blob<MOtype>*>& top) {
+void SPPLayer<Dtype, MItype, MOtype>::LayerSetUp(
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
   SPPParameter spp_param = this->layer_param_.spp_param();
 
   num_ = bottom[0]->num();
@@ -131,7 +131,8 @@ void SPPLayer<Dtype, MItype, MOtype>::LayerSetUp(const vector<Blob<MItype>*>& bo
 
     // flatten layer setup
     LayerParameter flatten_param;
-    flatten_layers_.push_back(new FlattenLayer<Dtype, MItype, MOtype>(flatten_param));
+    flatten_layers_.push_back(
+        new FlattenLayer<Dtype, MItype, MOtype>(flatten_param));
     flatten_layers_[i]->SetUp(*pooling_top_vecs_[i], *flatten_top_vecs_[i]);
 
     // concat layer input holders setup
@@ -142,11 +143,13 @@ void SPPLayer<Dtype, MItype, MOtype>::LayerSetUp(const vector<Blob<MItype>*>& bo
   LayerParameter concat_param;
   concat_layer_.reset(new ConcatLayer<Dtype, MItype, MOtype>(concat_param));
   concat_layer_->SetUp(concat_bottom_vec_, top);
+
+  this->InitializeQuantizers(bottom, top);
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void SPPLayer<Dtype, MItype, MOtype>::Reshape(const vector<Blob<MItype>*>& bottom,
-      const vector<Blob<MOtype>*>& top) {
+void SPPLayer<Dtype, MItype, MOtype>::Reshape(
+    const vector<Blob<MItype>*>& bottom, const vector<Blob<MOtype>*>& top) {
   CHECK_EQ(4, bottom[0]->num_axes()) << "Input must have 4 axes, "
       << "corresponding to (num, channels, height, width)";
   // Do nothing if bottom shape is unchanged since last Reshape
@@ -164,7 +167,8 @@ void SPPLayer<Dtype, MItype, MOtype>::Reshape(const vector<Blob<MItype>*>& botto
   if (pyramid_height_ == 1) {
     LayerParameter pooling_param = GetPoolingParam(0, bottom_h_, bottom_w_,
         spp_param);
-    pooling_layers_[0].reset(new PoolingLayer<Dtype, MItype, MOtype>(pooling_param));
+    pooling_layers_[0].reset(
+        new PoolingLayer<Dtype, MItype, MOtype>(pooling_param));
     pooling_layers_[0]->SetUp(bottom, top);
     pooling_layers_[0]->Reshape(bottom, top);
     return;
@@ -187,8 +191,8 @@ void SPPLayer<Dtype, MItype, MOtype>::Reshape(const vector<Blob<MItype>*>& botto
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void SPPLayer<Dtype, MItype, MOtype>::Forward_cpu(const vector<Blob<MItype>*>& bottom,
-      const vector<Blob<MOtype>*>& top) {
+void SPPLayer<Dtype, MItype, MOtype>::Forward_cpu(
+    const vector<Blob<MItype>*>& bottom, const vector<Blob<MOtype>*>& top) {
   if (pyramid_height_ == 1) {
     pooling_layers_[0]->Forward(bottom, top);
     return;
@@ -204,8 +208,9 @@ void SPPLayer<Dtype, MItype, MOtype>::Forward_cpu(const vector<Blob<MItype>*>& b
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void SPPLayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob<MOtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<MItype>*>& bottom) {
+void SPPLayer<Dtype, MItype, MOtype>::Backward_cpu(
+    const vector<Blob<MOtype>*>& top, const vector<bool>& propagate_down,
+    const vector<Blob<MItype>*>& bottom) {
   if (!propagate_down[0]) {
     return;
   }

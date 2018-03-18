@@ -6,8 +6,9 @@
 namespace caffe {
 
 template<typename Dtype, typename MItype, typename MOtype>
-void MVNLayer<Dtype, MItype, MOtype>::Reshape(const vector<Blob<MItype>*>& bottom,
-      const vector<Blob<MOtype>*>& top) {
+void MVNLayer<Dtype, MItype, MOtype>::Reshape(
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
   top[0]->Reshape(bottom[0]->num(), bottom[0]->channels(),
       bottom[0]->height(), bottom[0]->width());
   mean_.Reshape(bottom[0]->num(), bottom[0]->channels(),
@@ -28,7 +29,8 @@ void MVNLayer<Dtype, MItype, MOtype>::Reshape(const vector<Blob<MItype>*>& botto
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void MVNLayer<Dtype, MItype, MOtype>::Forward_cpu(const vector<Blob<MItype>*>& bottom,
+void MVNLayer<Dtype, MItype, MOtype>::Forward_cpu(
+    const vector<Blob<MItype>*>& bottom,
     const vector<Blob<MOtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = top[0]->mutable_cpu_data();
@@ -71,8 +73,8 @@ void MVNLayer<Dtype, MItype, MOtype>::Forward_cpu(const vector<Blob<MItype>*>& b
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void MVNLayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob<MOtype>*>& top,
-    const vector<bool>& propagate_down,
+void MVNLayer<Dtype, MItype, MOtype>::Backward_cpu(
+    const vector<Blob<MOtype>*>& top, const vector<bool>& propagate_down,
     const vector<Blob<MItype>*>& bottom) {
   const Dtype* top_diff = top[0]->cpu_diff();
   const Dtype* top_data = top[0]->cpu_data();

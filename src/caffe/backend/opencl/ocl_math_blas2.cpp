@@ -11,7 +11,12 @@ void OclDevice::gemv_half(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
                           vptr<const half_fp> a,
                           vptr<const half_fp> x,
                           const half_fp beta,
-                          vptr<half_fp> y) {
+                          vptr<half_fp> y,
+                          const QuantizerValues* const alpha_quant,
+                          const QuantizerValues* const a_quant,
+                          const QuantizerValues* const x_quant,
+                          const QuantizerValues* const beta_quant,
+                          const QuantizerValues* const y_quant) {
   uint_tp offA = a.get_ocl_off();
   uint_tp offx = x.get_ocl_off();
   uint_tp offy = y.get_ocl_off();
@@ -63,7 +68,12 @@ void OclDevice::gemv_float(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
                            const uint_tp n, const float alpha,
                            vptr<const float> a,
                            vptr<const float> x, const float beta,
-                           vptr<float> y) {
+                           vptr<float> y,
+                           const QuantizerValues* const alpha_quant,
+                           const QuantizerValues* const a_quant,
+                           const QuantizerValues* const x_quant,
+                           const QuantizerValues* const beta_quant,
+                           const QuantizerValues* const y_quant) {
   uint_tp offA = a.get_ocl_off();
   uint_tp offx = x.get_ocl_off();
   uint_tp offy = y.get_ocl_off();
@@ -166,7 +176,12 @@ void OclDevice::gemv_double(const CBLAS_TRANSPOSE trans_a, const uint_tp m,
                             const uint_tp n, const double alpha,
                             vptr<const double> a,
                             vptr<const double> x, const double beta,
-                            vptr<double> y) {
+                            vptr<double> y,
+                            const QuantizerValues* const alpha_quant,
+                            const QuantizerValues* const a_quant,
+                            const QuantizerValues* const x_quant,
+                            const QuantizerValues* const beta_quant,
+                            const QuantizerValues* const y_quant) {
   uint_tp offA = a.get_ocl_off();
   uint_tp offx = x.get_ocl_off();
   uint_tp offy = y.get_ocl_off();

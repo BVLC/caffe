@@ -5,8 +5,9 @@
 namespace caffe {
 
 template<typename Dtype, typename MItype, typename MOtype>
-void FlattenLayer<Dtype, MItype, MOtype>::Reshape(const vector<Blob<MItype>*>& bottom,
-      const vector<Blob<MOtype>*>& top) {
+void FlattenLayer<Dtype, MItype, MOtype>::Reshape(
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
   CHECK_NE(top[0], bottom[0]) << this->type() << " Layer does not "
       "allow in-place computation.";
   const int_tp start_axis = bottom[0]->CanonicalAxisIndex(
@@ -27,14 +28,16 @@ void FlattenLayer<Dtype, MItype, MOtype>::Reshape(const vector<Blob<MItype>*>& b
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void FlattenLayer<Dtype, MItype, MOtype>::Forward_cpu(const vector<Blob<MItype>*>& bottom,
-      const vector<Blob<MOtype>*>& top) {
+void FlattenLayer<Dtype, MItype, MOtype>::Forward_cpu(
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
   top[0]->ShareData(*bottom[0]);
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void FlattenLayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob<MOtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<MItype>*>& bottom) {
+void FlattenLayer<Dtype, MItype, MOtype>::Backward_cpu(
+    const vector<Blob<MOtype>*>& top,
+    const vector<bool>& propagate_down, const vector<Blob<MItype>*>& bottom) {
   bottom[0]->ShareDiff(*top[0]);
 }
 

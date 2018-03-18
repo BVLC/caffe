@@ -82,22 +82,24 @@ enum QuantizerMode {
 }
 
 message QuantizerParameter {
-  optional int64 index = 1 [default = -1];
-  optional DataType input_data_type = 2;
-  optional DataType output_data_type = 3;
+  optional string name = 1; // the quantizer name
+
+  optional int64 zone = 2;  // the zone index
+  optional DataType input_data_type = 3;
+  optional DataType output_data_type = 4;
   
-  optional double observed_max = 4;
-  optional double observed_min = 5;
+  optional double observed_max = 5;
+  optional double observed_min = 6;
   
-  optional double max_in = 6;
-  optional double min_in = 7;
-  optional double max_out = 8;
-  optional double min_out = 9;
+  optional double max_in = 7;
+  optional double min_in = 8;
+  optional double max_out = 9;
+  optional double min_out = 10;
   
-  optional QuantizerMode mode = 10 [default = CAFFE_QUANT_PASSIVE];
+  optional QuantizerMode mode = 11 [default = CAFFE_QUANT_PASSIVE];
   
   // Parameters for device abstraction
-  optional int64 device = 11 [default = -1];
+  optional int64 device = 12 [default = -1];
 }
 
 message NetParameter {
@@ -129,7 +131,7 @@ message NetParameter {
   // connectivity and behavior, is specified as a LayerParameter.
   repeated LayerParameter layer = 100;  // ID 100 so layers are printed last.
   
-  // The collected quantizer informations for each quantizer zone
+  // The collected quantizer informations for each quantizer zone and name
   repeated QuantizerParameter quantizer = 80;
 
   // DEPRECATED: use 'layer' instead.
@@ -247,7 +249,7 @@ message SolverParameter {
   }
   optional SolverMode solver_mode = 17 [default = GPU];
   // the device_id will that be used in GPU mode. Use device_id = 0 in default.
-  optional int64 device_id = 18 [default = 0];
+  optional int64 device = 18 [default = -1];
   // If non-negative, the seed with which the Solver will initialize the Caffe
   // random number generator -- useful for reproducible results. Otherwise,
   // (and by default) initialize using a seed derived from the system clock.
@@ -378,11 +380,10 @@ message LayerParameter {
   // The train / test phase for computation.
   optional Phase phase = 10;
   
-  optional int64 quantizer_index = 15 [default = 0];
-  optional QuantizerParameter bottom_quantizer = 16;
-  optional QuantizerParameter top_quantizer = 17;
+  repeated QuantizerParameter bottom_quantizer = 16;
+  repeated QuantizerParameter top_quantizer = 17;
   optional QuantizerParameter net_quantizer = 18;
-  optional QuantizerParameter blobs_quantizer = 19;
+  repeated QuantizerParameter blobs_quantizer = 19;
 
   // The amount of weight to assign each top blob in the objective.
   // Each layer assigns a default value, usually of either 0 or 1,

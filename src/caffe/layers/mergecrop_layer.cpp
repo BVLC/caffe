@@ -31,6 +31,7 @@ void MergeCropLayer<Dtype, MItype, MOtype>::LayerSetUp(
     op_ = mergecrop_param.operation();
   }
 
+  this->InitializeQuantizers(bottom, top);
   Reshape(bottom, top);
 }
 

@@ -183,6 +183,8 @@ void RecurrentLayer<Dtype, MItype, MOtype>::LayerSetUp(
   for (int i = last_layer_index_ + 1, j = 0; i < layer_names.size(); ++i, ++j) {
     CHECK_EQ(layer_names[i], pseudo_losses[j]);
   }
+
+  this->InitializeQuantizers(bottom, top);
 }
 
 template<typename Dtype, typename MItype, typename MOtype>

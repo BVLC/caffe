@@ -58,19 +58,36 @@ class OclDevice : public Device {
                  const half_fp alpha, vptr<const half_fp> a,
                  vptr<const half_fp> b,
                  const half_fp beta,
-                 vptr<half_fp> c);
+                 vptr<half_fp> c,
+                 const QuantizerValues* const alpha_quant,
+                 const QuantizerValues* const a_quant,
+                 const QuantizerValues* const b_quant,
+                 const QuantizerValues* const beta_quant,
+                 const QuantizerValues* const c_quant);
   virtual void gemv_half
                 (const CBLAS_TRANSPOSE trans_a, const uint_tp m,
                  const uint_tp n, const half_fp alpha,
                  vptr<const half_fp> a,
                  vptr<const half_fp> x, const half_fp beta,
-                 vptr<half_fp> y);
+                 vptr<half_fp> y,
+                 const QuantizerValues* const alpha_quant,
+                 const QuantizerValues* const a_quant,
+                 const QuantizerValues* const x_quant,
+                 const QuantizerValues* const beta_quant,
+                 const QuantizerValues* const y_quant);
   virtual void axpy_half(const uint_tp n,
                          const half_fp alpha,
                          vptr<const half_fp> x,
-                         vptr<half_fp> y);
+                         vptr<half_fp> y,
+                         const QuantizerValues* const alpha_quant,
+                         const QuantizerValues* const x_quant,
+                         const QuantizerValues* const y_quant);
   virtual void axpby_half(const uint_tp n, const half_fp alpha,
-                    vptr<const half_fp> x, const half_fp beta, vptr<half_fp> y);
+                    vptr<const half_fp> x, const half_fp beta, vptr<half_fp> y,
+                    const QuantizerValues* const alpha_quant,
+                    const QuantizerValues* const x_quant,
+                    const QuantizerValues* const beta_quant,
+                    const QuantizerValues* const y_quant);
   virtual void dot_half(const uint_tp n, vptr<const half_fp> x,
                         vptr<const half_fp> y, half_fp *out);
   virtual void asum_half(const uint_tp n, vptr<const half_fp> x, half_fp* y);
@@ -85,17 +102,34 @@ class OclDevice : public Device {
                  const uint_tp m, const uint_tp n, const uint_tp k,
                  const float alpha, vptr<const float> a,
                  vptr<const float> b,
-                 const float beta, vptr<float> c);
+                 const float beta, vptr<float> c,
+                 const QuantizerValues* const alpha_quant,
+                 const QuantizerValues* const a_quant,
+                 const QuantizerValues* const b_quant,
+                 const QuantizerValues* const beta_quant,
+                 const QuantizerValues* const c_quant);
   virtual void gemv_float
                 (const CBLAS_TRANSPOSE trans_a, const uint_tp m,
                  const uint_tp n, const float alpha,
                  vptr<const float> a,
                  vptr<const float> x, const float beta,
-                 vptr<float> y);
+                 vptr<float> y,
+                 const QuantizerValues* const alpha_quant,
+                 const QuantizerValues* const a_quant,
+                 const QuantizerValues* const x_quant,
+                 const QuantizerValues* const beta_quant,
+                 const QuantizerValues* const y_quant);
   virtual void axpy_float(const uint_tp n, const float alpha,
-                          vptr<const float> x, vptr<float> y);
+                          vptr<const float> x, vptr<float> y,
+                          const QuantizerValues* const alpha_quant,
+                          const QuantizerValues* const x_quant,
+                          const QuantizerValues* const y_quant);
   virtual void axpby_float(const uint_tp n, const float alpha,
-                          vptr<const float> x, const float beta, vptr<float> y);
+                          vptr<const float> x, const float beta, vptr<float> y,
+                          const QuantizerValues* const alpha_quant,
+                          const QuantizerValues* const x_quant,
+                          const QuantizerValues* const beta_quant,
+                          const QuantizerValues* const y_quant);
   virtual void dot_float(const uint_tp n, vptr<const float> x,
                          vptr<const float> y, float *out);
   virtual void asum_float(const uint_tp n, vptr<const float> x, float* y);
@@ -110,17 +144,34 @@ class OclDevice : public Device {
                  const uint_tp m, const uint_tp n, const uint_tp k,
                  const double alpha, vptr<const double> a,
                  vptr<const double> b,
-                 const double beta, vptr<double> c);
+                 const double beta, vptr<double> c,
+                 const QuantizerValues* const alpha_quant,
+                 const QuantizerValues* const a_quant,
+                 const QuantizerValues* const b_quant,
+                 const QuantizerValues* const beta_quant,
+                 const QuantizerValues* const c_quant);
   virtual void gemv_double
                 (const CBLAS_TRANSPOSE trans_a, const uint_tp m,
                  const uint_tp n, const double alpha,
                  vptr<const double> a,
                  vptr<const double> x, const double beta,
-                 vptr<double> y);
+                 vptr<double> y,
+                 const QuantizerValues* const alpha_quant,
+                 const QuantizerValues* const a_quant,
+                 const QuantizerValues* const x_quant,
+                 const QuantizerValues* const beta_quant,
+                 const QuantizerValues* const y_quant);
   virtual void axpy_double(const uint_tp n, const double alpha,
-                          vptr<const double> x, vptr<double> y);
+                           vptr<const double> x, vptr<double> y,
+                           const QuantizerValues* const alpha_quant,
+                           const QuantizerValues* const x_quant,
+                           const QuantizerValues* const y_quant);
   virtual void axpby_double(const uint_tp n, const double alpha,
-                       vptr<const double> x, const double beta, vptr<double> y);
+                       vptr<const double> x, const double beta, vptr<double> y,
+                       const QuantizerValues* const alpha_quant,
+                       const QuantizerValues* const x_quant,
+                       const QuantizerValues* const beta_quant,
+                       const QuantizerValues* const y_quant);
   virtual void dot_double(const uint_tp n, vptr<const double> x,
                           vptr<const double> y, double *out);
   virtual void asum_double(const uint_tp n, vptr<const double> x, double* y);

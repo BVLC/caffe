@@ -27,7 +27,6 @@ void PReLULayer<Dtype, MItype, MOtype>::LayerSetUp(const vector<Blob<MItype>*>& 
       this->blobs_[0].reset(new Blob<Dtype>(vector<int_tp>(1, channels),
                                             this->device_));
     }
-    this->blobs_[0]->set_quant(this->blobs_quant_);
     shared_ptr<Filler<Dtype> > filler;
     if (prelu_param.has_filler()) {
       filler.reset(GetFiller<Dtype>(prelu_param.filler()));
@@ -52,11 +51,14 @@ void PReLULayer<Dtype, MItype, MOtype>::LayerSetUp(const vector<Blob<MItype>*>& 
   multiplier_.Reshape(vector<int_tp>(1, bottom[0]->count(1)));
   backward_buff_.Reshape(vector<int_tp>(1, bottom[0]->count(1)));
   caffe_set(multiplier_.count(), Dtype(1), multiplier_.mutable_cpu_data());
+
+  this->InitializeQuantizers(bottom, top);
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void PReLULayer<Dtype, MItype, MOtype>::Reshape(const vector<Blob<MItype>*>& bottom,
-                                const vector<Blob<MOtype>*>& top) {
+void PReLULayer<Dtype, MItype, MOtype>::Reshape(
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
   CHECK_GE(bottom[0]->num_axes(), 2)
       << "Number of axes of bottom blob must be >=2.";
   top[0]->ReshapeLike(*bottom[0]);
@@ -71,8 +73,9 @@ void PReLULayer<Dtype, MItype, MOtype>::Reshape(const vector<Blob<MItype>*>& bot
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void PReLULayer<Dtype, MItype, MOtype>::Forward_cpu(const vector<Blob<MItype>*>& bottom,
-                                    const vector<Blob<MOtype>*>& top) {
+void PReLULayer<Dtype, MItype, MOtype>::Forward_cpu(
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = top[0]->mutable_cpu_data();
   const int_tp count = bottom[0]->count();

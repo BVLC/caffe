@@ -26,6 +26,8 @@ void ContrastiveLossLayer<Dtype, MItype, MOtype>::LayerSetUp(
   summer_vec_.Reshape(bottom[0]->channels(), 1, 1, 1);
   for (int_tp i = 0; i < bottom[0]->channels(); ++i)
     summer_vec_.mutable_cpu_data()[i] = Dtype(1);
+
+  this->InitializeQuantizers(bottom, top);
   this->Reshape(bottom, top);
 }
 

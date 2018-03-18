@@ -30,16 +30,18 @@ void BiasLayer<Dtype, MItype, MOtype>::LayerSetUp(const vector<Blob<MItype>*>& b
         (num_axes == -1) ? bottom[0]->shape().end() : (shape_start + num_axes);
     vector<int_tp> bias_shape(shape_start, shape_end);
     this->blobs_[0].reset(new Blob<Dtype>(bias_shape));
-    this->blobs_[0]->set_quant(this->blobs_quant_);
     shared_ptr<Filler<Dtype> > filler(GetFiller<Dtype>(param.filler()));
     filler->Fill(this->blobs_[0].get());
   }
   this->param_propagate_down_.resize(this->blobs_.size(), true);
+
+  this->InitializeQuantizers(bottom, top);
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void BiasLayer<Dtype, MItype, MOtype>::Reshape(const vector<Blob<MItype>*>& bottom,
-      const vector<Blob<MOtype>*>& top) {
+void BiasLayer<Dtype, MItype, MOtype>::Reshape(
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
   const BiasParameter& param = this->layer_param_.bias_param();
   Blob<Dtype>* bias = (bottom.size() > 1) ? bottom[1] : this->blobs_[0].get();
   // Always set axis == 0 in special case where bias is a scalar

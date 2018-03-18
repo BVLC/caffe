@@ -21,9 +21,6 @@ LibDNNConv<MItype, MOtype>::LibDNNConv(LibDNNConvConfig config)
       : LibDNN<MItype, MOtype>(config.dev_ptr) {
   this->config_ = config;
   this->program_ = this->dev_ptr_->CreateProgram();
-  this->quant_ = static_pointer_cast<Quantizer<MItype, MItype> >(
-                                                               config.quant);
-  this->prec_ = config.prec;
   this->bias_term_ = config.bias_term;
   this->bias_multiplier_ = config.bias_term ? 1.0 : 0.0;
   this->fast_unsafe_math_ = config.fast_unsafe_math;
@@ -778,7 +775,7 @@ string LibDNNConv<MItype, MOtype>::generate_fw_kernels(string name) {
 
   // Initialize the accumulation registers
   ss << "{" << std::endl;  // Scoping for C registers
-  ss << this->generate_accreg_init(fw_tuner_, false, false, false, prec_);
+  ss << this->generate_accreg_init(fw_tuner_, false, false, false);
 
   ss << "{" << std::endl;  // Scoping for load & compute block
   // Loop over all tiles
@@ -887,7 +884,7 @@ string LibDNNConv<MItype, MOtype>::generate_fw_kernels(string name) {
   // Synchronize to make sure the tile is loaded
   ss << this->program_->local_barrier() << std::endl;
 
-  ss << this->generate_gemm_core(fw_tuner_, false, false, prec_) << std::endl;
+  ss << this->generate_gemm_core(fw_tuner_, false, false) << std::endl;
 
   // Synchronize before loading the next tile
   ss << this->program_->local_barrier() << std::endl;
@@ -1063,7 +1060,7 @@ string LibDNNConv<MItype, MOtype>::generate_wg_kernels(string name) {
   ss << "{" << std::endl;  // Scoping for C registers
   ss << this->generate_accreg_init(wg_tuner_, bias_term_,
                              wgalgo_ == LIBDNN_CONVOLUTION_WG_ALGO_DIRECT,
-                             false, prec_);
+                             false);
 
   ss << "{" << std::endl;  // Scoping for load & compute block
   if (wgalgo_ == LIBDNN_CONVOLUTION_WG_ALGO_DIRECT) {
@@ -1163,7 +1160,7 @@ string LibDNNConv<MItype, MOtype>::generate_wg_kernels(string name) {
   // Synchronize to make sure the tile is loaded
   ss << this->program_->local_barrier() << std::endl;
 
-  ss << this->generate_gemm_core(wg_tuner_, bias_term_, false, prec_)
+  ss << this->generate_gemm_core(wg_tuner_, bias_term_, false)
      << std::endl;
 
   // Synchronize before loading the next tile
@@ -1306,7 +1303,7 @@ string LibDNNConv<MItype, MOtype>::generate_bw_kernels(string name) {
 
   // Initialize the accumulation registers
   ss << "{" << std::endl;  // Scoping for C registers
-  ss << this->generate_accreg_init(bw_tuner_, false, false, false, prec_);
+  ss << this->generate_accreg_init(bw_tuner_, false, false, false);
 
   ss << "{" << std::endl;  // Scoping for load & compute block
   // Loop over all tiles
@@ -1427,7 +1424,7 @@ string LibDNNConv<MItype, MOtype>::generate_bw_kernels(string name) {
   // Synchronize to make sure the tile is loaded
   ss << this->program_->local_barrier() << std::endl;
 
-  ss << this->generate_gemm_core(bw_tuner_, false, false, prec_) << std::endl;
+  ss << this->generate_gemm_core(bw_tuner_, false, false) << std::endl;
 
   // Synchronize before loading the next tile
   ss << this->program_->local_barrier() << std::endl;

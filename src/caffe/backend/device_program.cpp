@@ -124,10 +124,16 @@ template string DeviceProgram::define_type<uint64_t>(string name);
 template<typename Dtype>
 string DeviceProgram::define(const char* name, Dtype value) {
   stringstream ss;
-  ss << "#ifdef " << name << std::endl;
-  ss << "#undef " << name << std::endl;
-  ss << "#endif  //" << name << std::endl;
-  ss << "#define " << name << " " << value << std::endl;
+  stringstream lhss;
+  lhss << name;
+  stringstream rhss;
+  rhss << value;
+  if (!(lhss.str() == rhss.str())) {
+    ss << "#ifdef " << name << std::endl;
+    ss << "#undef " << name << std::endl;
+    ss << "#endif  //" << name << std::endl;
+    ss << "#define " << name << " " << value << std::endl;
+  }
   return ss.str();
 }
 
@@ -154,10 +160,16 @@ template string DeviceProgram::define<const char*>(const char* name,
 template<typename Dtype>
 string DeviceProgram::define(string name, Dtype value) {
   stringstream ss;
-  ss << "#ifdef " << name << std::endl;
-  ss << "#undef " << name << std::endl;
-  ss << "#endif  //" << name << std::endl;
-  ss << "#define " << name << " " << value << std::endl;
+  stringstream lhss;
+  lhss << name;
+  stringstream rhss;
+  rhss << value;
+  if (!(lhss.str() == rhss.str())) {
+    ss << "#ifdef " << name << std::endl;
+    ss << "#undef " << name << std::endl;
+    ss << "#endif  //" << name << std::endl;
+    ss << "#define " << name << " " << value << std::endl;
+  }
   return ss.str();
 }
 
@@ -181,17 +193,7 @@ template string DeviceProgram::define<const char*>(string name,
 template<typename Dtype>
 string DeviceProgram::define_vector_type(const char* name, int_tp from,
                                          int_tp to) {
-  stringstream ss;
-  int_tp safe_from = 1;
-  if (from <= 0) {
-    ss << this->define_type<Dtype>(name);
-  }
-  safe_from = std::max(from, safe_from);
-  for (int_tp i = safe_from; i <= to; i *= 2) {
-    ss << this->define(name + std::to_string(i),
-                           this->device_type_name<Dtype>() + std::to_string(i));
-  }
-  return ss.str();
+  return define_vector_type<Dtype>(string(name), from, to);
 }
 
 template string DeviceProgram::define_vector_type<bool>(const char* name,
@@ -225,14 +227,16 @@ template<typename Dtype>
 string DeviceProgram::define_vector_type(string name, int_tp from,
                                          int_tp to) {
   stringstream ss;
-  int_tp safe_from = 1;
-  if (from <= 0) {
-    ss << this->define_type<Dtype>(name);
+  int_tp safe_from = 2;
+  if (from <= 1) {
+    for (int_tp i = from; i <= 1; ++i) {
+      ss << this->define_type<Dtype>(name + std::to_string(i));
+    }
   }
   safe_from = std::max(from, safe_from);
   for (int_tp i = safe_from; i <= to; i *= 2) {
     ss << this->define(name + std::to_string(i),
-                           this->device_type_name<Dtype>() + std::to_string(i));
+                       this->device_type_name<Dtype>() + std::to_string(i));
   }
   return ss.str();
 }
@@ -473,6 +477,26 @@ template<>
 string DeviceProgram::convert_type<uint64_t>(int_tp vec_len,
                                              string src_val) const {
   return convert_type_uint64(vec_len, src_val);
+}
+template<>
+string DeviceProgram::convert_type<int8_t>(int_tp vec_len,
+                                           string src_val) const {
+  return convert_type_int8(vec_len, src_val);
+}
+template<>
+string DeviceProgram::convert_type<int16_t>(int_tp vec_len,
+                                            string src_val) const {
+  return convert_type_int16(vec_len, src_val);
+}
+template<>
+string DeviceProgram::convert_type<int32_t>(int_tp vec_len,
+                                            string src_val)const {
+  return convert_type_int32(vec_len, src_val);
+}
+template<>
+string DeviceProgram::convert_type<int64_t>(int_tp vec_len,
+                                            string src_val) const {
+  return convert_type_int64(vec_len, src_val);
 }
 
 

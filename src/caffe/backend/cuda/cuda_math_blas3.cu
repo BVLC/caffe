@@ -26,7 +26,12 @@ void CudaDevice::gemm_half(const CBLAS_TRANSPOSE trans_A,
                            vptr<const half_fp> A,
                            vptr<const half_fp> B,
                            const half_fp beta,
-                           vptr<half_fp> C) {
+                           vptr<half_fp> C,
+                           const QuantizerValues* const alpha_quant,
+                           const QuantizerValues* const a_quant,
+                           const QuantizerValues* const b_quant,
+                           const QuantizerValues* const beta_quant,
+                           const QuantizerValues* const c_quant) {
   // Note that cublas follows fortran order.
   int_tp lda = (trans_A == CblasNoTrans) ? K : M;
   int_tp ldb = (trans_B == CblasNoTrans) ? N : K;
@@ -49,7 +54,12 @@ void CudaDevice::gemm_float(const CBLAS_TRANSPOSE trans_A,
                             const uint_tp M, const uint_tp N, const uint_tp K,
                             const float alpha, vptr<const float> A,
                             vptr<const float> B, const float beta,
-                            vptr<float> C) {
+                            vptr<float> C,
+                            const QuantizerValues* const alpha_quant,
+                            const QuantizerValues* const a_quant,
+                            const QuantizerValues* const b_quant,
+                            const QuantizerValues* const beta_quant,
+                            const QuantizerValues* const c_quant) {
   // Note that cublas follows fortran order.
   int_tp lda = (trans_A == CblasNoTrans) ? K : M;
   int_tp ldb = (trans_B == CblasNoTrans) ? N : K;
@@ -69,7 +79,12 @@ void CudaDevice::gemm_double(const CBLAS_TRANSPOSE trans_A,
                              const uint_tp M, const uint_tp N, const uint_tp K,
                              const double alpha, vptr<const double> A,
                              vptr<const double> B, const double beta,
-                             vptr<double> C) {
+                             vptr<double> C,
+                             const QuantizerValues* const alpha_quant,
+                             const QuantizerValues* const a_quant,
+                             const QuantizerValues* const b_quant,
+                             const QuantizerValues* const beta_quant,
+                             const QuantizerValues* const c_quant) {
   // Note that cublas follows fortran order.
   int_tp lda = (trans_A == CblasNoTrans) ? K : M;
   int_tp ldb = (trans_B == CblasNoTrans) ? N : K;

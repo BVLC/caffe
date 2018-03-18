@@ -6,16 +6,19 @@
 namespace caffe {
 
 template<typename Dtype, typename MItype, typename MOtype>
-void ConcatLayer<Dtype, MItype, MOtype>::LayerSetUp(const vector<Blob<MItype>*>& bottom,
-      const vector<Blob<MOtype>*>& top) {
+void ConcatLayer<Dtype, MItype, MOtype>::LayerSetUp(
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
   const ConcatParameter& concat_param = this->layer_param_.concat_param();
   CHECK(!(concat_param.has_axis() && concat_param.has_concat_dim()))
       << "Either axis or concat_dim should be specified; not both.";
+  this->InitializeQuantizers(bottom, top);
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void ConcatLayer<Dtype, MItype, MOtype>::Reshape(const vector<Blob<MItype>*>& bottom,
-      const vector<Blob<MOtype>*>& top) {
+void ConcatLayer<Dtype, MItype, MOtype>::Reshape(
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
   const int_tp num_axes = bottom[0]->num_axes();
   const ConcatParameter& concat_param = this->layer_param_.concat_param();
   if (concat_param.has_concat_dim()) {
@@ -58,8 +61,9 @@ void ConcatLayer<Dtype, MItype, MOtype>::Reshape(const vector<Blob<MItype>*>& bo
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void ConcatLayer<Dtype, MItype, MOtype>::Forward_cpu(const vector<Blob<MItype>*>& bottom,
-      const vector<Blob<MOtype>*>& top) {
+void ConcatLayer<Dtype, MItype, MOtype>::Forward_cpu(
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
   if (bottom.size() == 1) { return; }
   Dtype* top_data = top[0]->mutable_cpu_data();
   int_tp offset_concat_axis = 0;
@@ -78,8 +82,9 @@ void ConcatLayer<Dtype, MItype, MOtype>::Forward_cpu(const vector<Blob<MItype>*>
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void ConcatLayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob<MOtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<MItype>*>& bottom) {
+void ConcatLayer<Dtype, MItype, MOtype>::Backward_cpu(
+    const vector<Blob<MOtype>*>& top, const vector<bool>& propagate_down,
+    const vector<Blob<MItype>*>& bottom) {
   if (bottom.size() == 1) { return; }
   const Dtype* top_diff = top[0]->cpu_diff();
   int_tp offset_concat_axis = 0;

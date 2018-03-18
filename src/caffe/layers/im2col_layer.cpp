@@ -6,8 +6,9 @@
 namespace caffe {
 
 template<typename Dtype, typename MItype, typename MOtype>
-void Im2colLayer<Dtype, MItype, MOtype>::LayerSetUp(const vector<Blob<MItype>*>& bottom,
-      const vector<Blob<MOtype>*>& top) {
+void Im2colLayer<Dtype, MItype, MOtype>::LayerSetUp(
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
   ConvolutionParameter conv_param = this->layer_param_.convolution_param();
   force_nd_im2col_ = conv_param.force_nd_im2col();
   const int_tp input_num_dims = bottom[0]->shape().size();
@@ -101,11 +102,14 @@ void Im2colLayer<Dtype, MItype, MOtype>::LayerSetUp(const vector<Blob<MItype>*>&
     dilation_data[i] = (num_dilation_dims == 0) ? kDefaultDilation :
                        conv_param.dilation((num_dilation_dims == 1) ? 0 : i);
   }
+
+  this->InitializeQuantizers(bottom, top);
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void Im2colLayer<Dtype, MItype, MOtype>::Reshape(const vector<Blob<MItype>*>& bottom,
-      const vector<Blob<MOtype>*>& top) {
+void Im2colLayer<Dtype, MItype, MOtype>::Reshape(
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
   vector<int_tp> top_shape = bottom[0]->shape();
   const int_tp* kernel_shape_data = kernel_shape_.cpu_data();
   const int_tp* stride_data = stride_.cpu_data();
@@ -129,8 +133,9 @@ void Im2colLayer<Dtype, MItype, MOtype>::Reshape(const vector<Blob<MItype>*>& bo
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void Im2colLayer<Dtype, MItype, MOtype>::Forward_cpu(const vector<Blob<MItype>*>& bottom,
-      const vector<Blob<MOtype>*>& top) {
+void Im2colLayer<Dtype, MItype, MOtype>::Forward_cpu(
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = top[0]->mutable_cpu_data();
   for (int_tp n = 0; n < num_; ++n) {
@@ -160,8 +165,9 @@ void Im2colLayer<Dtype, MItype, MOtype>::Forward_cpu(const vector<Blob<MItype>*>
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void Im2colLayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob<MOtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<MItype>*>& bottom) {
+void Im2colLayer<Dtype, MItype, MOtype>::Backward_cpu(
+    const vector<Blob<MOtype>*>& top, const vector<bool>& propagate_down,
+    const vector<Blob<MItype>*>& bottom) {
   const Dtype* top_diff = top[0]->cpu_diff();
   Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
   for (int_tp n = 0; n < num_; ++n) {

@@ -74,9 +74,9 @@ class QuantizerBase {
  public:
   template<typename Dtype>
   static void MultiplicativeQuantVals(
-      const QuantizerValues* lhs, const QuantizerValues* rhs,
-      const QuantizerValues* rs, Dtype* rsmult, Dtype* rsshift,
-      const uint8_t shift_bits = 0);
+      const QuantizerValues* const lhs, const QuantizerValues* const rhs,
+      const QuantizerValues* const rs, Dtype* rsmult, int8_t* rsshift,
+      const uint8_t shift_bits = 31);
 
   virtual void update() = 0;
   virtual void update_param(const QuantizerParameter& param) = 0;
@@ -116,10 +116,6 @@ class QuantizerBase {
     return out_vals_;
   }
 
-  inline int_tp index() const {
-    return index_;
-  }
-
   inline double observed_max() const {
     return observed_max_;
   }
@@ -151,7 +147,6 @@ class QuantizerBase {
  protected:
   explicit QuantizerBase(const QuantizerParameter& param);
   explicit QuantizerBase(Device* dev_ptr);
-  int_tp index_;
 
   std::mutex quant_mutex_;
 
@@ -239,12 +234,10 @@ class Quantizer : public QuantizerBase {
   string fw_gpu_term(int_tp vec_len, string src_var, string tar_var,
                      string scal_var, string in_zero_var,
                      string out_zero_var,
-                     string min_in_var, string max_in_var,
                      string min_out_var, string max_out_var) const;
   string bw_gpu_term(int_tp vec_len, string src_var, string tar_var,
                      string scal_var, string in_zero_var,
                      string out_zero_var,
-                     string min_in_var, string max_in_var,
                      string min_out_var, string max_out_var) const;
 
   virtual double in_scale_val();

@@ -161,6 +161,7 @@ void PoolingLayer<Dtype, MItype, MOtype>::LayerSetUp(
     }
   }
 
+  this->InitializeQuantizers(bottom, top);
   Reshape(bottom, top);
 }
 

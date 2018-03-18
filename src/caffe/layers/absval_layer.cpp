@@ -12,6 +12,8 @@ void AbsValLayer<Dtype, MItype, MOtype>::LayerSetUp(
   NeuronLayer<Dtype, MItype, MOtype>::LayerSetUp(bottom, top);
   CHECK_NE(top[0], bottom[0]) << this->type() << " Layer does not "
     "allow in-place computation.";
+
+  this->InitializeQuantizers(bottom, top);
 }
 
 template<typename Dtype, typename MItype, typename MOtype>

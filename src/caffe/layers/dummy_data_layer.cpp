@@ -9,6 +9,8 @@ template<typename Dtype, typename MItype, typename MOtype>
 void DummyDataLayer<Dtype, MItype, MOtype>::LayerSetUp(
       const vector<Blob<MItype>*>& bottom,
       const vector<Blob<MOtype>*>& top) {
+  this->InitializeQuantizers(bottom, top);
+
   const int_tp num_top = top.size();
   const DummyDataParameter& param = this->layer_param_.dummy_data_param();
   const int_tp num_data_filler = param.data_filler_size();

@@ -12,7 +12,12 @@ void OclDevice::gemm_half(const CBLAS_TRANSPOSE trans_A,
                             vptr<const half_fp> A,
                             vptr<const half_fp> B,
                             const half_fp beta,
-                            vptr<half_fp> C) {
+                            vptr<half_fp> C,
+                            const QuantizerValues* const alpha_quant,
+                            const QuantizerValues* const a_quant,
+                            const QuantizerValues* const b_quant,
+                            const QuantizerValues* const beta_quant,
+                            const QuantizerValues* const c_quant) {
   uint_tp offA = A.get_ocl_off();
   uint_tp offB = B.get_ocl_off();
   uint_tp offC = C.get_ocl_off();
@@ -55,7 +60,8 @@ void OclDevice::gemm_half(const CBLAS_TRANSPOSE trans_A,
       C.get_ocl_mem(), offC, ldc,
       &queue));
 #else  // default (ViennaCL)
-  Device::gemm_half(trans_A, trans_B, M, N, K, alpha, A, B, beta, C);
+  Device::gemm_half(trans_A, trans_B, M, N, K, alpha, A, B, beta, C,
+                    alpha_quant, a_quant, b_quant, beta_quant, c_quant);
 #endif  // clBLAS, CLBlast, or default (ViennaCL)
 }
 #endif  // USE_HALF
@@ -67,7 +73,12 @@ void OclDevice::gemm_float(const CBLAS_TRANSPOSE trans_A,
                            const uint_tp M, const uint_tp N, const uint_tp K,
                            const float alpha, vptr<const float> A,
                            vptr<const float> B, const float beta,
-                           vptr<float> C) {
+                           vptr<float> C,
+                           const QuantizerValues* const alpha_quant,
+                           const QuantizerValues* const a_quant,
+                           const QuantizerValues* const b_quant,
+                           const QuantizerValues* const beta_quant,
+                           const QuantizerValues* const c_quant) {
   uint_tp offA = A.get_ocl_off();
   uint_tp offB = B.get_ocl_off();
   uint_tp offC = C.get_ocl_off();
@@ -87,7 +98,8 @@ void OclDevice::gemm_float(const CBLAS_TRANSPOSE trans_A,
         sizeof(float) * offC, sizeof(float) * M * N, 0, NULL, NULL, NULL));
 
     caffe_gemm<float>(trans_A, trans_B, M, N, K, alpha, Aptr, Bptr, beta,
-                          Cptr);
+                      Cptr, alpha_quant, a_quant, b_quant, beta_quant,
+                      c_quant);
 
     clEnqueueUnmapMemObject(ctx.get_queue().handle().get(), A.get_ocl_mem(),
                             Aptr, 0, NULL, NULL);
@@ -200,7 +212,10 @@ void OclDevice::gemm_double(const CBLAS_TRANSPOSE trans_A,
                             const uint_tp M, const uint_tp N, const uint_tp K,
                             const double alpha, vptr<const double> A,
                             vptr<const double> B,
-                            const double beta, vptr<double> C) {
+                            const double beta, vptr<double> C,
+                            const QuantizerValues* const a_quant,
+                            const QuantizerValues* const b_quant,
+                            const QuantizerValues* const c_quant) {
   uint_tp offA = A.get_ocl_off();
   uint_tp offB = B.get_ocl_off();
   uint_tp offC = C.get_ocl_off();

@@ -59,7 +59,7 @@ void HDF5DataLayer<Dtype, MItype, MOtype>::Forward_gpu(
       vptr<MOtype> top_data = top[j]->mutable_gpu_data() + i * data_dim;
       data_copy_to_top<Dtype, MOtype>(data_dim,
          &hdf_blobs_[j]->cpu_data()[data_permutation_[current_row_] * data_dim],
-         top_data, this->top_quant_.get(), this->device_);
+         top_data, this->top_quants_[j].get(), this->device_);
     }
     Next();
   }

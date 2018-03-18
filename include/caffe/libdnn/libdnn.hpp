@@ -12,14 +12,6 @@
 
 namespace caffe {
 
-typedef enum {
-  LIBDNN_ACCUMULATE_PREC_NATIVE = 0,
-  LIBDNN_ACCUMULATE_PREC_8 = 1,
-  LIBDNN_ACCUMULATE_PREC_16 = 2,
-  LIBDNN_ACCUMULATE_PREC_32 = 3,
-  LIBDNN_ACCUMULATE_PREC_64 = 4
-} libdnnAccumulatePrecision_t;
-
 class LibDNNBase {
  protected:
   LibDNNBase(Device* dev_ptr);
@@ -34,11 +26,9 @@ class LibDNN : public LibDNNBase {
  protected:
   LibDNN(Device* dev_ptr);
   string generate_accreg_init(shared_ptr<LibDNNTuner> tuner, bool dterm,
-                              bool load, bool beta_term,
-                              libdnnAccumulatePrecision_t prec);
+                              bool load, bool beta_term);
   string generate_gemm_core(shared_ptr<LibDNNTuner> tuner, bool dterm,
-                            bool alpha_term,
-                            libdnnAccumulatePrecision_t prec);
+                            bool alpha_term);
 
 };
 

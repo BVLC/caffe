@@ -200,14 +200,12 @@ void BaseConvolutionLayer<Dtype, MItype, MOtype>::LayerSetUp(
     // Initialize and fill the weights:
     // output channels X input channels per-group X kernel height X kernel width
     this->blobs_[0].reset(new Blob<Dtype>(weight_shape, this->device_));
-    this->blobs_[0]->set_quant(this->blobs_quant_);
     shared_ptr<Filler<Dtype> > weight_filler(GetFiller<Dtype>(
             this->layer_param_.convolution_param().weight_filler()));
     weight_filler->Fill(this->blobs_[0].get());
     // If necessary, initialize and fill the biases.
     if (bias_term_) {
       this->blobs_[1].reset(new Blob<Dtype>(bias_shape, this->device_));
-      this->blobs_[1]->set_quant(this->blobs_quant_);
       shared_ptr<Filler<Dtype> > bias_filler(GetFiller<Dtype>(
               this->layer_param_.convolution_param().bias_filler()));
       bias_filler->Fill(this->blobs_[1].get());
@@ -217,6 +215,8 @@ void BaseConvolutionLayer<Dtype, MItype, MOtype>::LayerSetUp(
   weight_offset_ = conv_out_channels_ * kernel_dim_ / group_;
   // Propagate gradients to the parameters (as directed by backward pass).
   this->param_propagate_down_.resize(this->blobs_.size(), true);
+
+  this->InitializeQuantizers(bottom, top);
 }
 
 template<typename Dtype, typename MItype, typename MOtype>

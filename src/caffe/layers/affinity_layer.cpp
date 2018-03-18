@@ -26,6 +26,8 @@ void AffinityLayer<Dtype, MItype, MOtype>::LayerSetUp(
       offsets_[i] = affinity_param.offset(i);
     }
   }
+
+  this->InitializeQuantizers(bottom, top);
 }
 
 template<typename Dtype, typename MItype, typename MOtype>

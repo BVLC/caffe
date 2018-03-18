@@ -27,6 +27,7 @@ void MOELayer<Dtype, MItype, MOtype>::LayerSetUp(
   if (expert_nets_.size() == 0) {
     LOG(FATAL) << "MOE Layer requires at least one expert network.";
   }
+  this->InitializeQuantizers(bottom, top);
 }
 
 

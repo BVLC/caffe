@@ -6,18 +6,21 @@
 namespace caffe {
 
 template<typename Dtype, typename MItype, typename MOtype>
-void PowerLayer<Dtype, MItype, MOtype>::LayerSetUp(const vector<Blob<MItype>*>& bottom,
-      const vector<Blob<MOtype>*>& top) {
+void PowerLayer<Dtype, MItype, MOtype>::LayerSetUp(
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
   NeuronLayer<Dtype, MItype, MOtype>::LayerSetUp(bottom, top);
   power_ = this->layer_param_.power_param().power();
   scale_ = this->layer_param_.power_param().scale();
   shift_ = this->layer_param_.power_param().shift();
   diff_scale_ = power_  * scale_;
+  this->InitializeQuantizers(bottom, top);
 }
 
 // Compute Y = (shift + scale * X)^power
 template<typename Dtype, typename MItype, typename MOtype>
-void PowerLayer<Dtype, MItype, MOtype>::Forward_cpu(const vector<Blob<MItype>*>& bottom,
+void PowerLayer<Dtype, MItype, MOtype>::Forward_cpu(
+    const vector<Blob<MItype>*>& bottom,
     const vector<Blob<MOtype>*>& top) {
   Dtype* top_data = top[0]->mutable_cpu_data();
   const int_tp count = bottom[0]->count();
@@ -41,8 +44,8 @@ void PowerLayer<Dtype, MItype, MOtype>::Forward_cpu(const vector<Blob<MItype>*>&
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void PowerLayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob<MOtype>*>& top,
-    const vector<bool>& propagate_down,
+void PowerLayer<Dtype, MItype, MOtype>::Backward_cpu(
+    const vector<Blob<MOtype>*>& top, const vector<bool>& propagate_down,
     const vector<Blob<MItype>*>& bottom) {
   if (propagate_down[0]) {
     Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();

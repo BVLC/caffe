@@ -146,17 +146,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
       quant_param.set_device(layer_param.device());
       quant_param.set_input_data_type(proto_data_type<Dtype>());
       quant_param.set_output_data_type(layer_param.top_data_type());
-      quant_param.set_index(layer_param.quantizer_index());
       layer_param.mutable_net_quantizer()->CopyFrom(quant_param);
-    }
-
-    if (!layer_param.has_blobs_quantizer()) {
-      QuantizerParameter quant_param;
-      quant_param.set_device(layer_param.device());
-      quant_param.set_input_data_type(proto_data_type<Dtype>());
-      quant_param.set_output_data_type(layer_param.compute_data_type());
-      quant_param.set_index(layer_param.quantizer_index());
-      layer_param.mutable_blobs_quantizer()->CopyFrom(quant_param);
     }
 
     if (layer_param.propagate_down_size() > 0) {
@@ -873,15 +863,25 @@ void Net<Dtype>::Reshape() {
   }
 }
 
+
 template<typename Dtype>
 void Net<Dtype>::CopyTrainedLayersFrom(const NetParameter& param) {
 
   // Load quantizer statistics
-  std::map<int_tp, std::pair<double, double> > quantizer_map;
+  // Map by zones
+  std::map<int_tp, std::pair<double, double> > quantizer_zone_map;
+  // Map by names
+  std::map<string, std::pair<double, double> > quantizer_name_map;
   for (int_tp i = 0; i < param.quantizer_size(); ++i) {
     QuantizerParameter quant_param = param.quantizer(i);
-    quantizer_map[quant_param.index()] = std::make_pair<double, double>(
-        quant_param.observed_min(), quant_param.observed_max());
+    if (quant_param.has_zone()) {
+      quantizer_zone_map[quant_param.zone()] = std::make_pair<double, double>(
+          quant_param.observed_min(), quant_param.observed_max());
+    }
+    if (quant_param.has_name()) {
+      quantizer_name_map[quant_param.name()] = std::make_pair<double, double>(
+          quant_param.observed_min(), quant_param.observed_max());
+    }
   }
 
   for (int_tp i = 0; i < this->layers().size(); ++i) {
@@ -893,11 +893,20 @@ void Net<Dtype>::CopyTrainedLayersFrom(const NetParameter& param) {
       const QuantizerParameter& quant_param = quant_base_vec[j]->quant_param();
       QuantizerParameter quant_param_copy;
       quant_param_copy.CopyFrom(quant_param);
-      std::map<int_tp, std::pair<double, double> >::iterator iter =
-          quantizer_map.find(quant_param.index());
-      if (iter != quantizer_map.end()) {
-        quant_param_copy.set_observed_min(std::get<0>(iter->second));
-        quant_param_copy.set_observed_max(std::get<1>(iter->second));
+      if (quant_param.has_zone()) {
+        std::map<int_tp, std::pair<double, double> >::iterator iter =
+            quantizer_zone_map.find(quant_param.zone());
+        if (iter != quantizer_zone_map.end()) {
+          quant_param_copy.set_observed_min(std::get<0>(iter->second));
+          quant_param_copy.set_observed_max(std::get<1>(iter->second));
+        }
+      } else if (quant_param.has_name()) {
+        std::map<string, std::pair<double, double> >::iterator iter =
+            quantizer_name_map.find(quant_param.name());
+        if (iter != quantizer_name_map.end()) {
+          quant_param_copy.set_observed_min(std::get<0>(iter->second));
+          quant_param_copy.set_observed_max(std::get<1>(iter->second));
+        }
       }
       quant_base_vec[j]->update_param(quant_param_copy);
     }
@@ -1032,34 +1041,67 @@ void Net<Dtype>::ToProto(NetParameter* param, bool write_diff) const {
 
 template<typename Dtype>
 void Net<Dtype>::QuantizerToProto(NetParameter* param) const {
-  std::map<int_tp, std::pair<double, double> > quantizer_map;
+
+  param->clear_quantizer();
+
+  // Map by zones
+  std::map<int_tp, std::pair<double, double> > quantizer_zone_map;
+  // Map by names
+  std::map<string, std::pair<double, double> > quantizer_name_map;
+
   for (size_t i = 0; i < layers_.size(); ++i) {
     vector<shared_ptr<QuantizerBase> > quant_base_vec =
         layers_[i]->get_all_quantizers();
     for (size_t j = 0; j < quant_base_vec.size(); ++j) {
-      int_tp idx = quant_base_vec[j]->index();
-      double l_min = quant_base_vec[j]->observed_min();
-      double l_max = quant_base_vec[j]->observed_max();
-      std::map<int_tp, std::pair<double, double> >::iterator iter =
-          quantizer_map.find(idx);
-      if (iter != quantizer_map.end()) {
-        l_min = std::min(std::get<0>(iter->second), l_min);
-        l_max = std::max(std::get<1>(iter->second), l_max);
+      if (quant_base_vec[j]->quant_param().has_zone()) {
+        int_tp idx = quant_base_vec[j]->quant_param().zone();
+        double l_min = quant_base_vec[j]->observed_min();
+        double l_max = quant_base_vec[j]->observed_max();
+        std::map<int_tp, std::pair<double, double> >::iterator iter =
+            quantizer_zone_map.find(idx);
+        if (iter != quantizer_zone_map.end()) {
+          l_min = std::min(std::get<0>(iter->second), l_min);
+          l_max = std::max(std::get<1>(iter->second), l_max);
+        }
+        quantizer_zone_map[idx] = std::make_pair(l_min, l_max);
       }
-      quantizer_map[idx] = std::make_pair(l_min, l_max);
+      if (quant_base_vec[j]->quant_param().has_name()) {
+        string name = quant_base_vec[j]->quant_param().name();
+        double l_min = quant_base_vec[j]->observed_min();
+        double l_max = quant_base_vec[j]->observed_max();
+        std::map<string, std::pair<double, double> >::iterator iter =
+            quantizer_name_map.find(name);
+        if (iter != quantizer_name_map.end()) {
+          l_min = std::min(std::get<0>(iter->second), l_min);
+          l_max = std::max(std::get<1>(iter->second), l_max);
+        }
+        quantizer_name_map[name] = std::make_pair(l_min, l_max);
+      }
     }
   }
 
-  param->clear_quantizer();
 
-  DLOG(INFO) << "Serializing " << quantizer_map.size() << " quantizer zones.";
+  DLOG(INFO) << "Serializing " << quantizer_zone_map.size()
+             << " quantizer zones.";
+  DLOG(INFO) << "Serializing " << quantizer_name_map.size()
+             << " named quantizers.";
   for (std::map<int_tp, std::pair<double, double> >::iterator iter =
-       quantizer_map.begin(); iter != quantizer_map.end(); ++iter) {
+       quantizer_zone_map.begin(); iter != quantizer_zone_map.end(); ++iter) {
     QuantizerParameter* quant_param = param->add_quantizer();
-    quant_param->set_index(iter->first);
+    quant_param->set_zone(iter->first);
     quant_param->set_observed_min(std::get<0>(iter->second));
     quant_param->set_observed_max(std::get<1>(iter->second));
-    DLOG(INFO) << "Zone " << iter->first << ": ["
+    DLOG(INFO) << "Quantizer zone " << iter->first << ": ["
+               << std::get<0>(iter->second) << ","
+               << std::get<1>(iter->second) << "].";
+  }
+  for (std::map<string, std::pair<double, double> >::iterator iter =
+       quantizer_name_map.begin(); iter != quantizer_name_map.end(); ++iter) {
+    QuantizerParameter* quant_param = param->add_quantizer();
+    quant_param->set_name(iter->first);
+    quant_param->set_observed_min(std::get<0>(iter->second));
+    quant_param->set_observed_max(std::get<1>(iter->second));
+    DLOG(INFO) << "Quantizer name " << iter->first << ": ["
                << std::get<0>(iter->second) << ","
                << std::get<1>(iter->second) << "].";
   }
@@ -1129,7 +1171,7 @@ void Net<Dtype>::ToHDF5(const string& filename, bool write_diff) const {
     vector<shared_ptr<QuantizerBase> > quant_base_vec =
         layers_[i]->get_all_quantizers();
     for (size_t j = 0; j < quant_base_vec.size(); ++j) {
-      int_tp idx = quant_base_vec[j]->index();
+      int_tp idx = quant_base_vec[j]->quant_param().zone();
       double l_min = quant_base_vec[j]->observed_min();
       double l_max = quant_base_vec[j]->observed_max();
       std::map<int_tp, std::pair<double, double> >::iterator iter =

@@ -25,7 +25,7 @@ TYPED_TEST_CASE(QuantBlasTest, TestDtypesInteger);
 
 TYPED_TEST(QuantBlasTest, TestGemmComparativeFloatQuant) {
 
-  float eps = 0.2;
+  float eps = 0.66;
 
   std::random_device rdev;
   std::mt19937 rngen(rdev());
@@ -33,6 +33,7 @@ TYPED_TEST(QuantBlasTest, TestGemmComparativeFloatQuant) {
   std::uniform_int_distribution<int_tp> dimsRand(1, 128);
   std::uniform_int_distribution<int_tp> boolRand(0, 1);
   std::uniform_int_distribution<int_tp> factorRand(-25, 25);
+  std::uniform_real_distribution<float> valRand(-2.0, 2.0);
 
 
   for (int_tp testIdx = 0; testIdx < 25; ++testIdx) {
@@ -43,8 +44,26 @@ TYPED_TEST(QuantBlasTest, TestGemmComparativeFloatQuant) {
     CBLAS_TRANSPOSE trans_A = boolRand(rngen) ? CblasTrans : CblasNoTrans;
     CBLAS_TRANSPOSE trans_B = boolRand(rngen) ? CblasTrans : CblasNoTrans;
 
-    TypeParam alpha_val = boolRand(rngen);
-    TypeParam beta_val = alpha_val ? boolRand(rngen) : TypeParam(1);
+    bool has_alpha = boolRand(rngen);
+    bool has_beta = has_alpha ? boolRand(rngen) : true;
+
+    bool alpha_with_quant = boolRand(rngen) && has_alpha;
+    bool beta_with_quant = boolRand(rngen) && has_beta;
+
+    float alpha_val;
+    float beta_val;
+
+    if (has_alpha) {
+      alpha_val = alpha_with_quant ? valRand(rngen) : float(1.0);
+    } else {
+      alpha_val = 0.0;
+    }
+
+    if (has_beta) {
+      beta_val = beta_with_quant ? valRand(rngen) : float(1.0);
+    } else {
+      beta_val = 0.0;
+    }
 
     vector<int_tp> A_shape(4, 1);
     vector<int_tp> B_shape(4, 1);
@@ -69,11 +88,11 @@ TYPED_TEST(QuantBlasTest, TestGemmComparativeFloatQuant) {
     Blob<float> C_unquant(C_shape, Caffe::GetDefaultDevice());
 
 
-    caffe_rng_gaussian(M * K, (float)0.0, (float)0.25,
+    caffe_rng_gaussian(M * K, (float)-0.25, (float)0.25,
                        A.mutable_cpu_data());
-    caffe_rng_gaussian(K * N, (float)0.0, (float)0.25,
+    caffe_rng_gaussian(K * N, (float)-0.25, (float)0.25,
                        B.mutable_cpu_data());
-    caffe_rng_gaussian(M * N, (float)0.0, (float)0.25,
+    caffe_rng_gaussian(M * N, (float)-0.25, (float)0.25,
                        C.mutable_cpu_data());
 
     caffe_copy(M * N, C.cpu_data(), C_result.mutable_cpu_data());
@@ -81,21 +100,27 @@ TYPED_TEST(QuantBlasTest, TestGemmComparativeFloatQuant) {
     QuantizerParameter qpm_a;
     QuantizerParameter qpm_b;
     QuantizerParameter qpm_c;
+    QuantizerParameter qpm_alpha;
+    QuantizerParameter qpm_beta;
     qpm_a.set_mode(CAFFE_QUANT_OBSERVE);
     qpm_b.set_mode(CAFFE_QUANT_OBSERVE);
     qpm_c.set_mode(CAFFE_QUANT_OBSERVE);
+    qpm_alpha.set_mode(CAFFE_QUANT_OBSERVE);
+    qpm_beta.set_mode(CAFFE_QUANT_OBSERVE);
 
     Quantizer<float, TypeParam> aq(qpm_a);
     Quantizer<float, TypeParam> bq(qpm_b);
     Quantizer<float, TypeParam> cq(qpm_c);
+    Quantizer<float, TypeParam> alphaq(qpm_alpha);
+    Quantizer<float, TypeParam> betaq(qpm_beta);
 
     // Normal GEMM
     caffe_gemm<float>(
                 trans_A, trans_B,
                 M, N, K,
-                static_cast<float>(alpha_val),
+                alpha_val,
                 A.cpu_data(), B.cpu_data(),
-                static_cast<float>(beta_val),
+                beta_val,
                 C_result.mutable_cpu_data());
 
 
@@ -104,16 +129,33 @@ TYPED_TEST(QuantBlasTest, TestGemmComparativeFloatQuant) {
     bq.Observe_in_cpu(K * N, B.cpu_data());
     cq.Observe_in_cpu(M * N, C.cpu_data());
     cq.Observe_in_cpu(M * N, C_result.cpu_data());
+    alphaq.Observe_in_cpu(1, &alpha_val);
+    betaq.Observe_in_cpu(1, &beta_val);
 
     // Apply observed values to the quantizer
     aq.update();
     bq.update();
     cq.update();
+    alphaq.update();
+    betaq.update();
 
     // Quantize A, B and C
     aq.Forward_cpu(M * K, A.cpu_data(), A_quant.mutable_cpu_data());
     bq.Forward_cpu(K * N, B.cpu_data(), B_quant.mutable_cpu_data());
     cq.Forward_cpu(M * N, C.cpu_data(), C_quant.mutable_cpu_data());
+
+    TypeParam alpha_val_quant = has_alpha;
+    TypeParam beta_val_quant = has_beta;
+
+    // Quantize alpha
+    if (alpha_with_quant) {
+      alphaq.Forward_cpu(1, &alpha_val, &alpha_val_quant);
+    }
+
+    // Quantize beta
+    if (beta_with_quant) {
+      betaq.Forward_cpu(1, &beta_val, &beta_val_quant);
+    }
 
     /*
     std::cout << "C max:" << cq.in_quantizer_values().max << std::endl;
@@ -130,12 +172,14 @@ TYPED_TEST(QuantBlasTest, TestGemmComparativeFloatQuant) {
     caffe_gemm<TypeParam>(
                 trans_A, trans_B,
                 M, N, K,
-                alpha_val,
+                alpha_val_quant,
                 A_quant.cpu_data(), B_quant.cpu_data(),
-                beta_val,
+                beta_val_quant,
                 C_quant.mutable_cpu_data(),
+                alpha_with_quant ? &(alphaq.out_quantizer_values()) : nullptr,
                 &(aq.out_quantizer_values()),
                 &(bq.out_quantizer_values()),
+                beta_with_quant ? &(betaq.out_quantizer_values()) : nullptr,
                 &(cq.out_quantizer_values()));
 
     cq.Backward_cpu(M * N, C_quant.cpu_data(), C_unquant.mutable_cpu_data());

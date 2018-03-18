@@ -10,7 +10,10 @@ namespace caffe {
 #ifdef USE_HALF
 void OclDevice::axpy_half(const uint_tp n, const half_fp alpha,
                           vptr<const half_fp> x,
-                          vptr<half_fp> y) {
+                          vptr<half_fp> y,
+                          const QuantizerValues* const alpha_quant,
+                          const QuantizerValues* const x_quant,
+                          const QuantizerValues* const y_quant) {
   uint_tp offX = x.get_ocl_off();
   uint_tp offY = y.get_ocl_off();
 
@@ -45,9 +48,13 @@ void OclDevice::axpy_half(const uint_tp n, const half_fp alpha,
 }
 void OclDevice::axpby_half(const uint_tp n, const half_fp alpha,
                    vptr<const half_fp> x,
-                   const half_fp beta, vptr<half_fp> y) {
+                   const half_fp beta, vptr<half_fp> y,
+                   const QuantizerValues* const alpha_quant,
+                   const QuantizerValues* const x_quant,
+                   const QuantizerValues* const beta_quant,
+                   const QuantizerValues* const y_quant) {
   this->scal_half(n, beta, y);
-  this->axpy_half(n, alpha, x, y);
+  this->axpy_half(n, alpha, x, y, alpha_quant, x_quant, y_quant);
 }
 void OclDevice::scal_half(const uint_tp n, const half_fp alpha,
                   vptr<half_fp> x) {
@@ -265,7 +272,10 @@ void OclDevice::scale_half(const uint_tp n, const half_fp alpha,
 
 #ifdef USE_SINGLE
 void OclDevice::axpy_float(const uint_tp n, const float alpha,
-                           vptr<const float> x, vptr<float> y) {
+                           vptr<const float> x, vptr<float> y,
+                           const QuantizerValues* const alpha_quant,
+                           const QuantizerValues* const x_quant,
+                           const QuantizerValues* const y_quant) {
 
   uint_tp offX = x.get_ocl_off();
   uint_tp offY = y.get_ocl_off();
@@ -327,9 +337,13 @@ void OclDevice::axpy_float(const uint_tp n, const float alpha,
   }
 }
 void OclDevice::axpby_float(const uint_tp n, const float alpha,
-                   vptr<const float> x, const float beta, vptr<float> y) {
+                   vptr<const float> x, const float beta, vptr<float> y,
+                   const QuantizerValues* const alpha_quant,
+                   const QuantizerValues* const x_quant,
+                   const QuantizerValues* const beta_quant,
+                   const QuantizerValues* const y_quant) {
   this->scal_float(n, beta, y);
-  this->axpy_float(n, alpha, x, y);
+  this->axpy_float(n, alpha, x, y, alpha_quant, x_quant, y_quant);
 }
 void OclDevice::scal_float(const uint_tp n, const float alpha, vptr<float> x) {
   uint_tp offX = x.get_ocl_off();

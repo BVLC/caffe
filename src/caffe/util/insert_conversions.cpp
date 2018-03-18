@@ -28,12 +28,16 @@ void InsertConversions(const NetParameter& param, NetParameter* param_convert) {
                            layer_param.top_size())) {
             loss_weight = layer_param.loss_weight(j);
           }
+          const QuantizerParameter* ref_quant_param = nullptr;
+          if (layer_param.bottom_quantizer_size() > j) {
+            ref_quant_param = &(layer_param.bottom_quantizer(j));
+          }
           ConfigureConversionLayer(blob_name_to_layer_name[blob_name],
                                    blob_name, j, loss_weight,
                                    convert_layer_param,
                                    blob_data_types[blob_name],
                                    layer_param.bottom_data_type(),
-                                   layer_param.quantizer_index());
+                                   ref_quant_param);
         }
       }
       layer_bottom_names[j] = convert_blob_name;
@@ -41,6 +45,14 @@ void InsertConversions(const NetParameter& param, NetParameter* param_convert) {
     LayerParameter* copy_layer_param = param_convert->add_layer();
     copy_layer_param->CopyFrom(param.layer(i));
     for (int_tp j = 0; j < layer_bottom_names.size(); ++j) {
+      while (copy_layer_param->bottom_quantizer_size() <= j) {
+        copy_layer_param->add_bottom_quantizer();
+      }
+      // Need to preserve the original blob name for quantization purposes
+      if (!copy_layer_param->bottom_quantizer(j).has_name()) {
+        copy_layer_param->mutable_bottom_quantizer(j)->set_name(
+            copy_layer_param->bottom(j));
+      }
       copy_layer_param->set_bottom(j, layer_bottom_names[j]);
     }
     for (int_tp j = 0; j < layer_param.top_size(); ++j) {
@@ -54,8 +66,21 @@ void InsertConversions(const NetParameter& param, NetParameter* param_convert) {
 void ConfigureConversionLayer(const string& layer_name, const string& blob_name,
     const int_tp blob_idx, const float loss_weight,
     LayerParameter* convert_layer_param, DataType bottom_data_type,
-    DataType top_data_type, size_t quantizer_index) {
+    DataType top_data_type, const QuantizerParameter* ref_quant_param) {
+  QuantizerParameter quant_param;
+  if (ref_quant_param) {
+    std::cout << ref_quant_param << std::endl;
+    quant_param.CopyFrom(*ref_quant_param);
+  }
+  quant_param.set_name(blob_name);
+
   convert_layer_param->Clear();
+  QuantizerParameter* bottom_quant_param = convert_layer_param->
+      add_bottom_quantizer();
+  bottom_quant_param->CopyFrom(quant_param);
+  QuantizerParameter* top_quant_param = convert_layer_param->
+      add_top_quantizer();
+  top_quant_param->CopyFrom(quant_param);
   convert_layer_param->add_bottom(blob_name);
   convert_layer_param->set_name(ConversionLayerName(layer_name, blob_name,
                                                     blob_idx));
@@ -63,7 +88,6 @@ void ConfigureConversionLayer(const string& layer_name, const string& blob_name,
   convert_layer_param->set_compute_data_type(bottom_data_type);
   convert_layer_param->set_top_data_type(top_data_type);
   convert_layer_param->set_bottom_data_type(bottom_data_type);
-  convert_layer_param->set_quantizer_index(quantizer_index);
   convert_layer_param->add_top(ConversionBlobName(layer_name, blob_name,
                                                   blob_idx));
   convert_layer_param->add_loss_weight(loss_weight);

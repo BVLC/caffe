@@ -9,7 +9,8 @@ const float kBNLL_THRESHOLD = 50.;
 
 
 template<typename Dtype, typename MItype, typename MOtype>
-void BNLLLayer<Dtype, MItype, MOtype>::Forward_cpu(const vector<Blob<MItype>*>& bottom,
+void BNLLLayer<Dtype, MItype, MOtype>::Forward_cpu(
+    const vector<Blob<MItype>*>& bottom,
     const vector<Blob<MOtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = top[0]->mutable_cpu_data();
@@ -22,7 +23,8 @@ void BNLLLayer<Dtype, MItype, MOtype>::Forward_cpu(const vector<Blob<MItype>*>& 
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void BNLLLayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob<MOtype>*>& top,
+void BNLLLayer<Dtype, MItype, MOtype>::Backward_cpu(
+    const vector<Blob<MOtype>*>& top,
     const vector<bool>& propagate_down,
     const vector<Blob<MItype>*>& bottom) {
   if (propagate_down[0]) {

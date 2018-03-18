@@ -26,6 +26,8 @@ void EltwiseLayer<Dtype, MItype, MOtype>::LayerSetUp(
     }
   }
   stable_prod_grad_ = this->layer_param_.eltwise_param().stable_prod_grad();
+
+  this->InitializeQuantizers(bottom, top);
 }
 
 template<typename Dtype, typename MItype, typename MOtype>

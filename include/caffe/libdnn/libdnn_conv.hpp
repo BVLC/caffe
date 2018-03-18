@@ -67,8 +67,6 @@ struct LibDNNConvConfig {
       LIBDNN_CONVOLUTION_WG_ALGO_ATOMIC;
   libdnnConvolutionBackwardAlgo_t bwalgo =
       LIBDNN_CONVOLUTION_BW_ALGO_COL2IM_ATOMIC;
-  shared_ptr<QuantizerBase> quant;
-  libdnnAccumulatePrecision_t prec = LIBDNN_ACCUMULATE_PREC_NATIVE;
 };
 
 template<typename MItype, typename MOtype>
@@ -153,10 +151,6 @@ class LibDNNConv : public LibDNN<MItype, MOtype> {
   MItype bias_multiplier_;
   libdnnConvolutionWeightAlgo_t wgalgo_;
   libdnnConvolutionBackwardAlgo_t bwalgo_;
-
-  shared_ptr<Quantizer<MItype, MItype> > quant_;
-  libdnnAccumulatePrecision_t prec_;
-
  private:
   LibDNNConvConfig config_;
 };
@@ -186,8 +180,6 @@ struct LibDNNDeconvConfig {
       LIBDNN_CONVOLUTION_WG_ALGO_ATOMIC;
   libdnnConvolutionBackwardAlgo_t bwalgo =
       LIBDNN_CONVOLUTION_BW_ALGO_COL2IM_ATOMIC;
-  shared_ptr<QuantizerBase> quant;
-  libdnnAccumulatePrecision_t prec = LIBDNN_ACCUMULATE_PREC_NATIVE;
 };
 
 template<typename MItype, typename MOtype>

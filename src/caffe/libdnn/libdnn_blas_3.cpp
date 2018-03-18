@@ -75,35 +75,26 @@ string LibDNNBlas<MItype, MOtype>::generate_gemm_source(
     shared_ptr<DeviceProgram> program, shared_ptr<LibDNNTuner> tuner,
     bool trans_A, bool trans_B,
     const uint_tp M, const uint_tp N, const uint_tp K,
-    bool alpha_term, bool beta_term,
-    libdnnAccumulatePrecision_t prec,
-    shared_ptr<Quantizer<MItype, MOtype> > quantizer) {
+    bool alpha_term, bool beta_term) {
+
+  typedef typename std::conditional<float_is_same<MItype>::value, MItype,
+          typename std::conditional<sizeof(MItype) == 1, int16_t,
+          typename std::conditional<sizeof(MItype) == 2, int32_t,
+                                    int64_t>::type>::type>::type Difftype;
+  typedef typename std::conditional<float_is_same<MItype>::value, MItype,
+          typename std::conditional<sizeof(MItype) == 1, int32_t,
+                                    int64_t>::type>::type Acctype;
+
   stringstream ss;
 
   ss << program->setup();
   ss << program->template define_vector_type<MItype>("MItype", 0, 16);
   ss << program->template define_vector_type<MOtype>("MOtype", 0, 16);
+  ss << program->template define_vector_type<Acctype>("Acctype", 0, 16);
+  ss << program->template define_vector_type<Difftype>("Difftype", 0, 16);
   ss << program->vector_accessors();
 
   string accreg_type = "MItype";
-  switch (prec) {
-    case LIBDNN_ACCUMULATE_PREC_NATIVE:
-      break;
-    case LIBDNN_ACCUMULATE_PREC_8:
-      accreg_type = program->template device_type_name<int8_t>();
-      break;
-    case LIBDNN_ACCUMULATE_PREC_16:
-      accreg_type = program->template device_type_name<int16_t>();
-      break;
-    case LIBDNN_ACCUMULATE_PREC_32:
-      accreg_type = program->template device_type_name<int32_t>();
-      break;
-    case LIBDNN_ACCUMULATE_PREC_64:
-      accreg_type = program->template device_type_name<int64_t>();
-      break;
-    default:
-      break;
-  }
 
   int wptn = tuner->get_param<int>("WPTN");
   int wptm = tuner->get_param<int>("WPTM");
@@ -211,7 +202,7 @@ string LibDNNBlas<MItype, MOtype>::generate_gemm_source(
 
   // Initialize the accumulation registers
   ss << "{" << std::endl;  // Scoping for C registers
-  ss << this->generate_accreg_init(tuner, false, beta_term, beta_term, prec);
+  ss << this->generate_accreg_init(tuner, false, beta_term, beta_term);
 
   ss << "{" << std::endl;  // Scoping for load & compute block
   // Loop over all tiles
@@ -267,7 +258,7 @@ string LibDNNBlas<MItype, MOtype>::generate_gemm_source(
   // Synchronize to make sure the tile is loaded
   ss << program->local_barrier() << std::endl;
 
-  ss << this->generate_gemm_core(tuner, false, alpha_term, prec);
+  ss << this->generate_gemm_core(tuner, false, alpha_term);
 
   ss << program->local_barrier() << std::endl;
 
@@ -286,9 +277,7 @@ string LibDNNBlas<MItype, MOtype>::generate_gemm_source(
      << std::endl;
   ss << "if (globalRow < M && globalCol < N) {" << std::endl;
   ss << "Cptr[globalRow * N + globalCol] = ";
-  if (!(prec == LIBDNN_ACCUMULATE_PREC_NATIVE)) {
-    ss << "(MOtype)";
-  }
+  ss << "(MOtype)";
   ss << "(((" << accreg_type << "*)(&(Creg[wm][wn/VWN])))[wn%VWN]);"
      << std::endl;
   ss << "}" << std::endl;   // M-N-Guard
@@ -305,8 +294,7 @@ template<typename MItype, typename MOtype>
 string LibDNNBlas<MItype, MOtype>::gemm_string_identifier(
     const CBLAS_TRANSPOSE trans_A, const CBLAS_TRANSPOSE trans_B,
     const uint_tp M, const uint_tp N, const uint_tp K,
-    bool alpha_term, bool beta_term, libdnnAccumulatePrecision_t prec,
-    shared_ptr<Quantizer<MItype, MOtype> > quantizer) {
+    bool alpha_term, bool beta_term) {
   stringstream ss;
   ss << "gemm_";
   ss << (trans_A == CblasNoTrans ? "TA_" : "NTA_");
@@ -320,23 +308,6 @@ string LibDNNBlas<MItype, MOtype>::gemm_string_identifier(
   if (beta_term) {
     ss << "beta_";
   }
-  switch (prec) {
-    case LIBDNN_ACCUMULATE_PREC_8:
-      ss << "prec_8_";
-      break;
-    case LIBDNN_ACCUMULATE_PREC_16:
-      ss << "prec_16_";
-      break;
-    case LIBDNN_ACCUMULATE_PREC_32:
-      ss << "prec_32_";
-      break;
-    case LIBDNN_ACCUMULATE_PREC_64:
-      ss << "prec_64_";
-      break;
-    default:
-      break;
-  }
-  ss << "q_" << (quantizer->needs_quantization() ? "a" : "p");
   return ss.str();
 }
 
@@ -344,16 +315,27 @@ template<typename MItype, typename MOtype>
 void LibDNNBlas<MItype, MOtype>::gemm(
                const CBLAS_TRANSPOSE trans_A, const CBLAS_TRANSPOSE trans_B,
                const uint_tp M, const uint_tp N, const uint_tp K,
-               const MItype alpha, vptr<const MItype> A, vptr<const MItype> B,
-               const MItype beta, vptr<MOtype> C,
-               libdnnAccumulatePrecision_t prec,
-               shared_ptr<Quantizer<MItype, MOtype> > quantizer) {
+               const MOtype alpha, vptr<const MItype> A, vptr<const MItype> B,
+               const MOtype beta, vptr<MOtype> C,
+               const QuantizerValues* const alpha_quant,
+               const QuantizerValues* const a_quant,
+               const QuantizerValues* const b_quant,
+               const QuantizerValues* const beta_quant,
+               const QuantizerValues* const c_quant) {
+
+  typedef typename std::conditional<float_is_same<MItype>::value, MItype,
+          typename std::conditional<sizeof(MItype) == 1, int16_t,
+          typename std::conditional<sizeof(MItype) == 2, int32_t,
+                                    int64_t>::type>::type>::type Difftype;
+  typedef typename std::conditional<float_is_same<MItype>::value, MItype,
+          typename std::conditional<sizeof(MItype) == 1, int32_t,
+                                    int64_t>::type>::type Acctype;
+
   bool alpha_term = alpha != (MItype)1;
   bool beta_term = beta != (MItype)0;
 
   string identifier = gemm_string_identifier(trans_A, trans_B, M, N, K,
-                                            alpha_term, beta_term, prec,
-                                            quantizer);
+                                             alpha_term, beta_term);
 
   int_tp id = get_id(identifier);
   if (id < 0) {
@@ -371,8 +353,7 @@ void LibDNNBlas<MItype, MOtype>::gemm(
       stringstream ss;
       ss << generate_gemm_source(program, tuner,
                                  trans_A == CblasTrans, trans_B == CblasTrans,
-                                 M, N, K, alpha_term, beta_term, prec,
-                                 quantizer);
+                                 M, N, K, alpha_term, beta_term);
       program->set_source(ss.str());
       program->Compile(true, true);
       program_ready_[id] = true;
@@ -396,6 +377,18 @@ void LibDNNBlas<MItype, MOtype>::gemm(
                           ((M - 1) / div_M + 1),
                           1};
   vector<size_t> local = {wgs0, wgs1, 1};
+
+  Acctype mult;
+  int8_t shift;
+  const Acctype c_max = c_quant ? c_quant->get_max<Acctype>() : Acctype(0);
+  const Acctype c_min = c_quant ? c_quant->get_min<Acctype>() : Acctype(0);
+  const Acctype result_offset = c_quant ? c_quant->get_zero<Acctype>()
+      : Acctype(0);
+  int8_t shift_bits = ((sizeof(Acctype))/sizeof(MItype)) - 1;
+  MItype lhs_off = a_quant->get_zero<MItype>();
+  MItype rhs_off = b_quant->get_zero<MItype>();
+  QuantizerBase::template MultiplicativeQuantVals<Acctype>(
+      a_quant, b_quant, c_quant, &mult, &shift, shift_bits);
 
   if (alpha_term) {
     kernel->add_arg(&alpha);

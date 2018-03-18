@@ -5,7 +5,8 @@
 namespace caffe {
 
 template<typename Dtype, typename MItype, typename MOtype>
-void ReshapeLayer<Dtype, MItype, MOtype>::LayerSetUp(const vector<Blob<MItype>*>& bottom,
+void ReshapeLayer<Dtype, MItype, MOtype>::LayerSetUp(
+    const vector<Blob<MItype>*>& bottom,
     const vector<Blob<MOtype>*>& top) {
   CHECK_NE(top[0], bottom[0]) << this->type() << " Layer does not "
       "allow in-place computation.";
@@ -26,10 +27,12 @@ void ReshapeLayer<Dtype, MItype, MOtype>::LayerSetUp(const vector<Blob<MItype>*>
       constant_count_ *= top_dim;
     }
   }
+  this->InitializeQuantizers(bottom, top);
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void ReshapeLayer<Dtype, MItype, MOtype>::Reshape(const vector<Blob<MItype>*>& bottom,
+void ReshapeLayer<Dtype, MItype, MOtype>::Reshape(
+    const vector<Blob<MItype>*>& bottom,
     const vector<Blob<MOtype>*>& top) {
   const int_tp input_start_axis = this->layer_param_.reshape_param().axis();
   const int_tp start_axis = (input_start_axis >= 0) ? input_start_axis :
