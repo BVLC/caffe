@@ -26,9 +26,9 @@ class LibDNN : public LibDNNBase {
  protected:
   LibDNN(Device* dev_ptr);
   string generate_accreg_init(shared_ptr<LibDNNTuner> tuner, bool dterm,
-                              bool load, bool beta_term);
+                              bool load, bool beta_term, bool beta_exactly_one);
   string generate_gemm_core(shared_ptr<LibDNNTuner> tuner, bool dterm,
-                            bool alpha_term);
+                            bool alpha_term, bool alpha_exactly_one);
 
 };
 

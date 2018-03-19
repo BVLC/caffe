@@ -23,9 +23,9 @@ class LibDNNConvolutionLayer :
     this->deconvolution_ = false;
   }
   virtual void LayerSetUp(const vector<Blob<MItype>*>& bottom,
-      const vector<Blob<MOtype>*>& top);
+                          const vector<Blob<MOtype>*>& top);
   virtual void Reshape(const vector<Blob<MItype>*>& bottom,
-      const vector<Blob<MOtype>*>& top);
+                       const vector<Blob<MOtype>*>& top);
   virtual ~LibDNNConvolutionLayer();
 
   virtual void Tune(vptr<Dtype> top_data, vptr<Dtype> top_diff,
@@ -34,12 +34,12 @@ class LibDNNConvolutionLayer :
 
  protected:
   virtual void Forward_cpu(const vector<Blob<MItype>*>& bottom,
-      const vector<Blob<MOtype>*>& top) {
+                           const vector<Blob<MOtype>*>& top) {
     NOT_IMPLEMENTED;
   }
   virtual void Backward_cpu(const vector<Blob<MOtype>*>& top,
-      const vector<bool>& propagate_down,
-      const vector<Blob<MItype>*>& bottom) {
+                            const vector<bool>& propagate_down,
+                            const vector<Blob<MItype>*>& bottom) {
     NOT_IMPLEMENTED;
   }
 

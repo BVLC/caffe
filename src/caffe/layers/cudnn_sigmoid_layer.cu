@@ -61,14 +61,10 @@ void CuDNNSigmoidLayer<Dtype, MItype, MOtype>::Backward_gpu(
 
 
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(CuDNNSigmoidLayer, Forward_gpu,
-                                  (half_fp), (half_fp), (half_fp));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(CuDNNSigmoidLayer, Forward_gpu,
                                   (float), (float), (float));
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(CuDNNSigmoidLayer, Forward_gpu,
                                   (double), (double), (double));
 
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(CuDNNSigmoidLayer, Backward_gpu,
-                                  (half_fp), (half_fp), (half_fp));
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(CuDNNSigmoidLayer, Backward_gpu,
                                   (float), (float), (float));
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(CuDNNSigmoidLayer, Backward_gpu,

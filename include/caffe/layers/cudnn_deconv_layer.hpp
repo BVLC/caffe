@@ -9,6 +9,10 @@
 
 #include "caffe/layers/deconv_layer.hpp"
 
+#ifdef USE_CUDNN  // cuDNN acceleration library.
+#include "caffe/util/cudnn.hpp"
+#endif
+
 namespace caffe {
 
 #ifdef USE_CUDNN
@@ -37,11 +41,21 @@ class CuDNNDeconvolutionLayer
   virtual ~CuDNNDeconvolutionLayer();
 
  protected:
+  virtual void Forward_cpu(const vector<Blob<MItype>*>& bottom,
+                           const vector<Blob<MOtype>*>& top) {
+    NOT_IMPLEMENTED;
+  }
+  virtual void Backward_cpu(const vector<Blob<MOtype>*>& top,
+                            const vector<bool>& propagate_down,
+                            const vector<Blob<MItype>*>& bottom) {
+    NOT_IMPLEMENTED;
+  }
+
   virtual void Forward_gpu(const vector<Blob<MItype>*>& bottom,
                            const vector<Blob<MOtype>*>& top);
-  virtual void Backward_gpu(const vector<Blob<MItype>*>& top,
+  virtual void Backward_gpu(const vector<Blob<MOtype>*>& top,
                             const vector<bool>& propagate_down,
-                            const vector<Blob<MOtype>*>& bottom);
+                            const vector<Blob<MItype>*>& bottom);
 
   bool handles_setup_;
   cudnnHandle_t* handle_;

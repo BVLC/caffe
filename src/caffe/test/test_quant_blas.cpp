@@ -17,13 +17,14 @@
 namespace caffe {
 
 template <typename TypeParam>
-class QuantBlasTest : public ::testing::Test {};
+class QuantBlasTest : public MultiDeviceTest<TypeParam> {};
 
-TYPED_TEST_CASE(QuantBlasTest, TestDtypesInteger);
+TYPED_TEST_CASE(QuantBlasTest, TestDtypesIntegerAndDevices);
 
 
 
 TYPED_TEST(QuantBlasTest, TestGemmComparativeFloatQuant) {
+  typedef typename TypeParam::Dtype Dtype;
 
   float eps = 0.66;
 
@@ -81,9 +82,9 @@ TYPED_TEST(QuantBlasTest, TestGemmComparativeFloatQuant) {
     Blob<float> C(C_shape, Caffe::GetDefaultDevice());
     Blob<float> C_result(C_shape, Caffe::GetDefaultDevice());
 
-    Blob<TypeParam> A_quant(A_shape, Caffe::GetDefaultDevice());
-    Blob<TypeParam> B_quant(B_shape, Caffe::GetDefaultDevice());
-    Blob<TypeParam> C_quant(C_shape, Caffe::GetDefaultDevice());
+    Blob<Dtype> A_quant(A_shape, Caffe::GetDefaultDevice());
+    Blob<Dtype> B_quant(B_shape, Caffe::GetDefaultDevice());
+    Blob<Dtype> C_quant(C_shape, Caffe::GetDefaultDevice());
 
     Blob<float> C_unquant(C_shape, Caffe::GetDefaultDevice());
 
@@ -108,11 +109,11 @@ TYPED_TEST(QuantBlasTest, TestGemmComparativeFloatQuant) {
     qpm_alpha.set_mode(CAFFE_QUANT_OBSERVE);
     qpm_beta.set_mode(CAFFE_QUANT_OBSERVE);
 
-    Quantizer<float, TypeParam> aq(qpm_a);
-    Quantizer<float, TypeParam> bq(qpm_b);
-    Quantizer<float, TypeParam> cq(qpm_c);
-    Quantizer<float, TypeParam> alphaq(qpm_alpha);
-    Quantizer<float, TypeParam> betaq(qpm_beta);
+    Quantizer<float, Dtype> aq(qpm_a);
+    Quantizer<float, Dtype> bq(qpm_b);
+    Quantizer<float, Dtype> cq(qpm_c);
+    Quantizer<float, Dtype> alphaq(qpm_alpha);
+    Quantizer<float, Dtype> betaq(qpm_beta);
 
     // Normal GEMM
     caffe_gemm<float>(
@@ -144,8 +145,8 @@ TYPED_TEST(QuantBlasTest, TestGemmComparativeFloatQuant) {
     bq.Forward_cpu(K * N, B.cpu_data(), B_quant.mutable_cpu_data());
     cq.Forward_cpu(M * N, C.cpu_data(), C_quant.mutable_cpu_data());
 
-    TypeParam alpha_val_quant = has_alpha;
-    TypeParam beta_val_quant = has_beta;
+    Dtype alpha_val_quant = has_alpha;
+    Dtype beta_val_quant = has_beta;
 
     // Quantize alpha
     if (alpha_with_quant) {
@@ -168,19 +169,33 @@ TYPED_TEST(QuantBlasTest, TestGemmComparativeFloatQuant) {
     std::cout << "C scale:" <<  cq.out_quantizer_values().scale << std::endl;
     */
 
-    // Quantized GEMM
-    caffe_gemm<TypeParam>(
-                trans_A, trans_B,
-                M, N, K,
-                alpha_val_quant,
-                A_quant.cpu_data(), B_quant.cpu_data(),
-                beta_val_quant,
-                C_quant.mutable_cpu_data(),
-                alpha_with_quant ? &(alphaq.out_quantizer_values()) : nullptr,
-                &(aq.out_quantizer_values()),
-                &(bq.out_quantizer_values()),
-                beta_with_quant ? &(betaq.out_quantizer_values()) : nullptr,
-                &(cq.out_quantizer_values()));
+    if (Caffe::mode() == Caffe::Brew::CPU) {
+      // Quantized GEMM
+      caffe_gemm<Dtype>(
+                  trans_A, trans_B,
+                  M, N, K,
+                  alpha_val_quant,
+                  A_quant.cpu_data(), B_quant.cpu_data(),
+                  beta_val_quant,
+                  C_quant.mutable_cpu_data(),
+                  alpha_with_quant ? &(alphaq.out_quantizer_values()) : nullptr,
+                  &(aq.out_quantizer_values()),
+                  &(bq.out_quantizer_values()),
+                  beta_with_quant ? &(betaq.out_quantizer_values()) : nullptr,
+                  &(cq.out_quantizer_values()));
+    } else {
+      Caffe::GetDefaultDevice()->template gemm<Dtype>(trans_A, trans_B,
+                  M, N, K,
+                  alpha_val_quant,
+                  A_quant.gpu_data(), B_quant.gpu_data(),
+                  beta_val_quant,
+                  C_quant.mutable_gpu_data(),
+                  alpha_with_quant ? &(alphaq.out_quantizer_values()) : nullptr,
+                  &(aq.out_quantizer_values()),
+                  &(bq.out_quantizer_values()),
+                  beta_with_quant ? &(betaq.out_quantizer_values()) : nullptr,
+                  &(cq.out_quantizer_values()));
+    }
 
     cq.Backward_cpu(M * N, C_quant.cpu_data(), C_unquant.mutable_cpu_data());
 

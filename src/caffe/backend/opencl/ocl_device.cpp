@@ -28,7 +28,6 @@ OclDevice::~OclDevice() {
 
 void OclDevice::Init() {
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(id_);
-
   {
     clGetDeviceInfo(ctx.devices()[0].id(),
                     CL_DEVICE_MAX_WORK_GROUP_SIZE,
@@ -67,6 +66,50 @@ void OclDevice::Init() {
 
   for (int q = 0; q < OPENCL_QUEUE_COUNT - 1; ++q) {
     ctx.add_queue(ctx.devices()[0]);
+  }
+
+  {
+    cl_uint vec_size;
+    clGetDeviceInfo(ctx.devices()[0].id(),
+                    CL_DEVICE_PREFERRED_VECTOR_WIDTH_CHAR, sizeof(cl_uint),
+                    &vec_size, NULL);
+    this->preferred_vector_widths_[safe_type_name<char>()] = vec_size;
+    this->preferred_vector_widths_[safe_type_name<int8_t>()] = vec_size;
+    this->preferred_vector_widths_[safe_type_name<uint8_t>()] = vec_size;
+
+    clGetDeviceInfo(ctx.devices()[0].id(),
+                    CL_DEVICE_PREFERRED_VECTOR_WIDTH_SHORT, sizeof(cl_uint),
+                    &vec_size, NULL);
+    this->preferred_vector_widths_[safe_type_name<int16_t>()] = vec_size;
+    this->preferred_vector_widths_[safe_type_name<uint16_t>()] = vec_size;
+
+    clGetDeviceInfo(ctx.devices()[0].id(),
+                    CL_DEVICE_PREFERRED_VECTOR_WIDTH_INT, sizeof(cl_uint),
+                    &vec_size, NULL);
+    this->preferred_vector_widths_[safe_type_name<int32_t>()] = vec_size;
+    this->preferred_vector_widths_[safe_type_name<uint32_t>()] = vec_size;
+
+    clGetDeviceInfo(ctx.devices()[0].id(),
+                    CL_DEVICE_PREFERRED_VECTOR_WIDTH_LONG, sizeof(cl_uint),
+                    &vec_size, NULL);
+    this->preferred_vector_widths_[safe_type_name<int64_t>()] = vec_size;
+    this->preferred_vector_widths_[safe_type_name<uint64_t>()] = vec_size;
+
+    clGetDeviceInfo(ctx.devices()[0].id(),
+                    CL_DEVICE_PREFERRED_VECTOR_WIDTH_HALF, sizeof(cl_uint),
+                    &vec_size, NULL);
+    this->preferred_vector_widths_[safe_type_name<half_fp>()] = vec_size;
+
+    clGetDeviceInfo(ctx.devices()[0].id(),
+                    CL_DEVICE_PREFERRED_VECTOR_WIDTH_FLOAT, sizeof(cl_uint),
+                    &vec_size, NULL);
+    this->preferred_vector_widths_[safe_type_name<float>()] = vec_size;
+
+    clGetDeviceInfo(ctx.devices()[0].id(),
+                    CL_DEVICE_PREFERRED_VECTOR_WIDTH_DOUBLE, sizeof(cl_uint),
+                    &vec_size, NULL);
+    this->preferred_vector_widths_[safe_type_name<double>()] = vec_size;
+
   }
 
   Device::Init();
@@ -335,6 +378,22 @@ bool OclDevice::CheckCapability(DeviceCapability cap) {
     case DEVICE_INT64_GLOBAL_EXTENDED_ATOMICS_SUPPORT:
       return (extsstr.find("cl_khr_global_int64_extended_atomics")
                                                                != string::npos);
+    case DEVICE_32_BIT_ADDRESS: {
+      cl_uint address_bits;
+      clGetDeviceInfo(ctx.devices()[0].id(),
+                      CL_DEVICE_PREFERRED_VECTOR_WIDTH_HALF, sizeof(cl_uint),
+                      &address_bits, NULL);
+      return std::min(static_cast<int32_t>(address_bits/8),
+                      static_cast<int32_t>(sizeof(void*))) == 4;
+    }
+    case DEVICE_64_BIT_ADDRESS: {
+      cl_uint address_bits;
+      clGetDeviceInfo(ctx.devices()[0].id(),
+                      CL_DEVICE_PREFERRED_VECTOR_WIDTH_HALF, sizeof(cl_uint),
+                      &address_bits, NULL);
+      return std::min(static_cast<int32_t>(address_bits/8),
+                      static_cast<int32_t>(sizeof(void*))) == 8;
+    }
     default:
       return false;
   }

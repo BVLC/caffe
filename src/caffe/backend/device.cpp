@@ -135,6 +135,29 @@ size_t Device::workgroup_size(uint_tp id) {
   return max_local_sizes_[id % 3];
 }
 
+template<typename Dtype>
+size_t Device::preferred_vector_width() {
+  string type = safe_type_name<Dtype>();
+  if (preferred_vector_widths_.find(type) != preferred_vector_widths_.end()) {
+    return preferred_vector_widths_[type];
+  } else {
+    return 0;
+  }
+}
+
+template size_t Device::preferred_vector_width<char>();
+template size_t Device::preferred_vector_width<int8_t>();
+template size_t Device::preferred_vector_width<uint8_t>();
+template size_t Device::preferred_vector_width<int16_t>();
+template size_t Device::preferred_vector_width<uint16_t>();
+template size_t Device::preferred_vector_width<int32_t>();
+template size_t Device::preferred_vector_width<uint32_t>();
+template size_t Device::preferred_vector_width<int64_t>();
+template size_t Device::preferred_vector_width<uint64_t>();
+template size_t Device::preferred_vector_width<half_fp>();
+template size_t Device::preferred_vector_width<float>();
+template size_t Device::preferred_vector_width<double>();
+
 bool Device::is_fast_unsafe_math() const {
   return fast_unsafe_math_;
 }

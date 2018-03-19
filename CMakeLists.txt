@@ -51,7 +51,7 @@ include(cmake/WindowsCreateLinkHeader.cmake)
 include(cmake/TargetResolvePrerequesites.cmake)
 
 # ---[ Options
-caffe_option(CPU_ONLY "Build Caffe without CUDA and OpenCL support" OFF)
+caffe_option(CPU_ONLY "Build Caffe without CUDA, OpenCL and HIP support" OFF)
 caffe_option(USE_INDEX_64 "Build Caffe with 64 bit indexing" OFF)
 caffe_option(USE_HALF "Build Caffe with FP16 support" ON)
 caffe_option(USE_SINGLE "Build Caffe with FP32 support" ON)
@@ -62,6 +62,8 @@ caffe_option(USE_INT_QUANT_32 "Build Caffe with 32 bit integer quantization supp
 caffe_option(USE_INT_QUANT_64 "Build Caffe with 64 bit integer quantization support" OFF)
 caffe_option(USE_CUDA "Build Caffe with CUDA support" OFF)
 caffe_option(USE_OPENCL "Build Caffe with OpenCL support" ON)
+caffe_option(USE_HSA "Build Caffe with HSA support. Should be enable for AMDGPU-PRO and ROCM." OFF)
+caffe_option(USE_HIP "Build Caffe with HIP support." OFF)
 caffe_option(FORCE_COMPILE_CU_AS_CPP "Force .cu files to be compiled with C++ compiler instead of NVCC" ON)
 caffe_option(DISABLE_DEVICE_HOST_UNIFIED_MEMORY "Disable host/device shared memory" OFF)
 caffe_option(USE_LIBDNN "Build Caffe with LibDNN library support" ON)
