@@ -43,6 +43,21 @@ void CudaDevice::Init() {
   max_group_sizes_[2] = prop.maxGridSize[2];
   max_local_size_ = prop.maxThreadsPerBlock;
 
+  this->preferred_vector_widths_[safe_type_name<char>()] = 4;
+  this->preferred_vector_widths_[safe_type_name<int8_t>()] = 4;
+  this->preferred_vector_widths_[safe_type_name<uint8_t>()] = 4;
+  this->preferred_vector_widths_[safe_type_name<short>()] = 2;
+  this->preferred_vector_widths_[safe_type_name<int16_t>()] = 2;
+  this->preferred_vector_widths_[safe_type_name<uint16_t>()] = 2;
+  this->preferred_vector_widths_[safe_type_name<int32_t>()] = 1;
+  this->preferred_vector_widths_[safe_type_name<uint32_t>()] = 1;
+  this->preferred_vector_widths_[safe_type_name<int64_t>()] = 1;
+  this->preferred_vector_widths_[safe_type_name<uint64_t>()] = 1;
+  this->preferred_vector_widths_[safe_type_name<half_fp>()] = 2;
+  this->preferred_vector_widths_[safe_type_name<float>()] = 1;
+  this->preferred_vector_widths_[safe_type_name<double>()] = 1;
+
+
   ReadHeaders();
   Device::Init();
 
@@ -213,6 +228,14 @@ bool CudaDevice::CheckCapability(DeviceCapability cap) {
       return true;
     case DEVICE_INT64_GLOBAL_EXTENDED_ATOMICS_SUPPORT:
       return true;
+    case DEVICE_32_BIT_ADDRESS:
+      // Report host pointer size
+      return sizeof(void*) == 4;
+    case DEVICE_64_BIT_ADDRESS:
+      // Report host pointer size
+      return sizeof(void*) == 8;
+    default:
+      return false;
   }
 }
 

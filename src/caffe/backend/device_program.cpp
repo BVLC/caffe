@@ -230,6 +230,7 @@ string DeviceProgram::define_vector_type(string name, int_tp from,
   int_tp safe_from = 2;
   if (from <= 1) {
     for (int_tp i = from; i <= 1; ++i) {
+      ss << this->define_type<Dtype>(name);
       ss << this->define_type<Dtype>(name + std::to_string(i));
     }
   }

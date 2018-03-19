@@ -75,7 +75,8 @@ string LibDNNBlas<MItype, MOtype>::generate_gemm_source(
     shared_ptr<DeviceProgram> program, shared_ptr<LibDNNTuner> tuner,
     bool trans_A, bool trans_B,
     const uint_tp M, const uint_tp N, const uint_tp K,
-    bool alpha_term, bool beta_term) {
+    bool alpha_term, bool alpha_exactly_one,
+    bool beta_term, bool beta_exactly_one) {
 
   typedef typename std::conditional<float_is_same<MItype>::value, MItype,
           typename std::conditional<sizeof(MItype) == 1, int16_t,
@@ -92,9 +93,14 @@ string LibDNNBlas<MItype, MOtype>::generate_gemm_source(
   ss << program->template define_vector_type<MOtype>("MOtype", 0, 16);
   ss << program->template define_vector_type<Acctype>("Acctype", 0, 16);
   ss << program->template define_vector_type<Difftype>("Difftype", 0, 16);
+  if (is_integer_type<MItype>()) {
+    if (this->dev_ptr_->template preferred_vector_width<int64_t>() > 0) {
+      ss << program->template define_vector_type<int64_t>("Multtype", 0, 16);
+    } else {
+      ss << program->template define_vector_type<int32_t>("Multtype", 0, 16);
+    }
+  }
   ss << program->vector_accessors();
-
-  string accreg_type = "MItype";
 
   int wptn = tuner->get_param<int>("WPTN");
   int wptm = tuner->get_param<int>("WPTM");
@@ -108,6 +114,12 @@ string LibDNNBlas<MItype, MOtype>::generate_gemm_source(
   int lpta = (tsm * tsk) / (rtsm * rtsn);
   int lptb = (tsn * tsk) / (rtsm * rtsn);
 
+  // Quantization definitions
+  if (is_integer_type<MItype>()) {
+    ss << program->define("ONE_MULT_CONST",
+       ((this->dev_ptr_->template preferred_vector_width<int64_t>() > 0) ?
+           "1ll" : "1"));
+  }
 
   // GEMM definitions
   ss << program->define("M", M);
@@ -151,20 +163,62 @@ string LibDNNBlas<MItype, MOtype>::generate_gemm_source(
   ss << program->define("v_num_tiles", "(((K - 1)/(TSK*2) + 1)*2)");
 
   KernelArgs args;
-  if (alpha_term) {
-    args.push_back(program->template create_kernel_arg<MItype>("alpha",
+  if (is_integer_type<MItype>() || is_integer_type<MOtype>()) {
+    args.push_back(program->template create_kernel_arg<int8_t>("shift_bits",
                                                              KERNEL_ARG_CONST));
+  }
+  if (alpha_term && !alpha_exactly_one) {
+    args.push_back(program->template create_kernel_arg<MOtype>("alpha",
+                                                             KERNEL_ARG_CONST));
+    if (is_integer_type<MOtype>()) {
+      args.push_back(program->template create_kernel_arg<MOtype>("alpha_off",
+                                                             KERNEL_ARG_CONST));
+      args.push_back(program->template create_kernel_arg<Acctype>("alpha_mult",
+                                                             KERNEL_ARG_CONST));
+      args.push_back(program->template create_kernel_arg<int8_t>("alpha_shift",
+                                                             KERNEL_ARG_CONST));
+    }
   }
   args.push_back(program->template create_kernel_arg<MItype>("A",
                KERNEL_ARG_RESTRICT | KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_CONST));
+  if (is_integer_type<MItype>()) {
+    args.push_back(program->template create_kernel_arg<MItype>("A_off",
+                                                             KERNEL_ARG_CONST));
+  }
   args.push_back(program->template create_kernel_arg<MItype>("B",
                KERNEL_ARG_RESTRICT | KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_CONST));
-  if (beta_term) {
-    args.push_back(program->template create_kernel_arg<MItype>("beta",
+  if (is_integer_type<MItype>()) {
+    args.push_back(program->template create_kernel_arg<MItype>("B_off",
                                                              KERNEL_ARG_CONST));
+  }
+  if (beta_term && !beta_exactly_one) {
+    args.push_back(program->template create_kernel_arg<MOtype>("beta",
+                                                             KERNEL_ARG_CONST));
+    if (is_integer_type<MOtype>()) {
+      args.push_back(program->template create_kernel_arg<MOtype>("beta_off",
+                                                             KERNEL_ARG_CONST));
+      args.push_back(program->template create_kernel_arg<Acctype>("beta_mult",
+                                                             KERNEL_ARG_CONST));
+      args.push_back(program->template create_kernel_arg<int8_t>("beta_shift",
+                                                             KERNEL_ARG_CONST));
+    }
   }
   args.push_back(program->template create_kernel_arg<MOtype>("C",
                                   KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_RESTRICT));
+  if (is_integer_type<MOtype>()) {
+    args.push_back(program->template create_kernel_arg<MOtype>("C_off",
+                                                             KERNEL_ARG_CONST));
+    args.push_back(program->template create_kernel_arg<Acctype>("C_min",
+                                                             KERNEL_ARG_CONST));
+    args.push_back(program->template create_kernel_arg<Acctype>("C_max",
+                                                             KERNEL_ARG_CONST));
+    args.push_back(program->template create_kernel_arg<Acctype>("mult",
+                                                             KERNEL_ARG_CONST));
+    args.push_back(program->template create_kernel_arg<int8_t>("shift",
+                                                             KERNEL_ARG_CONST));
+  }
+
+
   ss << program->function("libdnn_gemm", args);
 
   ss << program->global_ptr("const MItype", "Aptr") << " = A;"
@@ -200,70 +254,144 @@ string LibDNNBlas<MItype, MOtype>::generate_gemm_source(
                       + "[" + std::to_string(tsn) + " + v_pad_B]") << ";"
                     << std::endl;
 
+  if (is_integer_type<MItype>()) {
+    // Row & column caches for quantization affine transform
+    ss << program->local_mem("Acctype", "Asubrows[" + std::to_string(tsm) + "]")
+       << ";" << std::endl;
+    ss << program->local_mem("Acctype", "Bsubcols[" + std::to_string(tsn) + "]")
+       << ";" << std::endl;
+
+    ss << "if (tidn == 0) {" << std::endl;
+    ss << "#pragma unroll" << std::endl;
+    ss << "for (int_tp wm = 0; wm < WPTM; ++wm) {" << std::endl;
+    ss << "Asubrows[tidm * WPTM + wm] = (MItype)0;" << std::endl;
+    ss << "}}" << std::endl;
+    ss << "if (tidm == 0) {" << std::endl;
+    ss << "#pragma unroll" << std::endl;
+    ss << "for (int_tp wn = 0; wn < WPTN; ++wn) {" << std::endl;
+    ss << "Bsubcols[tidn * WPTN + wn] = (MItype)0;" << std::endl;
+    ss << "}}" << std::endl;
+
+    ss << program->local_barrier() << std::endl;
+  }
+
   // Initialize the accumulation registers
   ss << "{" << std::endl;  // Scoping for C registers
-  ss << this->generate_accreg_init(tuner, false, beta_term, beta_term);
+  ss << this->generate_accreg_init(tuner, false, beta_term, beta_term,
+                                   beta_exactly_one);
 
   ss << "{" << std::endl;  // Scoping for load & compute block
-  // Loop over all tiles
-  ss << "#pragma unroll 1" << std::endl;
-  ss << "for (int_tp t = 0; t < v_num_tiles; ++t) {" << std::endl;
 
-  // Load one tile of A into local memory
-  ss << "{" << std::endl;  // Scoping for loading A
-  ss << "#pragma unroll 4" << std::endl;
-  ss << "for (int_tp la = 0; la < LPTA; ++la) {" << std::endl;
-  ss << "int_tp tid = tidm * RTSN + tidn;" << std::endl;
-  ss << "int_tp id = la * RTSN * RTSM + tid;" << std::endl;
-  ss << "int_tp row = id / TSK;" << std::endl;
-  ss << "int_tp col = id % TSK;" << std::endl;
-  ss << "int_tp tiledIndex = TSK * t + col;" << std::endl;
-  ss << "if ((offM + row) < M && tiledIndex < K) {" << std::endl;
-  ss << "Asub[row][col] = ";
-  if (trans_A) {
-    ss << "Aptr[(offM + row) + tiledIndex * M];";
-  } else {
-    ss << "Aptr[(offM + row) * K + tiledIndex];";
-  }
-  ss << std::endl;
-  ss << "} else {" << std::endl;  // M-K-Guard
-  ss << "Asub[row][col] = (MItype)0;" << std::endl;
-  ss << "}" << std::endl;
-  ss << "}" << std::endl;  // LPTA
-  ss << "}" << std::endl;  // Scoping for loading A
+  if (alpha_term) {
+    // Loop over all tiles
+    ss << "#pragma unroll 1" << std::endl;
+    ss << "for (int_tp t = 0; t < v_num_tiles; ++t) {" << std::endl;
 
-  // Load one tile of B into local memory
-  ss << "{" << std::endl;  // Scoping for loading B
-  ss << "#pragma unroll 4" << std::endl;
-  ss << "for (int_tp lb = 0; lb < LPTB; ++lb) {" << std::endl;
-  ss << "int_tp tid = tidm * RTSN + tidn;" << std::endl;
-  ss << "int_tp id = lb * RTSN * RTSM + tid;" << std::endl;
-  ss << "int_tp row = id / TSN;" << std::endl;
-  ss << "int_tp col = id % TSN;" << std::endl;
-  ss << "int_tp tiledIndex = TSK * t + row;" << std::endl;
-  ss << "if ((offN + col) < N && tiledIndex < K) {" << std::endl;
-  if (trans_B) {
-    ss << "Bsub[row][col] = Bptr[(offN + col) * K + tiledIndex];"
-       << std::endl;
-  } else {
-    ss << "Bsub[row][col] = Bptr[(offN + col) + tiledIndex * N];"
-       << std::endl;
-  }
-  ss << "} else {" << std::endl;  // N-K-Guard
-  ss << "Bsub[row][col] = (MItype)0;" << std::endl;
-  ss << "}" << std::endl;
-  ss << "}" << std::endl;  // LPTB
-  ss << "}" << std::endl;  // Scoping for loading B
+    // Load one tile of A into local memory
+    ss << "{" << std::endl;  // Scoping for loading A
+    ss << "#pragma unroll 4" << std::endl;
+    ss << "for (int_tp la = 0; la < LPTA; ++la) {" << std::endl;
+    ss << "int_tp tid = tidm * RTSN + tidn;" << std::endl;
+    ss << "int_tp id = la * RTSN * RTSM + tid;" << std::endl;
+    ss << "int_tp row = id / TSK;" << std::endl;
+    ss << "int_tp col = id % TSK;" << std::endl;
+    ss << "int_tp tiledIndex = TSK * t + col;" << std::endl;
+    ss << "if ((offM + row) < M && tiledIndex < K) {" << std::endl;
+    ss << "Asub[row][col] = ";
+    if (trans_A) {
+      ss << "Aptr[(offM + row) + tiledIndex * M];";
+    } else {
+      ss << "Aptr[(offM + row) * K + tiledIndex];";
+    }
+    ss << std::endl;
+    ss << "} else {" << std::endl;  // M-K-Guard
+    ss << "Asub[row][col] = (MItype)";
+    if (is_float_type<MItype>()) {
+      ss << "0.0;" << std::endl;
+    } else {
+      ss << "A_off;" << std::endl;
+    }
+    ss << "}" << std::endl;
+    ss << "}" << std::endl;  // LPTA
+    ss << "}" << std::endl;  // Scoping for loading A
 
-  // Synchronize to make sure the tile is loaded
-  ss << program->local_barrier() << std::endl;
+    // Load one tile of B into local memory
+    ss << "{" << std::endl;  // Scoping for loading B
+    ss << "#pragma unroll 4" << std::endl;
+    ss << "for (int_tp lb = 0; lb < LPTB; ++lb) {" << std::endl;
+    ss << "int_tp tid = tidm * RTSN + tidn;" << std::endl;
+    ss << "int_tp id = lb * RTSN * RTSM + tid;" << std::endl;
+    ss << "int_tp row = id / TSN;" << std::endl;
+    ss << "int_tp col = id % TSN;" << std::endl;
+    ss << "int_tp tiledIndex = TSK * t + row;" << std::endl;
+    ss << "if ((offN + col) < N && tiledIndex < K) {" << std::endl;
+    if (trans_B) {
+      ss << "Bsub[row][col] = Bptr[(offN + col) * K + tiledIndex];"
+         << std::endl;
+    } else {
+      ss << "Bsub[row][col] = Bptr[(offN + col) + tiledIndex * N];"
+         << std::endl;
+    }
+    ss << "} else {" << std::endl;  // N-K-Guard
+    ss << "Bsub[row][col] = (MItype)";
+    if (is_float_type<MItype>()) {
+      ss << "0.0;" << std::endl;
+    } else {
+      ss << "B_off;" << std::endl;
+    }
+    ss << "}" << std::endl;
+    ss << "}" << std::endl;  // LPTB
+    ss << "}" << std::endl;  // Scoping for loading B
 
-  ss << this->generate_gemm_core(tuner, false, alpha_term);
+    // Synchronize to make sure the tile is loaded
+    ss << program->local_barrier() << std::endl;
 
-  ss << program->local_barrier() << std::endl;
+    ss << this->generate_gemm_core(tuner, false, alpha_term,
+                                   alpha_exactly_one);
 
-  // Loop over all tiles
-  ss << "}" << std::endl;
+    if (is_integer_type<MItype>()) {
+      // Add up columns of A
+      ss << "for (int_tp k = 0; k < TSK; ++k) {" << std::endl;
+      ss << "if (tidn == 0) {" << std::endl;
+      ss << "#pragma unroll" << std::endl;
+      ss << "for (int_tp wm = 0; wm < WPTM; ++wm) {" << std::endl;
+      ss << "Asubrows[tidm * WPTM + wm] += Asub[tidm * WPTM + wm][k];"
+         << std::endl;
+      ss << "}}" << std::endl;
+      // Add up rows of B
+      ss << "if (tidm == 0) {" << std::endl;
+      ss << "#pragma unroll" << std::endl;
+      ss << "for (int_tp wn = 0; wn < WPTN; ++wn) {" << std::endl;
+      ss << "Bsubcols[tidn * WPTN + wn] += Bsub[k][tidn * WPTN + wn];"
+         << std::endl;
+      ss << "}}" << std::endl;
+      ss << "}" << std::endl;
+    }
+
+    ss << program->local_barrier() << std::endl;
+
+    // Loop over all tiles
+    ss << "}" << std::endl;
+
+    if (is_integer_type<MItype>()) {
+      // Subtract A*B_off and B*A_off
+      ss << "for (int_tp wm = 0; wm < WPTM / VWM; ++wm) {" << std::endl;
+      ss << "int_tp row = tidm + wm * VWM * RTSM;" << std::endl;
+      ss << "for (int_tp wn = 0; wn < WPTN / VWN; ++wn) {" << std::endl;
+      ss << "int_tp col = tidn + wn * VWN * RTSN;" << std::endl;
+      for (int_tp n = 0; n < vwn; ++n) {
+        for (int_tp m = 0; m < vwm; ++m) {
+          ss << "VEC_" << vwn << "_" << n
+             << "(Creg[wm * VWM + " << m << "][wn])"
+             << " += ((Asubrows[row + " << m << "] * B_off) +"
+             << "     (Bsubcols[col + " << n << "] * A_off));" << std::endl;
+        }
+      }
+      ss << "}" << std::endl;
+      ss << "}" << std::endl;
+      ss << program->local_barrier() << std::endl;
+    }
+  }  // if (alpha_term)
   ss << "}" << std::endl;  // Scoping for load & compute block
 
   // Store the final results in C
@@ -276,9 +404,75 @@ string LibDNNBlas<MItype, MOtype>::generate_gemm_source(
   ss << "int_tp globalCol = offN + tidn + wn * RTSN;"
      << std::endl;
   ss << "if (globalRow < M && globalCol < N) {" << std::endl;
-  ss << "Cptr[globalRow * N + globalCol] = ";
-  ss << "(MOtype)";
-  ss << "(((" << accreg_type << "*)(&(Creg[wm][wn/VWN])))[wn%VWN]);"
+
+  if (is_float_type<MItype>()) {
+    // Float type code
+    // Nothing to do here
+  } else {
+    // Quantization type code
+    if (alpha_term) {
+      ss << "{" << std::endl;
+      ss << "Acctype C_tmp = ((Acctype*)(&(Creg[wm][wn/VWN])))[wn%VWN] + "
+         << "((Acctype)K) * ((Acctype)A_off) * ((Acctype)B_off);"
+         << std::endl;
+      ss << "C_tmp = (Acctype)((((Multtype)C_tmp) * ((Multtype)mult))"
+         << "/ (ONE_MULT_CONST << shift_bits));" << std::endl;
+      ss << "if (shift >= 0) {" << std::endl;
+      ss << "C_tmp = C_tmp >> shift;" << std::endl;
+      ss << "} else {" << std::endl;
+      ss << "C_tmp = C_tmp << -shift;" << std::endl;
+      ss << "}" << std::endl;
+
+      if (!alpha_exactly_one) {
+        ss << "Difftype alpha_diff = alpha - alpha_off;" << std::endl;
+        ss << "C_tmp = ((Acctype)alpha_diff) * ((Acctype)C_tmp);"
+           << std::endl;
+        ss << "C_tmp = (Acctype)((((Multtype)C_tmp) * ((Multtype)alpha_mult))"
+           << "/ (ONE_MULT_CONST << shift_bits));" << std::endl;
+        ss << "if (alpha_shift >= 0) {" << std::endl;
+        ss << "C_tmp = C_tmp >> alpha_shift;" << std::endl;
+        ss << "} else {" << std::endl;
+        ss << "C_tmp = C_tmp << -alpha_shift;" << std::endl;
+        ss << "}" << std::endl;
+      }
+      ss << "((Acctype*)(&(Creg[wm][wn/VWN])))[wn%VWN] = C_tmp;" << std::endl;
+      ss << "}" << std::endl;
+    }
+  }
+
+  stringstream ss_c;
+  if (is_float_type<MItype>()) {
+    // Float type code
+    ss_c << "((Acctype*)(&(Creg[wm][wn/VWN])))[wn%VWN]";
+  } else {
+    // Quantization type code
+    if (beta_term) {
+      ss << "{" << std::endl;
+      ss << "Acctype C_tmp = 0;" << std::endl;
+      ss << "Acctype C_diff = Cptr[globalRow * N + globalCol]"
+         << " - ((Acctype)C_off);" << std::endl;
+      if (beta_exactly_one) {
+        ss << "C_tmp = C_diff;" << std::endl;
+      } else {
+        ss << "Difftype beta_diff = beta - beta_off;" << std::endl;
+        ss << "C_tmp = ((Acctype)beta_diff) * ((Acctype)C_diff);"
+           << std::endl;
+        ss << "C_tmp = (Acctype)((((Multtype)C_tmp) * ((Multtype)beta_mult))"
+           << "/ (ONE_MULT_CONST << shift_bits));" << std::endl;
+        ss << "if (beta_shift >= 0) {" << std::endl;
+        ss << "C_tmp = C_tmp >> beta_shift;" << std::endl;
+        ss << "} else {" << std::endl;
+        ss << "C_tmp = C_tmp << -beta_shift;" << std::endl;
+        ss << "}" << std::endl;
+      }
+      ss << "((Acctype*)(&(Creg[wm][wn/VWN])))[wn%VWN] += C_tmp;" << std::endl;
+      ss << "}" << std::endl;
+    }
+    ss << "((Acctype*)(&(Creg[wm][wn/VWN])))[wn%VWN] += C_off;" << std::endl;
+    ss_c << "min(max(((Acctype*)(&(Creg[wm][wn/VWN])))[wn%VWN], C_min), C_max)";
+  }
+
+  ss << "Cptr[globalRow * N + globalCol] = (MOtype)(" << ss_c.str() << ");"
      << std::endl;
   ss << "}" << std::endl;   // M-N-Guard
   ss << "}" << std::endl;   // For (N)
@@ -294,7 +488,8 @@ template<typename MItype, typename MOtype>
 string LibDNNBlas<MItype, MOtype>::gemm_string_identifier(
     const CBLAS_TRANSPOSE trans_A, const CBLAS_TRANSPOSE trans_B,
     const uint_tp M, const uint_tp N, const uint_tp K,
-    bool alpha_term, bool beta_term) {
+    bool alpha_term, bool alpha_exactly_one,
+    bool beta_term, bool beta_exactly_one) {
   stringstream ss;
   ss << "gemm_";
   ss << (trans_A == CblasNoTrans ? "TA_" : "NTA_");
@@ -304,9 +499,15 @@ string LibDNNBlas<MItype, MOtype>::gemm_string_identifier(
   ss << "K" << K << "_";
   if (alpha_term) {
     ss << "alpha_";
+    if (alpha_exactly_one) {
+      ss << "1_";
+    }
   }
   if (beta_term) {
     ss << "beta_";
+    if (beta_exactly_one) {
+      ss << "1_";
+    }
   }
   return ss.str();
 }
@@ -331,11 +532,14 @@ void LibDNNBlas<MItype, MOtype>::gemm(
           typename std::conditional<sizeof(MItype) == 1, int32_t,
                                     int64_t>::type>::type Acctype;
 
-  bool alpha_term = alpha != (MItype)1;
-  bool beta_term = beta != (MItype)0;
+  bool alpha_term = alpha != (MOtype)0;
+  bool beta_term = beta != (MOtype)0;
+  bool alpha_exactly_one = (alpha == (MOtype)1);
+  bool beta_exactly_one = (beta == (MOtype)1);
 
   string identifier = gemm_string_identifier(trans_A, trans_B, M, N, K,
-                                             alpha_term, beta_term);
+                                             alpha_term, alpha_exactly_one,
+                                             beta_term, beta_exactly_one);
 
   int_tp id = get_id(identifier);
   if (id < 0) {
@@ -353,7 +557,9 @@ void LibDNNBlas<MItype, MOtype>::gemm(
       stringstream ss;
       ss << generate_gemm_source(program, tuner,
                                  trans_A == CblasTrans, trans_B == CblasTrans,
-                                 M, N, K, alpha_term, beta_term);
+                                 M, N, K,
+                                 alpha_term, alpha_exactly_one,
+                                 beta_term, beta_exactly_one);
       program->set_source(ss.str());
       program->Compile(true, true);
       program_ready_[id] = true;
@@ -378,27 +584,60 @@ void LibDNNBlas<MItype, MOtype>::gemm(
                           1};
   vector<size_t> local = {wgs0, wgs1, 1};
 
+  // Quantization parameters
+  int8_t shift_bits =
+      (this->dev_ptr_->template preferred_vector_width<int64_t>() > 0 ? 32 : 16)
+      / sizeof(MItype) - 1;
+
+  MItype A_off;
+  MItype B_off;
+  MOtype C_off;
   Acctype mult;
   int8_t shift;
-  const Acctype c_max = c_quant ? c_quant->get_max<Acctype>() : Acctype(0);
-  const Acctype c_min = c_quant ? c_quant->get_min<Acctype>() : Acctype(0);
-  const Acctype result_offset = c_quant ? c_quant->get_zero<Acctype>()
-      : Acctype(0);
-  int8_t shift_bits = ((sizeof(Acctype))/sizeof(MItype)) - 1;
-  MItype lhs_off = a_quant->get_zero<MItype>();
-  MItype rhs_off = b_quant->get_zero<MItype>();
-  QuantizerBase::template MultiplicativeQuantVals<Acctype>(
-      a_quant, b_quant, c_quant, &mult, &shift, shift_bits);
+  Acctype C_min;
+  Acctype C_max;
+  MOtype alpha_off;
+  Acctype alpha_mult;
+  int8_t alpha_shift;
+  MOtype beta_off;
+  Acctype beta_mult;
+  int8_t beta_shift;
 
-  if (alpha_term) {
+  if (is_integer_type<MItype>() || is_integer_type<MOtype>()) {
+    kernel->add_arg(&shift_bits);
+  }
+  if (alpha_term && !alpha_exactly_one) {
     kernel->add_arg(&alpha);
+    if (is_integer_type<MOtype>()) {
+      kernel->add_arg(&alpha_off);
+      kernel->add_arg(&alpha_mult);
+      kernel->add_arg(&alpha_shift);
+    }
   }
   kernel->add_arg(&A);
+  if (is_integer_type<MItype>()) {
+    kernel->add_arg(&A_off);
+  }
   kernel->add_arg(&B);
-  if (beta_term) {
+  if (is_integer_type<MItype>()) {
+    kernel->add_arg(&B_off);
+  }
+  if (beta_term && !beta_exactly_one) {
     kernel->add_arg(&beta);
+    if (is_integer_type<MOtype>()) {
+      kernel->add_arg(&beta_off);
+      kernel->add_arg(&beta_mult);
+      kernel->add_arg(&beta_shift);
+    }
   }
   kernel->add_arg(&C);
+  if (is_integer_type<MOtype>()) {
+    kernel->add_arg(&C_off);
+    kernel->add_arg(&C_min);
+    kernel->add_arg(&C_max);
+    kernel->add_arg(&mult);
+    kernel->add_arg(&shift);
+  }
   kernel->Execute(group, local);
 }
 

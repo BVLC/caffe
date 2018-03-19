@@ -156,7 +156,7 @@ void CuDNNConvolutionLayer<Dtype, MItype, MOtype>::Reshape(
     }
 
     cudnn::setConvolutionDesc<Dtype>(&conv_descs_[i], bottom_descs_[i],
-        filter_desc_, this->num_spatial_axes_, pad_data, stride_data);
+                  filter_desc_, this->num_spatial_axes_, pad_data, stride_data);
 
     // choose forward and backward algorithms + workspace(s)
     CUDNN_CHECK(cudnnGetConvolutionForwardAlgorithm(handle_[0],
@@ -260,9 +260,8 @@ void CuDNNConvolutionLayer<Dtype, MItype, MOtype>::Reshape(
 
   // Tensor descriptor for bias.
   if (this->bias_term_) {
-    cudnn::setTensorNdDesc<Dtype>(&bias_desc_,
-                                  this->num_spatial_axes_,
-        1, this->num_output_ / this->group_, ones_ptr);
+    cudnn::setTensorNdDesc<Dtype>(&bias_desc_, this->num_spatial_axes_, 1,
+                                  this->num_output_ / this->group_, ones_ptr);
   }
 }
 

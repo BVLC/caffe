@@ -24,15 +24,14 @@ LibDNN<MItype, MOtype>::LibDNN(Device* dev_ptr)
 
 template<typename MItype, typename MOtype>
 string LibDNN<MItype, MOtype>::generate_gemm_core(
-    shared_ptr<LibDNNTuner> tuner, bool dterm, bool alpha_term) {
+    shared_ptr<LibDNNTuner> tuner, bool dterm, bool alpha_term,
+    bool alpha_exactly_one) {
   stringstream ss;
   int vwm = tuner->get_param<int>("VWM");
   int vwn = tuner->get_param<int>("VWN");
   int rtsn = tuner->get_param<int>("workgroup_size_0");
   int rtsm = tuner->get_param<int>("workgroup_size_1");
   bool unroll = tuner->get_param<bool>("vector_unroll");
-
-  string accreg_type = "MItype";
 
   // Temporary registers for A and B
   ss << "MItype" << vwm << " Areg;" << std::endl;
@@ -68,8 +67,7 @@ string LibDNN<MItype, MOtype>::generate_gemm_core(
     if (unroll) {
       for (int i = 0; i < vwm; ++i) {
         ss << "VEC_" << vwm << "_" << i << "(Dreg[wm]) " << "+= ";
-        ss << "(" << accreg_type << ")";
-        ss << "(VEC_" << vwm << "_" << i << "(Areg) * (MItype)v_bmul);"
+        ss << "(Acctype)(VEC_" << vwm << "_" << i << "(Areg) * (MItype)v_bmul);"
            << std::endl;
       }
     } else {
@@ -85,8 +83,8 @@ string LibDNN<MItype, MOtype>::generate_gemm_core(
       for (int_tp m = 0; m < vwm; ++m) {
         ss << "VEC_" << vwn << "_" << n << "(Creg[wm * VWM + " << m << "][wn])"
            << " += ";
-        ss << "(" << accreg_type << ")";
-        if (alpha_term) {
+        ss << "(Acctype)";
+        if (!alpha_exactly_one && is_float_type<MItype>()) {
           ss << "(alpha *";
         } else {
           ss << "(";
@@ -99,7 +97,7 @@ string LibDNN<MItype, MOtype>::generate_gemm_core(
     for (int_tp m = 0; m < vwm; ++m) {
       ss << "Creg[wm * VWM + " << m << "][wn] += ";
       stringstream src_term;
-      if (alpha_term) {
+      if (!alpha_exactly_one && is_float_type<MItype>()) {
         src_term << "(alpha *";
       } else {
         src_term << "(";
@@ -120,31 +118,30 @@ string LibDNN<MItype, MOtype>::generate_gemm_core(
 
 template<typename MItype, typename MOtype>
 string LibDNN<MItype, MOtype>::generate_accreg_init(
-    shared_ptr<LibDNNTuner> tuner, bool dterm, bool load, bool beta_term) {
+    shared_ptr<LibDNNTuner> tuner, bool dterm, bool load, bool beta_term,
+    bool beta_exactly_one) {
   stringstream ss;
 
   int vwm = tuner->get_param<int>("VWM");
   int vwn = tuner->get_param<int>("VWN");
   bool unroll = tuner->get_param<bool>("vector_unroll");
 
-  string accreg_type = "MItype";
-
   if (dterm) {
-    ss << accreg_type << vwm << " Dreg[WPTM / VWM];" << std::endl;
+    ss << "Acctype" << vwm << " Dreg[WPTM / VWM];" << std::endl;
   }
-  ss << accreg_type << vwn << " Creg[WPTM][WPTN / VWN];" << std::endl;
+  ss << "Acctype" << vwn << " Creg[WPTM][WPTN / VWN];" << std::endl;
 
-  // Initialize the accumulation registers
-  if (load) {
+  // Initialize the accumulation registers (only preload with float types)
+  // Quantized types require adding the values post-GEMM due to offsets
+  if (load && is_float_type<MOtype>()) {
     // Load
     if (dterm) {
       ss << "#pragma unroll" << std::endl;
       ss << "for (int_tp wm = 0; wm < WPTM; ++wm) {" << std::endl;
       ss << "int_tp globalRow = offM + tidm + wm * RTSM;"
          << std::endl;
-      ss << "((" << accreg_type << "*)(&(Dreg[wm / VWM])))[wm % VWM] = ";
-      ss << "(" << accreg_type << ")";
-      ss << "(Dptr[globalRow]);" << std::endl;
+      ss << "((Acctype*)(&(Dreg[wm / VWM])))[wm % VWM] = ";
+      ss << "(Acctype)(Dptr[globalRow]);" << std::endl;
       ss << "}" << std::endl;
     }
     ss << "#pragma unroll" << std::endl;
@@ -156,14 +153,20 @@ string LibDNN<MItype, MOtype>::generate_accreg_init(
     ss << "int_tp globalCol = offN + tidn + wn * RTSN;"
        << std::endl;
     ss << "if (globalRow < M && globalCol < N) {" << std::endl;
-    ss << "((" << accreg_type << "*)(&(Creg[wm][wn / VWN])))[wn % VWN] = ";
-    ss << "(" << accreg_type << ")";
+    stringstream ss_beta_c;
     if (beta_term) {
-      ss << "(beta * ";
+      if (beta_exactly_one) {
+        ss_beta_c << "Cptr[globalRow * N + globalCol]);" << std::endl;
+      } else {
+        // Float code
+        ss_beta_c << "(beta * Cptr[globalRow * N + globalCol]));"
+                  << std::endl;
+      }
     } else {
-      ss << "(";
+      ss_beta_c << "0;" << std::endl;
     }
-    ss << "Cptr[globalRow * N + globalCol]);" << std::endl;
+    ss << "((Acctype*)(&(Creg[wm][wn / VWN])))[wn % VWN] = ";
+    ss << "(Acctype)" << ss_beta_c.str();
     ss << "}" << std::endl;
     ss << "}" << std::endl;
     ss << "}" << std::endl;
@@ -174,11 +177,11 @@ string LibDNN<MItype, MOtype>::generate_accreg_init(
       ss << "for (int_tp wm = 0; wm < WPTM / VWM; ++wm) {" << std::endl;
       if (unroll) {
         for (int i = 0; i < vwm; ++i) {
-          ss << "VEC_" << vwm << "_" << i << "(Dreg[wm]) = ("
-             << accreg_type << ")0;" << std::endl;
+          ss << "VEC_" << vwm << "_" << i << "(Dreg[wm]) = (Acctype)0;"
+             << std::endl;
         }
       } else {
-        ss << "Dreg[wm] = (" << accreg_type << ")0;" << std::endl;
+        ss << "Dreg[wm] = (Acctype)0;" << std::endl;
       }
       ss << "}" << std::endl;
     }
@@ -188,11 +191,11 @@ string LibDNN<MItype, MOtype>::generate_accreg_init(
     ss << "for (int_tp wn = 0; wn < WPTN / VWN; ++wn) {" << std::endl;
     if (unroll) {
       for (int i = 0; i < vwn; ++i) {
-        ss << "VEC_" << vwn << "_" << i << "(Creg[wm][wn]) = ("
-           << accreg_type << ")0;" << std::endl;
+        ss << "VEC_" << vwn << "_" << i << "(Creg[wm][wn]) = (Acctype)0;"
+           << std::endl;
       }
     } else {
-      ss << "Creg[wm][wn] = (" << accreg_type << ")0;" << std::endl;
+      ss << "Creg[wm][wn] = (Acctype)0;" << std::endl;
     }
     ss << "}" << std::endl;
     ss << "}" << std::endl;

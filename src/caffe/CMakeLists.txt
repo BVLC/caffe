@@ -15,17 +15,17 @@ caffe_prebuild_test_macros_py(${test_macros_gen_folder})
 list(APPEND pre_build_srcs ${test_macros_gen_folder}/test_macros.hpp)
 
 if(USE_CUDA)
-set(CUDA_NVRTC_HEADERS "")
-list(APPEND CUDA_NVRTC_HEADERS "${CUDA_TOOLKIT_INCLUDE}/cuda_fp16.h")
-list(APPEND CUDA_NVRTC_HEADERS "${CUDA_TOOLKIT_INCLUDE}/cuda_fp16.hpp")
-set(CUDA_NVRTC_SYSTEM_HEADERS "")
-set(CUDA_NVRTC_EXCLUDE_HEADERS "utility")
-caffe_cuda_nvrtc_header_loader_py(${cuda_nvrtc_header_gen_folder}
+  set(CUDA_NVRTC_HEADERS "")
+  list(APPEND CUDA_NVRTC_HEADERS "${CUDA_TOOLKIT_INCLUDE}/cuda_fp16.h")
+  list(APPEND CUDA_NVRTC_HEADERS "${CUDA_TOOLKIT_INCLUDE}/cuda_fp16.hpp")
+  set(CUDA_NVRTC_SYSTEM_HEADERS "")
+  set(CUDA_NVRTC_EXCLUDE_HEADERS "utility")
+  caffe_cuda_nvrtc_header_loader_py(${cuda_nvrtc_header_gen_folder}
 								  "${CUDA_NVRTC_HEADERS}"
 								  "${CMAKE_CXX_COMPILER}"
 								  "${CUDA_NVRTC_SYSTEM_HEADERS}"
 								  "${CUDA_NVRTC_EXCLUDE_HEADERS}")
-list(APPEND pre_build_srcs ${cuda_nvrtc_header_gen_folder}/cuda_nvrtc_headers.hpp)
+  list(APPEND pre_build_srcs ${cuda_nvrtc_header_gen_folder}/cuda_nvrtc_headers.hpp)
 endif()
 
 add_library(pre_build STATIC ${pre_build_srcs})

@@ -123,6 +123,28 @@ if (USE_GEMMLOWP)
   list(APPEND Caffe_DEFINITIONS PUBLIC -DUSE_GEMMLOWP)
 endif()
 
+# -- [ HSA
+if (USE_HSA)
+  find_package(HSA)
+  if (NOT HSA_FOUND)
+    message(FATAL_ERROR "HSA required but not found.")
+  endif()
+  list(APPEND Caffe_INCLUDE_DIRS PUBLIC "${HSA_RUNTIME_INCLUDE_DIR}")
+  list(APPEND Caffe_LINKER_LIBS PUBLIC "${HSA_RUNTIME_LIBRARY}")
+  list(APPEND Caffe_DEFINITIONS PUBLIC -DUSE_HSA)
+endif()
+
+# -- [ HIP
+if (USE_HIP)
+  find_package(HIP)
+    if (NOT HIP_FOUND)
+    message(FATAL_ERROR "HIP required but not found.")
+  endif()
+  list(APPEND Caffe_INCLUDE_DIRS PUBLIC "${ViennaCL_INCLUDE_DIRS}")
+  list(APPEND Caffe_LINKER_LIBS PUBLIC "${ViennaCL_LIBRARIES}")
+  list(APPEND Caffe_DEFINITIONS PUBLIC -DUSE_HIP)
+endif()
+
 # ---[ ViennaCL
 if (USE_OPENCL)
   find_package(ViennaCL)

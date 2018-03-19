@@ -55,8 +55,7 @@ void CuDNNReLULayer<Dtype, MItype, MOtype>::Backward_gpu(
   const Dtype* bottom_data = bottom[0]->gpu_data().get_cuda_ptr();
   Dtype* bottom_diff = bottom[0]->mutable_gpu_diff().get_cuda_ptr();
 #if CUDNN_VERSION_MIN(5, 0, 0)
-  CUDNN_CHECK(cudnnActivationBackward(this->handle_,
-        activ_desc_,
+  CUDNN_CHECK(cudnnActivationBackward(this->handle_, activ_desc_,
         cudnn::dataType<Dtype>::one,
         this->top_desc_, top_data, this->top_desc_, top_diff,
         this->bottom_desc_, bottom_data,
@@ -75,14 +74,10 @@ void CuDNNReLULayer<Dtype, MItype, MOtype>::Backward_gpu(
 
 
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(CuDNNReLULayer, Forward_gpu,
-                                  (half_fp), (half_fp), (half_fp));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(CuDNNReLULayer, Forward_gpu,
                                   (float), (float), (float));
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(CuDNNReLULayer, Forward_gpu,
                                   (double), (double), (double));
 
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(CuDNNReLULayer, Backward_gpu,
-                                  (half_fp), (half_fp), (half_fp));
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(CuDNNReLULayer, Backward_gpu,
                                   (float), (float), (float));
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(CuDNNReLULayer, Backward_gpu,

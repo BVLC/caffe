@@ -51,7 +51,7 @@ class DeconvolutionLayerTest : public MultiDeviceTest<TypeParam> {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-TYPED_TEST_CASE(DeconvolutionLayerTest, TestDtypesFloatAndDevices);
+TYPED_TEST_CASE(DeconvolutionLayerTest, TestDtypesFloatNoHalfAndDevices);
 
 TYPED_TEST(DeconvolutionLayerTest, TestSetup) {
   typedef typename TypeParam::Dtype Dtype;
@@ -344,7 +344,7 @@ class CuDNNDeconvolutionLayerTest : public MultiDeviceTest<TypeParam> {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-TYPED_TEST_CASE(CuDNNDeconvolutionLayerTest, TestDtypesFloatAndDevices);
+TYPED_TEST_CASE(CuDNNDeconvolutionLayerTest, TestDtypesFloatNoHalfAndDevices);
 
 TYPED_TEST(CuDNNDeconvolutionLayerTest, TestSetup) {
   typedef typename TypeParam::Dtype Dtype;
@@ -356,8 +356,8 @@ TYPED_TEST(CuDNNDeconvolutionLayerTest, TestSetup) {
   convolution_param->set_num_output(4);
   this->blob_bottom_vec_.push_back(this->blob_bottom_2_);
   this->blob_top_vec_.push_back(this->blob_top_2_);
-  shared_ptr<Layer<Dtype> > layer(
-      new CuDNNDeconvolutionLayer<Dtype>(layer_param));
+  shared_ptr<Layer<Dtype, Dtype, Dtype> > layer(
+      new CuDNNDeconvolutionLayer<Dtype, Dtype, Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), 2);
   EXPECT_EQ(this->blob_top_->channels(), 4);
@@ -370,7 +370,7 @@ TYPED_TEST(CuDNNDeconvolutionLayerTest, TestSetup) {
   // setting group should not change the shape
   convolution_param->set_num_output(3);
   convolution_param->set_group(3);
-  layer.reset(new CuDNNDeconvolutionLayer<Dtype>(layer_param));
+  layer.reset(new CuDNNDeconvolutionLayer<Dtype, Dtype, Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), 2);
   EXPECT_EQ(this->blob_top_->channels(), 3);
@@ -396,8 +396,8 @@ TYPED_TEST(CuDNNDeconvolutionLayerTest, TestSimpleCuDNNDeconvolution) {
   convolution_param->mutable_weight_filler()->set_value(1);
   convolution_param->mutable_bias_filler()->set_type("constant");
   convolution_param->mutable_bias_filler()->set_value(0.1);
-  shared_ptr<Layer<Dtype> > layer(
-      new CuDNNDeconvolutionLayer<Dtype>(layer_param));
+  shared_ptr<Layer<Dtype, Dtype, Dtype> > layer(
+      new CuDNNDeconvolutionLayer<Dtype, Dtype, Dtype>(layer_param));
   layer->SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   // constant-fill the bottom blobs
   FillerParameter filler_param;
@@ -442,7 +442,7 @@ TYPED_TEST(CuDNNDeconvolutionLayerTest, TestGradient) {
   convolution_param->set_num_output(1);
   convolution_param->mutable_weight_filler()->set_type("gaussian");
   convolution_param->mutable_bias_filler()->set_type("gaussian");
-  CuDNNDeconvolutionLayer<Dtype> layer(layer_param);
+  CuDNNDeconvolutionLayer<Dtype, Dtype, Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-3);
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_);
@@ -478,7 +478,7 @@ TYPED_TEST(CuDNNDeconvolutionLayerTest, TestNDAgainst2D) {
   bool copy_diff;
   bool reshape;
   {
-    CuDNNDeconvolutionLayer<Dtype> layer(layer_param);
+    CuDNNDeconvolutionLayer<Dtype, Dtype, Dtype> layer(layer_param);
     layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     top_diff.ReshapeLike(*this->blob_top_);
     filler.Fill(&top_diff);
@@ -499,7 +499,7 @@ TYPED_TEST(CuDNNDeconvolutionLayerTest, TestNDAgainst2D) {
     caffe_set(weights.count(), Dtype(0), weights.mutable_cpu_diff());
     // Do SetUp and Forward; save Forward result in result_2d.
     convolution_param->set_force_nd_im2col(false);
-    CuDNNDeconvolutionLayer<Dtype> layer_2d(layer_param);
+    CuDNNDeconvolutionLayer<Dtype, Dtype, Dtype> layer_2d(layer_param);
     layer_2d.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     ASSERT_EQ(1, layer_2d.blobs().size());
     copy_diff = false; reshape = false;
@@ -530,7 +530,7 @@ TYPED_TEST(CuDNNDeconvolutionLayerTest, TestNDAgainst2D) {
     caffe_set(weights.count(), Dtype(0), weights.mutable_cpu_diff());
     // Do SetUp and Forward; save Forward result in result_nd.
     convolution_param->set_force_nd_im2col(true);
-    CuDNNDeconvolutionLayer<Dtype> layer_nd(layer_param);
+    CuDNNDeconvolutionLayer<Dtype, Dtype, Dtype> layer_nd(layer_param);
     layer_nd.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     ASSERT_EQ(1, layer_nd.blobs().size());
     copy_diff = false; reshape = false;

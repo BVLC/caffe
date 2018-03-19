@@ -40,15 +40,13 @@ void CuDNNLRNLayer<Dtype, MItype, MOtype>::Backward_gpu(
         bottom_desc_, bottom_diff) );
 }
 
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(CuDNNLRNLayer, Forward_gpu,
-                                  (half_fp), (half_fp), (half_fp));
+
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(CuDNNLRNLayer, Forward_gpu,
                                   (float), (float), (float));
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(CuDNNLRNLayer, Forward_gpu,
                                   (double), (double), (double));
 
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(CuDNNLRNLayer, Backward_gpu,
-                                  (half_fp), (half_fp), (half_fp));
+
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(CuDNNLRNLayer, Backward_gpu,
                                   (float), (float), (float));
 INSTANTIATE_CLASS_FUNC_3T_GUARDED(CuDNNLRNLayer, Backward_gpu,

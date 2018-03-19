@@ -39,7 +39,9 @@ enum DeviceCapability {
   DEVICE_INT32_GLOBAL_ATOMICS_SUPPORT,
   DEVICE_INT64_GLOBAL_ATOMICS_SUPPORT,
   DEVICE_INT32_GLOBAL_EXTENDED_ATOMICS_SUPPORT,
-  DEVICE_INT64_GLOBAL_EXTENDED_ATOMICS_SUPPORT
+  DEVICE_INT64_GLOBAL_EXTENDED_ATOMICS_SUPPORT,
+  DEVICE_32_BIT_ADDRESS,
+  DEVICE_64_BIT_ADDRESS
 };
 
 #ifdef USE_LIBDNN
@@ -103,6 +105,8 @@ class Device {
   virtual void SwitchQueue(uint_tp id);
   uint_tp current_queue_id();
   size_t workgroup_size(uint_tp id);
+  template<typename Dtype>
+  size_t preferred_vector_width();
   virtual void get_threads(const vector<size_t>* work_size,
                            vector<size_t>* group,
                            vector<size_t>* local,
@@ -693,6 +697,7 @@ class Device {
   size_t max_local_size_;
   vector<size_t> max_local_sizes_;
   vector<size_t> max_group_sizes_;
+  std::map<string, size_t> preferred_vector_widths_;
   int_tp id_;
   int_tp list_id_;
   Backend backend_;
