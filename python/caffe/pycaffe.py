@@ -10,8 +10,9 @@ except:
     from itertools import zip_longest as izip_longest
 import numpy as np
 
-from ._caffe import Net, SGDSolver, NesterovSolver, AdaGradSolver, \
-        RMSPropSolver, AdaDeltaSolver, AdamSolver, NCCL, Timer
+#from ._caffe import Net, SGDSolver, NesterovSolver, AdaGradSolver, \
+#        RMSPropSolver, AdaDeltaSolver, AdamSolver, NCCL, Timer
+from ._caffe import Net
 import caffe.io
 
 import six
@@ -341,5 +342,5 @@ Net.set_input_arrays = _Net_set_input_arrays
 Net._batch = _Net_batch
 Net.inputs = _Net_inputs
 Net.outputs = _Net_outputs
-Net.top_names = _Net_get_id_name(Net._top_ids, "_top_names")
-Net.bottom_names = _Net_get_id_name(Net._bottom_ids, "_bottom_names")
+#Net.top_names = _Net_get_id_name(Net._top_ids, "_top_names")
+#Net.bottom_names = _Net_get_id_name(Net._bottom_ids, "_bottom_names")
