@@ -53,6 +53,7 @@ __global__ void AvePoolForward(const int nthreads,
     const int pooled_width, const int kernel_h, const int kernel_w,
     const int stride_h, const int stride_w, const int pad_h, const int pad_w,
     Dtype* const top_data) {
+    PoolingParameter pool_param = this->layer_param_.pooling_param();
   CUDA_KERNEL_LOOP(index, nthreads) {
     const int pw = index % pooled_width;
     const int ph = (index / pooled_width) % pooled_height;
@@ -62,11 +63,14 @@ __global__ void AvePoolForward(const int nthreads,
     int wstart = pw * stride_w - pad_w;
     int hend = min(hstart + kernel_h, height + pad_h);
     int wend = min(wstart + kernel_w, width + pad_w);
-    const int pool_size = (hend - hstart) * (wend - wstart);
+    int pool_size = (hend - hstart) * (wend - wstart);
     hstart = max(hstart, 0);
     wstart = max(wstart, 0);
     hend = min(hend, height);
     wend = min(wend, width);
+    if(pool_param.dynamic_ave_pool_size()==true) {
+      pool_size = (hend - hstart) * (wend - wstart);
+    }
     Dtype aveval = 0;
     const Dtype* const bottom_slice =
         bottom_data + (n * channels + c) * height * width;

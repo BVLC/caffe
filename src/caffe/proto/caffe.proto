@@ -935,6 +935,7 @@ message PoolingParameter {
   // If global_pooling then it will pool over the size of the bottom by doing
   // kernel_h = bottom->height and kernel_w = bottom->width
   optional bool global_pooling = 12 [default = false];
+  optional bool dynamic_ave_pool_size = 13 [default=false];
 }
 
 message PowerParameter {
