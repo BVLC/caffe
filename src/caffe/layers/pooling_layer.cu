@@ -52,7 +52,7 @@ __global__ void AvePoolForward(const int nthreads,
     const int height, const int width, const int pooled_height,
     const int pooled_width, const int kernel_h, const int kernel_w,
     const int stride_h, const int stride_w, const int pad_h, const int pad_w,
-    Dtype* const top_data, const boolean dynamic_ave_pool_size) {
+    Dtype* const top_data, const bool dynamic_ave_pool_size) {
   CUDA_KERNEL_LOOP(index, nthreads) {
     const int pw = index % pooled_width;
     const int ph = (index / pooled_width) % pooled_height;
