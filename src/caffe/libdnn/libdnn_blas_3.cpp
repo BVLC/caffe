@@ -219,13 +219,6 @@ string LibDNNBlas<MItype, MOtype>::generate_gemm_source(
 
   ss << program->function("libdnn_gemm", args);
 
-  ss << program->global_ptr("const MItype", "Aptr") << " = A;"
-     << std::endl;
-  ss << program->global_ptr("const MItype", "Bptr")<< " = B;"
-     << std::endl;
-  ss << program->global_ptr("MOtype", "Cptr")<< " = C;"
-     << std::endl;
-
   // Thread identifiers
   // Local row ID (max: RTSM=TSM/WPTM)
   ss << "const int_tp tidn = " << program->local_id(0) << ";"
@@ -297,9 +290,9 @@ string LibDNNBlas<MItype, MOtype>::generate_gemm_source(
     ss << "if ((offM + row) < M && tiledIndex < K) {" << std::endl;
     ss << "Asub[row][col] = ";
     if (trans_A) {
-      ss << "Aptr[(offM + row) + tiledIndex * M];";
+      ss << "A[(offM + row) + tiledIndex * M];";
     } else {
-      ss << "Aptr[(offM + row) * K + tiledIndex];";
+      ss << "A[(offM + row) * K + tiledIndex];";
     }
     ss << std::endl;
     ss << "} else {" << std::endl;  // M-K-Guard
@@ -324,10 +317,10 @@ string LibDNNBlas<MItype, MOtype>::generate_gemm_source(
     ss << "int_tp tiledIndex = TSK * t + row;" << std::endl;
     ss << "if ((offN + col) < N && tiledIndex < K) {" << std::endl;
     if (trans_B) {
-      ss << "Bsub[row][col] = Bptr[(offN + col) * K + tiledIndex];"
+      ss << "Bsub[row][col] = B[(offN + col) * K + tiledIndex];"
          << std::endl;
     } else {
-      ss << "Bsub[row][col] = Bptr[(offN + col) + tiledIndex * N];"
+      ss << "Bsub[row][col] = B[(offN + col) + tiledIndex * N];"
          << std::endl;
     }
     ss << "} else {" << std::endl;  // N-K-Guard
@@ -447,7 +440,7 @@ string LibDNNBlas<MItype, MOtype>::generate_gemm_source(
     // Quantization type code
     if (beta_term) {
       ss << "{" << std::endl;
-      ss << "Acctype C_tmp = (Acctype)(Cptr[globalRow * N + globalCol])"
+      ss << "Acctype C_tmp = (Acctype)(C[globalRow * N + globalCol])"
          << " - ((Acctype)C_off);" << std::endl;
       if (!beta_exactly_one) {
         ss << "Difftype beta_diff = beta - beta_off;" << std::endl;
@@ -467,7 +460,7 @@ string LibDNNBlas<MItype, MOtype>::generate_gemm_source(
     ss << "((Acctype*)(&(Creg[wm][wn/VWN])))[wn%VWN] += C_off;" << std::endl;
     ss_c << "min(max(((Acctype*)(&(Creg[wm][wn/VWN])))[wn%VWN], C_min), C_max)";
   }
-  ss << "Cptr[globalRow * N + globalCol] = (MOtype)(" << ss_c.str() << ");"
+  ss << "C[globalRow * N + globalCol] = (MOtype)(" << ss_c.str() << ");"
      << std::endl;
   ss << "}" << std::endl;   // M-N-Guard
   ss << "}" << std::endl;   // For (N)

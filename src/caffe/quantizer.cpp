@@ -693,7 +693,8 @@ string quant_gpu_term(DeviceProgram* program, bool needs_quantization,
        max_gpu_func = "fmax";
      }
 
-     ss << (program->template device_type_name<Difftype>()) << vec_len
+     ss << (program->template device_type_name<Difftype>())
+        <<  (vec_len > 0 ? std::to_string(vec_len) : "")
         << " fw_gpu_centered_input = "
         << program->template convert_type<Difftype>(vec_len, src_var) << " - "
         << in_zero_var << ";" << std::endl;
@@ -718,15 +719,18 @@ string quant_gpu_term(DeviceProgram* program, bool needs_quantization,
        max_gpu_func = "fmax";
      }
 
-     ss << (program->template device_type_name<Difftype>()) << vec_len
+     ss << (program->template device_type_name<Difftype>())
+        <<  (vec_len > 0 ? std::to_string(vec_len) : "")
         << " fw_gpu_centered_output = ("
         << program->template convert_type<Difftype>(vec_len, src_var) << " - "
         << in_zero_var << ")" << op << scal_var << ";" << std::endl;
 
-     ss << "int" << vec_len << " fw_gpu_uf = (fw_gpu_centered_output < "
+     ss << "int" << (vec_len > 0 ? std::to_string(vec_len) : "")
+        << " fw_gpu_uf = (fw_gpu_centered_output < "
         << min_out_var << " - " << out_zero_var << ") && " << out_zero_var
         << " < 0;" << std::endl;
-     ss << "int" << vec_len << " fw_gpu_of = (" << src_var << " > "
+     ss << "int" << (vec_len > 0 ? std::to_string(vec_len) : "")
+        << " fw_gpu_of = (" << src_var << " > "
         << max_out_var << " - " << out_zero_var << ") && " << out_zero_var
         << " > 0;" << std::endl;
      ss_s0 << "fw_gpu_uf ? " << min_out_var << " : (fw_gpu_of ? "
@@ -820,18 +824,6 @@ void Quantizer<MItype, MOtype>::GenerateKernels() {
   ss << this->program_->template define_type<MOtype>("MOtype");
   ss << this->program_->template define_vector_type<MItype>("MItype", 0, 4);
   ss << this->program_->template define_vector_type<MOtype>("MOtype", 0, 4);
-  ss << this->program_->template define_vector_type<MItype>(
-        this->program_->template device_type_name<MItype>(), 0, 4);
-  ss << this->program_->template define_vector_type<MOtype>(
-        this->program_->template device_type_name<MOtype>(), 0, 4);
-  ss << this->program_->template define_vector_type<int8_t>(
-        this->program_->template device_type_name<int8_t>(), 0, 4);
-  ss << this->program_->template define_vector_type<int16_t>(
-        this->program_->template device_type_name<int16_t>(), 0, 4);
-  ss << this->program_->template define_vector_type<int32_t>(
-        this->program_->template device_type_name<int32_t>(), 0, 4);
-  ss << this->program_->template define_vector_type<int64_t>(
-        this->program_->template device_type_name<int64_t>(), 0, 4);
 
 
   // Quantizer forward

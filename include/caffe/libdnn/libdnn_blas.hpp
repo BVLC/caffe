@@ -88,10 +88,13 @@ class LibDNNBlas : public LibDNN<MItype, MOtype> {
 
   string generate_gemv_source(
          shared_ptr<DeviceProgram> program, shared_ptr<LibDNNTuner> tuner,
-         bool trans_A, const uint_tp M, const uint_tp N, bool alpha_term,
-         bool beta_term);
+         bool trans_A, const uint_tp M, const uint_tp N,
+         bool alpha_term, bool alpha_exactly_one,
+         bool beta_term, bool beta_exactly_one);
   string gemv_string_identifier(const CBLAS_TRANSPOSE trans_A,
-         const uint_tp M, const uint_tp N, bool alpha_term, bool beta_term);
+         const uint_tp M, const uint_tp N,
+         bool alpha_term, bool alpha_exactly_one,
+         bool beta_term, bool beta_exactly_one);
   void initialize_gemv_tuner(shared_ptr<DeviceProgram> program,
                              shared_ptr<LibDNNTuner> tuner);
 

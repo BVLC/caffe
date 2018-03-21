@@ -18,10 +18,12 @@ void InnerProductLayer<Dtype, MItype, MOtype>::Forward_gpu(
   vptr<const Dtype> weight = this->blobs_[0]->gpu_data();
 
   if (M_ == 1) {
-    this->device_->template gemv<Dtype>(CblasNoTrans, N_, K_, (Dtype) 1.,
+    this->device_->template gemv<Dtype>(CblasNoTrans, N_, K_, Dtype(1),
                              weight, bottom_data, Dtype(0), top_data,
+                             nullptr,
                              &(this->bottom_quants_[0]->out_quantizer_values()),
                              &(this->blobs_quants_[0]->out_quantizer_values()),
+                             nullptr,
                              &(this->top_quants_[0]->in_quantizer_values()));
     if (bias_term_)
       this->device_->template axpy<Dtype>(N_, bias_multiplier_.cpu_data()[0],
@@ -34,15 +36,18 @@ void InnerProductLayer<Dtype, MItype, MOtype>::Forward_gpu(
                           transpose_ ? CblasNoTrans : CblasTrans,
                           M_, N_, K_, Dtype(1),
                           bottom_data, weight, Dtype(0), top_data,
+                          nullptr,
                           &(this->bottom_quants_[0]->out_quantizer_values()),
                           &(this->blobs_quants_[0]->out_quantizer_values()),
+                          nullptr,
                           &(this->top_quants_[0]->in_quantizer_values()));
     if (bias_term_)
       this->device_->template gemm<Dtype>(CblasNoTrans, CblasNoTrans, M_, N_, 1,
                           Dtype(1), bias_multiplier_.gpu_data(),
                           this->blobs_[1]->gpu_data(), Dtype(1), top_data,
-                          &bias_multiplier_qv_,
+                          nullptr, &bias_multiplier_qv_,
                           &(this->blobs_quants_[1]->out_quantizer_values()),
+                          nullptr,
                           &(this->top_quants_[0]->in_quantizer_values()));
   }
 }
