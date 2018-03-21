@@ -42,9 +42,26 @@ caffe_gemm(const CBLAS_TRANSPOSE trans_A, const CBLAS_TRANSPOSE trans_B,
            const QuantizerValues* const c_quant = nullptr);
 
 template<typename Dtype>
-void caffe_gemv(const CBLAS_TRANSPOSE trans_A, const int_tp M,
-                const int_tp N, const Dtype alpha, const Dtype* A,
-                const Dtype* x, const Dtype beta, Dtype* y);
+typename std::enable_if<unsigned_integer_is_same<Dtype>::value, void>::type
+caffe_gemv(const CBLAS_TRANSPOSE trans_A, const int_tp M,
+           const int_tp N, const Dtype alpha, const Dtype* A,
+           const Dtype* x, const Dtype beta, Dtype* y,
+           const QuantizerValues* const alpha_quant = nullptr,
+           const QuantizerValues* const a_quant = nullptr,
+           const QuantizerValues* const x_quant = nullptr,
+           const QuantizerValues* const beta_quant = nullptr,
+           const QuantizerValues* const y_quant = nullptr);
+
+template<typename Dtype>
+typename std::enable_if<float_is_same<Dtype>::value, void>::type
+caffe_gemv(const CBLAS_TRANSPOSE trans_A, const int_tp M,
+           const int_tp N, const Dtype alpha, const Dtype* A,
+           const Dtype* x, const Dtype beta, Dtype* y,
+           const QuantizerValues* const alpha_quant = nullptr,
+           const QuantizerValues* const a_quant = nullptr,
+           const QuantizerValues* const x_quant = nullptr,
+           const QuantizerValues* const beta_quant = nullptr,
+           const QuantizerValues* const y_quant = nullptr);
 
 template<typename Dtype>
 void caffe_axpy(const int_tp N, const Dtype alpha, const Dtype* x, Dtype* y);
