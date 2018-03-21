@@ -296,17 +296,17 @@ string LibDNNBlas<MItype, MOtype>::generate_gemv_source(
             for (int_tp n = 0; n < vwn; ++n) {
               ss << "VEC_" << vwm << "_" << m << "(yreg[wm])"
                  << " += ";
-              ss << "(Acctype)";
-              ss << "(VEC_" << vwn << "_" << n << "(Areg[wm * VWM + " << m
-                 << "][wn])" << " * VEC_" << vwn << "_" << n << "(xreg[wn]));"
+              ss << "(Acctype)" << "(VEC_" << vwn << "_" << n
+                 << "(Areg[wm * VWM + " << m << "][wn]))"
+                 << " * (Acctype)(VEC_" << vwn << "_" << n << "(xreg[wn]));"
                  << std::endl;
             }
           }
         } else {
           for (int_tp m = 0; m < vwm; ++m) {
             ss << "Acctype" << vwn << " tmp;" << std::endl;
-            ss << "tmp = Areg[wm * VWM + " << m << "][wn] * xreg[wn];"
-               << std::endl;
+            ss << "tmp = (Acctype)(Areg[wm * VWM + " << m
+               << "][wn]) * (Acctype)(xreg[wn]);" << std::endl;
             for (int_tp n = 0; n < vwn; ++n) {
               ss << "VEC_" << vwm << "_" << m << "(yreg[wm])"
                  << " += VEC_" << vwn << "_" << n << "(tmp)";

@@ -21,8 +21,8 @@ void InnerProductLayer<Dtype, MItype, MOtype>::Forward_gpu(
     this->device_->template gemv<Dtype>(CblasNoTrans, N_, K_, Dtype(1),
                              weight, bottom_data, Dtype(0), top_data,
                              nullptr,
-                             &(this->bottom_quants_[0]->out_quantizer_values()),
                              &(this->blobs_quants_[0]->out_quantizer_values()),
+                             &(this->bottom_quants_[0]->out_quantizer_values()),
                              nullptr,
                              &(this->top_quants_[0]->in_quantizer_values()));
     if (bias_term_)
