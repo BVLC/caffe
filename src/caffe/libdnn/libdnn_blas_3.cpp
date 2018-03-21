@@ -16,15 +16,15 @@ void LibDNNBlas<MItype, MOtype>::initialize_gemm_tuner(
       workgroup_sizes.push_back(i);
     }
     tuner->add_set_param <int_tp>("workgroup_size_" + std::to_string(id),
-                                      16, workgroup_sizes);
+                                  16, workgroup_sizes);
   }
 
   tuner->add_range_param<int_tp>("TSK", 8, 1, 32, 1);
   tuner->add_range_param<int_tp>("TSK_UNROLL", 1, 1, 16, 1);
   tuner->add_range_param<int_tp>("WPTM", 4, 4, 16, 4);
-  tuner->add_set_param<int_tp>("VWM", 4, vector<int_tp>({1, 2, 4, 8, 16 }));
+  tuner->add_set_param<int_tp>("VWM", 4, vector<int_tp>({1, 2, 4, 8, 16}));
   tuner->add_range_param<int_tp>("WPTN", 4, 4, 16, 4);
-  tuner->add_set_param<int_tp>("VWN", 4, vector<int_tp>({1, 2, 4, 8, 16 }));
+  tuner->add_set_param<int_tp>("VWN", 4, vector<int_tp>({1, 2, 4, 8, 16}));
 
   tuner->add_constraint<int64_t>(
     vector<string>({"TSK", "WPTM", "workgroup_size_1"}),
@@ -116,9 +116,7 @@ string LibDNNBlas<MItype, MOtype>::generate_gemm_source(
 
   // Quantization definitions
   if (is_integer_type<MItype>()) {
-    ss << program->define("ONE_MULT_CONST",
-       ((this->dev_ptr_->template preferred_vector_width<int64_t>() > 0) ?
-           "1ll" : "1"));
+    ss << program->define("ONE_MULT_CONST", "1");
   }
 
   // GEMM definitions
@@ -173,7 +171,7 @@ string LibDNNBlas<MItype, MOtype>::generate_gemm_source(
     if (is_integer_type<MOtype>()) {
       args.push_back(program->template create_kernel_arg<MOtype>("alpha_off",
                                                              KERNEL_ARG_CONST));
-      args.push_back(program->template create_kernel_arg<Acctype>("alpha_mult",
+      args.push_back(program->template create_kernel_arg<int32_t>("alpha_mult",
                                                              KERNEL_ARG_CONST));
       args.push_back(program->template create_kernel_arg<int8_t>("alpha_shift",
                                                              KERNEL_ARG_CONST));
@@ -197,7 +195,7 @@ string LibDNNBlas<MItype, MOtype>::generate_gemm_source(
     if (is_integer_type<MOtype>()) {
       args.push_back(program->template create_kernel_arg<MOtype>("beta_off",
                                                              KERNEL_ARG_CONST));
-      args.push_back(program->template create_kernel_arg<Acctype>("beta_mult",
+      args.push_back(program->template create_kernel_arg<int32_t>("beta_mult",
                                                              KERNEL_ARG_CONST));
       args.push_back(program->template create_kernel_arg<int8_t>("beta_shift",
                                                              KERNEL_ARG_CONST));
@@ -212,7 +210,7 @@ string LibDNNBlas<MItype, MOtype>::generate_gemm_source(
                                                              KERNEL_ARG_CONST));
     args.push_back(program->template create_kernel_arg<Acctype>("C_max",
                                                              KERNEL_ARG_CONST));
-    args.push_back(program->template create_kernel_arg<Acctype>("mult",
+    args.push_back(program->template create_kernel_arg<int32_t>("mult",
                                                              KERNEL_ARG_CONST));
     args.push_back(program->template create_kernel_arg<int8_t>("shift",
                                                              KERNEL_ARG_CONST));
@@ -383,8 +381,9 @@ string LibDNNBlas<MItype, MOtype>::generate_gemm_source(
         for (int_tp m = 0; m < vwm; ++m) {
           ss << "VEC_" << vwn << "_" << n
              << "(Creg[wm * VWM + " << m << "][wn])"
-             << " += ((Asubrows[row + " << m << "] * B_off) +"
-             << "     (Bsubcols[col + " << n << "] * A_off));" << std::endl;
+             << " -= ((Asubrows[row + " << (m * rtsm)  << "] * B_off) +"
+             << "     (Bsubcols[col + " << (n * rtsn) << "] * A_off));"
+             << std::endl;
         }
       }
       ss << "}" << std::endl;
@@ -413,10 +412,10 @@ string LibDNNBlas<MItype, MOtype>::generate_gemm_source(
     if (alpha_term) {
       ss << "{" << std::endl;
       ss << "Acctype C_tmp = ((Acctype*)(&(Creg[wm][wn/VWN])))[wn%VWN] + "
-         << "((Acctype)K) * ((Acctype)A_off) * ((Acctype)B_off);"
-         << std::endl;
+         << "((Acctype)(v_num_tiles * TSK))"
+         << " * ((Acctype)A_off) * ((Acctype)B_off);" << std::endl;
       ss << "C_tmp = (Acctype)((((Multtype)C_tmp) * ((Multtype)mult))"
-         << "/ (ONE_MULT_CONST << shift_bits));" << std::endl;
+         << "/ ((Multtype)(ONE_MULT_CONST) << shift_bits));" << std::endl;
       ss << "if (shift >= 0) {" << std::endl;
       ss << "C_tmp = C_tmp >> shift;" << std::endl;
       ss << "} else {" << std::endl;
@@ -428,7 +427,7 @@ string LibDNNBlas<MItype, MOtype>::generate_gemm_source(
         ss << "C_tmp = ((Acctype)alpha_diff) * ((Acctype)C_tmp);"
            << std::endl;
         ss << "C_tmp = (Acctype)((((Multtype)C_tmp) * ((Multtype)alpha_mult))"
-           << "/ (ONE_MULT_CONST << shift_bits));" << std::endl;
+           << "/ ((Multtype)(ONE_MULT_CONST) << shift_bits));" << std::endl;
         ss << "if (alpha_shift >= 0) {" << std::endl;
         ss << "C_tmp = C_tmp >> alpha_shift;" << std::endl;
         ss << "} else {" << std::endl;
@@ -448,17 +447,14 @@ string LibDNNBlas<MItype, MOtype>::generate_gemm_source(
     // Quantization type code
     if (beta_term) {
       ss << "{" << std::endl;
-      ss << "Acctype C_tmp = 0;" << std::endl;
-      ss << "Acctype C_diff = Cptr[globalRow * N + globalCol]"
+      ss << "Acctype C_tmp = (Acctype)(Cptr[globalRow * N + globalCol])"
          << " - ((Acctype)C_off);" << std::endl;
-      if (beta_exactly_one) {
-        ss << "C_tmp = C_diff;" << std::endl;
-      } else {
+      if (!beta_exactly_one) {
         ss << "Difftype beta_diff = beta - beta_off;" << std::endl;
-        ss << "C_tmp = ((Acctype)beta_diff) * ((Acctype)C_diff);"
+        ss << "C_tmp = ((Acctype)beta_diff) * ((Acctype)C_tmp);"
            << std::endl;
         ss << "C_tmp = (Acctype)((((Multtype)C_tmp) * ((Multtype)beta_mult))"
-           << "/ (ONE_MULT_CONST << shift_bits));" << std::endl;
+           << "/ ((Multtype)(ONE_MULT_CONST) << shift_bits));" << std::endl;
         ss << "if (beta_shift >= 0) {" << std::endl;
         ss << "C_tmp = C_tmp >> beta_shift;" << std::endl;
         ss << "} else {" << std::endl;
@@ -471,7 +467,6 @@ string LibDNNBlas<MItype, MOtype>::generate_gemm_source(
     ss << "((Acctype*)(&(Creg[wm][wn/VWN])))[wn%VWN] += C_off;" << std::endl;
     ss_c << "min(max(((Acctype*)(&(Creg[wm][wn/VWN])))[wn%VWN], C_min), C_max)";
   }
-
   ss << "Cptr[globalRow * N + globalCol] = (MOtype)(" << ss_c.str() << ");"
      << std::endl;
   ss << "}" << std::endl;   // M-N-Guard
@@ -532,10 +527,10 @@ void LibDNNBlas<MItype, MOtype>::gemm(
           typename std::conditional<sizeof(MItype) == 1, int32_t,
                                     int64_t>::type>::type Acctype;
 
-  bool alpha_term = alpha != (MOtype)0;
-  bool beta_term = beta != (MOtype)0;
-  bool alpha_exactly_one = (alpha == (MOtype)1);
-  bool beta_exactly_one = (beta == (MOtype)1);
+  bool alpha_term = (alpha != MOtype(0)) || alpha_quant;
+  bool beta_term = (beta != MOtype(0)) || beta_quant;
+  bool alpha_exactly_one = (alpha == MOtype(1)) && !alpha_quant;
+  bool beta_exactly_one = (beta == MOtype(1)) && !beta_quant;
 
   string identifier = gemm_string_identifier(trans_A, trans_B, M, N, K,
                                              alpha_term, alpha_exactly_one,
@@ -592,16 +587,33 @@ void LibDNNBlas<MItype, MOtype>::gemm(
   MItype A_off;
   MItype B_off;
   MOtype C_off;
-  Acctype mult;
+  int32_t mult;
   int8_t shift;
   Acctype C_min;
   Acctype C_max;
   MOtype alpha_off;
-  Acctype alpha_mult;
+  int32_t alpha_mult;
   int8_t alpha_shift;
   MOtype beta_off;
-  Acctype beta_mult;
+  int32_t beta_mult;
   int8_t beta_shift;
+
+  if (is_integer_type<MItype>() || is_integer_type<MOtype>()) {
+    A_off = a_quant->get_zero<MItype>();
+    B_off = b_quant->get_zero<MItype>();
+    C_off = c_quant->get_zero<Acctype>();
+    C_min = c_quant->get_min<Acctype>();
+    C_max = c_quant->get_max<Acctype>();
+    alpha_off = alpha_quant ? alpha_quant->get_zero<MOtype>() : MOtype(0);
+    beta_off = beta_quant ? beta_quant->get_zero<MOtype>() : MOtype(0);
+
+    QuantizerBase::template MultiplicativeQuantVals<int32_t>(
+        a_quant, b_quant, c_quant, &mult, &shift, shift_bits);
+    QuantizerBase::template MultiplicativeQuantVals<int32_t>(
+        c_quant, alpha_quant, c_quant, &alpha_mult, &alpha_shift, shift_bits);
+    QuantizerBase::template MultiplicativeQuantVals<int32_t>(
+        c_quant, beta_quant, c_quant, &beta_mult, &beta_shift, shift_bits);
+  }
 
   if (is_integer_type<MItype>() || is_integer_type<MOtype>()) {
     kernel->add_arg(&shift_bits);

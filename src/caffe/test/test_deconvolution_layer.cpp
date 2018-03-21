@@ -51,7 +51,7 @@ class DeconvolutionLayerTest : public MultiDeviceTest<TypeParam> {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-TYPED_TEST_CASE(DeconvolutionLayerTest, TestDtypesFloatNoHalfAndDevices);
+TYPED_TEST_CASE(DeconvolutionLayerTest, TestDtypesFloatAndDevices);
 
 TYPED_TEST(DeconvolutionLayerTest, TestSetup) {
   typedef typename TypeParam::Dtype Dtype;
@@ -309,7 +309,7 @@ TYPED_TEST(DeconvolutionLayerTest, TestGradient3D) {
 // Since ConvolutionLayerTest checks the shared conv/deconv code in detail,
 // we'll just do a simple forward test and a gradient check.
 template <typename TypeParam>
-class CuDNNDeconvolutionLayerTest : public MultiDeviceTest<TypeParam> {
+class CuDNNDeconvolutionLayerTest : public GPUDeviceTest<TypeParam> {
   typedef typename TypeParam::Dtype Dtype;
 
  protected:
