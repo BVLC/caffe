@@ -695,11 +695,11 @@ string quant_gpu_term(DeviceProgram* program, bool needs_quantization,
 
      ss << (program->template device_type_name<Difftype>())
         <<  (vec_len > 0 ? std::to_string(vec_len) : "")
-        << " fw_gpu_centered_input = "
+        << " gpu_centered_input = "
         << program->template convert_type<Difftype>(vec_len, src_var) << " - "
         << in_zero_var << ";" << std::endl;
 
-     ss_s0 << min_gpu_func << "(" << max_gpu_func << "(fw_gpu_centered_input"
+     ss_s0 << min_gpu_func << "(" << max_gpu_func << "(gpu_centered_input"
            << op << scal_var << " + "  << out_zero_var << "," << min_out_var
            << "), " << max_out_var << ")";
 
@@ -721,20 +721,20 @@ string quant_gpu_term(DeviceProgram* program, bool needs_quantization,
 
      ss << (program->template device_type_name<Difftype>())
         <<  (vec_len > 0 ? std::to_string(vec_len) : "")
-        << " fw_gpu_centered_output = ("
+        << " gpu_centered_output = ("
         << program->template convert_type<Difftype>(vec_len, src_var) << " - "
         << in_zero_var << ")" << op << scal_var << ";" << std::endl;
 
      ss << "int" << (vec_len > 0 ? std::to_string(vec_len) : "")
-        << " fw_gpu_uf = (fw_gpu_centered_output < "
+        << " gpu_uf = (gpu_centered_output < "
         << min_out_var << " - " << out_zero_var << ") && " << out_zero_var
         << " < 0;" << std::endl;
      ss << "int" << (vec_len > 0 ? std::to_string(vec_len) : "")
-        << " fw_gpu_of = (" << src_var << " > "
+        << " gpu_of = (" << src_var << " > "
         << max_out_var << " - " << out_zero_var << ") && " << out_zero_var
         << " > 0;" << std::endl;
-     ss_s0 << "fw_gpu_uf ? " << min_out_var << " : (fw_gpu_of ? "
-        << max_out_var << " : fw_gpu_centered_output + " << out_zero_var << ")";
+     ss_s0 << "gpu_uf ? " << min_out_var << " : (gpu_of ? "
+        << max_out_var << " : gpu_centered_output + " << out_zero_var << ")";
      ss << tar_var << " = "
         << program->template convert_type<MOtype>(vec_len, ss_s0.str()) << ";"
         << std::endl;
@@ -750,7 +750,7 @@ string Quantizer<MItype, MOtype>::fw_gpu_term(
     string min_out_var, string max_out_var) const {
   return quant_gpu_term<MItype, MOtype>(this->program_.get(),
               needs_quantization(), fw_scale_divide(),
-              fw_scale_after_cast_val(), vec_len, src_var, tar_var, scal_var,
+              fw_scale_before_cast(), vec_len, src_var, tar_var, scal_var,
               in_zero_var, out_zero_var, min_out_var, max_out_var);
 }
 
@@ -761,7 +761,7 @@ string Quantizer<MItype, MOtype>::bw_gpu_term(
     string min_out_var, string max_out_var) const {
   return quant_gpu_term<MOtype, MItype>(this->program_.get(),
               needs_quantization(), bw_scale_divide(),
-              bw_scale_after_cast_val(), vec_len, src_var, tar_var, scal_var,
+              bw_scale_before_cast(), vec_len, src_var, tar_var, scal_var,
               in_zero_var, out_zero_var, min_out_var, max_out_var);
 }
 
@@ -1185,7 +1185,7 @@ void Quantizer<MItype, MOtype>::Backward_gpu(size_t n, vptr<const MOtype> input,
   kernel->add_arg(&input);
   kernel->add_arg(&output);
   if (bw_scale_before_cast()) {
-    typedef typename std::conditional<float_is_same<MOtype>::value, MItype,
+    typedef typename std::conditional<float_is_same<MOtype>::value, MOtype,
             typename std::conditional<sizeof(MOtype) == 1, int16_t,
             typename std::conditional<sizeof(MOtype) == 2, int32_t, int64_t>
                                                   ::type>::type>::type Difftype;
