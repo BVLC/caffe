@@ -5,4 +5,4 @@ from .proto.caffe_pb2 import TRAIN, TEST
 from .classifier import Classifier
 from .detector import Detector
 from . import io
-from .net_spec import layers, params, NetSpec, to_proto
+from .net_spec import layers, params, NetSpec, to_proto, name_scope, arg_scope
