@@ -37,9 +37,9 @@ bool OclDeviceProgram::Compile(bool load_cache, bool store_cache) {
                    &(device_ids[0]), nullptr);
 
 #ifdef USE_SQLITE
+  // Try to load the kernel from cache
   if (load_cache) {
     size_t ptx_size = 0;
-    // Try to load the kernel from cache
     int64_t id = this->device_->get_database()->GetKernelInfo(identifier(),
                                                flags.c_str(), flags.size(),
                                                src_.c_str(), src_.size(),
@@ -82,6 +82,7 @@ bool OclDeviceProgram::Compile(bool load_cache, bool store_cache) {
   }
 #endif  // USE_SQLITE
 
+  // Compile from source
   if (!loaded_from_cache) {
 #ifndef NDEBUG
     string debug_path = ".caffe_debug";
@@ -110,48 +111,23 @@ bool OclDeviceProgram::Compile(bool load_cache, bool store_cache) {
                          &(device_ids[0]), ctx.build_options().c_str(),
                          nullptr, nullptr);
     if (err != CL_SUCCESS) {
+      size_t len;
+      clGetProgramBuildInfo(compiled_program, device_ids[0],
+                            CL_PROGRAM_BUILD_LOG, 0, NULL, &len);
+      std::vector<char> log_chars(len);
+      clGetProgramBuildInfo(compiled_program, device_ids[0],
+                            CL_PROGRAM_BUILD_LOG, len, &log_chars[0], NULL);
+      std::string build_log(&log_chars[0]);
+
       LOG(ERROR) << "Failed to compile OpenCL binary ("
                  << this->string_identifier() << ") from code ("
-                 << clGetErrorString(err) << ")" << std::endl;
+                 << clGetErrorString(err) << ")" << std::endl
+                 << build_log;
     }
     ocl_program_ = ctx.add_program(compiled_program, string_identifier());
-
-    size_t len;
-    vector<size_t> ptx_sizes(ctx.devices().size());
-    clGetProgramInfo(ocl_program_.handle().get(),
-                     CL_PROGRAM_BINARY_SIZES, 0, NULL, &len);
-    clGetProgramInfo(ocl_program_.handle().get(),
-                     CL_PROGRAM_BINARY_SIZES, len, &(ptx_sizes[0]), NULL);
-
-    vector<char*> ptxs;
-    for (size_t i = 0; i < ctx.devices().size(); ++i) {
-      ptxs.push_back(new char[ptx_sizes[i]]);  // NOLINT
-    }
-    clGetProgramInfo(ocl_program_.handle().get(),
-                     CL_PROGRAM_BINARIES, 0, nullptr, &len);
-    clGetProgramInfo(ocl_program_.handle().get(),
-                     CL_PROGRAM_BINARIES, len, &(ptxs[0]), nullptr);
-#ifndef NDEBUG
-    {
-      FILE* fp = fopen((".caffe_debug/" + string_identifier()
-                        + ".clptx").c_str(), "wb");
-      fwrite(ptxs[0], sizeof(char), ptx_sizes[0], fp);
-      fclose(fp);
-    }
-#endif  // NDEBUG
-#ifdef USE_SQLITE
-    if (store_cache) {
-      this->device_->get_database()->StoreKernel(identifier(),
-                                                flags.c_str(), flags.size(),
-                                                src_.c_str(), src_.size(),
-                                                ptxs[0], ptx_sizes[0]);
-    }
-#endif  // USE_SQLITE
-    for (size_t i = 0; i < ctx.devices().size(); ++i) {
-      delete[] ptxs[i];
-    }
   }
 
+  // Add kernels to the program
   vector<cl_kernel> kernels(1024);
   cl_uint num_kernels;
   err = clCreateKernelsInProgram(ocl_program_.handle().get(),
@@ -166,6 +142,55 @@ bool OclDeviceProgram::Compile(bool load_cache, bool store_cache) {
       err = clGetKernelInfo(kernels[i], CL_KERNEL_FUNCTION_NAME, 128,
                             &(kernel_name[0]), NULL);
       ocl_program_.add_kernel(kernels[i], string(&(kernel_name[0])));
+    }
+  }
+
+  // Storing compiled kernels not loaded from the cache
+  if (!loaded_from_cache) {
+    size_t len;
+    vector<size_t> ptx_sizes(ctx.devices().size(), 0);
+    vector<char*> ptxs;
+
+    if (num_kernels > 0) {
+      err = clGetProgramInfo(ocl_program_.handle().get(),
+                       CL_PROGRAM_BINARY_SIZES, 0, NULL, &len);
+      if (len > 0 && (err == CL_SUCCESS)) {
+        clGetProgramInfo(ocl_program_.handle().get(),
+                         CL_PROGRAM_BINARY_SIZES, len, &(ptx_sizes[0]), NULL);
+      }
+
+      for (size_t i = 0; i < ctx.devices().size(); ++i) {
+        ptxs.push_back(new char[ptx_sizes[i]]);  // NOLINT
+      }
+      err = clGetProgramInfo(ocl_program_.handle().get(),
+                       CL_PROGRAM_BINARIES, 0, nullptr, &len);
+      if (len > 0 && (err == CL_SUCCESS)) {
+        clGetProgramInfo(ocl_program_.handle().get(),
+                         CL_PROGRAM_BINARIES, len, &(ptxs[0]), nullptr);
+      }
+    }
+#ifndef NDEBUG
+    {
+      FILE* fp = fopen((".caffe_debug/" + string_identifier()
+                        + ".clptx").c_str(), "wb");
+      if (ptxs.size() > 0) {
+        fwrite(ptxs[0], sizeof(char), ptx_sizes[0], fp);
+      }
+      fclose(fp);
+    }
+#endif  // NDEBUG
+#ifdef USE_SQLITE
+    if (store_cache) {
+      this->device_->get_database()->StoreKernel(identifier(),
+                         flags.c_str(), flags.size(), src_.c_str(), src_.size(),
+                         ptxs.size() > 0 ? ptxs[0] : nullptr,
+                         ptx_sizes[0]);
+    }
+#endif  // USE_SQLITE
+    for (size_t i = 0; i < ctx.devices().size(); ++i) {
+      if (ptxs.size() > i) {
+        delete[] ptxs[i];
+      }
     }
   }
 
