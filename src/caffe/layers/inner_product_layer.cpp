@@ -104,17 +104,17 @@ void InnerProductLayer<Dtype, MItype, MOtype>::Forward_cpu(
 
   caffe_gemm<Dtype>(CblasNoTrans, transpose_ ? CblasNoTrans : CblasTrans,
       M_, N_, K_, Dtype(1), bottom_data, weight, Dtype(0), top_data,
-      &(this->bottom_quants_[0]->out_quantizer_values()),
+      nullptr, &(this->bottom_quants_[0]->out_quantizer_values()),
       &(this->blobs_quants_[0]->out_quantizer_values()),
-      &(this->top_quants_[0]->in_quantizer_values()));
+      nullptr, &(this->top_quants_[0]->in_quantizer_values()));
 
   if (bias_term_) {
     caffe_gemm<Dtype>(CblasNoTrans, CblasNoTrans, M_, N_, 1, Dtype(1),
                       bias_multiplier_.cpu_data(), this->blobs_[1]->cpu_data(),
                       Dtype(1), top_data,
-                      &bias_multiplier_qv_,
+                      nullptr, &bias_multiplier_qv_,
                       &(this->blobs_quants_[1]->out_quantizer_values()),
-                      &(this->top_quants_[0]->in_quantizer_values()));
+                      nullptr, &(this->top_quants_[0]->in_quantizer_values()));
   }
 }
 

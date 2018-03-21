@@ -112,6 +112,9 @@ void GlobalInit(int* pargc, char*** pargv) {
 
 
 Device *Caffe::GetDevice(int id, bool listId) {
+  if (Get().devices_.size() == 0) {
+    return Get().cpu_device_.get();
+  }
   if (listId) {
     return
         id == -1 ?
