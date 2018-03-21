@@ -983,6 +983,8 @@ void Net<Dtype>::CompilationRuleSparse(const NetParameter& param,
           (layer_param->convolution_param().pad_size() == 0 ||
            (layer_param->convolution_param().pad_size() > 0 &&
             layer_param->convolution_param().pad(0) == 0))) {
+        if (potential_sparse_layer == NULL)
+            continue;
         confirmed_sparse_layer = potential_sparse_layer;
 
         if (trigger_sparse_layers.size() > 0) {
