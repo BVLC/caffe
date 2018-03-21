@@ -97,7 +97,7 @@ class Solver {
   virtual inline const char* type() const { return ""; }
 
   // Make and apply the update value for the current iteration.
-  virtual void ApplyUpdate() = 0;
+  virtual void ApplyUpdate(const bool &log=true) = 0;
   string SnapshotFilename(const string extension);
   string SnapshotToBinaryProto();
   string SnapshotToHDF5();
@@ -146,7 +146,7 @@ class WorkerSolver : public Solver<Dtype> {
       : Solver<Dtype>(param, root_solver) {}
 
  protected:
-  void ApplyUpdate() {}
+  void ApplyUpdate(const bool &log=true) {}
   void SnapshotSolverState(const string& model_filename) {
     LOG(FATAL) << "Should not be called on worker solver.";
   }
