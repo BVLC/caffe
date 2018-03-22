@@ -309,7 +309,7 @@ class arg_scope(object):
 
     def check_args(self, kwargs):
         for layer_type in self.layer_types:
-            for key, value in kwargs.iteritems():
+            for key, value in six.iteritems(kwargs):
                 if key in ('param', 'in_place'):
                     continue
                 getattr(getattr(caffe_pb2, layer_type + 'Parameter')(), key)
@@ -317,7 +317,7 @@ class arg_scope(object):
     def __enter__(self):
         global ARG_SCOPE_KEYS
         for layer_type in self.layer_types:
-            for key, value in self.args.iteritems():
+            for key, value in six.iteritems(self.args):
                 ARG_SCOPE_KEYS[layer_type][key] = value
 
     def __exit__(self, *args):
