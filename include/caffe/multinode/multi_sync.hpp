@@ -129,6 +129,9 @@ namespace caffe {
 
     virtual ~MultiSync() {
     }
+    boost::shared_ptr<MultiSolver<Dtype>> get_solver() {
+      return solver;
+    }
 
     void synchronize_parameters() {
       LOG(INFO) << "synchronize_params: bcast";
@@ -187,7 +190,7 @@ namespace caffe {
       }
     }
 
-    void run() {
+    void init() {
       LOG(WARNING) << "RUN: "
                    << "PER LAYER TIMINGS ARE"
 #ifdef CAFFE_PER_LAYER_TIMINGS
@@ -223,6 +226,11 @@ namespace caffe {
 #endif
 
       solver->add_callback(this);
+    }
+
+    void run() {
+      init();
+
       solver->Solve();
 
 #ifdef PERFORMANCE_MONITORING
@@ -231,6 +239,9 @@ namespace caffe {
     }
 
     void apply_updates(int layer_id) {
+      if (mn::use_param_server())
+        return;
+
       std::vector<int> &param_ids = layer_param_ids[layer_id];
       for (int i = 0; i < param_ids.size(); ++i) {
         solver->root_solver()->ApplyUpdate(param_ids[i]);
@@ -266,25 +277,44 @@ namespace caffe {
       }
     }
 
-    void launch_reduce(int layer_id, int param_id) {
+    void launch_reduce(int layer_id) {
       mn::Distribution& distrib = layers[layer_id]->GetDistribution();
-      Dtype* send_buff = NULL;
-      Dtype* recv_buff = NULL;
-      size_t buf_size = net_params[param_id]->count();
-      if (CAN_USE_PRV_DIFF(net_params[param_id])) {
-        send_buff = (Dtype*)net_params[param_id]->prv_diff();
-        recv_buff = net_params[param_id]->mutable_prv_diff();
-      }
-      else {
-        send_buff = (Dtype*)net_params[param_id]->cpu_diff();
-        recv_buff = net_params[param_id]->mutable_cpu_diff();
-      }
-      reduce_req_vec[param_id] =
-        distrib.reduce_async<Dtype,MLSL::ReductionType::RT_SUM,MLSL::GroupType::GT_DATA>(
-          send_buff, recv_buff, buf_size);
-      if (reduce_req_vec[param_id] != NULL && distrib.is_root(MLSL::GroupType::GT_DATA)) {
-        AsyncTask req_task(layer_id, param_id, NULL);
-        reduce_req_list.push_back(req_task);
+      boost::shared_ptr<Layer<Dtype>> &layer = layers[layer_id];
+      std::vector<int> &param_ids = layer_param_ids[layer_id];
+      // TODO: descending is faster?
+      for (int i = param_ids.size() - 1; i >= 0; --i) {
+        if (!layer->ParamNeedReduce(i)) continue;
+        int param_id = param_ids[i];
+
+        if (mn::get_nodes_count() > 1) {
+          Dtype* send_buff = NULL;
+          Dtype* recv_buff = NULL;
+          size_t buf_size = net_params[param_id]->count();
+          if (CAN_USE_PRV_DIFF(net_params[param_id])) {
+            send_buff = (Dtype*)net_params[param_id]->prv_diff();
+            recv_buff = net_params[param_id]->mutable_prv_diff();
+          }
+          else {
+            send_buff = (Dtype*)net_params[param_id]->cpu_diff();
+            recv_buff = net_params[param_id]->mutable_cpu_diff();
+          }
+          reduce_req_vec[param_id] =
+            distrib.reduce_async<Dtype,MLSL::ReductionType::RT_SUM,MLSL::GroupType::GT_DATA>(
+                send_buff, recv_buff, buf_size);
+          bool complete = false;
+          DLOG(INFO) << "Launch reduce with param id " << param_id;
+          // progress communication ASAP
+          MLSL::Environment::GetEnv().Test(reduce_req_vec[param_id], &complete);
+          if (complete) {
+            // reset req to indicate no need to do Wait
+            reduce_req_vec[param_id] = NULL;
+          }
+        }
+
+        if (distrib.is_root(MLSL::GroupType::GT_DATA)) {
+          AsyncTask req_task(layer_id, param_id, NULL);
+          reduce_req_list.push_back(req_task);
+        }
       }
     }
 
@@ -298,13 +328,17 @@ namespace caffe {
         else {
           MLSL::Environment::GetEnv().Test(reduce_req_vec[iter->param_id], &complete);
         }
+
         if (complete) {
           // reset req to indicate no need to do Wait
           reduce_req_vec[iter->param_id] = NULL;
 
+          int param_id = iter->param_id;
+          DLOG(INFO) << "Finish reduce on param id " << param_id
+            << " value " << net_params[param_id]->sumsq_diff();
+
           void* send_buff;
           void* recv_buff;
-          int param_id = iter->param_id;
           size_t buf_size = net_params[param_id]->count();
           
           if (CAN_USE_PRV_DIFF(net_params[param_id] ) ) {
@@ -319,6 +353,7 @@ namespace caffe {
           else {
             recv_buff = (void*)net_params[param_id]->mutable_cpu_data();
           }
+
           mn::Distribution &distrib = layers[iter->layer_id]->GetDistribution();
           int server_mpi_rank = mn::param_to_server_rank(iter->layer_id, iter->param_id);
           mn::TaskRequest task(
@@ -328,16 +363,23 @@ namespace caffe {
           int tag = task.GetTag();
           MPI_Request send_req;
           int recv_flag = 1;
-           // recv from PS
+          // recv from PS
           MPI_Irecv(recv_buff, buf_size, mn::DtypeToMPIDtype<Dtype>(),
                     server_mpi_rank, tag, MPI_COMM_WORLD, &irecv_req_vec[param_id]);
           MPI_Test(&irecv_req_vec[param_id], &recv_flag, MPI_STATUS_IGNORE);
           CHECK(!recv_flag);
+          DLOG(INFO) << "Receive data of param id " << param_id
+            << " from PS (rank " << server_mpi_rank << " and tag " << tag 
+            << ")";
           // Send to PS
           MPI_Isend(send_buff, buf_size, mn::DtypeToMPIDtype<Dtype>(),
                     server_mpi_rank, tag, MPI_COMM_WORLD, &send_req);
           // TODO: why do we have to wait here?
           MPI_Wait(&send_req, MPI_STATUS_IGNORE);
+
+          DLOG(INFO) << "Send to PS of param id " << param_id
+            << " to PS (rank " << server_mpi_rank << " and tag " << tag
+            << ")";
 
           irecv_req_list.push_back(task);
           iter = reduce_req_list.erase(iter);
@@ -346,7 +388,10 @@ namespace caffe {
       }
     }
 
-    void launch_param_broadcast(int layer_id, int param_id) {
+    void launch_param_broadcast(int param_id) {
+      if (mn::get_nodes_count() <= 1)
+        return;
+
       Dtype* buff;
       if (CAN_USE_PRV_DATA(net_params[param_id])) {
         if (distrib_bcast->is_root(MLSL::GroupType::GT_DATA))
@@ -361,6 +406,7 @@ namespace caffe {
           buff = net_params[param_id]->mutable_cpu_data();
       }
       size_t buf_size = net_params[param_id]->count();
+      DLOG(INFO) << "Launch broadcast request with param id " << param_id;
       broadcast_req_vec[param_id] =
           distrib_bcast->bcast_async<Dtype,MLSL::GroupType::GT_DATA>(buff, buf_size);
     }
@@ -376,6 +422,8 @@ namespace caffe {
           MPI_Test(&irecv_req_vec[param_id], &flag, MPI_STATUS_IGNORE);
         }
         if (flag) {
+          DLOG(INFO) << " Root node received model param id " << param_id 
+            << " value " << net_params[param_id]->sumsq_data();
           irecv_req_vec[param_id] = MPI_REQUEST_NULL;
           irecv_done[param_id] = true;
           iter = irecv_req_list.erase(iter);
@@ -392,7 +440,7 @@ namespace caffe {
           int param_id = layer_param_ids[i][j];
           if (!broadcast_launched[param_id]) {
             if (irecv_done[param_id]) {
-              launch_param_broadcast(i, param_id);
+              launch_param_broadcast(param_id);
               broadcast_launched[param_id] = true;
             } else return;
           }
@@ -402,61 +450,83 @@ namespace caffe {
 
     void on_backward_finished(int layer_id) {
       boost::shared_ptr<Layer<Dtype>> &layer = layers[layer_id];
-      if (layer->layerOp == nullptr) {
-        return;
-      }
 
       if (mn::use_param_server()) {
-        std::vector<int> &param_ids = layer_param_ids[layer_id];
-        // TODO: descending is faster?
-        for (int i = param_ids.size() - 1; i >= 0; --i) {
-          if (!layer->ParamNeedReduce(i)) continue;
-          launch_reduce(layer_id, param_ids[i]);
-          mn::Distribution &distrib = layer->GetDistribution();
-          if (distrib.is_root(MLSL::GroupType::GT_DATA)) {
-            check_and_launch_comm_to_ps();
-            check_and_launch_broadcast();
-          } else {
-            launch_param_broadcast(layer_id, param_ids[i]);
+        launch_reduce(layer_id);
+
+        mn::Distribution &distrib = layer->GetDistribution();
+        if (distrib.is_root(MLSL::GroupType::GT_DATA)) {
+          check_and_launch_comm_to_ps();
+          check_and_launch_broadcast();
+        } else {
+          std::vector<int> &param_ids = layer_param_ids[layer_id];
+          for (int i=param_ids.size() - 1; i >= 0; --i) {
+            launch_param_broadcast(param_ids[i]);
           }
         }
       } else {
+        if (layer->layerOp == nullptr) {
+          return;
+        }
         launch_allreduce(layer_id);
       }
     }
 
+
+
     void delwt_wait_ps(int layer_id) {
       mn::Distribution &distrib = layers[layer_id]->GetDistribution();
+
+      std::vector<int> &param_ids = layer_param_ids[layer_id];
       if (distrib.is_root(MLSL::GroupType::GT_DATA)) {
-        std::vector<int> &param_ids = layer_param_ids[layer_id];
-        // TODO: can we start comm with ps earlier? Per-layer data would be inconsistent then.
-        check_and_launch_comm_to_ps();
-        check_and_launch_broadcast();
-        for (int i = param_ids.size() - 1; i >= 0; i--) {
-          int param_id = param_ids[i];
-          // wait for reduce
-          if (reduce_req_vec[param_id] != NULL) {
-            MLSL::Environment::GetEnv().Wait(reduce_req_vec[param_id]);
+        bool bcast_launched = false;
+        while (!bcast_launched) {
+          // TODO: can we start comm with ps earlier? Per-layer data would be inconsistent then.
+          check_and_launch_comm_to_ps();
+          check_and_launch_broadcast();
+          bcast_launched = true;
+          for (int i = param_ids.size() - 1; i >= 0; i--) {
+            bcast_launched = bcast_launched & broadcast_launched[param_ids[i]];
           }
-          reduce_req_vec[param_id] = NULL;
-          // wait for new param from param server
-          if (irecv_req_vec[param_id] != MPI_REQUEST_NULL) {
-            MPI_Wait(&irecv_req_vec[param_id], MPI_STATUS_IGNORE);
-            // the req is set to MPI_Request_NULL indicating the request is already finished
-            irecv_req_vec[param_id] = MPI_REQUEST_NULL;
-          }
-          irecv_done[param_id] = false;
-          // wait for the completion of broadcast
-          if (broadcast_req_vec[param_id] != NULL) {
-            MLSL::Environment::GetEnv().Wait(broadcast_req_vec[param_id]);
-            broadcast_req_vec[param_id] = NULL;
-          }
-          broadcast_launched[param_id] = false;
         }
       }
+
 #ifdef FW_OVERLAP_OPT
       solver->set_layer_finished_flag(layer_id, true);
 #endif
+
+      for (int i = param_ids.size() - 1; i >= 0; i--) {
+        int param_id = param_ids[i];
+        DLOG(INFO) << " Wait reduce layer id " << layer_id << " param id " << param_id;
+        // wait for reduce
+        if (reduce_req_vec[param_id] != NULL) {
+          MLSL::Environment::GetEnv().Wait(reduce_req_vec[param_id]);
+        }
+        reduce_req_vec[param_id] = NULL;
+          
+        DLOG(INFO) << "Worker (iter " << solver->root_solver()->iter() << "): param id=" << param_id << " weight=" << net_params[param_id]->sumsq_diff();
+
+        DLOG(INFO) << " Wait recv layer id " << layer_id << " param id " << param_id;
+
+        // wait for new param from param server
+        if (irecv_req_vec[param_id] != MPI_REQUEST_NULL) {
+          MPI_Wait(&irecv_req_vec[param_id], MPI_STATUS_IGNORE);
+          // the req is set to MPI_Request_NULL indicating the request is already finished
+          irecv_req_vec[param_id] = MPI_REQUEST_NULL;
+        }
+        irecv_done[param_id] = false;
+
+        DLOG(INFO) << " Wait broadcast layer id " << layer_id << " param id " << param_id;
+
+        // wait for the completion of broadcast
+        if (broadcast_req_vec[param_id] != NULL) {
+          MLSL::Environment::GetEnv().Wait(broadcast_req_vec[param_id]);
+          broadcast_req_vec[param_id] = NULL;
+        }
+        broadcast_launched[param_id] = false;
+
+        DLOG(INFO) << "Worker (iter " << solver->root_solver()->iter() << "): param id=" << param_id << " data=" << net_params[param_id]->sumsq_data();
+      }
     }
 
     void delwt_wait_no_ps(int layer_id) {

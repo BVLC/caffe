@@ -39,12 +39,6 @@ import os
 import sys
 import copy
 import argparse
-
-caffe_root = "../"
-sys.path.insert(0, caffe_root + 'python')
-
-import caffe
-from caffe.proto import caffe_pb2
 import google.protobuf.text_format as txtf
 
 
@@ -207,7 +201,6 @@ def transform_convolutions(model_path, compiled_model_path):
                                               if (l, index) != convolution_layers[-1]
                                               else len(net.layer), [i[0] for i in fusion_layer])
         inputwith_relu = get_all_top_layers(l, net, index, skip_layers, interesting_layers)
-
         for si in range(0, len(new_net.layer[index].quantization_param.scale_out)):
             if len(outputwith_relu) > 0 or l.name in u8_layers or conv_relu_flag:  # u8
                 new_net.layer[index].quantization_param.scale_out[si] = round(u8_max / new_net.layer[index].
@@ -233,11 +226,10 @@ def transform_convolutions(model_path, compiled_model_path):
 
 
 def generate_sample(sample_path, input_model, weights,
-                    quantized_model, detection, iterations=1, error_margin=1, power=0):
-    cmd = '{0} quantize -model {1} -weights {2} -model_quantized {3} -iterations {4} ' \
-          '-trimming_mode dynamic_fixed_point -error_margin {5} -power {6}'.format(sample_path, input_model, weights,
-                                                                                   quantized_model, iterations,
-                                                                                   error_margin, power)
+                    quantized_model, detection, scaling_mode, iterations=1, error_margin=1, power=0):
+    cmd = '{0} quantize -model {1} -weights {2} -model_quantized {3} -iterations {4} -error_margin {5} -power {6}' \
+          ' -scaling {7} -trimming_mode dynamic_fixed_point'.format(sample_path, input_model, weights, quantized_model,
+                                                                    iterations, error_margin, power, scaling_mode)
     if detection:
         cmd += ' --detection=1'
 
@@ -307,6 +299,20 @@ def tuning_quantized_topology(base_top1_accuracy, prototxt, caffe_bin, model_wei
         current_top1_accuracy = get_the_accuracy(caffe_bin, prototxt, model_weights, iterations, detection, blob_name)
 
 
+def accuracy_blob_name_parser(prototxt):
+    net = read_prototxt(prototxt)
+    if not net:
+        print 'Please check the model prototxt integrity.'
+        sys.exit(-1)
+    res = {}
+    for i in net.layer:
+        if i.type == 'Accuracy':
+            if i.HasField('accuracy_param'):
+                res[i.accuracy_param.top_k] = i.top[0]
+            else:
+                res[1] = i.top[0]
+    return res[sorted(res.keys())[0]] if res else ''
+
 def check_blob_name_existence(prototxt, blob_name):
     net = read_prototxt(prototxt)
     if not net.layer:
@@ -322,15 +328,17 @@ def check_blob_name_existence(prototxt, blob_name):
 
 if __name__ == '__main__':
     usage_string = 'Usage: 1.Build the caffe\n ' \
-                   '2.cd /path/to/caffe/scripts\n ' \
-                   '3.python calibrator.py ' \
-                   ' -r /path/to/caffe/build ' \
-                   ' -w pre-trained-fp32 weights ' \
-                   ' -m typology ' \
-                   ' -i iterations ' \
-                   ' -l acceptable accuracy loss value, the default value is 0.01(stands for 1%)' \
-                   ' -d 1(0 means classification while 1 means detection, the default value is 0' \
-                   ' -n blob name which means accuracy.\n '
+                    '2.cd /path/to/caffe/scripts\n ' \
+                    '3.python calibrator.py ' \
+                    ' -r /path/to/caffe/build ' \
+                    ' -w pre-trained-fp32 weights ' \
+                    ' -m typology ' \
+                    ' -i iterations ' \
+                    ' -l acceptable accuracy loss value, the default value is 0.01 stands for one percent' \
+                    ' -d 1(0 means classification while 1 means detection, the default value is 0' \
+                    ' -n blob name which means accuracy' \
+                    ' -c scaling mode, the default value is single' \
+                    ' -s sampling iterations'
 
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument('-h', '--help', action='help', help=usage_string)
@@ -346,7 +354,7 @@ if __name__ == '__main__':
 
     parser.add_argument('-l', '--accuracy_loss', action='store', dest='loss', default=0.01,
                         help='the acceptable accuracy loss that raised by 8-Bit quantization, '
-                             'default value is 0.01(1%).')
+                             'default value is 0.01(one percent).')
 
     parser.add_argument('-d', '--detection', action='store', dest='is_detection', default=0,
                         help='0 for classification while 1 for detection, default value is 0.')
@@ -356,13 +364,49 @@ if __name__ == '__main__':
 
     parser.add_argument('-n', '--blob_name', action='store', dest='blob_name', default='',
                         help='top blob name which stands for accuracy')
-    params = parser.parse_args()
 
+    parser.add_argument('-c', '--weights_channel', action='store', dest='scaling_mode', default='single',
+                        help='the scaling mode for weights')
+    
+    parser.add_argument('-s', '--sampling_iterations', action='store', dest='sampling_iterations', default=10,
+                        help='iteration number of sampling, the default value is 10.')
+
+    params = parser.parse_args()
+    
+    if not check_existence(params.root):
+        print 'Please check the {} existence.'.format(params.root)
+        sys.exit(-1)
+    
+    pycaffe_path = os.path.abspath(os.path.dirname(os.path.abspath(params.root))) + os.path.sep + 'python'
+    if not check_existence(pycaffe_path):
+        print "Please check the pycaffe existence.Suggest to rebuild pycaffe via 'make pycaffe'"
+    sys.path.insert(0, pycaffe_path)
+    import caffe
+    from caffe.proto import caffe_pb2
+    
     try:
         user_input_iterations = int(params.iterations)
     except:
         print 'Set the iterations to the default value 1000'
         user_input_iterations = 1000
+    else:
+        if user_input_iterations < 1:
+            print 'Invalid iterations!The value should be larger than zero.'
+            sys.exit(-1)
+    try:
+        user_sampling_iteration = int(params.sampling_iterations)
+    except:
+        print 'Set the sampling iteration to the default value 10'
+        user_sampling_iteration = 10
+    else:
+        if user_sampling_iteration < 1:
+            print 'Invalid sampling iteration!The value should be larger than zero.'
+            sys.exit(-1)
+
+    if params.scaling_mode != 'multipe' and params.scaling_mode != 'single':
+        user_scaling_mode = 'single'
+    else:
+        user_scaling_mode = params.scaling_mode
 
     try:
         toleration = float(params.loss)
@@ -379,34 +423,47 @@ if __name__ == '__main__':
         detection_flag = 0
 
     model = os.path.abspath(params.model)
-    user_input_weights = os.path.abspath(params.weights)
-    sample = os.path.abspath(params.root + 'tools/sample')
-    caffe_bin_path = os.path.abspath(params.root + 'tools/caffe')
-    setup_env()
+    if not check_existence(model):
+        print 'Please check model: {} existence.'.format(model)
+        sys.exit(-1)
 
-    if not check_existence(model) or not check_existence(user_input_weights) or not check_existence(sample) \
-            or not check_existence(caffe_bin_path):
+    user_input_weights = os.path.abspath(params.weights)
+    if not check_existence(user_input_weights):
+        print 'Please check weights: {} existence.'.format(user_input_weights)
+        sys.exit(-1)
+
+    sample = os.path.abspath(params.root + os.path.sep + 'tools/sample')
+    if not check_existence(sample):
+        print 'Please check sample: {} existence.'.format(sample)
+        sys.exit(-1)
+
+    caffe_bin_path = os.path.abspath(params.root + os.path.sep + 'tools/caffe')
+    if not check_existence(caffe_bin_path):
         print 'Please check model/weights/sample existence.'
         sys.exit(-1)
 
+    setup_env()
+
     target_blob_name = params.blob_name
+    if not target_blob_name and not detection_flag:
+        target_blob_name = accuracy_blob_name_parser(model)
+
     if not target_blob_name or not check_blob_name_existence(model, target_blob_name):
         print 'Please specify valid blob name and rerun the script.'
         sys.exit(-1)
 
-    sys.path.insert(0, params.root + '../python')
     quantized_prototxt = model.rsplit('.')[0] + '_quantized.prototxt'
     quantized_weights = user_input_weights.rsplit('.')[0] + '_quantized.caffemodel'
-    enable_floating_point = 0
+    enable_power_of_2 = 0
     print 'Sampling...'
-    generate_sample(sample, model, user_input_weights,
-                    quantized_prototxt, detection_flag, 10, 100 * toleration, enable_floating_point)
+    generate_sample(sample, model, user_input_weights, quantized_prototxt, detection_flag, user_scaling_mode,
+                    user_sampling_iteration, 100 * toleration, enable_power_of_2)
     print 'Sampling done'
     print 'Generating the FP32 accuracy...'
     top_1 = get_the_accuracy(caffe_bin_path, model, user_input_weights, user_input_iterations, detection_flag,
                              target_blob_name)
     print 'FP32 accuracy is: {}'.format(top_1)
     tuning_quantized_topology(top_1, quantized_prototxt, caffe_bin_path, user_input_weights, user_input_iterations,
-                              enable_floating_point, toleration, detection_flag, target_blob_name)
+                              enable_power_of_2, toleration, detection_flag, target_blob_name)
 
     print 'Updated prototxt {} is generated.'.format(quantized_prototxt)

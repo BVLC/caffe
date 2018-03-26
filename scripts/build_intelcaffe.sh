@@ -6,7 +6,7 @@ function usage
     echo "Usage:"
     echo "  $script_name [--multinode] [--compiler icc/gcc] [--rebuild] "
     echo "               [--boost_root boost_install_dir] [--layer_timing]"
-    echo "               [--debug]"
+    echo "               [--debug] [--build_option]"
     echo ""
     echo "  Parameters:"
     echo "    multinode:    specify it to build caffe for multinode. build for single"
@@ -20,6 +20,7 @@ function usage
     echo "    layer_timing: build caffe for multinode with CAFFE_PER_LAYER_TIMINGS flag."
     echo "                  by default, the flag is NOT included for build."
     echo "    debug:        build caffe with debug flag. by default, the option is off."
+    echo "    build_option: build option to disable optimization. by default, the option is blank."
 }
 
 function check_dependency
@@ -36,15 +37,18 @@ function check_dependency
 function build_caffe_gcc
 {
     is_multinode_=$1
-
+    build_option_=$2
     cp Makefile.config.example Makefile.config
 
     if [ $is_multinode_ -eq 1 ]; then
         echo "USE_MLSL := 1" >> Makefile.config
+        echo "ALLOW_LMDB_NOLOCK := 1" >> Makefile.config
 
-        mlslvars_sh=`find external/mlsl/ -name mlslvars.sh`
-        if [ -f $mlslvars_sh ]; then
-            source $mlslvars_sh
+        if [ -z $MLSL_ROOT ]; then
+            mlslvars_sh=`find external/mlsl/ -name mlslvars.sh`
+            if [ -f $mlslvars_sh ]; then
+                source $mlslvars_sh
+            fi
         fi
     fi
 
@@ -59,12 +63,19 @@ function build_caffe_gcc
     if [ "$boost_root" != "" ]; then
         echo "BOOST_ROOT := $boost_root" >> Makefile.config
     fi
-
+    for option in $build_option_
+    do
+        grep "$option\s*:= 0" Makefile.config > /dev/null
+        if [ $? -eq 0 ]; then
+           sed -i "s/$option\s*:= 0/$option := 1/g" Makefile.config
+        fi
+    done
     if [ $is_rebuild -eq 1 ]; then
         make clean
     fi
-
-    make -j 8
+    
+    make -j $(nproc)
+    make pycaffe
 }
 
 function download_build_boost
@@ -98,9 +109,10 @@ function download_build_boost
 function build_caffe_icc
 {
     is_multinode_=$1
+    build_option_=$2
     cmake_params="-DCPU_ONLY=1 -DBOOST_ROOT=$boost_root"
     if [ $is_multinode_ -eq 1 ]; then
-        cmake_params+=" -DUSE_MLSL=1"
+        cmake_params+=" -DUSE_MLSL=1 -DALLOW_LMDB_NOLOCK=1"
     fi
 
     if [ $is_layer_timing -eq 1 ]; then
@@ -110,7 +122,10 @@ function build_caffe_icc
     if [ $debug -eq 1 ]; then
         cmake_params+=" -DDEBUG=1"
     fi
-
+    for option in $build_option_
+    do
+        cmake_params+=" -D$option=1 "
+    done
     build_dir=$root_dir/build
     if [ $is_rebuild -eq 1 ] && [ -d $build_dir ]; then
         rm -r $build_dir
@@ -121,19 +136,22 @@ function build_caffe_icc
 
     echo "Parameters: $cmake_params"
     CC=icc CXX=icpc cmake .. $cmake_params
-    CC=icc CXX=icpc make all -j 8
+    CC=icc CXX=icpc make all -j $(nproc) 
 }
 
 function sync_caffe_dir
 {
-  caffe_dir=`pwd`
-  caffe_parent_dir=`dirname $caffe_dir`
-  which ansible >/dev/null
-  if [ $? -eq 0 ]; then
-      ansible ourcluster -m synchronize -a "src=$caffe_dir dest=$caffe_parent_dir"
-  else
-      echo "Warning: no ansible command for synchronizing caffe directory in nodes"
-  fi
+    echo "Synchronize caffe binary between nodes..."
+    caffe_dir=`pwd`
+    caffe_parent_dir=`dirname $caffe_dir`
+    which ansible >/dev/null
+    if [ $? -eq 0 ]; then
+        set -x
+        ansible ourcluster -m synchronize -a "src=$caffe_dir dest=$caffe_parent_dir"
+        set +x
+    else
+        echo "Warning: no ansible command for synchronizing caffe directory in nodes"
+    fi
 }
 
 
@@ -145,6 +163,7 @@ boost_root=""
 is_rebuild=0
 compiler="icc"
 is_multinode=0
+build_option=""
 while [[ $# -ge 1 ]]
 do
     key="$1"
@@ -161,6 +180,10 @@ do
             ;;
         --boost_root)
             boost_root="$2"
+            shift
+            ;;
+        --build_option)
+            build_option="$2"
             shift
             ;;
         --layer_timing)
@@ -202,6 +225,12 @@ do
     fi
 done
 
+# Fix the compilation failure if icc environment is set.
+# During building caffe, MKL library will be downloaded,
+# and the environment variable will be set.
+unset MKLROOT
+unset CPATH
+
 echo "Build Intel Caffe by $compiler..."
 if [ "$compiler" == "icc" ]; then
     if [ "$boost_root" == "" ]; then
@@ -212,12 +241,12 @@ if [ "$compiler" == "icc" ]; then
         boost_root=$(cd $boost_root; pwd)
     fi
 
-    build_caffe_icc $is_multinode
+    build_caffe_icc $is_multinode "$build_option"
 else
-    build_caffe_gcc $is_multinode
+    build_caffe_gcc $is_multinode "$build_option"
 fi
 
 if [ $is_multinode -eq 1 ]; then
-  sync_caffe_dir
+    sync_caffe_dir
 fi
 

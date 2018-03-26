@@ -116,7 +116,7 @@ shared_ptr<Layer<Dtype> > GetConvolutionLayer(
     }
 #endif
 #ifdef MKLDNN_SUPPORTED
-    else if (!use_dilation && ep.isEngine("MKLDNN")) {
+    else if (ep.isEngine("MKLDNN")) {
       engine = ConvolutionParameter_Engine_MKLDNN;
     }
 #endif
@@ -150,10 +150,6 @@ shared_ptr<Layer<Dtype> > GetConvolutionLayer(
 #endif
 #ifdef MKLDNN_SUPPORTED
   } else if (engine == ConvolutionParameter_Engine_MKLDNN) {
-    if (use_dilation) {
-      LOG(FATAL) << "MKLDNN doesn't support the dilated convolution at Layer "
-                 << param.name();
-    }
     return shared_ptr<Layer<Dtype> >(new MKLDNNConvolutionLayer<Dtype>(param));
 #endif
   } else {

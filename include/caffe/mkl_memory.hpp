@@ -138,6 +138,10 @@ struct MKLMemoryDescriptorBase : PrvMemDescr,
   }
   virtual void convert_from_prv(void* cpu_ptr);
   virtual void convert_to_prv(void* cpu_ptr);
+#ifdef CO_SIM
+    virtual void create_reorder_from_prv_cosim(void* cpu_ptr);
+    virtual void convert_from_prv_cosim(void* cpu_ptr);
+#endif
   virtual bool layout_compare(shared_ptr<PrvMemDescr> other);
   virtual void convert_from_other(shared_ptr<PrvMemDescr> other);
  protected:

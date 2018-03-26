@@ -44,11 +44,21 @@ caffe_option(ALLOW_LMDB_NOLOCK "Allow MDB_NOLOCK when reading LMDB files (only i
 caffe_option(USE_SYSTEMTAP "Build for SystemTap" OFF)
 caffe_option(PERFORMANCE_MONITORING "Build Caffe with PERFORMANCE_MONITORING " OFF)
 #caffe_option(USE_GITHUB_MKLDNN "Download and use MKL-DNN available on github" OFF)
- 
+caffe_option(CODE_COVERAGE "Build with code coverage instrumentation" OFF)
+caffe_option(CO_SIM "Build readonly cpu blob data/diff pycaffe interface" OFF)
+caffe_option(USE_MLSL "Build Caffe with Intel(r) Machine Learning Scaling Library for multinode training" ON)
+
 # ---[ Dependencies
 include(cmake/MKLDNN.cmake)
 include(cmake/DLCP.cmake)
 include(cmake/Dependencies.cmake)
+
+if(CODE_COVERAGE)
+  # code coverage necessary
+  include(CodeCoverage)
+  APPEND_CCOV_COMPILER_FLAGS()
+endif()
+#end code coverage
 
 # ---[ Flags
 if(UNIX OR APPLE)
@@ -81,14 +91,16 @@ if(UNIX OR APPLE)
     # Same as above, with exception that ICC compilation crashes with -fPIE option, even 
     # though it uses -pie linker option that require -fPIE during compilation. Checksec
     # shows that it generates correct PIE anyway if only -pie is provided.
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fstack-protector")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fstack-protector -wd2196")
     # Auto enable SGD Fusion if use intel compiler
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DENABLE_SGD_FUSION")
   endif()
   
   # Generic flags.
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -fno-operator-names -Wformat -Wformat-security -Wall")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+  if(NOT CODE_COVERAGE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Werror")
+  endif()
   # Dot not forward c++11 flag to GPU beucause it is not supported
   set( CUDA_PROPAGATE_HOST_FLAGS OFF )
   set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -D_FORTIFY_SOURCE=2")

@@ -1,0 +1,15 @@
+train_net: "models/coco/ResNet-101/rfcn_end2end/train_agnostic.prototxt"
+base_lr: 0.001
+lr_policy: "step"
+gamma: 0.1
+stepsize: 640000
+display: 100
+
+momentum: 0.9
+weight_decay: 0.0005
+# We disable standard caffe solver snapshotting and implement our own snapshot
+# function
+snapshot: 0
+# We still use the snapshot prefix, though
+snapshot_prefix: "resnet101_rfcn"
+# debug_info: true

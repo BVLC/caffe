@@ -27,6 +27,11 @@ numservers=0
 # pin internal threads to 2 CPU cores for reading data
 internal_thread_pin="on"
 
+msg_priority="off"
+msg_priority_threshold=""
+
+mpi_iallreduce_algo=""
+
 function init_mpi_envs
 {
     if [ ${numnodes} -eq 1 ]; then
@@ -56,13 +61,17 @@ function init_mpi_envs
 
     export I_MPI_FALLBACK=0
     export I_MPI_DEBUG=6
+
+    if [ "${mpi_iallreduce_algo}" != "" ]; then
+        export I_MPI_ADJUST_IALLREDUCE=${mpi_iallreduce_algo}
+    fi
 }
 
 
 function clear_shm
 {
     clear_command="rm -rf /dev/shm/*"
-    check_shm_command="df -h | grep shm"
+    check_shm_command="df -h /dev/shm | grep shm"
 
     # TODO: check if 40G is the minimum shm size?
     min_shm_size=40
@@ -114,7 +123,9 @@ function set_mlsl_vars
     if [ -z $MLSL_ROOT ]; then
         # use built-in mlsl if nothing is specified in ini
         mlslvars_sh=`find external/mlsl/ -name mlslvars.sh`
-        source $mlslvars_sh
+        if [ -f $mlslvars_sh ]; then
+            source $mlslvars_sh
+        fi
     fi
 
     if [ ${num_mlsl_servers} -eq -1 ]; then
@@ -131,11 +142,12 @@ function set_mlsl_vars
     export MLSL_NUM_SERVERS=${numservers}
 
     if [ ${numservers} -gt 0 ]; then
-        if [ "${cpu_model}" == "knl" ] || [ "${cpu_model}" == "knm" ]; then
-            listep=6,7,8,9
-        else
-            listep=6,7
-        fi
+        listep="6"
+        for ((i=7; i<${numservers}+6; i++))
+        do
+            listep+=",$i"
+        done
+
         export MLSL_SERVER_AFFINITY="${listep}"
         echo "MLSL_SERVER_AFFINITY: ${listep}"
     fi
@@ -144,7 +156,17 @@ function set_mlsl_vars
     if [ "$debug" == "on" ]; then
         export MLSL_LOG_LEVEL=3
     else
-        export MLSL_LOG_LEVEL=0
+        export MLSL_LOG_LEVEL=1
+    fi
+
+    if [ "$msg_priority" == "on" ]; then
+        echo "Enable priority queue."
+        export MLSL_MSG_PRIORITY=1
+
+        if [ "$msg_priority_threshold" != "" ]; then
+            echo "Priority queue threshold: $msg_priority_threshold"
+            export MLSL_MSG_PRIORITY_THRESHOLD=$msg_priority_threshold
+        fi
     fi
 }
 
@@ -241,6 +263,18 @@ do
             ;;
         --internal_thread_pin)
             internal_thread_pin=$2
+            shift
+            ;;
+        --msg_priority)
+            msg_priority=$2
+            shift
+            ;;
+        --msg_priority_threshold)
+            msg_priority_threshold=$2
+            shift
+            ;;
+        --mpi_iallreduce_algo)
+            mpi_iallreduce_algo=$2
             shift
             ;;
         *)

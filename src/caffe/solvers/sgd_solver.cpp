@@ -296,9 +296,7 @@ void axpy_axpby_copy<float>(size_t count, const float decay, const float* net_pa
                             const float rate, const float momentum, float* history_data)
 {
 #ifdef _OPENMP
-//#pragma omp parallel for simd schedule(static)  //Not work for GCC 4.8
-#pragma omp parallel for schedule(static)
-#pragma simd
+#pragma omp parallel for simd schedule(static)
 #endif  
   for (size_t i = 0; i < count; ++i) {
     history_data[i] = rate * (decay * net_params_data[i] + net_params_diff[i]) + momentum * history_data[i];
@@ -311,9 +309,7 @@ void axpy_axpby_copy<double>(size_t count, const double decay, const double* net
                              const double rate, const double momentum, double* history_data)
 {
 #ifdef _OPENMP
-//#pragma omp parallel for simd schedule(static)  //Not work for GCC 4.8
-#pragma omp parallel for schedule(static)
-#pragma simd
+#pragma omp parallel for simd schedule(static)
 #endif  
   for (size_t i = 0; i < count; ++i) {
     history_data[i] = rate * (decay * net_params_data[i] + net_params_diff[i]) + momentum * history_data[i];
@@ -333,9 +329,7 @@ void axpy_axpby_copy_axpy<float>(size_t count, const float decay, float* net_par
                             const float rate, const float momentum, float* history_data, const float update_param)
 {
 #ifdef _OPENMP
-//#pragma omp parallel for simd schedule(static)  //Not work for GCC 4.8
-#pragma omp parallel for schedule(static)
-#pragma simd
+#pragma omp parallel for simd schedule(static)
 #endif  
   for (size_t i = 0; i < count; ++i) {
     history_data[i] = rate * (decay * net_params_data[i] + net_params_diff[i]) + momentum * history_data[i];
@@ -348,9 +342,7 @@ void axpy_axpby_copy_axpy<double>(size_t count, const double decay, double* net_
                              const double rate, const double momentum, double* history_data, const double update_param)
 {
 #ifdef _OPENMP
-//#pragma omp parallel for simd schedule(static)  //Not work for GCC 4.8
-#pragma omp parallel for schedule(static)
-#pragma simd
+#pragma omp parallel for simd schedule(static)
 #endif  
   for (size_t i = 0; i < count; ++i) {
     history_data[i] = rate * (decay * net_params_data[i] + net_params_diff[i]) + momentum * history_data[i];

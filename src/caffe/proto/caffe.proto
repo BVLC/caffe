@@ -709,6 +709,7 @@ message RandomAspectRatioParameter {
   optional float min_area_ratio = 1 [default = 0.5];
   optional float max_area_ratio = 2 [default = 1];
   optional float aspect_ratio_change = 3 [default = 1];
+  optional uint32 max_attempt = 4 [default = 10];
   optional ResizeParameter resize_param = 5;
 }
 
@@ -954,6 +955,7 @@ message BatchNormParameter {
   optional FillerParameter bias_filler = 8; // The filler for the bias
   // Batch size used for statistics, 0 would use the batch size of bottom blob
   optional uint32 stats_batch_size = 9 [default = 0];
+  optional bool relu = 10 [default = false];
 }
 
 message SplitParameter {

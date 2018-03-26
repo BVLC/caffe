@@ -143,8 +143,8 @@ class RMSPropSolver : public SGDSolver<Dtype> {
  protected:
   virtual void ComputeUpdateValue(int param_id, Dtype rate);
   void constructor_sanity_check() {
-    CHECK_EQ(0, this->param_.momentum())
-        << "Momentum cannot be used with RMSProp.";
+//    CHECK_EQ(0, this->param_.momentum())
+//        << "Momentum cannot be used with RMSProp.";
     CHECK_GE(this->param_.rms_decay(), 0)
         << "rms_decay should lie between 0 and 1.";
     CHECK_LT(this->param_.rms_decay(), 1)

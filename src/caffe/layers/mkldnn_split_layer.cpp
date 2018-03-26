@@ -94,7 +94,7 @@ void MKLDNNSplitLayer<Dtype>::InitSplitBwd(const vector<Blob<Dtype>*>& bottom,
   if (std::is_same<Dtype, double>::value)  NOT_IMPLEMENTED;
 
   // We just do simple adding so scale is 1.0 for all inputs we have
-  std::vector<double> scale(top.size(), 1.0);
+  std::vector<float> scale(top.size(), 1.0);
   engine cpu_engine = CpuEngine::Instance().get_engine();
   memory::data_type data_type = memory::data_type::f32;
   // TODO: shouldn't we have format here that is well suited for earlier layer.

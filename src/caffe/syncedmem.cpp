@@ -56,6 +56,11 @@ SyncedMemory::~SyncedMemory() {
     cudaSetDevice(initial_device);
   }
 #endif  // CPU_ONLY
+#ifdef CO_SIM
+  if (cpu_ptr_cosim_){
+    CaffeFreeHost(cpu_ptr_cosim_, cpu_malloc_use_cuda_);
+  }
+#endif
 }
 
 inline void SyncedMemory::to_cpu() {
@@ -94,6 +99,46 @@ inline void SyncedMemory::to_cpu() {
     break;
   }
 }
+
+#ifdef CO_SIM
+//Only invoke when getting data from mkldnn engine by COSIM.
+inline void SyncedMemory::to_cpu_cosim(){
+  switch (head_) {
+  case UNINITIALIZED:
+    if (cpu_ptr_cosim_ == NULL) {
+      CaffeMallocHost(&cpu_ptr_cosim_, size_, &cpu_malloc_use_cuda_);
+      caffe_memset(size_, 0, cpu_ptr_cosim_);
+    }
+    break;
+  case HEAD_AT_GPU:
+    assert(!"Do not support GPU.");
+    break;
+  case HEAD_AT_PRV:
+    if (cpu_ptr_cosim_ == NULL) {
+      CaffeMallocHost(&cpu_ptr_cosim_, size_, &cpu_malloc_use_cuda_);
+    }
+    CHECK(prv_descriptor_.get());
+    prv_descriptor_->convert_from_prv_cosim(cpu_ptr_cosim_);
+    prv_descriptor_->on_to_cpu();
+    break;
+  case SYNCED_PRV:
+  case HEAD_AT_CPU:
+  case SYNCED:
+    if (cpu_ptr_cosim_ == NULL) {
+      CaffeMallocHost(&cpu_ptr_cosim_, size_, &cpu_malloc_use_cuda_);
+    }
+    memcpy(cpu_ptr_cosim_, cpu_ptr_, size_);
+    break;
+  }
+}
+
+const void* SyncedMemory::cpu_data_cosim() {
+  boost::mutex::scoped_lock lock(mtx);
+  to_cpu_cosim();
+  return (const void*)cpu_ptr_cosim_;
+
+}
+#endif
 
 inline void SyncedMemory::to_gpu() {
 #ifndef CPU_ONLY

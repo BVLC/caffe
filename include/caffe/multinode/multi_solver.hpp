@@ -68,12 +68,12 @@ class MultiSolver {
 #endif
   }
 
-
   // Invoked at specific points during an iteration
   class Callback : public Solver<Dtype>::Callback {
   protected:
     virtual ~Callback() {
     }
+
     virtual void on_backward_finished(int layer_id) = 0;
     virtual void on_delwt_wait(int layer_id) = 0;
     virtual void apply_updates(int layer_id) = 0;
@@ -104,16 +104,32 @@ class MultiSolver {
   boost::shared_ptr<Solver<Dtype>> root_solver() {
     return root_solver_;
   }
+
+  void Backward(bool last=true);
+  Dtype Forward();
+  void WaitAndUpdate();
+  void ClearParamDiffs();
+
 #ifdef FW_OVERLAP_OPT
   void set_layer_finished_flag(int layer_id, bool flag) {
     layer_finished_flags_[layer_id] = flag;
   }
+
+  Dtype UpdateAndForward(bool first=true);
 #endif
+
  private:
   virtual Dtype ForwardBackwardImpl(bool first, bool last);
   bool IsSkipSyncGradient(int layer_id);
   bool WaitGradient(int layer_id);
   void UpdateGradient(int layer_id);
+
+  Dtype ForwardFromTo(int start, int end);
+  void BackwardFromTo(int start, int end, bool last=true);
+
+#ifdef FW_OVERLAP_OPT
+  void WaitAndUpdateBeforeFwd(int layer_id);
+#endif
 
  protected:
   boost::shared_ptr<Solver<Dtype>> root_solver_;

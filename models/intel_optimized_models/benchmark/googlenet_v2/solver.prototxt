@@ -1,0 +1,14 @@
+net: "models/intel_optimized_models/benchmark/googlenet_v2/train_val.prototxt"
+test_iter: 1000
+test_interval: 10000
+test_initialization: false
+display: 40
+average_loss: 40
+base_lr: 0.045
+lr_policy: "step"
+stepsize: 2133
+gamma: 0.96
+max_iter: 400000
+momentum: 0.9
+weight_decay: 0.0002
+solver_mode: CPU

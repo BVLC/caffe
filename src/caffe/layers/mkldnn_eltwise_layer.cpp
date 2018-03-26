@@ -135,7 +135,7 @@ void MKLDNNEltwiseLayer<Dtype>::InitEltwiseFwd(const vector<Blob<Dtype>*>& botto
     int32_t ic = this->channels_;
 
     // If we just do simple adding, scale is 1.0 for all inputs we have
-    std::vector<double> scale(num_bottoms_, 1.0);
+    std::vector<float> scale(num_bottoms_, 1.0);
     //Eltwise layer is supporting multiplication coefficient and this scale value can be used for that.
     for (int i = 0; i < num_bottoms_; ++i) 
     {

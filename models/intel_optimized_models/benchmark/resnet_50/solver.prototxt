@@ -1,0 +1,18 @@
+#The prototxt files(solver.prototxt and train_val.prototxt) are copied from "models/intel_optimized_models/multinode/resnet_50_16_nodes_2k_batch", temporarily used for throughput benchmarking. It can't achieve expected accuracy for training. We'll provide the files for single node training in the future.
+net: "models/intel_optimized_models/benchmark/resnet_50/train_val.prototxt"
+test_iter: 1000
+test_interval: 625
+test_initialization: false
+display: 40
+base_lr: 0.8
+lr_policy: "multistep"
+stepvalue:18750
+stepvalue:37500
+stepvalue:50000
+gamma: 0.1
+max_iter: 200
+warmup_iter: 3125 # 1281167 / 2048 * 5 epochs
+warmup_start_lr: 0.1
+momentum: 0.9
+weight_decay: 0.0001
+solver_mode: CPU

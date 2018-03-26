@@ -55,6 +55,10 @@ mpibench_param="allreduce"
 script_dir=$(dirname $0)
 
 caffe_bin=""
+msg_priority="off"
+msg_priority_threshold=10000
+
+mpi_iallreduce_algo=""
 
 function usage
 {
@@ -73,6 +77,8 @@ function usage
     echo "               [--mpibench_param mpibench_param]"
     echo "               [--caffe_bin  caffe_binary_path]"
     echo "               [--cpu cpu_model]"
+    echo "               [--msg_priority on/off] [--msg_priority_threshold 10000]"
+    echo "               [--mpi_iallreduce_algo mpi_iallreduce_algo]"
     echo ""
     echo "  Parameters:"
     echo "    hostfile: host file includes list of nodes. Only used if you're running with multinode"
@@ -98,6 +104,9 @@ function usage
     echo "               included in supported list. Value: bdw, knl, skx and knm."
     echo "               bdw - Broadwell, knl - Knights Landing, skx - Skylake,"
     echo "               knm - Knights Mill."
+    echo "    msg_priority: off (default). Enable/disable message priority in MLSL."
+    echo "    msg_priority_threshold: 10000 (default), if message priority is on."
+    echo "    mpi_iallreduce_algo: adjust MPI iallreduce algorithms for synchronizing gradients in nodes."
     echo ""
 }
 
@@ -105,37 +114,63 @@ declare -a cpu_list=("Intel Xeon E7-88/48xx, E5-46/26/16xx, E3-12xx, D15/D-15 (B
                      "Intel Xeon Phi 7210/30/50/90 (Knights Landing)" 
                      "Intel Xeon Platinum 81/61/51/41/31xx (Skylake)")
 
+# the flag is true, while the machine to execute this script is one of machines included in hostfile
+# otherwise, we need to run caffe on remote machine by mpirun command
+is_local_run=1
+
+# check localhost is included in hostfile
+function is_localhost_in_hostfile
+{
+    local_hostname=`hostname`
+
+    host_file_=$1
+    if [ "$host_file_" != "" ]; then
+        host_list=( `cat $host_file_ | sort -V | uniq ` )
+        for host in ${host_list[@]}
+        do
+            hostname=`ssh $host "hostname"`
+            if [ $hostname == $local_hostname ]; then
+                return 1
+            fi
+        done
+        return 0
+    fi
+    
+    return 1
+}
+
 function detect_cpu
 {
     # detect cpu model
     model_string=`lscpu | grep "Model name" | awk -F ':' '{print $2}'`
+    cpu_model_="skx"
+
     if [[ $model_string == *"Phi"* ]]; then
         if [[ $model_string =~ 72(1|3|5|9)0 ]]; then
-            cpu_model="knl"
+            cpu_model_="knl"
         elif [[ $model_string == *"72"* ]]; then
-            cpu_model="knm"
+            cpu_model_="knm"
         else
-            cpu_model="unknown"
-            echo "CPU model :$model_string is unknown."
-            echo "    Use default settings, which may not be the optimal one."
+            cpu_model_="unknown"
         fi
     else
         model_num=`echo $model_string | awk '{print $4}'`
         if [[ $model_num =~ ^[8|6|5|4|3]1 ]]; then
-            cpu_model="skx"
+            cpu_model_="skx"
         elif [[ $model_num =~ ^E5-[4|2|1]6|^E7-[8|4]8|^E3-12|^D[-]?15 ]]; then
-            cpu_model="bdw"
+            cpu_model_="bdw"
         else
-            cpu_model="unknown"
-            echo "CPU model :$model_string is unknown."
-            echo "    Use default settings, which may not be the optimal one."
+            cpu_model_="unknown"
         fi
     fi
+    echo ${cpu_model_}
 }
 
 function set_numa_node
 {
-    check_dependency numactl
+    # this cannot be replaced with check_dependency function,
+    # since it may be called via ssh
+    which numactl >/dev/null 2>&1
     if [ $? -ne 0 ]; then
         return
     fi
@@ -143,13 +178,12 @@ function set_numa_node
     # detect numa mode: cache and flat mode for KNL
     numa_node=($(numactl -H | grep "available" | awk -F ' ' '{print $2}'))
     if [ $numa_node -eq 1 ]; then
-        echo "    NUMA configuration: Cache mode."
         # cache mode, use numa node 0
-        numanode=0
+        numanode_=0
     else
-        echo "    NUMA configuration: Flat mode."
-        numanode=1
+        numanode_=1
     fi
+    echo ${numanode_}
 }
 
 
@@ -178,7 +212,7 @@ function execute_command
         exec_command="$xeonbin_"
     fi
 
-    if [ ${numnodes} -gt 1 ]; then
+    if [ ${numnodes} -gt 1 ] || [ $is_local_run -ne 1 ]; then
         # Produce the configuration file for mpiexec. 
         # Each line of the config file contains a # host, environment, binary name.
         cfile_=$result_dir_/nodeconfig-${cpu_model}-${numnodes}.txt
@@ -199,7 +233,7 @@ function execute_command
         $sensors_bin >$sensor_log_file
     fi
 
-    if [ ${numnodes} -eq 1 ]; then
+    if [ ${numnodes} -eq 1 ] && [ $is_local_run -eq 1 ]; then
         time GLOG_minloglevel=0 $exec_command 2>&1 | tee ${log_file}
     else
         exec_command="-l -configfile $cfile_"
@@ -367,7 +401,10 @@ function test_ssh_connection
 function get_model_fname
 {
     solver_file_=$1
-    model_file_=$(grep -w "net:" $solver_file_ | head -n 1 | awk -F ':' '{print $2}' | sed 's/\"//g' | sed 's/\r//g')
+    model_file_=$(grep -w "net:" $solver_file_ | head -n 1 | awk -F ':' '{print $2}' | sed 's/\"//g' | sed 's/\r//g' | tr -d ' ')
+    if [ "$model_file_" != "" ] && [[ "$model_file_" != /* ]]; then
+        model_file_=$root_dir/$model_file_
+    fi
     echo "$(echo $model_file_)"
 }
 
@@ -504,6 +541,18 @@ do
             cpu_model=$2
             shift
             ;;
+        --msg_priority)
+            msg_priority=$2
+            shift
+            ;;
+        --msg_priority_threshold)
+            msg_priority_threshold=$2
+            shift
+            ;;
+        --mpi_iallreduce_algo)
+            mpi_iallreduce_algo=$2
+            shift
+            ;;
         *)
             echo "Unknown option: $key"
             usage
@@ -520,9 +569,25 @@ do
     echo "    ${cpu_list[$i]}"
 done
 
+head_node=""
+if [ "$host_file" != "" ]; then
+    is_localhost_in_hostfile $host_file
+    is_local_run=$?
+    head_node=`cat $host_file | head -n 1`
+fi
+
 # if cpu model is not specified in command, detect cpu model by "lscpu" command
 if [ "$cpu_model" == "" ]; then
-    detect_cpu
+    if [ $is_local_run -eq 1 ]; then
+        cpu_model=`detect_cpu`
+    else
+        # detect cpu on remote machine
+        cpu_model=`ssh $head_node "$(typeset -f detect_cpu);detect_cpu"`
+    fi
+fi
+if [ "$cpu_model" == "unknown" ]; then
+    echo "CPU model is unknown."
+    echo "    Use default settings, which may not be the optimal one."
 fi
 
 echo ""
@@ -582,7 +647,12 @@ fi
 if [ "$model_file" != "" ]; then
     grep "backend" $model_file | grep -i "LMDB"  >/dev/null
     if [ $? -eq 0 ]; then
-        check_lmdb_files $model_file
+        if [ $is_local_run -eq 1 ]; then
+            check_lmdb_files $model_file
+        else
+            # check lmdb on remote machine
+            ssh $head_node "$(typeset -f check_lmdb_files);cd $root_dir; check_lmdb_files $model_file"
+        fi
     fi
 fi
 
@@ -597,19 +667,29 @@ fi
 
 # Names to configfile, binary (executable) files #
 # Add check for host_file's existence to support single node
-if [[ $host_file != "" ]]; then
+if [ "$host_file" != "" ]; then
     nodenames=( `cat $host_file | sort -V | uniq ` )
     if [ ${#nodenames[@]} -eq 0 ]; then
         echo "Error: empty host file! Exit."
         exit 0
     fi
     numnodes=${#nodenames[@]}
+
+    # test connection between nodes via ssh
+    test_ssh_connection $host_file
 fi
 
-# test connection between nodes via ssh
-test_ssh_connection $host_file
-
-set_numa_node
+if [ $is_local_run -eq 1 ]; then
+    numanode=`set_numa_node`
+else
+    # check numa config
+    numanode=`ssh $head_node "$(typeset -f set_numa_node); set_numa_node"`
+fi
+if [ $numanode -eq 0 ]; then
+    echo "    NUMA configuration: Cache mode."
+else
+    echo "    NUMA configuration: Flat mode."
+fi
 
 if [ ! -d $result_dir ]; then
     echo "Create result directory: $result_dir"
@@ -617,6 +697,7 @@ if [ ! -d $result_dir ]; then
 fi
 
 env_params="--cpu $cpu_model --debug $debug --network $network --num_mlsl_servers $num_mlsl_servers"
+env_params+=" --msg_priority $msg_priority --msg_priority_threshold $msg_priority_threshold"
 if [ "$network" == "tcp" ]; then
     env_params+=" --netmask $tcp_netmask"
 fi
@@ -625,6 +706,10 @@ if [ "$host_file" != "" ]; then
 fi
 if [ ${num_omp_threads} -ne 0 ]; then
     env_params+=" --num_omp_threads ${num_omp_threads}"
+fi
+
+if [ "${mpi_iallreduce_algo}" != "" ]; then
+    env_params+=" --mpi_iallreduce_algo ${mpi_iallreduce_algo}"
 fi
 
 source ${script_dir}/set_env.sh $env_params

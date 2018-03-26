@@ -57,6 +57,7 @@ void ApplyMultinodeParams(const NetParameter& param,
   // aux map for inserting MnActivationLayer
   map<string, MnActivationParameter> blob_param_map;
   MultinodeParameter mn_param = param.multinode();
+  const MnParamGradCompressLayerTypeList &compress_layer_list = mn_param.compress_layer_type_list();
 
   // Step 1: Identify all the layers having global net params
   for (int param_id = 0; param_id < mn_param.model_parallel_size(); param_id++) {
@@ -252,6 +253,24 @@ void ApplyMultinodeParams(const NetParameter& param,
     for (int j = 0; j < orig_layer_param.bottom_size(); j++) {
       if (updated_blob_idx_to_name.find(j) != updated_blob_idx_to_name.end()) {
         layer_param->set_bottom(j, updated_blob_idx_to_name[j]);
+      }
+    }
+  }
+
+    // Step 4: Set MnParamGradCompressParameter on each layer param if the
+  //         layer type is in the compress_layer_type list.
+  for (int i = 0; i < param_with_mn->layer_size(); i++) {
+    LayerParameter *layer_param = param_with_mn->mutable_layer(i);
+    string layer_type = layer_param->type();
+    for (int j = 0; j < compress_layer_list.layer_type_size(); j++) {
+      if (compress_layer_list.layer_type(j) == layer_type) {
+        MnParamGradCompressParameter *grad_comp_param = layer_param->mutable_mn_grad_compress_param();
+        // If param_grad_compress_enable is not set, we set it with default value.
+        if (grad_comp_param->param_grad_compress_enable_size() == 0) {
+          // In default, we only compress first blob (weight)'s grad.
+          grad_comp_param->add_param_grad_compress_enable(true);
+        }
+        break;
       }
     }
   }
