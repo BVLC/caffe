@@ -730,8 +730,18 @@ int main(int argc, char** argv) {
   caffe::GlobalInit(&argc, &argv);
 #ifdef USE_MLSL
   caffe::mn::nGroup = FLAGS_n_group;
+  if (caffe::mn::nGroup <= 0) {
+      LOG(ERROR) << "Invalid number of group: " << caffe::mn::nGroup;
+      return 1;
+  }
+
   caffe::mn::nServer = FLAGS_n_server;
   caffe::mn::init(&argc, &argv);
+  if (caffe::mn::get_group_size() <= 0) {
+      LOG(ERROR) << "Invalid group size: " << caffe::mn::get_group_size();
+      return 1;
+  }
+
   CHECK_EQ(caffe::mn::get_world_size(),
            caffe::mn::nGroup * caffe::mn::get_group_size() + caffe::mn::nServer);
   if (caffe::mn::nGroup > 1) {

@@ -50,7 +50,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace caffe {
   namespace mn {
-
     using std::make_pair;
 
     template <typename Dtype>
@@ -63,16 +62,16 @@ namespace caffe {
       int mpi_rank = get_node_rank();
       shared_ptr<Net<Dtype>> net = solver_->net();
       const vector<Blob<Dtype> *> &net_params = net->learnable_params();
-      
+      const std::vector<bool>& layer_need_backward{ net->layer_need_backward() };
+     
       for (int i = 0; i < get_num_groups(); i++) {
         int root_rank = get_group_root_rank(i);
         //iterate over layers and skip the ones without params
         for (int j = 0; j < net->layers().size(); j++) {
           shared_ptr<Layer<Dtype>> layer = net->layers()[j];
-          //skip layers w/o parameters
-          if ((layer->layerOp == nullptr) || !(layer->layerOp->HasParameterSets())) {
-            continue;
-          }
+          if (!layer_need_backward[j])
+              continue;
+
           const MultinodeLayerParameter & mn_layer_param = layer->layer_param().multinode();
           int model_parts = mn_layer_param.model_parts();
           int mn_num_nodes = mn_layer_param.num_nodes();
@@ -105,7 +104,8 @@ namespace caffe {
           }
         }
       }
-      total_update_ = total_send_ = recv_tasks_.size() * (solver_->param().max_iter() - 1);
+      // assumed iter is started from 0
+      total_update_ = total_send_ = recv_tasks_.size() * solver_->param().max_iter();
     }
 
     template <typename Dtype>
@@ -157,14 +157,18 @@ namespace caffe {
         // apply update
         int blob_wise_iter = async_iter_[make_pair(task.param_id_, task.part_id_) ];
         solver_->set_iter(blob_wise_iter);
+
         // TODO: supports partial param update per model parts
         solver_->ApplyUpdate(task.param_id_);
 
+        DLOG(INFO) << "PS (iter " << blob_wise_iter << "): param id=" << task.param_id_ << " weight=" << net_params[task.param_id_]->sumsq_diff();
+        DLOG(INFO) << "PS (iter " << blob_wise_iter << "): param id=" << task.param_id_ << " data=" << net_params[task.param_id_]->sumsq_data();
+        
         //clean up
         solver_->net()->ClearParamDiffs(task.param_id_);
         async_iter_[ make_pair(task.param_id_, task.part_id_) ] += 1;
         update_cnt_ += 1;
-        
+
         // copy model(data) in solver to mpi buffer
         mpi_buf = send_buf_[make_pair(root_rank, task.param_id_)].first;
         caffe_copy(count / task.num_parts_,

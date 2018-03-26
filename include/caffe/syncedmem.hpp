@@ -130,6 +130,10 @@ struct PrvMemDescr {
     PRV_DESCR_MKLDNN
   };
   virtual PrvDescrType get_descr_type() = 0;
+#ifdef CO_SIM
+    virtual void create_reorder_from_prv_cosim(void* cpu_ptr) = 0;
+    virtual void convert_from_prv_cosim(void* cpu_ptr) = 0;
+#endif
 };
 
 /**
@@ -144,12 +148,20 @@ class SyncedMemory {
       : cpu_ptr_(NULL), gpu_ptr_(NULL),
         size_(0), head_(UNINITIALIZED), own_cpu_data_(false),
         cpu_malloc_use_cuda_(false), own_gpu_data_(false), own_prv_data_(false),
-        gpu_device_(-1) {}
+        gpu_device_(-1)
+#ifdef CO_SIM
+        , cpu_ptr_cosim_(NULL), own_cpu_data_cosim_(false)
+#endif
+        {}
   explicit SyncedMemory(size_t size)
       : cpu_ptr_(NULL), gpu_ptr_(NULL),
         size_(size), head_(UNINITIALIZED), own_cpu_data_(false),
         cpu_malloc_use_cuda_(false), own_gpu_data_(false), own_prv_data_(false),
-        gpu_device_(-1) {}
+        gpu_device_(-1)
+#ifdef CO_SIM
+        , cpu_ptr_cosim_(NULL), own_cpu_data_cosim_(false)
+#endif
+        {}
   ~SyncedMemory();
   void swap(shared_ptr<SyncedMemory> other);
   const void* cpu_data();
@@ -159,6 +171,9 @@ class SyncedMemory {
   void* mutable_cpu_data();
   void* mutable_gpu_data();
 
+#ifdef CO_SIM
+    const void * cpu_data_cosim();
+#endif
   const void* cpu_ptr() const { return cpu_ptr_; }
 
   shared_ptr<PrvMemDescr> prv_descriptor_;
@@ -187,7 +202,11 @@ class SyncedMemory {
   bool own_prv_data_;
   int gpu_device_;
   boost::mutex mtx;
-
+#ifdef CO_SIM
+  void* cpu_ptr_cosim_;
+  void to_cpu_cosim();
+  bool own_cpu_data_cosim_;
+#endif
   DISABLE_COPY_AND_ASSIGN(SyncedMemory);
 };  // class SyncedMemory
 

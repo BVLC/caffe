@@ -387,14 +387,14 @@ endif
 
 # Compiler flags
 ifneq (,$(findstring icpc,$(CXX)))
-	CXX_HARDENING_FLAGS += -fstack-protector
+	CXX_HARDENING_FLAGS += -fstack-protector -wd2196
 	#Enable SGD FUSION if use intel compiler
 	COMMON_FLAGS += -DENABLE_SGD_FUSION
 
 else ifneq (,$(findstring clang++,$(CXX)))
 	CXX_HARDENING_FLAGS += -fPIE -fstack-protector
 else ifneq (,$(findstring g++,$(CXX)))
-	ifeq ($(shell echo | awk '{ print $(GCCVERSION) >= 4.9 }'), 1)
+	ifeq ($(shell echo | awk '{print $(GCCVERSION) < 4.9;}'), 0)
 		CXX_HARDENING_FLAGS += -fPIE -fstack-protector-strong
 		#Enable SGD FUSION if gcc version >= 4.9
 		COMMON_FLAGS += -DENABLE_SGD_FUSION
@@ -415,7 +415,7 @@ else
 endif
 
 # Generic flags
-CXX_HARDENING_FLAGS += -fPIC -fno-operator-names -Wformat -Wformat-security -Wall
+CXX_HARDENING_FLAGS += -fPIC -fno-operator-names -Wformat -Wformat-security -Wall -Werror
 LINKER_EXEC_HARDENING_FLAGS += -pie
 
 # Release-only flag
@@ -493,9 +493,24 @@ ifeq ($(DISABLE_BN_FOLDING), 1)
 	COMMON_FLAGS += -DDISABLE_BN_FOLDING
 endif
 
+# Disable Conv + ReLU fusion
+ifeq ($(DISABLE_CONV_RELU_FUSION), 1)
+    COMMON_FLAGS += -DDISABLE_CONV_RELU_FUSION
+endif
+
+# Disable Bn + ReLU fusion
+ifeq ($(DISABLE_BN_RELU_FUSION), 1)
+    COMMON_FLAGS += -DDISABLE_BN_RELU_FUSION
+endif
+
 # Disable the conv/eltwise/relu layer fusion
 ifeq ($(DISABLE_CONV_SUM_FUSION), 1)
 	COMMON_FLAGS += -DDISABLE_CONV_SUM_FUSION
+endif
+
+# Disable sparse
+ifeq ($(DISABLE_SPARSE), 1)
+	COMMON_FLAGS += -DDISABLE_SPARSE
 endif
 
 # Performance monitoring
@@ -515,7 +530,9 @@ include Makefile.dlcp
 BOOST_LDFLAGS += $(foreach boost_lib,$(BOOST_LIBRARIES),-l$(boost_lib))
 ifneq ($(origin BOOST_ROOT), undefined)
 	INCLUDE_DIRS += $(BOOST_ROOT)
+	INCLUDE_DIRS += $(BOOST_ROOT)/include
 	BOOST_LDFLAGS+=-L$(BOOST_ROOT)/stage/lib -Wl,-rpath,$(BOOST_ROOT)/stage/lib
+	BOOST_LDFLAGS+=-L$(BOOST_ROOT)/lib -Wl,-rpath,$(BOOST_ROOT)/lib
 endif
 
 # BLAS configuration (default = MKL)

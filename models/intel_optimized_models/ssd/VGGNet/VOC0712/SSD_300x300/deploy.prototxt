@@ -1613,14 +1613,15 @@ layer {
       nms_threshold: 0.45
       top_k: 400
     }
-    save_output_param {
-      output_directory: "data/ssd_out/VOC2007/SSD_300x300"
-      output_name_prefix: "comp4_det_test_"
-      output_format: "VOC"
-      label_map_file: "data/VOC0712/labelmap_voc.prototxt"
-      name_size_file: "data/VOC0712/test_name_size.txt"
-      num_test_image: 4952
-    }
+    #Only for output to disk
+    #save_output_param {
+    #  output_directory: "data/ssd_out/VOC2007/SSD_300x300"
+    #  output_name_prefix: "comp4_det_test_"
+    #  output_format: "VOC"
+    #  label_map_file: "data/VOC0712/labelmap_voc.prototxt"
+    #  name_size_file: "data/VOC0712/test_name_size.txt"
+    #  num_test_image: 4952
+    #}
     code_type: CENTER_SIZE
     keep_top_k: 200
     confidence_threshold: 0.01

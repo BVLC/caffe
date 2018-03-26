@@ -79,14 +79,22 @@ void DetectionOutputLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       detection_output_param.save_output_param();
   output_directory_ = save_output_param.output_directory();
   if (!output_directory_.empty()) {
-    if (boost::filesystem::is_directory(output_directory_)) {
+    if (boost::filesystem::is_directory(output_directory_)
+#ifdef USE_MLSL
+        && mn::is_root() == true
+#endif
+       )
       boost::filesystem::remove_all(output_directory_);
-    }
     // bug on ret val of create_dir https://svn.boost.org/trac/boost/ticket/7258
+#ifdef USE_MLSL
+    if(mn::is_root() == true){
+#endif
     boost::filesystem::create_directories(output_directory_);
-    if(!boost::filesystem::is_directory(output_directory_)) {
+    if(!boost::filesystem::is_directory(output_directory_))
       LOG(FATAL) << "Failed to create directory: " << output_directory_;
+#ifdef USE_MLSL
     }
+#endif
   }
   output_name_prefix_ = save_output_param.output_name_prefix();
   need_save_ = output_directory_ == "" ? false : true;
@@ -171,6 +179,9 @@ void DetectionOutputLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     if (name_count_ % num_test_image_ == 0) {
       // Clean all outputs.
       if (output_format_ == "VOC") {
+#ifdef USE_MLSL
+        MPI_Barrier(MPI_COMM_WORLD);
+#endif
         boost::filesystem::path output_directory(output_directory_);
         for (map<int, string>::iterator it = label_to_name_.begin();
              it != label_to_name_.end(); ++it) {

@@ -1,0 +1,5 @@
+EXP_DIR: faster_rcnn_alt_opt
+TRAIN:
+  BG_THRESH_LO: 0.0
+TEST:
+  HAS_RPN: True

@@ -234,9 +234,20 @@ void MKLDNNBatchNormLayer<Dtype>::InitBatchNorm(const vector<Blob<Dtype>*>& bott
     EngineParser ep(subengines);
     unsigned subEngineIndex = 0;
     BatchNormFwd_pd = NULL;
+    bool relu = this->layer_param_.batch_norm_param().relu();
+    mkldnn::primitive_attr attr;
+    mkldnn::post_ops ops;
+    if (relu) {
+        ops.append_eltwise(1.f, eltwise_relu, 0.f, 0.f);
+        attr.set_post_ops(ops);
+    }
     for(; subEngineIndex < ep.getNumberOfSubEngines(); subEngineIndex++) {
       try {
-        BatchNormFwd_pd.reset(new batch_normalization_forward::primitive_desc(BatchNormFwd_desc,
+        if (relu)
+            BatchNormFwd_pd.reset(new batch_normalization_forward::primitive_desc(BatchNormFwd_desc, attr,
+                ep.getMKLDNNSubEngine(subEngineIndex)));
+        else
+            BatchNormFwd_pd.reset(new batch_normalization_forward::primitive_desc(BatchNormFwd_desc,
                 ep.getMKLDNNSubEngine(subEngineIndex)));
       }
       catch(...) {
@@ -249,7 +260,13 @@ void MKLDNNBatchNormLayer<Dtype>::InitBatchNorm(const vector<Blob<Dtype>*>& bott
 
     // ---- Create memory  ---------------------
     if (use_weight_bias_) {
-        scaleshift_memory.reset(new memory(BatchNormFwd_pd->weights_primitive_desc(), this->scaleshift_blob_->mutable_cpu_data()));
+        //For test in train, memory address of blobs_[3] and blobs_[4] will be changed when share data from train net. If the address
+        // of blobs_[3] and blobs_[4] are continued, we will use them immediately, otherwise we will copy them to scaleshift_blob_ in Forward.
+        if((this->blobs_[3]->mutable_cpu_data() + this->blobs_[3]->offset(channels_)) == this->blobs_[4]->mutable_cpu_data()){
+            scaleshift_memory.reset(new memory(BatchNormFwd_pd->weights_primitive_desc(), this->blobs_[3]->mutable_cpu_data()));
+        }else {
+            scaleshift_memory.reset(new memory(BatchNormFwd_pd->weights_primitive_desc(), this->scaleshift_blob_->mutable_cpu_data()));
+        }
     }
 
     // ---  init primitive and prv_memory descriptors ----------------------
@@ -380,6 +397,11 @@ void MKLDNNBatchNormLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom
     fwd_bottom_data->sync_before_read();
     // update top that head at prv
     fwd_top_data->sync_before_write();
+
+    if((this->blobs_[3]->mutable_cpu_data() + this->blobs_[3]->offset(channels_)) != this->blobs_[4]->mutable_cpu_data()){
+        caffe_copy(channels_, this->blobs_[3]->cpu_data(), this->scaleshift_blob_->mutable_cpu_data());
+        caffe_copy(channels_, this->blobs_[4]->cpu_data(), this->scaleshift_blob_->mutable_cpu_data() + scaleshift_blob_->offset(channels_));
+    }
 
     for (int stats_batch_idx = 0; stats_batch_idx < num_stats_batches_; stats_batch_idx++) {
       if (use_global_stats_) {

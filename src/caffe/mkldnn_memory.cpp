@@ -108,20 +108,30 @@ void MKLDNNMemoryDescriptorBase<Dtype>::create_reorder_descriptors(std::vector<f
 
     primitive_attr attri;
     int mask = 0;
+    if(scale.size() > 1 || scale_ext.size() > 1){
+#ifdef DEBUG
+        LOG(INFO)<<"multi-channel";
+#endif
+        int oc_dim_id = 0;
+        mask = 1 << oc_dim_id;
+    }
 
+    int count = scale.size();
     if ( *_usr_memory_pd != *_prv_memory_pd) {
-        std::vector<float> scales_u2p;
-        for(int i=0; i<scale.size(); i++){
-            scales_u2p.push_back(scale[i]);
+        std::vector<float> scales_u2p(count);
+        #pragma omp parallel for if (count > 1)
+        for(int i=0; i < count; i++){
+            scales_u2p[i] = scale[i];
         }
         attri.set_output_scales(mask, scales_u2p);
         attri.set_int_output_round_mode(round_nearest);
         _reorder_usr2prv_pd = shared_ptr<reorder::primitive_desc>(
                 new reorder::primitive_desc(*_usr_memory_pd, *_prv_memory_pd, attri));
 
-        std::vector<float> scales_p2u;
-        for(int i=0; i<scale.size(); i++){
-            scales_p2u.push_back(1. / scale[i]);
+        std::vector<float> scales_p2u(count);
+        #pragma omp parallel for if (count > 1)
+        for(int i=0; i < count; i++){
+            scales_p2u[i] = (1. / scale[i]);
         }
         attri.set_output_scales(mask, scales_p2u); 
         attri.set_int_output_round_mode(round_nearest);
@@ -135,10 +145,12 @@ void MKLDNNMemoryDescriptorBase<Dtype>::create_reorder_descriptors(std::vector<f
 #endif
             _reorder_extprv2prv_pd = NULL;
         }else{
-            std::vector<float> scales_e2p;
-            for(int i=0; i<scale.size(); i++){
-                float shift_scale = scale[i] / scale_ext[i]; //fp32->int8 blob_prv_mkldnn_mem_descr->get_scale() will always be 0 ?
-                scales_e2p.push_back(shift_scale);
+            std::vector<float> scales_e2p(count);
+            float shift_scale;
+            #pragma omp parallel for if (count > 1)
+            for(int i=0; i < count; i++){
+                shift_scale = scale[i] / scale_ext[i]; //fp32->int8 blob_prv_mkldnn_mem_descr->get_scale() will always be 0 ?
+                scales_e2p[i] = shift_scale;
             }
             attri.set_output_scales(mask, scales_e2p);
             attri.set_int_output_round_mode(round_nearest);
@@ -156,22 +168,33 @@ void MKLDNNMemoryDescriptorBase<Dtype>::create_reorder_descriptors(std::vector<i
 
     primitive_attr attri;
     int mask = 0;
+    if(fl.size() > 1 || fl_ext.size() > 1){
+#ifdef DEBUG
+        LOG(INFO)<<"multi-channel";
+#endif
+        int oc_dim_id = 0;
+        mask = 1 << oc_dim_id;
+    }
 
+    int count = fl.size();
+    float scale;
     if ( *_usr_memory_pd != *_prv_memory_pd) {
-        std::vector<float> scales_u2p;
-        for(int i=0; i<fl.size(); i++){
-            float scale = pow(2, fl[i]);
-            scales_u2p.push_back(scale);
+        std::vector<float> scales_u2p(count);
+        #pragma omp parallel for if (count > 1)
+        for(int i = 0; i < count; i++){
+            scale = pow(2, fl[i]);
+            scales_u2p[i] = scale;
         }
         attri.set_output_scales(mask, scales_u2p);
         attri.set_int_output_round_mode(round_nearest);
         _reorder_usr2prv_pd = shared_ptr<reorder::primitive_desc>(
                 new reorder::primitive_desc(*_usr_memory_pd, *_prv_memory_pd, attri));
 
-        std::vector<float> scales_p2u;
-        for(int i=0; i<fl.size(); i++){
-            float scale = pow(2, -fl[i]);
-            scales_p2u.push_back(scale);
+        std::vector<float> scales_p2u(count);
+        #pragma omp parallel for if (count > 1)
+        for(int i = 0; i < count; i++){
+          scale = pow(2, -fl[i]);
+          scales_p2u[i] = scale;
         }
         attri.set_output_scales(mask, scales_p2u);
         attri.set_int_output_round_mode(round_nearest);
@@ -185,11 +208,13 @@ void MKLDNNMemoryDescriptorBase<Dtype>::create_reorder_descriptors(std::vector<i
 #endif
             _reorder_extprv2prv_pd = NULL;
         }else{
-            std::vector<float> scales_e2p;
-            for(int i=0; i<fl.size(); i++){
-                int shift_fl = fl[i] - fl_ext[i]; //fp32->int8 blob_prv_mkldnn_mem_descr->get_fl() will always be 0 ?
-                float scale = pow(2, shift_fl);
-                scales_e2p.push_back(scale);
+            std::vector<float> scales_e2p(count);
+            int shift_fl;
+            #pragma omp parallel for if (count > 1)
+            for(int i = 0; i < count; i++){
+                shift_fl = fl[i] - fl_ext[i]; //fp32->int8 blob_prv_mkldnn_mem_descr->get_fl() will always be 0 ?
+                scale = pow(2, shift_fl);
+                scales_e2p[i] = scale;
             }
             attri.set_output_scales(mask, scales_e2p);
             attri.set_int_output_round_mode(round_nearest);
@@ -283,7 +308,46 @@ void MKLDNNMemoryDescriptor<Dtype, is_diff>::convert_to_prv(void* cpu_ptr)
     this->_reorder_usr2prv.submit();
     PERFORMANCE_MEASUREMENT_END_STATIC("mkldnn_conversion");
 }
+#ifdef CO_SIM
+template <typename Dtype, bool is_diff>
+void MKLDNNMemoryDescriptor<Dtype, is_diff>::convert_from_prv_cosim(void* cpu_ptr_cosim)
+{
+    if(this->_reorder_prv2usr_pd == NULL)
+        return;
+    create_reorder_from_prv_cosim(cpu_ptr_cosim);
+    this->_reorder_prv2usr_cosim.submit();
 
+}
+
+template <typename Dtype, bool is_diff>
+void MKLDNNMemoryDescriptor<Dtype, is_diff>::create_reorder_from_prv_cosim(void* cpu_ptr_cosim)
+{
+    CHECK(cpu_ptr_cosim);
+    CHECK(this->_usr_memory_pd);
+    CHECK(this->_prv_memory_pd);
+    CHECK(this->_reorder_prv2usr_pd);
+
+    this->_usr_memory_cosim = this->_usr_memory;
+    this->_reorder_prv2usr_cosim.aprimitive = this->_reorder_prv2usr.aprimitive;
+
+    // Used to save data copy from prv.
+    this->_prv_memory_cosim.reset(new memory(*this->_prv_memory_pd));
+
+    // Copy prv data to _prv_memory_cosim.
+    memcpy(this->_prv_memory_cosim->get_data_handle(), this->get_prv_ptr(), this->prv_size());
+
+    // Wrap _prv_memory_cosim.
+    this->at_prv_cosim.reset(new primitive::at(*this->_prv_memory_cosim));
+
+    if(this->_usr_memory == NULL || this->_cpu_ptr != cpu_ptr_cosim)
+        this->_usr_memory_cosim.reset(new memory(*this->_usr_memory_pd, cpu_ptr_cosim));
+    if(this->_reorder_prv2usr.aprimitive == NULL || this->_cpu_ptr != cpu_ptr_cosim){
+
+        // Create primitive for reorder.
+        this->_reorder_prv2usr_cosim.aprimitive.reset(new reorder(*this->_reorder_prv2usr_pd, *this->at_prv_cosim, *this->_usr_memory_cosim));
+    }
+}
+#endif
 template <typename Dtype, bool is_diff>
 void MKLDNNMemoryDescriptor<Dtype, is_diff>::create_reorder_from_prv(void* cpu_ptr)
 {
@@ -488,7 +552,7 @@ void MKLDNNMemoryDescriptor<Dtype, is_diff>::sync_before_read()
         this->convert_to_prv(const_cast<Dtype*>(is_diff ? this->_blob->cpu_diff() : this->_blob->cpu_data()));
         // if blob has not prv descriptor then set it to avoid conversions on next iterations
         if (is_diff) {
-            this->_blob->set_prv_diff_descriptor(this->get_shared_ptr(), true);
+            this->_blob->set_prv_diff_descriptor(this->get_shared_ptr(), false);
             // Original:
             // below line designated to set correspondent SyncedMemory->_head to HEAD_AT_CPU
             // TODO: need to optimize

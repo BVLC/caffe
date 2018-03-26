@@ -86,6 +86,7 @@ class DataReader {
   class DBWrapper  {
    public:
     explicit DBWrapper(const LayerParameter& param);
+    virtual ~DBWrapper();
     virtual string value() = 0;
     virtual void Next() = 0;
    protected:

@@ -56,35 +56,59 @@ void RMSPropSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
   Dtype delta = this->param_.delta();
   Dtype rms_decay = this->param_.rms_decay();
   Dtype local_rate = rate * net_params_lr[param_id];
+  Dtype momentum = this->param_.momentum();
+  const Dtype* diff_ptr = NULL;
+  Dtype* mutable_diff_ptr = NULL;
 
   switch (Caffe::mode()) {
   case Caffe::CPU:
+    if (net_params[param_id]->prv_diff()
+        && (net_params[param_id]->prv_diff_count()
+            == net_params[param_id]->count())) {
+      diff_ptr = net_params[param_id]->prv_diff();
+      mutable_diff_ptr = net_params[param_id]->mutable_prv_diff();
+    } else {
+      diff_ptr = net_params[param_id]->cpu_diff();
+      mutable_diff_ptr = net_params[param_id]->mutable_cpu_diff();
+    }
+
     // compute square of gradient in update
     caffe_powx(net_params[param_id]->count(),
-        net_params[param_id]->cpu_diff(), Dtype(2),
-        this->update_[param_id]->mutable_cpu_data());
+      diff_ptr, Dtype(2),
+      this->update_[param_id]->mutable_cpu_data());
 
     // update history
     caffe_cpu_axpby(net_params[param_id] -> count(),
-        Dtype(1-rms_decay), this->update_[param_id]->cpu_data(),
-        rms_decay, this->history_[param_id]-> mutable_cpu_data());
+      Dtype(1-rms_decay), this->update_[param_id]->cpu_data(),
+      rms_decay, this->history_[param_id]-> mutable_cpu_data());
+
+    // copy
+    caffe_copy(net_params[param_id]->count(),
+      this->history_[param_id]->cpu_data(),
+      this->update_[param_id]->mutable_cpu_data());
+
+    // add delta
+    caffe_add_scalar(net_params[param_id]->count(),
+      delta, this->update_[param_id]->mutable_cpu_data());
 
     // prepare update
     caffe_powx(net_params[param_id]->count(),
-        this->history_[param_id]->cpu_data(), Dtype(0.5),
-        this->update_[param_id]->mutable_cpu_data());
-
-    caffe_add_scalar(net_params[param_id]->count(),
-        delta, this->update_[param_id]->mutable_cpu_data());
+      this->update_[param_id]->cpu_data(), Dtype(0.5),
+      this->update_[param_id]->mutable_cpu_data());
 
     caffe_div(net_params[param_id]->count(),
-        net_params[param_id]->cpu_diff(), this->update_[param_id]->cpu_data(),
-        this->update_[param_id]->mutable_cpu_data());
+      diff_ptr, this->update_[param_id]->cpu_data(),
+      this->update_[param_id]->mutable_cpu_data());
 
     // scale and copy
     caffe_cpu_axpby(net_params[param_id]->count(), local_rate,
-        this->update_[param_id]->cpu_data(), Dtype(0),
-        net_params[param_id]->mutable_cpu_diff());
+      this->update_[param_id]->cpu_data(), momentum,
+      this->temp_[param_id]->mutable_cpu_data());
+
+    caffe_copy(net_params[param_id]->count(),
+      this->temp_[param_id]->cpu_data(),
+      mutable_diff_ptr);
+
     break;
   case Caffe::GPU:
 #ifndef CPU_ONLY

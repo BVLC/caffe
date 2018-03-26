@@ -287,7 +287,7 @@ class Net {
   *        then scale layer can be dropped
   */
   // TODO: Make it decent C++ anonymous function etc.
-  static void CompilationRuleOne(const NetParameter& param,
+  static void CompilationRuleRemoveScale(const NetParameter& param,
                                  NetParameter* param_compiled);
   /**
   * @brief This is rule that analyze layer if it is of type MKLDNNReLU and if that is the case
@@ -296,7 +296,7 @@ class Net {
   */
 
 
-  static void CompilationRuleTwo(const NetParameter& param,
+  static void CompilationRuleConvReluFusion(const NetParameter& param,
                                  NetParameter* param_compiled);
 
   /**
@@ -304,14 +304,29 @@ class Net {
   *        and is to perform in place computation 
   *        if positive then make it doing out-ofplace computation
   */
-  static void CompilationRuleThree(const NetParameter& param,
+  static void CompilationRuleBNInplace(const NetParameter& param,
                              NetParameter* param_compiled);
 
   /**
   * @brief This is rule analyze for conv/elt/relu fusion.
   */
-  static void CompilationRuleFour(const NetParameter& param,
+  static void CompilationRuleConvSumFusion(const NetParameter& param,
                              NetParameter* param_compiled);
+
+   /**
+  * @brief This is rule analyze for general sparse.
+  */
+  static void CompilationRuleSparse(const NetParameter& param,
+                             NetParameter* param_compiled);
+
+  /**
+  * @brief This is rule that analyze layer if it is of type MKLDNNReLU and if that is the case
+  *        and previous layer which serves as input layer to MKLDNNReLU Layer is MKLDNNBN
+  *        then MKLDNNReLU layer can be dropped
+  */
+  static void CompilationRuleFuseBnRelu(const NetParameter& param,
+                                 NetParameter* param_compiled);
+
   /**
    * @brief If find "Conv--BN--Scale" in current network, merge BN and Scale layer into Convolution
    * layers, this optimization only works in caffe TEST phase now.

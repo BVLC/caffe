@@ -345,7 +345,7 @@ class GradientBasedSolverTest : public MultiDeviceTest<TypeParam> {
       } else if (solver_->type() == string("RMSProp")) {
         const Dtype rms_decay = 0.95;
         update_value /= std::sqrt(rms_decay*history_value
-            + grad * grad * (1 - rms_decay)) + delta_;
+            + grad * grad * (1 - rms_decay) + delta_);
       } else if (solver_->type() == string("AdaDelta")) {
         const Dtype update_history_value = (i == D) ?
             history[1 + num_param_blobs]->cpu_data()[0] :
@@ -1250,6 +1250,7 @@ class RMSPropSolverTest : public GradientBasedSolverTest<TypeParam> {
     const Dtype rms_decay = 0.95;
     SolverParameter new_param = param;
     new_param.set_rms_decay(rms_decay);
+    new_param.set_momentum(0);
     this->solver_.reset(new RMSPropSolver<Dtype>(new_param));
   }
 };

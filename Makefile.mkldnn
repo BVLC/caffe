@@ -24,6 +24,17 @@ endif
 MKLDNN_GITHUB := https://github.com/01org/mkl-dnn.git
 MKLDNN_CMAKE_FLAGS += $(MKLDNN_SRCDIR) -DCMAKE_INSTALL_PREFIX=$(MKLDNN_INSTALLDIR) -DMKLROOT=${MKL_ROOTDIR} -B$(MKLDNN_BUILDDIR) -DCMAKE_CXX_COMPILER="$(MKLDNN_CXX)" -DCMAKE_C_COMPILER="$(MKLDNN_CC)"
 
+# Disable MKLDNN download by customized setting
+ifeq ($(DISABLE_MKLDNN_DOWNLOAD), 1)
+disable_mkldnn_download_info:
+	@echo "MKLDNN download is disabled by customized setting! If MKLDNNROOT is not set in the ENV, may cause compile error in the following steps!"
+mkldnn_download:
+mkldnn_build:
+
+else
+disable_mkldnn_download_info:
+	@echo "MKLDNN download is enabled by customized setting!"
+
 ifeq ("$(wildcard $(MKLDNN_INSTALLDIR)/include/mkldnn.hpp)", "")
 mkldnn_download:
 	git clone --no-checkout $(MKLDNN_GITHUB) $(MKLDNN_TMPDIR)
@@ -37,6 +48,7 @@ mkldnn_build: mkldnn_download
 else
 mkldnn_download:
 mkldnn_build:
+endif
 endif
 
 mkldnn_clean:
@@ -55,10 +67,14 @@ mkldnnroot_notset: mkldnn_build
 	$(eval MKLDNN_LDFLAGS += -lmkldnn) \
 	$(eval MKLDNN_LDFLAGS += -L$(MKLDNN_INSTALLDIR)/lib -Wl,-rpath,${MKLDNN_INSTALLDIR}/lib)
 
+
+
 ifneq ($(origin MKLDNNROOT), undefined)
 ifdef MKLDNNROOT
 mkldnn: mkldnnroot_set
+mkldnn: disable_mkldnn_download_info
 endif
 else
 mkldnn: mkldnnroot_notset
+mkldnn: disable_mkldnn_download_info
 endif
