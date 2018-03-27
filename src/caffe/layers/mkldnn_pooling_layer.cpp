@@ -278,11 +278,11 @@ void MKLDNNPoolingLayer<Dtype>::InitPoolingFwd(const vector<Blob<Dtype>*>& botto
 
     std::vector<int> fl;
     std::vector<float> scale;
-    bool bottom_is_float = false;
+    bool bottom_scale_is_float = false;
     if (bottom_data_is_prv) {
         shared_ptr<MKLDNNMemoryDescriptor<Dtype, false> > mem_descr
             = get_mkldnn_prv_descriptor<Dtype, false>(bottom[0]);
-        bottom_is_float = mem_descr->get_float();
+        bottom_scale_is_float = mem_descr->get_float();
         cmfmt = static_cast<memory::format>(mem_descr->prv_memory_pd()->desc().data.format);
         mpcsn = static_cast<memory::data_type>(mem_descr->prv_memory_pd()->desc().data.data_type);
         fl.push_back(mem_descr->get_fl(0));
@@ -337,14 +337,14 @@ void MKLDNNPoolingLayer<Dtype>::InitPoolingFwd(const vector<Blob<Dtype>*>& botto
             : max_idx_.mutable_cpu_data();
 
     // ---  init primitive and prv_memory descriptors ----------------------
-    if(bottom_is_float){
+    if(bottom_scale_is_float){
         fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_bottom_data_mpd, prv_fwd_bottom_data_mpd, bottom[0], this, true, scale));
     } else {
         fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_bottom_data_mpd, prv_fwd_bottom_data_mpd, bottom[0], this, fl));
     }
     fwd_bottom_data_primitive = fwd_bottom_data->create_input(false);
 
-    if(bottom_is_float){
+    if(bottom_scale_is_float){
         fwd_top_data.reset(new MKLDNNData<Dtype>(usr_top_data_mpd, prv_fwd_top_data_mpd, top[0], this, true, scale));
     } else{
         fwd_top_data.reset(new MKLDNNData<Dtype>(usr_top_data_mpd, prv_fwd_top_data_mpd, top[0], this, fl));

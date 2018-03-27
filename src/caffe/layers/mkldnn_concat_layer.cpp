@@ -302,8 +302,10 @@ void MKLDNNConcatLayer<Dtype>::InitConcatFwd(const vector<Blob<Dtype>*>& bottom,
           if(scale != 1. && scale < scale_min) scale_min = scale;
       }
   }
-  
-  bool bottom_is_float = false;
+  vector<memory::format> src_mfmts;
+  bool bottom_scale_is_float = false;
+  std::vector<float> bottom_scales(num_concats_, 1.);
+  std::vector<int> bottom_fls(num_concats_, 0);
   for (auto i = 0; i < num_concats_; i++) {
     fwd_bottom_data.push_back(boost::shared_ptr<MKLDNNData<Dtype> >());
 
@@ -335,15 +337,17 @@ void MKLDNNConcatLayer<Dtype>::InitConcatFwd(const vector<Blob<Dtype>*>& bottom,
       scale = 1.;
       shared_ptr<MKLDNNMemoryDescriptor<Dtype, false> > mem_descr
         = get_mkldnn_prv_descriptor<Dtype, false>(bottom[i]);
-      bottom_is_float = mem_descr->get_float();
+      bottom_scale_is_float = mem_descr->get_float();
       src_mfmt = static_cast<memory::format>(
           mem_descr->prv_memory_pd()->desc().data.format);
       prv_dt = static_cast<memory::data_type>(mem_descr->prv_memory_pd()->desc().data.data_type);
       prv_src_mpd.reset(new memory::primitive_desc(
             {input_tz, prv_dt, src_mfmt}, cpu_engine));
       fl = mem_descr->get_fl(0);
+      bottom_fls[i] = fl;
       if(fl != 0) fl = fl_min;
       scale = mem_descr->get_scale(0);
+      bottom_scales[i] = scale;
       if(scale != 1.) scale = scale_min;
     }
     std::vector<int> fl_bottom;
@@ -351,10 +355,11 @@ void MKLDNNConcatLayer<Dtype>::InitConcatFwd(const vector<Blob<Dtype>*>& bottom,
     std::vector<float> scale_bottom;
     scale_bottom.push_back(scale);
 
+    src_mfmts.push_back(src_mfmt);
     srcs_mpd.push_back(memory::primitive_desc(
           {input_tz, prv_dt, src_mfmt}, cpu_engine));
 
-    if(bottom_is_float){
+    if(bottom_scale_is_float){
         fwd_bottom_data[i].reset(new MKLDNNData<Dtype>(
               usr_src_mpd, prv_src_mpd, bottom[i], this, true, scale_bottom));
     } else{
@@ -377,7 +382,7 @@ void MKLDNNConcatLayer<Dtype>::InitConcatFwd(const vector<Blob<Dtype>*>& bottom,
   fl_top.push_back(fl_min);
   std::vector<float> scale_top;
   scale_top.push_back(scale_min);
-  if(bottom_is_float){
+  if(bottom_scale_is_float){
       fwd_top_data.reset(new MKLDNNData<Dtype>(usr_dst_mpd, prv_dst_mpd, top[0],
             this, true, scale_top));
   } else{
@@ -386,6 +391,36 @@ void MKLDNNConcatLayer<Dtype>::InitConcatFwd(const vector<Blob<Dtype>*>& bottom,
   }
 
   fwd_output_memory = fwd_top_data->create_output_memory();
+
+  memory::format base_mfmt = mfmt_nchw;
+  float base_scale = 1.;
+  int base_fl = 0;
+  this->in_place_ = true;
+  for(auto i = 0; i < num_concats_; i++){
+    if(i == 0) {
+      base_mfmt = src_mfmts[i];
+      base_scale = bottom_scales[i];
+      base_fl = bottom_fls[i];
+    }
+    else if(bottom[i]->shape()[0] != 1 || base_mfmt != src_mfmts[i] || (bottom_scale_is_float && fabs(base_scale-bottom_scales[i]) > FLT_MIN) || (!bottom_scale_is_float && abs(base_fl-bottom_fls[i]) > 0)){
+      this->in_place_ = false;
+      break;
+    }
+  }
+  
+  if(this->in_place_ && this->phase_ == TEST) {
+    size_t offset = 0;      
+    for(auto i = 0; i < num_concats_; i++){
+      if(bottom[i]->prv_data()){
+        caffe_copy(bottom[i]->count(), static_cast<Dtype*>(fwd_bottom_data[i]->get_prv_memory()->get_data_handle()), static_cast<Dtype*>(fwd_output_memory->get_data_handle()) + offset);
+        fwd_bottom_data[i]->get_prv_memory()->set_data_handle(static_cast<Dtype*>(fwd_output_memory->get_data_handle()) + offset);
+      } else{
+        caffe_copy(bottom[i]->count(), bottom[i]->cpu_data(), static_cast<Dtype*>(fwd_output_memory->get_data_handle()) + offset);
+        bottom[i]->set_cpu_data(static_cast<Dtype*>(fwd_output_memory->get_data_handle()) + offset);
+      }
+      offset += bottom[i]->count();
+    }
+  }
 
   concatFwd.reset(new concat(*concatFwd_pd, fwd_input_primitives_at_, *fwd_output_memory));
 
@@ -501,17 +536,19 @@ void MKLDNNConcatLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 
   if ((NULL == concatFwd_pd) || (true == this->reshape))
     InitConcatFwd(bottom, top);
-  for (auto i = 0; i < num_concats_; i++) {
-    // making reorders if needed.
-    fwd_bottom_data[i]->sync_before_read();
+  if(!this->in_place_ || this->phase_ != TEST) {
+    for (auto i = 0; i < num_concats_; i++) {
+      // making reorders if needed.
+      fwd_bottom_data[i]->sync_before_read();
+    }
+    // update top that head at prv
+    fwd_top_data->sync_before_write();
+  
+    PERFORMANCE_EVENT_ID_INIT(perf_id_fw_, PERFORMANCE_MKLDNN_NAME("FW"));
+    PERFORMANCE_MEASUREMENT_BEGIN();
+    concatFwd.submit();
+    PERFORMANCE_MEASUREMENT_END_ID(perf_id_fw_);
   }
-  // update top that head at prv
-  fwd_top_data->sync_before_write();
-
-  PERFORMANCE_EVENT_ID_INIT(perf_id_fw_, PERFORMANCE_MKLDNN_NAME("FW"));
-  PERFORMANCE_MEASUREMENT_BEGIN();
-  concatFwd.submit();
-  PERFORMANCE_MEASUREMENT_END_ID(perf_id_fw_);
 }
 
 template <typename Dtype>

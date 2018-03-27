@@ -398,13 +398,13 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
     shared_ptr<MemPD> usr_weights_data_memory_pd(new MemPD({{weights_tz}, mpcsn, weights_mfmt}, cpu_engine));
 
     // ---  init primitive and prv_memory descriptors ----------------------
-    bool bottom_is_float = false;
+    bool bottom_scale_is_float = false;
     if (const_cast<Dtype*>(bottom[0]->prv_data()) != NULL) {
         shared_ptr<MKLDNNMemoryDescriptor<Dtype, false> > blob_prv_mkldnn_mem_descr = get_mkldnn_prv_descriptor<Dtype, false>(bottom[0]);
-        bottom_is_float = blob_prv_mkldnn_mem_descr->get_float();
+        bottom_scale_is_float = blob_prv_mkldnn_mem_descr->get_float();
     }
     if (this->need_quantize_){
-      if(this->is_float_ || bottom_is_float){
+      if(this->is_float_ || bottom_scale_is_float){
         std::vector<float> scale_bottom;
         scale_bottom.push_back(this->scale_in_[0]);
         fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_bottom_data_memory_pd, prv_fwd_bottom_data_memory_pd, bottom[0], this, true, scale_bottom));
@@ -413,7 +413,7 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
         fl_bottom.push_back(this->fl_layer_in_[0]);
         fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_bottom_data_memory_pd, prv_fwd_bottom_data_memory_pd, bottom[0], this, fl_bottom));
       }       
-    } else if(bottom_is_float){
+    } else if(bottom_scale_is_float){
       fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_bottom_data_memory_pd, prv_fwd_bottom_data_memory_pd, bottom[0], this, false));
     } else{
       fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_bottom_data_memory_pd, prv_fwd_bottom_data_memory_pd, bottom[0], this));
@@ -422,7 +422,7 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
     fwd_bottom_data_primitive = fwd_bottom_data->create_input(false);
 
     if (this->need_quantize_){
-      if(this->is_float_ || bottom_is_float){
+      if(this->is_float_ || bottom_scale_is_float){
         std::vector<float> scale_top;
         scale_top.push_back(this->scale_out_[0]);
         fwd_top_data.reset(new MKLDNNData<Dtype>(usr_top_data_memory_pd, prv_fwd_top_data_memory_pd, top[0], this, true, scale_top, is_sum));
@@ -431,7 +431,7 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
         fl_top.push_back(this->fl_layer_out_[0]);
         fwd_top_data.reset(new MKLDNNData<Dtype>(usr_top_data_memory_pd, prv_fwd_top_data_memory_pd, top[0], this, fl_top, is_sum));
       }
-    } else if(bottom_is_float){ 
+    } else if(bottom_scale_is_float){ 
       fwd_top_data.reset(new MKLDNNData<Dtype>(usr_top_data_memory_pd, prv_fwd_top_data_memory_pd, top[0], this, false));
     } else{
       fwd_top_data.reset(new MKLDNNData<Dtype>(usr_top_data_memory_pd, prv_fwd_top_data_memory_pd, top[0], this));
@@ -442,7 +442,7 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
     if (fwd_weights_data == NULL) {
       if (this->need_quantize_){
         int count = 1; //single channel
-        if(this->is_float_ || bottom_is_float){
+        if(this->is_float_ || bottom_scale_is_float){
           if(this->scale_params_.size() > 1){
               count = oc;  //multi channel
           }
@@ -463,7 +463,7 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
           }
           fwd_weights_data.reset(new MKLDNNData<Dtype>(usr_weights_data_memory_pd, prv_fwd_weights_data_memory_pd, this->blobs_[0].get(), this, fl_weight));
         }
-      } else if(bottom_is_float){
+      } else if(bottom_scale_is_float){
         fwd_weights_data.reset(new MKLDNNData<Dtype>(usr_weights_data_memory_pd, prv_fwd_weights_data_memory_pd, this->blobs_[0].get(), this, false));
       } else{
         fwd_weights_data.reset(new MKLDNNData<Dtype>(usr_weights_data_memory_pd, prv_fwd_weights_data_memory_pd, this->blobs_[0].get(), this));
@@ -477,7 +477,7 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
           shared_ptr<MemPD> prv_fwd_bias_data_memory_pd(new MemPD(convFwd_pd->bias_primitive_desc()));
           if (this->need_quantize_){
             int count = 1;  //single channel
-            if(this->is_float_ || bottom_is_float){
+            if(this->is_float_ || bottom_scale_is_float){
               if(this->scale_params_.size() > 1){
                   count = oc;  //multi channel
               }
@@ -498,7 +498,7 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
               }
               fwd_bias_data.reset(new MKLDNNData<Dtype>(usr_bias_data_memory_pd, prv_fwd_bias_data_memory_pd, this->blobs_[1].get(), this, fl_bias));
             }
-          } else if(bottom_is_float){
+          } else if(bottom_scale_is_float){
             fwd_bias_data.reset(new MKLDNNData<Dtype>(usr_bias_data_memory_pd, prv_fwd_bias_data_memory_pd, this->blobs_[1].get(), this, false));
           } else{
             fwd_bias_data.reset(new MKLDNNData<Dtype>(usr_bias_data_memory_pd, prv_fwd_bias_data_memory_pd, this->blobs_[1].get(), this));

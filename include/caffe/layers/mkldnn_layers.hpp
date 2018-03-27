@@ -473,6 +473,7 @@ private:
     vector<shared_ptr<MKLDNNDiff<Dtype> > > bwd_bottom_diff;
     vector<MKLDNNPrimitive<Dtype> > reorders;
     vector<int> split_dims;
+    bool in_place_;
 
     int32_t num_, width_, height_, channels_, num_concats_;
     int concat_dimension;
