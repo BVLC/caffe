@@ -938,7 +938,7 @@ message PoolingParameter {
   // If dynamic_ave_pool_size is set to true, every iteration of AVE pooling will only
   // concerns valid elements: (sum of elements within kernel)/(valid elements num)
   // Otherwise, invalid padded elements will always be counted in the denominator
-  optional bool dynamic_ave_pool_size = 13 [default = false];
+  optional bool valid_ave_pooling = 13 [default = false];
 }
 
 message PowerParameter {
