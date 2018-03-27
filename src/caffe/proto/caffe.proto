@@ -935,9 +935,8 @@ message PoolingParameter {
   // If global_pooling then it will pool over the size of the bottom by doing
   // kernel_h = bottom->height and kernel_w = bottom->width
   optional bool global_pooling = 12 [default = false];
-  // If dynamic_ave_pool_size is set to true, every iteration of AVE pooling will only
-  // concerns valid elements: (sum of elements within kernel)/(valid elements num)
-  // Otherwise, invalid padded elements will always be counted in the denominator
+  // valid_ave_pooling will ignore the padded elements when doing AVE pooling
+  // calculation, since the padded elements are invalid.
   optional bool valid_ave_pooling = 13 [default = false];
 }
 
