@@ -97,3 +97,12 @@ LOCK
 LOG*
 CURRENT
 MANIFEST-*
+
+#leisu
+cscope.files
+cscope.in.out
+cscope.out
+cscope.po.out
+filenametags
+tags
+
