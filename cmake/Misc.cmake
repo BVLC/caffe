@@ -71,10 +71,3 @@ if(UNIX OR APPLE)
                                      COMMENT "Adding symlink: <caffe_root>/build -> ${PROJECT_BINARY_DIR}" )
 endif()
 
-# ---[ Set debug postfix
-set(Caffe_DEBUG_POSTFIX "-d")
-
-set(Caffe_POSTFIX "")
-if(CMAKE_BUILD_TYPE MATCHES "Debug")
-  set(Caffe_POSTFIX ${Caffe_DEBUG_POSTFIX})
-endif()
