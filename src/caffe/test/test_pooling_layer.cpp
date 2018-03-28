@@ -1197,7 +1197,7 @@ TYPED_TEST(CuDNNPoolingLayerTest, TestForwardAveValidCuDNN) {
   TypeParam epsilon = 1e-5;
   EXPECT_NEAR(this->blob_top_->cpu_data()[0], 3.0, epsilon);
 }
- 
+
 TYPED_TEST(CuDNNPoolingLayerTest, TestGradientAveCuDNN) {
   for (int kernel_h = 3; kernel_h <= 4; kernel_h++) {
     for (int kernel_w = 3; kernel_w <= 4; kernel_w++) {
