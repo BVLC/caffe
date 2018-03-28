@@ -49,7 +49,9 @@ def scope_lenet(batch_size):
                         # this can be done by assigning the top name to a dash
                         block2 = n._ = L.Pooling(n.conv, name='pool', pool=P.Pooling.AVE)
 
-            n.ip1 = L.InnerProduct(block2, num_output=500)
+            # nested arg scope
+            with arg_scope(['InnerProduct'], weight_filler=dict(type='msra')):
+                n.ip1 = L.InnerProduct(block2, num_output=500)
             with arg_scope(['ReLU'], in_place=True):
                 n.relu = L.ReLU(n.ip1)
             n.ip2 = L.InnerProduct(n.relu, num_output=10)
@@ -116,7 +118,9 @@ class TestNetSpec(unittest.TestCase):
         self.assertEqual(net.layer[4].pooling_param.kernel_size, 2)
         self.assertEqual(net.layer[4].pooling_param.stride, 2)
         self.assertEqual(net.layer[4].pooling_param.pool, P.Pooling.AVE)
+        self.assertEqual(net.layer[5].inner_product_param.weight_filler.type, 'msra')
         self.assertEqual(net.layer[6].bottom, net.layer[6].top)
+        self.assertEqual(net.layer[7].inner_product_param.weight_filler.type, 'xavier')
 
 
     def test_lenet(self):

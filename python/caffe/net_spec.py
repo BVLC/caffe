@@ -302,21 +302,14 @@ class arg_scope(object):
         for layer_type in layer_types:
             self.layer_fns.append(getattr(layers, layer_type))
         self.layer_types = layer_types
-        self.check_args(kwargs)
         self.args = kwargs
-        if 'param' in kwargs:
-            assert len(self.layer_fns) == 1
-
-    def check_args(self, kwargs):
-        for layer_type in self.layer_types:
-            for key, value in six.iteritems(kwargs):
-                if key in ('param', 'in_place'):
-                    continue
-                getattr(getattr(caffe_pb2, layer_type + 'Parameter')(), key)
+        self.old = {}
 
     def __enter__(self):
         global ARG_SCOPE_KEYS
         for layer_type in self.layer_types:
+            # keep old args
+            self.old[layer_type] = ARG_SCOPE_KEYS[layer_type].copy()
             for key, value in six.iteritems(self.args):
                 ARG_SCOPE_KEYS[layer_type][key] = value
 
@@ -327,6 +320,9 @@ class arg_scope(object):
             keys = self.args.keys()
             for key in keys:
                 layer_arg.pop(key)
+            # restore old layer args if this is a nested arg scope
+            ARG_SCOPE_KEYS[layer_type] = self.old[layer_type]
+
 
 def get_scope_name():
     global NAME_SCOPE_KEYS
