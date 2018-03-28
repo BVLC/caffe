@@ -1171,7 +1171,7 @@ TYPED_TEST(CuDNNPoolingLayerTest, TestForwardAveCuDNN) {
   TypeParam epsilon = 1e-5;
   EXPECT_NEAR(this->blob_top_->cpu_data()[0], 2.0, epsilon);
 }
-  
+
 TYPED_TEST(CuDNNPoolingLayerTest, TestForwardAveValidCuDNN) {
   LayerParameter layer_param;
   PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
