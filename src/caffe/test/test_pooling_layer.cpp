@@ -572,6 +572,33 @@ TYPED_TEST(PoolingLayerTest, TestForwardAve) {
   EXPECT_NEAR(this->blob_top_->cpu_data()[8], 8.0 / 9, epsilon);
 }
 
+TYPED_TEST(PoolingLayerTest, TestForwardAveValid) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
+  pooling_param->set_kernel_size(3);
+  pooling_param->set_stride(1);
+  pooling_param->set_pad(1);
+  pooling_param->set_pool(PoolingParameter_PoolMethod_AVE);
+  pooling_param->set_valid_ave_pooling(true);
+  this->blob_bottom_->Reshape(1, 1, 3, 3);
+  FillerParameter filler_param;
+  filler_param.set_value(Dtype(4));
+  ConstantFiller<Dtype> filler(filler_param);
+  filler.Fill(this->blob_bottom_);
+  PoolingLayer<Dtype> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  EXPECT_EQ(this->blob_top_->num(), 1);
+  EXPECT_EQ(this->blob_top_->channels(), 1);
+  EXPECT_EQ(this->blob_top_->height(), 3);
+  EXPECT_EQ(this->blob_top_->width(), 3);
+  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  Dtype epsilon = 1e-5;
+  for (int idx = 0; idx < 9; idx++) {
+    EXPECT_NEAR(this->blob_top_->cpu_data()[idx], 4.0, epsilon);
+  }
+}
+  
 TYPED_TEST(PoolingLayerTest, TestGradientAve) {
   typedef typename TypeParam::Dtype Dtype;
   for (int kernel_h = 3; kernel_h <= 4; kernel_h++) {
@@ -1144,7 +1171,33 @@ TYPED_TEST(CuDNNPoolingLayerTest, TestForwardAveCuDNN) {
   TypeParam epsilon = 1e-5;
   EXPECT_NEAR(this->blob_top_->cpu_data()[0], 2.0, epsilon);
 }
-
+  
+TYPED_TEST(CuDNNPoolingLayerTest, TestForwardAveValidCuDNN) {
+  LayerParameter layer_param;
+  PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
+  pooling_param->set_kernel_size(3);
+  pooling_param->set_stride(1);
+  // Currently, cuDNN pooling does not support padding, so we use
+  // a simplified version of this test.
+  pooling_param->set_pad(0);
+  pooling_param->set_pool(PoolingParameter_PoolMethod_AVE);
+  pooling_param->set_valid_ave_pooling(true);
+  this->blob_bottom_->Reshape(1, 1, 3, 3);
+  FillerParameter filler_param;
+  filler_param.set_value(TypeParam(3));
+  ConstantFiller<TypeParam> filler(filler_param);
+  filler.Fill(this->blob_bottom_);
+  CuDNNPoolingLayer<TypeParam> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  EXPECT_EQ(this->blob_top_->num(), 1);
+  EXPECT_EQ(this->blob_top_->channels(), 1);
+  EXPECT_EQ(this->blob_top_->height(), 1);
+  EXPECT_EQ(this->blob_top_->width(), 1);
+  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  TypeParam epsilon = 1e-5;
+  EXPECT_NEAR(this->blob_top_->cpu_data()[0], 3.0, epsilon);
+}
+ 
 TYPED_TEST(CuDNNPoolingLayerTest, TestGradientAveCuDNN) {
   for (int kernel_h = 3; kernel_h <= 4; kernel_h++) {
     for (int kernel_w = 3; kernel_w <= 4; kernel_w++) {
