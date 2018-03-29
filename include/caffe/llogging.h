@@ -5,6 +5,8 @@
 #ifndef LLOGGING_H
 #define LLOGGING_H
 
+#include <spdlog/spdlog.h>
+#include <boost/algorithm/string.hpp>
 #include <iostream>
 
 class DateLogger {
@@ -139,14 +141,54 @@ static std::ostream nullstream(0);
 #define DCHECK_NE(x, y) CHECK((x) != (y))
 #endif  // NDEBUG
 
-inline std::ostream& LOG(const std::string &severity,std::ostream &out=std::cout)
+class CaffeLogger
+{
+ public:
+  CaffeLogger(const std::string &severity)
+    :_severity(severity)
+  {
+    _console = spdlog::get("caffe");
+    if (!_console)
+      _console = spdlog::stdout_logger_mt("caffe");
+  }
+
+  ~CaffeLogger()
+    {
+      if (_severity == "none" || _str.empty()) // ignore
+	{}
+      else if (_severity == INFO)
+	_console->info(_str);
+      else if (_severity == WARNING)
+	_console->warn(_str);
+      else if (_severity == ERROR)
+	_console->error(_str);
+    }
+  
+  friend CaffeLogger& operator<<(const CaffeLogger &cl, const std::string &rstr)
+  {
+    std::string str = rstr;
+    const_cast<CaffeLogger&>(cl)._str += str;
+    return const_cast<CaffeLogger&>(cl);
+  }
+
+  friend CaffeLogger& operator<<(const CaffeLogger &cl, const double &d)
+  {
+    std::string str = std::to_string(d);
+    boost::trim_right_if(str,boost::is_any_of("\n"));
+    const_cast<CaffeLogger&>(cl)._str += str;
+    return const_cast<CaffeLogger&>(cl);
+  }
+
+  std::string _severity = INFO;
+  std::shared_ptr<spdlog::logger> _console;
+  std::string _str;
+};
+
+inline CaffeLogger LOG(const std::string &severity,std::ostream &out=std::cout)
 {
   if (severity != FATAL)
   {
-      DateLogger pretty_date;
-      out << std::endl;
-      out << severity << " - " << pretty_date.HumanDate() << " - ";
-      return out;
+    return CaffeLogger(severity);
   }
   else
     {
@@ -154,49 +196,49 @@ inline std::ostream& LOG(const std::string &severity,std::ostream &out=std::cout
     }
 }
 
-inline std::ostream& LOG_IF(const std::string &severity,const bool &condition,std::ostream &out=std::cout)
+inline CaffeLogger LOG_IF(const std::string &severity,const bool &condition,std::ostream &out=std::cout)
 {
   if (condition)
     return LOG(severity,out);
-  else return nullstream;
+  else return CaffeLogger("none");
 }
 
 #ifdef NDEBUG
-inline std::ostream& DFATAL(const std::string &severity, std::ostream &out=std::cout)
+inline CaffeLogger DFATAL(const std::string &severity, std::ostream &out=std::cout)
 {
   (void)severity;
   (void)out;
-  return nullstream;
+  return CaffeLogger("none");
 }
-inline std::ostream& LOG_DFATAL(const std::string &severity, std::ostream &out=std::cout)
+inline CaffeLogger LOG_DFATAL(const std::string &severity, std::ostream &out=std::cout)
 {
   (void)severity;
-  return nullstream;
+  return CaffeLogger("none");
 }
-inline std::ostream& DLOG(const std::string &severity, std::ostream &out=std::cout)
+inline CaffeLogger DLOG(const std::string &severity, std::ostream &out=std::cout)
 {
   (void)severity;
-  return nullstream;
+  return CaffeLogger("none");
 }
 #else
-inline std::ostream& DFATAL(const std::string &severity, std::ostream &out=std::cout)
+inline CaffeLogger DFATAL(const std::string &severity, std::ostream &out=std::cout)
 {
   (void)severity;
   return LOG(FATAL,out);
 }
-inline std::ostream& LOG_DFATAL(const std::string &severity, std::ostream &out=std::cout)
+inline CaffeLogger LOG_DFATAL(const std::string &severity, std::ostream &out=std::cout)
 {
   (void)severity;
   return LOG(FATAL,out);
 }
-inline std::ostream& DLOG(const std::string &severity, std::ostream &out=std::cout)
+inline CaffeLogger DLOG(const std::string &severity, std::ostream &out=std::cout)
 {
   return LOG(severity,out);
 }
 #endif
 
 // Poor man's version...
-inline std::ostream& LOG_EVERY_N(const std::string &severity, const int &n, std::ostream &out=std::cout)
+inline CaffeLogger LOG_EVERY_N(const std::string &severity, const int &n, std::ostream &out=std::cout)
 {
   (void)n;
   return LOG(severity,out);

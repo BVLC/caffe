@@ -151,7 +151,7 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
         new_height, new_width, is_color);
     if (!cv_img.data)
       {
-	LOG(ERROR) << "failed loading = " << lines_[lines_id_].first << std::endl;
+	LOG(ERROR) << "failed loading = " << lines_[lines_id_].first;// << std::endl;
 	continue;
       }
     read_time += timer.MicroSeconds();
