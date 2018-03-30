@@ -149,7 +149,11 @@ class CaffeLogger
   {
     _console = spdlog::get("caffe");
     if (!_console)
+#ifdef USE_SYSLOG
+      _console = spdlog::syslog_logger("caffe");
+#else
       _console = spdlog::stdout_logger_mt("caffe");
+#endif
   }
 
   ~CaffeLogger()
@@ -179,12 +183,20 @@ class CaffeLogger
     return const_cast<CaffeLogger&>(cl);
   }
 
+  friend CaffeLogger& operator<<(const CaffeLogger &cl, const std::ostream &out)
+  {
+    std::stringstream sstr;
+    sstr << out.rdbuf();
+    const_cast<CaffeLogger&>(cl)._str += sstr.str();
+    return const_cast<CaffeLogger&>(cl);
+  }
+  
   std::string _severity = INFO;
   std::shared_ptr<spdlog::logger> _console;
   std::string _str;
 };
 
-inline CaffeLogger LOG(const std::string &severity,std::ostream &out=std::cout)
+inline CaffeLogger LOG(const std::string &severity)
 {
   if (severity != FATAL)
   {
@@ -196,52 +208,51 @@ inline CaffeLogger LOG(const std::string &severity,std::ostream &out=std::cout)
     }
 }
 
-inline CaffeLogger LOG_IF(const std::string &severity,const bool &condition,std::ostream &out=std::cout)
+inline CaffeLogger LOG_IF(const std::string &severity,const bool &condition)
 {
   if (condition)
-    return LOG(severity,out);
+    return LOG(severity);
   else return CaffeLogger("none");
 }
 
 #ifdef NDEBUG
-inline CaffeLogger DFATAL(const std::string &severity, std::ostream &out=std::cout)
-{
-  (void)severity;
-  (void)out;
-  return CaffeLogger("none");
-}
-inline CaffeLogger LOG_DFATAL(const std::string &severity, std::ostream &out=std::cout)
+inline CaffeLogger DFATAL(const std::string &severity)
 {
   (void)severity;
   return CaffeLogger("none");
 }
-inline CaffeLogger DLOG(const std::string &severity, std::ostream &out=std::cout)
+inline CaffeLogger LOG_DFATAL(const std::string &severity)
+{
+  (void)severity;
+  return CaffeLogger("none");
+}
+inline CaffeLogger DLOG(const std::string &severity)
 {
   (void)severity;
   return CaffeLogger("none");
 }
 #else
-inline CaffeLogger DFATAL(const std::string &severity, std::ostream &out=std::cout)
+inline CaffeLogger DFATAL(const std::string &severity)
 {
   (void)severity;
-  return LOG(FATAL,out);
+  return LOG(FATAL);
 }
-inline CaffeLogger LOG_DFATAL(const std::string &severity, std::ostream &out=std::cout)
+inline CaffeLogger LOG_DFATAL(const std::string &severity)
 {
   (void)severity;
-  return LOG(FATAL,out);
+  return LOG(FATAL);
 }
-inline CaffeLogger DLOG(const std::string &severity, std::ostream &out=std::cout)
+inline CaffeLogger DLOG(const std::string &severity)
 {
-  return LOG(severity,out);
+  return LOG(severity);
 }
 #endif
 
 // Poor man's version...
-inline CaffeLogger LOG_EVERY_N(const std::string &severity, const int &n, std::ostream &out=std::cout)
+inline CaffeLogger LOG_EVERY_N(const std::string &severity, const int &n)
 {
   (void)n;
-  return LOG(severity,out);
+  return LOG(severity);
 }
 
 #endif
