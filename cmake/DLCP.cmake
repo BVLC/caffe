@@ -11,14 +11,14 @@ function(Download_DLCP)
 
   set(EXTERNAL_DIR ${CMAKE_SOURCE_DIR}/external)
   set(DLCP_IDEEPDIR ${EXTERNAL_DIR}/ideep)
-  set(DLCP_ROOTDIR ${DLCP_IDEEPDIR}/ideep/dlcp)
+  set(DLCP_ROOTDIR ${DLCP_IDEEPDIR}/dlcp)
   set(DLCP_INCLDIR "${DLCP_ROOTDIR}/include" PARENT_SCOPE)
   set(DLCP_LIBDIR ${DLCP_ROOTDIR}/lib PARENT_SCOPE)
  
   # Download dl compression lib source code if it doesn't exist 
   if (NOT EXISTS ${DLCP_INCLDIR}/dl_compression.h)
     execute_process(COMMAND rm -rf ${DLCP_IDEEPDIR})
-    execute_process(COMMAND git clone https://github.com/intel/ideep.git -b dlcp ${DLCP_IDEEPDIR})
+    execute_process(COMMAND git clone https://github.com/intel/ideep.git -b ideep4py ${DLCP_IDEEPDIR})
   endif()
 
   add_custom_target(DLCP_Build ALL
