@@ -128,3 +128,4 @@ MANIFEST-*
 # Log files
 log*.txt
 error*.txt
+*.ffs_db
