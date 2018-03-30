@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <vector>
+
 #include "caffe/layers/clip_layer.hpp"
 
 namespace caffe {

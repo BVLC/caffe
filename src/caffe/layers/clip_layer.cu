@@ -1,4 +1,5 @@
 #include <vector>
+
 #include "caffe/layers/clip_layer.hpp"
 #include "caffe/util/math_functions.hpp"
 
