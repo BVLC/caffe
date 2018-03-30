@@ -390,6 +390,10 @@ ifneq (,$(findstring icpc,$(CXX)))
 	CXX_HARDENING_FLAGS += -fstack-protector -wd2196
 	#Enable SGD FUSION if use intel compiler
 	COMMON_FLAGS += -DENABLE_SGD_FUSION
+	#Intel compiler static build flag
+	ifeq ($(ICC_STATIC_BUILD), 1)
+		LDFLAGS += -static-intel
+	endif
 
 else ifneq (,$(findstring clang++,$(CXX)))
 	CXX_HARDENING_FLAGS += -fPIE -fstack-protector
@@ -447,7 +451,7 @@ ifeq ($(DEBUG), 1)
 	COMMON_FLAGS += -DDEBUG -g -O0
 	NVCCFLAGS += -G
 else ifneq (,$(findstring icpc,$(CXX)))
-	COMMON_FLAGS += -DNDEBUG -O3 -xCORE-AVX2 -no-prec-div -fp-model fast=2
+	COMMON_FLAGS += -DNDEBUG -O3 -xHost -no-prec-div -fp-model fast=2
 else
 	COMMON_FLAGS += -DNDEBUG -O3
 endif

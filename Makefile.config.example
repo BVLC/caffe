@@ -71,6 +71,8 @@ USE_MKLDNN_AS_DEFAULT_ENGINE := 1
 # To customize your choice of compiler, uncomment and set the following.
 # N.B. the default for Linux is g++ and the default for OSX is clang++
 # CUSTOM_CXX := g++
+# If you use Intel compiler, you can choose uncomment following to enable static build
+# ICC_STATIC_BUILD := 1
 
 # If you use Intel compiler define a path to newer boost if not used
 # already. 
