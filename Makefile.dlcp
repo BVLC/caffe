@@ -1,6 +1,6 @@
 CAFFE_ROOTDIR := $(shell pwd)
 DLCP_IDEEPDIR := $(CAFFE_ROOTDIR)/external/ideep
-DLCP_ROOTDIR := $(DLCP_IDEEPDIR)/ideep/dlcp
+DLCP_ROOTDIR := $(DLCP_IDEEPDIR)/dlcp
 DLCP_INCLDIR := $(DLCP_ROOTDIR)/include
 DLCP_LIBDIR := $(DLCP_ROOTDIR)/lib
 IDEEP_GITHUB := https://github.com/intel/ideep.git
@@ -9,7 +9,7 @@ DLCP_CXX := $(CXX)
 ifeq ("$(wildcard $(DLCP_INCLDIR)/dl_compression.h)", "")
 dlcp_download:
 	rm -rf $(DLCP_IDEEPDIR)
-	git clone $(IDEEP_GITHUB) -b dlcp $(DLCP_IDEEPDIR)
+	git clone $(IDEEP_GITHUB) -b ideep4py $(DLCP_IDEEPDIR)
 
 dlcp_build: dlcp_download
 	make -C $(DLCP_ROOTDIR) -j$(shell cat /proc/cpuinfo |grep 'processor'|wc -l)
