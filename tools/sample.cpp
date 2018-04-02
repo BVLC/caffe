@@ -146,6 +146,9 @@ int main(int argc, char** argv) {
       "  quantize        Trim 32bit floating point net\n");
   // Run tool or show usage.
   caffe::GlobalInit(&argc, &argv);
+#ifdef USE_MLSL
+  caffe::mn::init(&argc, &argv);
+#endif
   if (argc == 2) {
       return GetBrewFunction(caffe::string(argv[1]))();
   } else {
