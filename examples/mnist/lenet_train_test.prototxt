@@ -166,3 +166,28 @@ layer {
   bottom: "label"
   top: "loss"
 }
+# Test code for select_label
+#layer {
+#  name: "loss1"
+#  type: "SoftmaxWithLoss"
+#  bottom: "ip2"
+#  bottom: "label"
+#  top: "loss1"
+#  loss_param {
+#      ignore_label: 1
+#      #select_label: 1
+#  }
+#  loss_weight: 1
+#}
+#
+#layer {
+#  name: "loss2"
+#  type: "SoftmaxWithLoss"
+#  bottom: "ip2"
+#  bottom: "label"
+#  top: "loss2"
+#  loss_param {
+#      select_label: 0
+#  }
+#  loss_weight: 2
+#}
