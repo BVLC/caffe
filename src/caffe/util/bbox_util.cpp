@@ -82,7 +82,7 @@ void IntersectBBox(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2,
 float BBoxSize(const NormalizedBBox& bbox, const bool normalized) {
   if (bbox.xmax() < bbox.xmin() || bbox.ymax() < bbox.ymin()) {
     // If bbox is invalid (e.g. xmax < xmin or ymax < ymin), return 0.
-    LOG(ERROR) << "Invalid bbox=" << bbox.xmin() << " " << bbox.ymin() << " " << bbox.xmax() << " " << bbox.ymax() << std::endl;
+    LOG(ERROR) << "Invalid bbox=" << bbox.xmin() << " " << bbox.ymin() << " " << bbox.xmax() << " " << bbox.ymax();
     return 0;
   } else {
     if (bbox.has_size()) {
@@ -104,7 +104,7 @@ template <typename Dtype>
 Dtype BBoxSize(const Dtype* bbox, const bool normalized) {
   if (bbox[2] < bbox[0] || bbox[3] < bbox[1]) {
     // If bbox is invalid (e.g. xmax < xmin or ymax < ymin), return 0.
-    LOG(ERROR) << "Invalid bbox=" << bbox[0] << " " << bbox[1] << " " << bbox[2] << " " << bbox[3] << std::endl;
+    LOG(ERROR) << "Invalid bbox=" << bbox[0] << " " << bbox[1] << " " << bbox[2] << " " << bbox[3];
     return Dtype(0.);
   } else {
     const Dtype width = bbox[2] - bbox[0];

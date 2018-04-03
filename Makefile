@@ -332,6 +332,9 @@ endif
 ifeq ($(USE_OPENCV), 1)
 	COMMON_FLAGS += -DUSE_OPENCV
 endif
+ifeq ($(USE_SYSLOG), 1)
+	COMMON_FLAGS += -DUSE_SYSLOG
+endif
 ifeq ($(USE_LEVELDB), 1)
 	COMMON_FLAGS += -DUSE_LEVELDB
 endif
