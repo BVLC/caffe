@@ -209,7 +209,7 @@ void RemoveBNScale(const NetParameter& param, NetParameter* param_compiled) {
     bool bn_use_global_stats_set = true;
     if (layer_param->type().compare("Convolution") == 0) {
       std::vector<const LayerParameter*> child_layers_params;
-	  Net<Dtype>::GetBlobConsumers(child_layers_params, layer_param->top(0), param, i + 1 < param.layer_size() ? i + 1 : i);
+      Net<Dtype>::GetBlobConsumers(child_layers_params, layer_param->top(0), param, i + 1 < param.layer_size() ? i + 1 : i);
       const LayerParameter &child_layer_param = child_layers_params.size() > 0 ? *(child_layers_params[0]) : *layer_param;
       // check whether child layer is BatchNorm
       if (child_layer_param.type().compare("BatchNorm") == 0) {
@@ -243,11 +243,11 @@ void RemoveBNScale(const NetParameter& param, NetParameter* param_compiled) {
         if (!bn_use_global_stats_set) {
           //Even in caffe TEST phase, current batch norm layer has set use_global_stats = false in protxt file, so we won't
           //merge this layer into convolution layer.
-         param_compiled->add_layer()->CopyFrom(*layer_param);
+          param_compiled->add_layer()->CopyFrom(*layer_param);
           continue;
         }
         std::vector<const LayerParameter*> grandchild_layers_params;
-		Net<Dtype>::GetBlobConsumers(grandchild_layers_params, child_layer_param.top(0), param, i + 2 < param.layer_size() ? i + 2 : i);
+        Net<Dtype>::GetBlobConsumers(grandchild_layers_params, child_layer_param.top(0), param, i + 2 < param.layer_size() ? i + 2 : i);
         const LayerParameter &grandchild_layer_param = (grandchild_layers_params.size() > 0) ? *(grandchild_layers_params[0]) : child_layer_param;
         if (grandchild_layer_param.type().compare("Scale") == 0) {
           MergeLayer(*layer_param, grandchild_layer_param);
@@ -279,10 +279,10 @@ void RemoveBNScale(const NetParameter& param, NetParameter* param_compiled) {
       layers_to_drop.erase(layers_to_drop.find(layer_param->name()));
     }
     if (layer_included) {
-            if (layer_param->type().compare("BatchNorm") == 0) {
-              param_compiled->mutable_compile_net_state()->add_kept_bn_layers(layer_param->name());
-            }
-            param_compiled->add_layer()->CopyFrom(*layer_param);
+      if (layer_param->type().compare("BatchNorm") == 0) {
+        param_compiled->mutable_compile_net_state()->add_kept_bn_layers(layer_param->name());
+      }
+      param_compiled->add_layer()->CopyFrom(*layer_param);
     }
   }
 
