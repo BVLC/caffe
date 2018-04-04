@@ -11,6 +11,7 @@
 #include <cstdio>
 #include <ctime>
 #include <tuple>
+#include <unistd.h>
 #include <vector>
 
 #include "caffe/common.hpp"
