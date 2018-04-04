@@ -643,6 +643,10 @@ void Net<Dtype>::CompilationRuleRemoveScale(const NetParameter& param,
           layer_param->add_blobs()->CopyFrom(consumer_layer_param.blobs(0));
           layer_param->add_blobs()->CopyFrom(consumer_layer_param.blobs(1));
         }
+        if (consumer_layer_param.param_size() == 2) {
+          layer_param->add_param()->CopyFrom(consumer_layer_param.param(0));
+          layer_param->add_param()->CopyFrom(consumer_layer_param.param(1));
+        }
       }
     }
 
