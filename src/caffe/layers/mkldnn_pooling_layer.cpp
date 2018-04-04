@@ -262,6 +262,7 @@ void MKLDNNPoolingLayer<Dtype>::InitPoolingFwd(const vector<Blob<Dtype>*>& botto
     int32_t pr = this->pad_r_;
 
     bool bottom_data_is_prv = (const_cast<Dtype*>(bottom[0]->prv_data()) != NULL);
+    bool top_data_is_prv = (const_cast<Dtype*>(top[0]->prv_data()) != NULL);
 
     engine cpu_engine = CpuEngine::Instance().get_engine();
     memory::data_type mpcsn = memory::data_type::f32;
@@ -279,7 +280,7 @@ void MKLDNNPoolingLayer<Dtype>::InitPoolingFwd(const vector<Blob<Dtype>*>& botto
     std::vector<int> fl;
     std::vector<float> scale;
     bool bottom_scale_is_float = false;
-    if (bottom_data_is_prv) {
+    if (bottom_data_is_prv || top_data_is_prv) {
         shared_ptr<MKLDNNMemoryDescriptor<Dtype, false> > mem_descr
             = get_mkldnn_prv_descriptor<Dtype, false>(bottom[0]);
         bottom_scale_is_float = mem_descr->get_float();
@@ -319,7 +320,7 @@ void MKLDNNPoolingLayer<Dtype>::InitPoolingFwd(const vector<Blob<Dtype>*>& botto
     // ---- Initialize remaining memory descriptors -------------
     shared_ptr<MemPD> prv_fwd_bottom_data_mpd;
     shared_ptr<MemPD> prv_fwd_top_data_mpd;
-    if (bottom_data_is_prv) {
+    if (bottom_data_is_prv || top_data_is_prv) {
         prv_fwd_bottom_data_mpd.reset(new MemPD(*init_fwd_bottom_md, engine));
         prv_fwd_top_data_mpd.reset(new MemPD(*init_fwd_top_md, engine));
         // ---- Log prv memory primitive descriptors -------------
