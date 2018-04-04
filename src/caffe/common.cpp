@@ -104,6 +104,8 @@ Caffe& Caffe::Get() {
     // Every thread initially gets a copy of the global initialization.
     // Later, every thread can switch to a different default device
     // or change other aspects of the Caffe object
+    while(!global_instance_)
+      usleep(1000);
     thread_instance_.reset(new Caffe(*global_instance_));
   }
   return *(thread_instance_.get());
