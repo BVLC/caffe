@@ -1,6 +1,9 @@
 #if defined(_MSC_VER)
 #include <process.h>
+#include <windows.h>
 #define getpid() _getpid()
+#else
+#include <unistd.h>
 #endif
 
 #include <boost/thread.hpp>
@@ -11,7 +14,6 @@
 #include <cstdio>
 #include <ctime>
 #include <tuple>
-#include <unistd.h>
 #include <vector>
 
 #include "caffe/common.hpp"
@@ -106,7 +108,11 @@ Caffe& Caffe::Get() {
     // Later, every thread can switch to a different default device
     // or change other aspects of the Caffe object
     while(!global_instance_)
+#if defined(_MSC_VER)
+      Sleep(1);
+#else
       usleep(1000);
+#endif
     thread_instance_.reset(new Caffe(*global_instance_));
   }
   return *(thread_instance_.get());
