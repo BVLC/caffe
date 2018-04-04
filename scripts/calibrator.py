@@ -325,6 +325,27 @@ def check_blob_name_existence(prototxt, blob_name):
                 return True
     return False
 
+def generate_dummy_model(model_path, dummy):
+    net = caffe_pb2.NetParameter()
+    with open(model_path) as f:
+        s = f.read()
+        txtf.Merge(s, net)
+
+    first_conv = True
+    convolution_layers = [(value, index) for index, value in enumerate(net.layer) if value.type == 'Convolution']
+    for (l, index) in convolution_layers:
+        if first_conv:
+            first_conv = False
+            continue
+        net.layer[index].quantization_param.bw_layer_in = 8
+        net.layer[index].quantization_param.bw_layer_out = 8
+        net.layer[index].quantization_param.bw_params = 8
+        net.layer[index].quantization_param.scale_in[:] = [1.0]
+        net.layer[index].quantization_param.scale_out[:] = [1.0]
+        net.layer[index].quantization_param.scale_params[:] = [1.0]
+
+    with open(dummy, 'w') as f:
+        f.write(str(net))
 
 if __name__ == '__main__':
     usage_string = 'Usage: 1.Build the caffe\n ' \
@@ -371,19 +392,33 @@ if __name__ == '__main__':
     parser.add_argument('-s', '--sampling_iterations', action='store', dest='sampling_iterations', default=10,
                         help='iteration number of sampling, the default value is 10.')
 
+    parser.add_argument('-p', '--performance_model', dest='performance_model', action="store_true", default=False,
+                        help='to generate model to measure performance only')
+
     params = parser.parse_args()
     
     if not check_existence(params.root):
         print 'Please check the {} existence.'.format(params.root)
         sys.exit(-1)
-    
+
     pycaffe_path = os.path.abspath(os.path.dirname(os.path.abspath(params.root))) + os.path.sep + 'python'
     if not check_existence(pycaffe_path):
         print "Please check the pycaffe existence.Suggest to rebuild pycaffe via 'make pycaffe'"
     sys.path.insert(0, pycaffe_path)
     import caffe
     from caffe.proto import caffe_pb2
-    
+
+    model = os.path.abspath(params.model)
+    if not check_existence(model):
+        print 'Please check model: {} existence.'.format(model)
+        sys.exit(-1)
+
+    dummy_prototxt = model.rsplit('.')[0] + '_dummy.prototxt'
+    if params.performance_model:
+        generate_dummy_model(model, dummy_prototxt)
+        print 'Updated prototxt {} is generated.'.format(dummy_prototxt)
+        sys.exit(0)
+
     try:
         user_input_iterations = int(params.iterations)
     except:
@@ -422,11 +457,6 @@ if __name__ == '__main__':
         print 'Set the test type to classification.'
         detection_flag = 0
 
-    model = os.path.abspath(params.model)
-    if not check_existence(model):
-        print 'Please check model: {} existence.'.format(model)
-        sys.exit(-1)
-
     user_input_weights = os.path.abspath(params.weights)
     if not check_existence(user_input_weights):
         print 'Please check weights: {} existence.'.format(user_input_weights)
@@ -453,7 +483,6 @@ if __name__ == '__main__':
         sys.exit(-1)
 
     quantized_prototxt = model.rsplit('.')[0] + '_quantized.prototxt'
-    quantized_weights = user_input_weights.rsplit('.')[0] + '_quantized.caffemodel'
     enable_power_of_2 = 0
     print 'Sampling...'
     generate_sample(sample, model, user_input_weights, quantized_prototxt, detection_flag, user_scaling_mode,
