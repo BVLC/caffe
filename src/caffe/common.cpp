@@ -96,7 +96,7 @@ std::vector< shared_ptr<device> > Caffe::devices_;
 
 Caffe& Caffe::Get() {
   instance_mutex_.lock();
-  if (NULL == global_instance_) {
+  if (global_instance_ == nullptr) {
     // The first call must be single threaded
     // and defines the global instance
     thread_instance_.reset(new Caffe());
