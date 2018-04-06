@@ -10,6 +10,7 @@
 #include <cmath>
 #include <cstdio>
 #include <ctime>
+#include <mutex>
 #include <tuple>
 #include <vector>
 
@@ -88,13 +89,14 @@ static boost::thread_specific_ptr<Caffe> thread_instance_;
 
 // Pointer to the global instance of Caffe
 static Caffe* global_instance_;
-static std::atomic<bool> first(true);
+static std::mutex instance_mutex_;
 
 // Device contexts are initialized once and shared on all threads
 std::vector< shared_ptr<device> > Caffe::devices_;
 
 Caffe& Caffe::Get() {
-  if (first.exchange(false)) {
+  instance_mutex_.lock();
+  if (global_instance_ == nullptr) {
     // The first call must be single threaded
     // and defines the global instance
     thread_instance_.reset(new Caffe());
@@ -106,6 +108,7 @@ Caffe& Caffe::Get() {
     // or change other aspects of the Caffe object
     thread_instance_.reset(new Caffe(*global_instance_));
   }
+  instance_mutex_.unlock();
   return *(thread_instance_.get());
 }
 
@@ -328,7 +331,9 @@ Caffe::~Caffe() {
   // Make sure all device contexts and
   // dependent memory blocks are freed properly
   if (this == global_instance_) {
-      first.store(true);
+      instance_mutex_.lock();
+      global_instance_ = NULL;
+      instance_mutex_.unlock();
       devices_.clear();
   }
 #ifdef USE_CUDA
