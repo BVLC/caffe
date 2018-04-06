@@ -1508,6 +1508,7 @@ void ConvolutionLayerSpatial<Dtype>::SetUp(
   }
 }
 
+#ifndef __APPLE__
 template void ConvolutionLayerSpatial<float>::SetUp(
     const vector<Blob<float>*>& bottom, const vector<Blob<float>*>& top,
     caffe::Backend backend);
@@ -1526,6 +1527,7 @@ template void ConvolutionLayerSpatial<double>::swizzleWeights(
     const vector<Blob<double>*>& top,
     int_tp swizzle_factor,
     bool interleave = false);
+#endif
 
 template<>
 void ConvolutionLayerSpatial<double>::create_convolution_kernel(

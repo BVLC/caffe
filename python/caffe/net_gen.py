@@ -9,7 +9,6 @@ from collections import OrderedDict, Counter, Iterable
 from caffe import layers as L, params as P, to_proto
 from caffe.proto import caffe_pb2
 import six
-from compiler.ast import nodes
 
 
 class MetaLayers(object):
