@@ -59,7 +59,7 @@ fi
 
 # Clean up the previous MLSL version
 # Can be used for l_mlsl_2017.1.016, l_mlsl_2017.2.018
-function CleanUpPreviousMLSL()
+CleanUpPreviousMLSL()
 {
 version_year=$1
 version_num=$2
