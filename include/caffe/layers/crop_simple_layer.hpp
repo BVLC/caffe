@@ -1,5 +1,5 @@
-#ifndef CAFFE_ELTWISE_LAYER_HPP_
-#define CAFFE_ELTWISE_LAYER_HPP_
+#ifndef CAFFE_XXX_LAYER_HPP_
+#define CAFFE_XXX_LAYER_HPP_
 
 #include <vector>
 
@@ -9,24 +9,22 @@
 
 namespace caffe {
 
-/**
- * @brief Compute elementwise operations, such as product and sum,
- *        along multiple input Blobs.
- *
- * TODO(dox): thorough documentation for Forward, Backward, and proto params.
+/*
+ * @brief CropSimple crops a crop_height_ x crop_width_ central fragment of the image, and can do backprop
  */
+
 template <typename Dtype>
-class EltwiseLayer : public Layer<Dtype> {
+class CropSimpleLayer : public Layer<Dtype> {
  public:
-  explicit EltwiseLayer(const LayerParameter& param)
+  explicit CropSimpleLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
-  virtual inline const char* type() const { return "Eltwise"; }
-  virtual inline int MinBottomBlobs() const { return 1; }
+  virtual inline const char* type() const { return "CropSimple"; }
+  virtual inline int ExactNumBottomBlobs() const { return 1; }
   virtual inline int ExactNumTopBlobs() const { return 1; }
 
  protected:
@@ -39,13 +37,11 @@ class EltwiseLayer : public Layer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
-  EltwiseParameter_EltwiseOp op_;
-  vector<Dtype> coeffs_;
-  Blob<int> max_idx_;
-
-  bool stable_prod_grad_;
+  int crop_height_, crop_width_;
 };
 
 }  // namespace caffe
 
-#endif  // CAFFE_ELTWISE_LAYER_HPP_
+#endif  // CAFFE_XXX_LAYER_HPP_
+
+

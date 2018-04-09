@@ -205,7 +205,7 @@ class MSRAFiller : public Filler<Dtype> {
         FillerParameter_VarianceNorm_FAN_OUT) {
       n = fan_out;
     }
-    Dtype std = sqrt(Dtype(2) / n);
+    Dtype std = sqrt(Dtype(2) / n)  * Dtype(this->filler_param_.msra_coeff());
     caffe_rng_gaussian<Dtype>(blob->count(), Dtype(0), std,
         blob->mutable_cpu_data());
     CHECK_EQ(this->filler_param_.sparse(), -1)

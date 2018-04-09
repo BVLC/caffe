@@ -59,6 +59,8 @@ message FillerParameter {
     AVERAGE = 2;
   }
   optional VarianceNorm variance_norm = 8 [default = FAN_IN];
+  
+  optional float msra_coeff = 21 [default = 1];  
 }
 
 message NetParameter {
@@ -376,8 +378,10 @@ message LayerParameter {
   // The default for the engine is set by the ENGINE switch at compile-time.
   optional AccuracyParameter accuracy_param = 102;
   optional ArgMaxParameter argmax_param = 103;
+  optional AugmentationParameter augmentation_param = 1000; // for DataAugmentationLayer
   optional BatchNormParameter batch_norm_param = 139;
   optional BiasParameter bias_param = 141;
+  optional CoeffScheduleParameter coeff_schedule_param = 1001; // for DataAugmentationLayer
   optional ConcatParameter concat_param = 104;
   optional ContrastiveLossParameter contrastive_loss_param = 105;
   optional ConvolutionParameter convolution_param = 106;
@@ -651,6 +655,10 @@ message CropParameter {
   // axis).
   optional int32 axis = 1 [default = 2];
   repeated uint32 offset = 2;
+  
+  // these are additional fields for the CropSimple layer 
+  optional uint32 crop_width = 11 [default = 0 ];
+  optional uint32 crop_height = 12 [default = 0 ];
 }
 
 message DataParameter {
@@ -1434,3 +1442,83 @@ message PReLUParameter {
   // Whether or not slope parameters are shared across channels.
   optional bool channel_shared = 2 [default = false];
 }
+
+// parameters of a schedule of augmentation parameters
+message CoeffScheduleParameter {
+  optional float gamma = 1 [default = 1];
+  optional float initial_coeff = 2 [default = 1];
+  optional float final_coeff = 3 [default = 1];
+}
+
+// Message used by AugmentationParameter for describing how to generate augmentation parameters
+message RandomGeneratorParameter {
+  optional string rand_type = 1 [default = "uniform" ]; // can be uniform, gaussian, bernoulli
+  optional bool exp = 2 [default = false ]; // after generating the random number, exponentiate it or not 
+  optional float mean = 4 [default = 0. ]; // mean of the random variable
+  optional float spread = 5 [default = 0. ]; // half of interval length for uniform; standard deviation for gaussian 
+  optional float prob = 6 [default = .5];
+  optional bool apply_schedule = 7 [default = true];
+}
+
+// Message describing distribution of augmentation parameters
+message AugmentationParameter {
+  optional uint32 crop_size = 1 [default = 0 ];
+  optional string write_augmented = 2 [default = ""];
+  optional float max_multiplier = 3 [default = 100.];
+  optional bool augment_during_test = 4 [default = false];
+  optional uint32 recompute_mean = 5 [default = 0]; // number of iterations to recompute mean (0 - do not recompute)
+  optional string write_mean = 6 [default = ""];
+  optional RandomGeneratorParameter mirror = 10;
+  optional RandomGeneratorParameter translate = 11 ;
+  optional RandomGeneratorParameter rotate = 12 ;
+  optional RandomGeneratorParameter zoom = 13 ;
+  optional RandomGeneratorParameter squeeze = 14 ;
+  optional RandomGeneratorParameter lmult_pow = 20 ;
+  optional RandomGeneratorParameter lmult_mult = 21 ;
+  optional RandomGeneratorParameter lmult_add = 22 ;
+  optional RandomGeneratorParameter sat_pow = 23 ;
+  optional RandomGeneratorParameter sat_mult = 24 ;
+  optional RandomGeneratorParameter sat_add = 25 ;
+  optional RandomGeneratorParameter col_pow = 26 ;
+  optional RandomGeneratorParameter col_mult = 27 ;
+  optional RandomGeneratorParameter col_add = 28 ;
+  optional RandomGeneratorParameter ladd_pow = 29 ;
+  optional RandomGeneratorParameter ladd_mult = 30 ;
+  optional RandomGeneratorParameter ladd_add = 31 ; 
+  optional RandomGeneratorParameter col_rotate = 32 ; 
+}
+
+// Message storing the actual coefficients of a transformation
+message AugmentationCoeff {  
+  optional float mirror = 1 [default = 0];
+  optional float dx = 2 [default = 0];
+  optional float dy = 3 [default = 0];
+  optional float angle = 4 [default = 0];
+  optional float zoom_x = 5 [default = 1];
+  optional float zoom_y = 6 [default = 1];
+  
+  optional float pow_nomean0 = 10 [default = 1];
+  optional float pow_nomean1 = 11 [default = 1];
+  optional float pow_nomean2 = 12 [default = 1];
+  optional float add_nomean0 = 13 [default = 0];
+  optional float add_nomean1 = 14 [default = 0];
+  optional float add_nomean2 = 15 [default = 0];
+  optional float mult_nomean0 = 16 [default = 1];
+  optional float mult_nomean1 = 17 [default = 1];
+  optional float mult_nomean2 = 18 [default = 1];
+  
+  optional float pow_withmean0 = 19 [default = 1];
+  optional float pow_withmean1 = 20 [default = 1];
+  optional float pow_withmean2 = 21 [default = 1];
+  optional float add_withmean0 = 22 [default = 0];
+  optional float add_withmean1 = 23 [default = 0];
+  optional float add_withmean2 = 24 [default = 0];
+  optional float mult_withmean0 = 25 [default = 1];
+  optional float mult_withmean1 = 26 [default = 1];
+  optional float mult_withmean2 = 27 [default = 1];
+  
+  optional float lmult_pow = 28 [default = 1];
+  optional float lmult_add = 29 [default = 0];
+  optional float lmult_mult = 30 [default = 1];
+  optional float col_angle = 31 [default = 0]; 
+}  
