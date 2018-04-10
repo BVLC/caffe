@@ -200,15 +200,19 @@ void BaseConvolutionLayer<Dtype, MItype, MOtype>::LayerSetUp(
     // Initialize and fill the weights:
     // output channels X input channels per-group X kernel height X kernel width
     this->blobs_[0].reset(new Blob<Dtype>(weight_shape, this->device_));
-    shared_ptr<Filler<Dtype> > weight_filler(GetFiller<Dtype>(
-            this->layer_param_.convolution_param().weight_filler()));
-    weight_filler->Fill(this->blobs_[0].get());
+    if (is_float_type<Dtype>()) {
+      shared_ptr<Filler<Dtype> > weight_filler(GetFiller<Dtype>(
+              this->layer_param_.convolution_param().weight_filler()));
+      weight_filler->Fill(this->blobs_[0].get());
+    }
     // If necessary, initialize and fill the biases.
     if (bias_term_) {
       this->blobs_[1].reset(new Blob<Dtype>(bias_shape, this->device_));
-      shared_ptr<Filler<Dtype> > bias_filler(GetFiller<Dtype>(
-              this->layer_param_.convolution_param().bias_filler()));
-      bias_filler->Fill(this->blobs_[1].get());
+      if (is_float_type<Dtype>()) {
+        shared_ptr<Filler<Dtype> > bias_filler(GetFiller<Dtype>(
+                this->layer_param_.convolution_param().bias_filler()));
+        bias_filler->Fill(this->blobs_[1].get());
+      }
     }
   }
   kernel_dim_ = this->blobs_[0]->count(1);
@@ -299,6 +303,11 @@ void BaseConvolutionLayer<Dtype, MItype, MOtype>::Reshape(
       caffe_set(bias_multiplier_.count(), Dtype(1),
                 bias_multiplier_.mutable_cpu_data());
     }
+    bias_multiplier_qv_.scale = 1.0;
+    bias_multiplier_qv_.zero = 0.0;
+    bias_multiplier_qv_.one = 1.0;
+    bias_multiplier_qv_.max = 1.0;
+    bias_multiplier_qv_.min = 0.0;
   }
 }
 

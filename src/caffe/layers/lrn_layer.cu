@@ -332,39 +332,39 @@ void LRNLayer<Dtype, MItype, MOtype>::CrossChannelBackward_gpu(
 }
 
 
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(LRNLayer, GenerateProgram,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(LRNLayer, GenerateProgram,
                                   (half_fp), (half_fp), (half_fp));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(LRNLayer, GenerateProgram,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(LRNLayer, GenerateProgram,
                                   (float), (float), (float));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(LRNLayer, GenerateProgram,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(LRNLayer, GenerateProgram,
                                   (double), (double), (double));
 
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(LRNLayer, Forward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(LRNLayer, Forward_gpu,
                                   (half_fp), (half_fp), (half_fp));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(LRNLayer, Forward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(LRNLayer, Forward_gpu,
                                   (float), (float), (float));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(LRNLayer, Forward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(LRNLayer, Forward_gpu,
                                   (double), (double), (double));
 
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(LRNLayer, CrossChannelForward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(LRNLayer, CrossChannelForward_gpu,
                                   (half_fp), (half_fp), (half_fp));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(LRNLayer, CrossChannelForward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(LRNLayer, CrossChannelForward_gpu,
                                   (float), (float), (float));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(LRNLayer, CrossChannelForward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(LRNLayer, CrossChannelForward_gpu,
                                   (double), (double), (double));
 
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(LRNLayer, Backward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(LRNLayer, Backward_gpu,
                                   (half_fp), (half_fp), (half_fp));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(LRNLayer, Backward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(LRNLayer, Backward_gpu,
                                   (float), (float), (float));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(LRNLayer, Backward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(LRNLayer, Backward_gpu,
                                   (double), (double), (double));
 
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(LRNLayer, CrossChannelBackward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(LRNLayer, CrossChannelBackward_gpu,
                                   (half_fp), (half_fp), (half_fp));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(LRNLayer, CrossChannelBackward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(LRNLayer, CrossChannelBackward_gpu,
                                   (float), (float), (float));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(LRNLayer, CrossChannelBackward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(LRNLayer, CrossChannelBackward_gpu,
                                   (double), (double), (double));
 
 }  // namespace caffe

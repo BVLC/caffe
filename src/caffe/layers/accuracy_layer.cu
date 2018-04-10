@@ -257,24 +257,24 @@ void AccuracyLayer<Dtype, MItype, MOtype>::Backward_gpu(
   if (propagate_down[1]) {  NOT_IMPLEMENTED;  }
 }
 
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(AccuracyLayer, GenerateProgram,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(AccuracyLayer, GenerateProgram,
                                   (half_fp), (half_fp), (half_fp));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(AccuracyLayer, GenerateProgram,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(AccuracyLayer, GenerateProgram,
                                   (float), (float), (float));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(AccuracyLayer, GenerateProgram,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(AccuracyLayer, GenerateProgram,
                                   (double), (double), (double));
 
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(AccuracyLayer, Forward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(AccuracyLayer, Forward_gpu,
                                   (half_fp), (half_fp), (half_fp));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(AccuracyLayer, Forward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(AccuracyLayer, Forward_gpu,
                                   (float), (float), (float));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(AccuracyLayer, Forward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(AccuracyLayer, Forward_gpu,
                                   (double), (double), (double));
 
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(AccuracyLayer, Backward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(AccuracyLayer, Backward_gpu,
                                   (half_fp), (half_fp), (half_fp));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(AccuracyLayer, Backward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(AccuracyLayer, Backward_gpu,
                                   (float), (float), (float));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(AccuracyLayer, Backward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(AccuracyLayer, Backward_gpu,
                                   (double), (double), (double));
 }  // namespace caffe

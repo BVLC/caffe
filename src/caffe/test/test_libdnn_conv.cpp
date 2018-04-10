@@ -24,7 +24,7 @@
 #define EPS_DOUBLE 1e-4
 
 // Comparative check shape size limit
-#define element_limit 1000000
+#define ELEMENT_LIMIT 1000000
 
 
 namespace caffe {
@@ -704,7 +704,7 @@ class LibDNNComparativeConvTest : public GPUDeviceTest<TypeParam> {
     int dims = dimsRand(this->rng_);
 
     std::uniform_int_distribution<int_tp> sizeRand(1,
-                pow(element_limit / (fmaps_in * fmaps_out * batchsize),
+                pow(ELEMENT_LIMIT / (fmaps_in * fmaps_out * batchsize),
                 1.0 / (static_cast<double>(dims))));
 
 
@@ -906,7 +906,7 @@ class LibDNNComparativeConvTest : public GPUDeviceTest<TypeParam> {
     int dims = dimsRand(this->rng_);
 
     std::uniform_int_distribution<int_tp> sizeRand(1,
-                pow(element_limit / (fmaps_in * fmaps_out * batchsize),
+                pow(ELEMENT_LIMIT / (fmaps_in * fmaps_out * batchsize),
                 1.0 / (static_cast<double>(dims))));
 
 

@@ -67,7 +67,7 @@ void adam_update_gpu(Device* dev, DeviceProgram* dev_prog, uint_tp n,
 
 INSTANTIATE_FUNC_1T_GUARDED(adam_update_gpu, (half_fp)(float)(double));
 
-INSTANTIATE_CLASS_FUNC_1T_GUARDED(AdamSolver,
+INSTANTIATE_CLASST_FUNC_1T_GUARDED(AdamSolver,
                                   GenerateProgram, (half_fp)(float)(double));
 
 }  // namespace caffe

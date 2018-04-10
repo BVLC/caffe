@@ -35,10 +35,8 @@ void NetBase::set_quant_mode(QuantizerMode quant_mode) {
 
   // Update the quantizer mode for all quantizers
   for (int_tp i = 0; i < this->layers().size(); ++i) {
-    vector<shared_ptr<QuantizerBase> > quantizers =
-        this->layers()[i]->get_all_quantizers();
     vector<shared_ptr<QuantizerBase> > quant_base_vec =
-        layers_[i]->get_all_quantizers();
+        this->layers()[i]->get_all_quantizers();
     for (int_tp j = 0; j < quant_base_vec.size(); ++j) {
       const QuantizerParameter& quant_param = quant_base_vec[j]->quant_param();
       QuantizerParameter quant_param_copy;

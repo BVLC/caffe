@@ -99,25 +99,25 @@ void SigmoidLayer<Dtype, MItype, MOtype>::Backward_gpu(
   }
 }
 
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(SigmoidLayer, GenerateProgram,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(SigmoidLayer, GenerateProgram,
                                   (half_fp), (half_fp), (half_fp));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(SigmoidLayer, GenerateProgram,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(SigmoidLayer, GenerateProgram,
                                   (float), (float), (float));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(SigmoidLayer, GenerateProgram,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(SigmoidLayer, GenerateProgram,
                                   (double), (double), (double));
 
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(SigmoidLayer, Forward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(SigmoidLayer, Forward_gpu,
                                   (half_fp), (half_fp), (half_fp));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(SigmoidLayer, Forward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(SigmoidLayer, Forward_gpu,
                                   (float), (float), (float));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(SigmoidLayer, Forward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(SigmoidLayer, Forward_gpu,
                                   (double), (double), (double));
 
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(SigmoidLayer, Backward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(SigmoidLayer, Backward_gpu,
                                   (half_fp), (half_fp), (half_fp));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(SigmoidLayer, Backward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(SigmoidLayer, Backward_gpu,
                                   (float), (float), (float));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(SigmoidLayer, Backward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(SigmoidLayer, Backward_gpu,
                                   (double), (double), (double));
 
 }  // namespace caffe

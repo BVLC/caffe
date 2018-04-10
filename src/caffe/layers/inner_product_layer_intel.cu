@@ -862,7 +862,7 @@ void InnerProductLayer<Dtype, MItype, MOtype>::Backward_gpu(
   }
 }
 
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(InnerProductLayer);
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(InnerProductLayer);
 
 #endif  // TODO_REFACTOR
 

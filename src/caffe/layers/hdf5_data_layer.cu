@@ -66,23 +66,23 @@ void HDF5DataLayer<Dtype, MItype, MOtype>::Forward_gpu(
 }
 
 
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(HDF5DataLayer, Forward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(HDF5DataLayer, Forward_gpu,
                                   (half_fp), (half_fp),
                                   (half_fp)(float)(double));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(HDF5DataLayer, Forward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(HDF5DataLayer, Forward_gpu,
                                   (float), (float),
                                   (half_fp)(float)(double));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(HDF5DataLayer, Forward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(HDF5DataLayer, Forward_gpu,
                                   (double), (double),
                                   (half_fp)(float)(double));
 
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(HDF5DataLayer, Backward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(HDF5DataLayer, Backward_gpu,
                                   (half_fp), (half_fp),
                                   (half_fp)(float)(double));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(HDF5DataLayer, Backward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(HDF5DataLayer, Backward_gpu,
                                   (float), (float),
                                   (half_fp)(float)(double));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(HDF5DataLayer, Backward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(HDF5DataLayer, Backward_gpu,
                                   (double), (double),
                                   (half_fp)(float)(double));
 

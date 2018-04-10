@@ -133,24 +133,24 @@ void ConcatLayer<Dtype, MItype, MOtype>::Backward_gpu(
   }
 }
 
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(ConcatLayer, GenerateProgram,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(ConcatLayer, GenerateProgram,
                                   (half_fp), (half_fp), (half_fp));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(ConcatLayer, GenerateProgram,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(ConcatLayer, GenerateProgram,
                                   (float), (float), (float));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(ConcatLayer, GenerateProgram,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(ConcatLayer, GenerateProgram,
                                   (double), (double), (double));
 
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(ConcatLayer, Forward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(ConcatLayer, Forward_gpu,
                                   (half_fp), (half_fp), (half_fp));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(ConcatLayer, Forward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(ConcatLayer, Forward_gpu,
                                   (float), (float), (float));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(ConcatLayer, Forward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(ConcatLayer, Forward_gpu,
                                   (double), (double), (double));
 
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(ConcatLayer, Backward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(ConcatLayer, Backward_gpu,
                                   (half_fp), (half_fp), (half_fp));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(ConcatLayer, Backward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(ConcatLayer, Backward_gpu,
                                   (float), (float), (float));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(ConcatLayer, Backward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(ConcatLayer, Backward_gpu,
                                   (double), (double), (double));
 }  // namespace caffe

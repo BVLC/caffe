@@ -31,19 +31,19 @@ void BasePrefetchingDataLayer<Dtype, MItype, MOtype>::Forward_gpu(
   }
 }
 
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(BasePrefetchingDataLayer, Forward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(BasePrefetchingDataLayer, Forward_gpu,
                                   (half_fp), (half_fp), (half_fp));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(BasePrefetchingDataLayer, Forward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(BasePrefetchingDataLayer, Forward_gpu,
                                   (float), (float), (float));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(BasePrefetchingDataLayer, Forward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(BasePrefetchingDataLayer, Forward_gpu,
                                   (double), (double), (double));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(BasePrefetchingDataLayer, Forward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(BasePrefetchingDataLayer, Forward_gpu,
                                   (uint8_t), (uint8_t), (uint8_t));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(BasePrefetchingDataLayer, Forward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(BasePrefetchingDataLayer, Forward_gpu,
                                   (uint16_t), (uint16_t), (uint16_t));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(BasePrefetchingDataLayer, Forward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(BasePrefetchingDataLayer, Forward_gpu,
                                   (uint32_t), (uint32_t), (uint32_t));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(BasePrefetchingDataLayer, Forward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(BasePrefetchingDataLayer, Forward_gpu,
                                   (uint64_t), (uint64_t), (uint64_t));
 
 }  // namespace caffe

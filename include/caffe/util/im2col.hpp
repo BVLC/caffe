@@ -3,6 +3,7 @@
 
 #include <stddef.h>
 #include "caffe/definitions.hpp"
+#include "caffe/quantizer.hpp"
 
 namespace caffe {
 
@@ -11,7 +12,8 @@ void im2col_nd_cpu(const Dtype* data_im, const int_tp num_spatial_axes,
                    const int_tp* im_shape, const int_tp* col_shape,
                    const int_tp* kernel_shape, const int_tp* pad,
                    const int_tp* stride, const int_tp* dilation,
-                   Dtype* data_col);
+                   Dtype* data_col,
+                   const QuantizerValues* const data_quant = nullptr);
 
 template<typename Dtype>
 void im2col_cpu(const Dtype* data_im, const int_tp channels,
@@ -19,7 +21,8 @@ void im2col_cpu(const Dtype* data_im, const int_tp channels,
                 const int_tp kernel_w, const int_tp pad_h, const int_tp pad_w,
                 const int_tp stride_h, const int_tp stride_w,
                 const int_tp dilation_h, const int_tp dilation_w,
-                Dtype* data_col);
+                Dtype* data_col,
+                const QuantizerValues* const data_quant = nullptr);
 
 template<typename Dtype>
 void col2im_nd_cpu(const Dtype* data_col, const int_tp num_spatial_axes,
@@ -41,7 +44,8 @@ void im2col_nd_gpu(const Dtype* data_im, const int_tp num_spatial_axes,
                    const int_tp col_size, const int_tp* im_shape,
                    const int_tp* col_shape, const int_tp* kernel_shape,
                    const int_tp* pad, const int_tp* stride,
-                   const int_tp* dilation, Dtype* data_col);
+                   const int_tp* dilation, Dtype* data_col,
+                   const QuantizerValues* const data_quant = nullptr);
 
 template<typename Dtype>
 void im2col_gpu(const Dtype* data_im, const int_tp channels,
@@ -49,7 +53,8 @@ void im2col_gpu(const Dtype* data_im, const int_tp channels,
                 const int_tp kernel_w, const int_tp pad_h, const int_tp pad_w,
                 const int_tp stride_h, const int_tp stride_w,
                 const int_tp dilation_h, const int_tp dilation_w,
-                Dtype* data_col);
+                Dtype* data_col,
+                const QuantizerValues* const data_quant = nullptr);
 
 template<typename Dtype>
 void col2im_nd_gpu(const Dtype* data_col, const int_tp num_spatial_axes,

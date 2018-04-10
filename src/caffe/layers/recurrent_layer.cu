@@ -42,11 +42,11 @@ void RecurrentLayer<Dtype, MItype, MOtype>::Forward_gpu(
 }
 
 
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(RecurrentLayer, Forward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(RecurrentLayer, Forward_gpu,
                                   (half_fp), (half_fp), (half_fp));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(RecurrentLayer, Forward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(RecurrentLayer, Forward_gpu,
                                   (float), (float), (float));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(RecurrentLayer, Forward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(RecurrentLayer, Forward_gpu,
                                   (double), (double), (double));
 
 

@@ -247,8 +247,8 @@ int train() {
         GetRequestedAction(FLAGS_sigint_effect),
         GetRequestedAction(FLAGS_sighup_effect));
 
-  shared_ptr<caffe::Solver<half_fp> >
-      solver(caffe::SolverRegistry<half_fp>::CreateSolver(solver_param,
+  shared_ptr<caffe::Solver<caffe::half_fp> >
+      solver(caffe::SolverRegistry<caffe::half_fp>::CreateSolver(solver_param,
                                                     Caffe::GetDefaultDevice()));
 
   solver->SetActionFunction(signal_handler.GetActionFunction());
@@ -307,25 +307,25 @@ int test() {
     Caffe::set_mode(Caffe::CPU);
   }
   // Instantiate the caffe net.
-  Net<half_fp> caffe_net(FLAGS_model, caffe::TEST,
+  Net<caffe::half_fp> caffe_net(FLAGS_model, caffe::TEST,
                        Caffe::GetDefaultDevice(), FLAGS_level, &stages);
   caffe_net.CopyTrainedLayersFrom(FLAGS_weights);
   LOG(INFO) << "Running for " << FLAGS_iterations << " iterations.";
 
   vector<int> test_score_output_id;
-  vector<half_fp> test_score;
-  half_fp loss = 0;
+  vector<caffe::half_fp> test_score;
+  caffe::half_fp loss = 0;
   for (int_tp i = 0; i < FLAGS_iterations; ++i) {
-    half_fp iter_loss;
+    caffe::half_fp iter_loss;
     const vector<BlobBase*> result =
         caffe_net.Forward(&iter_loss);
     loss += iter_loss;
     int_tp idx = 0;
     for (int_tp j = 0; j < result.size(); ++j) {
-      const half_fp* result_vec =
-          static_cast<Blob<half_fp>*>(result[j])->cpu_data();
+      const caffe::half_fp* result_vec =
+          static_cast<Blob<caffe::half_fp>*>(result[j])->cpu_data();
       for (int_tp k = 0; k < result[j]->count(); ++k, ++idx) {
-        const half_fp score = result_vec[k];
+        const caffe::half_fp score = result_vec[k];
         if (i == 0) {
           test_score.push_back(score);
           test_score_output_id.push_back(j);
@@ -343,10 +343,10 @@ int test() {
   for (int_tp i = 0; i < test_score.size(); ++i) {
     const string& output_name = caffe_net.blob_names()[
         caffe_net.output_blob_indices()[test_score_output_id[i]]];
-    const half_fp loss_weight = caffe_net.blob_loss_weights()[
+    const caffe::half_fp loss_weight = caffe_net.blob_loss_weights()[
         caffe_net.output_blob_indices()[test_score_output_id[i]]];
     std::ostringstream loss_msg_stream;
-    const half_fp mean_score = test_score[i] / FLAGS_iterations;
+    const caffe::half_fp mean_score = test_score[i] / FLAGS_iterations;
     if (loss_weight) {
       loss_msg_stream << " (* " << loss_weight
                       << " = " << loss_weight * mean_score << " loss)";
@@ -388,7 +388,7 @@ int time() {
     Caffe::set_mode(Caffe::CPU);
   }
   // Instantiate the caffe net.
-  Net<half_fp> caffe_net(FLAGS_model, phase,
+  Net<caffe::half_fp> caffe_net(FLAGS_model, phase,
                        Caffe::GetDefaultDevice(), FLAGS_level, &stages);
 
   // Do a clean forward and backward pass, so that memory allocation are done
@@ -396,7 +396,7 @@ int time() {
   LOG(INFO) << "Performing Forward";
   // Note that for the speed benchmark, we will assume that the network does
   // not take any input blobs.
-  half_fp initial_loss;
+  caffe::half_fp initial_loss;
   caffe_net.Forward(&initial_loss);
   LOG(INFO) << "Initial loss: " << initial_loss;
   if (phase == caffe::TRAIN) {

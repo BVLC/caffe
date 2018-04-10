@@ -29,32 +29,40 @@ class CaffeConvolutionLayer
   // The last argument in forward_cpu_gemm is so that we can skip the im2col if
   // we just called weight_cpu_gemm with the same input.
   void forward_cpu_gemm(const Dtype* input, const Dtype* weights, Dtype* output,
-                        bool skip_im2col = false);
-  void forward_cpu_bias(Dtype* output, const Dtype* bias);
+                        bool skip_im2col = false,
+                        const QuantizerValues* const input_quant = nullptr,
+                        const QuantizerValues* const weights_quant = nullptr,
+                        const QuantizerValues* const output_quant = nullptr);
+  void forward_cpu_bias(Dtype* output, const Dtype* bias,
+                        const QuantizerValues* const output_quant = nullptr,
+                        const QuantizerValues* const bias_quant = nullptr);
   void backward_cpu_gemm(const Dtype* input, const Dtype* weights,
                          Dtype* output);
   void weight_cpu_gemm(const Dtype* input, const Dtype* output, Dtype* weights);
   void backward_cpu_bias(Dtype* bias, const Dtype* input);
 
 #ifndef CPU_ONLY
-  void forward_gpu_gemm(vptr<const Dtype> col_input, const uint_tp col_input_off,
+  void forward_gpu_gemm(vptr<const Dtype> col_input,
                         vptr<const Dtype> weights, vptr<Dtype> output,
-                        const uint_tp output_off, bool skip_im2col = false);
-  void forward_gpu_bias(vptr<Dtype> output, const uint_tp output_off,
-                        vptr<const Dtype> bias);
-  void backward_gpu_gemm(vptr<const Dtype> input, const uint_tp input_off,
-                         vptr<const Dtype> weights, vptr<Dtype> col_output,
-                         const uint_tp col_output_off);
-  void weight_gpu_gemm(vptr<const Dtype> col_input, const uint_tp col_input_off,
-                       vptr<const Dtype> output, const uint_tp output_off,
+                        bool skip_im2col = false,
+                        const QuantizerValues* const input_quant = nullptr,
+                        const QuantizerValues* const weights_quant = nullptr,
+                        const QuantizerValues* const output_quant = nullptr);
+  void forward_gpu_bias(vptr<Dtype> output,
+                        vptr<const Dtype> bias,
+                        const QuantizerValues* const output_quant = nullptr,
+                        const QuantizerValues* const bias_quant = nullptr);
+  void backward_gpu_gemm(vptr<const Dtype> input, vptr<const Dtype> weights,
+                         vptr<Dtype> col_output);
+  void weight_gpu_gemm(vptr<const Dtype> col_input, vptr<const Dtype> output,
                        vptr<Dtype> weights);
-  void backward_gpu_bias(vptr<Dtype> bias, vptr<const Dtype> input,
-                         const uint_tp input_off);
+  void backward_gpu_bias(vptr<Dtype> bias, vptr<const Dtype> input);
 #endif
 
  private:
   // wrap im2col/col2im so we don't have to remember the (long) argument lists
-  inline void conv_im2col_cpu(const Dtype* data, Dtype* col_buff) {
+  inline void conv_im2col_cpu(const Dtype* data, Dtype* col_buff,
+                              const QuantizerValues* const data_quant) {
     if (!this->force_nd_im2col_ && this->num_spatial_axes_ == 2) {
       im2col_cpu(data, this->conv_in_channels_,
           this->conv_input_shape_.cpu_data()[1],
@@ -66,14 +74,14 @@ class CaffeConvolutionLayer
           this->stride_.cpu_data()[0],
           this->stride_.cpu_data()[1],
           this->dilation_.cpu_data()[0],
-          this->dilation_.cpu_data()[1], col_buff);
+          this->dilation_.cpu_data()[1], col_buff, data_quant);
     } else {
       im2col_nd_cpu(data, this->num_spatial_axes_,
           this->conv_input_shape_.cpu_data(),
           this->col_buffer_shape_.data(),
           this->kernel_shape_.cpu_data(),
           this->pad_.cpu_data(), this->stride_.cpu_data(),
-          this->dilation_.cpu_data(), col_buff);
+          this->dilation_.cpu_data(), col_buff, data_quant);
     }
   }
   inline void conv_col2im_cpu(const Dtype* col_buff, Dtype* data) {
@@ -96,7 +104,8 @@ class CaffeConvolutionLayer
   }
 
 #ifndef CPU_ONLY
-  inline void conv_im2col_gpu(vptr<const Dtype> data, vptr<Dtype> col_buff) {
+  inline void conv_im2col_gpu(vptr<const Dtype> data, vptr<Dtype> col_buff,
+                              const QuantizerValues* const data_quant) {
     if (!this->force_nd_im2col_ && this->num_spatial_axes_ == 2) {
       this->device_->im2col(data, this->conv_in_channels_,
           this->conv_input_shape_.cpu_data()[1],
@@ -105,14 +114,15 @@ class CaffeConvolutionLayer
           this->pad_.cpu_data()[0], this->pad_.cpu_data()[1],
           this->stride_.cpu_data()[0], this->stride_.cpu_data()[1],
           this->dilation_.cpu_data()[0],
-          this->dilation_.cpu_data()[1], col_buff);
+          this->dilation_.cpu_data()[1], col_buff, data_quant);
     } else {
       this->device_->im2col_nd(data, this->num_spatial_axes_,
           this->num_kernels_im2col_,
           this->conv_input_shape_.gpu_data(),
           this->col_buffer_.gpu_shape(),
           this->kernel_shape_.gpu_data(), this->pad_.gpu_data(),
-          this->stride_.gpu_data(), this->dilation_.gpu_data(), col_buff);
+          this->stride_.gpu_data(), this->dilation_.gpu_data(), col_buff,
+          data_quant);
     }
   }
 

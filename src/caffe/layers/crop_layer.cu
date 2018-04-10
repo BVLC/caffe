@@ -138,25 +138,25 @@ void CropLayer<Dtype, MItype, MOtype>::Backward_gpu(
   }
 }
 
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(CropLayer, GenerateProgram,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(CropLayer, GenerateProgram,
                                   (half_fp), (half_fp), (half_fp));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(CropLayer, GenerateProgram,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(CropLayer, GenerateProgram,
                                   (float), (float), (float));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(CropLayer, GenerateProgram,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(CropLayer, GenerateProgram,
                                   (double), (double), (double));
 
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(CropLayer, Forward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(CropLayer, Forward_gpu,
                                   (half_fp), (half_fp), (half_fp));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(CropLayer, Forward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(CropLayer, Forward_gpu,
                                   (float), (float), (float));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(CropLayer, Forward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(CropLayer, Forward_gpu,
                                   (double), (double), (double));
 
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(CropLayer, Backward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(CropLayer, Backward_gpu,
                                   (half_fp), (half_fp), (half_fp));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(CropLayer, Backward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(CropLayer, Backward_gpu,
                                   (float), (float), (float));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(CropLayer, Backward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(CropLayer, Backward_gpu,
                                   (double), (double), (double));
 
 }  // namespace caffe

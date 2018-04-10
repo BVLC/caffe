@@ -436,7 +436,7 @@ template void LRNLayer<double>::CrossChannelBackward_gpu(
     const vector<Blob<double>*>& top, const vector<bool>& propagate_down,
     const vector<Blob<double>*>& bottom);
 
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(LRNLayer);
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(LRNLayer);
 
 #endif  // TODO_REFACTOR
 

@@ -68,10 +68,23 @@ struct QuantizerValues {
   get_scale() const {
     return static_cast<Dtype>(std::round(this->scale));
   }
+
+  // For testing purposes
+  void print() const {
+    std::cout << "Zero: " << this->zero << std::endl;
+    std::cout << "One: " << this->one << std::endl;
+    std::cout << "Min: " << this->min << std::endl;
+    std::cout << "Max: " << this->max << std::endl;
+    std::cout << "Scale: " << this->scale << std::endl;
+  }
 };
 
 class QuantizerBase {
  public:
+  template<typename Dtype>
+  static void ScaleQuantVals(
+      const QuantizerValues* const lhs, const QuantizerValues* const rhs,
+      Dtype* rsmult, int8_t* rsshift, const uint8_t shift_bits = 31);
   template<typename Dtype>
   static void MultiplicativeQuantVals(
       const QuantizerValues* const lhs, const QuantizerValues* const rhs,

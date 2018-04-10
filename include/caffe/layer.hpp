@@ -262,6 +262,9 @@ class Layer : public LayerBase {
    * layer.
    */
   explicit Layer(const LayerParameter& param) : LayerBase(param) {
+    layer_param_.set_bottom_data_type(proto_data_type<MItype>());
+    layer_param_.set_compute_data_type(proto_data_type<Dtype>());
+    layer_param_.set_top_data_type(proto_data_type<MOtype>());
     if (layer_param_.blobs_size() > 0) {
       blobs_.resize(layer_param_.blobs_size());
       for (int_tp i = 0; i < layer_param_.blobs_size(); ++i) {

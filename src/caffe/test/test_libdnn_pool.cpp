@@ -17,7 +17,7 @@
 // Comparative check difference limit
 #define kappa 0.05
 // Comparative check shape size limit
-#define element_limit 1000000
+#define ELEMENT_LIMIT 1000000
 
 namespace caffe {
 
@@ -849,7 +849,7 @@ class LibDNNComparativePoolTest : public GPUDeviceTest<TypeParam> {
 
 
     std::uniform_int_distribution<int_tp> sizeRand(1,
-                pow(element_limit / (fmaps * batchsize),
+                pow(ELEMENT_LIMIT / (fmaps * batchsize),
                 1.0 / (static_cast<double>(dims))));
 
 
@@ -1042,7 +1042,7 @@ class LibDNNComparativePoolTest : public GPUDeviceTest<TypeParam> {
 
 
     std::uniform_int_distribution<int_tp> sizeRand(1,
-                pow(element_limit / (fmaps * batchsize),
+                pow(ELEMENT_LIMIT / (fmaps * batchsize),
                 1.0 / (static_cast<double>(dims))));
 
 

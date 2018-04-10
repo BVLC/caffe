@@ -84,6 +84,7 @@ class BaseConvolutionLayer : public Layer<Dtype, MItype, MOtype> {
 
   Blob<Dtype> col_buffer_;
   Blob<Dtype> bias_multiplier_;
+  QuantizerValues bias_multiplier_qv_;
   shared_ptr<Blob<Dtype> > shared_col_buffer_;
   int_tp col_buffer_lock_id_;
 

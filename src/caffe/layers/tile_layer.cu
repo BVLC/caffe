@@ -125,25 +125,25 @@ void TileLayer<Dtype, MItype, MOtype>::Backward_gpu(
   kernel->Execute(group, local);
 }
 
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(TileLayer, GenerateProgram,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(TileLayer, GenerateProgram,
                                   (half_fp), (half_fp), (half_fp));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(TileLayer, GenerateProgram,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(TileLayer, GenerateProgram,
                                   (float), (float), (float));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(TileLayer, GenerateProgram,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(TileLayer, GenerateProgram,
                                   (double), (double), (double));
 
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(TileLayer, Forward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(TileLayer, Forward_gpu,
                                   (half_fp), (half_fp), (half_fp));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(TileLayer, Forward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(TileLayer, Forward_gpu,
                                   (float), (float), (float));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(TileLayer, Forward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(TileLayer, Forward_gpu,
                                   (double), (double), (double));
 
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(TileLayer, Backward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(TileLayer, Backward_gpu,
                                   (half_fp), (half_fp), (half_fp));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(TileLayer, Backward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(TileLayer, Backward_gpu,
                                   (float), (float), (float));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(TileLayer, Backward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(TileLayer, Backward_gpu,
                                   (double), (double), (double));
 
 }  // namespace caffe

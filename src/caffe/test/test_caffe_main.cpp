@@ -23,16 +23,16 @@ bool caffe::isSupported(void) {
 
 #ifdef USE_HALF
 template<>
-bool caffe::isSupported<half_fp>(void) {
+bool caffe::isSupported<caffe::half_fp>(void) {
   return caffe::Caffe::GetDefaultDevice()->
       CheckCapability(caffe::DEVICE_FP16_SUPPORT);
 }
 template<>
-bool caffe::isSupported<caffe::CPUDevice<half_fp> >(void) {
+bool caffe::isSupported<caffe::CPUDevice<caffe::half_fp> >(void) {
   return true;
 }
 template<>
-bool caffe::isSupported<caffe::GPUDevice<half_fp> >(void) {
+bool caffe::isSupported<caffe::GPUDevice<caffe::half_fp> >(void) {
   return caffe::Caffe::GetDefaultDevice()->
       CheckCapability(caffe::DEVICE_FP16_SUPPORT);
 }

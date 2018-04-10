@@ -41,15 +41,15 @@ void CuDNNLRNLayer<Dtype, MItype, MOtype>::Backward_gpu(
 }
 
 
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(CuDNNLRNLayer, Forward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(CuDNNLRNLayer, Forward_gpu,
                                   (float), (float), (float));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(CuDNNLRNLayer, Forward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(CuDNNLRNLayer, Forward_gpu,
                                   (double), (double), (double));
 
 
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(CuDNNLRNLayer, Backward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(CuDNNLRNLayer, Backward_gpu,
                                   (float), (float), (float));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(CuDNNLRNLayer, Backward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(CuDNNLRNLayer, Backward_gpu,
                                   (double), (double), (double));
 
 };  // namespace caffe

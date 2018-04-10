@@ -17,6 +17,21 @@ QuantizerBase::QuantizerBase(Device* dev_ptr)
   this->device_ = dev_ptr;
 }
 
+
+template<typename Dtype>
+void QuantizerBase::ScaleQuantVals(const QuantizerValues* const lhs,
+                                   const QuantizerValues* const rhs,
+                                   Dtype* rsmult, int8_t* rsshift,
+                                   const uint8_t shift_bits) {
+  MultiplicativeQuantVals(lhs, lhs, rhs, rsmult, rsshift, shift_bits);
+}
+
+INSTANTIATE_FUNC_1T(QuantizerBase::ScaleQuantVals,
+                            (int8_t)(int16_t)(int32_t)(int64_t)
+                            (uint8_t)(uint16_t)(uint32_t)(uint64_t));
+INSTANTIATE_FUNC_1T(QuantizerBase::ScaleQuantVals,
+                            (half_fp)(float)(double));
+
 template<typename Dtype>
 void QuantizerBase::MultiplicativeQuantVals(
     const QuantizerValues* const lhs, const QuantizerValues* const rhs,
@@ -57,7 +72,8 @@ void QuantizerBase::MultiplicativeQuantVals(
 }
 
 INSTANTIATE_FUNC_1T(QuantizerBase::MultiplicativeQuantVals,
-                            (int8_t)(int16_t)(int32_t)(int64_t));
+                            (int8_t)(int16_t)(int32_t)(int64_t)
+                            (uint8_t)(uint16_t)(uint32_t)(uint64_t));
 INSTANTIATE_FUNC_1T(QuantizerBase::MultiplicativeQuantVals,
                             (half_fp)(float)(double));
 

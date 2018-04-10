@@ -209,25 +209,25 @@ void ScaleLayer<Dtype, MItype, MOtype>::Backward_gpu(
   }
 }
 
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(ScaleLayer, GenerateProgram,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(ScaleLayer, GenerateProgram,
                                  (half_fp), (half_fp), (half_fp));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(ScaleLayer, GenerateProgram,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(ScaleLayer, GenerateProgram,
                                  (float), (float), (float));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(ScaleLayer, GenerateProgram,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(ScaleLayer, GenerateProgram,
                                  (double), (double), (double));
 
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(ScaleLayer, Forward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(ScaleLayer, Forward_gpu,
                                   (half_fp), (half_fp), (half_fp));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(ScaleLayer, Forward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(ScaleLayer, Forward_gpu,
                                   (float), (float), (float));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(ScaleLayer, Forward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(ScaleLayer, Forward_gpu,
                                   (double), (double), (double));
 
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(ScaleLayer, Backward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(ScaleLayer, Backward_gpu,
                                   (half_fp), (half_fp), (half_fp));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(ScaleLayer, Backward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(ScaleLayer, Backward_gpu,
                                   (float), (float), (float));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(ScaleLayer, Backward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(ScaleLayer, Backward_gpu,
                                   (double), (double), (double));
 
 }  // namespace caffe

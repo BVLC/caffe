@@ -4,6 +4,8 @@
 #include <memory>
 #include "3rdparty/half/half.hpp"
 
+namespace caffe {
+
 #define HALF_DIG 3
 #define HALF_MANT_DIG 11
 #define HALF_MAX_10_EXP 4
@@ -14,8 +16,6 @@
 #define HALF_MAX 65504.f // 0x1.ffcp15
 #define HALF_MIN 6.10352e-5f // 0x1.0p-14
 #define HALF_EPSILON 0x1.0p-10f
-
-typedef half_float::half half_fp;
 
 inline float fixup_arg_type(float v) {
   return v;
@@ -53,16 +53,13 @@ inline unsigned long fixup_arg_type(unsigned long v) {
   return v;
 }
 
-inline float fixup_arg_type(const half_float::detail::expr& expr) {
+inline float fixup_arg_type(const caffe::detail::expr& expr) {
   return float(expr);
 }
 
 inline const void * fixup_arg_type(const std::shared_ptr<void>& share_ptr) {
   return (const void*)share_ptr.get();
 }
-
-namespace caffe {
-
 
 }
 

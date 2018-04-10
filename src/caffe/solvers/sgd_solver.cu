@@ -53,7 +53,7 @@ void sgd_update_gpu(Device* dev, DeviceProgram* dev_prog,
 
 INSTANTIATE_FUNC_1T_GUARDED(sgd_update_gpu, (half_fp)(float)(double));
 
-INSTANTIATE_CLASS_FUNC_1T_GUARDED(SGDSolver,
+INSTANTIATE_CLASST_FUNC_1T_GUARDED(SGDSolver,
                                   GenerateProgram, (half_fp)(float)(double));
 
 }  // namespace caffe

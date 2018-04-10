@@ -145,7 +145,7 @@ caffe_gemm(const CBLAS_TRANSPOSE trans_A, const CBLAS_TRANSPOSE trans_B,
   // std::cout << "Difftype: " << sizeof(Difftype) << std::endl;
   // std::cout << "Acctype: " << sizeof(Acctype) << std::endl;
 
-  int8_t shift_bits = (32/sizeof(Dtype)) - 1;
+  int8_t shift_bits = (32 / sizeof(Dtype)) - 1;
 
   int32_t mult;
   int8_t shift;

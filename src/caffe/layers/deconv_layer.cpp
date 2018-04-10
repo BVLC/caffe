@@ -70,6 +70,12 @@ INSTANTIATE_CLASS_3T_GUARDED(DeconvolutionLayer,
 INSTANTIATE_CLASS_3T_GUARDED(DeconvolutionLayer,
                              (float), (float), (float));
 INSTANTIATE_CLASS_3T_GUARDED(DeconvolutionLayer,
-                             (double), (double), (double));
+                             (uint8_t), (uint8_t), (uint8_t));
+INSTANTIATE_CLASS_3T_GUARDED(DeconvolutionLayer,
+                             (uint16_t), (uint16_t), (uint16_t));
+INSTANTIATE_CLASS_3T_GUARDED(DeconvolutionLayer,
+                             (uint32_t), (uint32_t), (uint32_t));
+INSTANTIATE_CLASS_3T_GUARDED(DeconvolutionLayer,
+                             (uint64_t), (uint64_t), (uint64_t));
 
 }  // namespace caffe

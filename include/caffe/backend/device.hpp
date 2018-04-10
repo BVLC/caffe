@@ -135,7 +135,8 @@ class Device {
               const int_tp kernel_w, const int_tp pad_h, const int_tp pad_w,
               const int_tp stride_h, const int_tp stride_w,
               const int_tp dilation_h, const int_tp dilation_w,
-              vptr<Dtype> data_col);
+              vptr<Dtype> data_col,
+              const QuantizerValues* const data_quant = nullptr);
 
   template<typename Dtype>
   void col2im(vptr<const Dtype> data_col, const int_tp channels,
@@ -150,7 +151,8 @@ class Device {
                  const int_tp num_kernels, vptr<const int_tp> im_shape,
                  vptr<const int_tp> col_shape, vptr<const int_tp> kernel_shape,
                  vptr<const int_tp> pad, vptr<const int_tp> stride,
-                 vptr<const int_tp> dilation, vptr<Dtype> data_col);
+                 vptr<const int_tp> dilation, vptr<Dtype> data_col,
+                 const QuantizerValues* const data_quant = nullptr);
 
   template<typename Dtype>
   void col2im_nd(vptr<const Dtype> data_col, const int_tp num_spatial_axes,

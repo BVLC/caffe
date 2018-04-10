@@ -225,25 +225,25 @@ void EltwiseLayer<Dtype, MItype, MOtype>::Backward_gpu(
   }
 }
 
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(EltwiseLayer, GenerateProgram,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(EltwiseLayer, GenerateProgram,
                                   (half_fp), (half_fp), (half_fp));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(EltwiseLayer, GenerateProgram,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(EltwiseLayer, GenerateProgram,
                                   (float), (float), (float));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(EltwiseLayer, GenerateProgram,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(EltwiseLayer, GenerateProgram,
                                   (double), (double), (double));
 
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(EltwiseLayer, Forward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(EltwiseLayer, Forward_gpu,
                                   (half_fp), (half_fp), (half_fp));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(EltwiseLayer, Forward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(EltwiseLayer, Forward_gpu,
                                   (float), (float), (float));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(EltwiseLayer, Forward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(EltwiseLayer, Forward_gpu,
                                   (double), (double), (double));
 
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(EltwiseLayer, Backward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(EltwiseLayer, Backward_gpu,
                                   (half_fp), (half_fp), (half_fp));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(EltwiseLayer, Backward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(EltwiseLayer, Backward_gpu,
                                   (float), (float), (float));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(EltwiseLayer, Backward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(EltwiseLayer, Backward_gpu,
                                   (double), (double), (double));
 
 }  // namespace caffe

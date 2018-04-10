@@ -114,14 +114,14 @@ void CuDNNConvolutionLayer<Dtype, MItype, MOtype>::Backward_gpu(
 }
 
 
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(CuDNNConvolutionLayer, Forward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(CuDNNConvolutionLayer, Forward_gpu,
                                   (float), (float), (float));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(CuDNNConvolutionLayer, Forward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(CuDNNConvolutionLayer, Forward_gpu,
                                   (double), (double), (double));
 
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(CuDNNConvolutionLayer, Backward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(CuDNNConvolutionLayer, Backward_gpu,
                                   (float), (float), (float));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(CuDNNConvolutionLayer, Backward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(CuDNNConvolutionLayer, Backward_gpu,
                                   (double), (double), (double));
 
 }  // namespace caffe

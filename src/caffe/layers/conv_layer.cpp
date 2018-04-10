@@ -14,10 +14,15 @@ void ConvolutionLayer<Dtype, MItype, MOtype>::Forward_cpu(
     Dtype* top_data = top[i]->mutable_cpu_data();
     for (int_tp n = 0; n < this->num_; ++n) {
       this->forward_cpu_gemm(bottom_data + n * this->bottom_dim_, weight,
-                             top_data + n * this->top_dim_);
+                             top_data + n * this->top_dim_, false,
+                             &(this->bottom_quants_[i]->out_quantizer_values()),
+                             &(this->blobs_quants_[0]->out_quantizer_values()),
+                             &(this->top_quants_[i]->in_quantizer_values()));
       if (this->bias_term_) {
         const Dtype* bias = this->blobs_[1]->cpu_data();
-        this->forward_cpu_bias(top_data + n * this->top_dim_, bias);
+        this->forward_cpu_bias(top_data + n * this->top_dim_, bias,
+                             &(this->top_quants_[i]->in_quantizer_values()),
+                             &(this->blobs_quants_[1]->out_quantizer_values()));
       }
     }
   }
@@ -68,5 +73,13 @@ INSTANTIATE_CLASS_3T_GUARDED(ConvolutionLayer,
                              (float), (float), (float));
 INSTANTIATE_CLASS_3T_GUARDED(ConvolutionLayer,
                              (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(ConvolutionLayer,
+                             (uint8_t), (uint8_t), (uint8_t));
+INSTANTIATE_CLASS_3T_GUARDED(ConvolutionLayer,
+                             (uint16_t), (uint16_t), (uint16_t));
+INSTANTIATE_CLASS_3T_GUARDED(ConvolutionLayer,
+                             (uint32_t), (uint32_t), (uint32_t));
+INSTANTIATE_CLASS_3T_GUARDED(ConvolutionLayer,
+                             (uint64_t), (uint64_t), (uint64_t));
 
 }  // namespace caffe

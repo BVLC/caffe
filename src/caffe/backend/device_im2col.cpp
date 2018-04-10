@@ -1,6 +1,7 @@
 #include "caffe/backend/device.hpp"
 #include "caffe/backend/device_program.hpp"
 #include "caffe/backend/device_kernel.hpp"
+#include "caffe/quantizer.hpp"
 
 namespace caffe {
 
@@ -46,7 +47,11 @@ string create_source(Device* dev,
     fw_args.push_back(program->create_kernel_arg<int_tp>("width_col",
                                                           KERNEL_ARG_CONST));
     fw_args.push_back(program->create_kernel_arg<Dtype>("data_col",
-                      KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_MEM_OFFSET));
+                             KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_MEM_OFFSET));
+    if (is_integer_type<Dtype>()) {
+      fw_args.push_back(program->create_kernel_arg<Dtype>("zero",
+                                                          KERNEL_ARG_CONST));
+    }
     ss << program->function("caffe_gpu_im2col", fw_args);
     ss << program->kernel_loop("int_tp", "index", "n");
     ss << "const int_tp h_index = index / width_col;" << std::endl;
@@ -70,8 +75,12 @@ string create_source(Device* dev,
     ss << "int_tp w_im = w_offset + j * dilation_w;" << std::endl;
     ss << "*data_col_ptr = "
        << "(h_im >= 0 && w_im >= 0 && h_im < height && w_im < width) ?"
-       << "data_im_ptr[i * dilation_h * width + j * dilation_w] : (Dtype)0;"
-       << std::endl;
+       << "data_im_ptr[i * dilation_h * width + j * dilation_w] : ";
+    if (is_integer_type<Dtype>()) {
+      ss << "zero;" << std::endl;
+    } else {
+      ss << "(Dtype)0;" << std::endl;
+    }
     ss << "data_col_ptr += height_col * width_col;" << std::endl;
     ss << "}" << std::endl;
     ss << "}" << std::endl;
@@ -177,6 +186,10 @@ string create_source(Device* dev,
                       KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_CONST));
     fw_args.push_back(program->create_kernel_arg<Dtype>("data_col",
                       KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_MEM_OFFSET));
+    if (is_integer_type<Dtype>()) {
+      fw_args.push_back(program->create_kernel_arg<Dtype>("zero",
+                                                          KERNEL_ARG_CONST));
+    }
     ss << program->function("caffe_gpu_im2col_nd_"
                             + std::to_string(num_axes), fw_args);
     ss << "int_tp d_temp[" << num_axes << "];" << std::endl;
@@ -258,7 +271,11 @@ string create_source(Device* dev,
     ss << "}" << std::endl;
     ss << "*data_col_ptr = data_im_ptr[data_im_offset];" << std::endl;
     ss << "} else {" << std::endl;
-    ss << "*data_col_ptr = 0;" << std::endl;
+    if (is_integer_type<Dtype>()) {
+      ss << "*data_col_ptr = zero;" << std::endl;
+    } else {
+      ss << "*data_col_ptr = 0;" << std::endl;
+    }
     ss << "}" << std::endl;
     ss << "data_col_ptr += data_col_inc;" << std::endl;
     ss << "incremented = false;" << std::endl;
@@ -497,7 +514,7 @@ void Device::im2col(vptr<const Dtype> data_im, const int_tp channels,
             const int_tp kernel_w, const int_tp pad_h, const int_tp pad_w,
             const int_tp stride_h, const int_tp stride_w,
             const int_tp dilation_h, const int_tp dilation_w,
-            vptr<Dtype> data_col) {
+            vptr<Dtype> data_col, const QuantizerValues* const data_quant) {
   // We are going to launch channels * height_col * width_col kernels, each
   // kernel responsible for copying a single-channel grid.
   int_tp height_col = (height + 2 * pad_h - (dilation_h * (kernel_h - 1) + 1))
@@ -506,9 +523,17 @@ void Device::im2col(vptr<const Dtype> data_im, const int_tp channels,
       / stride_w + 1;
   int_tp num_kernels = channels * height_col * width_col;
 
+  vector<size_t> work_size(1, num_kernels);
+  vector<size_t> group;
+  vector<size_t> local;
+
+
   shared_ptr<DeviceKernel> kernel =
     this->im2col_programs_[data_type_index<Dtype>()]
                            ->GetKernel("caffe_gpu_im2col");
+
+  this->get_threads(&work_size, &group, &local, kernel.get(), true);
+
   kernel->add_arg(&num_kernels);
   kernel->add_arg(&data_im);
   kernel->add_arg(&height);
@@ -524,12 +549,14 @@ void Device::im2col(vptr<const Dtype> data_im, const int_tp channels,
   kernel->add_arg(&height_col);
   kernel->add_arg(&width_col);
   kernel->add_arg(&data_col);
-
-  vector<size_t> work_size(1, num_kernels);
-  vector<size_t> group;
-  vector<size_t> local;
-  this->get_threads(&work_size, &group, &local, kernel.get(), true);
-  kernel->Execute(group, local);
+  if(is_integer_type<Dtype>()) {
+    const Dtype zero = data_quant ? data_quant->template get_zero<Dtype>()
+                                  : Dtype(0);
+    kernel->add_arg(&zero);
+    kernel->Execute(group, local);
+  } else {
+    kernel->Execute(group, local);
+  }
 }
 
 template<typename Dtype>
@@ -581,10 +608,19 @@ void Device::im2col_nd(vptr<const Dtype> data_im, const int_tp num_spatial_axes,
                        vptr<const int_tp> col_shape,
                        vptr<const int_tp> kernel_shape,
                        vptr<const int_tp> pad, vptr<const int_tp> stride,
-                       vptr<const int_tp> dilation, vptr<Dtype> data_col) {
+                       vptr<const int_tp> dilation, vptr<Dtype> data_col,
+                       const QuantizerValues* const data_quant) {
+
+  vector<size_t> work_size(1, num_kernels);
+  vector<size_t> group;
+  vector<size_t> local;
+
   shared_ptr<DeviceKernel> kernel =
       this->im2col_programs_[data_type_index<Dtype>()]
          ->GetKernel("caffe_gpu_im2col_nd_" + std::to_string(num_spatial_axes));
+
+  this->get_threads(&work_size, &group, &local, kernel.get(), true);
+
   kernel->add_arg(&num_kernels);
   kernel->add_arg(&data_im);
   kernel->add_arg(&im_shape);
@@ -594,12 +630,14 @@ void Device::im2col_nd(vptr<const Dtype> data_im, const int_tp num_spatial_axes,
   kernel->add_arg(&stride);
   kernel->add_arg(&dilation);
   kernel->add_arg(&data_col);
-
-  vector<size_t> work_size(1, num_kernels);
-  vector<size_t> group;
-  vector<size_t> local;
-  this->get_threads(&work_size, &group, &local, kernel.get(), true);
-  kernel->Execute(group, local);
+  if(is_integer_type<Dtype>()) {
+    const Dtype zero = data_quant ? data_quant->template get_zero<Dtype>()
+                                  : Dtype(0);
+    kernel->add_arg(&zero);
+    kernel->Execute(group, local);
+  } else {
+    kernel->Execute(group, local);
+  }
 }
 
 template<typename Dtype>
@@ -630,113 +668,9 @@ void Device::col2im_nd(vptr<const Dtype> data_col,
   kernel->Execute(group, local);
 }
 
-#ifdef USE_HALF
-template
-void Device::im2col(vptr<const half_fp> data_im, const int_tp channels,
-                    const int_tp height, const int_tp width,
-                    const int_tp kernel_h, const int_tp kernel_w,
-                    const int_tp pad_h, const int_tp pad_w,
-                    const int_tp stride_h, const int_tp stride_w,
-                    const int_tp dilation_h, const int_tp dilation_w,
-                    vptr<half_fp> data_col);
-template
-void Device::col2im(vptr<const half_fp> data_col,
-                    const int_tp channels, const int_tp height,
-                    const int_tp width, const int_tp kernel_h,
-                    const int_tp kernel_w, const int_tp pad_h,
-                    const int_tp pad_w, const int_tp stride_h,
-                    const int_tp stride_w, const int_tp dilation_h,
-                    const int_tp dilation_w, vptr<half_fp> data_im);
-template
-void Device::im2col_nd(vptr<const half_fp> data_im,
-                       const int_tp num_spatial_axes,
-                       const int_tp num_kernels, vptr<const int_tp> im_shape,
-                       vptr<const int_tp> col_shape,
-                       vptr<const int_tp> kernel_shape,
-                       vptr<const int_tp> pad, vptr<const int_tp> stride,
-                       vptr<const int_tp> dilation,
-                       vptr<half_fp> data_col);
-template
-void Device::col2im_nd(vptr<const half_fp> data_col,
-                       const int_tp num_spatial_axes,
-                       const int_tp im_size, vptr<const int_tp> im_shape,
-                       vptr<const int_tp> col_shape,
-                       vptr<const int_tp> kernel_shape,
-                       vptr<const int_tp> pad, vptr<const int_tp> stride,
-                       vptr<const int_tp> dilation,
-                       vptr<half_fp> data_im);
-#endif  // USE_HALF
-
-
-#ifdef USE_SINGLE
-template
-void Device::im2col(vptr<const float> data_im, const int_tp channels,
-                    const int_tp height, const int_tp width,
-                    const int_tp kernel_h, const int_tp kernel_w,
-                    const int_tp pad_h, const int_tp pad_w,
-                    const int_tp stride_h, const int_tp stride_w,
-                    const int_tp dilation_h, const int_tp dilation_w,
-                    vptr<float> data_col);
-template
-void Device::col2im(vptr<const float> data_col, const int_tp channels,
-                    const int_tp height, const int_tp width,
-                    const int_tp kernel_h, const int_tp kernel_w,
-                    const int_tp pad_h, const int_tp pad_w,
-                    const int_tp stride_h, const int_tp stride_w,
-                    const int_tp dilation_h, const int_tp dilation_w,
-                    vptr<float> data_im);
-template
-void Device::im2col_nd(vptr<const float> data_im,
-                       const int_tp num_spatial_axes,
-                       const int_tp num_kernels, vptr<const int_tp> im_shape,
-                       vptr<const int_tp> col_shape,
-                       vptr<const int_tp> kernel_shape,
-                       vptr<const int_tp> pad, vptr<const int_tp> stride,
-                       vptr<const int_tp> dilation, vptr<float> data_col);
-template
-void Device::col2im_nd(vptr<const float> data_col,
-                       const int_tp num_spatial_axes,
-                       const int_tp im_size, vptr<const int_tp> im_shape,
-                       vptr<const int_tp> col_shape,
-                       vptr<const int_tp> kernel_shape,
-                       vptr<const int_tp> pad, vptr<const int_tp> stride,
-                       vptr<const int_tp> dilation, vptr<float> data_im);
-#endif  // USE_SINGLE
-
-
-#ifdef USE_DOUBLE
-template
-void Device::im2col(vptr<const double> data_im, const int_tp channels,
-                    const int_tp height, const int_tp width,
-                    const int_tp kernel_h, const int_tp kernel_w,
-                    const int_tp pad_h, const int_tp pad_w,
-                    const int_tp stride_h, const int_tp stride_w,
-                    const int_tp dilation_h, const int_tp dilation_w,
-                    vptr<double> data_col);
-template
-void Device::col2im(vptr<const double> data_col, const int_tp channels,
-                    const int_tp height, const int_tp width,
-                    const int_tp kernel_h, const int_tp kernel_w,
-                    const int_tp pad_h, const int_tp pad_w,
-                    const int_tp stride_h, const int_tp stride_w,
-                    const int_tp dilation_h, const int_tp dilation_w,
-                    vptr<double> data_im);
-template
-void Device::im2col_nd(vptr<const double> data_im,
-                       const int_tp num_spatial_axes,
-                       const int_tp num_kernels, vptr<const int_tp> im_shape,
-                       vptr<const int_tp> col_shape,
-                       vptr<const int_tp> kernel_shape,
-                       vptr<const int_tp> pad, vptr<const int_tp> stride,
-                       vptr<const int_tp> dilation, vptr<double> data_col);
-template
-void Device::col2im_nd(vptr<const double> data_col,
-                       const int_tp num_spatial_axes,
-                       const int_tp im_size, vptr<const int_tp> im_shape,
-                       vptr<const int_tp> col_shape,
-                       vptr<const int_tp> kernel_shape,
-                       vptr<const int_tp> pad, vptr<const int_tp> stride,
-                       vptr<const int_tp> dilation, vptr<double> data_im);
-#endif  // USE_DOUBLE
+INSTANTIATE_CLASS_FUNCT_1T_GUARDED(Device, im2col, PROTO_TYPES);
+INSTANTIATE_CLASS_FUNCT_1T_GUARDED(Device, col2im, PROTO_TYPES);
+INSTANTIATE_CLASS_FUNCT_1T_GUARDED(Device, im2col_nd, PROTO_TYPES);
+INSTANTIATE_CLASS_FUNCT_1T_GUARDED(Device, col2im_nd, PROTO_TYPES);
 
 }  // namespace caffe

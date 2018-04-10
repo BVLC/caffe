@@ -96,25 +96,25 @@ void TanHLayer<Dtype, MItype, MOtype>::Backward_gpu(
   }
 }
 
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(TanHLayer, GenerateProgram,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(TanHLayer, GenerateProgram,
                                   (half_fp), (half_fp), (half_fp));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(TanHLayer, GenerateProgram,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(TanHLayer, GenerateProgram,
                                   (float), (float), (float));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(TanHLayer, GenerateProgram,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(TanHLayer, GenerateProgram,
                                   (double), (double), (double));
 
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(TanHLayer, Forward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(TanHLayer, Forward_gpu,
                                   (half_fp), (half_fp), (half_fp));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(TanHLayer, Forward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(TanHLayer, Forward_gpu,
                                   (float), (float), (float));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(TanHLayer, Forward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(TanHLayer, Forward_gpu,
                                   (double), (double), (double));
 
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(TanHLayer, Backward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(TanHLayer, Backward_gpu,
                                   (half_fp), (half_fp), (half_fp));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(TanHLayer, Backward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(TanHLayer, Backward_gpu,
                                   (float), (float), (float));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(TanHLayer, Backward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(TanHLayer, Backward_gpu,
                                   (double), (double), (double));
 
 }  // namespace caffe

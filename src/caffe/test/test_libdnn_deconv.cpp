@@ -17,7 +17,7 @@
 // Comparative check difference limit
 #define kappa 0.05
 // Comparative check shape size limit
-#define element_limit 1000000
+#define ELEMENT_LIMIT 1000000
 
 namespace caffe {
 
@@ -236,7 +236,7 @@ class LibDNNComparativeDeconvTest : public GPUDeviceTest<TypeParam> {
     int dims = dimsRand(this->rng_);
 
     std::uniform_int_distribution<int_tp> sizeRand(5,
-                std::max(static_cast<int>(pow(element_limit /
+                std::max(static_cast<int>(pow(ELEMENT_LIMIT /
                   (fmaps_in * fmaps_out * batchsize),
                   1.0 / (static_cast<double>(dims)))), 5));
 
@@ -424,7 +424,7 @@ class LibDNNComparativeDeconvTest : public GPUDeviceTest<TypeParam> {
     int dims = dimsRand(this->rng_);
 
     std::uniform_int_distribution<int_tp> sizeRand(5,
-                std::max(static_cast<int>(pow(element_limit /
+                std::max(static_cast<int>(pow(ELEMENT_LIMIT /
                   (fmaps_in * fmaps_out * batchsize),
                   1.0 / (static_cast<double>(dims)))), 5));
 

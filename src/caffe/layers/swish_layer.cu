@@ -115,25 +115,25 @@ void SwishLayer<Dtype, MItype, MOtype>::Backward_gpu(
   }
 }
 
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(SwishLayer, GenerateProgram,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(SwishLayer, GenerateProgram,
                                   (half_fp), (half_fp), (half_fp));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(SwishLayer, GenerateProgram,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(SwishLayer, GenerateProgram,
                                   (float), (float), (float));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(SwishLayer, GenerateProgram,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(SwishLayer, GenerateProgram,
                                   (double), (double), (double));
 
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(SwishLayer, Forward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(SwishLayer, Forward_gpu,
                                   (half_fp), (half_fp), (half_fp));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(SwishLayer, Forward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(SwishLayer, Forward_gpu,
                                   (float), (float), (float));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(SwishLayer, Forward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(SwishLayer, Forward_gpu,
                                   (double), (double), (double));
 
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(SwishLayer, Backward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(SwishLayer, Backward_gpu,
                                   (half_fp), (half_fp), (half_fp));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(SwishLayer, Backward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(SwishLayer, Backward_gpu,
                                   (float), (float), (float));
-INSTANTIATE_CLASS_FUNC_3T_GUARDED(SwishLayer, Backward_gpu,
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(SwishLayer, Backward_gpu,
                                   (double), (double), (double));
 
 }  // namespace caffe
