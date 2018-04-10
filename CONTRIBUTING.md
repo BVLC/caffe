@@ -7,6 +7,7 @@ Specific Caffe design and development issues, bugs, and feature requests are mai
 *Please do not post installation, build, usage, or modeling questions, or other requests for help to Issues.*
 Use the [caffe-users list](https://groups.google.com/forum/#!forum/caffe-users) instead.
 This helps developers maintain a clear, uncluttered, and efficient view of the state of Caffe.
+See the chapter [caffe-users](#caffe-users) below for guidance on posting to the users list.
 
 When reporting an issue, it's most helpful to provide the following information, where applicable:
 * What steps reproduce the problem?
@@ -20,14 +21,33 @@ When reporting an issue, it's most helpful to provide the following information,
 	* BLAS library,
 	* Python version, if relevant,
 	* MATLAB version, if relevant.
-* What steps have you already tried to solve the issue? What didn't work and how?
 * If the bug is a crash, provide the backtrace (usually printed by Caffe; always obtainable with `gdb`).
 * If you are reporting a build error that seems to be due to a bug in Caffe, please attach your build configuration (either Makefile.config or CMakeCache.txt) and the output of the make (or cmake) command.
 
-If only a small portion of the code/log is relevant to your issue, you may paste it directly into the post, preferably using Markdown syntax for code block: triple backtick ( \` ) to open/close a block.
+If only a small portion of the code/log is relevant to your issue, you may paste it directly into the post, preferably using Markdown syntax for code block: triple backtick ( \`\`\` ) to open/close a block.
 In other cases (multiple files, or long files), please **attach** them to the post - this greatly increases readability.
 
 Try to give your issue a title that is succinct and specific. The devs will rename issues as needed to keep track of them.
+
+## Caffe-users
+
+When posting to the [caffe-users list](https://groups.google.com/forum/#!forum/caffe-users), make sure you provide as much relevant information as possible.
+The steps for an issue submission (given above) are a good starting point:
+* What steps reproduce the problem?
+* How does the problem look like (provide the log/error message/anything relevant)?
+* Does your installation pass `make runtest`? Does the problem occur in a `DEBUG` configuration?
+* Which version of Caffe are you using? Latest master or an older release? If it is some other branch, or a specialized fork - make it clear too.
+* What hardware and software are you running (see the list for issues above)?
+* **What steps have you already tried** to solve the issue? How did they fail? Are there any issues related to yours?
+
+The error logs are very valuable, so do include them in your post.
+Please try to use fixed-width text formatting to make the log more readable.
+**However!** If the log is long (more than 50 lines or so), please do not post its content directly - instead, consider attaching it to the post as a file.
+
+If the problem arises during a complex operation (e.g. a long script using pycaffe, or a large network prototxt), please try to reduce the operation to the minimal size that still causes the error.
+Also, please minimize influence of external modules, data etc.
+This way it will be easier for others to understand and reproduce your issue, and eventually help you.
+Sometimes you will find the root cause yourself in the process.
 
 ## Pull Requests
 
