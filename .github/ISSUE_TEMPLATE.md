@@ -12,7 +12,10 @@ This helps developers maintain a clear, uncluttered, and efficient view of the s
 ### Steps to reproduce
 
 
-### Your system configuration
+### Tried solutions
+
+
+### System configuration
 
 * Operating system: 
 * Compiler: 
@@ -24,8 +27,8 @@ This helps developers maintain a clear, uncluttered, and efficient view of the s
 
 ### Issue checklist
 
-- [ ] this issue does not belong to the caffe-users list
 - [ ] read the guidelines and removed the first paragraph
-- [ ] written a summary and steps to reproduce
-- [ ] filled the configuration info
-- [ ] attached the relevant logs/config files (tick if it's not applicable in this case)
+- [ ] written a short summary and detailed steps to reproduce
+- [ ] explained how solutions to related problems failed (tick if found none)
+- [ ] filled system configuration
+- [ ] attached relevant logs/config files (tick if not applicable)
