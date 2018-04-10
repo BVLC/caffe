@@ -18,7 +18,7 @@ When reporting an issue, it's most helpful to provide the following information,
 * What hardware and software are you running? In particular:
 	* GPU make and model, if relevant,
 	* operating system/distribution,
-	* compiler; please also post which version (for example, if you're using GCC, run `gcc --version` to check which one),
+	* compiler; please also post which version (for example, with GCC run `gcc --version` to check),
 	* CUDA version, if applicable (run `nvcc --version` to check),
 	* cuDNN version, if applicable (version number is stored in `cudnn.h`, look for lines containing `CUDNN_MAJOR`, `CUDNN_MINOR` and `CUDNN_PATCHLEVEL`),
 	* BLAS library,
@@ -30,7 +30,7 @@ When reporting an issue, it's most helpful to provide the following information,
 * If you are reporting a build error that seems to be due to a bug in Caffe, please attach your build configuration (either Makefile.config or CMakeCache.txt) and the output of the make (or cmake) command.
 
 If only a small portion of the code/log is relevant to your issue, you may paste it directly into the post, preferably using Markdown syntax for code block: triple backtick ( \`\`\` ) to open/close a block.
-In other cases (multiple files, or long files), please **attach** them to the post - this greatly increases readability.
+In other cases (multiple files, or long files), please **attach** them to the post - this greatly improves readability.
 
 If the problem arises during a complex operation (e.g. large script using pycaffe, long network prototxt), please reduce the example to the minimal size that still causes the error.
 Also, minimize influence of external modules, data etc. - this way it will be easier for others to understand and reproduce your issue, and eventually help you.
@@ -54,7 +54,7 @@ Don't just leave a "me too" message - provide the details of your case.
 Problems with more available information are easier to solve and attract good attention.
 
 When posting to the list, make sure you provide as much relevant information as possible - recommendations for an issue report (see above) are a good starting point.  
-Please make it very clear which version of Caffe you are using, especially if it is a fork not maintained by BVLC.
+*Please make it very clear which version of Caffe you are using, especially if it is a fork not maintained by BVLC.*
 
 Formatting recommendations hold: paste short logs/code fragments into the post (use fixed-width text for them), **attach** long logs or multiple files.
 
