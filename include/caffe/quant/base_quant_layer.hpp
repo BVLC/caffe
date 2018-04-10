@@ -54,7 +54,6 @@ class BaseQuantLayer{
   vector<float> scale_params_, scale_in_, scale_out_;
   int rounding_, precision_;
   bool need_quantize_;
-  bool is_float_;
 };
 
 }  // namespace caffe

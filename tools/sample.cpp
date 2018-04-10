@@ -127,7 +127,7 @@ int quantize(){
   CHECK_GT(FLAGS_trimming_mode.size(), 0) << "Need trimming mode.";
   Quantization* q = new Quantization(FLAGS_model, FLAGS_weights,
       FLAGS_model_quantized, FLAGS_iterations, FLAGS_trimming_mode,
-      FLAGS_error_margin, FLAGS_score_number, FLAGS_scaling, FLAGS_detection, FLAGS_power);
+      FLAGS_error_margin, FLAGS_score_number, FLAGS_scaling, FLAGS_detection);
   q->QuantizeNet();
   delete q;
   return 0;

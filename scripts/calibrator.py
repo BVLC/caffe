@@ -226,10 +226,10 @@ def transform_convolutions(model_path, compiled_model_path):
 
 
 def generate_sample(sample_path, input_model, weights,
-                    quantized_model, detection, scaling_mode, iterations=1, error_margin=1, power=0):
-    cmd = '{0} quantize -model {1} -weights {2} -model_quantized {3} -iterations {4} -error_margin {5} -power {6}' \
-          ' -scaling {7} -trimming_mode dynamic_fixed_point'.format(sample_path, input_model, weights, quantized_model,
-                                                                    iterations, error_margin, power, scaling_mode)
+                    quantized_model, detection, scaling_mode, iterations=1, error_margin=1):
+    cmd = '{0} quantize -model {1} -weights {2} -model_quantized {3} -iterations {4} -error_margin {5} ' \
+          ' -scaling {6} -trimming_mode dynamic_fixed_point'.format(sample_path, input_model, weights, quantized_model,
+                                                                    iterations, error_margin, scaling_mode)
     if detection:
         cmd += ' --detection=1'
 
@@ -284,11 +284,10 @@ def remove_top_quantized_parameter(current_quantized_file):
 
 
 def tuning_quantized_topology(base_top1_accuracy, prototxt, caffe_bin, model_weights, iterations,
-                              is_floating_point, accuracy_loss, detection, blob_name):
-    if is_floating_point == 0:
-        print 'Updating quantization parameter...'
+                              accuracy_loss, detection, blob_name):
+    print 'Updating quantization parameter...'
 
-        transform_convolutions(prototxt, get_compiled_net(caffe_bin, prototxt, model_weights, detection))
+    transform_convolutions(prototxt, get_compiled_net(caffe_bin, prototxt, model_weights, detection))
 
     current_top1_accuracy = get_the_accuracy(caffe_bin, prototxt, model_weights, iterations, detection, blob_name)
 
@@ -438,7 +437,7 @@ if __name__ == '__main__':
             print 'Invalid sampling iteration!The value should be larger than zero.'
             sys.exit(-1)
 
-    if params.scaling_mode != 'multipe' and params.scaling_mode != 'single':
+    if params.scaling_mode != 'multiple' and params.scaling_mode != 'single':
         user_scaling_mode = 'single'
     else:
         user_scaling_mode = params.scaling_mode
@@ -483,16 +482,15 @@ if __name__ == '__main__':
         sys.exit(-1)
 
     quantized_prototxt = model.rsplit('.')[0] + '_quantized.prototxt'
-    enable_power_of_2 = 0
     print 'Sampling...'
     generate_sample(sample, model, user_input_weights, quantized_prototxt, detection_flag, user_scaling_mode,
-                    user_sampling_iteration, 100 * toleration, enable_power_of_2)
+                    user_sampling_iteration, 100 * toleration)
     print 'Sampling done'
     print 'Generating the FP32 accuracy...'
     top_1 = get_the_accuracy(caffe_bin_path, model, user_input_weights, user_input_iterations, detection_flag,
                              target_blob_name)
     print 'FP32 accuracy is: {}'.format(top_1)
     tuning_quantized_topology(top_1, quantized_prototxt, caffe_bin_path, user_input_weights, user_input_iterations,
-                              enable_power_of_2, toleration, detection_flag, target_blob_name)
+                              toleration, detection_flag, target_blob_name)
 
     print 'Updated prototxt {} is generated.'.format(quantized_prototxt)

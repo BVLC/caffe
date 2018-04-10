@@ -47,8 +47,8 @@ MKLDNNMemoryDescriptorBase<Dtype>::MKLDNNMemoryDescriptorBase(shared_ptr<memory:
                                                             , shared_ptr<memory::primitive_desc> prv_memory_pd
                                                             , Blob<Dtype>* blob
                                                             , MKLDNNLayer<Dtype>* mkldnn_layer
-                                                            , bool is_float
                                                             , std::vector<float> scale
+                                                            , int mask
                                                             , bool is_sum)
                                     : name("MKLDNNMemoryDescriptorBase")
                                     , _reorder_usr2prv_pd(), _reorder_prv2usr_pd(), _reorder_extprv2prv_pd()
@@ -56,32 +56,10 @@ MKLDNNMemoryDescriptorBase<Dtype>::MKLDNNMemoryDescriptorBase(shared_ptr<memory:
                                     , _mkldnn_layer(NULL)
 {
     set_usr_memory_pd(usr_memory_pd, scale);
-    set_prv_memory_pd(prv_memory_pd, scale);
+    set_prv_memory_pd(prv_memory_pd, scale, mask);
     set_mkldnn_layer(mkldnn_layer);
     this->set_scale(scale);
     this->set_sum(is_sum);
-    this->set_float(is_float);
-    this->_blob = blob;
-}
-
-template <typename Dtype>
-MKLDNNMemoryDescriptorBase<Dtype>::MKLDNNMemoryDescriptorBase(shared_ptr<memory::primitive_desc> usr_memory_pd
-                                                            , shared_ptr<memory::primitive_desc> prv_memory_pd
-                                                            , Blob<Dtype>* blob
-                                                            , MKLDNNLayer<Dtype>* mkldnn_layer
-                                                            , std::vector<int> fl
-                                                            , bool is_sum)
-                                    : name("MKLDNNMemoryDescriptorBase")
-                                    , _reorder_usr2prv_pd(), _reorder_prv2usr_pd(), _reorder_extprv2prv_pd()
-                                    ,_prv_memory(), _internal_ptr(NULL), _usr_memory(), _cpu_ptr(NULL)
-                                    , _mkldnn_layer(NULL)
-{   
-    set_usr_memory_pd(usr_memory_pd, fl);
-    set_prv_memory_pd(prv_memory_pd, fl);
-    set_mkldnn_layer(mkldnn_layer);
-    this->set_fl(fl);
-    this->set_sum(is_sum);
-    this->set_float(false);
     this->_blob = blob;
 }
 
@@ -101,21 +79,12 @@ void MKLDNNMemoryDescriptorBase<Dtype>::check_usr_with_prv_descriptors()
 }
 
 template <typename Dtype>
-void MKLDNNMemoryDescriptorBase<Dtype>::create_reorder_descriptors(std::vector<float> scale, std::vector<float> scale_ext, bool is_sum)
+void MKLDNNMemoryDescriptorBase<Dtype>::create_reorder_descriptors(std::vector<float> scale, int mask, std::vector<float> scale_ext, bool is_sum)
 {
     CHECK(_usr_memory_pd);
     CHECK(_prv_memory_pd);
 
     primitive_attr attri;
-    int mask = 0;
-    if(scale.size() > 1 || scale_ext.size() > 1){
-#ifdef DEBUG
-        LOG(INFO)<<"multi-channel";
-#endif
-        int oc_dim_id = 0;
-        mask = 1 << oc_dim_id;
-    }
-
     int count = scale.size();
     if ( *_usr_memory_pd != *_prv_memory_pd) {
         std::vector<float> scales_u2p(count);
@@ -160,78 +129,14 @@ void MKLDNNMemoryDescriptorBase<Dtype>::create_reorder_descriptors(std::vector<f
     }
 }
 
-template <typename Dtype>
-void MKLDNNMemoryDescriptorBase<Dtype>::create_reorder_descriptors(std::vector<int> fl, std::vector<int> fl_ext, bool is_sum)
-{
-    CHECK(_usr_memory_pd);
-    CHECK(_prv_memory_pd);
-
-    primitive_attr attri;
-    int mask = 0;
-    if(fl.size() > 1 || fl_ext.size() > 1){
-#ifdef DEBUG
-        LOG(INFO)<<"multi-channel";
-#endif
-        int oc_dim_id = 0;
-        mask = 1 << oc_dim_id;
-    }
-
-    int count = fl.size();
-    float scale;
-    if ( *_usr_memory_pd != *_prv_memory_pd) {
-        std::vector<float> scales_u2p(count);
-        #pragma omp parallel for if (count > 1)
-        for(int i = 0; i < count; i++){
-            scale = pow(2, fl[i]);
-            scales_u2p[i] = scale;
-        }
-        attri.set_output_scales(mask, scales_u2p);
-        attri.set_int_output_round_mode(round_nearest);
-        _reorder_usr2prv_pd = shared_ptr<reorder::primitive_desc>(
-                new reorder::primitive_desc(*_usr_memory_pd, *_prv_memory_pd, attri));
-
-        std::vector<float> scales_p2u(count);
-        #pragma omp parallel for if (count > 1)
-        for(int i = 0; i < count; i++){
-          scale = pow(2, -fl[i]);
-          scales_p2u[i] = scale;
-        }
-        attri.set_output_scales(mask, scales_p2u);
-        attri.set_int_output_round_mode(round_nearest);
-        _reorder_prv2usr_pd = shared_ptr<reorder::primitive_desc>(
-                new reorder::primitive_desc(*_prv_memory_pd, *_usr_memory_pd, attri));
-    }
-    if ( _extprv_memory_pd && (*_prv_memory_pd != *_extprv_memory_pd || fl != fl_ext)) {
-        if(is_sum == true && fl == fl_ext && _extprv_memory_pd->desc().data.data_type == memory::data_type::s8 && _prv_memory_pd->desc().data.data_type == memory::data_type::u8){
-#ifdef DEBUG
-            LOG(INFO) << "skip s8 to u8 reorder....";
-#endif
-            _reorder_extprv2prv_pd = NULL;
-        }else{
-            std::vector<float> scales_e2p(count);
-            int shift_fl;
-            #pragma omp parallel for if (count > 1)
-            for(int i = 0; i < count; i++){
-                shift_fl = fl[i] - fl_ext[i]; //fp32->int8 blob_prv_mkldnn_mem_descr->get_fl() will always be 0 ?
-                scale = pow(2, shift_fl);
-                scales_e2p[i] = scale;
-            }
-            attri.set_output_scales(mask, scales_e2p);
-            attri.set_int_output_round_mode(round_nearest);
-            _reorder_extprv2prv_pd = shared_ptr<reorder::primitive_desc>(new reorder::primitive_desc(*_extprv_memory_pd, *_prv_memory_pd, attri));
-
-        }
-    }
-}
-
 template <typename Dtype, bool is_diff>
  MKLDNNMemoryDescriptor<Dtype, is_diff>::MKLDNNMemoryDescriptor(shared_ptr<memory::primitive_desc> usr_memory_pd
                         , shared_ptr<memory::primitive_desc> prv_memory_pd
                         , Blob<Dtype>* blob, MKLDNNLayer<Dtype>* mkldnn_layer
-                        , bool is_float
                         , std::vector<float> scale
+                        , int mask
                         , bool is_sum)
-        : MKLDNNMemoryDescriptorBase<Dtype>(usr_memory_pd, prv_memory_pd, blob, mkldnn_layer, is_float, scale, is_sum)
+        : MKLDNNMemoryDescriptorBase<Dtype>(usr_memory_pd, prv_memory_pd, blob, mkldnn_layer, scale, mask, is_sum)
 {
     const Dtype* prv_ptr = is_diff ?  blob->prv_diff() : blob->prv_data();
 
@@ -246,31 +151,6 @@ template <typename Dtype, bool is_diff>
             LOG(INFO) << "Formats of blob-prv-memory-pd and this-prv-memory-pd are not equal !";
 #endif
             this->set_extprv_memory_pd(blob_prv_mkldnn_mem_descr->prv_memory_pd(), scale, blob_prv_mkldnn_mem_descr->get_scale(), blob_prv_mkldnn_mem_descr->get_sum());
-        }
-    }
-}
-
-template <typename Dtype, bool is_diff>
- MKLDNNMemoryDescriptor<Dtype, is_diff>::MKLDNNMemoryDescriptor(shared_ptr<memory::primitive_desc> usr_memory_pd
-                        , shared_ptr<memory::primitive_desc> prv_memory_pd
-                        , Blob<Dtype>* blob, MKLDNNLayer<Dtype>* mkldnn_layer
-                        , std::vector<int> fl
-                        , bool is_sum)
-        : MKLDNNMemoryDescriptorBase<Dtype>(usr_memory_pd, prv_memory_pd, blob, mkldnn_layer, fl, is_sum)
-{
-    const Dtype* prv_ptr = is_diff ?  blob->prv_diff() : blob->prv_data();
-
-    if (prv_ptr != NULL) {
-        shared_ptr<MKLDNNMemoryDescriptor<Dtype, is_diff> > blob_prv_mkldnn_mem_descr = get_mkldnn_prv_descriptor<Dtype, is_diff>(blob);
-#ifdef DEBUG
-        LOG(INFO) << "Format of blob-prv-memory-pd: " << blob_prv_mkldnn_mem_descr->prv_memory_pd()->desc().data.format;
-        LOG(INFO) << "Format of this-prv-memory-pd: " << this->prv_memory_pd()->desc().data.format;
-#endif
-        if (*blob_prv_mkldnn_mem_descr->prv_memory_pd() !=  *this->prv_memory_pd() || blob_prv_mkldnn_mem_descr->get_fl() != this->get_fl()) {
-#ifdef DEBUG
-            LOG(INFO) << "Formats of blob-prv-memory-pd and this-prv-memory-pd are not equal !";
-#endif
-            this->set_extprv_memory_pd(blob_prv_mkldnn_mem_descr->prv_memory_pd(), fl, blob_prv_mkldnn_mem_descr->get_fl(), blob_prv_mkldnn_mem_descr->get_sum());
         }
     }
 }
@@ -498,35 +378,19 @@ shared_ptr<primitive> MKLDNNMemoryDescriptor<Dtype, is_diff>::get_blob_prv_primi
         return this->reorder_usr2prv();
     } else {
         shared_ptr<MKLDNNMemoryDescriptor<Dtype, is_diff> > blob_prv_mkldnn_mem_descr = get_mkldnn_prv_descriptor<Dtype, is_diff>(blob);
-        if(blob_prv_mkldnn_mem_descr->get_float() || this->get_float()){
-            if ((*blob_prv_mkldnn_mem_descr->prv_memory_pd() !=  *this->prv_memory_pd() || blob_prv_mkldnn_mem_descr->get_scale() != this->get_scale()) && this->_reorder_extprv2prv_pd != NULL) {
-                // prv in blob and in this descrptor may have different layouts
-                if(convert) {
-                    LOG(INFO) << "BAD CONVERT";
-                    this->convert_from_extprv(blob_prv_mkldnn_mem_descr->aprimitive());
-                }
-                else {
-                    this->create_reorder_from_extprv(blob_prv_mkldnn_mem_descr->aprimitive());
-                }
-                return this->reorder_extprv2prv();
-            } else if (blob_prv_mkldnn_mem_descr.get() != this) {
-                VLOG(1) << "layout OK " << blob_prv_mkldnn_mem_descr->name << " == " << this->name;
+        if ((*blob_prv_mkldnn_mem_descr->prv_memory_pd() !=  *this->prv_memory_pd() || blob_prv_mkldnn_mem_descr->get_scale() != this->get_scale()) && this->_reorder_extprv2prv_pd != NULL) {
+            // prv in blob and in this descrptor may have different layouts
+            if(convert) {
+                LOG(INFO) << "BAD CONVERT";
+                this->convert_from_extprv(blob_prv_mkldnn_mem_descr->aprimitive());
             }
-        } else{
-            if ((*blob_prv_mkldnn_mem_descr->prv_memory_pd() !=  *this->prv_memory_pd() || blob_prv_mkldnn_mem_descr->get_fl() != this->get_fl()) && this->_reorder_extprv2prv_pd != NULL) {
-                // prv in blob and in this descrptor may have different layouts
-                if(convert) {
-                    LOG(INFO) << "BAD CONVERT";
-                    this->convert_from_extprv(blob_prv_mkldnn_mem_descr->aprimitive());
-                }
-                else {
-                    this->create_reorder_from_extprv(blob_prv_mkldnn_mem_descr->aprimitive());
-                }
-                return this->reorder_extprv2prv();
-            } else if (blob_prv_mkldnn_mem_descr.get() != this) {
-                VLOG(1) << "layout OK " << blob_prv_mkldnn_mem_descr->name << " == " << this->name;
+            else {
+                this->create_reorder_from_extprv(blob_prv_mkldnn_mem_descr->aprimitive());
             }
-        }          
+            return this->reorder_extprv2prv();
+        } else if (blob_prv_mkldnn_mem_descr.get() != this) {
+            VLOG(1) << "layout OK " << blob_prv_mkldnn_mem_descr->name << " == " << this->name;
+        }
         return blob_prv_mkldnn_mem_descr->aprimitive();
     }
     NOT_IMPLEMENTED;
@@ -573,33 +437,17 @@ void MKLDNNMemoryDescriptor<Dtype, is_diff>::sync_before_read()
     } else {
         shared_ptr<MKLDNNMemoryDescriptor<Dtype, is_diff> > blob_prv_mkldnn_mem_descr = get_mkldnn_prv_descriptor<Dtype, is_diff>(this->_blob);
 
-        if(blob_prv_mkldnn_mem_descr->get_float() || this->get_float()){
-            if (*blob_prv_mkldnn_mem_descr->prv_memory_pd() !=  *this->prv_memory_pd() || blob_prv_mkldnn_mem_descr->get_scale() != this->get_scale()) {
-                // prv in blob and in this descrptor may have different layouts
-#ifdef DEBUG
-            LOG(INFO) << "Convert from extprv";
+        if (*blob_prv_mkldnn_mem_descr->prv_memory_pd() !=  *this->prv_memory_pd() || blob_prv_mkldnn_mem_descr->get_scale() != this->get_scale()) {
+            // prv in blob and in this descrptor may have different layouts
+#ifdef D
+        LOG(INFO) << "Convert from extprv";
 #endif
-                this->convert_from_extprv(blob_prv_mkldnn_mem_descr->aprimitive());
+            this->convert_from_extprv(blob_prv_mkldnn_mem_descr->aprimitive());
+        } else {
+            if (is_diff) {
+                this->_blob->mutable_prv_diff();
             } else {
-                if (is_diff) {
-                    this->_blob->mutable_prv_diff();
-                } else {
-                    this->_blob->mutable_prv_data();
-                }
-            }
-        } else{
-            if (*blob_prv_mkldnn_mem_descr->prv_memory_pd() !=  *this->prv_memory_pd() || blob_prv_mkldnn_mem_descr->get_fl() != this->get_fl()) {
-                // prv in blob and in this descrptor may have different layouts
-#ifdef DEBUG
-            LOG(INFO) << "Convert from extprv";
-#endif
-                this->convert_from_extprv(blob_prv_mkldnn_mem_descr->aprimitive());
-            } else {
-                if (is_diff) {
-                    this->_blob->mutable_prv_diff();
-                } else {
-                    this->_blob->mutable_prv_data();
-                }
+                this->_blob->mutable_prv_data();
             }
         }
     }

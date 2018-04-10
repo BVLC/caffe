@@ -55,7 +55,7 @@ using caffe::Net;
 class Quantization {
 public:
   explicit Quantization(string model, string weights, string model_quantized,
-      int iterations, string trimming_mode, double error_margin, int score_number, string scaling="single", int detection=0, int power=1);
+      int iterations, string trimming_mode, double error_margin, int score_number, string scaling="single", int detection=0);
   void QuantizeNet();
 private:
   void CheckWritePermissions(const string path);
@@ -88,19 +88,16 @@ private:
       const string layer_quantize, const string network_part,
       const int bw_conv, const int bw_in, const int bw_out);
   
-  vector<int> GetIntegerLengthParams(const string layer_name);
   vector<float> GetScaleParams(const string layer_name);
   /**
    * @brief Find the integer length for dynamic fixed point inputs of a certain
    * layer.
    */
-  int GetIntegerLengthIn(const string layer_name);
   float GetScaleIn(const string layer_name);
   /**
    * @brief Find the integer length for dynamic fixed point outputs of a certain
    * layer.
    */
-  int GetIntegerLengthOut(const string layer_name);
   float GetScaleOut(const string layer_name);
 
   string model_;
@@ -112,7 +109,6 @@ private:
   int score_number;
   string scaling;
   int detection;
-  int power;
   float test_score_baseline_;
   // The maximal absolute values of layer inputs, parameters and
   // layer outputs.

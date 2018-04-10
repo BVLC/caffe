@@ -52,7 +52,7 @@ using caffe::LayerParameter;
 using caffe::NetParameter;
 
 Quantization::Quantization(string model, string weights, string model_quantized,
-      int iterations, string trimming_mode, double error_margin, int score_number, string scaling, int detection, int power) {
+      int iterations, string trimming_mode, double error_margin, int score_number, string scaling, int detection) {
   this->model_ = model;
   this->weights_ = weights;
   this->model_quantized_ = model_quantized;
@@ -62,7 +62,6 @@ Quantization::Quantization(string model, string weights, string model_quantized,
   this->score_number = score_number;
   this->scaling = scaling;
   this->detection = detection;
-  this->power = power;
 }
 
 void Quantization::QuantizeNet() {
@@ -153,65 +152,32 @@ void Quantization::Quantize2DynamicFixedPoint() {
   vector<int> lens;
   vector<float> scales;
   for (int i = 0; i < layer_names_.size(); ++i) {
-    if (this->power) {
-      il_in_.push_back((int)ceil(log2(max_in_[i])));
-      il_out_.push_back((int)ceil(log2(max_out_[i])));
-    } else {
-      scale_in_.push_back(max_in_[i]);
-      scale_out_.push_back(max_out_[i]);
-    }
+    scale_in_.push_back(max_in_[i]);
+    scale_out_.push_back(max_out_[i]);
     if (this->scaling == "single") {
-      if (this->power)
-        lens.push_back((int)ceil(log2(max_params_[i][0])+1));
-      else
-        scales.push_back(max_params_[i][0]);
+      scales.push_back(max_params_[i][0]);
     } else {
       for (int j = 0; j < max_params_[i].size(); j++) {
-        if (this->power)
-          lens.push_back((int)ceil(log2(max_params_[i][j])+1));
-        else
-          scales.push_back(max_params_[i][j]+0.0);
+        scales.push_back(max_params_[i][j]+0.0);
       }
     }
-    if (this->power) {
-      il_params_.push_back(lens);
-      lens.clear();
-    } else {
-      scale_params_.push_back(scales);
-      scales.clear();
-    }
+    scale_params_.push_back(scales);
+    scales.clear();
   }
   // Debug
   for (int k = 0; k < layer_names_.size(); ++k) {
     if (this->scaling != "single") {
-      if (this->power)
-        LOG(INFO) << "Layer " << layer_names_[k] << ", parameters channel=" << il_params_[k].size();
-      else
-        LOG(INFO) << "Layer " << layer_names_[k] << ", parameters channel=" << scale_params_[k].size();
+      LOG(INFO) << "Layer " << layer_names_[k] << ", parameters channel=" << scale_params_[k].size();
     }
 
-    if (this->power) {
-      LOG(INFO) << "Integer length input=" << il_in_[k];
-      LOG(INFO) << "Integer length output=" << il_out_[k];
-    } else {
-      LOG(INFO) << "Scale input=" << scale_in_[k];
-      LOG(INFO) << "Scale output=" << scale_out_[k];
-    }
+    LOG(INFO) << "Scale input=" << scale_in_[k];
+    LOG(INFO) << "Scale output=" << scale_out_[k];
    
     if (this->scaling == "single") {
-      if (this->power)
-        LOG(INFO) << "Integer length param=" << il_params_[k][0];
-      else
-        LOG(INFO) << "Scale param=" << scale_params_[k][0];
+      LOG(INFO) << "Scale param=" << scale_params_[k][0];
     } else {
-      if (this->power){
-        for (int j = 0; j < il_params_[k].size(); j++) {
-          LOG(INFO) << "Integer length params[" << j << "]=" << il_params_[k][j];
-        }
-      } else{
-        for (int j = 0; j < scale_params_[k].size(); j++) {
-          LOG(INFO) << "Scale params[" << j << "]=" << scale_params_[k][j];
-        }
+      for (int j = 0; j < scale_params_[k].size(); j++) {
+        LOG(INFO) << "Scale params[" << j << "]=" << scale_params_[k][j];
       }
     }
   }
@@ -252,17 +218,9 @@ void Quantization::EditNetDescriptionDynamicFixedPoint(NetParameter* param,
         param_layer->set_type("Convolution");
         if (trimming_mode_ == "dynamic_fixed_point") {
           param_layer->mutable_quantization_param()->set_bw_params(bw_conv);
-          if (this->power) {
-            vector<int> vals = GetIntegerLengthParams(param->layer(i).name());
-            for (int j = 0; j < vals.size(); j++) {
-              vals[j] = bw_conv - vals[j];
-              param_layer->mutable_quantization_param()->add_fl_params(vals[j]);
-            }
-          } else {
-            vector<float> vals = GetScaleParams(param->layer(i).name());
-            for (int j = 0; j < vals.size(); j++) {
-              param_layer->mutable_quantization_param()->add_scale_params(vals[j]);
-            }
+          vector<float> vals = GetScaleParams(param->layer(i).name());
+          for (int j = 0; j < vals.size(); j++) {
+            param_layer->mutable_quantization_param()->add_scale_params(vals[j]);
           }
         }
       }
@@ -273,17 +231,10 @@ void Quantization::EditNetDescriptionDynamicFixedPoint(NetParameter* param,
         if (trimming_mode_ == "dynamic_fixed_point") {
           param_layer->mutable_quantization_param()->set_bw_layer_in(bw_in);
           param_layer->mutable_quantization_param()->set_bw_layer_out(bw_out);
-          if (this->power) {
-            int val = GetIntegerLengthIn(param->layer(i).name());
-            param_layer->mutable_quantization_param()->add_fl_layer_in(bw_in - val);
-            val = GetIntegerLengthOut(param->layer(i).name());
-            param_layer->mutable_quantization_param()->add_fl_layer_out(bw_out - val);
-          } else {
-            float val = GetScaleIn(param->layer(i).name());
-            param_layer->mutable_quantization_param()->add_scale_in(val);
-            val = GetScaleOut(param->layer(i).name());
-            param_layer->mutable_quantization_param()->add_scale_out(val);
-          }
+          float val = GetScaleIn(param->layer(i).name());
+          param_layer->mutable_quantization_param()->add_scale_in(val);
+          val = GetScaleOut(param->layer(i).name());
+          param_layer->mutable_quantization_param()->add_scale_out(val);
         }
       }
       LayerParameter* param_layer = param->mutable_layer(i);
@@ -295,24 +246,6 @@ void Quantization::EditNetDescriptionDynamicFixedPoint(NetParameter* param,
       index++;
     }
   }
-}
-
-vector<int> Quantization::GetIntegerLengthParams(const string layer_name) {
-  int pos = find(layer_names_.begin(), layer_names_.end(), layer_name)
-      - layer_names_.begin();
-  return il_params_[pos];
-}
-
-int Quantization::GetIntegerLengthIn(const string layer_name) {
-  int pos = find(layer_names_.begin(), layer_names_.end(), layer_name)
-      - layer_names_.begin();
-  return il_in_[pos];
-}
-
-int Quantization::GetIntegerLengthOut(const string layer_name) {
-  int pos = find(layer_names_.begin(), layer_names_.end(), layer_name)
-      - layer_names_.begin();
-  return il_out_[pos];
 }
 
 vector<float> Quantization::GetScaleParams(const string layer_name) {

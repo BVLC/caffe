@@ -286,26 +286,19 @@ void MKLDNNConcatLayer<Dtype>::InitConcatFwd(const vector<Blob<Dtype>*>& bottom,
   fwd_input_primitives_.clear();
   fwd_input_primitives_at_.clear();
 
-  int fl = 0;
-  int fl_min = 0;
   float scale = 1.;
   float scale_min = 1.;
   for (auto i = 0; i < num_concats_; i++) {
       if (const_cast<Dtype*>(bottom[i]->prv_data()) != NULL) {
           shared_ptr<MKLDNNMemoryDescriptor<Dtype, false> > mem_descr
             = get_mkldnn_prv_descriptor<Dtype, false>(bottom[i]);
-          fl = mem_descr->get_fl(0);
-          if (fl_min == 0) fl_min = fl;
-          if(fl != 0 && fl < fl_min) fl_min = fl;
           scale = mem_descr->get_scale(0);
           if (scale_min == 1.) scale_min = scale;
           if(scale != 1. && scale < scale_min) scale_min = scale;
       }
   }
   vector<memory::format> src_mfmts;
-  bool bottom_scale_is_float = false;
   std::vector<float> bottom_scales(num_concats_, 1.);
-  std::vector<int> bottom_fls(num_concats_, 0);
   for (auto i = 0; i < num_concats_; i++) {
     fwd_bottom_data.push_back(boost::shared_ptr<MKLDNNData<Dtype> >());
 
@@ -333,25 +326,18 @@ void MKLDNNConcatLayer<Dtype>::InitConcatFwd(const vector<Blob<Dtype>*>& bottom,
         new memory::primitive_desc({input_tz, usr_dt, mfmt_nchw}, cpu_engine));
  
     if (const_cast<Dtype*>(bottom[i]->prv_data()) != NULL) {
-      fl = 0;
       scale = 1.;
       shared_ptr<MKLDNNMemoryDescriptor<Dtype, false> > mem_descr
         = get_mkldnn_prv_descriptor<Dtype, false>(bottom[i]);
-      bottom_scale_is_float = mem_descr->get_float();
       src_mfmt = static_cast<memory::format>(
           mem_descr->prv_memory_pd()->desc().data.format);
       prv_dt = static_cast<memory::data_type>(mem_descr->prv_memory_pd()->desc().data.data_type);
       prv_src_mpd.reset(new memory::primitive_desc(
             {input_tz, prv_dt, src_mfmt}, cpu_engine));
-      fl = mem_descr->get_fl(0);
-      bottom_fls[i] = fl;
-      if(fl != 0) fl = fl_min;
       scale = mem_descr->get_scale(0);
       bottom_scales[i] = scale;
       if(scale != 1.) scale = scale_min;
     }
-    std::vector<int> fl_bottom;
-    fl_bottom.push_back(fl);
     std::vector<float> scale_bottom;
     scale_bottom.push_back(scale);
 
@@ -359,13 +345,8 @@ void MKLDNNConcatLayer<Dtype>::InitConcatFwd(const vector<Blob<Dtype>*>& bottom,
     srcs_mpd.push_back(memory::primitive_desc(
           {input_tz, prv_dt, src_mfmt}, cpu_engine));
 
-    if(bottom_scale_is_float){
-        fwd_bottom_data[i].reset(new MKLDNNData<Dtype>(
-              usr_src_mpd, prv_src_mpd, bottom[i], this, true, scale_bottom));
-    } else{
-        fwd_bottom_data[i].reset(new MKLDNNData<Dtype>(
-              usr_src_mpd, prv_src_mpd, bottom[i], this, fl_bottom));
-    }
+    fwd_bottom_data[i].reset(new MKLDNNData<Dtype>(
+          usr_src_mpd, prv_src_mpd, bottom[i], this, scale_bottom));
     fwd_input_primitives_.push_back(fwd_bottom_data[i]->create_input(false));
     fwd_input_primitives_at_.push_back(*fwd_input_primitives_[i]);
   }
@@ -378,31 +359,22 @@ void MKLDNNConcatLayer<Dtype>::InitConcatFwd(const vector<Blob<Dtype>*>& bottom,
   shared_ptr<memory::primitive_desc> prv_dst_mpd(new memory::primitive_desc(
         concatFwd_pd->dst_primitive_desc()));
 
-  std::vector<int> fl_top;
-  fl_top.push_back(fl_min);
   std::vector<float> scale_top;
   scale_top.push_back(scale_min);
-  if(bottom_scale_is_float){
-      fwd_top_data.reset(new MKLDNNData<Dtype>(usr_dst_mpd, prv_dst_mpd, top[0],
-            this, true, scale_top));
-  } else{
-      fwd_top_data.reset(new MKLDNNData<Dtype>(usr_dst_mpd, prv_dst_mpd, top[0],
-          this, fl_top));
-  }
-
+  fwd_top_data.reset(new MKLDNNData<Dtype>(usr_dst_mpd, prv_dst_mpd, top[0],
+        this, scale_top));
+ 
   fwd_output_memory = fwd_top_data->create_output_memory();
 
   memory::format base_mfmt = mfmt_nchw;
   float base_scale = 1.;
-  int base_fl = 0;
   this->in_place_ = true;
   for(auto i = 0; i < num_concats_; i++){
     if(i == 0) {
       base_mfmt = src_mfmts[i];
       base_scale = bottom_scales[i];
-      base_fl = bottom_fls[i];
     }
-    else if(bottom[i]->shape()[0] != 1 || base_mfmt != src_mfmts[i] || (bottom_scale_is_float && fabs(base_scale-bottom_scales[i]) > FLT_MIN) || (!bottom_scale_is_float && abs(base_fl-bottom_fls[i]) > 0)){
+    else if(bottom[i]->shape()[0] != 1 || base_mfmt != src_mfmts[i] || fabs(base_scale-bottom_scales[i]) > FLT_MIN) {
       this->in_place_ = false;
       break;
     }

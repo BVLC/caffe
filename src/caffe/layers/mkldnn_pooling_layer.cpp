@@ -277,17 +277,15 @@ void MKLDNNPoolingLayer<Dtype>::InitPoolingFwd(const vector<Blob<Dtype>*>& botto
     shared_ptr<MemPD> usr_bottom_data_mpd(new MemPD({{bottom_tz}, mpcsn, mfmt_nchw}, cpu_engine));
     shared_ptr<MemPD> usr_top_data_mpd(new MemPD({{top_tz}, mpcsn, mfmt_nchw}, cpu_engine));
 
-    std::vector<int> fl;
     std::vector<float> scale;
-    bool bottom_scale_is_float = false;
     if (bottom_data_is_prv || top_data_is_prv) {
         shared_ptr<MKLDNNMemoryDescriptor<Dtype, false> > mem_descr
             = get_mkldnn_prv_descriptor<Dtype, false>(bottom[0]);
-        bottom_scale_is_float = mem_descr->get_float();
         cmfmt = static_cast<memory::format>(mem_descr->prv_memory_pd()->desc().data.format);
         mpcsn = static_cast<memory::data_type>(mem_descr->prv_memory_pd()->desc().data.data_type);
-        fl.push_back(mem_descr->get_fl(0));
         scale.push_back(mem_descr->get_scale(0));
+    } else{
+        scale.push_back(1.);
     }
 
     shared_ptr<memory::desc> init_fwd_bottom_md(new memory::desc({bottom_tz}, mpcsn, cmfmt));
@@ -338,18 +336,10 @@ void MKLDNNPoolingLayer<Dtype>::InitPoolingFwd(const vector<Blob<Dtype>*>& botto
             : max_idx_.mutable_cpu_data();
 
     // ---  init primitive and prv_memory descriptors ----------------------
-    if(bottom_scale_is_float){
-        fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_bottom_data_mpd, prv_fwd_bottom_data_mpd, bottom[0], this, true, scale));
-    } else {
-        fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_bottom_data_mpd, prv_fwd_bottom_data_mpd, bottom[0], this, fl));
-    }
+    fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_bottom_data_mpd, prv_fwd_bottom_data_mpd, bottom[0], this, scale));
     fwd_bottom_data_primitive = fwd_bottom_data->create_input(false);
 
-    if(bottom_scale_is_float){
-        fwd_top_data.reset(new MKLDNNData<Dtype>(usr_top_data_mpd, prv_fwd_top_data_mpd, top[0], this, true, scale));
-    } else{
-        fwd_top_data.reset(new MKLDNNData<Dtype>(usr_top_data_mpd, prv_fwd_top_data_mpd, top[0], this, fl));
-    }
+    fwd_top_data.reset(new MKLDNNData<Dtype>(usr_top_data_mpd, prv_fwd_top_data_mpd, top[0], this, scale));
     fwd_top_data_memory = fwd_top_data->create_output_memory();
 
     if (propagation == prop_kind::forward_training &&
