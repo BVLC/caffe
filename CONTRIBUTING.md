@@ -31,7 +31,20 @@ Try to give your issue a title that is succinct and specific. The devs will rena
 
 ## Caffe-users
 
-When posting to the [caffe-users list](https://groups.google.com/forum/#!forum/caffe-users), make sure you provide as much relevant information as possible.
+Before you post to the [caffe-users list](https://groups.google.com/forum/#!forum/caffe-users), make sure you look for existing solutions.
+The Caffe community has encountered and found solutions to countless problems - benefit from the collective experience.
+Recommended places to look:
+* the [users list](https://groups.google.com/forum/#!forum/caffe-users) itself,
+* [`caffe`](https://stackoverflow.com/questions/tagged/caffe) tag on StackOverflow,
+* [GitHub issues](https://github.com/BVLC/caffe/issues) tracker (some problems have been answered there),
+* the public [wiki](https://github.com/BVLC/caffe/wiki),
+* the official [documentation](http://caffe.berkeleyvision.org/).
+
+Found a post/issue with your exact problem, but with no answer?
+Don't just leave a "me too" message - provide the details of your case.
+Problems with more available information are easier to solve and attract good attention.
+
+When posting to the list, make sure you provide as much relevant information as possible.
 The steps for an issue submission (given above) are a good starting point:
 * What steps reproduce the problem?
 * How does the problem look like (provide the log/error message/anything relevant)?
@@ -41,12 +54,11 @@ The steps for an issue submission (given above) are a good starting point:
 * **What steps have you already tried** to solve the issue? How did they fail? Are there any issues related to yours?
 
 The error logs are very valuable, so do include them in your post.
-Please try to use fixed-width text formatting to make the log more readable.
-**However!** If the log is long (more than 50 lines or so), please do not post its content directly - instead, consider attaching it to the post as a file.
+Use fixed-width text formatting to make the log more readable.
+**However!** If the log is long (more than 50 lines or so) or there are multiple file - do not paste them into the post but **attach** them instead.
 
 If the problem arises during a complex operation (e.g. a long script using pycaffe, or a large network prototxt), please try to reduce the operation to the minimal size that still causes the error.
-Also, please minimize influence of external modules, data etc.
-This way it will be easier for others to understand and reproduce your issue, and eventually help you.
+Also, minimize influence of external modules, data etc. - this way it will be easier for others to understand and reproduce your issue, and eventually help you.
 Sometimes you will find the root cause yourself in the process.
 
 ## Pull Requests
