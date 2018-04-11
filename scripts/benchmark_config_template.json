@@ -1,13 +1,13 @@
 {
-    "params":{
-        "topology" : "all",
-        "hostfile" : "",
-        "network" : "",
-        "netmask" : "",
+   "params":{
+        "topology" : "your topology like alexnet/googlenet/googlenet_v2/resnet_50/all",
+        "hostfile" : "/your/hostfile",
+        "network" : "tcp or opa",
+        "netmask" : "your ethernet card name like eth0",
         "dummy_data_use" : true,
         "scal_test" : false,
         "caffe_bin" : "",
-        "engine" : "MKLDNN"
+        "engine" : "choose CAFFE, MKL2017 or MKLDNN"
     },
     "perf_batch_size_table" : {
     "resnet_50": {
