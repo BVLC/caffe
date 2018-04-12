@@ -11,8 +11,8 @@ __global__ void MultiLabelSigmoidLossForwardGPU(const int nthreads,
           const Dtype* input_data, const Dtype* target, Dtype* loss,
           Dtype* counts) {
   CUDA_KERNEL_LOOP(i, nthreads) {
-    const int target_value = static_cast<int>(target[i]);
-    if (target_value >= 0) {
+    //    const Dtype target_value = static_cast<Dtype>(target[i]);
+    if (target[i] >= 0) {
       loss[i] = input_data[i] * (target[i] - (input_data[i] >= 0)) -
         log(1 + exp(input_data[i] - 2 * input_data[i] *
                     (input_data[i] >= 0)));
@@ -28,8 +28,8 @@ __global__ void MultiLabelSigmoidLossForwardGPU(const int nthreads,
    __global__ void MultiLabelSigmoidLossIgnoreDiffGPU(const int count,
                                                       const Dtype* target, Dtype* diff, Dtype* counts) {
    CUDA_KERNEL_LOOP(i, count) {
-     const int target_value = static_cast<int>(target[i]);
-     if (target_value < 0) {
+     //const Dtype target_value = static_cast<Dtype>(target[i]);
+     if (target[i] < 0) {
        diff[i] = 0;
        counts[i] = 0;
      } else
@@ -67,7 +67,10 @@ void MultiLabelSigmoidLossLayer<Dtype>::Forward_gpu(
   caffe_gpu_asum(count, loss_data, &loss);
   // CPU version divides loss by num, which is the total number of classes,
   // here we divide by the number of classes that are not "dontcare", as in sigmoidcrossentropyloss
-  top[0]->mutable_cpu_data()[0] = loss / valid_count;
+  if (valid_count > 0)
+    top[0]->mutable_cpu_data()[0] = loss / valid_count;
+  else
+    top[0]->mutable_cpu_data()[0] = loss / num;
 }
 
 template <typename Dtype>
