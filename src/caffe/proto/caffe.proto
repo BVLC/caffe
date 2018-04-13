@@ -610,6 +610,8 @@ message LayerParameter {
   optional MnActivationParameter mn_activation_param = 151;
   optional MnParamGradCompressParameter mn_grad_compress_param = 156;
   optional QuantizationParameter quantization_param = 158;
+  
+  optional ReorgParameter reorg_param = 159;
 }
 
 message MultinodeLayerParameter {
@@ -1015,6 +1017,11 @@ message ContrastiveLossParameter {
   // legacy_version = true uses (margin - d^2). This is kept to support /
   // reproduce existing models and results
   optional bool legacy_version = 2 [default = false];
+}
+
+message ReorgParameter {
+  optional uint32 stride = 1;
+  optional bool reverse = 2 [default = false];
 }
 
 message ConvolutionParameter {
