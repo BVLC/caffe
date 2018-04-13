@@ -92,7 +92,7 @@ cv::Mat ReadImageToCVMat(const string& filename,
     CV_LOAD_IMAGE_GRAYSCALE);
   cv::Mat cv_img_origin = cv::imread(filename, cv_read_flag);
   if (!cv_img_origin.data) {
-    LOG(ERROR) << "Could not open or find file " << filename;
+    LOG(WARNING) << "Could not open or find file " << filename;
     return cv_img_origin;
   }
   if (min_dim > 0 || max_dim > 0) {
