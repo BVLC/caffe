@@ -42,7 +42,7 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       "new_height and new_width to be set at the same time.";
   // Read the file with filenames and labels
   const string& source = this->layer_param_.image_data_param().source();
-  size_t found=source.find_last_of("/\\");
+  //size_t found=source.find_last_of("/\\");
 
   LOG(INFO) << "Opening file " << source;
   // Extend image_data_layer from single label to multilabel inputs
@@ -77,16 +77,16 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
                                     new_height, new_width, is_color);
   CHECK(cv_img.data) << "Could not load " << lines_[lines_id_].first;
   // Use data_transformer to infer the expected blob shape from a cv_image.
-  vector<int> top_shape = this->data_transformer_->InferBlobShape(cv_img);
-  this->transformed_data_.Reshape(top_shape);
+  top_shape_ = this->data_transformer_->InferBlobShape(cv_img);
+  this->transformed_data_.Reshape(top_shape_);
   // Reshape prefetch_data and top[0] according to the batch_size.
   const int batch_size = this->layer_param_.image_data_param().batch_size();
   CHECK_GT(batch_size, 0) << "Positive batch size required";
-  top_shape[0] = batch_size;
+  top_shape_[0] = batch_size;
   for (int i = 0; i < this->PREFETCH_COUNT; ++i) {
-    this->prefetch_[i].data_.Reshape(top_shape);
+    this->prefetch_[i].data_.Reshape(top_shape_);
   }
-  top[0]->Reshape(top_shape);
+  top[0]->Reshape(top_shape_);
 
   LOG(INFO) << "output data size: " << top[0]->num() << ","
       << top[0]->channels() << "," << top[0]->height() << ","
@@ -121,22 +121,22 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   const int new_height = image_data_param.new_height();
   const int new_width = image_data_param.new_width();
   const bool is_color = image_data_param.is_color();
-  const string& source = image_data_param.source();
-  size_t found=source.find_last_of("/\\");
+  // const string& source = image_data_param.source();
+  //  size_t found=source.find_last_of("/\\");
   //string root_folder = source.substr(0,found) + "/";
   string root_folder = image_data_param.root_folder();
 
   // Reshape according to the first image of each batch
   // on single input batches allows for inputs of varying dimension.
-  cv::Mat cv_img = ReadImageToCVMat(root_folder + lines_[lines_id_].first,
-      new_height, new_width, is_color);
-  CHECK(cv_img.data) << "Could not load " << lines_[lines_id_].first;
+  //  cv::Mat cv_img = ReadImageToCVMat(root_folder + lines_[lines_id_].first,
+  //    new_height, new_width, is_color);
+  //CHECK(cv_img.data) << "Could not load " << lines_[lines_id_].first;
   // Use data_transformer to infer the expected blob shape from a cv_img.
-  vector<int> top_shape = this->data_transformer_->InferBlobShape(cv_img);
-  this->transformed_data_.Reshape(top_shape);
+  //  vector<int> top_shape = this->data_transformer_->InferBlobShape(cv_img);
+  //  this->transformed_data_.Reshape(top_shape);
   // Reshape batch according to the batch_size.
-  top_shape[0] = batch_size;
-  batch->data_.Reshape(top_shape);
+  top_shape_[0] = batch_size;
+  batch->data_.Reshape(top_shape_);
 
   Dtype* prefetch_data = batch->data_.mutable_cpu_data();
   Dtype* prefetch_label = batch->label_.mutable_cpu_data();
@@ -151,8 +151,8 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
         new_height, new_width, is_color);
     if (!cv_img.data)
       {
-	LOG(ERROR) << "failed loading = " << lines_[lines_id_].first;// << std::endl;
-	continue;
+        LOG(WARNING) << "failed loading = " << lines_[lines_id_].first;// << std::endl;
+        continue;
       }
     read_time += timer.MicroSeconds();
     timer.Start();
