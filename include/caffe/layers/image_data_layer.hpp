@@ -45,6 +45,7 @@ class ImageDataLayer : public BasePrefetchingDataLayer<Dtype> {
   std::vector<int> top_shape_;
   const std::string* source_;
   long int lines_size_;
+  std::ifstream infile_;
 };
 
 

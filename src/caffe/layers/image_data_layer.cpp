@@ -49,7 +49,7 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   //ReadImagesList(source.c_str(), &lines_);
   //CHECK(!lines_.empty()) << "File is empty";
 
-  lines_size_ = NumberOfImages(source_);
+  //lines_size_ = NumberOfImages(source_);
 
 
 
@@ -59,7 +59,7 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   //     LOG(WARNING) << "Shuffling or skipping recommended for multi-GPU";
   //   }
   // }
-  LOG(INFO) << "A total of " << lines_size_ << " images.";
+  //LOG(INFO) << "A total of " << lines_size_ << " images.";
 
   lines_id_ = 0;
   // Check if we would need to randomly skip a few data points
@@ -67,12 +67,13 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
     unsigned int skip = caffe_rng_rand() %
         this->layer_param_.image_data_param().rand_skip();
     LOG(INFO) << "Skipping first " << skip << " data points.";
-    CHECK_GT(lines_size_, skip) << "Not enough points to skip";
+    //TODO: check on skip size...
+    //CHECK_GT(lines_size_, skip) << "Not enough points to skip";
     lines_id_ = skip;
   }
   // Read an image, and use it to initialize the top blob.
 
-  ReadImagesListBatch(source_, 0, 1, lines_batch_);
+  ReadImagesListBatch(source_, 0, 1, lines_batch_, infile_);
 
   cv::Mat cv_img = ReadImageToCVMat(root_folder + lines_batch_[0].first,
                                     new_height, new_width, is_color);
@@ -142,7 +143,7 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   Dtype* prefetch_data = batch->data_.mutable_cpu_data();
   Dtype* prefetch_label = batch->label_.mutable_cpu_data();
 
-  ReadImagesListBatch(source_, lines_id_, batch_size, lines_batch_);
+  ReadImagesListBatch(source_, lines_id_, batch_size, lines_batch_, infile_);
   if (this->layer_param_.image_data_param().shuffle()) {
     // randomly shuffle data
     LOG(INFO) << "Shuffling data";
@@ -157,7 +158,7 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   for (int item_id = 0; item_id < batch_size; ++item_id) {
     // get a blob
     timer.Start();
-    CHECK_GT(lines_size_, lines_id_);
+    //CHECK_GT(lines_size_, lines_id_);
     cv::Mat cv_img = ReadImageToCVMat(root_folder + lines_batch_[item_id].first,
         new_height, new_width, is_color);
     if (!cv_img.data)
@@ -179,11 +180,12 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     }    
     // go to the next iter
     lines_id_++;
-    if (lines_id_ >= lines_size_) {
+    //if (lines_id_ >= lines_size_) {
+    if (infile_.eof()) {
       // We have reached the end. Restart from the first.
       DLOG(INFO) << "Restarting data prefetching from start.";
       lines_id_ = 0;
-      ReadImagesListBatch(source_, 0, batch_size, lines_batch_);
+      ReadImagesListBatch(source_, 0, batch_size, lines_batch_, infile_);
       if (this->layer_param_.image_data_param().shuffle()) {
         const unsigned int prefetch_rng_seed = caffe_rng_rand();
         prefetch_rng_.reset(new Caffe::RNG(prefetch_rng_seed));

@@ -764,22 +764,26 @@ void CVMatToDatum(const cv::Mat& cv_img, Datum* datum) {
   }
 
   void ReadImagesListBatch(const string* source, long int start_index, long int n_to_read,
-                    std::vector<std::pair<std::string, std::vector<float> > >&images_vec) {
+			   std::vector<std::pair<std::string, std::vector<float> > >&images_vec,
+			   std::ifstream &infile) {
      images_vec.clear();
-  // Read the file with filenames and labels
-  LOG(INFO) << "Opening file " << *source;
-  std::ifstream infile(source->c_str());
-  CHECK(infile) << "Error opening file";
-  std::string line;
-  int line_num = 1;
-  int num_labels = 0;
+     // Read the file with filenames and labels
+     if (!infile.is_open())
+       {
+	 LOG(INFO) << "Opening file " << *source;
+	 infile.open(source->c_str());
+	 CHECK(infile) << "Error opening file";
+       }
+     std::string line;
+     int line_num = 1;
+     int num_labels = 0;
+     
+     /*int index = 0;
+     while (std::getline(infile, line) && index < start_index)
+     index++;*/
 
-  int index = 0;
-  while (std::getline(infile, line) && index < start_index)
-    index++;
 
-
-  index = 0;
+     int index = 0;
   while (std::getline(infile, line) && index < n_to_read) {
     index++;
     std::istringstream iss(line);
