@@ -39,10 +39,12 @@ class ImageDataLayer : public BasePrefetchingDataLayer<Dtype> {
 
   //vector<std::pair<std::string, int> > lines_;
   //int lines_id_;
-  vector<std::pair<std::string, std::vector<float> > > lines_;
+  vector<std::pair<std::string, std::vector<float> > > lines_batch_;
   int lines_id_;
   int label_size_;
   std::vector<int> top_shape_;
+  const std::string* source_;
+  long int lines_size_;
 };
 
 

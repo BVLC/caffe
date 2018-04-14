@@ -41,27 +41,25 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       (new_height > 0 && new_width > 0)) << "Current implementation requires "
       "new_height and new_width to be set at the same time.";
   // Read the file with filenames and labels
-  const string& source = this->layer_param_.image_data_param().source();
-  //size_t found=source.find_last_of("/\\");
+  source_ = &this->layer_param_.image_data_param().source();
+  //  size_t found=source.find_last_of("/\\");
 
-  LOG(INFO) << "Opening file " << source;
+  //LOG(INFO) << "Opening file " << source;
   // Extend image_data_layer from single label to multilabel inputs
-  ReadImagesList(source.c_str(), &lines_);
-  CHECK(!lines_.empty()) << "File is empty";
+  //ReadImagesList(source.c_str(), &lines_);
+  //CHECK(!lines_.empty()) << "File is empty";
 
-  if (this->layer_param_.image_data_param().shuffle()) {
-    // randomly shuffle data
-    LOG(INFO) << "Shuffling data";
-    const unsigned int prefetch_rng_seed = caffe_rng_rand();
-    prefetch_rng_.reset(new Caffe::RNG(prefetch_rng_seed));
-    ShuffleImages();
-  }//  else {
+  lines_size_ = NumberOfImages(source_);
+
+
+
+  //  else {
   //   if (this->phase_ == TRAIN && Caffe::solver_rank() > 0 &&
   //       this->layer_param_.image_data_param().rand_skip() == 0) {
   //     LOG(WARNING) << "Shuffling or skipping recommended for multi-GPU";
   //   }
   // }
-  LOG(INFO) << "A total of " << lines_.size() << " images.";
+  LOG(INFO) << "A total of " << lines_size_ << " images.";
 
   lines_id_ = 0;
   // Check if we would need to randomly skip a few data points
@@ -69,13 +67,16 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
     unsigned int skip = caffe_rng_rand() %
         this->layer_param_.image_data_param().rand_skip();
     LOG(INFO) << "Skipping first " << skip << " data points.";
-    CHECK_GT(lines_.size(), skip) << "Not enough points to skip";
+    CHECK_GT(lines_size_, skip) << "Not enough points to skip";
     lines_id_ = skip;
   }
   // Read an image, and use it to initialize the top blob.
-  cv::Mat cv_img = ReadImageToCVMat(root_folder + lines_[lines_id_].first,
+
+  ReadImagesListBatch(source_, 0, 1, lines_batch_);
+
+  cv::Mat cv_img = ReadImageToCVMat(root_folder + lines_batch_[0].first,
                                     new_height, new_width, is_color);
-  CHECK(cv_img.data) << "Could not load " << lines_[lines_id_].first;
+  CHECK(cv_img.data) << "Could not load " << lines_batch_[0].first;
   // Use data_transformer to infer the expected blob shape from a cv_image.
   top_shape_ = this->data_transformer_->InferBlobShape(cv_img);
   this->transformed_data_.Reshape(top_shape_);
@@ -103,7 +104,7 @@ template <typename Dtype>
 void ImageDataLayer<Dtype>::ShuffleImages() {
   caffe::rng_t* prefetch_rng =
       static_cast<caffe::rng_t*>(prefetch_rng_->generator());
-  shuffle(lines_.begin(), lines_.end(), prefetch_rng);
+  shuffle(lines_batch_.begin(), lines_batch_.end(), prefetch_rng);
 }
 
 // This function is called on prefetch thread
@@ -121,19 +122,19 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   const int new_height = image_data_param.new_height();
   const int new_width = image_data_param.new_width();
   const bool is_color = image_data_param.is_color();
-  // const string& source = image_data_param.source();
+  //  const string& source = image_data_param.source();
   //  size_t found=source.find_last_of("/\\");
   //string root_folder = source.substr(0,found) + "/";
   string root_folder = image_data_param.root_folder();
 
   // Reshape according to the first image of each batch
   // on single input batches allows for inputs of varying dimension.
-  //  cv::Mat cv_img = ReadImageToCVMat(root_folder + lines_[lines_id_].first,
-  //    new_height, new_width, is_color);
-  //CHECK(cv_img.data) << "Could not load " << lines_[lines_id_].first;
+  // cv::Mat cv_img = ReadImageToCVMat(root_folder + lines_batch_[lines_id_].first,
+  //     new_height, new_width, is_color);
+  // CHECK(cv_img.data) << "Could not load " << lines_batch_[lines_id_].first;
   // Use data_transformer to infer the expected blob shape from a cv_img.
-  //  vector<int> top_shape = this->data_transformer_->InferBlobShape(cv_img);
-  //  this->transformed_data_.Reshape(top_shape);
+  // vector<int> top_shape = this->data_transformer_->InferBlobShape(cv_img);
+  // this->transformed_data_.Reshape(top_shape);
   // Reshape batch according to the batch_size.
   top_shape_[0] = batch_size;
   batch->data_.Reshape(top_shape_);
@@ -141,17 +142,27 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   Dtype* prefetch_data = batch->data_.mutable_cpu_data();
   Dtype* prefetch_label = batch->label_.mutable_cpu_data();
 
+  ReadImagesListBatch(source_, lines_id_, batch_size, lines_batch_);
+  if (this->layer_param_.image_data_param().shuffle()) {
+    // randomly shuffle data
+    LOG(INFO) << "Shuffling data";
+    const unsigned int prefetch_rng_seed = caffe_rng_rand();
+    prefetch_rng_.reset(new Caffe::RNG(prefetch_rng_seed));
+    ShuffleImages();
+  }
+
+
   // datum scales
-  const int lines_size = lines_.size();
+  //const int lines_size = lines_.size();
   for (int item_id = 0; item_id < batch_size; ++item_id) {
     // get a blob
     timer.Start();
-    CHECK_GT(lines_size, lines_id_);
-    cv::Mat cv_img = ReadImageToCVMat(root_folder + lines_[lines_id_].first,
+    CHECK_GT(lines_size_, lines_id_);
+    cv::Mat cv_img = ReadImageToCVMat(root_folder + lines_batch_[item_id].first,
         new_height, new_width, is_color);
     if (!cv_img.data)
       {
-        LOG(WARNING) << "failed loading = " << lines_[lines_id_].first;// << std::endl;
+        LOG(WARNING) << "failed loading = " << lines_batch_[item_id].first;// << std::endl;
         continue;
       }
     read_time += timer.MicroSeconds();
@@ -164,15 +175,18 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 
     //prefetch_label[item_id] = lines_[lines_id_].second;
     for(int labels_idx = 0; labels_idx < label_size_; ++labels_idx){
-	prefetch_label[ item_id*label_size_ + labels_idx ] = lines_[lines_id_].second[labels_idx];
+	prefetch_label[ item_id*label_size_ + labels_idx ] = lines_batch_[item_id].second[labels_idx];
     }    
     // go to the next iter
     lines_id_++;
-    if (lines_id_ >= lines_size) {
+    if (lines_id_ >= lines_size_) {
       // We have reached the end. Restart from the first.
       DLOG(INFO) << "Restarting data prefetching from start.";
       lines_id_ = 0;
+      ReadImagesListBatch(source_, 0, batch_size, lines_batch_);
       if (this->layer_param_.image_data_param().shuffle()) {
+        const unsigned int prefetch_rng_seed = caffe_rng_rand();
+        prefetch_rng_.reset(new Caffe::RNG(prefetch_rng_seed));
         ShuffleImages();
       }
     }
