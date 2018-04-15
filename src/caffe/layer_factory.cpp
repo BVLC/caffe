@@ -248,6 +248,42 @@ REGISTER_LAYER_CREATOR(Convolution, GetConvolutionLayer,
 REGISTER_LAYER_CREATOR(Convolution, GetConvolutionLayer,
                        (double), (double), (double));
 
+// Get quantized convolution layer according to engine.
+template<typename Dtype, typename MItype, typename MOtype>
+shared_ptr<Layer<Dtype, MItype, MOtype> > GetQuantizedConvolutionLayer(
+    const LayerParameter& param) {
+  ConvolutionParameter_Engine engine = param.convolution_param().engine();
+  if (engine == ConvolutionParameter_Engine_DEFAULT) {
+    engine = ConvolutionParameter_Engine_CAFFE;
+
+#ifdef USE_LIBDNN
+    engine = ConvolutionParameter_Engine_LIBDNN;
+#endif
+  }
+
+  if (engine == ConvolutionParameter_Engine_CAFFE) {
+    return shared_ptr<Layer<Dtype, MItype, MOtype> >(
+        new ConvolutionLayer<Dtype, MItype, MOtype>(param));
+#ifdef USE_LIBDNN
+  } else if (engine == ConvolutionParameter_Engine_LIBDNN) {
+    return shared_ptr<Layer<Dtype, MItype, MOtype> >(
+        new LibDNNConvolutionLayer<Dtype, MItype, MOtype>(param));
+#endif  // USE_LIBDNN
+  } else {
+    LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
+    throw;  // Avoids missing return warning
+  }
+}
+
+REGISTER_LAYER_CREATOR(Convolution, GetQuantizedConvolutionLayer,
+                       (uint8_t), (uint8_t), (uint8_t));
+REGISTER_LAYER_CREATOR(Convolution, GetQuantizedConvolutionLayer,
+                       (uint16_t), (uint16_t), (uint16_t));
+REGISTER_LAYER_CREATOR(Convolution, GetQuantizedConvolutionLayer,
+                       (uint32_t), (uint32_t), (uint32_t));
+REGISTER_LAYER_CREATOR(Convolution, GetQuantizedConvolutionLayer,
+                       (uint64_t), (uint64_t), (uint64_t));
+
 
 // Get deconvolution layer according to engine.
 template<typename Dtype, typename MItype, typename MOtype>

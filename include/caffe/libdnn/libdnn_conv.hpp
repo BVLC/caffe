@@ -74,18 +74,24 @@ class LibDNNConv : public LibDNN<MItype, MOtype> {
  public:
   explicit LibDNNConv(LibDNNConvConfig config);
   void Forward(vptr<const MItype> bottom_data, vptr<const MItype> weight,
-               vptr<const MItype> bias,
-               vptr<MOtype> top_data, int_tp batch_size);
+               const MItype bias_mult, vptr<const MItype> bias, vptr<MOtype> top_data,
+               int_tp batch_size,
+               const QuantizerValues* const bottom_quant = nullptr,
+               const QuantizerValues* const weight_quant = nullptr,
+               const QuantizerValues* const bias_mult_quant = nullptr,
+               const QuantizerValues* const bias_quant = nullptr,
+               const QuantizerValues* const top_quant = nullptr);
+
   void Backward(bool prop_down_data, bool prop_down_weights,
                 vptr<const MOtype> top_data, vptr<const MOtype> top_diff,
                 vptr<const MItype> weight, vptr<MItype> weight_diff,
-                vptr<const MItype> bias, vptr<MItype> bias_diff,
-                vptr<const MItype> bottom_data, vptr<MItype> bottom_diff,
-                int_tp batch_size);
+                const MItype bias_mult, vptr<const MItype> bias,
+                vptr<MItype> bias_diff, vptr<const MItype> bottom_data,
+                vptr<MItype> bottom_diff, int_tp batch_size);
 
   void Tune(vptr<MOtype> top_data, vptr<MOtype> top_diff,
             vptr<MItype> weight, vptr<MItype> weight_diff,
-            vptr<MItype> bias, vptr<MItype> bias_diff,
+            const MItype bias_mult, vptr<MItype> bias, vptr<MItype> bias_diff,
             vptr<MItype> bottom_data, vptr<MItype> bottom_diff,
             int_tp batch_size);
 
@@ -148,7 +154,6 @@ class LibDNNConv : public LibDNN<MItype, MOtype> {
   bool bias_backward_;
   bool bias_term_;
   bool skip_range_check_;
-  MItype bias_multiplier_;
   libdnnConvolutionWeightAlgo_t wgalgo_;
   libdnnConvolutionBackwardAlgo_t bwalgo_;
  private:
@@ -187,17 +192,18 @@ class LibDNNDeconv : public LibDNNConv<MItype, MOtype> {
  public:
   explicit LibDNNDeconv(LibDNNDeconvConfig config);
   void Forward(vptr<const MItype> bottom_data, vptr<const MItype> weight,
-               vptr<const MItype> bias,
+               const MItype bias_mult, vptr<const MItype> bias,
                vptr<MOtype> top_data, int_tp batch_size);
   void Backward(bool prop_down_data, bool prop_down_weights,
                 vptr<const MOtype> top_data, vptr<const MOtype> top_diff,
                 vptr<const MItype> weight, vptr<MItype> weight_diff,
-                vptr<const MItype> bias, vptr<MItype> bias_diff,
-                vptr<const MItype> bottom_data, vptr<MItype> bottom_diff,
-                int_tp batch_size);
+                const MItype bias_mult, vptr<const MItype> bias,
+                vptr<MItype> bias_diff, vptr<const MItype> bottom_data,
+                vptr<MItype> bottom_diff, int_tp batch_size);
 
   void Tune(vptr<MOtype> top_data, vptr<MOtype> top_diff,
             vptr<MItype> weight, vptr<MItype> weight_diff,
+            const MItype bias_mult,
             vptr<MItype> bias, vptr<MItype> bias_diff,
             vptr<MItype> bottom_data, vptr<MItype> bottom_diff,
             int_tp batch_size);

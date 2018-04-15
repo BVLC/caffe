@@ -17,7 +17,6 @@ LibDNNDeconv<MItype, MOtype>::LibDNNDeconv(LibDNNDeconvConfig config)
   this->config_ = config;
   this->program_ = this->dev_ptr_->CreateProgram();
   this->bias_term_ = config.bias_term;
-  this->bias_multiplier_ = config.bias_term ? 1.0 : 0.0;
   this->fast_unsafe_math_ = config.fast_unsafe_math;
   int_tp dims = config.in_shape.size();
   int_tp spatial_dims = config.kernel.size();
@@ -340,10 +339,6 @@ string LibDNNDeconv<MItype, MOtype>::generate_bw_defs() {
   ss << this->program_->define("v_fin", this->fmaps_in_);
   ss << this->program_->define("v_fout", this->fmaps_out_);
 
-  if (this->bias_term_) {
-    ss << this->program_->define("v_bmul", this->bias_multiplier_);
-  }
-
   this->MG_BW_ = this->fmaps_in_;
   this->M_BW_ = this->fmaps_in_ / this->group_;
   this->N_BW_ = 1;
@@ -489,10 +484,6 @@ string LibDNNDeconv<MItype, MOtype>::generate_fw_defs() {
 
   ss << this->program_->define("v_fin", this->fmaps_in_);
   ss << this->program_->define("v_fout", this->fmaps_out_);
-
-  if (this->bias_term_) {
-    ss << this->program_->define("v_bmul", this->bias_multiplier_);
-  }
 
   if (this->bwalgo_ == LIBDNN_CONVOLUTION_BW_ALGO_IM2COL) {
     this->MG_FW_ = this->fmaps_out_;
@@ -645,8 +636,6 @@ string LibDNNDeconv<MItype, MOtype>::generate_wg_defs() {
   ss << this->program_->define("v_fin", this->fmaps_in_);
   ss << this->program_->define("v_fout", this->fmaps_out_);
 
-  ss << this->program_->define("v_bmul", this->bias_multiplier_);
-
   this->MG_WG_ = this->fmaps_in_;
   this->M_WG_ = this->fmaps_in_ / this->group_;
   this->NG_WG_ = this->fmaps_out_;
@@ -794,10 +783,12 @@ string LibDNNDeconv<MItype, MOtype>::generate_bw_kernels(string name) {
 
   // Batch and group
   if (this->group_ > 1) {
-    ss << "int_tp group = get_global_id(2) % v_g;" << std::endl;
-    ss << "int_tp batch = get_global_id(2) / v_g;" << std::endl;
+    ss << "int_tp group = " << this->program_->global_id(2) << " % v_g;"
+       << std::endl;
+    ss << "int_tp batch = " << this->program_->global_id(2) << " / v_g;"
+       << std::endl;
   } else {
-    ss << "int_tp batch = get_global_id(2);" << std::endl;
+    ss << "int_tp batch = " << this->program_->global_id(2) << ";" << std::endl;
   }
 
   if (this->group_ > 1) {
@@ -1184,6 +1175,8 @@ string LibDNNDeconv<MItype, MOtype>::generate_wg_kernels(string name) {
      "im_out", KERNEL_ARG_CONST | KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_RESTRICT));
     if (this->bias_term_) {
       b_args.push_back(this->program_->template create_kernel_arg<MItype>(
+                                                "bias_mult", KERNEL_ARG_CONST));
+      b_args.push_back(this->program_->template create_kernel_arg<MItype>(
           "bias", KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_RESTRICT));
     }
     b_args.push_back(this->program_->template create_kernel_arg<MItype>("wg",
@@ -1213,10 +1206,13 @@ string LibDNNDeconv<MItype, MOtype>::generate_wg_kernels(string name) {
 
     // Batch and group
     if (this->group_ > 1) {
-      ss << "int_tp group = get_global_id(2) % v_g;" << std::endl;
-      ss << "int_tp batch = get_global_id(2) / v_g;" << std::endl;
+      ss << "int_tp group = " << this->program_->global_id(2) << " % v_g;"
+         << std::endl;
+      ss << "int_tp batch = " << this->program_->global_id(2) << " / v_g;"
+         << std::endl;
     } else {
-      ss << "int_tp batch = get_global_id(2);" << std::endl;
+      ss << "int_tp batch = " << this->program_->global_id(2) << ";"
+         << std::endl;
     }
 
     if (this->group_ > 1) {
@@ -1320,10 +1316,10 @@ string LibDNNDeconv<MItype, MOtype>::generate_wg_kernels(string name) {
     if (unroll) {
       for (int i = 0; i < vwm; ++i) {
         ss << "VEC_" << vwm << "_" << i << "(Dreg[wm]) " << "+= VEC_" << vwm
-           << "_" << i << "(Areg) * (MItype)v_bmul;" << std::endl;
+           << "_" << i << "(Areg) * bias_mult;" << std::endl;
       }
     } else {
-      ss << "Dreg[wm] += Areg * (MItype)v_bmul;" << std::endl;
+      ss << "Dreg[wm] += Areg * bias_mult;" << std::endl;
     }
     ss << "}" << std::endl;
 
@@ -1394,6 +1390,8 @@ string LibDNNDeconv<MItype, MOtype>::generate_fw_kernels(string name) {
   args.push_back(this->program_->template create_kernel_arg<MItype>("wg",
                KERNEL_ARG_CONST | KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_RESTRICT));
   if (this->bias_term_) {
+    args.push_back(this->program_->template create_kernel_arg<MItype>(
+                                                "bias_mult", KERNEL_ARG_CONST));
     args.push_back(this->program_->template create_kernel_arg<MItype>("bias",
                KERNEL_ARG_CONST | KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_RESTRICT));
   }
@@ -1612,7 +1610,7 @@ string LibDNNDeconv<MItype, MOtype>::generate_fw_kernels(string name) {
     ss << "Cptr[globalRow * N + globalCol] = ";
     if (this->bias_term_) {
       ss << "((MItype*)(&(Creg[wm][wn/VWN])))[wn%VWN]"
-         << " + v_bmul * biasval;" << std::endl;
+         << " + bias_mult * biasval;" << std::endl;
     } else {
       ss << "((MItype*)(&(Creg[wm][wn/VWN])))[wn%VWN];" << std::endl;
     }
@@ -1680,20 +1678,50 @@ template<typename MItype, typename MOtype>
 void LibDNNDeconv<MItype, MOtype>::GenerateKernels() {
   this->program_ = this->dev_ptr_->CreateProgram();
 
+  typedef typename std::conditional<float_is_same<MItype>::value, MItype,
+          typename std::conditional<sizeof(MItype) == 1, int16_t,
+          typename std::conditional<sizeof(MItype) == 2, int32_t,
+                                    int64_t>::type>::type>::type Difftype;
+  typedef typename std::conditional<float_is_same<MItype>::value, MItype,
+          typename std::conditional<sizeof(MItype) == 1, int32_t,
+                                    int64_t>::type>::type Acctype;
+
   stringstream ss;
   ss << this->program_->setup();
   ss << this->program_->template define_vector_type<MItype>("MItype", 0, 16);
   ss << this->program_->template define_vector_type<MItype>("MItype", 0, 16);
   ss << this->program_->template define_vector_type<MItype>("MOtype", 0, 16);
+  ss << this->program_->template define_vector_type<Acctype>("Acctype", 0, 16);
+  ss << this->program_->template define_vector_type<Difftype>("Difftype",
+                                                              0, 16);
+  if (is_integer_type<MItype>()) {
+    if (this->dev_ptr_->template preferred_vector_width<int64_t>() > 0) {
+      ss << this->program_->template define_vector_type<int64_t>("Multtype",
+                                                                0, 16);
+    } else {
+      ss << this->program_->template define_vector_type<int32_t>("Multtype",
+                                                                0, 16);
+    }
+  }
+
   ss << this->program_->atomics();
   ss << this->program_->vector_accessors();
 
-  ss << generate_fw_defs();
-  ss << generate_fw_kernels("deconv_forward");
-  ss << generate_bw_defs();
-  ss << generate_bw_kernels("deconv_backward");
-  ss << generate_wg_defs();
-  ss << generate_wg_kernels("deconv_weights");
+  // Quantization definitions
+  if (is_integer_type<MItype>()) {
+    ss << this->program_->define("ONE_MULT_CONST", "1");
+  }
+
+  // Deconvolution kernels only for float types
+  // TODO: Forward deconvolution quantized
+  if (is_float_type<MItype>()) {
+    ss << generate_fw_defs();
+    ss << generate_fw_kernels("deconv_forward");
+    ss << generate_bw_defs();
+    ss << generate_bw_kernels("deconv_backward");
+    ss << generate_wg_defs();
+    ss << generate_wg_kernels("deconv_weights");
+  }
 
   // Write complete kernel string
   this->program_->set_source(ss.str());
@@ -1706,7 +1734,7 @@ bool LibDNNDeconv<MItype, MOtype>::CompileKernels() {
 
 template<typename MItype, typename MOtype>
 void LibDNNDeconv<MItype, MOtype>::Forward(
-    vptr<const MItype> bottom_data, vptr<const MItype> weight,
+    vptr<const MItype> bottom_data, vptr<const MItype> weight, MItype bias_mult,
     vptr<const MItype> bias, vptr<MOtype> top_data, int_tp batch_size) {
   int fw_wptn = this->fw_tuner_->template get_param<int>("WPTN");
   int fw_wptm = this->fw_tuner_->template get_param<int>("WPTM");
@@ -1734,18 +1762,14 @@ void LibDNNDeconv<MItype, MOtype>::Forward(
   vector<size_t> local = {static_cast<size_t>(fw_wgs0),
                           static_cast<size_t>(fw_wgs1), 1};
 
+  kernel->add_arg(&bottom_data);
+  kernel->add_arg(&weight);
   if (this->bias_term_) {
-    kernel->add_arg(&bottom_data);
-    kernel->add_arg(&weight);
+    kernel->add_arg(&bias_mult);
     kernel->add_arg(&bias);
-    kernel->add_arg(&top_data);
-    kernel->Execute(group, local);
-  } else {
-    kernel->add_arg(&bottom_data);
-    kernel->add_arg(&weight);
-    kernel->add_arg(&top_data);
-    kernel->Execute(group, local);
   }
+  kernel->add_arg(&top_data);
+  kernel->Execute(group, local);
 }
 
 template<typename MItype, typename MOtype>
@@ -1753,6 +1777,7 @@ void LibDNNDeconv<MItype, MOtype>::Backward(
                        bool prop_down_data, bool prop_down_weights,
                        vptr<const MOtype> top_data, vptr<const MOtype> top_diff,
                        vptr<const MItype> weight, vptr<MItype> weight_diff,
+                       MItype bias_mult,
                        vptr<const MItype> bias, vptr<MItype> bias_diff,
                        vptr<const MItype> bottom_data, vptr<MItype> bottom_diff,
                        int_tp batch_size) {
@@ -1783,18 +1808,15 @@ void LibDNNDeconv<MItype, MOtype>::Backward(
     vector<size_t> local = {static_cast<size_t>(bw_wgs0),
                             static_cast<size_t>(bw_wgs1), 1};
 
+
+    kernel->add_arg(&top_diff);
+    kernel->add_arg(&weight);
     if (this->bias_term_) {
-      kernel->add_arg(&top_diff);
-      kernel->add_arg(&weight);
+      kernel->add_arg(&bias_mult);
       kernel->add_arg(&bias);
-      kernel->add_arg(&bottom_diff);
-      kernel->Execute(group, local);
-    } else {
-      kernel->add_arg(&top_diff);
-      kernel->add_arg(&weight);
-      kernel->add_arg(&bottom_diff);
-      kernel->Execute(group, local);
     }
+    kernel->add_arg(&bottom_diff);
+    kernel->Execute(group, local);
   }
 
   // Backprop w.r.t. weights and bias
@@ -1816,20 +1838,15 @@ void LibDNNDeconv<MItype, MOtype>::Backward(
       group[2] = batch_size * this->group_;
     }
 
+
+    kernel->add_arg(&bottom_data);
+    kernel->add_arg(&top_diff);
     if (this->bias_term_) {
-      kernel->add_arg(&bottom_data);
-      kernel->add_arg(&top_diff);
       kernel->add_arg(&bias_diff);
-      kernel->add_arg(&weight_diff);
-      kernel->add_arg(&batch_size);
-      kernel->Execute(group, local);
-    } else {
-      kernel->add_arg(&bottom_data);
-      kernel->add_arg(&top_diff);
-      kernel->add_arg(&weight_diff);
-      kernel->add_arg(&batch_size);
-      kernel->Execute(group, local);
     }
+    kernel->add_arg(&weight_diff);
+    kernel->add_arg(&batch_size);
+    kernel->Execute(group, local);
   }
 
   // Backprop w.r.t. weights and bias
@@ -1854,6 +1871,7 @@ void LibDNNDeconv<MItype, MOtype>::Backward(
 
     kernel->add_arg(&bottom_data);
     kernel->add_arg(&top_diff);
+    kernel->add_arg(&bias_mult);
     kernel->add_arg(&bias_diff);
     kernel->add_arg(&weight_diff);
     kernel->add_arg(&batch_size);
@@ -1865,6 +1883,7 @@ template<typename MItype, typename MOtype>
 void LibDNNDeconv<MItype, MOtype>::Tune(
                   vptr<MOtype> top_data, vptr<MOtype> top_diff,
                   vptr<MItype> weight, vptr<MItype> weight_diff,
+                  const MItype bias_mult,
                   vptr<MItype> bias, vptr<MItype> bias_diff,
                   vptr<MItype> bottom_data, vptr<MItype> bottom_diff,
                   int_tp batch_size) {
@@ -1881,7 +1900,7 @@ void LibDNNDeconv<MItype, MOtype>::Tune(
     try {
       Timer timer;
       timer.Start();
-      this->Forward(bottom_data, weight, bias, top_data, batch_size);
+      this->Forward(bottom_data, weight, bias_mult, bias, top_data, batch_size);
       timer.Stop();
       // Score is 1/time
       return 1.0 / timer.MicroSeconds();
@@ -1908,6 +1927,7 @@ void LibDNNDeconv<MItype, MOtype>::Tune(
       this->Backward(true, false,
           top_data, top_diff,
           weight, weight_diff,
+          bias_mult,
           bias, bias_diff,
           bottom_data, bottom_diff,
           batch_size);
@@ -1937,7 +1957,7 @@ void LibDNNDeconv<MItype, MOtype>::Tune(
       this->Backward(false, true,
           top_data, top_diff,
           weight, weight_diff,
-          bias, bias_diff,
+          bias_mult, bias, bias_diff,
           bottom_data, bottom_diff,
           batch_size);
       timer.Stop();

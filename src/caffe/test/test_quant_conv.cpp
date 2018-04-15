@@ -333,7 +333,24 @@ TYPED_TEST(QuantComparativeConvTest, TestCaffeConv) {
 
 #ifdef USE_LIBDNN
 TYPED_TEST(QuantComparativeConvTest, TestLibDNNConv) {
+  typedef typename TypeParam::Dtype Dtype;
 
+  if (Caffe::mode() == Caffe::CPU) {
+    // LibDNN not supported on CPU
+    return;
+  }
+
+  auto lmbd = [](LayerParameter layer_param) {
+    shared_ptr<BaseConvolutionLayer<Dtype, Dtype, Dtype> > layer(
+    new LibDNNConvolutionLayer<Dtype, Dtype, Dtype>(layer_param));
+    return layer;
+  };
+  this->layer_creator_func_  = lmbd;
+  for (int i = 0; i < 100; ++i) {
+    if (this->TestForward(i)) {
+      break;
+    }
+  }
 }
 
 #endif  // USE_LIBDNN

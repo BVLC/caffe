@@ -7,9 +7,7 @@
 #include "caffe/blob.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
-
 #include "caffe/layers/conv_layer.hpp"
-
 #include "caffe/libdnn/libdnn_conv.hpp"
 
 namespace caffe {

@@ -17,6 +17,15 @@ void ReLULayer<Dtype, MItype, MOtype>::GenerateProgram() {
   typedef typename std::conditional<float_is_same<MItype>::value, MItype,
           typename std::conditional<sizeof(MItype) == 1, int32_t,
                                     int64_t>::type>::type Acctype;
+  if (is_integer_type<MItype>()) {
+    if (this->device_->template preferred_vector_width<int64_t>() > 0) {
+      ss << this->device_program_->template define_vector_type<int64_t>(
+          "Multtype", 0, 16);
+    } else {
+      ss << this->device_program_->template define_vector_type<int32_t>(
+          "Multtype", 0, 16);
+    }
+  }
 
   ss << this->device_program_->setup();
   ss << this->device_program_->template define_type<Dtype>("Dtype");
@@ -58,7 +67,17 @@ void ReLULayer<Dtype, MItype, MOtype>::GenerateProgram() {
      << " * negative_slope;"
      << std::endl;
   } else {
-
+    ss << "Difftype relu = max((Difftype)((Difftype)(bottom_data[i]) - "
+       << "bottom_zero), (Difftype)0);" << std::endl;
+    ss << "Acctype reg = (Acctype)(((Multtype)(relu) * "
+       << "(Multtype)(mult)) / ((Multtype)1 << shift_bits));" << std::endl;
+    ss << "if (shift >= 0) {" << std::endl;
+    ss << "reg = reg >> shift;" << std::endl;
+    ss << "} else {" << std::endl;
+    ss << "reg = reg << -shift;" << std::endl;
+    ss << "}" << std::endl;
+    ss << "top_data[i] = (Dtype)(min(max(reg + top_zero, top_min), top_max));"
+       << std::endl;
   }
   ss << "}" << std::endl;
   ss << "}" << std::endl;
@@ -143,7 +162,6 @@ void ReLULayer<Dtype, MItype, MOtype>::Forward_gpu(
     kernel->Execute(group, local);
   }
 }
-
 
 
 template<typename Dtype, typename MItype, typename MOtype>

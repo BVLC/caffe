@@ -112,15 +112,17 @@ void LibDNNDeconvolutionLayer<Dtype, MItype, MOtype>::Forward_gpu(
 
   vptr<const Dtype> weight = this->blobs_[0]->gpu_data();
   vptr<const Dtype> bias;
+  Dtype bias_mult;
   if (this->bias_term_) {
      bias = this->blobs_[1]->gpu_data();
+     bias_mult = this->bias_multiplier_.cpu_data()[0];
   }
 
   for (int_tp i = 0; i < bottom.size(); ++i) {
     vptr<const MItype> bottom_data = bottom[i]->gpu_data();
     vptr<MOtype> top_data = top[i]->mutable_gpu_data();
-    libdnn_.get()->Forward(bottom_data, weight, bias,
-                           top_data, bottom[i]->shape()[0]);
+    libdnn_.get()->Forward(bottom_data, weight, bias_mult,
+                           bias, top_data, bottom[i]->shape()[0]);
   }
 }
 
@@ -134,9 +136,11 @@ void LibDNNDeconvolutionLayer<Dtype, MItype, MOtype>::Backward_gpu(
   vptr<const Dtype> bias;
   vptr<Dtype> weight_diff = this->blobs_[0]->mutable_gpu_diff();
   vptr<Dtype> bias_diff;
+  Dtype bias_mult;
   if (this->bias_term_) {
      bias = this->blobs_[1]->gpu_data();
      bias_diff = this->blobs_[1]->mutable_gpu_diff();
+     bias_mult = this->bias_multiplier_.cpu_data()[0];
   }
 
   for (int_tp i = 0; i < top.size(); ++i) {
@@ -149,7 +153,7 @@ void LibDNNDeconvolutionLayer<Dtype, MItype, MOtype>::Backward_gpu(
                              this->param_propagate_down_[1]),
                             top_data, top_diff,
                             weight, weight_diff,
-                            bias, bias_diff,
+                            bias_mult, bias, bias_diff,
                             bottom_data, bottom_diff,
                             bottom[i]->shape()[0]);
   }
@@ -164,13 +168,15 @@ void LibDNNDeconvolutionLayer<Dtype, MItype, MOtype>::Tune(
   vptr<Dtype> weight_diff = this->blobs_[0]->mutable_gpu_diff();
   vptr<Dtype> bias_data;
   vptr<Dtype> bias_diff;
+  Dtype bias_mult;
   if (this->bias_term_) {
      bias_data = this->blobs_[1]->mutable_gpu_data();
      bias_diff = this->blobs_[1]->mutable_gpu_diff();
+     bias_mult = this->bias_multiplier_.cpu_data()[0];
   }
 
   libdnn_.get()->Tune(top_data, top_diff,
-                      weight_data, weight_diff,
+                      weight_data, weight_diff, bias_mult,
                       bias_data, bias_diff,
                       bottom_data, bottom_diff,
                       batch_size);

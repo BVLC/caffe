@@ -22,7 +22,6 @@ LibDNNConv<MItype, MOtype>::LibDNNConv(LibDNNConvConfig config)
   this->config_ = config;
   this->program_ = this->dev_ptr_->CreateProgram();
   this->bias_term_ = config.bias_term;
-  this->bias_multiplier_ = config.bias_term ? 1.0 : 0.0;
   this->fast_unsafe_math_ = config.fast_unsafe_math;
   int_tp dims = config.in_shape.size();
   int_tp spatial_dims = config.kernel.size();
@@ -193,12 +192,12 @@ LibDNNConv<MItype, MOtype>::LibDNNConv(LibDNNConvConfig config)
     });
 
   // pad_A, pad_B
-  fw_tuner_->add_range_param<int_tp>("lmem_pad_A", 0, 0, 8, 1);
-  bw_tuner_->add_range_param<int_tp>("lmem_pad_A", 0, 0, 8, 1);
-  wg_tuner_->add_range_param<int_tp>("lmem_pad_A", 0, 0, 8, 1);
-  fw_tuner_->add_range_param<int_tp>("lmem_pad_B", 0, 0, 8, 1);
-  bw_tuner_->add_range_param<int_tp>("lmem_pad_B", 0, 0, 8, 1);
-  wg_tuner_->add_range_param<int_tp>("lmem_pad_B", 0, 0, 8, 1);
+  this->fw_tuner_->template add_range_param<int_tp>("lmem_pad_A", 0, 0, 8, 1);
+  this->bw_tuner_->template add_range_param<int_tp>("lmem_pad_A", 0, 0, 8, 1);
+  this->wg_tuner_->template add_range_param<int_tp>("lmem_pad_A", 0, 0, 8, 1);
+  this->fw_tuner_->template add_range_param<int_tp>("lmem_pad_B", 0, 0, 8, 1);
+  this->bw_tuner_->template add_range_param<int_tp>("lmem_pad_B", 0, 0, 8, 1);
+  this->wg_tuner_->template add_range_param<int_tp>("lmem_pad_B", 0, 0, 8, 1);
 
   if (this->dev_ptr_->backend() == BACKEND_CUDA) {
     // CUDA needs the vector elements unrolled
@@ -336,10 +335,6 @@ string LibDNNConv<MItype, MOtype>::generate_fw_defs() {
   ss << this->program_->define("v_fin", fmaps_in_);
   ss << this->program_->define("v_fout", fmaps_out_);
 
-  if (bias_term_) {
-    ss << this->program_->define("v_bmul", bias_multiplier_);
-  }
-
   MG_FW_ = fmaps_out_;
   M_FW_ = fmaps_out_ / group_;
   N_FW_ = 1;
@@ -471,10 +466,6 @@ string LibDNNConv<MItype, MOtype>::generate_bw_defs() {
 
   ss << this->program_->define("v_fin", fmaps_in_);
   ss << this->program_->define("v_fout", fmaps_out_);
-
-  if (bias_term_) {
-    ss << this->program_->define("v_bmul", bias_multiplier_);
-  }
 
   if (bwalgo_ == LIBDNN_CONVOLUTION_BW_ALGO_IM2COL) {
     MG_BW_ = fmaps_in_;
@@ -614,10 +605,6 @@ string LibDNNConv<MItype, MOtype>::generate_wg_defs() {
   ss << this->program_->define("v_fin", fmaps_in_);
   ss << this->program_->define("v_fout", fmaps_out_);
 
-  if (bias_term_) {
-    ss << this->program_->define("v_bmul", bias_multiplier_);
-  }
-
   MG_WG_ = fmaps_out_;
   M_WG_ = fmaps_out_ / group_;
   NG_WG_ = fmaps_in_;
@@ -681,6 +668,15 @@ string LibDNNConv<MItype, MOtype>::generate_wg_defs() {
 
 template<typename MItype, typename MOtype>
 string LibDNNConv<MItype, MOtype>::generate_fw_kernels(string name) {
+
+  typedef typename std::conditional<float_is_same<MItype>::value, MItype,
+          typename std::conditional<sizeof(MItype) == 1, int16_t,
+          typename std::conditional<sizeof(MItype) == 2, int32_t,
+                                    int64_t>::type>::type>::type Difftype;
+  typedef typename std::conditional<float_is_same<MItype>::value, MItype,
+          typename std::conditional<sizeof(MItype) == 1, int32_t,
+                                    int64_t>::type>::type Acctype;
+
   stringstream ss;
 
   int wptn = fw_tuner_->get_param<int>("WPTN");
@@ -690,10 +686,10 @@ string LibDNNConv<MItype, MOtype>::generate_fw_kernels(string name) {
   int rtsm = fw_tuner_->get_param<int>("workgroup_size_1");
   int tsm = wptm * rtsm;
   int tsn = wptn * rtsn;
-  // int vwm = fw_tuner_->get_param<int>("VWM");
-  // int vwn = fw_tuner_->get_param<int>("VWN");
-  // int lpta = (tsm * tsk) / (rtsm * rtsn);
-  // int lptb = (tsn * tsk) / (rtsm * rtsn);
+  int vwm = fw_tuner_->get_param<int>("VWM");
+  int vwn = fw_tuner_->get_param<int>("VWN");
+  int lpta = (tsm * tsk) / (rtsm * rtsn);
+  int lptb = (tsn * tsk) / (rtsm * rtsn);
 
   // Forward kernel
   /* ss << "__attribute__((reqd_work_group_size("
@@ -701,16 +697,52 @@ string LibDNNConv<MItype, MOtype>::generate_fw_kernels(string name) {
   ss << "__attribute__((vec_type_hint(MItype"
      << std::min(vwm, vwn) << ")))" << std::endl; */
   KernelArgs args;
+  if (is_integer_type<MItype>() || is_integer_type<MOtype>()) {
+    args.push_back(this->program_->template create_kernel_arg<int8_t>(
+                                               "shift_bits", KERNEL_ARG_CONST));
+  }
   args.push_back(this->program_->template create_kernel_arg<MItype>("im_in",
                KERNEL_ARG_CONST | KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_RESTRICT));
+  if (is_integer_type<MItype>() || is_integer_type<MOtype>()) {
+    args.push_back(this->program_->template create_kernel_arg<MItype>(
+                                                "im_in_off", KERNEL_ARG_CONST));
+  }
   args.push_back(this->program_->template create_kernel_arg<MItype>("wg",
                KERNEL_ARG_CONST | KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_RESTRICT));
+  if (is_integer_type<MItype>() || is_integer_type<MOtype>()) {
+    args.push_back(this->program_->template create_kernel_arg<MItype>(
+                                                   "wg_off", KERNEL_ARG_CONST));
+  }
   if (bias_term_) {
+    args.push_back(this->program_->template create_kernel_arg<MItype>(
+                                                "bias_mult", KERNEL_ARG_CONST));
     args.push_back(this->program_->template create_kernel_arg<MItype>("bias",
                KERNEL_ARG_CONST | KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_RESTRICT));
+    if (is_integer_type<MItype>() || is_integer_type<MOtype>()) {
+      args.push_back(this->program_->template create_kernel_arg<MItype>(
+                                            "bias_mult_off", KERNEL_ARG_CONST));
+      args.push_back(this->program_->template create_kernel_arg<MItype>(
+                                                 "bias_off", KERNEL_ARG_CONST));
+      args.push_back(this->program_->template create_kernel_arg<int32_t>(
+                                                    "bmult", KERNEL_ARG_CONST));
+      args.push_back(this->program_->template create_kernel_arg<int8_t>(
+                                                   "bshift", KERNEL_ARG_CONST));
+    }
   }
-  args.push_back(this->program_->template create_kernel_arg<MItype>("im_out",
+  args.push_back(this->program_->template create_kernel_arg<MOtype>("im_out",
                                   KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_RESTRICT));
+  if (is_integer_type<MOtype>()) {
+    args.push_back(this->program_->template create_kernel_arg<MOtype>(
+                                               "im_out_off", KERNEL_ARG_CONST));
+    args.push_back(this->program_->template create_kernel_arg<Acctype>(
+                                               "im_out_min", KERNEL_ARG_CONST));
+    args.push_back(this->program_->template create_kernel_arg<Acctype>(
+                                               "im_out_max", KERNEL_ARG_CONST));
+    args.push_back(this->program_->template create_kernel_arg<int32_t>(
+                                                     "mult", KERNEL_ARG_CONST));
+    args.push_back(this->program_->template create_kernel_arg<int8_t>(
+                                                    "shift", KERNEL_ARG_CONST));
+  }
   ss << this->program_->function(name, args);
 
   // Thread identifiers
@@ -739,6 +771,29 @@ string LibDNNConv<MItype, MOtype>::generate_fw_kernels(string name) {
                       + "[" + std::to_string(tsn) + " + v_pad_B]") << ";"
                     << std::endl;
 
+  if (is_integer_type<MItype>()) {
+    // Row & column caches for quantization affine transform
+    ss <<  this->program_->local_mem("Acctype", "Asubrows["
+                                     + std::to_string(tsm) + "]")
+       << ";" << std::endl;
+    ss <<  this->program_->local_mem("Acctype", "Bsubcols["
+                                     + std::to_string(tsn) + "]")
+       << ";" << std::endl;
+
+    ss << "if (tidn == 0) {" << std::endl;
+    ss << "#pragma unroll" << std::endl;
+    ss << "for (int_tp wm = 0; wm < WPTM; ++wm) {" << std::endl;
+    ss << "Asubrows[tidm * WPTM + wm] = (MItype)0;" << std::endl;
+    ss << "}}" << std::endl;
+    ss << "if (tidm == 0) {" << std::endl;
+    ss << "#pragma unroll" << std::endl;
+    ss << "for (int_tp wn = 0; wn < WPTN; ++wn) {" << std::endl;
+    ss << "Bsubcols[tidn * WPTN + wn] = (MItype)0;" << std::endl;
+    ss << "}}" << std::endl;
+
+    ss << this->program_->local_barrier() << std::endl;
+  }
+
   // Batch and group
   if (group_ > 1) {
     ss << "int_tp group = " << this->program_->global_id(2) << " % v_g;"
@@ -758,7 +813,7 @@ string LibDNNConv<MItype, MOtype>::generate_fw_kernels(string name) {
        << " = im_out + v_C_off * batch + group * (M * N);" << std::endl;
     if (bias_term_) {
       ss << this->program_->global_ptr("const MItype", "Dptr")
-         << "= bias + group * (v_fout / v_g);" << std::endl;
+         << " = bias + group * (v_fout / v_g);" << std::endl;
     }
   } else {
     ss << this->program_->global_ptr("const MItype", "Aptr") << " = wg;"
@@ -810,7 +865,12 @@ string LibDNNConv<MItype, MOtype>::generate_fw_kernels(string name) {
     ss << "if ((offM + row) < M && tiledIndex < K) {" << std::endl;
     ss << "Asub[row][col] = Aptr[(offM + row) * K + tiledIndex];" << std::endl;
     ss << "} else {" << std::endl;  // M-K-Guard
-    ss << "Asub[row][col] = 0.0;" << std::endl;
+    ss << "Asub[row][col] = (MItype)";
+    if (is_float_type<MItype>()) {
+      ss << "0.0;" << std::endl;
+    } else {
+      ss << "wg_off;" << std::endl;
+    }
     ss << "}" << std::endl;
     ss << "}" << std::endl;  // LPTA
   //  }
@@ -872,11 +932,21 @@ string LibDNNConv<MItype, MOtype>::generate_fw_kernels(string name) {
   ss << "Bsub[row][col] = Bptr[tiledIndex];" << std::endl;
   if (!skip_range_check_) {
     ss << "} else {" << std::endl;
-    ss << "Bsub[row][col] = 0.0;" << std::endl;
+    ss << "Bsub[row][col] = (MItype)";
+    if (is_float_type<MItype>()) {
+      ss << "0.0;" << std::endl;
+    } else {
+      ss << "im_in_off;" << std::endl;
+    }
     ss << "}" << std::endl;
   }
   ss << "} else {" << std::endl;
-  ss << "Bsub[row][col] = 0.0;" << std::endl;
+  ss << "Bsub[row][col] = (MItype)";
+  if (is_float_type<MItype>()) {
+    ss << "0.0;" << std::endl;
+  } else {
+    ss << "im_in_off;" << std::endl;
+  }
   ss << "}" << std::endl;
   ss << "}" << std::endl;
   ss << "}" << std::endl;  // Scoping for loading B
@@ -886,11 +956,51 @@ string LibDNNConv<MItype, MOtype>::generate_fw_kernels(string name) {
 
   ss << this->generate_gemm_core(fw_tuner_, false, false, false) << std::endl;
 
+  if (is_integer_type<MItype>()) {
+    // Add up columns of A
+    ss << "for (int_tp k = 0; k < TSK; ++k) {" << std::endl;
+    ss << "if (tidn == 0) {" << std::endl;
+    ss << "#pragma unroll" << std::endl;
+    ss << "for (int_tp wm = 0; wm < WPTM; ++wm) {" << std::endl;
+    ss << "Asubrows[tidm * WPTM + wm] += Asub[tidm * WPTM + wm][k];"
+       << std::endl;
+    ss << "}}" << std::endl;
+    // Add up rows of B
+    ss << "if (tidm == 0) {" << std::endl;
+    ss << "#pragma unroll" << std::endl;
+    ss << "for (int_tp wn = 0; wn < WPTN; ++wn) {" << std::endl;
+    ss << "Bsubcols[tidn * WPTN + wn] += Bsub[k][tidn * WPTN + wn];"
+       << std::endl;
+    ss << "}}" << std::endl;
+    ss << "}" << std::endl;
+  }
+
   // Synchronize before loading the next tile
   ss << this->program_->local_barrier() << std::endl;
 
   // Loop over all tiles
   ss << "}" << std::endl;
+
+  if (is_integer_type<MItype>()) {
+    // Subtract A*B_off and B*A_off
+    ss << "for (int_tp wm = 0; wm < WPTM / VWM; ++wm) {" << std::endl;
+    ss << "int_tp row = tidm + wm * VWM * RTSM;" << std::endl;
+    ss << "for (int_tp wn = 0; wn < WPTN / VWN; ++wn) {" << std::endl;
+    ss << "int_tp col = tidn + wn * VWN * RTSN;" << std::endl;
+    for (int_tp n = 0; n < vwn; ++n) {
+      for (int_tp m = 0; m < vwm; ++m) {
+        ss << "VEC_" << vwn << "_" << n
+           << "(Creg[wm * VWM + " << m << "][wn])"
+           << " -= ((Asubrows[row + " << (m * rtsm)  << "] * im_in_off) +"
+           << "     (Bsubcols[col + " << (n * rtsn) << "] * wg_off));"
+           << std::endl;
+      }
+    }
+    ss << "}" << std::endl;
+    ss << "}" << std::endl;
+    ss << this->program_->local_barrier() << std::endl;
+  }
+
   ss << "}" << std::endl;  // Scoping for load & compute block
 
   // Store the final results in c
@@ -946,14 +1056,62 @@ string LibDNNConv<MItype, MOtype>::generate_fw_kernels(string name) {
   ss << "int_tp globalCol = offN + tidn + wn * RTSN;"
      << std::endl;
   ss << "if (globalRow < M && globalCol < N) {" << std::endl;
-  if (bias_term_) {
-    ss << "Cptr[globalRow * N + globalCol] = "
-       << "((MItype*)(&(Creg[wm][wn/VWN])))[wn % VWN]"
-       << " + (MItype)v_bmul * biasval;" << std::endl;
+
+  if (is_float_type<MItype>()) {
+    // Float type code
+    // Nothing to do here
   } else {
-    ss << "Cptr[globalRow * N + globalCol] = "
-       << "((MItype*)(&(Creg[wm][wn/VWN])))[wn % VWN];" << std::endl;
+    // Quantization type code
+    ss << "{" << std::endl;
+    ss << "Acctype C_tmp = ((Acctype*)(&(Creg[wm][wn/VWN])))[wn%VWN] + "
+       << "((Acctype)(v_num_tiles * TSK))"
+       << " * ((Acctype)wg_off) * ((Acctype)im_in_off);" << std::endl;
+    ss << "C_tmp = (Acctype)((((Multtype)C_tmp) * ((Multtype)mult))"
+       << "/ ((Multtype)(ONE_MULT_CONST) << shift_bits));" << std::endl;
+
+    // Add quantized bias
+    if (bias_term_) {
+      ss << "Difftype bias_mult_d = (Difftype)bias_mult"
+         << " - (Difftype)bias_mult_off;" << std::endl;
+      ss << "Difftype bias_d = biasval - bias_off;" << std::endl;
+      ss << "Acctype bias_tmp = (Acctype)bias_mult_d * (Acctype)bias_d;"
+         << std::endl;
+      ss << "bias_tmp = (Acctype)((((Multtype)bias_tmp) * ((Multtype)bmult))"
+         << "/ ((Multtype)(ONE_MULT_CONST) << shift_bits));" << std::endl;
+      ss << "int8_t bshift_mod = bshift - shift;" << std::endl;
+      ss << "if (bshift_mod >= 0) {" << std::endl;
+      ss << "bias_tmp = bias_tmp >> bshift_mod;" << std::endl;
+      ss << "} else {" << std::endl;
+      ss << "bias_tmp = bias_tmp << -bshift_mod;" << std::endl;
+      ss << "}" << std::endl;
+      ss << "C_tmp = C_tmp + bias_tmp;" << std::endl;
+    }
+
+    ss << "if (shift >= 0) {" << std::endl;
+    ss << "C_tmp = C_tmp >> shift;" << std::endl;
+    ss << "} else {" << std::endl;
+    ss << "C_tmp = C_tmp << -shift;" << std::endl;
+    ss << "}" << std::endl;
+    ss << "((Acctype*)(&(Creg[wm][wn/VWN])))[wn%VWN] = C_tmp;" << std::endl;
+    ss << "}" << std::endl;
   }
+
+  stringstream ss_c;
+  if (is_float_type<MItype>()) {
+    // Float type code
+    ss_c << "((Acctype*)(&(Creg[wm][wn/VWN])))[wn % VWN]";
+    if (bias_term_) {
+      ss_c << " + bias_mult * biasval";
+    }
+  } else {
+    ss << "((Acctype*)(&(Creg[wm][wn/VWN])))[wn%VWN] += im_out_off;"
+       << std::endl;
+    ss_c << "min(max(((Acctype*)(&(Creg[wm][wn/VWN])))[wn%VWN], "
+         << "im_out_min), im_out_max)";
+  }
+  ss << "Cptr[globalRow * N + globalCol] = (MOtype)(" << ss_c.str() << ");"
+     << std::endl;
+
   ss << "}" << std::endl;   // M-N-Guard
   ss << "}" << std::endl;   // For (N)
   ss << "}" << std::endl;   // For (M)
@@ -992,6 +1150,8 @@ string LibDNNConv<MItype, MOtype>::generate_wg_kernels(string name) {
   args.push_back(this->program_->template create_kernel_arg<MItype>("im_out",
                KERNEL_ARG_CONST | KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_RESTRICT));
   if (bias_term_) {
+    args.push_back(this->program_->template create_kernel_arg<MItype>(
+                                                "bias_mult", KERNEL_ARG_CONST));
     args.push_back(this->program_->template create_kernel_arg<MItype>("bias",
                                   KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_RESTRICT));
   }
@@ -1426,7 +1586,6 @@ string LibDNNConv<MItype, MOtype>::generate_bw_kernels(string name) {
   // Synchronize to make sure the tile is loaded
   ss << this->program_->local_barrier() << std::endl;
 
-  // FIXME
   ss << this->generate_gemm_core(bw_tuner_, false, false, false) << std::endl;
 
   // Synchronize before loading the next tile
@@ -1512,20 +1671,50 @@ template<typename MItype, typename MOtype>
 void LibDNNConv<MItype, MOtype>::GenerateKernels() {
   this->program_ = this->dev_ptr_->CreateProgram();
 
+  typedef typename std::conditional<float_is_same<MItype>::value, MItype,
+          typename std::conditional<sizeof(MItype) == 1, int16_t,
+          typename std::conditional<sizeof(MItype) == 2, int32_t,
+                                    int64_t>::type>::type>::type Difftype;
+  typedef typename std::conditional<float_is_same<MItype>::value, MItype,
+          typename std::conditional<sizeof(MItype) == 1, int32_t,
+                                    int64_t>::type>::type Acctype;
+
   stringstream ss;
   ss << this->program_->setup();
   ss << this->program_->template define_vector_type<MItype>("MItype", 0, 16);
   ss << this->program_->template define_vector_type<MItype>("MItype", 0, 16);
   ss << this->program_->template define_vector_type<MOtype>("MOtype", 0, 16);
+  ss << this->program_->template define_vector_type<Acctype>("Acctype", 0, 16);
+  ss << this->program_->template define_vector_type<Difftype>("Difftype",
+                                                              0, 16);
+  if (is_integer_type<MItype>()) {
+    if (this->dev_ptr_->template preferred_vector_width<int64_t>() > 0) {
+      ss << this->program_->template define_vector_type<int64_t>("Multtype",
+                                                                0, 16);
+    } else {
+      ss << this->program_->template define_vector_type<int32_t>("Multtype",
+                                                                0, 16);
+    }
+  }
+
   ss << this->program_->atomics();
   ss << this->program_->vector_accessors();
 
+  // Quantization definitions
+  if (is_integer_type<MItype>()) {
+    ss << this->program_->define("ONE_MULT_CONST", "1");
+  }
+
   ss << generate_fw_defs();
   ss << generate_fw_kernels("conv_forward");
-  ss << generate_bw_defs();
-  ss << generate_bw_kernels("conv_backward");
-  ss << generate_wg_defs();
-  ss << generate_wg_kernels("conv_weights");
+
+  // Backward kernels only for float types
+  if (is_float_type<MItype>()) {
+    ss << generate_bw_defs();
+    ss << generate_bw_kernels("conv_backward");
+    ss << generate_wg_defs();
+    ss << generate_wg_kernels("conv_weights");
+  }
 
   // Write complete kernel string
   this->program_->set_source(ss.str());
@@ -1537,9 +1726,23 @@ bool LibDNNConv<MItype, MOtype>::CompileKernels() {
 }
 
 template<typename MItype, typename MOtype>
-void LibDNNConv<MItype, MOtype>::Forward(vptr<const MItype> bottom_data,
-       vptr<const MItype> weight, vptr<const MItype> bias, vptr<MOtype> top_data,
-       int_tp batch_size) {
+void LibDNNConv<MItype, MOtype>::Forward(
+    vptr<const MItype> bottom_data, vptr<const MItype> weight,
+    MItype bias_mult, vptr<const MItype> bias, vptr<MOtype> top_data,
+    int_tp batch_size,
+    const QuantizerValues* const bottom_quant,
+    const QuantizerValues* const weight_quant,
+    const QuantizerValues* const bias_mult_quant,
+    const QuantizerValues* const bias_quant,
+    const QuantizerValues* const top_quant) {
+  typedef typename std::conditional<float_is_same<MItype>::value, MItype,
+          typename std::conditional<sizeof(MItype) == 1, int16_t,
+          typename std::conditional<sizeof(MItype) == 2, int32_t,
+                                    int64_t>::type>::type>::type Difftype;
+  typedef typename std::conditional<float_is_same<MItype>::value, MItype,
+          typename std::conditional<sizeof(MItype) == 1, int32_t,
+                                    int64_t>::type>::type Acctype;
+
   int fw_wptn = fw_tuner_->get_param<int>("WPTN");
   int fw_wptm = fw_tuner_->get_param<int>("WPTM");
   int fw_wgs0 = fw_tuner_->get_param<int>("workgroup_size_0");
@@ -1555,18 +1758,76 @@ void LibDNNConv<MItype, MOtype>::Forward(vptr<const MItype> bottom_data,
   vector<size_t> local = {static_cast<size_t>(fw_wgs0),
                           static_cast<size_t>(fw_wgs1), 1};
 
-  if (bias_term_) {
-    kernel->add_arg(&bottom_data);
-    kernel->add_arg(&weight);
-    kernel->add_arg(&bias);
-    kernel->add_arg(&top_data);
-    kernel->Execute(group, local);
-  } else {
-    kernel->add_arg(&bottom_data);
-    kernel->add_arg(&weight);
-    kernel->add_arg(&top_data);
-    kernel->Execute(group, local);
+  // Quantization parameters
+  int8_t shift_bits =
+      (this->dev_ptr_->template preferred_vector_width<int64_t>() > 0 ? 32 : 16)
+      / sizeof(MItype) - 1;
+
+  MItype bottom_off;
+  MItype weight_off;
+  MOtype top_off;
+  int32_t mult;
+  int8_t shift;
+  Acctype top_min;
+  Acctype top_max;
+  MItype bias_mult_off;
+  MItype bias_off;
+  int32_t bmult;
+  int8_t bshift;
+
+  if (is_integer_type<MItype>() || is_integer_type<MOtype>()) {
+    CHECK(weight_quant);
+    CHECK(bottom_quant);
+    CHECK(top_quant);
+
+    bottom_off = bottom_quant->get_zero<MItype>();
+    weight_off = weight_quant->get_zero<MItype>();
+    top_off = top_quant->get_zero<MOtype>();
+    top_min = top_quant->get_min<Acctype>();
+    top_max = top_quant->get_max<Acctype>();
+    bias_mult_off = bias_mult_quant ? bias_mult_quant->get_zero<MItype>()
+        : MItype(0);
+    bias_off = bias_quant ? bias_quant->get_zero<MItype>()
+        : MItype(0);
+
+    QuantizerBase::template MultiplicativeQuantVals<int32_t>(
+        weight_quant, bottom_quant, top_quant, &mult, &shift, shift_bits);
+    if (bias_mult_quant && bias_quant) {
+      QuantizerBase::template MultiplicativeQuantVals<int32_t>(
+          bias_mult_quant, bias_quant, top_quant, &bmult, &bshift, shift_bits);
+    }
   }
+
+  if (is_integer_type<MItype>() || is_integer_type<MOtype>()) {
+    kernel->add_arg(&shift_bits);
+  }
+  kernel->add_arg(&bottom_data);
+  if (is_integer_type<MItype>() || is_integer_type<MOtype>()) {
+    kernel->add_arg(&bottom_off);
+  }
+  kernel->add_arg(&weight);
+  if (is_integer_type<MItype>() || is_integer_type<MOtype>()) {
+    kernel->add_arg(&weight_off);
+  }
+  if (bias_term_) {
+    kernel->add_arg(&bias_mult);
+    kernel->add_arg(&bias);
+    if (is_integer_type<MItype>() || is_integer_type<MOtype>()) {
+      kernel->add_arg(&bias_mult_off);
+      kernel->add_arg(&bias_off);
+      kernel->add_arg(&bmult);
+      kernel->add_arg(&bshift);
+    }
+  }
+  kernel->add_arg(&top_data);
+  if (is_integer_type<MItype>() || is_integer_type<MOtype>()) {
+    kernel->add_arg(&top_off);
+    kernel->add_arg(&top_min);
+    kernel->add_arg(&top_max);
+    kernel->add_arg(&mult);
+    kernel->add_arg(&shift);
+  }
+  kernel->Execute(group, local);
 }
 
 template<typename MItype, typename MOtype>
@@ -1574,6 +1835,7 @@ void LibDNNConv<MItype, MOtype>::Backward(bool prop_down_data,
                        bool prop_down_weights,
                        vptr<const MOtype> top_data, vptr<const MOtype> top_diff,
                        vptr<const MItype> weight, vptr<MItype> weight_diff,
+                       MItype bias_mult,
                        vptr<const MItype> bias, vptr<MItype> bias_diff,
                        vptr<const MItype> bottom_data, vptr<MItype> bottom_diff,
                        int_tp batch_size) {
@@ -1611,18 +1873,13 @@ void LibDNNConv<MItype, MOtype>::Backward(bool prop_down_data,
     vector<size_t> local = {static_cast<size_t>(bw_wgs0),
                             static_cast<size_t>(bw_wgs1), 1};
 
+    kernel->add_arg(&top_diff);
+    kernel->add_arg(&weight);
     if (bias_term_) {
-      kernel->add_arg(&top_diff);
-      kernel->add_arg(&weight);
       kernel->add_arg(&bias);
-      kernel->add_arg(&bottom_diff);
-      kernel->Execute(group, local);
-    } else {
-      kernel->add_arg(&top_diff);
-      kernel->add_arg(&weight);
-      kernel->add_arg(&bottom_diff);
-      kernel->Execute(group, local);
     }
+    kernel->add_arg(&bottom_diff);
+    kernel->Execute(group, local);
   }
 
   // Backprop w.r.t. weights and bias
@@ -1642,27 +1899,22 @@ void LibDNNConv<MItype, MOtype>::Backward(bool prop_down_data,
     if (wgalgo_ == LIBDNN_CONVOLUTION_WG_ALGO_ATOMIC) {
       group[2] = batch_size * group_;
     }
+    kernel->add_arg(&bottom_data);
+    kernel->add_arg(&top_diff);
     if (bias_term_) {
-      kernel->add_arg(&bottom_data);
-      kernel->add_arg(&top_diff);
+      kernel->add_arg(&bias_mult);
       kernel->add_arg(&bias_diff);
-      kernel->add_arg(&weight_diff);
-      kernel->add_arg(&batch_size);
-      kernel->Execute(group, local);
-    } else {
-      kernel->add_arg(&bottom_data);
-      kernel->add_arg(&top_diff);
-      kernel->add_arg(&weight_diff);
-      kernel->add_arg(&batch_size);
-      kernel->Execute(group, local);
     }
+    kernel->add_arg(&weight_diff);
+    kernel->add_arg(&batch_size);
+    kernel->Execute(group, local);
   }
 }
 
 template<typename MItype, typename MOtype>
 void LibDNNConv<MItype, MOtype>::Tune(
                 vptr<MOtype> top_data, vptr<MOtype> top_diff,
-                vptr<MItype> weight, vptr<MItype> weight_diff,
+                vptr<MItype> weight, vptr<MItype> weight_diff, MItype bias_mult,
                 vptr<MItype> bias, vptr<MItype> bias_diff,
                 vptr<MItype> bottom_data, vptr<MItype> bottom_diff,
                 int_tp batch_size) {
@@ -1679,7 +1931,7 @@ void LibDNNConv<MItype, MOtype>::Tune(
     try {
       Timer timer;
       timer.Start();
-      this->Forward(bottom_data, weight, bias, top_data, batch_size);
+      this->Forward(bottom_data, weight, bias_mult, bias, top_data, batch_size);
       timer.Stop();
       // Score is 1/time
       return 1.0 / timer.MicroSeconds();
@@ -1706,7 +1958,7 @@ void LibDNNConv<MItype, MOtype>::Tune(
       this->Backward(true, false,
           top_data, top_diff,
           weight, weight_diff,
-          bias, bias_diff,
+          bias_mult, bias, bias_diff,
           bottom_data, bottom_diff,
           batch_size);
       timer.Stop();
@@ -1735,7 +1987,7 @@ void LibDNNConv<MItype, MOtype>::Tune(
       this->Backward(false, true,
           top_data, top_diff,
           weight, weight_diff,
-          bias, bias_diff,
+          bias_mult, bias, bias_diff,
           bottom_data, bottom_diff,
           batch_size);
       timer.Stop();

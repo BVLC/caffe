@@ -233,6 +233,8 @@ string LibDNNBlas<MItype, MOtype>::generate_gemm_source(
   ss << "const int_tp offM = TSM * " << program->group_id(1) << ";"
      << std::endl;
 
+  ss << this->program_->global_ptr("MItype", "Cptr") << " = C;" << std::endl;
+
   // Local tile memory
   // Asub
   ss << program->local_mem("MItype",
@@ -359,6 +361,7 @@ string LibDNNBlas<MItype, MOtype>::generate_gemm_source(
       ss << "}" << std::endl;
     }
 
+    // Synchronize before loading the next tile
     ss << program->local_barrier() << std::endl;
 
     // Loop over all tiles
@@ -460,7 +463,7 @@ string LibDNNBlas<MItype, MOtype>::generate_gemm_source(
     ss << "((Acctype*)(&(Creg[wm][wn/VWN])))[wn%VWN] += C_off;" << std::endl;
     ss_c << "min(max(((Acctype*)(&(Creg[wm][wn/VWN])))[wn%VWN], C_min), C_max)";
   }
-  ss << "C[globalRow * N + globalCol] = (MOtype)(" << ss_c.str() << ");"
+  ss << "Cptr[globalRow * N + globalCol] = (MOtype)(" << ss_c.str() << ");"
      << std::endl;
   ss << "}" << std::endl;   // M-N-Guard
   ss << "}" << std::endl;   // For (N)
@@ -594,7 +597,7 @@ void LibDNNBlas<MItype, MOtype>::gemm(
   if (is_integer_type<MItype>() || is_integer_type<MOtype>()) {
     A_off = a_quant->get_zero<MItype>();
     B_off = b_quant->get_zero<MItype>();
-    C_off = c_quant->get_zero<Acctype>();
+    C_off = c_quant->get_zero<MOtype>();
     C_min = c_quant->get_min<Acctype>();
     C_max = c_quant->get_max<Acctype>();
     alpha_off = alpha_quant ? alpha_quant->get_zero<MOtype>() : MOtype(0);
@@ -613,30 +616,30 @@ void LibDNNBlas<MItype, MOtype>::gemm(
   }
   if (alpha_term && !alpha_exactly_one) {
     kernel->add_arg(&alpha);
-    if (is_integer_type<MOtype>()) {
+    if (is_integer_type<MItype>() || is_integer_type<MOtype>()) {
       kernel->add_arg(&alpha_off);
       kernel->add_arg(&alpha_mult);
       kernel->add_arg(&alpha_shift);
     }
   }
   kernel->add_arg(&A);
-  if (is_integer_type<MItype>()) {
+  if (is_integer_type<MItype>() || is_integer_type<MOtype>()) {
     kernel->add_arg(&A_off);
   }
   kernel->add_arg(&B);
-  if (is_integer_type<MItype>()) {
+  if (is_integer_type<MItype>() || is_integer_type<MOtype>()) {
     kernel->add_arg(&B_off);
   }
   if (beta_term && !beta_exactly_one) {
     kernel->add_arg(&beta);
-    if (is_integer_type<MOtype>()) {
+    if (is_integer_type<MItype>() || is_integer_type<MOtype>()) {
       kernel->add_arg(&beta_off);
       kernel->add_arg(&beta_mult);
       kernel->add_arg(&beta_shift);
     }
   }
   kernel->add_arg(&C);
-  if (is_integer_type<MOtype>()) {
+  if (is_integer_type<MItype>() || is_integer_type<MOtype>()) {
     kernel->add_arg(&C_off);
     kernel->add_arg(&C_min);
     kernel->add_arg(&C_max);

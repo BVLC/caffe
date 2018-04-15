@@ -67,12 +67,13 @@ string LibDNN<MItype, MOtype>::generate_gemm_core(
     if (unroll) {
       for (int i = 0; i < vwm; ++i) {
         ss << "VEC_" << vwm << "_" << i << "(Dreg[wm]) " << "+= ";
-        ss << "(Acctype)(VEC_" << vwm << "_" << i << "(Areg) * (MItype)v_bmul);"
+        ss << "(Acctype)(VEC_" << vwm << "_" << i
+           << "(Areg) * bias_mult);"
            << std::endl;
       }
     } else {
       ss << "Dreg[wm] += ";
-      ss << "Areg * (MItype)v_bmul";
+      ss << "Areg * (MItype)bias_mult";
       ss << ";" << std::endl;
     }
   }
@@ -84,7 +85,7 @@ string LibDNN<MItype, MOtype>::generate_gemm_core(
         ss << "VEC_" << vwn << "_" << n << "(Creg[wm * VWM + " << m << "][wn])"
            << " += ";
         ss << "(Acctype)";
-        if (!alpha_exactly_one && is_float_type<MItype>()) {
+        if (alpha_term && !alpha_exactly_one && is_float_type<MItype>()) {
           ss << "(alpha *";
         } else {
           ss << "(";
@@ -97,7 +98,7 @@ string LibDNN<MItype, MOtype>::generate_gemm_core(
     for (int_tp m = 0; m < vwm; ++m) {
       ss << "Creg[wm * VWM + " << m << "][wn] += ";
       stringstream src_term;
-      if (!alpha_exactly_one && is_float_type<MItype>()) {
+      if (alpha_term && !alpha_exactly_one && is_float_type<MItype>()) {
         src_term << "(alpha *";
       } else {
         src_term << "(";
@@ -159,7 +160,7 @@ string LibDNN<MItype, MOtype>::generate_accreg_init(
         ss_beta_c << "Cptr[globalRow * N + globalCol]);" << std::endl;
       } else {
         // Float code
-        ss_beta_c << "(beta * Cptr[globalRow * N + globalCol]));"
+        ss_beta_c << "(beta * Cptr[globalRow * N + globalCol]);"
                   << std::endl;
       }
     } else {

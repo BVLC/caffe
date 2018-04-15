@@ -411,7 +411,7 @@ string CudaDeviceProgram::global_barrier() {
 string CudaDeviceProgram::atomics() {
   stringstream ss;
   ss << "inline __device__" << std::endl;
-  ss << "float caffe_gpu_atomic_float_add(const float val, float* address) {"
+  ss << "float caffe_gpu_atomic_float_add(float* address, const float val) {"
      << std::endl;
   ss << "return atomicAdd(address, val);" << std::endl;
   ss << "}" << std::endl;
@@ -419,8 +419,8 @@ string CudaDeviceProgram::atomics() {
   // double atomicAdd implementation taken from:
   // http://docs.nvidia.com/cuda/cuda-c-programming-guide/#axzz3PVCpVsEG
   ss << "inline __device__" << std::endl;
-  ss << "double caffe_gpu_atomic_double_add(const double val, "
-     << "double* address) {" << std::endl;
+  ss << "double caffe_gpu_atomic_double_add(double* address, "
+     << "const double val) {" << std::endl;
   ss << "unsigned long long int* address_as_ull = "
      << "  reinterpret_cast<unsigned long long int*>(address);" << std::endl;
   ss << "unsigned long long int old = *address_as_ull;" << std::endl;
