@@ -294,7 +294,8 @@ void CVMatToDatum(const cv::Mat& cv_img, Datum* datum);
   long int NumberOfImages(const string* source);
 
   void ReadImagesListBatch(const string* source, long int start_index, long int n_to_read,
-                      std::vector<std::pair<std::string, std::vector<float> > >&images_vec);
+			   std::vector<std::pair<std::string, std::vector<float> > >&images_vec,
+			   std::ifstream &infile, const bool &fpeek=false);
   void ReadImagesList(const string& source,
                            std::vector<std::pair<std::string, std::vector<float> > >*images_vec);
 
