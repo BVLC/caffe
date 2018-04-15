@@ -42,25 +42,6 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       "new_height and new_width to be set at the same time.";
   // Read the file with filenames and labels
   source_ = &this->layer_param_.image_data_param().source();
-  //  size_t found=source.find_last_of("/\\");
-
-  //LOG(INFO) << "Opening file " << source;
-  // Extend image_data_layer from single label to multilabel inputs
-  //ReadImagesList(source.c_str(), &lines_);
-  //CHECK(!lines_.empty()) << "File is empty";
-
-  //lines_size_ = NumberOfImages(source_);
-
-
-
-  //  else {
-  //   if (this->phase_ == TRAIN && Caffe::solver_rank() > 0 &&
-  //       this->layer_param_.image_data_param().rand_skip() == 0) {
-  //     LOG(WARNING) << "Shuffling or skipping recommended for multi-GPU";
-  //   }
-  // }
-  //LOG(INFO) << "A total of " << lines_size_ << " images.";
-
   lines_id_ = 0;
   // Check if we would need to randomly skip a few data points
   if (this->layer_param_.image_data_param().rand_skip()) {
@@ -72,12 +53,12 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
     lines_id_ = skip;
   }
   // Read an image, and use it to initialize the top blob.
+  vector<std::pair<std::string, std::vector<float> > > lines_batch;
+  ReadImagesListBatch(source_, 0, 1, lines_batch, infile_, true); // peeking only
 
-  ReadImagesListBatch(source_, 0, 1, lines_batch_, infile_);
-
-  cv::Mat cv_img = ReadImageToCVMat(root_folder + lines_batch_[0].first,
+  cv::Mat cv_img = ReadImageToCVMat(root_folder + lines_batch[0].first,
                                     new_height, new_width, is_color);
-  CHECK(cv_img.data) << "Could not load " << lines_batch_[0].first;
+  CHECK(cv_img.data) << "Could not load " << lines_batch[0].first;
   // Use data_transformer to infer the expected blob shape from a cv_image.
   top_shape_ = this->data_transformer_->InferBlobShape(cv_img);
   this->transformed_data_.Reshape(top_shape_);
@@ -93,7 +74,7 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   LOG(INFO) << "output data size: " << top[0]->num() << ","
       << top[0]->channels() << "," << top[0]->height() << ","
       << top[0]->width();
-   //multi label
+  //multi label
      top[1]->Reshape(batch_size, label_size, 1, 1);
     for (int i = 0; i < this->PREFETCH_COUNT; ++i) {
       this->prefetch_[i].label_.Reshape(batch_size, label_size, 1, 1);
@@ -101,12 +82,12 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
 
 }
 
-template <typename Dtype>
+  /*template <typename Dtype>
 void ImageDataLayer<Dtype>::ShuffleImages() {
   caffe::rng_t* prefetch_rng =
       static_cast<caffe::rng_t*>(prefetch_rng_->generator());
   shuffle(lines_batch_.begin(), lines_batch_.end(), prefetch_rng);
-}
+  }*/
 
 // This function is called on prefetch thread
 template <typename Dtype>
@@ -123,9 +104,6 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   const int new_height = image_data_param.new_height();
   const int new_width = image_data_param.new_width();
   const bool is_color = image_data_param.is_color();
-  //  const string& source = image_data_param.source();
-  //  size_t found=source.find_last_of("/\\");
-  //string root_folder = source.substr(0,found) + "/";
   string root_folder = image_data_param.root_folder();
 
   // Reshape according to the first image of each batch
@@ -143,27 +121,28 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   Dtype* prefetch_data = batch->data_.mutable_cpu_data();
   Dtype* prefetch_label = batch->label_.mutable_cpu_data();
 
-  ReadImagesListBatch(source_, lines_id_, batch_size, lines_batch_, infile_);
-  if (this->layer_param_.image_data_param().shuffle()) {
+  vector<std::pair<std::string, std::vector<float> > > lines_batch;
+  {
+    std::lock_guard<std::mutex> lock(batch_mutex_);
+    ReadImagesListBatch(source_, lines_id_, batch_size, lines_batch, infile_);
+  }
+  /*if (this->layer_param_.image_data_param().shuffle()) {
     // randomly shuffle data
     LOG(INFO) << "Shuffling data";
     const unsigned int prefetch_rng_seed = caffe_rng_rand();
     prefetch_rng_.reset(new Caffe::RNG(prefetch_rng_seed));
     ShuffleImages();
-  }
-
-
+    }*/
+  
   // datum scales
-  //const int lines_size = lines_.size();
   for (int item_id = 0; item_id < batch_size; ++item_id) {
     // get a blob
     timer.Start();
-    //CHECK_GT(lines_size_, lines_id_);
-    cv::Mat cv_img = ReadImageToCVMat(root_folder + lines_batch_[item_id].first,
+    cv::Mat cv_img = ReadImageToCVMat(root_folder + lines_batch[item_id].first,
         new_height, new_width, is_color);
     if (!cv_img.data)
       {
-        LOG(WARNING) << "failed loading = " << lines_batch_[item_id].first;// << std::endl;
+        LOG(WARNING) << "failed loading = " << lines_batch[item_id].first;// << std::endl;
         continue;
       }
     read_time += timer.MicroSeconds();
@@ -174,22 +153,19 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     this->data_transformer_->Transform(cv_img, &(this->transformed_data_));
     trans_time += timer.MicroSeconds();
 
-    //prefetch_label[item_id] = lines_[lines_id_].second;
     for(int labels_idx = 0; labels_idx < label_size_; ++labels_idx){
-	prefetch_label[ item_id*label_size_ + labels_idx ] = lines_batch_[item_id].second[labels_idx];
+	prefetch_label[ item_id*label_size_ + labels_idx ] = lines_batch[item_id].second[labels_idx];
     }    
     // go to the next iter
     lines_id_++;
-    //if (lines_id_ >= lines_size_) {
-    if (infile_.eof()) {
-      // We have reached the end. Restart from the first.
-      DLOG(INFO) << "Restarting data prefetching from start.";
-      lines_id_ = 0;
-      ReadImagesListBatch(source_, 0, batch_size, lines_batch_, infile_);
-      if (this->layer_param_.image_data_param().shuffle()) {
-        const unsigned int prefetch_rng_seed = caffe_rng_rand();
-        prefetch_rng_.reset(new Caffe::RNG(prefetch_rng_seed));
-        ShuffleImages();
+    {
+      std::lock_guard<std::mutex> lock(batch_mutex_);
+      if (infile_.eof()) {
+	infile_.clear();
+	infile_.seekg(0, std::ios::beg);
+	// We have reached the end. Restart from the first.
+	DLOG(INFO) << "Restarting data prefetching from start.";
+	lines_id_ = 0;
       }
     }
   }

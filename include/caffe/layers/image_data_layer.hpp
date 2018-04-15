@@ -34,18 +34,15 @@ class ImageDataLayer : public BasePrefetchingDataLayer<Dtype> {
 
   protected:
   shared_ptr<Caffe::RNG> prefetch_rng_;
-  virtual void ShuffleImages();
+  //virtual void ShuffleImages();
   virtual void load_batch(Batch<Dtype>* batch);
 
-  //vector<std::pair<std::string, int> > lines_;
-  //int lines_id_;
-  vector<std::pair<std::string, std::vector<float> > > lines_batch_;
   int lines_id_;
   int label_size_;
   std::vector<int> top_shape_;
   const std::string* source_;
-  long int lines_size_;
   std::ifstream infile_;
+  std::mutex batch_mutex_;
 };
 
 

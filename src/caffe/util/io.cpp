@@ -765,7 +765,7 @@ void CVMatToDatum(const cv::Mat& cv_img, Datum* datum) {
 
   void ReadImagesListBatch(const string* source, long int start_index, long int n_to_read,
 			   std::vector<std::pair<std::string, std::vector<float> > >&images_vec,
-			   std::ifstream &infile) {
+			   std::ifstream &infile, const bool &fpeek) {
      images_vec.clear();
      // Read the file with filenames and labels
      if (!infile.is_open())
@@ -778,36 +778,34 @@ void CVMatToDatum(const cv::Mat& cv_img, Datum* datum) {
      int line_num = 1;
      int num_labels = 0;
      
-     /*int index = 0;
-     while (std::getline(infile, line) && index < start_index)
-     index++;*/
-
-
      int index = 0;
-  while (std::getline(infile, line) && index < n_to_read) {
-    index++;
-    std::istringstream iss(line);
-    string filename;
-    std::vector<float> labels;
-    float label;
-    CHECK(iss >> filename) << "Error reading line " << line_num;
-    while (iss >> label) {
-      labels.push_back(label);
-    }
-    if (line_num == 1) {
-      // Use first line to set the number of labels
-      num_labels = labels.size();
-    }
-    CHECK_EQ(labels.size(), num_labels) <<
-      filename << " error at line " << line_num << std::endl <<
-      " All images should have the same number of labels";
-    line_num++;
-    images_vec.push_back(std::make_pair(filename, labels));
+     while (std::getline(infile, line) && index < n_to_read) {
+       index++;
+       std::istringstream iss(line);
+       string filename;
+       std::vector<float> labels;
+       float label;
+       CHECK(iss >> filename) << "Error reading line " << line_num;
+       while (iss >> label) {
+	 labels.push_back(label);
+       }
+       if (line_num == 1) {
+	 // Use first line to set the number of labels
+	 num_labels = labels.size();
+       }
+       CHECK_EQ(labels.size(), num_labels) <<
+	 filename << " error at line " << line_num << std::endl <<
+	 " All images should have the same number of labels";
+       line_num++;
+       images_vec.push_back(std::make_pair(filename, labels));
+     }
+     DLOG(INFO) << "Read " << line_num - 1 << " images with " <<
+       num_labels << " labels";
+     if (fpeek) {
+       infile.clear();
+       infile.seekg(0, std::ios::beg);
+     }
   }
-  LOG(INFO) << "Read " << line_num - 1 << " images with " <<
-    num_labels << " labels";
-}
-
 
   void ReadImagesList(const string& source,
                     std::vector<std::pair<std::string, std::vector<float> > >*images_vec) {
