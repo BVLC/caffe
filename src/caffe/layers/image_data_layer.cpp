@@ -135,7 +135,7 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     }*/
   
   // datum scales
-  for (int item_id = 0; item_id < batch_size; ++item_id) {
+  for (size_t item_id = 0; item_id < lines_batch.size(); ++item_id) {
     // get a blob
     timer.Start();
     cv::Mat cv_img = ReadImageToCVMat(root_folder + lines_batch[item_id].first,
