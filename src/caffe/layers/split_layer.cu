@@ -46,6 +46,15 @@ INSTANTIATE_CLASST_FUNC_3T_GUARDED(SplitLayer, Forward_gpu,
                                   (float), (float), (float));
 INSTANTIATE_CLASST_FUNC_3T_GUARDED(SplitLayer, Forward_gpu,
                                   (double), (double), (double));
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(SplitLayer, Forward_gpu,
+                                  (uint8_t), (uint8_t), (uint8_t));
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(SplitLayer, Forward_gpu,
+                                  (uint16_t), (uint16_t), (uint16_t));
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(SplitLayer, Forward_gpu,
+                                  (uint32_t), (uint32_t), (uint32_t));
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(SplitLayer, Forward_gpu,
+                                  (uint64_t), (uint64_t), (uint64_t));
+
 
 INSTANTIATE_CLASST_FUNC_3T_GUARDED(SplitLayer, Backward_gpu,
                                   (half_fp), (half_fp), (half_fp));
@@ -53,5 +62,13 @@ INSTANTIATE_CLASST_FUNC_3T_GUARDED(SplitLayer, Backward_gpu,
                                   (float), (float), (float));
 INSTANTIATE_CLASST_FUNC_3T_GUARDED(SplitLayer, Backward_gpu,
                                   (double), (double), (double));
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(SplitLayer, Backward_gpu,
+                                  (uint8_t), (uint8_t), (uint8_t));
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(SplitLayer, Backward_gpu,
+                                  (uint16_t), (uint16_t), (uint16_t));
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(SplitLayer, Backward_gpu,
+                                  (uint32_t), (uint32_t), (uint32_t));
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(SplitLayer, Backward_gpu,
+                                  (uint64_t), (uint64_t), (uint64_t));
 
 }  // namespace caffe

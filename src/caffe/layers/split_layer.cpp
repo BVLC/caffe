@@ -59,10 +59,18 @@ STUB_GPU(SplitLayer);
 INSTANTIATE_CLASS_3T_GUARDED(SplitLayer, (half_fp), (half_fp), (half_fp));
 INSTANTIATE_CLASS_3T_GUARDED(SplitLayer, (float), (float), (float));
 INSTANTIATE_CLASS_3T_GUARDED(SplitLayer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(SplitLayer, (uint8_t), (uint8_t), (uint8_t));
+INSTANTIATE_CLASS_3T_GUARDED(SplitLayer, (uint16_t), (uint16_t), (uint16_t));
+INSTANTIATE_CLASS_3T_GUARDED(SplitLayer, (uint32_t), (uint32_t), (uint32_t));
+INSTANTIATE_CLASS_3T_GUARDED(SplitLayer, (uint64_t), (uint64_t), (uint64_t));
 
 REGISTER_LAYER_CLASS(Split);
 REGISTER_LAYER_CLASS_INST(Split, (half_fp), (half_fp), (half_fp));
 REGISTER_LAYER_CLASS_INST(Split, (float), (float), (float));
 REGISTER_LAYER_CLASS_INST(Split, (double), (double), (double));
+REGISTER_LAYER_CLASS_INST(Split, (uint8_t), (uint8_t), (uint8_t));
+REGISTER_LAYER_CLASS_INST(Split, (uint16_t), (uint16_t), (uint16_t));
+REGISTER_LAYER_CLASS_INST(Split, (uint32_t), (uint32_t), (uint32_t));
+REGISTER_LAYER_CLASS_INST(Split, (uint64_t), (uint64_t), (uint64_t));
 
 }  // namespace caffe
