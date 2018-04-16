@@ -106,6 +106,7 @@ class vptr<Dtype, typename const_enable_if<Dtype>::type> {
   bool is_valid() const;
 
 private:
+  static void* nullptr_ref_;
   shared_ptr<dev_ptr<Dtype> > dev_ptr_;
 };
 
@@ -172,6 +173,7 @@ class vptr<Dtype, typename non_const_enable_if<Dtype>::type> {
   bool is_valid() const;
 
 private:
+  static void* nullptr_ref_;
   shared_ptr<dev_ptr<Dtype> > dev_ptr_;
 };
 

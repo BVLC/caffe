@@ -9,6 +9,14 @@
 namespace caffe {
 
 template<typename Dtype>
+void* vptr<Dtype, typename const_enable_if<Dtype>::type>::nullptr_ref_ =
+    nullptr;
+
+template<typename Dtype>
+void* vptr<Dtype, typename non_const_enable_if<Dtype>::type>::nullptr_ref_ =
+    nullptr;
+
+template<typename Dtype>
 vptr<Dtype, typename const_enable_if<Dtype>::type>::vptr()
   : dev_ptr_(nullptr) {}
 template<typename Dtype>
@@ -445,29 +453,37 @@ shared_ptr<dev_ptr<Dtype> > vptr<Dtype,
 template<typename Dtype>
 Dtype* vptr<Dtype, typename const_enable_if<Dtype>::type>::get_cuda_ptr()
     const {
-  if (dev_ptr_ == nullptr)
+  if (dev_ptr_ == nullptr) {
     return nullptr;
+  }
   return (dynamic_cast<cuda_dev_ptr<Dtype>*>(dev_ptr_.get()))->get();
 }
 template<typename Dtype>
 Dtype* vptr<Dtype, typename non_const_enable_if<Dtype>::type>::get_cuda_ptr()
     const {
-  if (dev_ptr_ == nullptr)
+  if (dev_ptr_ == nullptr) {
     return nullptr;
+  }
   return (dynamic_cast<cuda_dev_ptr<Dtype>*>(dev_ptr_.get()))->get();
 }
 template<typename Dtype>
 void* vptr<Dtype, typename const_enable_if<Dtype>::type>
                                                     ::get_cuda_ptr_ptr() const {
-  if (dev_ptr_ == nullptr)
-    return nullptr;
+  if (dev_ptr_ == nullptr) {
+    // Needs a pointer to a null-pointer (static class member)
+    nullptr_ref_ = nullptr;
+    return &nullptr_ref_;
+  }
   return (dynamic_cast<cuda_dev_ptr<Dtype>*>(dev_ptr_.get()))->get_ptr();
 }
 template<typename Dtype>
 void* vptr<Dtype, typename non_const_enable_if<Dtype>::type>
                                                     ::get_cuda_ptr_ptr() const {
-  if (dev_ptr_ == nullptr)
-    return nullptr;
+  if (dev_ptr_ == nullptr) {
+    // Needs a pointer to a null-pointer (static class member)
+    nullptr_ref_ = nullptr;
+    return &nullptr_ref_;
+  }
   return (dynamic_cast<cuda_dev_ptr<Dtype>*>(dev_ptr_.get()))->get_ptr();
 }
 #endif  // USE_CUDA

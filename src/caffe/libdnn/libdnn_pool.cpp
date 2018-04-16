@@ -200,7 +200,7 @@ string LibDNNPool<MItype, MOtype>::generate_bw_defs() {
 
 template<typename MItype, typename MOtype>
 string LibDNNPool<MItype, MOtype>::generate_fw_kernels(string name,
-                                                              bool test_mode) {
+                                                       bool test_mode) {
   stringstream ss;
 #ifdef USE_HALF
   if (std::is_same<MItype, half_fp>::value) {
@@ -227,10 +227,10 @@ string LibDNNPool<MItype, MOtype>::generate_fw_kernels(string name,
   if (pool_method_ == LIBDNN_POOLING_METHOD_MAX) {
     if (use_top_mask_) {
       args.push_back(this->program_->template create_kernel_arg<MItype>(
-          "top_mask", KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_RESTRICT));
+                      "top_mask", KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_RESTRICT));
     } else {
       args.push_back(this->program_->template create_kernel_arg<int_tp>(
-          "mask", KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_RESTRICT));
+                          "mask", KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_RESTRICT));
     }
   }
   if (pool_method_ == LIBDNN_POOLING_METHOD_STO && !test_mode) {
@@ -493,8 +493,9 @@ string LibDNNPool<MItype, MOtype>::generate_bw_kernels(string name) {
     }
   }
   if (pool_method_ == LIBDNN_POOLING_METHOD_STO) {
-    args.push_back(this->program_->template create_kernel_arg<MItype>("rand_idx",
-             KERNEL_ARG_CONST | KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_RESTRICT));
+    args.push_back(this->program_->template create_kernel_arg<MItype>(
+        "rand_idx", KERNEL_ARG_CONST | KERNEL_ARG_GLOBAL_MEM
+        | KERNEL_ARG_RESTRICT));
   }
   args.push_back(this->program_->template create_kernel_arg<int_tp>("channels",
            KERNEL_ARG_CONST));
@@ -852,10 +853,10 @@ bool LibDNNPool<MItype, MOtype>::CompileKernels() {
 
 template<typename MItype, typename MOtype>
 void LibDNNPool<MItype, MOtype>::Forward(
-              vptr<const MItype> bottom_data, vptr<MOtype> top_data,
-              int_tp channels, int_tp batch_size,
-              bool test_mode, vptr<int_tp> mask,
-              vptr<MOtype> top_mask, vptr<MItype> rand_idx) {
+    vptr<const MItype> bottom_data, vptr<MOtype> top_data,
+    int_tp channels, int_tp batch_size,
+    bool test_mode, vptr<int_tp> mask,
+    vptr<MOtype> top_mask, vptr<MItype> rand_idx) {
   int_tp imsi = std::accumulate(im_in_shape_.begin(), im_in_shape_.end(),
                                 1, std::multiplies<int_tp>());
   int_tp imso = std::accumulate(im_out_shape_.begin(), im_out_shape_.end(),
@@ -867,47 +868,32 @@ void LibDNNPool<MItype, MOtype>::Forward(
   shared_ptr<DeviceKernel> kernel =
       this->program_->GetKernel(test_mode ? "pool_forward_test"
                                           : "pool_forward_train");
-  vector<size_t> group = {static_cast<size_t>(((imso - 1) / lw0 + 1),
-                          ((channels * batch_size - 1) / lw1 + 1)), 1};
+  vector<size_t> group = {static_cast<size_t>((imso - 1) / lw0 + 1),
+                 static_cast<size_t>((channels * batch_size - 1) / lw1 + 1), 1};
   vector<size_t> local = {lw0, lw1, 1};
 
+  kernel->add_arg(&bottom_data);
+  kernel->add_arg(&top_data);
   switch (pool_method_) {
     case LIBDNN_POOLING_METHOD_MAX: {
       if (use_top_mask_) {
-        kernel->add_arg(&bottom_data);
-        kernel->add_arg(&top_data);
         kernel->add_arg(&top_mask);
-        kernel->add_arg(&channels);
-        kernel->add_arg(&batch_size);
-        kernel->Execute(group, local);
       } else {
-        kernel->add_arg(&bottom_data);
-        kernel->add_arg(&top_data);
         kernel->add_arg(&mask);
-        kernel->add_arg(&channels);
-        kernel->add_arg(&batch_size);
-        kernel->Execute(group, local);
       }
       break;
     }
     case LIBDNN_POOLING_METHOD_AVE: {
-      kernel->add_arg(&bottom_data);
-      kernel->add_arg(&top_data);
-      kernel->add_arg(&channels);
-      kernel->add_arg(&batch_size);
-      kernel->Execute(group, local);
       break;
     }
     case LIBDNN_POOLING_METHOD_STO: {
-      kernel->add_arg(&bottom_data);
-      kernel->add_arg(&top_data);
       kernel->add_arg(&rand_idx);
-      kernel->add_arg(&channels);
-      kernel->add_arg(&batch_size);
-      kernel->Execute(group, local);
       break;
     }
   }
+  kernel->add_arg(&channels);
+  kernel->add_arg(&batch_size);
+  kernel->Execute(group, local);
 }
 
 template<typename MItype, typename MOtype>
@@ -941,47 +927,32 @@ void LibDNNPool<MItype, MOtype>::Backward(
 
   shared_ptr<DeviceKernel> kernel =
       this->program_->GetKernel("pool_backward");
-  vector<size_t> group = {static_cast<size_t>(((imsw - 1) / lw0 + 1),
-                          ((channels * batch_size - 1) / lw1 + 1)), 1};
+  vector<size_t> group = {static_cast<size_t>((imsw - 1) / lw0 + 1),
+                 static_cast<size_t>((channels * batch_size - 1) / lw1 + 1), 1};
   vector<size_t> local = {lw0, lw1, 1};
 
+  kernel->add_arg(&top_diff);
+  kernel->add_arg(&bottom_diff);
   switch (pool_method_) {
     case LIBDNN_POOLING_METHOD_MAX: {
       if (use_top_mask_) {
-        kernel->add_arg(&top_diff);
-        kernel->add_arg(&bottom_diff);
         kernel->add_arg(&top_mask);
-        kernel->add_arg(&channels);
-        kernel->add_arg(&batch_size);
-        kernel->Execute(group, local);
       } else {
-        kernel->add_arg(&top_diff);
-        kernel->add_arg(&bottom_diff);
         kernel->add_arg(&mask);
-        kernel->add_arg(&channels);
-        kernel->add_arg(&batch_size);
-        kernel->Execute(group, local);
       }
       break;
     }
     case LIBDNN_POOLING_METHOD_AVE: {
-      kernel->add_arg(&top_diff);
-      kernel->add_arg(&bottom_diff);
-      kernel->add_arg(&channels);
-      kernel->add_arg(&batch_size);
-      kernel->Execute(group, local);
       break;
     }
     case LIBDNN_POOLING_METHOD_STO: {
-      kernel->add_arg(&top_diff);
-      kernel->add_arg(&bottom_diff);
       kernel->add_arg(&rand_idx);
-      kernel->add_arg(&channels);
-      kernel->add_arg(&batch_size);
-      kernel->Execute(group, local);
       break;
     }
   }
+  kernel->add_arg(&channels);
+  kernel->add_arg(&batch_size);
+  kernel->Execute(group, local);
 }
 
 INSTANTIATE_CLASS_2T_GUARDED(LibDNNPool, PROTO_TYPES, PROTO_TYPES);

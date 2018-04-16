@@ -248,9 +248,9 @@ REGISTER_LAYER_CREATOR(Convolution, GetConvolutionLayer,
 REGISTER_LAYER_CREATOR(Convolution, GetConvolutionLayer,
                        (double), (double), (double));
 
-// Get quantized convolution layer according to engine.
+// Get lower precision convolution layer according to engine.
 template<typename Dtype, typename MItype, typename MOtype>
-shared_ptr<Layer<Dtype, MItype, MOtype> > GetQuantizedConvolutionLayer(
+shared_ptr<Layer<Dtype, MItype, MOtype> > GetConvolutionLayerLowerPrecision(
     const LayerParameter& param) {
   ConvolutionParameter_Engine engine = param.convolution_param().engine();
   if (engine == ConvolutionParameter_Engine_DEFAULT) {
@@ -274,14 +274,15 @@ shared_ptr<Layer<Dtype, MItype, MOtype> > GetQuantizedConvolutionLayer(
     throw;  // Avoids missing return warning
   }
 }
-
-REGISTER_LAYER_CREATOR(Convolution, GetQuantizedConvolutionLayer,
+REGISTER_LAYER_CREATOR(Convolution, GetConvolutionLayerLowerPrecision,
+                       (half_fp), (half_fp), (half_fp));
+REGISTER_LAYER_CREATOR(Convolution, GetConvolutionLayerLowerPrecision,
                        (uint8_t), (uint8_t), (uint8_t));
-REGISTER_LAYER_CREATOR(Convolution, GetQuantizedConvolutionLayer,
+REGISTER_LAYER_CREATOR(Convolution, GetConvolutionLayerLowerPrecision,
                        (uint16_t), (uint16_t), (uint16_t));
-REGISTER_LAYER_CREATOR(Convolution, GetQuantizedConvolutionLayer,
+REGISTER_LAYER_CREATOR(Convolution, GetConvolutionLayerLowerPrecision,
                        (uint32_t), (uint32_t), (uint32_t));
-REGISTER_LAYER_CREATOR(Convolution, GetQuantizedConvolutionLayer,
+REGISTER_LAYER_CREATOR(Convolution, GetConvolutionLayerLowerPrecision,
                        (uint64_t), (uint64_t), (uint64_t));
 
 
@@ -401,6 +402,47 @@ REGISTER_LAYER_CREATOR(Pooling, GetPoolingLayer,
                        (float), (float), (float));
 REGISTER_LAYER_CREATOR(Pooling, GetPoolingLayer,
                        (double), (double), (double));
+
+
+// Get lower precision pooling layer according to engine.
+template<typename Dtype, typename MItype, typename MOtype>
+shared_ptr<Layer<Dtype, MItype, MOtype> > GetPoolingLayerLowerPrecision(
+    const LayerParameter& param) {
+  PoolingParameter_Engine engine = param.pooling_param().engine();
+  if (engine == PoolingParameter_Engine_DEFAULT) {
+    engine = PoolingParameter_Engine_CAFFE;
+
+#ifdef USE_LIBDNN
+    engine = PoolingParameter_Engine_LIBDNN;
+#endif
+  }
+
+  if (engine == PoolingParameter_Engine_CAFFE) {
+    return shared_ptr<Layer<Dtype, MItype, MOtype> >(
+        new PoolingLayer<Dtype, MItype, MOtype>(param));
+#ifdef USE_LIBDNN
+  } else if (engine == PoolingParameter_Engine_LIBDNN) {
+    return shared_ptr<Layer<Dtype, MItype, MOtype> >(
+        new LibDNNPoolingLayer<Dtype, MItype, MOtype>(param));
+#endif  // USE_LIBDNN
+  } else {
+    LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
+    throw;  // Avoids missing return warning
+  }
+}
+REGISTER_LAYER_CREATOR(Pooling, GetPoolingLayerLowerPrecision,
+                       (half_fp), (half_fp), (half_fp));
+REGISTER_LAYER_CREATOR(Pooling, GetPoolingLayerLowerPrecision,
+                       (uint8_t), (uint8_t), (uint8_t));
+REGISTER_LAYER_CREATOR(Pooling, GetPoolingLayerLowerPrecision,
+                       (uint16_t), (uint16_t), (uint16_t));
+REGISTER_LAYER_CREATOR(Pooling, GetPoolingLayerLowerPrecision,
+                       (uint32_t), (uint32_t), (uint32_t));
+REGISTER_LAYER_CREATOR(Pooling, GetPoolingLayerLowerPrecision,
+                       (uint64_t), (uint64_t), (uint64_t));
+
+
+
 
 // Get LRN layer according to engine
 template <typename Dtype, typename MItype, typename MOtype>

@@ -129,7 +129,6 @@ void LibDNNPoolingLayer<Dtype, MItype, MOtype>::Forward_gpu(
   vptr<MOtype> top_mask;
   vptr<Dtype> rand_idx;
 
-
   switch (this->layer_param_.pooling_param().pool()) {
     case PoolingParameter_PoolMethod_MAX:
       if (use_top_mask) {
@@ -210,8 +209,6 @@ INSTANTIATE_CLASS_3T_GUARDED(LibDNNPoolingLayer, (uint64_t), (uint64_t),
                              PROTO_TYPES);
 
 REGISTER_LAYER_CLASS(LibDNNPooling);
-REGISTER_LAYER_CREATOR(Pooling, Creator_LibDNNPoolingLayer,
-                       (half_fp), (half_fp), (half_fp));
 
 }   // namespace caffe
 #endif  // USE_LIBDNN

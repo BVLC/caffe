@@ -84,8 +84,9 @@ class QuantComparativeConvTest : public MultiDeviceTest<TypeParam> {
     int dims = dimsRand(this->rng_);
 
     std::uniform_int_distribution<int_tp> sizeRand(1,
-                pow(ELEMENT_LIMIT / (fmaps_in * fmaps_out * batchsize),
-                1.0 / (static_cast<double>(dims))));
+         std::max(2, static_cast<int_tp>(pow(ELEMENT_LIMIT /
+                     (fmaps_in * fmaps_out * batchsize),
+                     1.0 / (static_cast<double>(dims))))));
 
     BlobShape shape;
     shape.add_dim(batchsize);  // Batch

@@ -189,7 +189,7 @@ void PoolingLayer<Dtype, MItype, MOtype>::GenerateProgram() {
     ss << "++pool_size;" << std::endl;
     ss << "}" << std::endl;
     ss << "}" << std::endl;
-    ss << "top_data[index] = aveval / pool_size;" << std::endl;
+    ss << "top_data[index] = aveval / ((Dtype)pool_size);" << std::endl;
     ss << "}" << std::endl;
     ss << "}" << std::endl;
   }
@@ -418,7 +418,7 @@ void PoolingLayer<Dtype, MItype, MOtype>::GenerateProgram() {
     ss << "top_mask += offset;" << std::endl;
     ss << "for (int_tp ph = phstart; ph < phend; ++ph) {" << std::endl;
     ss << "for (int_tp pw = pwstart; pw < pwend; ++pw) {" << std::endl;
-    ss << "if (top_mask[ph * pooled_width + pw] == h * width + w) {"
+    ss << "if (top_mask[ph * pooled_width + pw] == (Dtype)(h * width + w)) {"
        << std::endl;
     ss << "gradient += top_diff[ph * pooled_width + pw];" << std::endl;
     ss << "}" << std::endl;
@@ -508,8 +508,8 @@ void PoolingLayer<Dtype, MItype, MOtype>::GenerateProgram() {
        << "(h - hstart) % dilation_h == 0 &&"
        << "w >= wstart && w < wend &&"
        << "(w - wstart) % dilation_w == 0) {" << std::endl;
-    ss << "gradient += top_diff_slice[ph * pooled_width + pw] / pool_size;"
-       << std::endl;
+    ss << "gradient += top_diff_slice[ph * pooled_width + pw]"
+       << " / ((Dtype)pool_size);" << std::endl;
     ss << "}" << std::endl;
     ss << "}" << std::endl;
     ss << "}" << std::endl;
@@ -654,7 +654,7 @@ void PoolingLayer<Dtype, MItype, MOtype>::GenerateProgram() {
     ss << "aveval += bottom_slice[h * width + w];" << std::endl;
     ss << "}" << std::endl;
     ss << "}" << std::endl;
-    ss << "top_data[index] = aveval / pool_size;" << std::endl;
+    ss << "top_data[index] = aveval / ((Dtype)pool_size);" << std::endl;
     ss << "}" << std::endl;
     ss << "}" << std::endl;
   }
@@ -719,7 +719,7 @@ void PoolingLayer<Dtype, MItype, MOtype>::GenerateProgram() {
     ss << "for (int_tp h = hstart; h < hend; ++h) {" << std::endl;
     ss << "for (int_tp w = wstart; w < wend; ++w) {" << std::endl;
     ss << "cumsum += bottom_slice[h * width + w];" << std::endl;
-    ss << "if (cumsum >= thres) {" << std::endl;
+    ss << "if (cumsum >= ((Dtype)thres)) {" << std::endl;
     ss << "rand_idx[index] = ((n * channels + c) * height + h) * width + w;"
        << std::endl;
     ss << "top_data[index] = bottom_slice[h * width + w];" << std::endl;
@@ -787,8 +787,8 @@ void PoolingLayer<Dtype, MItype, MOtype>::GenerateProgram() {
        << " * bottom_slice[h * width + w];" << std::endl;
     ss << "}" << std::endl;
     ss << "}" << std::endl;
-    ss << "top_data[index] = (cumsum > 0.) ? cumvalues / cumsum : 0.;"
-       << std::endl;
+    ss << "top_data[index] = (cumsum > (Dtype)(0.0)) ? "
+       << "cumvalues / cumsum : (Dtype)(0.0);" << std::endl;
     ss << "}" << std::endl;
     ss << "}" << std::endl;
   }
@@ -868,8 +868,8 @@ void PoolingLayer<Dtype, MItype, MOtype>::GenerateProgram() {
        << " = top_mask + offset;" << std::endl;
     ss << "for (int_tp ph = phstart; ph < phend; ++ph) {" << std::endl;
     ss << "for (int_tp pw = pwstart; pw < pwend; ++pw) {" << std::endl;
-    ss << "if (top_mask_slice[ph * pooled_width + pw] == h * width + w) {"
-       << std::endl;
+    ss << "if (top_mask_slice[ph * pooled_width + pw] == "
+       << "(Dtype)(h * width + w)) {" << std::endl;
     ss << "gradient += top_diff_slice[ph * pooled_width + pw];" << std::endl;
     ss << "}" << std::endl;
     ss << "}" << std::endl;
@@ -942,8 +942,8 @@ void PoolingLayer<Dtype, MItype, MOtype>::GenerateProgram() {
     ss << "int_tp wend = min((int_tpc) (wstart + kernel_w),"
        << " (int_tpc) (width + pad_w));" << std::endl;
     ss << "int_tp pool_size = (hend - hstart) * (wend - wstart);" << std::endl;
-    ss << "gradient += top_diff_slice[ph * pooled_width + pw] / pool_size;"
-       << std::endl;
+    ss << "gradient += top_diff_slice[ph * pooled_width + pw]"
+       << " / ((Dtype)pool_size);" << std::endl;
     ss << "}" << std::endl;
     ss << "}" << std::endl;
     ss << "bottom_diff[index] = gradient;" << std::endl;
@@ -1007,8 +1007,8 @@ void PoolingLayer<Dtype, MItype, MOtype>::GenerateProgram() {
     ss << "for (int_tp ph = phstart; ph < phend; ++ph) {" << std::endl;
     ss << "for (int_tp pw = pwstart; pw < pwend; ++pw) {" << std::endl;
     ss << "gradient += top_diff_slice[ph * pooled_width + pw]"
-       << " * (index  == (int_tpc)(rand_idx_slice[ph * pooled_width + pw]));"
-       << std::endl;
+       << " * (index  == (int_tpc)(rand_idx_slice[ph * pooled_width + pw]) ?"
+       << " (Dtype)1.0 : (Dtype)0.0);"  << std::endl;
     ss << "}" << std::endl;
     ss << "}" << std::endl;
     ss << "bottom_diff[index] = gradient;" << std::endl;
@@ -1198,7 +1198,7 @@ void PoolingLayer<Dtype, MItype, MOtype>::GenerateProgram() {
     ss << "gradient += top_diff[final_offset];" << std::endl;
     ss << "}" << std::endl;
     ss << "} else {" << std::endl;
-    ss << "if (top_mask[final_offset] == im_offset) {" << std::endl;
+    ss << "if (top_mask[final_offset] == (Dtype)im_offset) {" << std::endl;
     ss << "gradient += top_diff[final_offset];" << std::endl;
     ss << "}" << std::endl;
     ss << "}" << std::endl;
@@ -1226,11 +1226,11 @@ void PoolingLayer<Dtype, MItype, MOtype>::GenerateProgram() {
 
 template<typename Dtype, typename MItype, typename MOtype>
 void PoolingLayer<Dtype, MItype, MOtype>::Forward_gpu(
-                                        const vector<Blob<MItype>*>& bottom,
-                                        const vector<Blob<MOtype>*>& top) {
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
   vptr<const Dtype> bottom_data = bottom[0]->gpu_data();
   vptr<Dtype> top_data = top[0]->mutable_gpu_data();
-  int_tp count = top[0]->count();
+  uint_tp count = top[0]->count();
   // We'll output the mask to top[1] if it's of size >1.
   const bool use_top_mask = top.size() > 1;
   vptr<int_tp> mask;
@@ -1265,7 +1265,7 @@ void PoolingLayer<Dtype, MItype, MOtype>::Forward_gpu(
           }
 
           shared_ptr<DeviceKernel> kernel =
-                          this->device_program_->GetKernel("MaxPoolForwardSK");
+                           this->device_program_->GetKernel("MaxPoolForwardSK");
           kernel->add_arg(&count);
           kernel->add_arg(&bottom_data);
           kernel->add_arg(&num);
