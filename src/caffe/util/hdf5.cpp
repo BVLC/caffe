@@ -1,3 +1,4 @@
+#ifdef USE_HDF5
 #include "caffe/util/hdf5.hpp"
 
 #include <string>
@@ -207,3 +208,4 @@ string hdf5_get_name_by_idx(hid_t loc_id, int idx) {
 }
 
 }  // namespace caffe
+#endif  // USE_HDF5
