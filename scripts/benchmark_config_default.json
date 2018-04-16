@@ -1,6 +1,6 @@
 {
     "params":{
-        "topology" : "all",
+        "topology" : "alexnet",
         "hostfile" : "",
         "network" : "",
         "netmask" : "",
