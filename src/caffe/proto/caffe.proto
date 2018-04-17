@@ -596,8 +596,9 @@ message LayerParameter {
   optional SmoothL1LossParameter smooth_l1_loss_param = 148;
   optional SoftmaxParameter softmax_param = 125;
   optional SPPParameter spp_param = 132;
-  optional SplitParameter split_param = 147;
+  optional SplitParameter split_param = 208;
   optional SliceParameter slice_param = 126;
+  optional SwishParameter swish_param = 147;
   optional TanHParameter tanh_param = 127;
   optional ThresholdParameter threshold_param = 128;
   optional TileParameter tile_param = 138;
@@ -1384,6 +1385,7 @@ message ImageDataParameter {
 message InfogainLossParameter {
   // Specify the infogain matrix source.
   optional string source = 1;
+  optional int32 axis = 2 [default = 1]; // axis of prob
 }
 
 message InnerProductParameter {
@@ -1567,22 +1569,24 @@ message PoolingParameter {
     AVE = 1;
     STOCHASTIC = 2;
   }
-  optional bool avg_include_pad = 13 [default = true];
   optional PoolMethod pool = 1 [default = MAX]; // The pooling method
-  // Pad, kernel size, and stride are all given as a single value for equal
-  // dimensions in all spatial dimensions, or once per spatial dimension.
-  repeated uint32 pad = 2; // The padding size defaults to 0
-  repeated uint32 kernel_size = 3; // The kernel size (square)
-  repeated uint32 stride = 4; // defaults to 1
+  // For 2D pooling only, Pad, kernel size, and stride are all given as a
+  // single value for equal dimensions in height and width or as Y, X pairs.
+  optional uint32 pad = 4 [default = 0]; // The padding size (equal in Y, X)
+  optional uint32 pad_h = 9 [default = 0]; // The padding height
+  optional uint32 pad_w = 10 [default = 0]; // The padding width
+  optional uint32 kernel_size = 2; // The kernel size (square)
+  optional uint32 kernel_h = 5; // The kernel height
+  optional uint32 kernel_w = 6; // The kernel width
+  optional uint32 stride = 3 [default = 1]; // The stride (equal in Y, X)
+  optional uint32 stride_h = 7; // The stride height
+  optional uint32 stride_w = 8; // The stride width
+  // For 3D pooling only, dimensions in all spatial dimensions, or once
+  // per spatial dimension.
+  repeated uint32 pad_3d = 15; // The padding size defaults to 0
+  repeated uint32 kernel_size_3d = 16; // The kernel size (square)
+  repeated uint32 stride_3d = 17; // defaults to 1
 
-  // For 2D pooling only, the *_h and *_w versions may also be used to
-  // specify both spatial dimensions.
-  optional uint32 pad_h = 5 [default = 0]; // The padding height (2D only)
-  optional uint32 pad_w = 6 [default = 0]; // The padding width (2D only)
-  optional uint32 kernel_h = 7; // The kernel height (2D only)
-  optional uint32 kernel_w = 8; // The kernel width (2D only)
-  optional uint32 stride_h = 9 [default = 1]; // The stride height (2D only)
-  optional uint32 stride_w = 10 [default = 1]; // The stride width (2D only)
   enum Engine {
     DEFAULT = 0;
     CAFFE = 1;
@@ -1594,6 +1598,7 @@ message PoolingParameter {
   // If global_pooling then it will pool over the size of the bottom by doing
   // kernel_h = bottom->height and kernel_w = bottom->width
   optional bool global_pooling = 12 [default = false];
+  optional bool avg_include_pad = 13 [default = true];
   // The axis to interpret as "channels" when performing pooling.
   // Preceding dimensions are treated as independent inputs;
   // succeeding dimensions are treated as "spatial".
@@ -1891,6 +1896,15 @@ message SoftmaxParameter {
   optional int32 axis = 2 [default = 1];
 }
 
+// Message that stores parameters used by SwishLayer
+message SwishParameter {
+  // Beta parameter for the Swish activation function
+  // Described in:
+  // Prajit Ramachandran, Barret Zoph, Quoc V. Le. (2017). Searching for
+  // Activation Functions. https://arxiv.org/abs/1710.05941v2
+  optional float beta = 1 [default = 1];
+}
+
 message TanHParameter {
   enum Engine {
     DEFAULT = 0;
@@ -2168,6 +2182,6 @@ message PReLUParameter {
 
   // Initial value of a_i. Default is a_i=0.25 for all i.
   optional FillerParameter filler = 1;
-  // Whether or not slope paramters are shared across channels.
+  // Whether or not slope parameters are shared across channels.
   optional bool channel_shared = 2 [default = false];
 }

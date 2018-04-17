@@ -1078,9 +1078,9 @@ void Net<Dtype>::CompilationRuleSparse(const NetParameter& param,
       each_layer_param->add_bottom(pooling_layer_id_top_blob[i]);
       each_layer_param->add_top(pooling_layer_id_top_blob[i] + "_p");
 
-      each_layer_param->mutable_pooling_param()->add_stride(
+      each_layer_param->mutable_pooling_param()->set_stride(
           pooling_layer_id_stride[i]);
-      each_layer_param->mutable_pooling_param()->add_kernel_size(1);
+      each_layer_param->mutable_pooling_param()->set_kernel_size(1);
       each_layer_param->mutable_pooling_param()->set_pool(
           PoolingParameter_PoolMethod_MAX);
 

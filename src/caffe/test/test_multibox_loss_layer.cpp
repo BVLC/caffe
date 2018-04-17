@@ -235,8 +235,8 @@ class MultiBoxLossLayerTest : public MultiDeviceTest<TypeParam> {
     // Fake layer
     PoolingParameter* pooling_param = layer_param.mutable_pooling_param();
     pooling_param->set_pool(PoolingParameter_PoolMethod_AVE);
-    pooling_param->add_kernel_size(10);
-    pooling_param->add_stride(10);
+    pooling_param->set_kernel_size(10);
+    pooling_param->set_stride(10);
 
     PoolingLayer<Dtype> pooling_layer(layer_param);
     Blob<Dtype>* fake_blob = new Blob<Dtype>(num_, 5, height_, width_);

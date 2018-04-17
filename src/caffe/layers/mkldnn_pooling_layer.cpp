@@ -59,18 +59,18 @@ void MKLDNNPoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom
     PoolingParameter pool_param = this->layer_param_.pooling_param();
 
     if (pool_param.global_pooling()) {
-        CHECK(!(pool_param.kernel_size_size() || pool_param.has_kernel_h() || pool_param.has_kernel_w()))
+        CHECK(!(pool_param.has_kernel_size() || pool_param.has_kernel_h() || pool_param.has_kernel_w()))
             << "With Global_pooling: true Filter size cannot specified";
     } else {
-        CHECK(!pool_param.kernel_size_size() != !(pool_param.has_kernel_h() && pool_param.has_kernel_w()))
+        CHECK(!pool_param.has_kernel_size() != !(pool_param.has_kernel_h() && pool_param.has_kernel_w()))
             << "Filter size is kernel_size OR kernel_h and kernel_w; not both";
-        CHECK(pool_param.kernel_size_size() ||(pool_param.has_kernel_h() && pool_param.has_kernel_w()))
+        CHECK(pool_param.has_kernel_size() ||(pool_param.has_kernel_h() && pool_param.has_kernel_w()))
             << "For non-square filters both kernel_h and kernel_w are required.";
     }
-    CHECK((!pool_param.pad_size() && pool_param.has_pad_h() && pool_param.has_pad_w())
+    CHECK((!pool_param.has_pad() && pool_param.has_pad_h() && pool_param.has_pad_w())
             || (!pool_param.has_pad_h() && !pool_param.has_pad_w()))
         << "pad is pad OR pad_h and pad_w are required.";
-    CHECK((!pool_param.stride_size() && pool_param.has_stride_h() && pool_param.has_stride_w())
+    CHECK((!pool_param.has_stride() && pool_param.has_stride_h() && pool_param.has_stride_w())
             || (!pool_param.has_stride_h() && !pool_param.has_stride_w()))
         << "Stride is stride OR stride_h and stride_w are required.";
 
@@ -79,15 +79,8 @@ void MKLDNNPoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom
         kernel_h_ = bottom[0]->height();
         kernel_w_ = bottom[0]->width();
     } else {
-        if (pool_param.kernel_size_size()) {
-            CHECK(pool_param.kernel_size_size() == 1 || pool_param.kernel_size_size() == 2)
-              << "kernel_size must be specified once, or 2 values for Height and Width";
-            if (pool_param.kernel_size_size() == 1) {
-                kernel_h_ = kernel_w_ = pool_param.kernel_size(0);
-            } else {
-                kernel_h_ = pool_param.kernel_size(0);
-                kernel_w_ = pool_param.kernel_size(1);
-            }
+        if (pool_param.has_kernel_size()) {
+          kernel_h_ = kernel_w_ = pool_param.kernel_size();
         } else {
           kernel_h_ = pool_param.kernel_h();
           kernel_w_ = pool_param.kernel_w();
@@ -98,32 +91,14 @@ void MKLDNNPoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom
     CHECK_GT(kernel_w_, 0) << "Filter dimensions cannot be zero.";
 
     if (!pool_param.has_pad_h()) {
-        CHECK(pool_param.pad_size() < 3)
-          << "pad must be specified no more than 3 dimensions";
-        if (pool_param.pad_size() == 0) {
-          pad_t_ = pad_b_ = pad_l_ = pad_r_ = 0;
-        } else if (pool_param.pad_size() == 1) {
-          pad_t_ = pad_b_ = pad_l_ = pad_r_ = pool_param.pad(0);
-        } else {
-          pad_t_ = pad_b_ = pool_param.pad(0);
-          pad_l_ = pad_r_ = pool_param.pad(1);
-        }
+        pad_t_ = pad_b_ = pad_l_ = pad_r_ = pool_param.pad();
     } else {
         pad_t_ = pad_b_ = pool_param.pad_h();
         pad_l_ = pad_r_ = pool_param.pad_w();
     }
 
     if (!pool_param.has_stride_h()) {
-        CHECK(pool_param.stride_size() < 3)
-          << "stride must be specified no more than 3 dimensions";
-        if (pool_param.stride_size() == 0) {
-          stride_h_ = stride_w_ = 1;
-        } else if (pool_param.stride_size() == 1) {
-          stride_h_ = stride_w_ = pool_param.stride(0);
-        } else {
-          stride_h_ = pool_param.stride(0);
-          stride_w_ = pool_param.stride(1);
-        }
+        stride_h_ = stride_w_ = pool_param.stride();
     } else {
         stride_h_ = pool_param.stride_h();
         stride_w_ = pool_param.stride_w();
