@@ -601,14 +601,16 @@ void Net<Dtype>::CompilationRuleRemoveScale(const NetParameter& param,
           ((layer_param->batch_norm_param().engine() == BatchNormParameter_Engine_DEFAULT) &&
            (layer_param->has_engine() == false)  &&
            (param.engine().compare("MKL2017") == 0)) ||
-          (param.engine() == "" && layer_param->engine().compare("MKL2017") == 0))) ||
+          ((layer_param->batch_norm_param().has_engine() == false) &&
+           (layer_param->engine().compare("MKL2017") == 0)))) ||
         // If current layer is BatchNorm of MKLDNN engine..
         ((layer_param->type().compare("BatchNorm") == 0) &&
          ((layer_param->batch_norm_param().engine() == BatchNormParameter_Engine_MKLDNN) ||
           ((layer_param->batch_norm_param().engine() == BatchNormParameter_Engine_DEFAULT) &&
            (layer_param->has_engine() == false)  &&
            (param.engine().compare("MKLDNN") == 0)) ||
-          (param.engine() == "" && layer_param->engine().compare("MKLDNN") == 0)))) {
+          ((layer_param->batch_norm_param().has_engine() == false) &&
+           (layer_param->engine().compare("MKLDNN") == 0))))) {
       std::vector<const LayerParameter*> consumer_layer_params;
       GetBlobConsumers(consumer_layer_params,
                        layer_param->top(0),
@@ -1863,6 +1865,26 @@ void Net<Dtype>::CopyTrainedLayersFrom(const NetParameter& param_inp) {
   for (vector<string>::iterator it = this->kept_bn_layers_.begin(); it != this->kept_bn_layers_.end(); it++) {
     param_tmp.mutable_compile_net_state()->add_kept_bn_layers(*it);
   }
+  int num_source_layers = param.layer_size();
+  for (int i = 0; i < num_source_layers; ++i) {
+    LayerParameter* source_layer = param.mutable_layer(i);
+    const string& source_layer_name = source_layer->name();
+    int target_layer_id = 0;
+    while (target_layer_id != layer_names_.size() &&
+        layer_names_[target_layer_id] != source_layer_name) {
+      ++target_layer_id;
+    }
+    if (target_layer_id == layer_names_.size()) {
+      continue;
+    }
+    const LayerParameter& layer_param = layers_[target_layer_id]->layer_param();
+    const string& engine_name = layer_param.engine();
+    source_layer->set_engine(engine_name);
+    if ((layer_param.type().compare("BatchNorm") == 0) &&
+        (layer_param.batch_norm_param().has_engine())) {
+      source_layer->mutable_batch_norm_param()->set_engine(layer_param.batch_norm_param().engine());
+    }
+  }
   NetParameter param_compiled;
   CompileNet(param, &param_compiled);
   param = param_compiled;
@@ -1875,7 +1897,7 @@ void Net<Dtype>::CopyTrainedLayersFrom(const NetParameter& param_inp) {
   }
 #endif
 
-  int num_source_layers = param.layer_size();
+  num_source_layers = param.layer_size();
   for (int i = 0; i < num_source_layers; ++i) {
     const LayerParameter& source_layer = param.layer(i);
     const string& source_layer_name = source_layer.name();
