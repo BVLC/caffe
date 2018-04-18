@@ -35,8 +35,6 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   label_size_ = label_size;
   string root_folder = this->layer_param_.image_data_param().root_folder();
 
-
-
   CHECK((new_height == 0 && new_width == 0) ||
       (new_height > 0 && new_width > 0)) << "Current implementation requires "
       "new_height and new_width to be set at the same time.";
@@ -49,9 +47,6 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
     skip = caffe_rng_rand() %
       this->layer_param_.image_data_param().rand_skip();
     LOG(INFO) << "Skipping first " << skip << " data points.";
-    //TODO: check on skip size...
-    //CHECK_GT(lines_size_, skip) << "Not enough points to skip";
-    //lines_id_ = skip;
   }
   // Read an image, and use it to initialize the top blob.
   vector<std::pair<std::string, std::vector<float> > > lines_batch;
