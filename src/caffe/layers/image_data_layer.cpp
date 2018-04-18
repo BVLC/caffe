@@ -44,17 +44,18 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   source_ = &this->layer_param_.image_data_param().source();
   lines_id_ = 0;
   // Check if we would need to randomly skip a few data points
+  unsigned int skip = 0;
   if (this->layer_param_.image_data_param().rand_skip()) {
-    unsigned int skip = caffe_rng_rand() %
-        this->layer_param_.image_data_param().rand_skip();
+    skip = caffe_rng_rand() %
+      this->layer_param_.image_data_param().rand_skip();
     LOG(INFO) << "Skipping first " << skip << " data points.";
     //TODO: check on skip size...
     //CHECK_GT(lines_size_, skip) << "Not enough points to skip";
-    lines_id_ = skip;
+    //lines_id_ = skip;
   }
   // Read an image, and use it to initialize the top blob.
   vector<std::pair<std::string, std::vector<float> > > lines_batch;
-  ReadImagesListBatch(source_, 0, 1, lines_batch, infile_, true); // peeking only
+  ReadImagesListBatch(source_, 0, 1, lines_batch, infile_, true, skip); // peeking only
 
   cv::Mat cv_img = ReadImageToCVMat(root_folder + lines_batch[0].first,
                                     new_height, new_width, is_color);
