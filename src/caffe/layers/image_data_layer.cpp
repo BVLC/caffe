@@ -56,7 +56,8 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   // Read an image, and use it to initialize the top blob.
   vector<std::pair<std::string, std::vector<float> > > lines_batch;
   ReadImagesListBatch(source_, 0, 1, lines_batch, infile_, true, skip); // peeking only
-
+  CHECK(!lines_batch.empty()) << "No data found / skip=" << skip;
+  
   cv::Mat cv_img = ReadImageToCVMat(root_folder + lines_batch[0].first,
                                     new_height, new_width, is_color);
   CHECK(cv_img.data) << "Could not load " << lines_batch[0].first;
