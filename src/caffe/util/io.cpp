@@ -781,10 +781,10 @@ void CVMatToDatum(const cv::Mat& cv_img, Datum* datum) {
      int index = 0;
      int count = 0;
      while (std::getline(infile, line) && index < n_to_read) {
-       index++;
        count++;
        if (skip > count)
 	 continue;
+       index++;
        std::istringstream iss(line);
        string filename;
        std::vector<float> labels;
