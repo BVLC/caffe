@@ -297,10 +297,12 @@ void MKLDNNConcatLayer<Dtype>::InitConcatFwd(const vector<Blob<Dtype>*>& bottom,
           if(scale != 1. && scale < scale_min) scale_min = scale;
       }
   }
-  vector<memory::format> src_mfmts;
+  std::vector<memory::format> src_mfmts;
   std::vector<float> bottom_scales(num_concats_, 1.);
+  std::vector<shared_ptr<MKLDNNMemoryDescriptor<Dtype, false> >> mem_descr;
   for (auto i = 0; i < num_concats_; i++) {
     fwd_bottom_data.push_back(boost::shared_ptr<MKLDNNData<Dtype> >());
+    mem_descr.push_back(boost::shared_ptr<MKLDNNMemoryDescriptor<Dtype, false>>());
 
     memory::dims input_tz = {0, 0, 0, 0};
     if (concat_dimension == 0)
@@ -327,14 +329,13 @@ void MKLDNNConcatLayer<Dtype>::InitConcatFwd(const vector<Blob<Dtype>*>& bottom,
  
     if (const_cast<Dtype*>(bottom[i]->prv_data()) != NULL) {
       scale = 1.;
-      shared_ptr<MKLDNNMemoryDescriptor<Dtype, false> > mem_descr
-        = get_mkldnn_prv_descriptor<Dtype, false>(bottom[i]);
+      mem_descr[i]  = get_mkldnn_prv_descriptor<Dtype, false>(bottom[i]);
       src_mfmt = static_cast<memory::format>(
-          mem_descr->prv_memory_pd()->desc().data.format);
-      prv_dt = static_cast<memory::data_type>(mem_descr->prv_memory_pd()->desc().data.data_type);
+          mem_descr[i]->prv_memory_pd()->desc().data.format);
+      prv_dt = static_cast<memory::data_type>(mem_descr[i]->prv_memory_pd()->desc().data.data_type);
       prv_src_mpd.reset(new memory::primitive_desc(
             {input_tz, prv_dt, src_mfmt}, cpu_engine));
-      scale = mem_descr->get_scale(0);
+      scale = mem_descr[i]->get_scale(0);
       bottom_scales[i] = scale;
       if(scale != 1.) scale = scale_min;
     }
@@ -369,23 +370,24 @@ void MKLDNNConcatLayer<Dtype>::InitConcatFwd(const vector<Blob<Dtype>*>& bottom,
   memory::format base_mfmt = mfmt_nchw;
   float base_scale = 1.;
   this->in_place_ = true;
+
   for(auto i = 0; i < num_concats_; i++){
     if(i == 0) {
       base_mfmt = src_mfmts[i];
       base_scale = bottom_scales[i];
     }
-    else if(bottom[i]->shape()[0] != 1 || base_mfmt != src_mfmts[i] || fabs(base_scale-bottom_scales[i]) > FLT_MIN) {
+    else if((concat_dimension != 0 && bottom[i]->shape()[concat_dimension - 1] != 1) || base_mfmt != src_mfmts[i] || fabs(base_scale-bottom_scales[i]) > FLT_MIN) {
       this->in_place_ = false;
       break;
     }
   }
-  
+
   if(this->in_place_ && this->phase_ == TEST) {
     size_t offset = 0;      
     for(auto i = 0; i < num_concats_; i++){
       if(bottom[i]->prv_data()){
-        caffe_copy(bottom[i]->count(), static_cast<Dtype*>(fwd_bottom_data[i]->get_prv_memory()->get_data_handle()), static_cast<Dtype*>(fwd_output_memory->get_data_handle()) + offset);
-        fwd_bottom_data[i]->get_prv_memory()->set_data_handle(static_cast<Dtype*>(fwd_output_memory->get_data_handle()) + offset);
+        caffe_copy(bottom[i]->count(), static_cast<Dtype*>(mem_descr[i]->get_prv_memory()->get_data_handle()), static_cast<Dtype*>(fwd_output_memory->get_data_handle()) + offset);
+        mem_descr[i]->get_prv_memory()->set_data_handle(static_cast<Dtype*>(fwd_output_memory->get_data_handle()) + offset);
       } else{
         caffe_copy(bottom[i]->count(), bottom[i]->cpu_data(), static_cast<Dtype*>(fwd_output_memory->get_data_handle()) + offset);
         bottom[i]->set_cpu_data(static_cast<Dtype*>(fwd_output_memory->get_data_handle()) + offset);
@@ -515,7 +517,7 @@ void MKLDNNConcatLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     }
     // update top that head at prv
     fwd_top_data->sync_before_write();
-  
+
     PERFORMANCE_EVENT_ID_INIT(perf_id_fw_, PERFORMANCE_MKLDNN_NAME("FW"));
     PERFORMANCE_MEASUREMENT_BEGIN();
     concatFwd.submit();
