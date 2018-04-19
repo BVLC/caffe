@@ -140,9 +140,7 @@ private:
     vector<shared_ptr<memory> > input_stats, output_stats, top_diff_stats, bottom_diff_stats;
 
     shared_ptr<primitive> input_primitive, bwd_top_diff_primitive;
-    bool relu_;
-    shared_ptr<primitive> ws;
-    
+
     int32_t num_, width_, height_, channels_;
     Dtype eps_, moving_average_fraction_;
     bool use_weight_bias_, bias_term_, use_global_stats_;

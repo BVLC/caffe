@@ -74,9 +74,6 @@ void MKLDNNBatchNormLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom
     bias_term_ = this->layer_param_.batch_norm_param().bias_term();
     moving_average_fraction_ = this->layer_param_.batch_norm_param().moving_average_fraction();
     use_global_stats_ = this->phase_ == TEST;
-
-    relu_ = this->layer_param_.batch_norm_param().relu();
-    
     if (this->layer_param_.batch_norm_param().has_use_global_stats())
       use_global_stats_ = this->layer_param_.batch_norm_param().use_global_stats();
 
@@ -196,7 +193,6 @@ void MKLDNNBatchNormLayer<Dtype>::InitBatchNorm(const vector<Blob<Dtype>*>& bott
     unsigned flags = 0;
     if (use_weight_bias_) flags |= use_scale_shift;
     if (use_global_stats_) flags |= use_global_stats;
-    if (relu_) flags |= fuse_bn_relu;
 
     int32_t n  = this->num_;
     int32_t iw = this->width_;
@@ -238,8 +234,19 @@ void MKLDNNBatchNormLayer<Dtype>::InitBatchNorm(const vector<Blob<Dtype>*>& bott
     EngineParser ep(subengines);
     unsigned subEngineIndex = 0;
     BatchNormFwd_pd = NULL;
+    bool relu = this->layer_param_.batch_norm_param().relu();
+    mkldnn::primitive_attr attr;
+    mkldnn::post_ops ops;
+    if (relu) {
+        ops.append_eltwise(1.f, eltwise_relu, 0.f, 0.f);
+        attr.set_post_ops(ops);
+    }
     for(; subEngineIndex < ep.getNumberOfSubEngines(); subEngineIndex++) {
       try {
+        if (relu)
+            BatchNormFwd_pd.reset(new batch_normalization_forward::primitive_desc(BatchNormFwd_desc, attr,
+                ep.getMKLDNNSubEngine(subEngineIndex)));
+        else
             BatchNormFwd_pd.reset(new batch_normalization_forward::primitive_desc(BatchNormFwd_desc,
                 ep.getMKLDNNSubEngine(subEngineIndex)));
       }
@@ -261,8 +268,6 @@ void MKLDNNBatchNormLayer<Dtype>::InitBatchNorm(const vector<Blob<Dtype>*>& bott
             scaleshift_memory.reset(new memory(BatchNormFwd_pd->weights_primitive_desc(), this->scaleshift_blob_->mutable_cpu_data()));
         }
     }
-    if (relu_)
-        ws.reset(new memory(BatchNormFwd_pd->workspace_primitive_desc()));
 
     // ---  init primitive and prv_memory descriptors ----------------------
     fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_mpd, prv_mpd, bottom[0], this));
@@ -363,29 +368,14 @@ void MKLDNNBatchNormLayer<Dtype>::InitBatchNormFwdPrimitive(int idx) {
                         (const primitive::at)*variance_memory[idx], *output_stats[idx]));
             }
         } else {
-          if (use_weight_bias_) {
-            if (relu_) {
-              BatchNormFwd[idx].reset(new batch_normalization_forward(
-                  *BatchNormFwd_pd, *input_stats[idx], *scaleshift_memory,
-                  *output_stats[idx], *mean_memory[idx], *variance_memory[idx],
-                  *ws));
+            if (use_weight_bias_) {
+                BatchNormFwd[idx].reset(new batch_normalization_forward(*BatchNormFwd_pd,
+                        *input_stats[idx], *scaleshift_memory, *output_stats[idx],
+                        *mean_memory[idx], *variance_memory[idx]));
             } else {
-              BatchNormFwd[idx].reset(new batch_normalization_forward(
-                  *BatchNormFwd_pd, *input_stats[idx], *scaleshift_memory,
-                  *output_stats[idx], *mean_memory[idx],
-                  *variance_memory[idx]));
+                BatchNormFwd[idx].reset(new batch_normalization_forward(*BatchNormFwd_pd,
+                        *input_stats[idx], *output_stats[idx], *mean_memory[idx], *variance_memory[idx]));
             }
-          } else {
-            if (relu_) {
-              BatchNormFwd[idx].reset(new batch_normalization_forward(
-                  *BatchNormFwd_pd, *input_stats[idx], *output_stats[idx],
-                  *mean_memory[idx], *variance_memory[idx], *ws));
-            } else {
-              BatchNormFwd[idx].reset(new batch_normalization_forward(
-                  *BatchNormFwd_pd, *input_stats[idx], *output_stats[idx],
-                  *mean_memory[idx], *variance_memory[idx]));
-            }
-          }
         }
     }
 }
@@ -468,7 +458,6 @@ void MKLDNNBatchNormLayer<Dtype>::InitBatchNormBwd(
     unsigned flags = 0;
     if (use_weight_bias_) flags |= use_scale_shift;
     if (use_global_stats_) flags |= use_global_stats;
-    if (relu_) flags |= fuse_bn_relu;
 
     bool top_diff_is_prv = (const_cast<Dtype*>(top[0]->prv_diff()) != NULL);
     bool inplace = (bottom[0] == top[0]);
@@ -559,30 +548,14 @@ void MKLDNNBatchNormLayer<Dtype>::InitBatchNormBwdPrimitive(int idx) {
     bottom_diff_stats[idx] = GetStatsBatchMemory<true>(bwd_bottom_diff, idx);
 
     if (use_weight_bias_) {
-      if (relu_) {
-        BatchNormBwd[idx].reset(new batch_normalization_backward(
-            *BatchNormBwd_pd, *input_stats[idx], *mean_memory[idx],
-            *variance_memory[idx], *top_diff_stats[idx], *scaleshift_memory,
-            *ws, *bottom_diff_stats[idx], *bwd_scaleshift_diff_memory));
-
-      } else {
-        BatchNormBwd[idx].reset(new batch_normalization_backward(
-            *BatchNormBwd_pd, *input_stats[idx], *mean_memory[idx],
-            *variance_memory[idx], *top_diff_stats[idx], *scaleshift_memory,
-            *bottom_diff_stats[idx], *bwd_scaleshift_diff_memory));
-      }
+        BatchNormBwd[idx].reset(new batch_normalization_backward(*BatchNormBwd_pd,
+                    *input_stats[idx], *mean_memory[idx], *variance_memory[idx],
+                    *top_diff_stats[idx], *scaleshift_memory,
+                    *bottom_diff_stats[idx], *bwd_scaleshift_diff_memory));
     } else {
-      if (relu_) {
-        BatchNormBwd[idx].reset(new batch_normalization_backward(
-            *BatchNormBwd_pd, *input_stats[idx], *mean_memory[idx],
-            *variance_memory[idx], *top_diff_stats[idx], *ws,
-            *bottom_diff_stats[idx]));
-      } else {
-        BatchNormBwd[idx].reset(new batch_normalization_backward(
-            *BatchNormBwd_pd, *input_stats[idx], *mean_memory[idx],
-            *variance_memory[idx], *top_diff_stats[idx],
-            *bottom_diff_stats[idx]));
-      }
+        BatchNormBwd[idx].reset(new batch_normalization_backward(*BatchNormBwd_pd,
+                    *input_stats[idx], *mean_memory[idx], *variance_memory[idx],
+                    *top_diff_stats[idx], *bottom_diff_stats[idx]));
     }
 }
 
