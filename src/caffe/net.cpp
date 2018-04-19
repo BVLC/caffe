@@ -1376,6 +1376,7 @@ vector<Dtype> Net<Dtype>::FindMax(Blob<Dtype>* blob, bool is_single) {
         if((i + 1) % step == 0) {
           max_vals.at(index) = std::max(max_val, (Dtype)fabs(data[i]));
           ++index;
+          max_val = (Dtype)(-10);
         } else {
           max_val = std::max(max_val, (Dtype)fabs(data[i]));
         }
@@ -1396,6 +1397,7 @@ vector<Dtype> Net<Dtype>::FindMax(Blob<Dtype>* blob, bool is_single) {
         if((i + 1) % step == 0) {
           max_vals.at(index) = std::max(max_val, (Dtype)fabs(data[i]));
           ++index;
+          max_val = (Dtype)(-10);
         } else {
           max_val = std::max(max_val, (Dtype)fabs(data[i]));
         }
