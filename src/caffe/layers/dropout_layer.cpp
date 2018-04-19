@@ -85,10 +85,18 @@ STUB_GPU(DropoutLayer);
 INSTANTIATE_CLASS_3T_GUARDED(DropoutLayer, (half_fp), (half_fp), (half_fp));
 INSTANTIATE_CLASS_3T_GUARDED(DropoutLayer, (float), (float), (float));
 INSTANTIATE_CLASS_3T_GUARDED(DropoutLayer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(DropoutLayer, (uint8_t), (uint8_t), (uint8_t));
+INSTANTIATE_CLASS_3T_GUARDED(DropoutLayer, (uint16_t), (uint16_t), (uint16_t));
+INSTANTIATE_CLASS_3T_GUARDED(DropoutLayer, (uint32_t), (uint32_t), (uint32_t));
+INSTANTIATE_CLASS_3T_GUARDED(DropoutLayer, (uint64_t), (uint64_t), (uint64_t));
 
 REGISTER_LAYER_CLASS(Dropout);
 REGISTER_LAYER_CLASS_INST(Dropout, (half_fp), (half_fp), (half_fp));
 REGISTER_LAYER_CLASS_INST(Dropout, (float), (float), (float));
 REGISTER_LAYER_CLASS_INST(Dropout, (double), (double), (double));
+REGISTER_LAYER_CLASS_INST(Dropout, (uint8_t), (uint8_t), (uint8_t));
+REGISTER_LAYER_CLASS_INST(Dropout, (uint16_t), (uint16_t), (uint16_t));
+REGISTER_LAYER_CLASS_INST(Dropout, (uint32_t), (uint32_t), (uint32_t));
+REGISTER_LAYER_CLASS_INST(Dropout, (uint64_t), (uint64_t), (uint64_t));
 
 }  // namespace caffe

@@ -73,9 +73,9 @@ class DropoutLayer : public NeuronLayer<Dtype, MItype, MOtype> {
   /// when divided by uint_MAX, the randomly generated values @f$u\sim U(0,1)@f$
   Blob<uint_tp> rand_vec_;
   /// the probability @f$ p @f$ of dropping any input
-  Dtype threshold_;
+  float threshold_;
   /// the scale for undropped inputs at train time @f$ 1 / (1 - p) @f$
-  Dtype scale_;
+  float scale_;
   uint_tp uint_thres_;
 };
 

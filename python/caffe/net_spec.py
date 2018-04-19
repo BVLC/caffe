@@ -122,7 +122,7 @@ class Function(object):
         self.name = None
         self.type_name = type_name
         for index, input in enumerate(inputs):
-            if not isinstance(input, Top):
+            if not isinstance(input, Top) and not isinstance(input, Iterable):
                 raise TypeError('%s input %d is not a Top (type is %s)' %
                                 (type_name, index, type(input)))
         self.inputs = inputs
@@ -169,9 +169,7 @@ class Function(object):
                         first = subinp
                     else:
                         # Transfer the name to each bundled function
-                        names[subinp.fn] = names[first.fn]
-                        for firsttop, nexttop in zip(first.fn.tops, subinp.fn.tops):
-                            names[nexttop] = names[firsttop]
+                        names[subinp.n] = layers[first.fn].top[first.n]
                         subinp._to_proto(layers, names, autonames)
             else:
                 inp._to_proto(layers, names, autonames)
@@ -226,23 +224,21 @@ class NetSpec(object):
         names = {(v if (not isinstance(v, Iterable)) else frozenset(v)): (v.name if (not isinstance(v, Iterable) and v.name != None) else k) for k, v in six.iteritems(self.tops)}
         autonames = Counter()
         layers = OrderedDict()
+        # First pass to propagate top names
         for name, top in six.iteritems(self.tops):
             if (isinstance(top, Iterable)):
                 first = None
                 for subtop in top:
                     if (first == None):
                         names[subtop] = name
-                        subtop._to_proto(layers, names, autonames)
                         first = subtop
                     else:
                         names[subtop] = names[first]
-                        if (isinstance(first, Top)):
-                            for firsttop, nexttop in zip(first.fn.tops, subtop.fn.tops):
-                                names[nexttop] = names[firsttop]
-                        elif (isinstance(first, Function)):
-                            for firsttop, nexttop in zip(first.tops, subtop.tops):
-                                names[nexttop] = names[firsttop]
-                        subtop._to_proto(layers, names, autonames)
+        
+        # Second pass to call to_proto for all tops (and functions)
+        for name, top in six.iteritems(self.tops):
+            if (isinstance(top, Iterable)):
+                subtop._to_proto(layers, names, autonames)
             else:
                 top._to_proto(layers, names, autonames)
         net = caffe_pb2.NetParameter()
