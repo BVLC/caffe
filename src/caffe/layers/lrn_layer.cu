@@ -15,6 +15,7 @@ void LRNLayer<Dtype, MItype, MOtype>::GenerateProgram() {
   ss << this->device_program_->template define_type<Dtype>("Dtype");
   ss << this->device_program_->template define_type<MItype>("MItype");
   ss << this->device_program_->template define_type<MOtype>("MOtype");
+  ss << this->device_program_->template helper_functions<Dtype>();
 
   {
     KernelArgs args;

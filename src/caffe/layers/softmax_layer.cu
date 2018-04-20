@@ -20,6 +20,23 @@ void SoftmaxLayer<Dtype, MItype, MOtype>::GenerateProgram() {
   ss << this->device_program_->template define_type<Dtype>("Dtype");
   ss << this->device_program_->template define_type<MItype>("MItype");
   ss << this->device_program_->template define_type<MOtype>("MOtype");
+  ss << this->device_program_->template helper_functions<Dtype>();
+
+#ifdef USE_HALF
+  if (std::is_same<MItype, half_fp>::value) {
+    ss << "#define DTYPE_MAX HALF_MAX" << std::endl;
+    ss << "#define DTYPE_MIN HALF_MIN" << std::endl;
+  } else if (std::is_same<MItype, float>::value
+        || std::is_same<MItype, double>::value) {
+#endif
+    ss << "#define DTYPE_MAX FLT_MAX" << std::endl;
+    ss << "#define DTYPE_MIN FLT_MIN" << std::endl;
+#ifdef USE_HALF
+  } else {
+    ss << "#define DTYPE_MAX " << type_max_val<MItype>() << std::endl;
+    ss << "#define DTYPE_MIN " << 0 << std::endl;
+  }
+#endif
 
   {
     KernelArgs args;
@@ -38,7 +55,7 @@ void SoftmaxLayer<Dtype, MItype, MOtype>::GenerateProgram() {
                                              "num * spatial_dim");
     ss << "int_tp n = index / spatial_dim;" << std::endl;
     ss << "int_tp s = index % spatial_dim;" << std::endl;
-    ss << "Dtype maxval = -FLT_MAX;" << std::endl;
+    ss << "Dtype maxval = -DTYPE_MAX;" << std::endl;
     ss << "for (int_tp c = 0; c < channels; ++c) {" << std::endl;
     ss << "maxval = max(data[(n * channels + c) * spatial_dim + s], maxval);"
        << std::endl;

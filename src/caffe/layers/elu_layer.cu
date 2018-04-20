@@ -27,7 +27,7 @@ void ELULayer<Dtype, MItype, MOtype>::GenerateProgram() {
   ss << this->device_program_->function("ELUForward", fw_args);
   ss << this->device_program_->kernel_loop("uint_tp", "index", "n");
   ss << "out[index] = in[index] > (Dtype)0 ? in[index] : "
-     << "alpha * (exp(in[index]) - (Dtype)1);" << std::endl;
+     << "alpha * ((Dtype)exp(in[index]) - (Dtype)1);" << std::endl;
   ss << "}" << std::endl;
   ss << "}" << std::endl;
 

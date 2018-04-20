@@ -605,6 +605,12 @@ string CudaDeviceProgram::helper_functions_half() const {
   ss << "__device__ half signbit(half x) {" << std::endl;
   ss << "return (half)signbit((float)x);";
   ss << "}" << std::endl;
+  ss << "__device__ half max(half x, half y) {" << std::endl;
+  ss << "return x > y ? x : y;" << std::endl;
+  ss << "}" << std::endl;
+  ss << "__device__ half min(half x, half y) {" << std::endl;
+  ss << "return x < y ? x : y;" << std::endl;
+  ss << "}" << std::endl;
   ss << "#endif  // CAFFE_CUDA_HELPER_HALF" << std::endl;
 
   return ss.str();

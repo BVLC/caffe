@@ -179,7 +179,9 @@ shared_ptr<Layer<Dtype, MItype, MOtype> > GetConvolutionLayer(
     engine = ConvolutionParameter_Engine_CAFFE;
 
 #ifdef USE_LIBDNN
-    engine = ConvolutionParameter_Engine_LIBDNN;
+    if (!(Caffe::GetDevice(param.device(), true)->backend() == BACKEND_CPU)) {
+      engine = ConvolutionParameter_Engine_LIBDNN;
+    }
 #endif
 
 #ifdef USE_CUDNN
@@ -257,7 +259,9 @@ shared_ptr<Layer<Dtype, MItype, MOtype> > GetConvolutionLayerLowerPrecision(
     engine = ConvolutionParameter_Engine_CAFFE;
 
 #ifdef USE_LIBDNN
-    engine = ConvolutionParameter_Engine_LIBDNN;
+    if (!(Caffe::GetDevice(param.device(), true)->backend() == BACKEND_CPU)) {
+      engine = ConvolutionParameter_Engine_LIBDNN;
+    }
 #endif
   }
 
@@ -352,7 +356,9 @@ shared_ptr<Layer<Dtype, MItype, MOtype> > GetPoolingLayer(
   if (engine == PoolingParameter_Engine_DEFAULT) {
     engine = PoolingParameter_Engine_CAFFE;
 #ifdef USE_LIBDNN
-    engine = PoolingParameter_Engine_LIBDNN;
+    if (!(Caffe::GetDevice(param.device(), true)->backend() == BACKEND_CPU)) {
+      engine = PoolingParameter_Engine_LIBDNN;
+    }
 #endif
   }
   if (engine == PoolingParameter_Engine_LIBDNN) {
@@ -413,7 +419,9 @@ shared_ptr<Layer<Dtype, MItype, MOtype> > GetPoolingLayerLowerPrecision(
     engine = PoolingParameter_Engine_CAFFE;
 
 #ifdef USE_LIBDNN
-    engine = PoolingParameter_Engine_LIBDNN;
+    if (!(Caffe::GetDevice(param.device(), true)->backend() == BACKEND_CPU)) {
+      engine = PoolingParameter_Engine_LIBDNN;
+    }
 #endif
   }
 

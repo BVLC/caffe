@@ -320,8 +320,9 @@ TYPED_TEST(AccuracyLayerTest, TestForwardPerClass) {
     vector<int_tp> num_per_class(num_class, 0);
     for (int_tp i = 0; i < 100; ++i) {
       max_value = -FLT_MAX;
-      if (std::is_same<Dtype, half_fp>::value)
+      if (std::is_same<Dtype, half_fp>::value) {
         max_value = -HALF_MAX;
+      }
       max_id = 0;
       for (int_tp j = 0; j < 10; ++j) {
         if (this->blob_bottom_data_->data_at(i, j, 0, 0) > max_value) {
@@ -380,8 +381,9 @@ TYPED_TEST(AccuracyLayerTest, TestForwardPerClassWithIgnoreLabel) {
       }
       ++count;
       max_value = -FLT_MAX;
-      if (std::is_same<Dtype, half_fp>::value)
+      if (std::is_same<Dtype, half_fp>::value) {
         max_value = -HALF_MAX;
+      }
       max_id = 0;
       for (int_tp j = 0; j < 10; ++j) {
         if (this->blob_bottom_data_->data_at(i, j, 0, 0) > max_value) {

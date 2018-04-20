@@ -907,7 +907,9 @@ void Blob<Dtype>::FromProto(const BlobProto& proto, bool reshape) {
       : (proto.data_size() > 0 || proto.diff_size() > 0 ? CAFFE_FLOAT : CAFFE_DOUBLE);
 
   QuantizerParameter param;
-  param.CopyFrom(this->quant_->quant_param());
+  if (this->quant_) {
+    param.CopyFrom(this->quant_->quant_param());
+  }
   param.set_input_data_type(proto_data_type);
   param.set_output_data_type(this->data_type());
   shared_ptr<QuantizerBase> quant = CreateQuantizer(param);

@@ -20,7 +20,7 @@ DataTransformer<Dtype>::DataTransformer(const TransformationParameter& param,
       phase_(phase), device_(device_context) {
   // check if we want to use mean_file
   if (param_.has_mean_file()) {
-    CHECK_EQ(param_.mean_value_size(), 0)<<
+    CHECK_EQ(param_.mean_value_size(), 0) <<
     "Cannot specify mean_file and mean_value at the same time";
     const string& mean_file = param.mean_file();
     if (Caffe::root_solver()) {

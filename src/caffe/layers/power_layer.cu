@@ -7,8 +7,8 @@ namespace caffe {
 
 template<typename Dtype, typename MItype, typename MOtype>
 void PowerLayer<Dtype, MItype, MOtype>::Forward_gpu(
-                                      const vector<Blob<MItype>*>& bottom,
-                                      const vector<Blob<MOtype>*>& top) {
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
   vptr<Dtype> top_data = top[0]->mutable_gpu_data();
   const int_tp count = bottom[0]->count();
 

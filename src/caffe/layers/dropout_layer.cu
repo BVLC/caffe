@@ -30,7 +30,7 @@ void DropoutLayer<Dtype, MItype, MOtype>::GenerateProgram() {
                     "out", KERNEL_ARG_GLOBAL_MEM));
   ss << this->device_program_->function("DropoutForward", fw_args);
   ss << this->device_program_->kernel_loop("uint_tp", "index", "n");
-  ss << "out[index] = in[index] * (mask[index] > threshold) * scale;"
+  ss << "out[index] = in[index] * (Dtype)(mask[index] > threshold) * scale;"
      << std::endl;
   ss << "}" << std::endl;
   ss << "}" << std::endl;
@@ -50,7 +50,8 @@ void DropoutLayer<Dtype, MItype, MOtype>::GenerateProgram() {
                     "out_diff", KERNEL_ARG_GLOBAL_MEM));
   ss << this->device_program_->function("DropoutBackward", bw_args);
   ss << this->device_program_->kernel_loop("uint_tp", "index", "n");
-  ss << "out_diff[index] = in_diff[index] * scale * (mask[index] > threshold);"
+  ss << "out_diff[index] = in_diff[index] * scale *"
+     << " (Dtype)(mask[index] > threshold);"
      << std::endl;
   ss << "}" << std::endl;
   ss << "}" << std::endl;

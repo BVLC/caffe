@@ -413,8 +413,7 @@ template<typename Dtype>
 void Device::powx(const uint_tp n, vptr<const Dtype> a, const Dtype b,
                   vptr<Dtype> y) {
   shared_ptr<DeviceKernel> kernel
-      = math_programs_[data_type_index<Dtype>()]
-                       ->GetKernel("caffe_gpu_powx");
+      = math_programs_[data_type_index<Dtype>()]->GetKernel("caffe_gpu_powx");
 
   kernel->add_arg(&n);
   kernel->add_arg(&a);

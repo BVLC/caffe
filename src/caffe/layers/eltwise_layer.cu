@@ -16,6 +16,22 @@ void EltwiseLayer<Dtype, MItype, MOtype>::GenerateProgram() {
   ss << this->device_program_->template define_type<MItype>("MItype");
   ss << this->device_program_->template define_type<MOtype>("MOtype");
 
+#ifdef USE_HALF
+  if (std::is_same<MItype, half_fp>::value) {
+    ss << "#define DTYPE_MAX HALF_MAX" << std::endl;
+    ss << "#define DTYPE_MIN HALF_MIN" << std::endl;
+  } else if (std::is_same<MItype, float>::value
+        || std::is_same<MItype, double>::value) {
+#endif
+    ss << "#define DTYPE_MAX FLT_MAX" << std::endl;
+    ss << "#define DTYPE_MIN FLT_MIN" << std::endl;
+#ifdef USE_HALF
+  } else {
+    ss << "#define DTYPE_MAX " << type_max_val<MItype>() << std::endl;
+    ss << "#define DTYPE_MIN " << 0 << std::endl;
+  }
+#endif
+
   KernelArgs fw_args;
   fw_args.push_back(this->device_program_->template create_kernel_arg<uint_tp>(
                     "nthreads", KERNEL_ARG_CONST));
@@ -31,7 +47,7 @@ void EltwiseLayer<Dtype, MItype, MOtype>::GenerateProgram() {
                     "mask", KERNEL_ARG_GLOBAL_MEM));
   ss << this->device_program_->function("MaxForward", fw_args);
   ss << this->device_program_->kernel_loop("uint_tp", "index", "nthreads");
-  ss << "Dtype maxval = -FLT_MAX;" << std::endl;
+  ss << "Dtype maxval = -DTYPE_MAX;" << std::endl;
   ss << "int_tp maxidx = -1;" << std::endl;
   ss << "if (bottom_data_a[index] > bottom_data_b[index]) {" << std::endl;
   // only update for very first bottom_data blob (blob_idx == 0)

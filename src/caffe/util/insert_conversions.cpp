@@ -69,7 +69,6 @@ void ConfigureConversionLayer(const string& layer_name, const string& blob_name,
     DataType top_data_type, const QuantizerParameter* ref_quant_param) {
   QuantizerParameter quant_param;
   if (ref_quant_param) {
-    std::cout << ref_quant_param << std::endl;
     quant_param.CopyFrom(*ref_quant_param);
   }
   quant_param.set_name(blob_name);

@@ -16,6 +16,7 @@ void SoftmaxWithLossLayer<Dtype, MItype, MOtype>::GenerateProgram() {
   ss << this->device_program_->template define_type<Dtype>("Dtype");
   ss << this->device_program_->template define_type<MItype>("MItype");
   ss << this->device_program_->template define_type<MOtype>("MOtype");
+  ss << this->device_program_->template helper_functions<Dtype>();
 
   KernelArgs fw_args;
   fw_args.push_back(this->device_program_->template create_kernel_arg<uint_tp>(

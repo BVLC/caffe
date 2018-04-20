@@ -904,6 +904,9 @@ void Net<Dtype>::CopyTrainedLayersFrom(const NetParameter& param) {
         if (iter != quantizer_name_map.end()) {
           quant_param_copy.set_observed_min(std::get<0>(iter->second));
           quant_param_copy.set_observed_max(std::get<1>(iter->second));
+        } else {
+          LOG(WARNING) << "No quantizer parameters found for name: "
+                       << quant_param.name();
         }
       }
       quant_base_vec[j]->update_param(quant_param_copy);

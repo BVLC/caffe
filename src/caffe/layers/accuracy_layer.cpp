@@ -97,12 +97,13 @@ void AccuracyLayer<Dtype, MItype, MOtype>::Forward_cpu(
   }
 
   // LOG(INFO) << "Accuracy: " << accuracy;
-  top[0]->mutable_cpu_data()[0] = (count == 0) ? 0 : (accuracy / count);
+  top[0]->mutable_cpu_data()[0] = (count == 0) ? Dtype(0) :
+      (accuracy / static_cast<Dtype>(count));
   if (top.size() > 1) {
     for (int_tp i = 0; i < top[1]->count(); ++i) {
       top[1]->mutable_cpu_data()[i] =
-          nums_buffer_.cpu_data()[i] == 0 ? 0
-          : top[1]->cpu_data()[i] / nums_buffer_.cpu_data()[i];
+          nums_buffer_.cpu_data()[i] == Dtype(0) ? Dtype(0)
+          : (top[1]->cpu_data()[i] / nums_buffer_.cpu_data()[i]);
     }
   }
   // Accuracy layer should not be used as a loss function.

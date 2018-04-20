@@ -28,7 +28,7 @@ void PoolingLayer<Dtype, MItype, MOtype>::GenerateProgram() {
     ss << "#define DTYPE_MIN FLT_MIN" << std::endl;
 #ifdef USE_HALF
   } else {
-    ss << "#define DTYPE_MAX " << type_max_val<MItype>() << std::endl;
+    ss << "#define DTYPE_MAX " << 0 << std::endl;
     ss << "#define DTYPE_MIN " << 0 << std::endl;
   }
 #endif

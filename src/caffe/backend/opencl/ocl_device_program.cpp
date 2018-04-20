@@ -24,7 +24,7 @@ bool OclDeviceProgram::Compile(bool load_cache, bool store_cache) {
   cl_int err = 0;
 
   string build_opts = "";
-  build_opts += "-cl-fast-relaxed-math -cl-mad-enable ";
+  build_opts += "-cl-mad-enable ";
   build_opts += "-cl-single-precision-constant ";
 
   bool loaded_from_cache = false;

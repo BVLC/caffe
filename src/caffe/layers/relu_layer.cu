@@ -46,18 +46,20 @@ void ReLULayer<Dtype, MItype, MOtype>::GenerateProgram() {
                       "negative_slope", KERNEL_ARG_CONST));
   } else {
     fw_args.push_back(this->device_program_->template
-                      create_kernel_arg<Difftype>("bottom_zero",
+                      create_kernel_arg<int8_t>("shift_bits",
                                                   KERNEL_ARG_CONST));
+    fw_args.push_back(this->device_program_->template
+                      create_kernel_arg<Difftype>("in_zero", KERNEL_ARG_CONST));
     fw_args.push_back(this->device_program_->template
                       create_kernel_arg<Acctype>("mult", KERNEL_ARG_CONST));
     fw_args.push_back(this->device_program_->template
                       create_kernel_arg<int8_t>("shift", KERNEL_ARG_CONST));
     fw_args.push_back(this->device_program_->template
-                      create_kernel_arg<Acctype>("top_zero", KERNEL_ARG_CONST));
+                      create_kernel_arg<Acctype>("out_zero", KERNEL_ARG_CONST));
     fw_args.push_back(this->device_program_->template
-                      create_kernel_arg<Acctype>("top_min", KERNEL_ARG_CONST));
+                      create_kernel_arg<Acctype>("out_min", KERNEL_ARG_CONST));
     fw_args.push_back(this->device_program_->template
-                      create_kernel_arg<Acctype>("top_max", KERNEL_ARG_CONST));
+                      create_kernel_arg<Acctype>("out_max", KERNEL_ARG_CONST));
   }
 
   ss << this->device_program_->function("ReLUForward", fw_args);
@@ -67,8 +69,8 @@ void ReLULayer<Dtype, MItype, MOtype>::GenerateProgram() {
      << " * negative_slope;"
      << std::endl;
   } else {
-    ss << "Difftype relu = max((Difftype)((Difftype)(bottom_data[i]) - "
-       << "bottom_zero), (Difftype)0);" << std::endl;
+    ss << "Difftype relu = max((Difftype)((Difftype)(in[index]) - "
+       << "in_zero), (Difftype)0);" << std::endl;
     ss << "Acctype reg = (Acctype)(((Multtype)(relu) * "
        << "(Multtype)(mult)) / ((Multtype)1 << shift_bits));" << std::endl;
     ss << "if (shift >= 0) {" << std::endl;
@@ -76,7 +78,7 @@ void ReLULayer<Dtype, MItype, MOtype>::GenerateProgram() {
     ss << "} else {" << std::endl;
     ss << "reg = reg << -shift;" << std::endl;
     ss << "}" << std::endl;
-    ss << "top_data[i] = (Dtype)(min(max(reg + top_zero, top_min), top_max));"
+    ss << "out[index] = (Dtype)(min(max(reg + out_zero, out_min), out_max));"
        << std::endl;
   }
   ss << "}" << std::endl;
@@ -138,7 +140,6 @@ void ReLULayer<Dtype, MItype, MOtype>::Forward_gpu(
   kernel->add_arg(&top_data);
   if (is_float_type<Dtype>()) {
     kernel->add_arg(&negative_slope);
-    kernel->Execute(group, local);
   } else {
     int8_t shift_bits =
         (this->device_->template preferred_vector_width<int64_t>() > 0
@@ -153,14 +154,15 @@ void ReLULayer<Dtype, MItype, MOtype>::Forward_gpu(
     Acctype top_zero = top_qv.get_zero<Acctype>();
     Acctype top_min = top_qv.get_min<Acctype>();
     Acctype top_max = top_qv.get_max<Acctype>();
+    kernel->add_arg(&shift_bits);
     kernel->add_arg(&bottom_zero);
     kernel->add_arg(&mult);
     kernel->add_arg(&shift);
     kernel->add_arg(&top_zero);
     kernel->add_arg(&top_min);
     kernel->add_arg(&top_max);
-    kernel->Execute(group, local);
   }
+  kernel->Execute(group, local);
 }
 
 

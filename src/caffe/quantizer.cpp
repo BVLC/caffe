@@ -23,7 +23,7 @@ void QuantizerBase::ScaleQuantVals(const QuantizerValues* const lhs,
                                    const QuantizerValues* const rhs,
                                    Dtype* rsmult, int8_t* rsshift,
                                    const uint8_t shift_bits) {
-  MultiplicativeQuantVals(lhs, lhs, rhs, rsmult, rsshift, shift_bits);
+  MultiplicativeQuantVals(lhs, nullptr, rhs, rsmult, rsshift, shift_bits);
 }
 
 INSTANTIATE_FUNC_1T(QuantizerBase::ScaleQuantVals,

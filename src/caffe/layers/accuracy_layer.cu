@@ -95,7 +95,7 @@ void AccuracyLayer<Dtype, MItype, MOtype>::GenerateProgram() {
                       "has_ignore_label", KERNEL_ARG_CONST));
     fw_args.push_back(this->device_program_->template create_kernel_arg<int_tp>(
                       "ignore_label", KERNEL_ARG_CONST));
-    fw_args.push_back(this->device_program_->template create_kernel_arg<Dtype>(
+    fw_args.push_back(this->device_program_->template create_kernel_arg<MItype>(
                       "counts", KERNEL_ARG_GLOBAL_MEM));
     ss << this->device_program_->function("AccuracyForwardWithPerClass",
                                           fw_args);
