@@ -521,12 +521,7 @@ protected:
       CHECK_EQ(top.size(), num_loss_weights) << "loss_weight must be "
           "unspecified or specified once per top blob.";
       for (int top_id = 0; top_id < top.size(); ++top_id) {
-#ifdef USE_MLSL
-        const Dtype loss_weight = layer_param_.loss_weight(top_id) /
-          GetDistribution().get_data_parts();
-#else
         const Dtype loss_weight = layer_param_.loss_weight(top_id);
-#endif
         if (loss_weight == Dtype(0)) { continue; }
         this->set_loss(top_id, loss_weight);
         const int count = top[top_id]->count();

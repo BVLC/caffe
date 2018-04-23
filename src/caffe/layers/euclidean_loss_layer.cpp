@@ -61,7 +61,16 @@ void EuclideanLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       bottom[1]->cpu_data(),
       diff_.mutable_cpu_data());
   Dtype dot = caffe_cpu_dot(count, diff_.cpu_data(), diff_.cpu_data());
-  Dtype loss = dot / bottom[0]->num() / Dtype(2);
+  Dtype normalizer = Dtype(bottom[0]->num());
+  if (this->layer_param_.loss_param().normalization() == LossParameter_NormalizationMode_NONE)
+    normalizer = 1.f;
+#ifdef USE_MLSL
+  else {
+    // We assume local bs is same across all nodes
+    normalizer *= mn::get_group_size();
+  }
+#endif
+  Dtype loss = dot / normalizer / Dtype(2);
   top[0]->mutable_cpu_data()[0] = loss;
 }
 
@@ -71,7 +80,16 @@ void EuclideanLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   for (int i = 0; i < 2; ++i) {
     if (propagate_down[i]) {
       const Dtype sign = (i == 0) ? 1 : -1;
-      const Dtype alpha = sign * top[0]->cpu_diff()[0] / bottom[i]->num();
+      Dtype normalizer = Dtype(bottom[i]->num());
+      if (this->layer_param_.loss_param().normalization() == LossParameter_NormalizationMode_NONE)
+        normalizer = 1.f;
+#ifdef USE_MLSL
+      else {
+        // We assume local bs is same across all nodes
+        normalizer *= mn::get_group_size();
+      }
+#endif
+      const Dtype alpha = sign * top[0]->cpu_diff()[0] / normalizer;
       caffe_cpu_axpby(
           bottom[i]->count(),              // count
           alpha,                              // alpha

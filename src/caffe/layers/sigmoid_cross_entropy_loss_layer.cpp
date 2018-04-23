@@ -79,7 +79,16 @@ void SigmoidCrossEntropyLossLayer<Dtype>::Forward_cpu(
     loss -= input_data[i] * (target[i] - (input_data[i] >= 0)) -
         log(1 + exp(input_data[i] - 2 * input_data[i] * (input_data[i] >= 0)));
   }
-  top[0]->mutable_cpu_data()[0] = loss / num;
+  Dtype normalizer = Dtype(num);
+  if (this->layer_param_.loss_param().normalization() == LossParameter_NormalizationMode_NONE)
+    normalizer = 1.f;
+#ifdef USE_MLSL
+  else {
+    // We assume local bs is same across all nodes
+    normalizer *= mn::get_group_size();
+  }
+#endif
+  top[0]->mutable_cpu_data()[0] = loss / normalizer;
 }
 
 template <typename Dtype>
@@ -100,7 +109,16 @@ void SigmoidCrossEntropyLossLayer<Dtype>::Backward_cpu(
     caffe_sub(count, sigmoid_output_data, target, bottom_diff);
     // Scale down gradient
     const Dtype loss_weight = top[0]->cpu_diff()[0];
-    caffe_scal(count, loss_weight / num, bottom_diff);
+    Dtype normalizer = Dtype(num);
+    if (this->layer_param_.loss_param().normalization() == LossParameter_NormalizationMode_NONE)
+      normalizer = 1.f;
+#ifdef USE_MLSL
+    else {
+      // We assume local bs is same across all nodes
+      normalizer *= mn::get_group_size();
+    }
+#endif
+    caffe_scal(count, loss_weight / normalizer, bottom_diff);
   }
 }
 

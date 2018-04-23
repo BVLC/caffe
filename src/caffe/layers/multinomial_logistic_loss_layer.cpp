@@ -67,7 +67,16 @@ void MultinomialLogisticLossLayer<Dtype>::Forward_cpu(
         bottom_data[i * dim + label], Dtype(kLOG_THRESHOLD));
     loss -= log(prob);
   }
-  top[0]->mutable_cpu_data()[0] = loss / num;
+  Dtype normalizer = Dtype(bottom[0]->num());
+  if (this->layer_param_.loss_param().normalization() == LossParameter_NormalizationMode_NONE)
+    normalizer = 1.f;
+#ifdef USE_MLSL
+  else {
+    // We assume local bs is same across all nodes
+    normalizer *= mn::get_group_size();
+  }
+#endif
+  top[0]->mutable_cpu_data()[0] = loss / normalizer;
 }
 
 template <typename Dtype>
@@ -83,9 +92,18 @@ void MultinomialLogisticLossLayer<Dtype>::Backward_cpu(
     const Dtype* bottom_label = bottom[1]->cpu_data();
     Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
     int num = bottom[0]->num();
+    Dtype normalizer = Dtype(num);
+    if (this->layer_param_.loss_param().normalization() == LossParameter_NormalizationMode_NONE)
+      normalizer = 1.f;
+#ifdef USE_MLSL
+    else {
+      // We assume local bs is same across all nodes
+      normalizer *= mn::get_group_size();
+    }
+#endif
     int dim = bottom[0]->count() / bottom[0]->num();
     caffe_set(bottom[0]->count(), Dtype(0), bottom_diff);
-    const Dtype scale = - top[0]->cpu_diff()[0] / num;
+    const Dtype scale = - top[0]->cpu_diff()[0] / normalizer;
     for (int i = 0; i < num; ++i) {
       int label = static_cast<int>(bottom_label[i]);
       Dtype prob = std::max(
