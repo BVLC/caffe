@@ -128,12 +128,12 @@ TYPED_TEST(QuantBlasTest, TestGemmComparativeFloatQuant) {
 
 
     // Observe all values that will be relevant for quantization
-    aq.Observe_in_cpu(M * K, A.cpu_data());
-    bq.Observe_in_cpu(K * N, B.cpu_data());
-    cq.Observe_in_cpu(M * N, C.cpu_data());
-    cq.Observe_in_cpu(M * N, C_result.cpu_data());
-    alphaq.Observe_in_cpu(1, &alpha_val);
-    betaq.Observe_in_cpu(1, &beta_val);
+    aq.ObserveIn_cpu(M * K, A.cpu_data());
+    bq.ObserveIn_cpu(K * N, B.cpu_data());
+    cq.ObserveIn_cpu(M * N, C.cpu_data());
+    cq.ObserveIn_cpu(M * N, C_result.cpu_data());
+    alphaq.ObserveIn_cpu(1, &alpha_val);
+    betaq.ObserveIn_cpu(1, &beta_val);
 
     // Apply observed values to the quantizer
     aq.update();
@@ -325,12 +325,12 @@ TYPED_TEST(QuantBlasTest, TestGemvComparativeFloatQuant) {
 
 
     // Observe all values that will be relevant for quantization
-    aq.Observe_in_cpu(M * N, A.cpu_data());
-    xq.Observe_in_cpu(trans_A == CblasTrans ? M : N, x.cpu_data());
-    yq.Observe_in_cpu(trans_A == CblasTrans ? N : M, y.cpu_data());
-    yq.Observe_in_cpu(trans_A == CblasTrans ? N : M, y_result.cpu_data());
-    alphaq.Observe_in_cpu(1, &alpha_val);
-    betaq.Observe_in_cpu(1, &beta_val);
+    aq.ObserveIn_cpu(M * N, A.cpu_data());
+    xq.ObserveIn_cpu(trans_A == CblasTrans ? M : N, x.cpu_data());
+    yq.ObserveIn_cpu(trans_A == CblasTrans ? N : M, y.cpu_data());
+    yq.ObserveIn_cpu(trans_A == CblasTrans ? N : M, y_result.cpu_data());
+    alphaq.ObserveIn_cpu(1, &alpha_val);
+    betaq.ObserveIn_cpu(1, &beta_val);
 
     // Apply observed values to the quantizer
     aq.update();
@@ -489,11 +489,11 @@ TYPED_TEST(QuantBlasTest, TestAxpbyComparativeFloatQuant) {
 
 
     // Observe all values that will be relevant for quantization
-    xq.Observe_in_cpu(N, x.cpu_data());
-    yq.Observe_in_cpu(N, y.cpu_data());
-    yq.Observe_in_cpu(N, y_result.cpu_data());
-    alphaq.Observe_in_cpu(1, &alpha_val);
-    betaq.Observe_in_cpu(1, &beta_val);
+    xq.ObserveIn_cpu(N, x.cpu_data());
+    yq.ObserveIn_cpu(N, y.cpu_data());
+    yq.ObserveIn_cpu(N, y_result.cpu_data());
+    alphaq.ObserveIn_cpu(1, &alpha_val);
+    betaq.ObserveIn_cpu(1, &beta_val);
 
     // Apply observed values to the quantizer
     xq.update();

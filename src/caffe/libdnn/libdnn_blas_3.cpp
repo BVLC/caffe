@@ -114,11 +114,6 @@ string LibDNNBlas<MItype, MOtype>::generate_gemm_source(
   int lpta = (tsm * tsk) / (rtsm * rtsn);
   int lptb = (tsn * tsk) / (rtsm * rtsn);
 
-  // Quantization definitions
-  if (is_integer_type<MItype>()) {
-    ss << program->define("ONE_MULT_CONST", "1");
-  }
-
   // GEMM definitions
   ss << program->define("M", M);
   ss << program->define("N", N);
@@ -178,13 +173,15 @@ string LibDNNBlas<MItype, MOtype>::generate_gemm_source(
     }
   }
   args.push_back(program->template create_kernel_arg<MItype>("A",
-               KERNEL_ARG_RESTRICT | KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_CONST));
+                                  KERNEL_ARG_MEM_OFFSET | KERNEL_ARG_RESTRICT |
+                                  KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_CONST));
   if (is_integer_type<MItype>()) {
     args.push_back(program->template create_kernel_arg<MItype>("A_off",
                                                              KERNEL_ARG_CONST));
   }
   args.push_back(program->template create_kernel_arg<MItype>("B",
-               KERNEL_ARG_RESTRICT | KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_CONST));
+                                  KERNEL_ARG_MEM_OFFSET | KERNEL_ARG_RESTRICT |
+                                  KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_CONST));
   if (is_integer_type<MItype>()) {
     args.push_back(program->template create_kernel_arg<MItype>("B_off",
                                                              KERNEL_ARG_CONST));
@@ -202,7 +199,7 @@ string LibDNNBlas<MItype, MOtype>::generate_gemm_source(
     }
   }
   args.push_back(program->template create_kernel_arg<MOtype>("C",
-                                  KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_RESTRICT));
+          KERNEL_ARG_MEM_OFFSET | KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_RESTRICT));
   if (is_integer_type<MOtype>()) {
     args.push_back(program->template create_kernel_arg<MOtype>("C_off",
                                                              KERNEL_ARG_CONST));
@@ -411,7 +408,7 @@ string LibDNNBlas<MItype, MOtype>::generate_gemm_source(
          << "((Acctype)(v_num_tiles * TSK))"
          << " * ((Acctype)A_off) * ((Acctype)B_off);" << std::endl;
       ss << "C_tmp = (Acctype)((((Multtype)C_tmp) * ((Multtype)mult))"
-         << "/ ((Multtype)(ONE_MULT_CONST) << shift_bits));" << std::endl;
+         << "/ ((Multtype)1 << shift_bits));" << std::endl;
       ss << "if (shift >= 0) {" << std::endl;
       ss << "C_tmp = C_tmp >> shift;" << std::endl;
       ss << "} else {" << std::endl;
@@ -423,7 +420,7 @@ string LibDNNBlas<MItype, MOtype>::generate_gemm_source(
         ss << "C_tmp = ((Acctype)alpha_diff) * ((Acctype)C_tmp);"
            << std::endl;
         ss << "C_tmp = (Acctype)((((Multtype)C_tmp) * ((Multtype)alpha_mult))"
-           << "/ ((Multtype)(ONE_MULT_CONST) << shift_bits));" << std::endl;
+           << "/ ((Multtype)1 << shift_bits));" << std::endl;
         ss << "if (alpha_shift >= 0) {" << std::endl;
         ss << "C_tmp = C_tmp >> alpha_shift;" << std::endl;
         ss << "} else {" << std::endl;
@@ -450,7 +447,7 @@ string LibDNNBlas<MItype, MOtype>::generate_gemm_source(
         ss << "C_tmp = ((Acctype)beta_diff) * ((Acctype)C_tmp);"
            << std::endl;
         ss << "C_tmp = (Acctype)((((Multtype)C_tmp) * ((Multtype)beta_mult))"
-           << "/ ((Multtype)(ONE_MULT_CONST) << shift_bits));" << std::endl;
+           << "/ ((Multtype)1 << shift_bits));" << std::endl;
         ss << "if (beta_shift >= 0) {" << std::endl;
         ss << "C_tmp = C_tmp >> beta_shift;" << std::endl;
         ss << "} else {" << std::endl;

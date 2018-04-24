@@ -120,11 +120,6 @@ string LibDNNBlas<MItype, MOtype>::generate_axpby_source(
   }
   ss << program->vector_accessors();
 
-  // Quantization definitions
-  if (is_integer_type<MItype>()) {
-    ss << program->define("ONE_MULT_CONST", "1");
-  }
-
   KernelArgs args;
   if (is_integer_type<MItype>() || is_integer_type<MOtype>()) {
     args.push_back(program->template create_kernel_arg<int8_t>("shift_bits",
@@ -178,7 +173,7 @@ string LibDNNBlas<MItype, MOtype>::generate_axpby_source(
     ss << "Acctype x_tmp = ((Acctype)alpha_diff) * ((Acctype)x_diff);"
        << std::endl;
     ss << "x_tmp = (Acctype)((((Multtype)x_tmp) * ((Multtype)alpha_mult))"
-       << "/ ((Multtype)(ONE_MULT_CONST) << shift_bits));" << std::endl;
+       << "/ ((Multtype)1 << shift_bits));" << std::endl;
     ss << "if (alpha_shift >= 0) {" << std::endl;
     ss << "x_tmp = x_tmp >> alpha_shift;" << std::endl;
     ss << "} else {" << std::endl;
@@ -192,7 +187,7 @@ string LibDNNBlas<MItype, MOtype>::generate_axpby_source(
     ss << "Acctype y_tmp = ((Acctype)beta_diff) * ((Acctype)y_diff);"
        << std::endl;
     ss << "y_tmp = (Acctype)((((Multtype)y_tmp) * ((Multtype)beta_mult))"
-       << "/ ((Multtype)(ONE_MULT_CONST) << shift_bits));" << std::endl;
+       << "/ ((Multtype)1 << shift_bits));" << std::endl;
     ss << "if (beta_shift >= 0) {" << std::endl;
     ss << "y_tmp = y_tmp >> beta_shift;" << std::endl;
     ss << "} else {" << std::endl;

@@ -17,6 +17,11 @@ QuantizerBase::QuantizerBase(Device* dev_ptr)
   this->device_ = dev_ptr;
 }
 
+void QuantizerBase::reset_observed_values() {
+  this->observed_min_ = 0.0;
+  this->observed_max_ = 0.0;
+}
+
 
 template<typename Dtype>
 void QuantizerBase::ScaleQuantVals(const QuantizerValues* const lhs,
@@ -77,21 +82,22 @@ INSTANTIATE_FUNC_1T(QuantizerBase::MultiplicativeQuantVals,
 INSTANTIATE_FUNC_1T(QuantizerBase::MultiplicativeQuantVals,
                             (half_fp)(float)(double));
 
-void QuantizerBase::Observe_in(size_t n, const shared_ptr<SyncedMemory> data) {
-  if (mode_ == CAFFE_QUANT_PASSIVE) {
+void QuantizerBase::ObserveIn(size_t n, const shared_ptr<SyncedMemory> data,
+                              bool force) {
+  if (mode_ != CAFFE_QUANT_OBSERVE && !force) {
     return;
   }
   switch(data->head()) {
     case SyncedMemory::HEAD_AT_CPU:
-      this->Observe_in_cpu(n, data->cpu_data());
+      this->ObserveIn_cpu(n, data->cpu_data(), force);
       break;
     case SyncedMemory::HEAD_AT_GPU:
     case SyncedMemory::SYNCED:
     case SyncedMemory::UNINITIALIZED:
       if (this->device_->backend() == BACKEND_CPU) {
-        this->Observe_in_cpu(n, data->cpu_data());
+        this->ObserveIn_cpu(n, data->cpu_data(), force);
       } else {
-        this->Observe_in_gpu(n, data->gpu_data());
+        this->ObserveIn_gpu(n, data->gpu_data(), force);
       }
       break;
     default:
@@ -99,27 +105,83 @@ void QuantizerBase::Observe_in(size_t n, const shared_ptr<SyncedMemory> data) {
   }
 }
 
-void QuantizerBase::Observe_out(size_t n, const shared_ptr<SyncedMemory> data) {
-  if (mode_ == CAFFE_QUANT_PASSIVE) {
+void QuantizerBase::ObserveOut(size_t n, const shared_ptr<SyncedMemory> data,
+                               bool force) {
+  if (mode_ != CAFFE_QUANT_OBSERVE && !force) {
     return;
   }
   switch(data->head()) {
     case SyncedMemory::HEAD_AT_CPU:
-      this->Observe_out_cpu(n, data->cpu_data());
+      this->ObserveOut_cpu(n, data->cpu_data(), force);
       break;
     case SyncedMemory::HEAD_AT_GPU:
     case SyncedMemory::SYNCED:
     case SyncedMemory::UNINITIALIZED:
       if (this->device_->backend() == BACKEND_CPU) {
-        this->Observe_out_cpu(n, data->cpu_data());
+        this->ObserveOut_cpu(n, data->cpu_data(), force);
       } else {
-        this->Observe_out_gpu(n, data->gpu_data());
+        this->ObserveOut_gpu(n, data->gpu_data(), force);
       }
       break;
     default:
       LOG(FATAL) << "SyncedMemory in invalid state";
   }
 }
+
+void QuantizerBase::PseudoQuantIn(size_t n,
+                                  const shared_ptr<SyncedMemory> input,
+                                  const shared_ptr<SyncedMemory> output) {
+  if (mode_ != CAFFE_QUANT_PSEUDO) {
+    return;
+  }
+  switch(input->head()) {
+    case SyncedMemory::HEAD_AT_CPU:
+      this->PseudoQuantIn_cpu(n, input->cpu_data(),
+                              output->mutable_cpu_data());
+      break;
+    case SyncedMemory::HEAD_AT_GPU:
+    case SyncedMemory::SYNCED:
+    case SyncedMemory::UNINITIALIZED:
+      if (this->device_->backend() == BACKEND_CPU) {
+        this->PseudoQuantIn_cpu(n, input->cpu_data(),
+                                output->mutable_cpu_data());
+      } else {
+        this->PseudoQuantIn_gpu(n, input->gpu_data(),
+                                output->mutable_gpu_data());
+      }
+      break;
+    default:
+      LOG(FATAL) << "SyncedMemory in invalid state";
+  }
+}
+
+void QuantizerBase::PseudoQuantOut(size_t n,
+                                   const shared_ptr<SyncedMemory> input,
+                                   const shared_ptr<SyncedMemory> output) {
+  if (mode_ != CAFFE_QUANT_PSEUDO) {
+    return;
+  }
+  switch(input->head()) {
+    case SyncedMemory::HEAD_AT_CPU:
+      this->PseudoQuantOut_cpu(n, input->cpu_data(),
+                               output->mutable_cpu_data());
+      break;
+    case SyncedMemory::HEAD_AT_GPU:
+    case SyncedMemory::SYNCED:
+    case SyncedMemory::UNINITIALIZED:
+      if (this->device_->backend() == BACKEND_CPU) {
+        this->PseudoQuantOut_cpu(n, input->cpu_data(),
+                                 output->mutable_cpu_data());
+      } else {
+        this->PseudoQuantOut_gpu(n, input->gpu_data(),
+                                 output->mutable_gpu_data());
+      }
+      break;
+    default:
+      LOG(FATAL) << "SyncedMemory in invalid state";
+  }
+}
+
 
 template<typename MItype, typename MOtype>
 void Quantizer<MItype, MOtype>::update() {
@@ -192,39 +254,8 @@ void Quantizer<MItype, MOtype>::update_param(const QuantizerParameter& param) {
     }
   }
 
-  if (is_float_type<MItype>()) {
-    this->in_vals_.zero = 0.0;
-    this->in_vals_.one = 1.0;
-  } else {
-    double initial_zero = this->in_vals_.min - this->flt_min_
-        / this->in_scale_val();
-    if (initial_zero < this->in_vals_.min) {
-      this->in_vals_.zero = this->in_vals_.min;
-    } else if (initial_zero > this->in_vals_.max) {
-      this->in_vals_.zero = this->in_vals_.max;
-    } else {
-      this->in_vals_.zero = std::round(initial_zero);
-    }
-    this->in_vals_.one = 1.0/in_scale_val() + this->in_vals_.zero;
-  }
-  this->in_vals_.scale = in_scale_val();
-
-  if (is_float_type<MOtype>()) {
-    this->out_vals_.zero = 0.0;
-    this->out_vals_.one = 1.0;
-  } else {
-    double initial_zero = this->out_vals_.min - this->flt_min_
-        / this->out_scale_val();
-    if (initial_zero < this->out_vals_.min) {
-      this->out_vals_.zero = this->out_vals_.min;
-    } else if (initial_zero > this->out_vals_.max) {
-      this->out_vals_.zero = this->out_vals_.max;
-    } else {
-      this->out_vals_.zero = std::round(initial_zero);
-    }
-    this->out_vals_.one = 1.0/out_scale_val() + this->out_vals_.zero;
-  }
-  this->out_vals_.scale = out_scale_val();
+  this->in_vals_.compute_values<MItype>(this->flt_min_, this->flt_max_);
+  this->out_vals_.compute_values<MOtype>(this->flt_min_, this->flt_max_);
 
   // Need to recompile after changes to the quantizer parameters
   program_ready_ = false;
@@ -237,8 +268,7 @@ void Quantizer<MItype, MOtype>::init() {
 
   this->mode_ = CAFFE_QUANT_PASSIVE;
 
-  this->observed_min_ = 0.0;
-  this->observed_max_ = 0.0;
+  this->reset_observed_values();
 
   this->flt_min_ = 0.0;
   this->flt_max_ = 0.0;
@@ -363,25 +393,25 @@ void Quantizer<MItype, MOtype>::Forward_cpu(
                                                   ::type>::type>::type Difftype;
 
     const Difftype scal = static_cast<Difftype>(fw_scale_before_cast_val());
-    const Difftype in_zero = static_cast<Difftype>(this->in_vals_.zero);
-    const Difftype out_zero = static_cast<Difftype>(this->out_vals_.zero);
-    const Difftype min_out = static_cast<Difftype>(this->out_vals_.min);
-    const Difftype max_out = static_cast<Difftype>(this->out_vals_.max);
+    const Difftype in_zero = this->in_vals_.get_zero<Difftype>();
+    const Difftype out_zero = this->out_vals_.get_zero<Difftype>();
+    const Difftype min_out = this->out_vals_.get_min<Difftype>();
+    const Difftype max_out = this->out_vals_.get_max<Difftype>();
     if (fw_scale_divide()) {
 #pragma omp parallel for
       for (size_t i = 0; i < n; ++i) {
         Difftype centered_input = static_cast<Difftype>(input[i]) - in_zero;
         output[i] = static_cast<MOtype>(std::min(std::max(
-            static_cast<Difftype>(centered_input / scal + out_zero),
-            min_out), max_out));
+            static_cast<Difftype>(type_round<Difftype>(centered_input / scal)
+                                  + out_zero), min_out), max_out));
       }
     } else {
 #pragma omp parallel for
       for (size_t i = 0; i < n; ++i) {
         Difftype centered_input = static_cast<Difftype>(input[i]) - in_zero;
         output[i] = static_cast<MOtype>(std::min(std::max(
-            static_cast<Difftype>(centered_input * scal + out_zero),
-            min_out), max_out));
+            static_cast<Difftype>(type_round<Difftype>(centered_input * scal)
+                                  + out_zero), min_out), max_out));
       }
     }
   } else {
@@ -391,10 +421,10 @@ void Quantizer<MItype, MOtype>::Forward_cpu(
                                                   ::type>::type>::type Difftype;
 
     const Difftype scal = static_cast<Difftype>(fw_scale_after_cast_val());
-    const Difftype in_zero = static_cast<Difftype>(this->in_vals_.zero);
-    const Difftype out_zero = static_cast<Difftype>(this->out_vals_.zero);
-    const Difftype min_out = static_cast<Difftype>(this->out_vals_.min);
-    const Difftype max_out = static_cast<Difftype>(this->out_vals_.max);
+    const Difftype in_zero = this->in_vals_.get_zero<Difftype>();
+    const Difftype out_zero = this->out_vals_.get_zero<Difftype>();
+    const Difftype min_out = this->out_vals_.get_min<Difftype>();
+    const Difftype max_out = this->out_vals_.get_max<Difftype>();
     if (fw_scale_divide()) {
 #pragma omp parallel for
       for (size_t i = 0; i < n; ++i) {
@@ -467,25 +497,25 @@ void Quantizer<MItype, MOtype>::Backward_cpu(
                                                   ::type>::type>::type Difftype;
 
     const Difftype scal = static_cast<Difftype>(bw_scale_before_cast_val());
-    const Difftype in_zero = static_cast<Difftype>(this->out_vals_.zero);
-    const Difftype out_zero = static_cast<Difftype>(this->in_vals_.zero);
-    const Difftype min_out = static_cast<Difftype>(this->in_vals_.min);
-    const Difftype max_out = static_cast<Difftype>(this->in_vals_.max);
+    const Difftype in_zero = this->out_vals_.get_zero<Difftype>();
+    const Difftype out_zero = this->in_vals_.get_zero<Difftype>();
+    const Difftype min_out = this->in_vals_.get_min<Difftype>();
+    const Difftype max_out = this->in_vals_.get_max<Difftype>();
     if (bw_scale_divide()) {
 #pragma omp parallel for
       for (size_t i = 0; i < n; ++i) {
         Difftype centered_input = static_cast<Difftype>(input[i]) - in_zero;
         output[i] = static_cast<MItype>(std::min(std::max(
-            static_cast<Difftype>(centered_input / scal + out_zero),
-            min_out), max_out));
+            static_cast<Difftype>(type_round<Difftype>(centered_input / scal)
+                                  + out_zero), min_out), max_out));
       }
     } else {
 #pragma omp parallel for
       for (size_t i = 0; i < n; ++i) {
         Difftype centered_input = static_cast<Difftype>(input[i]) - in_zero;
         output[i] = static_cast<MItype>(std::min(std::max(
-            static_cast<Difftype>(centered_input * scal + out_zero),
-            min_out), max_out));
+            static_cast<Difftype>(type_round<Difftype>(centered_input * scal)
+                                  + out_zero), min_out), max_out));
       }
     }
   } else {
@@ -495,10 +525,10 @@ void Quantizer<MItype, MOtype>::Backward_cpu(
                                                   ::type>::type>::type Difftype;
 
     const Difftype scal = static_cast<Difftype>(bw_scale_after_cast_val());
-    const Difftype in_zero = static_cast<Difftype>(this->out_vals_.zero);
-    const Difftype out_zero = static_cast<Difftype>(this->in_vals_.zero);
-    const Difftype min_out = static_cast<Difftype>(this->in_vals_.min);
-    const Difftype max_out = static_cast<Difftype>(this->in_vals_.max);
+    const Difftype in_zero = this->out_vals_.get_zero<Difftype>();
+    const Difftype out_zero = this->in_vals_.get_zero<Difftype>();
+    const Difftype min_out = this->in_vals_.get_min<Difftype>();
+    const Difftype max_out = this->in_vals_.get_max<Difftype>();
     if (bw_scale_divide()) {
 #pragma omp parallel for
       for (size_t i = 0; i < n; ++i) {
@@ -701,6 +731,10 @@ string quant_gpu_term(DeviceProgram* program, bool needs_quantization,
              typename std::conditional<sizeof(MItype) == 2, int32_t, int64_t>
                                                  ::type>::type>::type Difftype;
 
+     string round_gpu_func = "";
+     if (is_float_type<Difftype>()) {
+       round_gpu_func = "round";
+     }
      string min_gpu_func = "min";
      string max_gpu_func = "max";
      if (program->device()->backend() == BACKEND_OPENCL &&
@@ -715,8 +749,9 @@ string quant_gpu_term(DeviceProgram* program, bool needs_quantization,
         << program->template convert_type<Difftype>(vec_len, src_var) << " - "
         << in_zero_var << ";" << std::endl;
 
-     ss_s0 << min_gpu_func << "(" << max_gpu_func << "(gpu_centered_input"
-           << op << scal_var << " + "  << out_zero_var << "," << min_out_var
+     ss_s0 << min_gpu_func << "(" << max_gpu_func << "("
+           << round_gpu_func << "(gpu_centered_input"
+           << op << scal_var << ") + "  << out_zero_var << "," << min_out_var
            << "), " << max_out_var << ")";
 
      ss << tar_var << " = " << program->template convert_type<MOtype>(vec_len,
@@ -782,13 +817,15 @@ string Quantizer<MItype, MOtype>::bw_gpu_term(
 }
 
 template<typename MItype, typename MOtype>
-void Quantizer<MItype, MOtype>::Observe_in_cpu(size_t n, const void* data) {
-  Observe_in_cpu(n, static_cast<const MItype*>(data));
+void Quantizer<MItype, MOtype>::ObserveIn_cpu(size_t n, const void* data,
+                                              bool force) {
+  ObserveIn_cpu(n, static_cast<const MItype*>(data), force);
 }
 
 template<typename MItype, typename MOtype>
-void Quantizer<MItype, MOtype>::Observe_in_cpu(size_t n, const MItype* data) {
-  if (mode_ == CAFFE_QUANT_PASSIVE) {
+void Quantizer<MItype, MOtype>::ObserveIn_cpu(size_t n, const MItype* data,
+                                              bool force) {
+  if (mode_ != CAFFE_QUANT_OBSERVE && !force) {
     return;
   }
   double local_min = type_max_val<double>();
@@ -807,13 +844,15 @@ void Quantizer<MItype, MOtype>::Observe_in_cpu(size_t n, const MItype* data) {
 }
 
 template<typename MItype, typename MOtype>
-void Quantizer<MItype, MOtype>::Observe_out_cpu(size_t n, const void* data) {
-  Observe_out_cpu(n, static_cast<const MOtype*>(data));
+void Quantizer<MItype, MOtype>::ObserveOut_cpu(size_t n, const void* data,
+                                               bool force) {
+  ObserveOut_cpu(n, static_cast<const MOtype*>(data), force);
 }
 
 template<typename MItype, typename MOtype>
-void Quantizer<MItype, MOtype>::Observe_out_cpu(size_t n, const MOtype* data) {
-  if (mode_ == CAFFE_QUANT_PASSIVE) {
+void Quantizer<MItype, MOtype>::ObserveOut_cpu(size_t n, const MOtype* data,
+                                               bool force) {
+  if (mode_ != CAFFE_QUANT_OBSERVE && !force) {
     return;
   }
   double local_min = type_max_val<double>();
@@ -1090,6 +1129,60 @@ void Quantizer<MItype, MOtype>::GenerateKernels() {
     ss << "}" << std::endl;
   }
 
+  // Pseudo quant in
+  {
+    KernelArgs args;
+    args.push_back(this->program_->template create_kernel_arg<uint_tp>("n",
+                                                             KERNEL_ARG_CONST));
+    args.push_back(this->program_->template create_kernel_arg<MItype>("in",
+             KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_CONST | KERNEL_ARG_MEM_OFFSET));
+    args.push_back(this->program_->template create_kernel_arg<MItype>(
+                                                     "scal", KERNEL_ARG_CONST));
+    args.push_back(this->program_->template create_kernel_arg<MItype>(
+                                               "inter_zero", KERNEL_ARG_CONST));
+    args.push_back(this->program_->template create_kernel_arg<MItype>(
+                                                "min_inter", KERNEL_ARG_CONST));
+    args.push_back(this->program_->template create_kernel_arg<MItype>(
+                                                "max_inter", KERNEL_ARG_CONST));
+    args.push_back(this->program_->template create_kernel_arg<MItype>("out",
+                                KERNEL_ARG_MEM_OFFSET | KERNEL_ARG_GLOBAL_MEM));
+    ss << this->program_->function("pseudo_quant_in", args);
+    ss << this->program_->kernel_loop("uint_tp", "i", "n");
+    if (is_float_type<MItype>()) {
+      ss << "out[i] = (min(max(round(in[i] / scal) + inter_zero,"
+         << "min_inter), max_inter) - inter_zero) * scal;" << std::endl;
+    }
+    ss << "}" << std::endl;
+    ss << "}" << std::endl;
+  }
+
+  // Pseudo quant out
+  {
+    KernelArgs args;
+    args.push_back(this->program_->template create_kernel_arg<uint_tp>("n",
+                                                             KERNEL_ARG_CONST));
+    args.push_back(this->program_->template create_kernel_arg<MOtype>("in",
+             KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_CONST | KERNEL_ARG_MEM_OFFSET));
+    args.push_back(this->program_->template create_kernel_arg<MOtype>(
+                                                     "scal", KERNEL_ARG_CONST));
+    args.push_back(this->program_->template create_kernel_arg<MOtype>(
+                                               "inter_zero", KERNEL_ARG_CONST));
+    args.push_back(this->program_->template create_kernel_arg<MOtype>(
+                                                "min_inter", KERNEL_ARG_CONST));
+    args.push_back(this->program_->template create_kernel_arg<MOtype>(
+                                                "max_inter", KERNEL_ARG_CONST));
+    args.push_back(this->program_->template create_kernel_arg<MOtype>("out",
+                                KERNEL_ARG_MEM_OFFSET | KERNEL_ARG_GLOBAL_MEM));
+    ss << this->program_->function("pseudo_quant_out", args);
+    ss << this->program_->kernel_loop("uint_tp", "i", "n");
+    if (is_float_type<MOtype>()) {
+      ss << "out[i] = (min(max(round(in[i] / scal) + inter_zero,"
+         << "min_inter), max_inter) - inter_zero) * scal;" << std::endl;
+    }
+    ss << "}" << std::endl;
+    ss << "}" << std::endl;
+  }
+
   this->program_->set_source(ss.str());
   this->program_->Compile(true, true);
   program_ready_ = true;
@@ -1155,8 +1248,8 @@ void Quantizer<MItype, MOtype>::Forward_gpu(size_t n, vptr<const MItype> input,
 }
 
 template<typename MItype, typename MOtype>
-void Quantizer<MItype, MOtype>::Forward_gpu(size_t n, vptr<const void> input,
-                         vptr<void> output) {
+void Quantizer<MItype, MOtype>::Forward_gpu(
+    size_t n, vptr<const void> input, vptr<void> output) {
   this->Forward_gpu(n, vptr<const MItype>(input), vptr<MOtype>(output));
 }
 
@@ -1262,15 +1355,15 @@ void Quantizer<MItype, MOtype>::Backward_gpu(Blob<MOtype>* input,
 }
 
 template<typename MItype, typename MOtype>
-void Quantizer<MItype, MOtype>::Observe_in_gpu(size_t n,
-                                               vptr<const void> data) {
-  Observe_in_gpu(n, vptr<const MItype>(data));
+void Quantizer<MItype, MOtype>::ObserveIn_gpu(
+    size_t n, vptr<const void> data, bool force) {
+  ObserveIn_gpu(n, vptr<const MItype>(data), force);
 }
 
 template<typename MItype, typename MOtype>
-void Quantizer<MItype, MOtype>::Observe_in_gpu(size_t n,
-                                               vptr<const MItype> data) {
-  if (mode_ == CAFFE_QUANT_PASSIVE) {
+void Quantizer<MItype, MOtype>::ObserveIn_gpu(
+    size_t n, vptr<const MItype> data, bool force) {
+  if (mode_ != CAFFE_QUANT_OBSERVE && !force) {
     return;
   }
   this->quant_mutex_.lock();
@@ -1331,15 +1424,15 @@ void Quantizer<MItype, MOtype>::Observe_in_gpu(size_t n,
 }
 
 template<typename MItype, typename MOtype>
-void Quantizer<MItype, MOtype>::Observe_out_gpu(size_t n,
-                                                vptr<const void> data) {
-  Observe_out_gpu(n, vptr<const MOtype>(data));
+void Quantizer<MItype, MOtype>::ObserveOut_gpu(
+    size_t n, vptr<const void> data, bool force) {
+  ObserveOut_gpu(n, vptr<const MOtype>(data), force);
 }
 
 template<typename MItype, typename MOtype>
-void Quantizer<MItype, MOtype>::Observe_out_gpu(size_t n,
-                                                vptr<const MOtype> data) {
-  if (mode_ == CAFFE_QUANT_PASSIVE) {
+void Quantizer<MItype, MOtype>::ObserveOut_gpu(
+    size_t n, vptr<const MOtype> data, bool force) {
+  if (mode_ != CAFFE_QUANT_OBSERVE && !force) {
     return;
   }
   this->quant_mutex_.lock();
@@ -1398,6 +1491,282 @@ void Quantizer<MItype, MOtype>::Observe_out_gpu(size_t n,
   this->device_->unlock_buffer(&min_buffer_lock_id);
   this->device_->unlock_buffer(&max_buffer_lock_id);
 }
+
+
+template<typename MItype, typename MOtype>
+void Quantizer<MItype, MOtype>::PseudoQuantIn_cpu(size_t n, const void* input,
+                                                  void* output) {
+  this->PseudoQuantIn_cpu(n, static_cast<const MItype*>(input),
+                          static_cast<MItype*>(output));
+}
+
+template<typename MItype, typename MOtype>
+void Quantizer<MItype, MOtype>::PseudoQuantIn_cpu(size_t n,
+                                          const MItype* input, MItype* output) {
+  if (mode_ != CAFFE_QUANT_PSEUDO) {
+    return;
+  }
+  CHECK(input);
+  CHECK(output);
+
+  if (this->param_.pseudo_reset_observed()) {
+    this->reset_observed_values();
+  }
+
+  ObserveIn_cpu(n, input, true);
+
+  QuantizerValues quant_vals;
+
+  switch (this->param_.pseudo_target_type()) {
+    case CAFFE_INT8_QUANTIZED:
+      quant_vals.auto_min_max<uint8_t>();
+      quant_vals.compute_values<uint8_t>(this->observed_min_,
+                                         this->observed_max_);
+      break;
+    case CAFFE_INT16_QUANTIZED:
+      quant_vals.auto_min_max<uint16_t>();
+      quant_vals.compute_values<uint16_t>(this->observed_min_,
+                                          this->observed_max_);
+      break;
+    case CAFFE_INT32_QUANTIZED:
+      quant_vals.auto_min_max<uint32_t>();
+      quant_vals.compute_values<uint32_t>(this->observed_min_,
+                                          this->observed_max_);
+      break;
+    case CAFFE_INT64_QUANTIZED:
+      quant_vals.auto_min_max<uint64_t>();
+      quant_vals.compute_values<uint64_t>(this->observed_min_,
+                                          this->observed_max_);
+      break;
+    default:
+      NOT_IMPLEMENTED;
+  }
+
+  const MItype scal = quant_vals.get_scale<MItype>();
+  const MItype inter_zero = quant_vals.get_zero<MItype>();
+  const MItype min_inter = quant_vals.get_min<MItype>();
+  const MItype max_inter = quant_vals.get_max<MItype>();
+
+  #pragma omp parallel for
+  for (size_t i = 0; i < n; ++i) {
+    output[i] = (std::min(std::max(
+          static_cast<MItype>(static_cast<MItype>(std::round(input[i] / scal))
+          + inter_zero), min_inter), max_inter)
+          - inter_zero) * scal;
+  }
+}
+
+template<typename MItype, typename MOtype>
+void Quantizer<MItype, MOtype>::PseudoQuantOut_cpu(size_t n, const void* input,
+                                                   void* output) {
+  this->PseudoQuantIn_cpu(n, static_cast<const MItype*>(input),
+                          static_cast<MItype*>(output));
+}
+
+template<typename MItype, typename MOtype>
+void Quantizer<MItype, MOtype>::PseudoQuantOut_cpu(size_t n,
+                                          const MOtype* input, MOtype* output) {
+  if (mode_ != CAFFE_QUANT_PSEUDO) {
+    return;
+  }
+  CHECK(input);
+  CHECK(output);
+
+  if (this->param_.pseudo_reset_observed()) {
+    this->reset_observed_values();
+  }
+
+  ObserveOut_cpu(n, input);
+
+  QuantizerValues quant_vals;
+
+  switch (this->param_.pseudo_target_type()) {
+    case CAFFE_INT8_QUANTIZED:
+      quant_vals.auto_min_max<uint8_t>();
+      quant_vals.compute_values<uint8_t>(this->observed_min_,
+                                         this->observed_max_);
+      break;
+    case CAFFE_INT16_QUANTIZED:
+      quant_vals.auto_min_max<uint16_t>();
+      quant_vals.compute_values<uint16_t>(this->observed_min_,
+                                          this->observed_max_);
+      break;
+    case CAFFE_INT32_QUANTIZED:
+      quant_vals.auto_min_max<uint32_t>();
+      quant_vals.compute_values<uint32_t>(this->observed_min_,
+                                          this->observed_max_);
+      break;
+    case CAFFE_INT64_QUANTIZED:
+      quant_vals.auto_min_max<uint64_t>();
+      quant_vals.compute_values<uint64_t>(this->observed_min_,
+                                          this->observed_max_);
+      break;
+    default:
+      NOT_IMPLEMENTED;
+  }
+
+  const MOtype scal = quant_vals.get_scale<MOtype>();
+  const MOtype inter_zero = quant_vals.get_zero<MOtype>();
+  const MOtype min_inter = quant_vals.get_min<MOtype>();
+  const MOtype max_inter = quant_vals.get_max<MOtype>();
+
+  #pragma omp parallel for
+  for (size_t i = 0; i < n; ++i) {
+    output[i] = (std::min(std::max(
+          static_cast<MOtype>(static_cast<MOtype>(std::round(input[i] / scal))
+          + inter_zero), min_inter), max_inter)
+          - inter_zero) * scal;
+  }
+}
+
+template<typename MItype, typename MOtype>
+void Quantizer<MItype, MOtype>::PseudoQuantIn_gpu(
+    size_t n, vptr<const void> input, vptr<void> output) {
+  this->PseudoQuantIn_gpu(n, vptr<const MItype>(input), vptr<MItype>(output));
+}
+
+template<typename MItype, typename MOtype>
+void Quantizer<MItype, MOtype>::PseudoQuantIn_gpu(size_t n,
+                                vptr<const MItype> input, vptr<MItype> output) {
+  if (mode_ != CAFFE_QUANT_PSEUDO) {
+    return;
+  }
+  this->quant_mutex_.lock();
+  if (!program_ready_) {
+    this->GenerateKernels();
+  }
+  this->quant_mutex_.unlock();
+
+  if (this->param_.pseudo_reset_observed()) {
+    this->reset_observed_values();
+  }
+  ObserveIn_gpu(n, input);
+
+  QuantizerValues quant_vals;
+
+  switch (this->param_.pseudo_target_type()) {
+    case CAFFE_INT8_QUANTIZED:
+      quant_vals.auto_min_max<uint8_t>();
+      quant_vals.compute_values<uint8_t>(this->observed_min_,
+                                         this->observed_max_);
+      break;
+    case CAFFE_INT16_QUANTIZED:
+      quant_vals.auto_min_max<uint16_t>();
+      quant_vals.compute_values<uint16_t>(this->observed_min_,
+                                          this->observed_max_);
+      break;
+    case CAFFE_INT32_QUANTIZED:
+      quant_vals.auto_min_max<uint32_t>();
+      quant_vals.compute_values<uint32_t>(this->observed_min_,
+                                          this->observed_max_);
+      break;
+    case CAFFE_INT64_QUANTIZED:
+      quant_vals.auto_min_max<uint64_t>();
+      quant_vals.compute_values<uint64_t>(this->observed_min_,
+                                          this->observed_max_);
+      break;
+    default:
+      NOT_IMPLEMENTED;
+  }
+
+  const MItype scal = quant_vals.get_scale<MItype>();
+  const MItype inter_zero = quant_vals.get_zero<MItype>();
+  const MItype min_inter = quant_vals.get_min<MItype>();
+  const MItype max_inter = quant_vals.get_max<MItype>();
+
+  shared_ptr<DeviceKernel> kernel =
+                                   this->program_->GetKernel("pseudo_quant_in");
+
+  vector<size_t> work_size(1, n);
+  vector<size_t> group;
+  vector<size_t> local;
+  this->device_->get_threads(&work_size, &group, &local, kernel.get(), true);
+
+  uint_tp n_arg = n;
+  kernel->add_arg(&n_arg);
+  kernel->add_arg(&input);
+  kernel->add_arg(&scal);
+  kernel->add_arg(&inter_zero);
+  kernel->add_arg(&min_inter);
+  kernel->add_arg(&max_inter);
+  kernel->add_arg(&output);
+  kernel->Execute(group, local);
+}
+
+template<typename MItype, typename MOtype>
+void Quantizer<MItype, MOtype>::PseudoQuantOut_gpu(
+    size_t n, vptr<const void> input, vptr<void> output) {
+  this->PseudoQuantOut_gpu(n, vptr<const MOtype>(input), vptr<MOtype>(output));
+}
+
+template<typename MItype, typename MOtype>
+void Quantizer<MItype, MOtype>::PseudoQuantOut_gpu(
+    size_t n, vptr<const MOtype> input, vptr<MOtype> output) {
+  if (mode_ != CAFFE_QUANT_PSEUDO) {
+    return;
+  }
+  this->quant_mutex_.lock();
+  if (!program_ready_) {
+    this->GenerateKernels();
+  }
+  this->quant_mutex_.unlock();
+
+  if (this->param_.pseudo_reset_observed()) {
+    this->reset_observed_values();
+  }
+  ObserveOut_gpu(n, input);
+
+  QuantizerValues quant_vals;
+
+  switch (this->param_.pseudo_target_type()) {
+    case CAFFE_INT8_QUANTIZED:
+      quant_vals.auto_min_max<uint8_t>();
+      quant_vals.compute_values<uint8_t>(this->observed_min_,
+                                         this->observed_max_);
+      break;
+    case CAFFE_INT16_QUANTIZED:
+      quant_vals.auto_min_max<uint16_t>();
+      quant_vals.compute_values<uint16_t>(this->observed_min_,
+                                          this->observed_max_);
+      break;
+    case CAFFE_INT32_QUANTIZED:
+      quant_vals.auto_min_max<uint32_t>();
+      quant_vals.compute_values<uint32_t>(this->observed_min_,
+                                          this->observed_max_);
+      break;
+    case CAFFE_INT64_QUANTIZED:
+      quant_vals.auto_min_max<uint64_t>();
+      quant_vals.compute_values<uint64_t>(this->observed_min_,
+                                          this->observed_max_);
+      break;
+    default:
+      NOT_IMPLEMENTED;
+  }
+
+  const MOtype scal = quant_vals.get_scale<MOtype>();
+  const MOtype inter_zero = quant_vals.get_zero<MOtype>();
+  const MOtype min_inter = quant_vals.get_min<MOtype>();
+  const MOtype max_inter = quant_vals.get_max<MOtype>();
+
+  shared_ptr<DeviceKernel> kernel =
+                                  this->program_->GetKernel("pseudo_quant_out");
+
+  vector<size_t> work_size(1, n);
+  vector<size_t> group;
+  vector<size_t> local;
+  this->device_->get_threads(&work_size, &group, &local, kernel.get(), true);
+
+  uint_tp n_arg = n;
+  kernel->add_arg(&n_arg);
+  kernel->add_arg(&input);
+  kernel->add_arg(&scal);
+  kernel->add_arg(&inter_zero);
+  kernel->add_arg(&min_inter);
+  kernel->add_arg(&max_inter);
+  kernel->add_arg(&output);
+  kernel->Execute(group, local);
+}
+
 
 INSTANTIATE_CLASS_2T(Quantizer, PROTO_TYPES, PROTO_TYPES)
 

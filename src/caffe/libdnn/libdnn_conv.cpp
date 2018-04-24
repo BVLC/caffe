@@ -1067,7 +1067,7 @@ string LibDNNConv<MItype, MOtype>::generate_fw_kernels(string name) {
        << "((Acctype)(v_num_tiles * TSK))"
        << " * ((Acctype)wg_off) * ((Acctype)im_in_off);" << std::endl;
     ss << "C_tmp = (Acctype)((((Multtype)C_tmp) * ((Multtype)mult))"
-       << "/ ((Multtype)(ONE_MULT_CONST) << shift_bits));" << std::endl;
+       << "/ ((Multtype)1 << shift_bits));" << std::endl;
 
     // Add quantized bias
     if (bias_term_) {
@@ -1077,7 +1077,7 @@ string LibDNNConv<MItype, MOtype>::generate_fw_kernels(string name) {
       ss << "Acctype bias_tmp = (Acctype)bias_mult_d * (Acctype)bias_d;"
          << std::endl;
       ss << "bias_tmp = (Acctype)((((Multtype)bias_tmp) * ((Multtype)bmult))"
-         << "/ ((Multtype)(ONE_MULT_CONST) << shift_bits));" << std::endl;
+         << "/ ((Multtype)1 << shift_bits));" << std::endl;
       ss << "int8_t bshift_mod = bshift - shift;" << std::endl;
       ss << "if (bshift_mod >= 0) {" << std::endl;
       ss << "bias_tmp = bias_tmp >> bshift_mod;" << std::endl;
@@ -1086,9 +1086,12 @@ string LibDNNConv<MItype, MOtype>::generate_fw_kernels(string name) {
       ss << "}" << std::endl;
       ss << "C_tmp = C_tmp + bias_tmp;" << std::endl;
     }
-
     ss << "if (shift >= 0) {" << std::endl;
-    ss << "C_tmp = C_tmp >> shift;" << std::endl;
+    ss << "Acctype mask = ((Acctype)1 << shift) - (Acctype)1;" << std::endl;
+    ss << "Acctype C_round = (C_tmp & mask) > "
+       << "((mask >> 1) + ((C_tmp < (Acctype)0) ? (Acctype)1 : (Acctype)0)) ? "
+       << "(Acctype)1 : (Acctype)0;" << std::endl;
+    ss << "C_tmp = (C_tmp >> shift) + C_round;" << std::endl;
     ss << "} else {" << std::endl;
     ss << "C_tmp = C_tmp << -shift;" << std::endl;
     ss << "}" << std::endl;
@@ -1699,11 +1702,6 @@ void LibDNNConv<MItype, MOtype>::GenerateKernels() {
 
   ss << this->program_->atomics();
   ss << this->program_->vector_accessors();
-
-  // Quantization definitions
-  if (is_integer_type<MItype>()) {
-    ss << this->program_->define("ONE_MULT_CONST", "1");
-  }
 
   ss << generate_fw_defs();
   ss << generate_fw_kernels("conv_forward");

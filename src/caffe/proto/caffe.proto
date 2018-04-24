@@ -79,6 +79,7 @@ message FillerParameter {
 enum QuantizerMode {
   CAFFE_QUANT_PASSIVE = 0;
   CAFFE_QUANT_OBSERVE = 1;
+  CAFFE_QUANT_PSEUDO = 2;
 }
 
 message QuantizerParameter {
@@ -97,6 +98,9 @@ message QuantizerParameter {
   optional double min_out = 10;
   
   optional QuantizerMode mode = 11 [default = CAFFE_QUANT_PASSIVE];
+  
+  optional DataType pseudo_target_type = 13 [default = CAFFE_INT8_QUANTIZED];
+  optional bool pseudo_reset_observed = 14 [default = false];
   
   // Parameters for device abstraction
   optional int64 device = 12 [default = -1];

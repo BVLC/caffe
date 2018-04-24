@@ -371,6 +371,29 @@ inline size_t type_max_integer_representable<uint64_t>() {
   return std::numeric_limits<uint64_t>::max();
 }
 
+
+template<typename T>
+inline T type_round(T x) {
+  return x;
+}
+
+template<>
+inline float type_round(float x) {
+  return std::round(x);
+}
+
+template<>
+inline double type_round(double x) {
+  return std::round(x);
+}
+
+template<>
+inline half_fp type_round(half_fp x) {
+  return std::round(x);
+}
+
+
+
 }  // namespace caffe
 
 #endif  // CAFFE_UTIL_TYPE_UTILS_HPP_

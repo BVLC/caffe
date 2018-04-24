@@ -89,11 +89,6 @@ string LibDNNBlas<MItype, MOtype>::generate_gemv_source(
   // Check if the big block computation is needed at all
   bool needs_block = (N >= tsn);
 
-  // Quantization definitions
-  if (is_integer_type<MItype>()) {
-    ss << program->define("ONE_MULT_CONST", "1");
-  }
-
   // GEMV definitions
   ss << program->define("M", M);
   ss << program->define("N", N);
@@ -358,7 +353,7 @@ string LibDNNBlas<MItype, MOtype>::generate_gemv_source(
         ss << "{" << std::endl;
         ss << "Acctype y_tmp = (Acctype)(((VEC_" << vwm << "_" << m
            << "(yreg[wm])) * ((Multtype)mult))"
-           << "/ ((Multtype)(ONE_MULT_CONST) << shift_bits));" << std::endl;
+           << "/ ((Multtype)1 << shift_bits));" << std::endl;
         ss << "if (shift >= 0) {" << std::endl;
         ss << "y_tmp = y_tmp >> shift;" << std::endl;
         ss << "} else {" << std::endl;
@@ -369,7 +364,7 @@ string LibDNNBlas<MItype, MOtype>::generate_gemv_source(
           ss << "y_tmp = ((Acctype)alpha_diff) * ((Acctype)y_tmp);"
              << std::endl;
           ss << "y_tmp = (Acctype)((((Multtype)y_tmp) * ((Multtype)alpha_mult))"
-             << "/ ((Multtype)(ONE_MULT_CONST) << shift_bits));" << std::endl;
+             << "/ ((Multtype)1 << shift_bits));" << std::endl;
           ss << "if (alpha_shift >= 0) {" << std::endl;
           ss << "y_tmp = y_tmp >> alpha_shift;" << std::endl;
           ss << "} else {" << std::endl;
@@ -388,7 +383,7 @@ string LibDNNBlas<MItype, MOtype>::generate_gemv_source(
           ss << "y_tmp = ((Acctype)beta_diff) * ((Acctype)y_tmp);"
              << std::endl;
           ss << "y_tmp = (Acctype)((((Multtype)y_tmp) * ((Multtype)beta_mult))"
-             << "/ ((Multtype)(ONE_MULT_CONST) << shift_bits));" << std::endl;
+             << "/ ((Multtype)1 << shift_bits));" << std::endl;
           ss << "if (beta_shift >= 0) {" << std::endl;
           ss << "y_tmp = y_tmp >> beta_shift;" << std::endl;
           ss << "} else {" << std::endl;

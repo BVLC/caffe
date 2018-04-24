@@ -750,8 +750,14 @@ inline Dtype Layer<Dtype, MItype, MOtype>::Forward(
   Reshape(bottom, top);
   for (int_tp bottom_id = 0; bottom_id < bottom.size(); ++bottom_id) {
     if (bottom_quants_.size() > 0) {
+      // Observe values needed for quantization if necessary
       bottom_quants_[bottom_id % bottom_quants_.size()]
-            ->Observe_in(bottom[bottom_id]->count(), bottom[bottom_id]->data());
+            ->ObserveIn(bottom[bottom_id]->count(), bottom[bottom_id]->data());
+      // Run pseudo quantization if necessary
+      bottom_quants_[bottom_id % bottom_quants_.size()]
+            ->PseudoQuantIn(bottom[bottom_id]->count(),
+                            bottom[bottom_id]->data(),
+                            bottom[bottom_id]->data());
     }
   }
   switch (Caffe::mode()) {
@@ -791,13 +797,17 @@ inline Dtype Layer<Dtype, MItype, MOtype>::Forward(
   for (int_tp top_id = 0; top_id < top.size(); ++top_id) {
     if (top_quants_.size() > 0) {
       top_quants_[top_id % top_quants_.size()]
-                       ->Observe_out(top[top_id]->count(), top[top_id]->data());
+                       ->ObserveOut(top[top_id]->count(), top[top_id]->data());
+      top_quants_[top_id % top_quants_.size()]
+            ->PseudoQuantOut(top[top_id]->count(),
+                             top[top_id]->data(),
+                             top[top_id]->data());
     }
   }
   for (int_tp blob_id = 0; blob_id < blobs_.size(); ++blob_id) {
     if (blobs_quants_.size() > 0) {
       blobs_quants_[blob_id % blobs_quants_.size()]
-               ->Observe_out(blobs_[blob_id]->count(), blobs_[blob_id]->data());
+               ->ObserveOut(blobs_[blob_id]->count(), blobs_[blob_id]->data());
     }
   }
   return loss;
@@ -808,12 +818,13 @@ inline void Layer<Dtype, MItype, MOtype>::Backward(
                       const vector<Blob<MOtype>*>& top,
                       const vector<bool>& propagate_down,
                       const vector<Blob<MItype>*>& bottom) {
-  for (int_tp top_id = 0; top_id < top.size(); ++top_id) {
+  // Disable quantization observer on backward pass
+  /*for (int_tp top_id = 0; top_id < top.size(); ++top_id) {
     if (top_quants_.size() > 0) {
       top_quants_[top_id % top_quants_.size()]
-                       ->Observe_out(top[top_id]->count(), top[top_id]->diff());
+                       ->ObserveOut(top[top_id]->count(), top[top_id]->diff());
     }
-  }
+  }*/
   switch (Caffe::mode()) {
     case Caffe::CPU:
       Backward_cpu(top, propagate_down, bottom);
@@ -824,18 +835,19 @@ inline void Layer<Dtype, MItype, MOtype>::Backward(
     default:
       LOG(FATAL)<< "Unknown caffe mode.";
   }
-  for (int_tp bottom_id = 0; bottom_id < bottom.size(); ++bottom_id) {
+  // Disable quantization observer on backward pass
+  /*for (int_tp bottom_id = 0; bottom_id < bottom.size(); ++bottom_id) {
     if (top_quants_.size() > 0) {
       bottom_quants_[bottom_id % bottom_quants_.size()]
-            ->Observe_in(bottom[bottom_id]->count(), bottom[bottom_id]->diff());
+            ->ObserveIn(bottom[bottom_id]->count(), bottom[bottom_id]->diff());
     }
   }
   for (int_tp blob_id = 0; blob_id < blobs_.size(); ++blob_id) {
     if (blobs_quants_.size() > 0) {
       blobs_quants_[blob_id % blobs_quants_.size()]
-               ->Observe_out(blobs_[blob_id]->count(), blobs_[blob_id]->diff());
+               ->ObserveOut(blobs_[blob_id]->count(), blobs_[blob_id]->diff());
     }
-  }
+  }*/
 }
 
 // Serialize LayerParameter to protocol buffer

@@ -7,6 +7,7 @@
 #include "caffe/common.hpp"
 #include "caffe/backend/vptr.hpp"
 #include "caffe/backend/device_program.hpp"
+#include "caffe/util/type_utils.hpp"
 
 namespace caffe {
 
@@ -69,6 +70,42 @@ struct QuantizerValues {
     return static_cast<Dtype>(std::round(this->scale));
   }
 
+  template<typename Dtype>
+  void auto_min_max() {
+    this->min = type_min_val<Dtype>();
+    this->max = type_max_val<Dtype>();
+  }
+
+
+  template<typename Dtype>
+  float scale_val(float flt_min, float flt_max) {
+    if (is_float_type<Dtype>()) {
+      return 1.0;
+    } else {
+      return (flt_max - flt_min) / (this->max - this->min);
+    }
+  }
+
+  template<typename Dtype>
+  void compute_values(float flt_min, float flt_max) {
+    if (is_float_type<Dtype>()) {
+      this->zero = 0.0;
+      this->one = 1.0;
+    } else {
+      double initial_zero = this->min - flt_min
+          / this->scale_val<Dtype>(flt_min, flt_max);
+      if (initial_zero < this->min) {
+        this->zero = this->min;
+      } else if (initial_zero > this->max) {
+        this->zero = this->max;
+      } else {
+        this->zero = std::round(initial_zero);
+      }
+      this->one = 1.0/scale_val<Dtype>(flt_min, flt_max) + this->zero;
+    }
+    this->scale = scale_val<Dtype>(flt_min, flt_max);
+  }
+
   // For testing purposes
   void print() const {
     std::cout << "Zero: " << this->zero << std::endl;
@@ -93,6 +130,7 @@ class QuantizerBase {
 
   virtual void update() = 0;
   virtual void update_param(const QuantizerParameter& param) = 0;
+  void reset_observed_values();
 
   virtual bool needs_quantization() const = 0;
 
@@ -106,12 +144,30 @@ class QuantizerBase {
   virtual void Backward_gpu(size_t n, vptr<const void> input,
                             vptr<void> output) = 0;
 
-  virtual void Observe_in(size_t n, const shared_ptr<SyncedMemory> data);
-  virtual void Observe_in_cpu(size_t n, const void* data) = 0;
-  virtual void Observe_in_gpu(size_t n, vptr<const void> data) = 0;
-  virtual void Observe_out(size_t n, const shared_ptr<SyncedMemory> data);
-  virtual void Observe_out_cpu(size_t n, const void* data) = 0;
-  virtual void Observe_out_gpu(size_t n, vptr<const void> data) = 0;
+  virtual void PseudoQuantIn(size_t n, const shared_ptr<SyncedMemory> input,
+                             shared_ptr<SyncedMemory> output);
+  virtual void PseudoQuantIn_cpu(size_t n, const void* input, void* output) = 0;
+  virtual void PseudoQuantIn_gpu(size_t n, vptr<const void> input,
+                                 vptr<void> output) = 0;
+  virtual void PseudoQuantOut(size_t n, const shared_ptr<SyncedMemory> input,
+                              shared_ptr<SyncedMemory> output);
+  virtual void PseudoQuantOut_cpu(size_t n, const void* input,
+                                  void* output) = 0;
+  virtual void PseudoQuantOut_gpu(size_t n, vptr<const void> input,
+                                  vptr<void> output) = 0;
+
+  virtual void ObserveIn(size_t n, const shared_ptr<SyncedMemory> data,
+                         bool force = false);
+  virtual void ObserveIn_cpu(size_t n, const void* data,
+                             bool force = false) = 0;
+  virtual void ObserveIn_gpu(size_t n, vptr<const void> data,
+                             bool force = false) = 0;
+  virtual void ObserveOut(size_t n, const shared_ptr<SyncedMemory> data,
+                          bool force = false);
+  virtual void ObserveOut_cpu(size_t n, const void* data,
+                              bool force = false) = 0;
+  virtual void ObserveOut_gpu(size_t n, vptr<const void> data,
+                              bool force = false) = 0;
 
   virtual bool fw_scale_divide() const = 0;
   virtual bool bw_scale_divide() const = 0;
@@ -224,15 +280,34 @@ class Quantizer : public QuantizerBase {
   void Backward_gpu(size_t n, vptr<const MOtype> input,
                     vptr<MItype> output);
 
-  virtual void Observe_in_cpu(size_t n, const void* data);
-  virtual void Observe_in_gpu(size_t n, vptr<const void> data);
-  virtual void Observe_out_cpu(size_t n, const void* data);
-  virtual void Observe_out_gpu(size_t n, vptr<const void> data);
 
-  void Observe_in_cpu(size_t n, const MItype* data);
-  void Observe_in_gpu(size_t n, vptr<const MItype> data);
-  void Observe_out_cpu(size_t n, const MOtype* data);
-  void Observe_out_gpu(size_t n, vptr<const MOtype> data);
+  virtual void PseudoQuantIn_cpu(size_t n, const void* input, void* output);
+  virtual void PseudoQuantIn_gpu(size_t n, vptr<const void> input,
+                                 vptr<void> output);
+  virtual void PseudoQuantOut_cpu(size_t n, const void* input,
+                                  void* output);
+  virtual void PseudoQuantOut_gpu(size_t n, vptr<const void> input,
+                                  vptr<void> output);
+
+  virtual void PseudoQuantIn_cpu(size_t n, const MItype* input, MItype* output);
+  virtual void PseudoQuantIn_gpu(size_t n, vptr<const MItype> input,
+                                 vptr<MItype> output);
+  virtual void PseudoQuantOut_cpu(size_t n, const MOtype* input,
+                                  MOtype* output);
+  virtual void PseudoQuantOut_gpu(size_t n, vptr<const MOtype> input,
+                                  vptr<MOtype> output);
+
+  virtual void ObserveIn_cpu(size_t n, const void* data, bool force = false);
+  virtual void ObserveIn_gpu(size_t n, vptr<const void> data,
+                             bool force = false);
+  virtual void ObserveOut_cpu(size_t n, const void* data, bool force = false);
+  virtual void ObserveOut_gpu(size_t n, vptr<const void> data,
+                              bool force = false);
+
+  void ObserveIn_cpu(size_t n, const MItype* data, bool force = false);
+  void ObserveIn_gpu(size_t n, vptr<const MItype> data, bool force = false);
+  void ObserveOut_cpu(size_t n, const MOtype* data, bool force = false);
+  void ObserveOut_gpu(size_t n, vptr<const MOtype> data, bool force = false);
 
   virtual bool fw_scale_divide() const;
   virtual bool bw_scale_divide() const;

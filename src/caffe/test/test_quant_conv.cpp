@@ -194,7 +194,7 @@ class QuantComparativeConvTest : public MultiDeviceTest<TypeParam> {
 
     ref_layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
 
-    bottom_quant_->Observe_in_cpu(this->blob_bottom_->count(),
+    bottom_quant_->ObserveIn_cpu(this->blob_bottom_->count(),
                                   this->blob_bottom_->cpu_data());
     bottom_quant_->update();
     bottom_quants[0]->update_param(bottom_quant_->quant_param());
@@ -202,7 +202,7 @@ class QuantComparativeConvTest : public MultiDeviceTest<TypeParam> {
                                blob_bottom_->cpu_data(),
                                blob_bottom_quant_->mutable_cpu_data());
 
-    top_quant_->Observe_in_cpu(this->blob_top_->count(),
+    top_quant_->ObserveIn_cpu(this->blob_top_->count(),
                                this->blob_top_->cpu_data());
     top_quant_->update();
     top_quants[0]->update_param(top_quant_->quant_param());
@@ -210,7 +210,7 @@ class QuantComparativeConvTest : public MultiDeviceTest<TypeParam> {
     for (int_tp i = 0; i < ref_layer.blobs().size(); ++i) {
       switch (i) {
         case 0:
-          weight_quant_->Observe_in_cpu(ref_layer.blobs()[i]->count(),
+          weight_quant_->ObserveIn_cpu(ref_layer.blobs()[i]->count(),
                                         ref_layer.blobs()[i]->cpu_data());
           weight_quant_->update();
           weight_quant_->Forward_cpu(ref_layer.blobs()[i]->count(),
@@ -219,7 +219,7 @@ class QuantComparativeConvTest : public MultiDeviceTest<TypeParam> {
           blobs_quants[i]->update_param(weight_quant_->quant_param());
           break;
         case 1:
-          bias_quant_->Observe_in_cpu(ref_layer.blobs()[i]->count(),
+          bias_quant_->ObserveIn_cpu(ref_layer.blobs()[i]->count(),
                                       ref_layer.blobs()[i]->cpu_data());
           bias_quant_->update();
           bias_quant_->Forward_cpu(ref_layer.blobs()[i]->count(),

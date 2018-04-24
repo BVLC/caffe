@@ -1707,11 +1707,6 @@ void LibDNNDeconv<MItype, MOtype>::GenerateKernels() {
   ss << this->program_->atomics();
   ss << this->program_->vector_accessors();
 
-  // Quantization definitions
-  if (is_integer_type<MItype>()) {
-    ss << this->program_->define("ONE_MULT_CONST", "1");
-  }
-
   // Deconvolution kernels only for float types
   // TODO: Forward deconvolution quantized
   if (is_float_type<MItype>()) {
