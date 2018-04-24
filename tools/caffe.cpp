@@ -316,7 +316,9 @@ int test() {
   // Instantiate the caffe net.
   Net<float> caffe_net(FLAGS_model, caffe::TEST,
                        Caffe::GetDefaultDevice(), FLAGS_level, &stages);
-  caffe_net.CopyTrainedLayersFrom(FLAGS_weights);
+  if (FLAGS_weights.size() > 0) {
+    caffe_net.CopyTrainedLayersFrom(FLAGS_weights);
+  }
   LOG(INFO) << "Running for " << FLAGS_iterations << " iterations.";
 
   vector<int> test_score_output_id;
@@ -397,6 +399,9 @@ int time() {
   // Instantiate the caffe net.
   Net<float> caffe_net(FLAGS_model, phase,
                        Caffe::GetDefaultDevice(), FLAGS_level, &stages);
+  if (FLAGS_weights.size() > 0) {
+    caffe_net.CopyTrainedLayersFrom(FLAGS_weights);
+  }
 
   // Do a clean forward and backward pass, so that memory allocation are done
   // and future iterations will be more stable.
