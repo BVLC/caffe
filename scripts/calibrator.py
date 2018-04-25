@@ -243,8 +243,9 @@ def get_compiled_net(caffe_bin, model_def, model_weights, detection):
     if detection:
         cmd += ' -detection'
     cmd += ' 2>&1 > {}'.format(output_log_name)
-
+    os.environ['GLOG_minloglevel'] = '2'
     os.system(cmd)
+    os.environ.pop('GLOG_minloglevel')
     return os.path.abspath(output_log_name)
 
 
