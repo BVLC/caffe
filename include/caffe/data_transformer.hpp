@@ -53,6 +53,13 @@ namespace caffe {
 
 class DataReader;
 
+class BoxLabel {
+ public:
+  float class_label_;
+  float difficult_;
+  float box_[4];
+};
+
 class RandNumbers {
  public:
    /**
@@ -192,7 +199,7 @@ class DataTransformer {
 		 Blob<Dtype>* transformed_blob,
 		 vector<AnnotationGroup>* transformed_anno_vec,
 		 RandNumbers& rand_num);
-
+  void Transform(const Datum& datum, Blob<Dtype>* transformed_blob, vector<BoxLabel>* box_labels); 
   /**
    * @brief Transform the annotation according to the transformation applied
    * to the datum.

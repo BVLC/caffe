@@ -613,6 +613,30 @@ message LayerParameter {
   optional QuantizationParameter quantization_param = 158;
   
   optional ReorgParameter reorg_param = 159;
+  optional RegionLossParameter region_loss_param = 209;
+}
+
+message RegionLossParameter{
+  //Yolo 9000
+  optional uint32 side = 1 [default = 13];
+  optional uint32 num_class = 2 [default = 20];
+  optional uint32 bias_match = 3 [default = 1];
+  optional uint32 coords = 4 [default = 4];
+  optional uint32 num = 5 [default = 5];
+  optional uint32 softmax = 6 [default = 1];
+  optional float jitter = 7 [default = 0.2];
+  optional uint32 rescore = 8 [default = 1];
+
+  optional float object_scale = 9 [default = 1.0];
+  optional float class_scale = 10 [default = 1.0];
+  optional float noobject_scale = 11 [default = 0.5];
+  optional float coord_scale = 12 [default = 5.0];
+  optional uint32 absolute = 13 [default = 1];
+  optional float thresh = 14 [default = 0.2];
+  optional uint32 random = 15 [default = 1];
+  repeated float biases = 16;
+  optional string softmax_tree = 17;
+  optional string class_map = 18;
 }
 
 message MultinodeLayerParameter {
@@ -1136,6 +1160,8 @@ message DataParameter {
   optional uint32 prefetch = 10 [default = 4];
   // Whether or not DataLayer should shuffle the images at every epoch.
   optional bool shuffle = 11 [default = false];
+  
+  repeated uint32 side = 12;
 }
 
 // Message that store parameters used by DetectionEvaluateLayer

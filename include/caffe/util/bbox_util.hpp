@@ -180,6 +180,71 @@ void MatchBBox(const vector<NormalizedBBox>& gt,
     const bool ignore_cross_boundary_bbox,
     vector<int>* match_indices, vector<float>* match_overlaps);
 
+template <typename Dtype>
+void disp(Blob<Dtype>& swap)
+{
+  std::cout<<"#######################################"<<std::endl;
+  for (int b = 0; b < swap.num(); ++b)
+    for (int c = 0; c < swap.channels(); ++c)
+      for (int h = 0; h < swap.height(); ++h)
+      {
+  	std::cout<<"[";
+        for (int w = 0; w < swap.width(); ++w)
+	{
+	  std::cout<<swap.data_at(b,c,h,w)<<",";	
+	}
+	std::cout<<"]"<<std::endl;
+      }
+  return;
+}
+
+template <typename Dtype>
+Dtype Overlap(Dtype x1, Dtype w1, Dtype x2, Dtype w2) {
+  Dtype l1 = x1 - w1/2;
+  Dtype l2 = x2 - w2/2;
+  Dtype left = l1 > l2 ? l1 : l2;
+  Dtype r1 = x1 + w1/2;
+ Dtype r2 = x2 + w2/2;
+  Dtype right = r1 < r2 ? r1 : r2;
+  return right - left;
+}
+
+template <typename Dtype>
+void setNormalizedBBox(NormalizedBBox& bbox, Dtype x, Dtype y, Dtype w, Dtype h)
+{
+  Dtype xmin = x - w/2.0;
+  Dtype xmax = x + w/2.0;
+  Dtype ymin = y - h/2.0;
+  Dtype ymax = y + h/2.0;
+
+  if (xmin < 0.0){
+    xmin = 0.0;
+  }
+  if (xmax > 1.0){
+    xmax = 1.0;
+  }
+  if (ymin < 0.0){
+    ymin = 0.0;
+  }
+  if (ymax > 1.0){
+    ymax = 1.0;
+  }  
+  bbox.set_xmin(xmin);
+  bbox.set_ymin(ymin);
+  bbox.set_xmax(xmax);
+  bbox.set_ymax(ymax);
+  float bbox_size = BBoxSize(bbox, true);
+  bbox.set_size(bbox_size);
+}
+
+template <typename Dtype>
+Dtype Calc_iou(const vector<Dtype>& box, const vector<Dtype>& truth) {
+  NormalizedBBox Bbox1, Bbox2;
+  setNormalizedBBox(Bbox1, box[0], box[1], box[2], box[3]);
+  setNormalizedBBox(Bbox2, truth[0], truth[1], truth[2], truth[3]);
+  return JaccardOverlap(Bbox1, Bbox2, true);
+}
+
 // Find matches between prediction bboxes and ground truth bboxes.
 //    all_loc_preds: stores the location prediction, where each item contains
 //      location prediction for an image.
