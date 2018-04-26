@@ -868,7 +868,7 @@ void Net<Dtype>::CompilationRuleBNInplace(const NetParameter& param,
 
 template <typename Dtype>
 void Net<Dtype>::CompilationRuleConvSumFusion(const NetParameter& param,
-                                     NetParameter* param_compiled) {
+                                              NetParameter* param_compiled) {
   // only apply this rule for inference(TEST) phase
   if (param.state().phase() != TEST || param.engine().compare("MKLDNN") != 0) {
     param_compiled->CopyFrom(param);
@@ -876,19 +876,21 @@ void Net<Dtype>::CompilationRuleConvSumFusion(const NetParameter& param,
   }
   string blob_need_to_insert;
   LayerParameter* need_to_convert_layer = NULL;
+  bool has_relu_flag = true;
   for (int i = 0; i < param.layer_size(); i++) {
     LayerParameter* layer_param =
         (const_cast<NetParameter&>(param)).mutable_layer(i);
-    if (layer_param->type().compare("Convolution") == 0 
-        && (layer_param->has_engine() == false
-        || (layer_param->has_engine() == true
-        && layer_param->engine().compare("MKLDNN") ==0))) {
+    if (layer_param->type().compare("Convolution") == 0 &&
+        (layer_param->has_engine() == false ||
+         (layer_param->has_engine() == true &&
+          layer_param->engine().compare("MKLDNN") == 0))) {
       std::vector<const LayerParameter*> child_layers_params;
       Net<Dtype>::GetBlobConsumers(child_layers_params, layer_param->top(0),
                                    param,
                                    i + 1 < param.layer_size() ? i + 1 : i);
 
-      if (child_layers_params.size() > 0 && child_layers_params[0]->type().compare("Eltwise") == 0) {
+      if (child_layers_params.size() > 0 &&
+          child_layers_params[0]->type().compare("Eltwise") == 0) {
         std::vector<const LayerParameter*> grand_child_layers_params;
 
         Net<Dtype>::GetBlobConsumers(grand_child_layers_params,
@@ -900,18 +902,23 @@ void Net<Dtype>::CompilationRuleConvSumFusion(const NetParameter& param,
                 : *layer_param;
 
         if (grand_child_layer_param.type().compare("ReLU") != 0) {
-          param_compiled->add_layer()->CopyFrom(*layer_param);
-          continue;
+          has_relu_flag = false;
         }
 
-        if (child_layers_params[0]->bottom(0) == layer_param->top(0) ) {
+        if (child_layers_params[0]->bottom(0) == layer_param->top(0)) {
           param_compiled->add_layer()->CopyFrom(*layer_param);
           need_to_convert_layer = layer_param;
           continue;
         }
 
-        const_cast<string&>(layer_param->top(0)) =
-            grand_child_layer_param.top(0);
+        if (has_relu_flag) {
+          const_cast<string&>(layer_param->top(0)) =
+              grand_child_layer_param.top(0);
+        } else {
+          const_cast<string&>(layer_param->top(0)) =
+              child_layers_params[0]->top(0);
+        }
+
         if (need_to_convert_layer != NULL) {
           layer_param->add_bottom(
               const_cast<string&>(need_to_convert_layer->top(0)));
@@ -921,7 +928,12 @@ void Net<Dtype>::CompilationRuleConvSumFusion(const NetParameter& param,
               const_cast<string&>(child_layers_params[0]->bottom(0)));
         }
 
-        i += 2;  // skip next eltwise and relu
+        if (has_relu_flag) {
+          i += 2;  // skip next eltwise and relu
+          layer_param->mutable_convolution_param()->set_relu(true);
+        } else {
+          i += 1;
+        }
       }
     }
 

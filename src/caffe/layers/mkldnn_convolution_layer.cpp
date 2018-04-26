@@ -279,29 +279,24 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
     convFwd_pd = NULL;
     mkldnn::post_ops ops;
 
+    float scale = 1.0f;
+    Dtype alpha = negative_slope;  // negative slope for mkldnn_eltwise_relu.
+    float beta = 1.0f;             // ignored for mkldnn_eltwise_relu.
 #ifndef DISABLE_CONV_SUM_FUSION
-    if(relu || bottom.size() > 1) {
-#else
-    if(relu) {
-#endif
-        float scale = 1.0f;
-        Dtype alpha = negative_slope;  // negative slope for mkldnn_eltwise_relu.
-        float beta = 1.0f;  //ignored for mkldnn_eltwise_relu.
-#ifndef DISABLE_CONV_SUM_FUSION
-        if (bottom.size() > 1) {
-          if (this->need_quantize_) {
-            float sum_scale;
-            sum_scale = this->scale_out_[0] /
-                  get_mkldnn_prv_descriptor<Dtype, false>(bottom[1])->get_scale(0);
-            ops.append_sum(sum_scale);
-          } else {
-            ops.append_sum(1.0f);
-          }
-        }
-#endif
-        ops.append_eltwise(scale, eltwise_relu, alpha, beta);
-        attr.set_post_ops(ops);
+    if (bottom.size() > 1) {
+      if (this->need_quantize_) {
+        float sum_scale;
+        sum_scale =
+            this->scale_out_[0] /
+            get_mkldnn_prv_descriptor<Dtype, false>(bottom[1])->get_scale(0);
+        ops.append_sum(sum_scale);
+      } else {
+        ops.append_sum(1.0f);
+      }
     }
+#endif
+    if (relu) ops.append_eltwise(scale, eltwise_relu, alpha, beta);
+    attr.set_post_ops(ops);
 
     for (auto& convAlgorithm : eligibleAlgorithms) {
       // ---- Initialize convolution primitive descriptor -------------
