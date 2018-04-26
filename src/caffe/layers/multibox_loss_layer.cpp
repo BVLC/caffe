@@ -111,6 +111,8 @@ void MultiBoxLossLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     layer_param.set_name(this->layer_param_.name() + "_l2_loc");
     layer_param.set_type("EuclideanLoss");
     layer_param.add_loss_weight(loc_weight_);
+    layer_param.mutable_loss_param()->set_normalization(
+        LossParameter_NormalizationMode_NONE);
     loc_loss_layer_ = LayerRegistry<Dtype>::CreateLayer(layer_param);
     loc_loss_layer_->SetUp(loc_bottom_vec_, loc_top_vec_);
   } else if (loc_loss_type_ == MultiBoxLossParameter_LocLossType_SMOOTH_L1) {
@@ -118,6 +120,8 @@ void MultiBoxLossLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     layer_param.set_name(this->layer_param_.name() + "_smooth_L1_loc");
     layer_param.set_type("SmoothL1Loss");
     layer_param.add_loss_weight(loc_weight_);
+    layer_param.mutable_loss_param()->set_normalization(
+        LossParameter_NormalizationMode_NONE);
     loc_loss_layer_ = LayerRegistry<Dtype>::CreateLayer(layer_param);
     loc_loss_layer_->SetUp(loc_bottom_vec_, loc_top_vec_);
   } else {
@@ -154,6 +158,8 @@ void MultiBoxLossLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     layer_param.set_name(this->layer_param_.name() + "_logistic_conf");
     layer_param.set_type("SigmoidCrossEntropyLoss");
     layer_param.add_loss_weight(Dtype(1.));
+    layer_param.mutable_loss_param()->set_normalization(
+        LossParameter_NormalizationMode_NONE);
     // Fake reshape.
     vector<int> conf_shape(1, 1);
     conf_shape.push_back(num_classes_);
@@ -281,15 +287,14 @@ void MultiBoxLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   }
 
   top[0]->mutable_cpu_data()[0] = 0;
+  // To make sure we don't use the cached normalizer value
+  Dtype normalizer = LossLayer<Dtype>::GetNormalizer(
+      normalization_, num_, num_priors_, num_matches_);
   if (this->layer_param_.propagate_down(0)) {
-    Dtype normalizer = LossLayer<Dtype>::GetNormalizer(
-        normalization_, num_, num_priors_, num_matches_);
     top[0]->mutable_cpu_data()[0] +=
         loc_weight_ * loc_loss_.cpu_data()[0] / normalizer;
   }
   if (this->layer_param_.propagate_down(1)) {
-    Dtype normalizer = LossLayer<Dtype>::GetNormalizer(
-        normalization_, num_, num_priors_, num_matches_);
     top[0]->mutable_cpu_data()[0] += conf_loss_.cpu_data()[0] / normalizer;
   }
 }
@@ -322,9 +327,7 @@ void MultiBoxLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
                                 loc_bottom_vec_);
       PERFORMANCE_MEASUREMENT_END_STATIC("BW_Smooth_L1");}
       // Scale gradient.
-      Dtype normalizer = LossLayer<Dtype>::GetNormalizer(
-          normalization_, num_, num_priors_, num_matches_);
-      Dtype loss_weight = top[0]->cpu_diff()[0] / normalizer;
+      Dtype loss_weight = top[0]->cpu_diff()[0] / this->cached_normalizer_;
       caffe_scal(loc_pred_.count(), loss_weight, loc_pred_.mutable_cpu_diff());
       // Copy gradient back to bottom[0].
       const Dtype* loc_pred_diff = loc_pred_.cpu_diff();
@@ -365,9 +368,7 @@ void MultiBoxLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
                                  conf_bottom_vec_);
       PERFORMANCE_MEASUREMENT_END_STATIC("BW_Softmax");}
       // Scale gradient.
-      Dtype normalizer = LossLayer<Dtype>::GetNormalizer(
-          normalization_, num_, num_priors_, num_matches_);
-      Dtype loss_weight = top[0]->cpu_diff()[0] / normalizer;
+      Dtype loss_weight = top[0]->cpu_diff()[0] / this->cached_normalizer_;
       caffe_scal(conf_pred_.count(), loss_weight,
                  conf_pred_.mutable_cpu_diff());
       // Copy gradient back to bottom[1].

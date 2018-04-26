@@ -79,6 +79,9 @@ Dtype LossLayer<Dtype>::GetNormalizer(
     case LossParameter_NormalizationMode_BATCH_SIZE:
       normalizer = Dtype(outer_num);
       break;
+    case LossParameter_NormalizationMode_PRE_FIXED:
+      normalizer = Dtype(this->layer_param_.loss_param().pre_fixed_normalizer());
+      break;
     case LossParameter_NormalizationMode_NONE:
       normalizer = Dtype(1);
       break;
@@ -86,9 +89,19 @@ Dtype LossLayer<Dtype>::GetNormalizer(
       LOG(FATAL) << "Unknown normalization mode: "
           << LossParameter_NormalizationMode_Name(normalization_mode);
   }
+#ifdef USE_MLSL
+  if (normalization_mode != LossParameter_NormalizationMode_NONE) {
+    Dtype allnodes_normalizer(normalizer);
+    DLOG(INFO) << "node id: " << mn::get_node_id() << ", normalizer: " << normalizer;
+    mn::allreduce(&allnodes_normalizer, 1);
+    normalizer = allnodes_normalizer;
+  }
+#endif
+  DLOG(INFO) << "Final normalizer: " << normalizer;
   // Some users will have no labels for some examples in order to 'turn off' a
   // particular loss in a multi-task setup. The max prevents NaNs in that case.
-  return std::max(Dtype(1.0), normalizer);
+  this->cached_normalizer_ = std::max(Dtype(1.0), normalizer);
+  return this->cached_normalizer_;
 }
 
 INSTANTIATE_CLASS(LossLayer);

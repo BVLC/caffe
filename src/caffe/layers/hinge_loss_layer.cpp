@@ -66,14 +66,23 @@ void HingeLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   Dtype* loss = top[0]->mutable_cpu_data();
   switch (this->layer_param_.hinge_loss_param().norm()) {
   case HingeLossParameter_Norm_L1:
-    loss[0] = caffe_cpu_asum(count, bottom_diff) / num;
+    loss[0] = caffe_cpu_asum(count, bottom_diff);
     break;
   case HingeLossParameter_Norm_L2:
-    loss[0] = caffe_cpu_dot(count, bottom_diff, bottom_diff) / num;
+    loss[0] = caffe_cpu_dot(count, bottom_diff, bottom_diff);
     break;
   default:
     LOG(FATAL) << "Unknown Norm";
   }
+  if (this->layer_param_.loss_param().normalization() == LossParameter_NormalizationMode_NONE)
+    num = 1.f;
+#ifdef USE_MLSL
+  else {
+    // We assume local bs is same across all nodes
+    num *= mn::get_group_size();
+  }
+#endif
+  loss[0] /= num;
 }
 
 template <typename Dtype>
@@ -94,6 +103,14 @@ void HingeLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       bottom_diff[i * dim + static_cast<int>(label[i])] *= -1;
     }
 
+    if (this->layer_param_.loss_param().normalization() == LossParameter_NormalizationMode_NONE)
+      num = 1.f;
+#ifdef USE_MLSL
+    else {
+      // We assume local bs is same across all nodes
+      num *= mn::get_group_size();
+    }
+#endif
     const Dtype loss_weight = top[0]->cpu_diff()[0];
     switch (this->layer_param_.hinge_loss_param().norm()) {
     case HingeLossParameter_Norm_L1:
