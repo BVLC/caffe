@@ -26,7 +26,8 @@ void ReLU6Layer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
     const int count = bottom[0]->count();
     for (int i = 0; i < count; ++i) {
-      bottom_diff[i] = top_diff[i] * ((bottom_data[i] > 0) && (bottom_data[i] < 6));
+      bottom_diff[i] = top_diff[i] * 
+          ((bottom_data[i] > 0 && bottom_data[i] < 6));
     }
   }
 }

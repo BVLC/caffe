@@ -14,7 +14,11 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   // Configure the kernel size, padding, stride, and inputs.
   ConvolutionParameter conv_param = this->layer_param_.convolution_param();
   force_nd_im2col_ = conv_param.force_nd_im2col();
-  half_pad_ = conv_param.half_pad();
+  use_tf_pad_ = conv_param.has_tf_pad();
+  if (use_tf_pad_) {
+    LOG(INFO) << "use tensorflow pad";
+    tf_pad_same_ = conv_param.tf_pad() == ConvolutionParameter_TFPaddingMethod_SAME;
+  }
   channel_axis_ = bottom[0]->CanonicalAxisIndex(conv_param.axis());
   const int first_spatial_axis = channel_axis_ + 1;
   const int num_axes = bottom[0]->num_axes();
@@ -252,6 +256,33 @@ void BaseConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     caffe_set(bias_multiplier_.count(), Dtype(1),
         bias_multiplier_.mutable_cpu_data());
   }
+  //if use tf_pad, override the pad or pad_h or pad_w params.
+  int* pad_data = pad_.mutable_cpu_data();
+  int* kernel_shape_data = kernel_shape_.mutable_cpu_data();
+  int* stride_data = stride_.mutable_cpu_data();
+  if (use_tf_pad_) {
+    if (!tf_pad_same_) {
+      pad_data[0] = 0;
+      pad_data[1] = 0;
+      pad_only_bottom_ = false;
+      pad_only_right_ = false;
+    }
+    else {
+      int pad_all_height = (top[0]->height() - 1) * stride_data[0] 
+        + kernel_shape_data[0] - bottom[0]->height();
+      int pad_top = int(pad_all_height / 2.0);
+      int pad_bottom = pad_all_height - pad_top;
+
+      int pad_all_width = (top[0]->width() - 1) * stride_data[1] 
+        + kernel_shape_data[1] - bottom[0]->width();
+      int pad_left = int(pad_all_width / 2.0);
+      int pad_right = pad_all_width - pad_left;
+      pad_data[0] = pad_bottom;
+      pad_data[1] = pad_right;
+      pad_only_bottom_ = pad_top == 0?true:false;
+      pad_only_right_ = pad_left == 0?true:false;
+    }
+  }
 }
 
 template <typename Dtype>
@@ -260,11 +291,12 @@ void BaseConvolutionLayer<Dtype>::forward_cpu_gemm(const Dtype* input,
   const Dtype* col_buff = input;
   if (!is_1x1_) {
     if (!skip_im2col) {
-      if(!half_pad_){
-          conv_im2col_cpu(input, col_buffer_.mutable_cpu_data());
+      if(!use_tf_pad_){
+        conv_im2col_cpu(input, col_buffer_.mutable_cpu_data());
       }
       else {
-          conv_im2col_cpu_half_pad(input, col_buffer_.mutable_cpu_data());
+        conv_im2col_cpu_tf(input, col_buffer_.mutable_cpu_data(), 
+            pad_only_bottom_, pad_only_right_);
       }
     }
     col_buff = col_buffer_.cpu_data();
@@ -308,11 +340,12 @@ void BaseConvolutionLayer<Dtype>::weight_cpu_gemm(const Dtype* input,
     const Dtype* output, Dtype* weights) {
   const Dtype* col_buff = input;
   if (!is_1x1_) {
-      if(!half_pad_){
+      if(!use_tf_pad_){
          conv_im2col_cpu(input, col_buffer_.mutable_cpu_data());
       }
       else{
-         conv_im2col_cpu_half_pad(input, col_buffer_.mutable_cpu_data());
+         conv_im2col_cpu_tf(input, col_buffer_.mutable_cpu_data(), 
+             pad_only_bottom_, pad_only_right_);
       }
     col_buff = col_buffer_.cpu_data();
   }
@@ -339,7 +372,13 @@ void BaseConvolutionLayer<Dtype>::forward_gpu_gemm(const Dtype* input,
   const Dtype* col_buff = input;
   if (!is_1x1_) {
     if (!skip_im2col) {
-      conv_im2col_gpu(input, col_buffer_.mutable_gpu_data());
+      if (!use_tf_pad_) {
+        conv_im2col_gpu(input, col_buffer_.mutable_gpu_data());
+      }
+      else {
+        conv_im2col_gpu_tf(input, col_buffer_.mutable_gpu_data(),
+            pad_only_bottom_, pad_only_right_);
+      }
     }
     col_buff = col_buffer_.gpu_data();
   }
@@ -382,7 +421,13 @@ void BaseConvolutionLayer<Dtype>::weight_gpu_gemm(const Dtype* input,
     const Dtype* output, Dtype* weights) {
   const Dtype* col_buff = input;
   if (!is_1x1_) {
-    conv_im2col_gpu(input, col_buffer_.mutable_gpu_data());
+    if (!use_tf_pad_) {
+      conv_im2col_gpu(input, col_buffer_.mutable_gpu_data());
+    }
+    else {
+      conv_im2col_gpu_tf(input, col_buffer_.mutable_gpu_data(),
+          pad_only_bottom_, pad_only_right_);
+    }
     col_buff = col_buffer_.gpu_data();
   }
   for (int g = 0; g < group_; ++g) {

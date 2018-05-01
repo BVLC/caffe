@@ -92,7 +92,10 @@ class BaseConvolutionLayer : public Layer<Dtype> {
   bool bias_term_;
   bool is_1x1_;
   bool force_nd_im2col_;
-  bool half_pad_;
+  bool use_tf_pad_;
+  bool pad_only_bottom_;
+  bool pad_only_right_;
+  bool tf_pad_same_;
 
  private:
   // wrap im2col/col2im so we don't have to remember the (long) argument lists
@@ -110,14 +113,16 @@ class BaseConvolutionLayer : public Layer<Dtype> {
           pad_.cpu_data(), stride_.cpu_data(), dilation_.cpu_data(), col_buff);
     }
   }
-  inline void conv_im2col_cpu_half_pad(const Dtype* data, Dtype* col_buff) {
+  inline void conv_im2col_cpu_tf(const Dtype* data, Dtype* col_buff,
+        const bool pad_only_bottom, const bool pad_only_right) {
     if (!force_nd_im2col_ && num_spatial_axes_ == 2) {
-      im2col_cpu_half_pad(data, conv_in_channels_,
+      im2col_cpu_tf(data, conv_in_channels_,
           conv_input_shape_.cpu_data()[1], conv_input_shape_.cpu_data()[2],
           kernel_shape_.cpu_data()[0], kernel_shape_.cpu_data()[1],
           pad_.cpu_data()[0], pad_.cpu_data()[1],
           stride_.cpu_data()[0], stride_.cpu_data()[1],
-          dilation_.cpu_data()[0], dilation_.cpu_data()[1], col_buff);
+          dilation_.cpu_data()[0], dilation_.cpu_data()[1], col_buff,
+          pad_only_bottom, pad_only_right);
     } else {
       im2col_nd_cpu(data, num_spatial_axes_, conv_input_shape_.cpu_data(),
           col_buffer_shape_.data(), kernel_shape_.cpu_data(),
@@ -147,6 +152,23 @@ class BaseConvolutionLayer : public Layer<Dtype> {
           pad_.cpu_data()[0], pad_.cpu_data()[1],
           stride_.cpu_data()[0], stride_.cpu_data()[1],
           dilation_.cpu_data()[0], dilation_.cpu_data()[1], col_buff);
+    } else {
+      im2col_nd_gpu(data, num_spatial_axes_, num_kernels_im2col_,
+          conv_input_shape_.gpu_data(), col_buffer_.gpu_shape(),
+          kernel_shape_.gpu_data(), pad_.gpu_data(),
+          stride_.gpu_data(), dilation_.gpu_data(), col_buff);
+    }
+  }
+  inline void conv_im2col_gpu_tf(const Dtype* data, Dtype* col_buff,
+        const bool pad_only_bottom, const bool pad_only_right) {
+    if (!force_nd_im2col_ && num_spatial_axes_ == 2) {
+      im2col_gpu_tf(data, conv_in_channels_,
+          conv_input_shape_.cpu_data()[1], conv_input_shape_.cpu_data()[2],
+          kernel_shape_.cpu_data()[0], kernel_shape_.cpu_data()[1],
+          pad_.cpu_data()[0], pad_.cpu_data()[1],
+          stride_.cpu_data()[0], stride_.cpu_data()[1],
+          dilation_.cpu_data()[0], dilation_.cpu_data()[1], col_buff,
+          pad_only_bottom, pad_only_right);
     } else {
       im2col_nd_gpu(data, num_spatial_axes_, num_kernels_im2col_,
           conv_input_shape_.gpu_data(), col_buffer_.gpu_shape(),
