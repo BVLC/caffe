@@ -235,7 +235,6 @@ def generate_sample(sample_path, input_model, weights,
 
     os.system(cmd)
 
-
 def get_compiled_net(caffe_bin, model_def, model_weights, detection):
     output_log_name = '.compiled_net.txt'
 
@@ -287,7 +286,6 @@ def remove_top_quantized_parameter(current_quantized_file):
 def tuning_quantized_topology(base_top1_accuracy, prototxt, caffe_bin, model_weights, iterations,
                               accuracy_loss, detection, blob_name):
     print 'Updating quantization parameter...'
-
     transform_convolutions(prototxt, get_compiled_net(caffe_bin, prototxt, model_weights, detection))
 
     current_top1_accuracy = get_the_accuracy(caffe_bin, prototxt, model_weights, iterations, detection, blob_name)
@@ -467,11 +465,12 @@ if __name__ == '__main__':
         print 'Please check sample: {} existence.'.format(sample)
         sys.exit(-1)
 
+    sample = 'unset EPLIB_SERVER_AFFINITY &&' + sample
     caffe_bin_path = os.path.abspath(params.root + os.path.sep + 'tools/caffe')
     if not check_existence(caffe_bin_path):
         print 'Please check model/weights/sample existence.'
         sys.exit(-1)
-
+    caffe_bin_path = 'unset EPLIB_SERVER_AFFINITY &&' + caffe_bin_path
     setup_env()
 
     target_blob_name = params.blob_name
