@@ -79,6 +79,7 @@ template <typename Dtype>
 void MKLDNNConvolutionLayer<Dtype>::compute_output_shape()
 {
     ConvolutionLayer<Dtype>::compute_output_shape();
+    CHECK_GT(this->output_shape_.size(), 1) << "Expect at least 2D spatial dimension!";
     this->height_out_ = this->output_shape_[0];
     this->width_out_ = this->output_shape_[1];
 }
@@ -271,7 +272,7 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
     
     // ---- Determining engine to use -----------------------
     std::string subengines = this->layer_param_.engine();
-    if (subengines == "" || subengines == "MKLDNN")
+    if (subengines.find("MKLDNN") == std::string::npos || subengines == "MKLDNN")
       subengines = "MKLDNN:CPU";
     EngineParser ep(subengines);
     unsigned subEngineIndex = 0;
@@ -542,7 +543,7 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionBwd(const vector<Blob<Dtype>*
 
     // ---- Determining engine to use -----------------------
     std::string subengines = this->layer_param_.engine();
-    if (subengines == "" || subengines == "MKLDNN")
+    if (subengines.find("MKLDNN") == std::string::npos || subengines == "MKLDNN")
       subengines = "MKLDNN:CPU";
     EngineParser ep(subengines);
     unsigned subEngineIndex = 0;
