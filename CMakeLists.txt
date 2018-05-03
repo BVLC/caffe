@@ -94,7 +94,7 @@ if(UNIX OR APPLE)
     # shows that it generates correct PIE anyway if only -pie is provided.
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fstack-protector -wd2196")
     # Auto enable SGD Fusion if use intel compiler
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DENABLE_SGD_FUSION")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DENABLE_SGD_FUSION -DENABLE_NMS_OPTIMIZATION")
     # ICC static build
     if(ICC_STATIC_BUILD)
       set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -static-intel")

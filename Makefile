@@ -389,7 +389,7 @@ endif
 ifneq (,$(findstring icpc,$(CXX)))
 	CXX_HARDENING_FLAGS += -fstack-protector -wd2196
 	#Enable SGD FUSION if use intel compiler
-	COMMON_FLAGS += -DENABLE_SGD_FUSION
+	COMMON_FLAGS += -DENABLE_SGD_FUSION -DENABLE_NMS_OPTIMIZATION
 	#Intel compiler static build flag
 	ifeq ($(ICC_STATIC_BUILD), 1)
 		LDFLAGS += -static-intel
