@@ -75,7 +75,6 @@ void ConnectedComponentLayer<Dtype, MItype, MOtype>::Forward_cpu(
       }
     }
     cv::Mat seg = FindBlobs(maxlabel, img);
-#pragma omp parallel for
     for (int_tp Y = 0; Y < seg.rows; ++Y) {
       for (int_tp X = 0; X < seg.cols; ++X) {
         top_data[nc * bottom[0]->width() * bottom[0]->height()

@@ -1,6 +1,7 @@
 #include <cmath>
 #include <algorithm>
 
+#include "caffe/definitions.hpp"
 #include "caffe/backend/device.hpp"
 #include "caffe/quantizer.hpp"
 #include "caffe/util/type_utils.hpp"
@@ -379,7 +380,6 @@ void Quantizer<MItype, MOtype>::Forward_cpu(
   CHECK(output);
 
   if (!needs_quantization()) {
-#pragma omp parallel for
     for (size_t i = 0; i < n; ++i) {
       output[i] = static_cast<MOtype>(input[i]);
     }
@@ -398,7 +398,6 @@ void Quantizer<MItype, MOtype>::Forward_cpu(
     const Difftype min_out = this->out_vals_.get_min<Difftype>();
     const Difftype max_out = this->out_vals_.get_max<Difftype>();
     if (fw_scale_divide()) {
-#pragma omp parallel for
       for (size_t i = 0; i < n; ++i) {
         Difftype centered_input = static_cast<Difftype>(input[i]) - in_zero;
         output[i] = static_cast<MOtype>(std::min(std::max(
@@ -406,7 +405,6 @@ void Quantizer<MItype, MOtype>::Forward_cpu(
                                   + out_zero), min_out), max_out));
       }
     } else {
-#pragma omp parallel for
       for (size_t i = 0; i < n; ++i) {
         Difftype centered_input = static_cast<Difftype>(input[i]) - in_zero;
         output[i] = static_cast<MOtype>(std::min(std::max(
@@ -426,7 +424,6 @@ void Quantizer<MItype, MOtype>::Forward_cpu(
     const Difftype min_out = this->out_vals_.get_min<Difftype>();
     const Difftype max_out = this->out_vals_.get_max<Difftype>();
     if (fw_scale_divide()) {
-#pragma omp parallel for
       for (size_t i = 0; i < n; ++i) {
         Difftype centered_output = (static_cast<Difftype>(input[i]) - in_zero)
                                    / scal;
@@ -437,7 +434,6 @@ void Quantizer<MItype, MOtype>::Forward_cpu(
                                         centered_output + out_zero));
       }
     } else {
-#pragma omp parallel for
       for (size_t i = 0; i < n; ++i) {
         Difftype centered_output = (static_cast<Difftype>(input[i]) - in_zero)
                                    * scal;
@@ -483,7 +479,6 @@ void Quantizer<MItype, MOtype>::Backward_cpu(
   CHECK(output);
 
   if (!needs_quantization()) {
-#pragma omp parallel for
     for (size_t i = 0; i < n; ++i) {
       output[i] = static_cast<MItype>(input[i]);
     }
@@ -502,7 +497,6 @@ void Quantizer<MItype, MOtype>::Backward_cpu(
     const Difftype min_out = this->in_vals_.get_min<Difftype>();
     const Difftype max_out = this->in_vals_.get_max<Difftype>();
     if (bw_scale_divide()) {
-#pragma omp parallel for
       for (size_t i = 0; i < n; ++i) {
         Difftype centered_input = static_cast<Difftype>(input[i]) - in_zero;
         output[i] = static_cast<MItype>(std::min(std::max(
@@ -510,7 +504,6 @@ void Quantizer<MItype, MOtype>::Backward_cpu(
                                   + out_zero), min_out), max_out));
       }
     } else {
-#pragma omp parallel for
       for (size_t i = 0; i < n; ++i) {
         Difftype centered_input = static_cast<Difftype>(input[i]) - in_zero;
         output[i] = static_cast<MItype>(std::min(std::max(
@@ -530,7 +523,6 @@ void Quantizer<MItype, MOtype>::Backward_cpu(
     const Difftype min_out = this->in_vals_.get_min<Difftype>();
     const Difftype max_out = this->in_vals_.get_max<Difftype>();
     if (bw_scale_divide()) {
-#pragma omp parallel for
       for (size_t i = 0; i < n; ++i) {
         Difftype centered_output = (static_cast<Difftype>(input[i]) - in_zero)
                                    / scal;
@@ -541,7 +533,6 @@ void Quantizer<MItype, MOtype>::Backward_cpu(
                                         centered_output + out_zero));
       }
     } else {
-#pragma omp parallel for
       for (size_t i = 0; i < n; ++i) {
         Difftype centered_output = (static_cast<Difftype>(input[i]) - in_zero)
                                    * scal;
@@ -1332,7 +1323,7 @@ void Quantizer<MItype, MOtype>::Backward_gpu(size_t n, vptr<const MOtype> input,
 
 template<typename MItype, typename MOtype>
 void Quantizer<MItype, MOtype>::Backward_gpu(size_t n, vptr<const void> input,
-                         vptr<void> output) {
+                                             vptr<void> output) {
   this->Backward_gpu(n, vptr<const MOtype>(input), vptr<MItype>(output));
 }
 
@@ -1547,7 +1538,6 @@ void Quantizer<MItype, MOtype>::PseudoQuantIn_cpu(size_t n,
   const MItype min_inter = quant_vals.get_min<MItype>();
   const MItype max_inter = quant_vals.get_max<MItype>();
 
-  #pragma omp parallel for
   for (size_t i = 0; i < n; ++i) {
     output[i] = (std::min(std::max(
           static_cast<MItype>(static_cast<MItype>(std::round(input[i] / scal))
@@ -1610,7 +1600,6 @@ void Quantizer<MItype, MOtype>::PseudoQuantOut_cpu(size_t n,
   const MOtype min_inter = quant_vals.get_min<MOtype>();
   const MOtype max_inter = quant_vals.get_max<MOtype>();
 
-  #pragma omp parallel for
   for (size_t i = 0; i < n; ++i) {
     output[i] = (std::min(std::max(
           static_cast<MOtype>(static_cast<MOtype>(std::round(input[i] / scal))

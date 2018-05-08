@@ -44,7 +44,6 @@ template void caffe_set<double>(const int_tp n, const double alpha, double* y);
 // ADD SCALAR
 template<typename Dtype>
 void caffe_add_scalar(const int_tp n, const Dtype alpha, Dtype* y) {
-#pragma omp parallel for
   for (size_t i = 0; i < n; ++i) {
     y[i] += alpha;
   }

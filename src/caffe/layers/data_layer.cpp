@@ -85,22 +85,21 @@ template<typename Dtype, typename MItype, typename MOtype>
 void DataLayer<Dtype, MItype, MOtype>::load_batch(Batch<Dtype>* batch) {
   CPUTimer batch_timer;
   batch_timer.Start();
-  double read_time = 0;
-  double trans_time = 0;
+  double read_time = 0.0;
+  double trans_time = 0.0;
   CPUTimer timer;
   CHECK(batch->data_.count());
   CHECK(this->transformed_data_.count());
   const int_tp batch_size = this->layer_param_.data_param().batch_size();
 
-  Datum datum;
+  vector<Datum> datum(batch_size);
+
   for (int_tp item_id = 0; item_id < batch_size; ++item_id) {
     timer.Start();
     while (Skip()) {
       Next();
     }
-    datum.ParseFromString(cursor_->value());
-    read_time += timer.MicroSeconds();
-
+    datum[item_id].ParseFromString(cursor_->value());
     if (item_id == 0) {
       // Reshape according to the first datum of each batch
       // on single input batches allows for inputs of varying dimension.
@@ -112,21 +111,29 @@ void DataLayer<Dtype, MItype, MOtype>::load_batch(Batch<Dtype>* batch) {
       top_shape[0] = batch_size;
       batch->data_.Reshape(top_shape);
     }
-
-    // Apply data transformations (mirror, scale, crop...)
-    timer.Start();
-    int_tp offset = batch->data_.offset(item_id);
-    Dtype* top_data = batch->data_.mutable_cpu_data();
-    this->transformed_data_.set_cpu_data(top_data + offset);
-    this->data_transformer_->Transform(datum, &(this->transformed_data_));
-    // Copy label.
-    if (this->output_labels_) {
-      Dtype* top_label = batch->label_.mutable_cpu_data();
-      top_label[item_id] = datum.label();
-    }
-    trans_time += timer.MicroSeconds();
+    read_time += timer.MicroSeconds();
     Next();
   }
+
+  timer.Start();
+  Dtype* top_data = batch->data_.mutable_cpu_data();
+  Dtype* top_label = batch->label_.mutable_cpu_data();
+
+  this->transformed_data_.set_cpu_data(top_data);
+#pragma omp parallel for
+  for (int_tp item_id = 0; item_id < batch_size; ++item_id) {
+    // Apply data transformations (mirror, scale, crop...)
+    int_tp offset = batch->data_.offset(item_id);
+    this->data_transformer_->Transform(datum[item_id],
+                                       &(this->transformed_data_),
+                                       offset);
+    // Copy label.
+    if (this->output_labels_) {
+      top_label[item_id] = datum[item_id].label();
+    }
+  }
+  trans_time += timer.MicroSeconds();
+
   timer.Stop();
   batch_timer.Stop();
   DLOG(INFO)<< "Prefetch batch: " << batch_timer.MilliSeconds() << " ms.";

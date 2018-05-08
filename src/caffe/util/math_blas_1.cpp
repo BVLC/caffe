@@ -23,7 +23,6 @@ void caffe_axpy<double>(const int_tp n, const double alpha, const double* X,
 template<typename Dtype>
 void caffe_axpy(const int_tp n, const Dtype alpha,
                          const Dtype* X, Dtype* Y) {
-#pragma omp parallel for
   for (int_tp i = 0; i < n; ++i) {
     Y[i] += alpha * X[i];
   }
@@ -59,7 +58,6 @@ void caffe_axpby<double>(const int_tp n, const double alpha,
 template<typename Dtype>
 void caffe_axpby(const int_tp n, const Dtype alpha, const Dtype* X,
                  const Dtype beta, Dtype* Y) {
-#pragma omp parallel for
   for (int_tp i = 0; i < n; ++i) {
     Y[i] = alpha * X[i] + beta * Y[i];
   }
@@ -119,8 +117,7 @@ double caffe_strided_dot<double>(const int_tp n, const double* X,
 
 template<typename Dtype>
 Dtype caffe_dot(const int_tp n, const Dtype* X, const Dtype* Y) {
-  Dtype r;
-  #pragma omp for reduction(+ : r)
+  Dtype r = Dtype(0);
   for (size_t i = 0; i < n; i++) {
     r += X[i] * Y[i];
   }
@@ -221,7 +218,6 @@ void caffe_scal<double>(const int_tp n, const double alpha, double *X) {
 }
 template<typename Dtype>
 void caffe_scal(const int_tp n, const Dtype alpha, Dtype *X) {
-#pragma omp parallel for
   for (int_tp i = 0; i < n; ++i) {
     X[i] *= alpha;
   }

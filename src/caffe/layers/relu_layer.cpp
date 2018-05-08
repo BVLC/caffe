@@ -37,7 +37,6 @@ inline void forward(int_tp count, const Dtype* bottom_data, Dtype* top_data,
   Acctype top_zero = top_qv->get_zero<Acctype>();
   Acctype top_min = top_qv->get_min<Acctype>();
   Acctype top_max = top_qv->get_max<Acctype>();
-#pragma omp parallel for
   for (int_tp i = 0; i < count; ++i) {
     Difftype relu = std::max(static_cast<Difftype>(
         static_cast<Difftype>(bottom_data[i]) - bottom_zero), Difftype(0));
@@ -59,7 +58,6 @@ template<typename Dtype,
 inline void forward(int_tp count, const Dtype* bottom_data, Dtype* top_data,
         Dtype negative_slope, const QuantizerValues* const bottom_qv = nullptr,
         const QuantizerValues* const top_qv = nullptr) {
-#pragma omp parallel for
   for (int_tp i = 0; i < count; ++i) {
     top_data[i] = std::max(bottom_data[i], Dtype(0))
         + negative_slope * std::min(bottom_data[i], Dtype(0));

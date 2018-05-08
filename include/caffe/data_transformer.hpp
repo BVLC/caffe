@@ -37,7 +37,8 @@ class DataTransformer {
    *    This is destination blob. It can be part of top blob's data if
    *    set_cpu_data() is used. See data_layer.cpp for an example.
    */
-  void Transform(const Datum& datum, Blob<Dtype>* transformed_blob);
+  void Transform(const Datum& datum, Blob<Dtype>* transformed_blob,
+                 int_tp offset);
 
   /**
    * @brief Applies the transformation defined in the data layer's

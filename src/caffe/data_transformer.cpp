@@ -132,7 +132,8 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
 
 template<typename Dtype>
 void DataTransformer<Dtype>::Transform(const Datum& datum,
-                                       Blob<Dtype>* transformed_blob) {
+                                       Blob<Dtype>* transformed_blob,
+                                       int_tp offset) {
   // If datum is encoded, decode and transform the cv::image.
   if (datum.encoded()) {
 #ifdef USE_OPENCV
@@ -180,7 +181,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
     CHECK_EQ(datum_width, width);
   }
 
-  Dtype* transformed_data = transformed_blob->mutable_cpu_data();
+  Dtype* transformed_data = transformed_blob->mutable_cpu_data() + offset;
   Transform(datum, transformed_data);
 }
 
@@ -196,11 +197,12 @@ void DataTransformer<Dtype>::Transform(const vector<Datum> & datum_vector,
   CHECK_GT(datum_num, 0)<< "There is no datum to add";
   CHECK_LE(datum_num, num)<<
   "The size of datum_vector must be no greater than transformed_blob->num()";
-  Blob<Dtype> uni_blob(1, channels, height, width, device_);
+#pragma omp parallel for
   for (int_tp item_id = 0; item_id < datum_num; ++item_id) {
+    Blob<Dtype> uni_blob(1, channels, height, width, device_);
     int_tp offset = transformed_blob->offset(item_id);
-    uni_blob.set_cpu_data(transformed_blob->mutable_cpu_data() + offset);
-    Transform(datum_vector[item_id], &uni_blob);
+    uni_blob.set_cpu_data(transformed_blob->mutable_cpu_data());
+    Transform(datum_vector[item_id], &uni_blob, offset);
   }
 }
 
@@ -217,8 +219,9 @@ void DataTransformer<Dtype>::Transform(const vector<cv::Mat> & mat_vector,
   CHECK_GT(mat_num, 0)<< "There is no MAT to add";
   CHECK_EQ(mat_num, num)<<
   "The size of mat_vector must be equals to transformed_blob->num()";
-  Blob<Dtype> uni_blob(1, channels, height, width, device_);
+#pragma omp parallel for
   for (int_tp item_id = 0; item_id < mat_num; ++item_id) {
+    Blob<Dtype> uni_blob(1, channels, height, width, device_);
     int_tp offset = transformed_blob->offset(item_id);
     uni_blob.set_cpu_data(transformed_blob->mutable_cpu_data() + offset);
     Transform(mat_vector[item_id], &uni_blob);
@@ -396,6 +399,7 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
     CHECK_EQ(input_channels, data_mean_.channels());
     CHECK_EQ(input_height, data_mean_.height());
     CHECK_EQ(input_width, data_mean_.width());
+#pragma omp parallel for
     for (int_tp n = 0; n < input_num; ++n) {
       int_tp offset = input_blob->offset(n);
       caffe_sub<Dtype>(data_mean_.count(), input_data + offset,
@@ -411,6 +415,7 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
       caffe_add_scalar<Dtype>(input_blob->count(), -(mean_values_[0]),
                               input_data);
     } else {
+#pragma omp parallel for
       for (int_tp n = 0; n < input_num; ++n) {
         for (int_tp c = 0; c < input_channels; ++c) {
           int_tp offset = input_blob->offset(n, c);
@@ -423,6 +428,7 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
 
   Dtype* transformed_data = transformed_blob->mutable_cpu_data();
 
+#pragma omp parallel for
   for (int_tp n = 0; n < input_num; ++n) {
     int_tp top_index_n = n * channels;
     int_tp data_index_n = n * channels;

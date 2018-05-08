@@ -70,7 +70,6 @@ void MOELayer<Dtype, MItype, MOtype>::Forward_cpu(
   const MOtype* gating_data = gating->cpu_data();
   MOtype eps = MOtype(0);
   size_t j = 0;
-#pragma omp parallel for
   for (size_t i = 0; i < this->expert_nets_.size(); ++i) {
     vector<Blob<MOtype>*> result_vec;
     // If the gating network selects this expert, preload blobs and forward
@@ -101,7 +100,6 @@ void MOELayer<Dtype, MItype, MOtype>::Forward_cpu(
   }
 
   // Loop over all top blobs
-#pragma omp parallel for
   for (size_t i = 0; i < top.size(); ++i) {
     MOtype* top_data = top[i]->mutable_cpu_data();
     caffe_set(top[i]->count(), MOtype(0), top_data);

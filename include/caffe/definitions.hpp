@@ -10,6 +10,9 @@
 #include <iostream>  // NOLINT(readability/streams)
 #include <map>
 #include <memory>
+#ifdef USE_OPENMP
+#include <omp.h>
+#endif  // USE_OPENMP
 #include <set>
 #include <sstream>
 #include <string>
@@ -17,6 +20,7 @@
 #include <utility>  // pair
 #include <vector>
 #include <boost/variant.hpp>
+
 
 #include "caffe/trait_helper.hpp"
 #include "caffe/util/half_fp.hpp"
@@ -48,6 +52,10 @@
 #ifndef CAFFE_MALLOC_CACHE_ALIGN
 #define CAFFE_MALLOC_CACHE_ALIGN 64
 #endif  // CAFFE_MALLOC_CACHE_ALIGN
+
+#ifndef CAFFE_OMP_BYTE_STRIDE
+#define CAFFE_OMP_BYTE_STRIDE 8
+#endif  // CAFFE_OMP_BYTE_STRIDE
 
 namespace caffe {
 

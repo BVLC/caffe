@@ -370,7 +370,6 @@ void MalisLossLayer<Dtype, MItype, MOtype>::Forward_cpu(const vector<Blob<MItype
 
 // Affinity graph must be in the range (0,1)
 // square loss (euclidean) is used by MALIS
-#pragma omp parallel for
   for (int_tp i = 0; i < bottom[0]->count(); ++i) {
     affinity_data_pos[i] = std::min(affinity_prob[i], affinity[i]);
     affinity_data_neg[i] = std::max(affinity_prob[i], affinity[i]);
@@ -390,7 +389,7 @@ void MalisLossLayer<Dtype, MItype, MOtype>::Forward_cpu(const vector<Blob<MItype
     }
   }
 
-  Dtype loss = 0;
+  float loss = 0;
 
 #pragma omp parallel for reduction(+:loss)
   for (int_tp batch = 0; batch < bottom[0]->shape()[0]; ++batch) {
@@ -442,7 +441,6 @@ void MalisLossLayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob<MOtyp
     // Clear the diff
     caffe_set(bottom[0]->count(), Dtype(0.0), bottom_diff);
 
-#pragma omp parallel for
     for (int_tp i = 0; i < bottom[0]->count(); ++i) {
       bottom_diff[i] = -(dloss_neg_data[i] + dloss_pos_data[i]) / 2.0;
     }

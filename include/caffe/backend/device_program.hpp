@@ -110,7 +110,7 @@ class DeviceProgram {
   string define_vector_type(string name, int_tp from, int_tp to);
 
   template<typename Dtype>
-  KernelArg create_kernel_arg(string name, uint64_t flags);
+  KernelArg create_kernel_arg(string name, uint64_t flags = KERNEL_ARG_NONE);
 
  protected:
   DeviceProgram(Device* dev);

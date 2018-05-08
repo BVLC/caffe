@@ -29,7 +29,6 @@ void im2col_cpu(const Dtype* data_im, const int_tp channels,
   const int_tp output_w =
       (width + 2 * pad_w - (dilation_w * (kernel_w - 1) + 1)) / stride_w + 1;
   const int_tp channel_size = height * width;
-#pragma omp parallel for
   for (int_tp channel = channels; channel--; data_im += channel_size) {
     for (int_tp kernel_row = 0; kernel_row < kernel_h; kernel_row++) {
       for (int_tp kernel_col = 0; kernel_col < kernel_w; kernel_col++) {

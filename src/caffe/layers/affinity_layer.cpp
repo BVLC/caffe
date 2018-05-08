@@ -64,7 +64,6 @@ void AffinityLayer<Dtype, MItype, MOtype>::Forward_cpu(
     int_tp xmin, ymin;
 
     // Construct affinity graph
-#pragma omp parallel for
     for (int_tp i = 0; i < bottom[bidx]->height() - 1; ++i) {
       for (int_tp j = 0; j < bottom[bidx]->width() - 1; ++j) {
         // Center

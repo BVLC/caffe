@@ -34,7 +34,6 @@ void MOELayer<Dtype, MItype, MOtype>::Forward_gpu(
   const MOtype* gating_data = gating->cpu_data();
   MOtype eps = MOtype(0);
   size_t j = 0;
-#pragma omp parallel for
   for (size_t i = 0; i < this->expert_nets_.size(); ++i) {
     vector<Blob<MOtype>*> result_vec;
     // If the gating network selects this expert, preload blobs and forward
@@ -66,7 +65,6 @@ void MOELayer<Dtype, MItype, MOtype>::Forward_gpu(
   }
 
   // Loop over all top blobs
-#pragma omp parallel for
   for (size_t i = 0; i < top.size(); ++i) {
    vptr<MOtype> top_data = top[i]->mutable_gpu_data();
     this->device_->template set<MOtype>(top[i]->count(), MOtype(0), top_data);

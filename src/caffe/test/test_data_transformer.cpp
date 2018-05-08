@@ -52,7 +52,7 @@ class DataTransformTest : public ::testing::Test {
     vector<vector<Dtype> > crop_sequence;
     for (int_tp iter = 0; iter < this->num_iter_; ++iter) {
       vector<Dtype> iter_crop_sequence;
-      transformer.Transform(datum, &blob);
+      transformer.Transform(datum, &blob, 0);
       for (int_tp j = 0; j < blob.count(); ++j) {
         iter_crop_sequence.push_back(blob.cpu_data()[j]);
       }
@@ -62,7 +62,7 @@ class DataTransformTest : public ::testing::Test {
     int_tp num_sequence_matches = 0;
     for (int_tp iter = 0; iter < this->num_iter_; ++iter) {
       vector<Dtype> iter_crop_sequence = crop_sequence[iter];
-      transformer.Transform(datum, &blob);
+      transformer.Transform(datum, &blob, 0);
       for (int_tp j = 0; j < blob.count(); ++j) {
         num_sequence_matches += (crop_sequence[iter][j] == blob.cpu_data()[j]);
       }
@@ -90,7 +90,7 @@ TYPED_TEST(DataTransformTest, TestEmptyTransform) {
   DataTransformer<TypeParam> transformer(transform_param, TEST,
                                          Caffe::GetDefaultDevice());
   transformer.InitRand();
-  transformer.Transform(datum, &blob);
+  transformer.Transform(datum, &blob, 0);
   EXPECT_EQ(blob.num(), 1);
   EXPECT_EQ(blob.channels(), datum.channels());
   EXPECT_EQ(blob.height(), datum.height());
@@ -114,7 +114,7 @@ TYPED_TEST(DataTransformTest, TestEmptyTransformUniquePixels) {
   DataTransformer<TypeParam> transformer(transform_param, TEST,
                                          Caffe::GetDefaultDevice());
   transformer.InitRand();
-  transformer.Transform(datum, &blob);
+  transformer.Transform(datum, &blob, 0);
   EXPECT_EQ(blob.num(), 1);
   EXPECT_EQ(blob.channels(), datum.channels());
   EXPECT_EQ(blob.height(), datum.height());
@@ -141,7 +141,7 @@ TYPED_TEST(DataTransformTest, TestCropSize) {
   transformer.InitRand();
   Blob<TypeParam> blob(1, channels, crop_size, crop_size);
   for (int_tp iter = 0; iter < this->num_iter_; ++iter) {
-    transformer.Transform(datum, &blob);
+    transformer.Transform(datum, &blob, 0);
     EXPECT_EQ(blob.num(), 1);
     EXPECT_EQ(blob.channels(), datum.channels());
     EXPECT_EQ(blob.height(), crop_size);
@@ -279,7 +279,7 @@ TYPED_TEST(DataTransformTest, TestMeanValue) {
   DataTransformer<TypeParam> transformer(transform_param, TEST,
                                          Caffe::GetDefaultDevice());
   transformer.InitRand();
-  transformer.Transform(datum, &blob);
+  transformer.Transform(datum, &blob, 0);
   for (int_tp j = 0; j < blob.count(); ++j) {
     EXPECT_EQ(blob.cpu_data()[j], label - mean_value);
   }
@@ -302,7 +302,7 @@ TYPED_TEST(DataTransformTest, TestMeanValues) {
   DataTransformer<TypeParam> transformer(transform_param, TEST,
                                          Caffe::GetDefaultDevice());
   transformer.InitRand();
-  transformer.Transform(datum, &blob);
+  transformer.Transform(datum, &blob, 0);
   for (int_tp c = 0; c < channels; ++c) {
     for (int_tp j = 0; j < height * width; ++j) {
       EXPECT_EQ(blob.cpu_data()[blob.offset(0, c) + j], label - c);
@@ -342,7 +342,7 @@ TYPED_TEST(DataTransformTest, TestMeanFile) {
   DataTransformer<TypeParam> transformer(transform_param, TEST,
                                          Caffe::GetDefaultDevice());
   transformer.InitRand();
-  transformer.Transform(datum, &blob);
+  transformer.Transform(datum, &blob, 0);
   for (int_tp j = 0; j < blob.count(); ++j) {
     EXPECT_EQ(blob.cpu_data()[j], 0);
   }

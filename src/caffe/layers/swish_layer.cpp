@@ -37,7 +37,6 @@ void SwishLayer<Dtype, MItype, MOtype>::Forward_cpu(
   MOtype* top_data = top[0]->mutable_cpu_data();
   const int_tp count = bottom[0]->count();
   Dtype beta = this->layer_param_.swish_param().beta();
-#pragma omp parallel for
   for (int_tp i = 0; i < count; ++i) {
     top_data[i] = bottom_data[i] *
         sigmoid<Dtype, MItype, MOtype>(beta * bottom_data[i]);
@@ -56,7 +55,6 @@ void SwishLayer<Dtype, MItype, MOtype>::Backward_cpu(
     MItype* bottom_diff = bottom[0]->mutable_cpu_diff();
     const int_tp count = bottom[0]->count();
     Dtype beta = this->layer_param_.swish_param().beta();
-#pragma omp parallel for
     for (int_tp i = 0; i < count; ++i) {
       const Dtype swish_x = top_data[i];
       bottom_diff[i] = top_diff[i] * (beta * swish_x +
