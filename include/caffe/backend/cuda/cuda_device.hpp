@@ -62,11 +62,11 @@ class CudaDevice : public Device {
                  vptr<const half_fp> b,
                  const half_fp beta,
                  vptr<half_fp> c,
-                 const QuantizerValues* const alpha_quant,
-                 const QuantizerValues* const a_quant,
-                 const QuantizerValues* const b_quant,
-                 const QuantizerValues* const beta_quant,
-                 const QuantizerValues* const c_quant);
+                 const QuantizerValues* const alpha_quant = nullptr,
+                 const QuantizerValues* const a_quant = nullptr,
+                 const QuantizerValues* const b_quant = nullptr,
+                 const QuantizerValues* const beta_quant = nullptr,
+                 const QuantizerValues* const c_quant = nullptr);
 #endif  // USE_HALF
 
 #ifdef USE_SINGLE
@@ -76,33 +76,33 @@ class CudaDevice : public Device {
                  const float alpha, vptr<const float> a,
                  vptr<const float> b,
                  const float beta, vptr<float> c,
-                 const QuantizerValues* const alpha_quant,
-                 const QuantizerValues* const a_quant,
-                 const QuantizerValues* const b_quant,
-                 const QuantizerValues* const beta_quant,
-                 const QuantizerValues* const c_quant);
+                 const QuantizerValues* const alpha_quant = nullptr,
+                 const QuantizerValues* const a_quant = nullptr,
+                 const QuantizerValues* const b_quant = nullptr,
+                 const QuantizerValues* const beta_quant = nullptr,
+                 const QuantizerValues* const c_quant = nullptr);
   virtual void gemv_float
                 (const CBLAS_TRANSPOSE trans_a, const uint_tp m,
                  const uint_tp n, const float alpha,
                  vptr<const float> a,
                  vptr<const float> x, const float beta,
                  vptr<float> y,
-                 const QuantizerValues* const alpha_quant,
-                 const QuantizerValues* const a_quant,
-                 const QuantizerValues* const x_quant,
-                 const QuantizerValues* const beta_quant,
-                 const QuantizerValues* const y_quant);
+                 const QuantizerValues* const alpha_quant = nullptr,
+                 const QuantizerValues* const a_quant = nullptr,
+                 const QuantizerValues* const x_quant = nullptr,
+                 const QuantizerValues* const beta_quant = nullptr,
+                 const QuantizerValues* const y_quant = nullptr);
   virtual void axpy_float(const uint_tp n, const float alpha,
                           vptr<const float> x, vptr<float> y,
-                          const QuantizerValues* const alpha_quant,
-                          const QuantizerValues* const x_quant,
-                          const QuantizerValues* const y_quant);
+                          const QuantizerValues* const alpha_quant = nullptr,
+                          const QuantizerValues* const x_quant = nullptr,
+                          const QuantizerValues* const y_quant = nullptr);
   virtual void axpby_float(const uint_tp n, const float alpha,
                           vptr<const float> x, const float beta, vptr<float> y,
-                          const QuantizerValues* const alpha_quant,
-                          const QuantizerValues* const x_quant,
-                          const QuantizerValues* const beta_quant,
-                          const QuantizerValues* const y_quant);
+                          const QuantizerValues* const alpha_quant = nullptr,
+                          const QuantizerValues* const x_quant = nullptr,
+                          const QuantizerValues* const beta_quant = nullptr,
+                          const QuantizerValues* const y_quant = nullptr);
   virtual void dot_float(const uint_tp n, vptr<const float> x,
                          vptr<const float> y, float *out);
   virtual void asum_float(const uint_tp n, vptr<const float> x, float* y);
@@ -123,33 +123,33 @@ class CudaDevice : public Device {
                  const double alpha, vptr<const double> a,
                  vptr<const double> b,
                  const double beta, vptr<double> c,
-                 const QuantizerValues* const alpha_quant,
-                 const QuantizerValues* const a_quant,
-                 const QuantizerValues* const b_quant,
-                 const QuantizerValues* const beta_quant,
-                 const QuantizerValues* const c_quant);
+                 const QuantizerValues* const alpha_quant = nullptr,
+                 const QuantizerValues* const a_quant = nullptr,
+                 const QuantizerValues* const b_quant = nullptr,
+                 const QuantizerValues* const beta_quant = nullptr,
+                 const QuantizerValues* const c_quant = nullptr);
   virtual void gemv_double
                 (const CBLAS_TRANSPOSE trans_a, const uint_tp m,
                  const uint_tp n, const double alpha,
                  vptr<const double> a,
                  vptr<const double> x, const double beta,
                  vptr<double> y,
-                 const QuantizerValues* const alpha_quant,
-                 const QuantizerValues* const a_quant,
-                 const QuantizerValues* const x_quant,
-                 const QuantizerValues* const beta_quant,
-                 const QuantizerValues* const y_quant);
+                 const QuantizerValues* const alpha_quant = nullptr,
+                 const QuantizerValues* const a_quant = nullptr,
+                 const QuantizerValues* const x_quant = nullptr,
+                 const QuantizerValues* const beta_quant = nullptr,
+                 const QuantizerValues* const y_quant = nullptr);
   virtual void axpy_double(const uint_tp n, const double alpha,
                           vptr<const double> x, vptr<double> y,
-                          const QuantizerValues* const alpha_quant,
-                          const QuantizerValues* const x_quant,
-                          const QuantizerValues* const y_quant);
+                          const QuantizerValues* const alpha_quant = nullptr,
+                          const QuantizerValues* const x_quant = nullptr,
+                          const QuantizerValues* const y_quant = nullptr);
   virtual void axpby_double(const uint_tp n, const double alpha,
                        vptr<const double> x, const double beta, vptr<double> y,
-                       const QuantizerValues* const alpha_quant,
-                       const QuantizerValues* const x_quant,
-                       const QuantizerValues* const beta_quant,
-                       const QuantizerValues* const y_quant);
+                       const QuantizerValues* const alpha_quant = nullptr,
+                       const QuantizerValues* const x_quant = nullptr,
+                       const QuantizerValues* const beta_quant = nullptr,
+                       const QuantizerValues* const y_quant = nullptr);
   virtual void dot_double(const uint_tp n, vptr<const double> x,
                           vptr<const double> y, double *out);
   virtual void asum_double(const uint_tp n, vptr<const double> x, double* y);

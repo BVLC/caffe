@@ -136,7 +136,7 @@ class Device {
               const int_tp stride_h, const int_tp stride_w,
               const int_tp dilation_h, const int_tp dilation_w,
               vptr<Dtype> data_col,
-              const QuantizerValues* const data_quant = nullptr);
+              const QuantizerValues* const data_quant= nullptr);
 
   template<typename Dtype>
   void col2im(vptr<const Dtype> data_col, const int_tp channels,
@@ -152,7 +152,7 @@ class Device {
                  vptr<const int_tp> col_shape, vptr<const int_tp> kernel_shape,
                  vptr<const int_tp> pad, vptr<const int_tp> stride,
                  vptr<const int_tp> dilation, vptr<Dtype> data_col,
-                 const QuantizerValues* const data_quant = nullptr);
+                 const QuantizerValues* const data_quant= nullptr);
 
   template<typename Dtype>
   void col2im_nd(vptr<const Dtype> data_col, const int_tp num_spatial_axes,
@@ -319,22 +319,22 @@ class Device {
                  vptr<const half_fp> b,
                  const half_fp beta,
                  vptr<half_fp> c,
-                 const QuantizerValues* const alpha_quant,
-                 const QuantizerValues* const a_quant,
-                 const QuantizerValues* const b_quant,
-                 const QuantizerValues* const beta_quant,
-                 const QuantizerValues* const c_quant);
+                 const QuantizerValues* const alpha_quant = nullptr,
+                 const QuantizerValues* const a_quant = nullptr,
+                 const QuantizerValues* const b_quant = nullptr,
+                 const QuantizerValues* const beta_quant = nullptr,
+                 const QuantizerValues* const c_quant = nullptr);
   virtual void gemv_half
                 (const CBLAS_TRANSPOSE trans_a, const uint_tp m,
                  const uint_tp n, const half_fp alpha,
                  vptr<const half_fp> a,
                  vptr<const half_fp> x, const half_fp beta,
                  vptr<half_fp> y,
-                 const QuantizerValues* const alpha_quant,
-                 const QuantizerValues* const a_quant,
-                 const QuantizerValues* const x_quant,
-                 const QuantizerValues* const beta_quant,
-                 const QuantizerValues* const y_quant);
+                 const QuantizerValues* const alpha_quant = nullptr,
+                 const QuantizerValues* const a_quant = nullptr,
+                 const QuantizerValues* const x_quant = nullptr,
+                 const QuantizerValues* const beta_quant = nullptr,
+                 const QuantizerValues* const y_quant = nullptr);
   virtual void axpy_half(const uint_tp n,
                          const half_fp alpha,
                          vptr<const half_fp> x,
@@ -344,10 +344,10 @@ class Device {
                          const QuantizerValues* const y_quant);
   virtual void axpby_half(const uint_tp n, const half_fp alpha,
                     vptr<const half_fp> x, const half_fp beta, vptr<half_fp> y,
-                    const QuantizerValues* const alpha_quant,
-                    const QuantizerValues* const x_quant,
-                    const QuantizerValues* const beta_quant,
-                    const QuantizerValues* const y_quant);
+                    const QuantizerValues* const alpha_quant = nullptr,
+                    const QuantizerValues* const x_quant = nullptr,
+                    const QuantizerValues* const beta_quant = nullptr,
+                    const QuantizerValues* const y_quant = nullptr);
   virtual void dot_half(const uint_tp n, vptr<const half_fp> x,
                         vptr<const half_fp> y, half_fp *out);
   virtual void asum_half(const uint_tp n, vptr<const half_fp> x, half_fp* y);
@@ -384,33 +384,33 @@ class Device {
                  const float alpha, vptr<const float> a,
                  vptr<const float> b,
                  const float beta, vptr<float> c,
-                 const QuantizerValues* const alpha_quant,
-                 const QuantizerValues* const a_quant,
-                 const QuantizerValues* const b_quant,
-                 const QuantizerValues* const beta_quant,
-                 const QuantizerValues* const c_quant);
+                 const QuantizerValues* const alpha_quant = nullptr,
+                 const QuantizerValues* const a_quant = nullptr,
+                 const QuantizerValues* const b_quant = nullptr,
+                 const QuantizerValues* const beta_quant = nullptr,
+                 const QuantizerValues* const c_quant = nullptr);
   virtual void gemv_float
                 (const CBLAS_TRANSPOSE trans_a, const uint_tp m,
                  const uint_tp n, const float alpha,
                  vptr<const float> a,
                  vptr<const float> x, const float beta,
                  vptr<float> y,
-                 const QuantizerValues* const alpha_quant,
-                 const QuantizerValues* const a_quant,
-                 const QuantizerValues* const x_quant,
-                 const QuantizerValues* const beta_quant,
-                 const QuantizerValues* const y_quant);
+                 const QuantizerValues* const alpha_quant = nullptr,
+                 const QuantizerValues* const a_quant = nullptr,
+                 const QuantizerValues* const x_quant = nullptr,
+                 const QuantizerValues* const beta_quant = nullptr,
+                 const QuantizerValues* const y_quant = nullptr);
   virtual void axpy_float(const uint_tp n, const float alpha,
                           vptr<const float> x, vptr<float> y,
-                          const QuantizerValues* const alpha_quant,
-                          const QuantizerValues* const x_quant,
-                          const QuantizerValues* const y_quant);
+                          const QuantizerValues* const alpha_quant = nullptr,
+                          const QuantizerValues* const x_quant = nullptr,
+                          const QuantizerValues* const y_quant = nullptr);
   virtual void axpby_float(const uint_tp n, const float alpha,
                           vptr<const float> x, const float beta, vptr<float> y,
-                          const QuantizerValues* const alpha_quant,
-                          const QuantizerValues* const x_quant,
-                          const QuantizerValues* const beta_quant,
-                          const QuantizerValues* const y_quant);
+                          const QuantizerValues* const alpha_quant = nullptr,
+                          const QuantizerValues* const x_quant = nullptr,
+                          const QuantizerValues* const beta_quant = nullptr,
+                          const QuantizerValues* const y_quant = nullptr);
   virtual void dot_float(const uint_tp n, vptr<const float> x,
                          vptr<const float> y, float *out);
   virtual void asum_float(const uint_tp n, vptr<const float> x, float* y);
@@ -447,22 +447,22 @@ class Device {
                  const double alpha, vptr<const double> a,
                  vptr<const double> b,
                  const double beta, vptr<double> c,
-                 const QuantizerValues* const alpha_quant,
-                 const QuantizerValues* const a_quant,
-                 const QuantizerValues* const b_quant,
-                 const QuantizerValues* const beta_quant,
-                 const QuantizerValues* const c_quant);
+                 const QuantizerValues* const alpha_quant = nullptr,
+                 const QuantizerValues* const a_quant = nullptr,
+                 const QuantizerValues* const b_quant = nullptr,
+                 const QuantizerValues* const beta_quant = nullptr,
+                 const QuantizerValues* const c_quant = nullptr);
   virtual void gemv_double
                 (const CBLAS_TRANSPOSE trans_a, const uint_tp m,
                  const uint_tp n, const double alpha,
                  vptr<const double> a,
                  vptr<const double> x, const double beta,
                  vptr<double> y,
-                 const QuantizerValues* const alpha_quant,
-                 const QuantizerValues* const a_quant,
-                 const QuantizerValues* const x_quant,
-                 const QuantizerValues* const beta_quant,
-                 const QuantizerValues* const y_quant);
+                 const QuantizerValues* const alpha_quant = nullptr,
+                 const QuantizerValues* const a_quant = nullptr,
+                 const QuantizerValues* const x_quant = nullptr,
+                 const QuantizerValues* const beta_quant = nullptr,
+                 const QuantizerValues* const y_quant = nullptr);
   virtual void axpy_double(const uint_tp n, const double alpha,
                           vptr<const double> x, vptr<double> y);
   virtual void axpby_double(const uint_tp n, const double alpha,
@@ -505,35 +505,35 @@ class Device {
                  vptr<const uint8_t> b,
                  const uint8_t beta,
                  vptr<uint8_t> c,
-                 const QuantizerValues* const alpha_quant,
-                 const QuantizerValues* const a_quant,
-                 const QuantizerValues* const b_quant,
-                 const QuantizerValues* const beta_quant,
-                 const QuantizerValues* const c_quant);
+                 const QuantizerValues* const alpha_quant = nullptr,
+                 const QuantizerValues* const a_quant = nullptr,
+                 const QuantizerValues* const b_quant = nullptr,
+                 const QuantizerValues* const beta_quant = nullptr,
+                 const QuantizerValues* const c_quant = nullptr);
   virtual void gemv_uint8
                 (const CBLAS_TRANSPOSE trans_a, const uint_tp m,
                  const uint_tp n, const uint8_t alpha,
                  vptr<const uint8_t> a,
                  vptr<const uint8_t> x, const uint8_t beta,
                  vptr<uint8_t> y,
-                 const QuantizerValues* const alpha_quant,
-                 const QuantizerValues* const a_quant,
-                 const QuantizerValues* const x_quant,
-                 const QuantizerValues* const beta_quant,
-                 const QuantizerValues* const y_quant);
+                 const QuantizerValues* const alpha_quant = nullptr,
+                 const QuantizerValues* const a_quant = nullptr,
+                 const QuantizerValues* const x_quant = nullptr,
+                 const QuantizerValues* const beta_quant = nullptr,
+                 const QuantizerValues* const y_quant = nullptr);
   virtual void axpy_uint8(const uint_tp n,
                          const uint8_t alpha,
                          vptr<const uint8_t> x,
                          vptr<uint8_t> y,
-                         const QuantizerValues* const alpha_quant,
-                         const QuantizerValues* const x_quant,
-                         const QuantizerValues* const y_quant);
+                         const QuantizerValues* const alpha_quant = nullptr,
+                         const QuantizerValues* const x_quant = nullptr,
+                         const QuantizerValues* const y_quant = nullptr);
   virtual void axpby_uint8(const uint_tp n, const uint8_t alpha,
                     vptr<const uint8_t> x, const uint8_t beta, vptr<uint8_t> y,
-                    const QuantizerValues* const alpha_quant,
-                    const QuantizerValues* const x_quant,
-                    const QuantizerValues* const beta_quant,
-                    const QuantizerValues* const y_quant);
+                    const QuantizerValues* const alpha_quant = nullptr,
+                    const QuantizerValues* const x_quant = nullptr,
+                    const QuantizerValues* const beta_quant = nullptr,
+                    const QuantizerValues* const y_quant = nullptr);
   virtual void dot_uint8(const uint_tp n, vptr<const uint8_t> x,
                         vptr<const uint8_t> y, uint8_t *out);
   virtual void asum_uint8(const uint_tp n, vptr<const uint8_t> x, uint8_t* y);
@@ -553,36 +553,36 @@ class Device {
                  vptr<const uint16_t> b,
                  const uint16_t beta,
                  vptr<uint16_t> c,
-                 const QuantizerValues* const alpha_quant,
-                 const QuantizerValues* const a_quant,
-                 const QuantizerValues* const b_quant,
-                 const QuantizerValues* const beta_quant,
-                 const QuantizerValues* const c_quant);
+                 const QuantizerValues* const alpha_quant = nullptr,
+                 const QuantizerValues* const a_quant = nullptr,
+                 const QuantizerValues* const b_quant = nullptr,
+                 const QuantizerValues* const beta_quant = nullptr,
+                 const QuantizerValues* const c_quant = nullptr);
   virtual void gemv_uint16
                 (const CBLAS_TRANSPOSE trans_a, const uint_tp m,
                  const uint_tp n, const uint16_t alpha,
                  vptr<const uint16_t> a,
                  vptr<const uint16_t> x, const uint16_t beta,
                  vptr<uint16_t> y,
-                 const QuantizerValues* const alpha_quant,
-                 const QuantizerValues* const a_quant,
-                 const QuantizerValues* const x_quant,
-                 const QuantizerValues* const beta_quant,
-                 const QuantizerValues* const y_quant);
+                 const QuantizerValues* const alpha_quant = nullptr,
+                 const QuantizerValues* const a_quant = nullptr,
+                 const QuantizerValues* const x_quant = nullptr,
+                 const QuantizerValues* const beta_quant = nullptr,
+                 const QuantizerValues* const y_quant = nullptr);
   virtual void axpy_uint16(const uint_tp n,
                          const uint16_t alpha,
                          vptr<const uint16_t> x,
                          vptr<uint16_t> y,
-                         const QuantizerValues* const alpha_quant,
-                         const QuantizerValues* const x_quant,
-                         const QuantizerValues* const y_quant);
+                         const QuantizerValues* const alpha_quant = nullptr,
+                         const QuantizerValues* const x_quant = nullptr,
+                         const QuantizerValues* const y_quant = nullptr);
   virtual void axpby_uint16(const uint_tp n, const uint16_t alpha,
                     vptr<const uint16_t> x, const uint16_t beta,
                     vptr<uint16_t> y,
-                    const QuantizerValues* const alpha_quant,
-                    const QuantizerValues* const x_quant,
-                    const QuantizerValues* const beta_quant,
-                    const QuantizerValues* const y_quant);
+                    const QuantizerValues* const alpha_quant = nullptr,
+                    const QuantizerValues* const x_quant = nullptr,
+                    const QuantizerValues* const beta_quant = nullptr,
+                    const QuantizerValues* const y_quant = nullptr);
   virtual void dot_uint16(const uint_tp n, vptr<const uint16_t> x,
                         vptr<const uint16_t> y, uint16_t *out);
   virtual void asum_uint16(const uint_tp n, vptr<const uint16_t> x, uint16_t* y);
@@ -602,36 +602,36 @@ class Device {
                  vptr<const uint32_t> b,
                  const uint32_t beta,
                  vptr<uint32_t> c,
-                 const QuantizerValues* const alpha_quant,
-                 const QuantizerValues* const a_quant,
-                 const QuantizerValues* const b_quant,
-                 const QuantizerValues* const beta_quant,
-                 const QuantizerValues* const c_quant);
+                 const QuantizerValues* const alpha_quant = nullptr,
+                 const QuantizerValues* const a_quant = nullptr,
+                 const QuantizerValues* const b_quant = nullptr,
+                 const QuantizerValues* const beta_quant = nullptr,
+                 const QuantizerValues* const c_quant = nullptr);
   virtual void gemv_uint32
                 (const CBLAS_TRANSPOSE trans_a, const uint_tp m,
                  const uint_tp n, const uint32_t alpha,
                  vptr<const uint32_t> a,
                  vptr<const uint32_t> x, const uint32_t beta,
                  vptr<uint32_t> y,
-                 const QuantizerValues* const alpha_quant,
-                 const QuantizerValues* const a_quant,
-                 const QuantizerValues* const x_quant,
-                 const QuantizerValues* const beta_quant,
-                 const QuantizerValues* const y_quant);
+                 const QuantizerValues* const alpha_quant = nullptr,
+                 const QuantizerValues* const a_quant = nullptr,
+                 const QuantizerValues* const x_quant = nullptr,
+                 const QuantizerValues* const beta_quant = nullptr,
+                 const QuantizerValues* const y_quant = nullptr);
   virtual void axpy_uint32(const uint_tp n,
                          const uint32_t alpha,
                          vptr<const uint32_t> x,
                          vptr<uint32_t> y,
-                         const QuantizerValues* const alpha_quant,
-                         const QuantizerValues* const x_quant,
-                         const QuantizerValues* const y_quant);
+                         const QuantizerValues* const alpha_quant = nullptr,
+                         const QuantizerValues* const x_quant = nullptr,
+                         const QuantizerValues* const y_quant = nullptr);
   virtual void axpby_uint32(const uint_tp n, const uint32_t alpha,
                     vptr<const uint32_t> x, const uint32_t beta,
                     vptr<uint32_t> y,
-                    const QuantizerValues* const alpha_quant,
-                    const QuantizerValues* const x_quant,
-                    const QuantizerValues* const beta_quant,
-                    const QuantizerValues* const y_quant);
+                    const QuantizerValues* const alpha_quant = nullptr,
+                    const QuantizerValues* const x_quant = nullptr,
+                    const QuantizerValues* const beta_quant = nullptr,
+                    const QuantizerValues* const y_quant = nullptr);
   virtual void dot_uint32(const uint_tp n, vptr<const uint32_t> x,
                         vptr<const uint32_t> y, uint32_t *out);
   virtual void asum_uint32(const uint_tp n, vptr<const uint32_t> x,
@@ -652,36 +652,36 @@ class Device {
                  vptr<const uint64_t> b,
                  const uint64_t beta,
                  vptr<uint64_t> c,
-                 const QuantizerValues* const alpha_quant,
-                 const QuantizerValues* const a_quant,
-                 const QuantizerValues* const b_quant,
-                 const QuantizerValues* const beta_quant,
-                 const QuantizerValues* const c_quant);
+                 const QuantizerValues* const alpha_quant = nullptr,
+                 const QuantizerValues* const a_quant = nullptr,
+                 const QuantizerValues* const b_quant = nullptr,
+                 const QuantizerValues* const beta_quant = nullptr,
+                 const QuantizerValues* const c_quant = nullptr);
   virtual void gemv_uint64
                 (const CBLAS_TRANSPOSE trans_a, const uint_tp m,
                  const uint_tp n, const uint64_t alpha,
                  vptr<const uint64_t> a,
                  vptr<const uint64_t> x, const uint64_t beta,
                  vptr<uint64_t> y,
-                 const QuantizerValues* const alpha_quant,
-                 const QuantizerValues* const a_quant,
-                 const QuantizerValues* const x_quant,
-                 const QuantizerValues* const beta_quant,
-                 const QuantizerValues* const y_quant);
+                 const QuantizerValues* const alpha_quant = nullptr,
+                 const QuantizerValues* const a_quant = nullptr,
+                 const QuantizerValues* const x_quant = nullptr,
+                 const QuantizerValues* const beta_quant = nullptr,
+                 const QuantizerValues* const y_quant = nullptr);
   virtual void axpy_uint64(const uint_tp n,
                          const uint64_t alpha,
                          vptr<const uint64_t> x,
                          vptr<uint64_t> y,
-                         const QuantizerValues* const alpha_quant,
-                         const QuantizerValues* const x_quant,
-                         const QuantizerValues* const y_quant);
+                         const QuantizerValues* const alpha_quant = nullptr,
+                         const QuantizerValues* const x_quant = nullptr,
+                         const QuantizerValues* const y_quant = nullptr);
   virtual void axpby_uint64(const uint_tp n, const uint64_t alpha,
                     vptr<const uint64_t> x, const uint64_t beta,
                     vptr<uint64_t> y,
-                    const QuantizerValues* const alpha_quant,
-                    const QuantizerValues* const x_quant,
-                    const QuantizerValues* const beta_quant,
-                    const QuantizerValues* const y_quant);
+                    const QuantizerValues* const alpha_quant = nullptr,
+                    const QuantizerValues* const x_quant = nullptr,
+                    const QuantizerValues* const beta_quant = nullptr,
+                    const QuantizerValues* const y_quant = nullptr);
   virtual void dot_uint64(const uint_tp n, vptr<const uint64_t> x,
                         vptr<const uint64_t> y, uint64_t *out);
   virtual void asum_uint64(const uint_tp n, vptr<const uint64_t> x,
