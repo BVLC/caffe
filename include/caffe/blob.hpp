@@ -153,13 +153,13 @@ class Blob {
   inline int offset(const int n, const int c = 0, const int h = 0,
       const int w = 0) const {
     CHECK_GE(n, 0);
-    CHECK_LE(n, num());
-    CHECK_GE(channels(), 0);
-    CHECK_LE(c, channels());
-    CHECK_GE(height(), 0);
-    CHECK_LE(h, height());
-    CHECK_GE(width(), 0);
-    CHECK_LE(w, width());
+    CHECK_LT(n, num());
+    CHECK_GE(c, 0);
+    CHECK_LT(c, channels());
+    CHECK_GE(h, 0);
+    CHECK_LT(h, height());
+    CHECK_GE(w, 0);
+    CHECK_LT(w, width());
     return ((n * channels() + c) * height() + h) * width() + w;
   }
 
