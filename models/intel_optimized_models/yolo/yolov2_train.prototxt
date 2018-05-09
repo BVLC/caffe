@@ -23,7 +23,7 @@ layer {
   }
   data_param {
     source: "examples/yolo/data/lmdb/trainval_lmdb"
-    batch_size: 4 
+    batch_size: 1 
     backend: LMDB
   }
 }
