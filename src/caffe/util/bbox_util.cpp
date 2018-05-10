@@ -388,6 +388,12 @@ void cpu_nms_avx512_caffe(int* __restrict keep_out, int* __restrict num_out,
   free(y2);
 }
 
+int has_intel_avx512_features() {
+  const unsigned long avx512_features = (_FEATURE_AVX512F | _FEATURE_AVX512ER |
+                                         _FEATURE_AVX512PF | _FEATURE_AVX512CD);
+  return _may_i_use_cpu_feature(avx512_features);
+}
+
 #endif
 
 NormalizedBBox UnitBBox() {
@@ -2275,16 +2281,18 @@ void ApplyNMSFast(const vector<NormalizedBBox>& bboxes,
   float adaptive_threshold = nms_threshold;
   indices->clear();
 #ifdef ENABLE_NMS_OPTIMIZATION
+  if (has_intel_avx512_features()) {
+    if (score_index_vec.size() == 0) return;
+    indices->resize(score_index_vec.size());
+    int* p = (int*)malloc(sizeof(int) * score_index_vec.size());
+    int num_out = 0;
+    cpu_nms_avx512_caffe(p, &num_out, bboxes, score_index_vec, nms_threshold);
+    indices->assign(p, p + num_out);
 
-  if (score_index_vec.size() == 0) return;
-  indices->resize(score_index_vec.size());
-  int* p = (int*)malloc(sizeof(int) * score_index_vec.size());
-  int num_out = 0;
-  cpu_nms_avx512_caffe(p, &num_out, bboxes, score_index_vec, nms_threshold);
-  indices->assign(p, p + num_out);
-
-  free(p);
-#else
+    free(p);
+    return;
+  }
+#endif
   while (score_index_vec.size() != 0) {
     const int idx = score_index_vec.front().second;
     bool keep = true;
@@ -2305,7 +2313,6 @@ void ApplyNMSFast(const vector<NormalizedBBox>& bboxes,
       adaptive_threshold *= eta;
     }
   }
-#endif
 }
 
 template <typename Dtype>
