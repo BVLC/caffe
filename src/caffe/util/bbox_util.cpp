@@ -387,13 +387,6 @@ void cpu_nms_avx512_caffe(int* __restrict keep_out, int* __restrict num_out,
   free(y1);
   free(y2);
 }
-
-int has_intel_avx512_features() {
-  const unsigned long avx512_features = (_FEATURE_AVX512F | _FEATURE_AVX512ER |
-                                         _FEATURE_AVX512PF | _FEATURE_AVX512CD);
-  return _may_i_use_cpu_feature(avx512_features);
-}
-
 #endif
 
 NormalizedBBox UnitBBox() {
@@ -2281,38 +2274,39 @@ void ApplyNMSFast(const vector<NormalizedBBox>& bboxes,
   float adaptive_threshold = nms_threshold;
   indices->clear();
 #ifdef ENABLE_NMS_OPTIMIZATION
-  if (has_intel_avx512_features()) {
+  if (_may_i_use_cpu_feature(_FEATURE_AVX512CD | _FEATURE_AVX512F)) {
     if (score_index_vec.size() == 0) return;
     indices->resize(score_index_vec.size());
     int* p = (int*)malloc(sizeof(int) * score_index_vec.size());
     int num_out = 0;
     cpu_nms_avx512_caffe(p, &num_out, bboxes, score_index_vec, nms_threshold);
     indices->assign(p, p + num_out);
-
     free(p);
-    return;
-  }
+  } else {
 #endif
-  while (score_index_vec.size() != 0) {
-    const int idx = score_index_vec.front().second;
-    bool keep = true;
-    for (int k = 0; k < indices->size(); ++k) {
+    while (score_index_vec.size() != 0) {
+      const int idx = score_index_vec.front().second;
+      bool keep = true;
+      for (int k = 0; k < indices->size(); ++k) {
+        if (keep) {
+          const int kept_idx = (*indices)[k];
+          float overlap = JaccardOverlap(bboxes[idx], bboxes[kept_idx]);
+          keep = overlap <= adaptive_threshold;
+        } else {
+          break;
+        }
+      }
       if (keep) {
-        const int kept_idx = (*indices)[k];
-        float overlap = JaccardOverlap(bboxes[idx], bboxes[kept_idx]);
-        keep = overlap <= adaptive_threshold;
-      } else {
-        break;
+        indices->push_back(idx);
+      }
+      score_index_vec.erase(score_index_vec.begin());
+      if (keep && eta < 1 && adaptive_threshold > 0.5) {
+        adaptive_threshold *= eta;
       }
     }
-    if (keep) {
-      indices->push_back(idx);
-    }
-    score_index_vec.erase(score_index_vec.begin());
-    if (keep && eta < 1 && adaptive_threshold > 0.5) {
-      adaptive_threshold *= eta;
-    }
+#ifdef ENABLE_NMS_OPTIMIZATION
   }
+#endif
 }
 
 template <typename Dtype>
