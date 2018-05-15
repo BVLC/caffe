@@ -213,12 +213,15 @@ void DataTransformer<Dtype>::Transform(const Datum& datum, Dtype* transformed_da
     mean = data_mean_.mutable_cpu_data();
   }
   if (has_mean_values) {
-    CHECK(mean_values_.size() == 1 || mean_values_.size() == datum_channels) <<
-     "Specify either 1 mean_value or as many as channels: " << datum_channels;
-    if (datum_channels > 1 && mean_values_.size() == 1) {
-      // Replicate the mean_value for simplicity
-      for (int c = 1; c < datum_channels; ++c) {
-        mean_values_.push_back(mean_values_[0]);
+   #pragma omp critical
+    {
+      CHECK(mean_values_.size() == 1 || mean_values_.size() == datum_channels) <<
+       "Specify either 1 mean_value or as many as channels: " << datum_channels;
+      if (datum_channels > 1 && mean_values_.size() == 1) {
+        // Replicate the mean_value for simplicity
+        for (int c = 1; c < datum_channels; ++c) {
+          mean_values_.push_back(mean_values_[0]);
+        }
       }
     }
   }
@@ -410,12 +413,15 @@ void DataTransformer<Dtype>::Transform(const Datum& datum_in,
     mean = data_mean_.mutable_cpu_data();
   }
   if (has_mean_values) {
-    CHECK(mean_values_.size() == 1 || mean_values_.size() == datum_channels) <<
-     "Specify either 1 mean_value or as many as channels: " << datum_channels;
-    if (datum_channels > 1 && mean_values_.size() == 1) {
-      // Replicate the mean_value for simplicity
-      for (int c = 1; c < datum_channels; ++c) {
-        mean_values_.push_back(mean_values_[0]);
+   #pragma omp critical
+    {
+      CHECK(mean_values_.size() == 1 || mean_values_.size() == datum_channels) <<
+       "Specify either 1 mean_value or as many as channels: " << datum_channels;
+      if (datum_channels > 1 && mean_values_.size() == 1) {
+        // Replicate the mean_value for simplicity
+        for (int c = 1; c < datum_channels; ++c) {
+          mean_values_.push_back(mean_values_[0]);
+        }
       }
     }
   }
@@ -1013,12 +1019,15 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img_in,
     mean = data_mean_.mutable_cpu_data();
   }
   if (has_mean_values) {
-    CHECK(mean_values_.size() == 1 || mean_values_.size() == img_channels) <<
-        "Specify either 1 mean_value or as many as channels: " << img_channels;
-    if (img_channels > 1 && mean_values_.size() == 1) {
-      // Replicate the mean_value for simplicity
-      for (int c = 1; c < img_channels; ++c) {
-        mean_values_.push_back(mean_values_[0]);
+   #pragma omp critical
+    {
+      CHECK(mean_values_.size() == 1 || mean_values_.size() == img_channels) <<
+          "Specify either 1 mean_value or as many as channels: " << img_channels;
+      if (img_channels > 1 && mean_values_.size() == 1) {
+        // Replicate the mean_value for simplicity
+        for (int c = 1; c < img_channels; ++c) {
+          mean_values_.push_back(mean_values_[0]);
+        }
       }
     }
   }
@@ -1113,12 +1122,15 @@ void DataTransformer<Dtype>::TransformInv(const Dtype* data, cv::Mat* cv_img,
     mean = data_mean_.mutable_cpu_data();
   }
   if (has_mean_values) {
-    CHECK(mean_values_.size() == 1 || mean_values_.size() == channels) <<
-        "Specify either 1 mean_value or as many as channels: " << channels;
-    if (channels > 1 && mean_values_.size() == 1) {
-      // Replicate the mean_value for simplicity
-      for (int c = 1; c < channels; ++c) {
-        mean_values_.push_back(mean_values_[0]);
+   #pragma omp critical
+    {
+      CHECK(mean_values_.size() == 1 || mean_values_.size() == channels) <<
+          "Specify either 1 mean_value or as many as channels: " << channels;
+      if (channels > 1 && mean_values_.size() == 1) {
+        // Replicate the mean_value for simplicity
+        for (int c = 1; c < channels; ++c) {
+          mean_values_.push_back(mean_values_[0]);
+        }
       }
     }
   }
@@ -1245,12 +1257,15 @@ void DataTransformer<Dtype>::ExpandImage(const cv::Mat& img,
     }
   }
   if (has_mean_values) {
-    CHECK(mean_values_.size() == 1 || mean_values_.size() == img_channels) <<
-        "Specify either 1 mean_value or as many as channels: " << img_channels;
-    if (img_channels > 1 && mean_values_.size() == 1) {
-      // Replicate the mean_value for simplicity
-      for (int c = 1; c < img_channels; ++c) {
-        mean_values_.push_back(mean_values_[0]);
+   #pragma omp critical
+    {
+      CHECK(mean_values_.size() == 1 || mean_values_.size() == img_channels) <<
+          "Specify either 1 mean_value or as many as channels: " << img_channels;
+      if (img_channels > 1 && mean_values_.size() == 1) {
+        // Replicate the mean_value for simplicity
+        for (int c = 1; c < img_channels; ++c) {
+          mean_values_.push_back(mean_values_[0]);
+        }
       }
     }
     vector<cv::Mat> channels(img_channels);
