@@ -585,6 +585,9 @@ message LayerParameter {
   optional CtcLossParameter ctc_loss_param = 157;
   optional ContinuationIndicatorParameter continuation_indicator_param = 158;
   optional LabelsequenceAccuracyParameter labelsequence_accuracy_param = 159;
+  // scaling temperature is a factor for dividing logits before softmax
+  // when correctly set, improves confidence 
+  optional float scaling_temperature = 161 [default = 1.0];
 }
 
 // Message that stores parameters used to apply transformation
