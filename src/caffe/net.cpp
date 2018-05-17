@@ -19,6 +19,7 @@
 #include "caffe/util/hdf5.hpp"
 #include "caffe/util/insert_splits.hpp"
 #include "caffe/util/insert_conversions.hpp"
+#include "caffe/util/insert_shared_blob_indices.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/upgrade_proto.hpp"
 #include "caffe/util/type_utils.hpp"
@@ -88,6 +89,16 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   // necessary.
   NetParameter converted_param;
   InsertConversions(splitted_param, &converted_param);
+
+  if (in_param.reduced_memory_inference() && phase_ == TEST) {
+    NetParameter shared_memory_net_param;
+    int_tp num_shared_blobs = InsertSharedBlobIndices(converted_param,
+                                                      &shared_memory_net_param);
+    for (int_tp i = 0; i < num_shared_blobs; ++i) {
+      shared_blobs_.push_back(make_shared<Blob<uint8_t> >(this->device_));
+    }
+    converted_param = shared_memory_net_param;
+  }
 
   if (Caffe::root_solver()) {
     LOG(INFO) << "Initializing net from parameters: " << std::endl
@@ -344,6 +355,11 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   if (Caffe::root_solver()) {
     LOG(INFO) << "Network initialization done.";
     LOG(INFO) << "Memory required for data: " << memory_used_ << " B";
+  }
+
+  // Set up shared blobs
+  if (param_.reduced_memory_inference() && phase_ == TEST) {
+    this->SetUpSharedBlobs();
   }
 
   // Set quantizer mode
@@ -858,6 +874,33 @@ template<typename Dtype>
 void Net<Dtype>::Reshape() {
   for (int_tp i = 0; i < layers_.size(); ++i) {
     layers_[i]->Reshape(bottom_vecs_[i], top_vecs_[i]);
+  }
+  // Set up shared blobs
+  if (param_.reduced_memory_inference() && phase_ == TEST) {
+    this->SetUpSharedBlobs();
+  }
+}
+
+template<typename Dtype>
+void Net<Dtype>::SetUpSharedBlobs() {
+  vector<uint_tp> shared_blob_byte_sizes(shared_blobs_.size(), 0);
+  for (int_tp i = 0; i < layers_.size(); ++i) {
+    for (int_tp j = 0; j < top_vecs_[i].size(); ++j) {
+      int_tp idx = param_.layer(i).top_shared_index(j);
+      shared_blob_byte_sizes[idx] = std::max(shared_blob_byte_sizes[idx],
+                                             top_vecs_[i][j]->byte_count());
+    }
+  }
+  for (int_tp i = 0; i < shared_blobs_.size(); ++i) {
+    vector<int_tp> buffer_shape(1, shared_blob_byte_sizes[i]);
+    shared_blobs_[i]->Reshape(buffer_shape);
+  }
+  for (int_tp i = 0; i < layers_.size(); ++i) {
+    for (int_tp j = 0; j < top_vecs_[i].size(); ++j) {
+      int_tp idx = param_.layer(i).top_shared_index(j);
+      top_vecs_[i][j]->ShareDataBase(shared_blobs_[idx].get());
+      top_vecs_[i][j]->ShareDiffBase(shared_blobs_[idx].get());
+    }
   }
 }
 

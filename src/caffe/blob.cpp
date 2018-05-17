@@ -485,12 +485,12 @@ void Blob<Dtype>::ShareDiff(const Blob& other) {
 
 
 void BlobBase::ShareDataBase(const BlobBase* other) {
-  CHECK_EQ(byte_count(), other->byte_count());
+  CHECK_LE(byte_count(), other->byte_count());
   data_ = other->data();
 }
 
 void BlobBase::ShareDiffBase(const BlobBase* other) {
-  CHECK_EQ(byte_count(), other->byte_count());
+  CHECK_LE(byte_count(), other->byte_count());
   diff_ = other->diff();
 }
 

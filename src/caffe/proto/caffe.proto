@@ -137,6 +137,9 @@ message NetParameter {
   
   // The collected quantizer informations for each quantizer zone and name
   repeated QuantizerParameter quantizer = 80;
+  
+  // Enable reduced memory inference
+  optional bool reduced_memory_inference = 81 [default = false];
 
   // DEPRECATED: use 'layer' instead.
   repeated V1LayerParameter layers = 2;
@@ -422,8 +425,9 @@ message LayerParameter {
   // Parameters for device abstraction
   optional int64 device = 95 [default = -1];
   
-  // Parameters for Splitnet
-  optional int64 buffer = 96 [default = -1];
+  // Parameters for reduced memory inference
+  repeated int64 bottom_shared_index = 96;
+  repeated int64 top_shared_index = 97;
 
   // Parameters for data pre-processing.
   optional TransformationParameter transform_param = 100;

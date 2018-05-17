@@ -163,8 +163,7 @@ class NetBase {
   bool has_blob(const string& blob_name) const;
   const shared_ptr<BlobBase> blob_by_name(const string& blob_name) const;
   bool has_layer(const string& layer_name) const;
-  const shared_ptr<LayerBase>
-                               layer_by_name(const string& layer_name) const;
+  const shared_ptr<LayerBase> layer_by_name(const string& layer_name) const;
 
   void set_debug_info(const bool value) {
     debug_info_ = value;
@@ -242,6 +241,10 @@ class NetBase {
   /// Whether to compute and display debug info for the net.
   bool debug_info_;
 
+  // Shared blobs
+  vector<shared_ptr<Blob<uint8_t> > > shared_blobs_;
+
+  // Compute device
   Device* device_;
 
   // Callbacks
@@ -388,6 +391,10 @@ class Net : public NetBase {
   }
 
  protected:
+  // Set up shared blobs
+  void SetUpSharedBlobs();
+
+
   // Helpers for Init.
   /// @brief Append a new top blob to the net.
   void AppendTop(const NetParameter& param, const int_tp layer_id,
