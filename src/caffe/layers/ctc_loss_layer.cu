@@ -4,7 +4,7 @@ namespace caffe {
   template <>
   void CtcLossLayer<double>::Forward_gpu(
       const vector<Blob<double>*>& bottom, const vector<Blob<double>*>& top) {
-      CAFFE_NOT_IMPLEMENTED;
+      CAFFE1_NOT_IMPLEMENTED;
   }
 
   template <typename Dtype>
@@ -45,7 +45,7 @@ namespace caffe {
   template <>
   void CtcLossLayer<double>::Backward_gpu(const vector<Blob<double>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<double>*>& bottom) {
-      CAFFE_NOT_IMPLEMENTED;
+      CAFFE1_NOT_IMPLEMENTED;
   }
 
   template <typename Dtype>

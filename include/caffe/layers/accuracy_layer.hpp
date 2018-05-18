@@ -76,7 +76,7 @@ class AccuracyLayer : public Layer<Dtype> {
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
     for (int i = 0; i < propagate_down.size(); ++i) {
-      if (propagate_down[i]) { CAFFE_NOT_IMPLEMENTED; }
+      if (propagate_down[i]) { CAFFE1_NOT_IMPLEMENTED; }
     }
   }
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
