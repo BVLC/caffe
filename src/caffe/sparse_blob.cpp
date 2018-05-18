@@ -221,36 +221,36 @@ void SparseBlob<Dtype>::Update() {
 
 template <typename Dtype>
 Dtype SparseBlob<Dtype>::asum_data() const {
-  CAFFE_NOT_IMPLEMENTED;
+  CAFFE1_NOT_IMPLEMENTED;
   return 0;
 }
 
 template <typename Dtype>
 Dtype SparseBlob<Dtype>::asum_diff() const {
-  CAFFE_NOT_IMPLEMENTED;
+  CAFFE1_NOT_IMPLEMENTED;
   return 0;
 }
 
 template <typename Dtype>
 Dtype SparseBlob<Dtype>::sumsq_data() const {
-  CAFFE_NOT_IMPLEMENTED;
+  CAFFE1_NOT_IMPLEMENTED;
     return 0;
 }
 
 template <typename Dtype>
 Dtype SparseBlob<Dtype>::sumsq_diff() const {
-  CAFFE_NOT_IMPLEMENTED;
+  CAFFE1_NOT_IMPLEMENTED;
     return 0;
 }
 
 template <typename Dtype>
 void SparseBlob<Dtype>::scale_data(Dtype scale_factor) {
-  CAFFE_NOT_IMPLEMENTED;
+  CAFFE1_NOT_IMPLEMENTED;
 }
 
 template <typename Dtype>
 void SparseBlob<Dtype>::scale_diff(Dtype scale_factor) {
-  CAFFE_NOT_IMPLEMENTED;
+  CAFFE1_NOT_IMPLEMENTED;
 }
 
 template<typename Dtype>

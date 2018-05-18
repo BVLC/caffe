@@ -32,7 +32,7 @@ void CtcLossLayer<Dtype>::Reshape(
 template <>
 void CtcLossLayer<double>::Forward_cpu(
     const vector<Blob<double>*>& bottom, const vector<Blob<double>*>& top) {
-    CAFFE_NOT_IMPLEMENTED;
+    CAFFE1_NOT_IMPLEMENTED;
 }
 
 template <typename Dtype>
@@ -91,7 +91,7 @@ void CtcLossLayer<Dtype>::Forward_cpu(
 template <>
 void CtcLossLayer<double>::Backward_cpu(const vector<Blob<double>*>& top,
     const vector<bool>& propagate_down, const vector<Blob<double>*>& bottom) {
-    CAFFE_NOT_IMPLEMENTED;
+    CAFFE1_NOT_IMPLEMENTED;
 }
 
 template <typename Dtype>

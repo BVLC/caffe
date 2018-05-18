@@ -66,11 +66,11 @@ class DetectionOutputLayer : public Layer<Dtype> {
   /// @brief Not implemented
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
-    CAFFE_NOT_IMPLEMENTED;
+    CAFFE1_NOT_IMPLEMENTED;
   }
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
-    CAFFE_NOT_IMPLEMENTED;
+    CAFFE1_NOT_IMPLEMENTED;
   }
 
   float objectness_score_;
