@@ -513,25 +513,25 @@ bool ReadTxtToAnnotatedDatum(const string& labelfile, const int height,
       instance_id = 0;
     }
     anno->set_instance_id(instance_id++);
-    LOG_IF(WARNING, xmin > width) << labelfile <<
+    LOG_IF(ERROR, xmin > width) << labelfile <<
       " bounding box exceeds image boundary.";
-    LOG_IF(WARNING, ymin > height) << labelfile <<
+    LOG_IF(ERROR, ymin > height) << labelfile <<
       " bounding box exceeds image boundary.";
-    LOG_IF(WARNING, xmax > width) << labelfile <<
+    LOG_IF(ERROR, xmax > width) << labelfile <<
       " bounding box exceeds image boundary.";
-    LOG_IF(WARNING, ymax > height) << labelfile <<
+    LOG_IF(ERROR, ymax > height) << labelfile <<
       " bounding box exceeds image boundary.";
-    LOG_IF(WARNING, xmin < 0) << labelfile <<
+    LOG_IF(ERROR, xmin < 0) << labelfile <<
       " bounding box exceeds image boundary.";
-    LOG_IF(WARNING, ymin < 0) << labelfile <<
+    LOG_IF(ERROR, ymin < 0) << labelfile <<
       " bounding box exceeds image boundary.";
-    LOG_IF(WARNING, xmax < 0) << labelfile <<
+    LOG_IF(ERROR, xmax < 0) << labelfile <<
       " bounding box exceeds image boundary.";
-    LOG_IF(WARNING, ymax < 0) << labelfile <<
+    LOG_IF(ERROR, ymax < 0) << labelfile <<
       " bounding box exceeds image boundary.";
-    LOG_IF(WARNING, xmin > xmax) << labelfile <<
+    LOG_IF(ERROR, xmin > xmax) << labelfile <<
       " bounding box irregular xmin > xmax." << xmin << " " << xmax;
-    LOG_IF(WARNING, ymin > ymax) << labelfile <<
+    LOG_IF(ERROR, ymin > ymax) << labelfile <<
       " bounding box irregular ymin > ymax." << ymin << " " << ymax;
     // Store the normalized bounding box.
     NormalizedBBox* bbox = anno->mutable_bbox();
