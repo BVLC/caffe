@@ -125,8 +125,7 @@ void DataLayer<Dtype, MItype, MOtype>::load_batch(Batch<Dtype>* batch) {
     // Apply data transformations (mirror, scale, crop...)
     int_tp offset = batch->data_.offset(item_id);
     this->data_transformer_->Transform(datum[item_id],
-                                       &(this->transformed_data_),
-                                       offset);
+                                       &(this->transformed_data_), offset);
     // Copy label.
     if (this->output_labels_) {
       top_label[item_id] = datum[item_id].label();

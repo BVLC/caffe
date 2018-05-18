@@ -147,7 +147,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
       cv_img = DecodeDatumToCVMatNative(datum);
     }
     // Transform the cv::image into blob.
-    return Transform(cv_img, transformed_blob);
+    return Transform(cv_img, transformed_blob, offset);
 #else
     LOG(FATAL) << "Encoded datum requires OpenCV; compile with USE_OPENCV.";
 #endif  // USE_OPENCV
@@ -224,13 +224,14 @@ void DataTransformer<Dtype>::Transform(const vector<cv::Mat> & mat_vector,
     Blob<Dtype> uni_blob(1, channels, height, width, device_);
     int_tp offset = transformed_blob->offset(item_id);
     uni_blob.set_cpu_data(transformed_blob->mutable_cpu_data() + offset);
-    Transform(mat_vector[item_id], &uni_blob);
+    Transform(mat_vector[item_id], &uni_blob, 0);
   }
 }
 
 template<typename Dtype>
 void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
-                                       Blob<Dtype>* transformed_blob) {
+                                       Blob<Dtype>* transformed_blob,
+                                       int_tp offset) {
   const int_tp crop_size = param_.crop_size();
   const int_tp img_channels = cv_img.channels();
   const int_tp img_height = cv_img.rows;
@@ -302,7 +303,7 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 
   CHECK(cv_cropped_img.data);
 
-  Dtype* transformed_data = transformed_blob->mutable_cpu_data();
+  Dtype* transformed_data = transformed_blob->mutable_cpu_data() + offset;
   int_tp top_index;
   for (int_tp h = 0; h < height; ++h) {
     const uchar* ptr = cv_cropped_img.ptr<uchar>(h);
