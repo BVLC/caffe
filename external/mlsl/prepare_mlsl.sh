@@ -58,7 +58,7 @@ fi
 }
 
 # Clean up the previous MLSL version
-# Can be used for l_mlsl_2017.1.016, l_mlsl_2017.2.018
+# Can be used for l_mlsl_2017.1.016, l_mlsl_2017.2.018, l_mlsl_2018.0.003
 CleanUpPreviousMLSL()
 {
 version_year=$1
@@ -93,17 +93,18 @@ if [ -z $MLSL_ROOT ]; then
   CleanUpPreviousMLSL2017_0_014
   CleanUpPreviousMLSL 2017 1 016
   CleanUpPreviousMLSL 2017 2 018
+  CleanUpPreviousMLSL 2018 0 003
 fi
 
-VERSION_MATCH=20180003
-ARCHIVE_BASENAME=l_mlsl_2018.0.003.tgz
-ARCHIVE_INSTALL_FOLDERNAME=l_mlsl_2018.0.003
+VERSION_MATCH=20181005
+ARCHIVE_BASENAME=l_mlsl_2018.1.005.tgz
+ARCHIVE_INSTALL_FOLDERNAME=l_mlsl_2018.1.005
 #because the l_mlsl_2018.0.003.tgz will unpacked files.tar.gz and install.sh to the ARCHIVE_INSTALL_FOLDERNAME
 #not unpacked to the DST folder (Different behavior against l_mlsl_p_2017.0.014.tgz)
-ARCHIVE_INSTALL_FOLDERNAME_TEMP=l_mlsl_2018.0.003_temp
+ARCHIVE_INSTALL_FOLDERNAME_TEMP=l_mlsl_2018.1.005_temp
 MLSL_CONTENT_DIR=`echo $ARCHIVE_BASENAME | rev | cut -d "." -f 2- | rev`
 #echo "[Debug] MLSL_CONTENT_DIR value: $MLSL_CONTENT_DIR"
-GITHUB_RELEASE_TAG=v2018-Preview
+GITHUB_RELEASE_TAG=v2018.1-Preview
 
 MLSLURL="https://github.com/01org/MLSL/releases/download/$GITHUB_RELEASE_TAG/$ARCHIVE_BASENAME"
 #echo "[Debug] MLSL_ROOT value: $MLSL_ROOT"
@@ -132,14 +133,14 @@ if [ -z $MLSL_ROOT ] || [ $VERSION_LINE -lt $VERSION_MATCH ]; then
       wget --no-check-certificate -P $DST $MLSLURL -O $DST/$ARCHIVE_BASENAME
       if [ ! -d $DST/$ARCHIVE_INSTALL_FOLDERNAME_TEMP ]; then
         mkdir $DST/$ARCHIVE_INSTALL_FOLDERNAME_TEMP
-        #echo "[Debug] Create l_mlsl_2018.0.003_temp folder for unpacking!"
+        #echo "[Debug] Create l_mlsl_2018.1.005_temp folder for unpacking!"
       fi
       tar -xzf $DST/$ARCHIVE_BASENAME -C $DST/$ARCHIVE_INSTALL_FOLDERNAME_TEMP
       #echo "[Debug] PWD value: $PWD"
       #install.sh did not support the relative path as the parameter
       bash $DST/$ARCHIVE_INSTALL_FOLDERNAME_TEMP/$ARCHIVE_INSTALL_FOLDERNAME/install.sh -s -d $ABS_DST/$ARCHIVE_INSTALL_FOLDERNAME
       rm -rf $DST/$ARCHIVE_INSTALL_FOLDERNAME_TEMP
-      #echo "[Debug] Remove l_mlsl_2018.0.003_temp folder for unpacking!"
+      #echo "[Debug] Remove l_mlsl_2018.1.005_temp folder for unpacking!"
     fi
     #else: version is just our expected version, no need to donload again, but need to set the MLSL_ROOT
     #do not change the value of MLSL_ROOT if MLSL_ROOT is set, but version is not given
