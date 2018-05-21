@@ -3,11 +3,13 @@ import re
 import argparse
 from collections import defaultdict
 import random
-import matplotlib.colors as colors
+# In case you can't install Tkinter on your system, please uncomment below two lines to have another try.
+#import matplotlib
+#matplotlib.use('agg')
 import matplotlib.pyplot as plt
+import matplotlib.colors as colors
 import matplotlib.legend as lgd
 import matplotlib.markers as mks
-import pdb
 
 class TrainLog(object):
     '''train log file analyze and data collection'''
@@ -20,6 +22,8 @@ class TrainLog(object):
         self._multi_mbox_losses = defaultdict(list)
         self._multi_test_iterations = defaultdict(list)
         self._multi_detection_accuracies = defaultdict(list)
+        self._multi_top1_accuracies = defaultdict(list)
+        self._multi_top5_accuracies = defaultdict(list)
         self._parse_log()
         self._is_detection = True if len(self._multi_mbox_losses) > 0 else False
 
@@ -42,6 +46,8 @@ class TrainLog(object):
         lr_pattern = re.compile('.* Iteration \d+, lr = .*')
         mbox_loss_pattern = re.compile('.* Train net output #\d+: mbox_loss = .*')
         detection_accuracy_pattern = re.compile('.* Test net output #\d+: detection_eval = .*')
+        top1_accuracy_pattern = re.compile('.* Test net output #\d+: .*top-1 = .*')
+        top5_accuracy_pattern = re.compile('.* Test net output #\d+: .*top-5 = .*')
         test_iteration_pattern = re.compile('.* Iteration \d+, Testing net \(#\d+\).*')
         for log_file in self._log_files:
             log_name = obtain_log_name(log_file)
@@ -68,6 +74,14 @@ class TrainLog(object):
                         if '0' != obtain_process_id(line):
                             continue
                         self._multi_detection_accuracies[log_name].append(float(line.split()[-1]))
+                    elif re.match(top1_accuracy_pattern, line):
+                        if '0' != obtain_process_id(line):
+                            continue
+                        self._multi_top1_accuracies[log_name].append(float(line.split()[-1]))
+                    elif re.match(top5_accuracy_pattern, line):
+                        if '0' != obtain_process_id(line):
+                            continue
+                        self._multi_top5_accuracies[log_name].append(float(line.split()[-1]))
 
     @property
     def is_detection(self):
@@ -103,6 +117,16 @@ class TrainLog(object):
     def detection_accuracies(self):
         '''get detection accuracies data showed within log file'''
         return self._multi_detection_accuracies
+
+    @property
+    def top1_accuracies(self):
+        '''get top-1 accuracies data showed within log file'''
+        return self._multi_top1_accuracies
+
+    @property
+    def top5_accuracies(self):
+        '''get top-5 accuracies data showed within log file'''
+        return self._multi_top5_accuracies
 
 class PlotTrend(object):
     '''plot single or multi trends within a fig'''
@@ -176,12 +200,12 @@ class PlotTrend(object):
         png_file = self.result_png_file(self.y_axis_name)
         plt.savefig(png_file)
         plt.show()
+        plt.close()
 
 def plot_loss_trends(train_log, out_dir):
     '''plot loss trends of train logs'''
     y_items = {'loss' : train_log.losses}
     x_items = {'Iterations' : train_log.iterations}
-    #pdb.set_trace()
     plot_trend = PlotTrend(y_items, x_items, out_dir)
     plot_trend.plot()
 
@@ -204,6 +228,22 @@ def plot_detection_accuracy_trends(train_log, out_dir):
     '''plot detection accuracy trend of train logs'''
     if not train_log.is_detection: return
     y_items = {'detection accuracy' : train_log.detection_accuracies}
+    x_items = {'Test iterations' : train_log.test_iterations}
+    plot_trend = PlotTrend(y_items, x_items, out_dir)
+    plot_trend.plot()
+
+def plot_top1_accuracy_trends(train_log, out_dir):
+    '''plot top-1 accuracy trend of train logs'''
+    if train_log.is_detection: return
+    y_items = {'top-1 accuracy' : train_log.top1_accuracies}
+    x_items = {'Test iterations' : train_log.test_iterations}
+    plot_trend = PlotTrend(y_items, x_items, out_dir)
+    plot_trend.plot()
+
+def plot_top5_accuracy_trends(train_log, out_dir):
+    '''plot top-5 accuracy trend of train logs'''
+    if train_log.is_detection: return
+    y_items = {'top-5 accuracy' : train_log.top5_accuracies}
     x_items = {'Test iterations' : train_log.test_iterations}
     plot_trend = PlotTrend(y_items, x_items, out_dir)
     plot_trend.plot()
@@ -233,6 +273,8 @@ def main():
     plot_mbox_loss_trends(train_log, args.output_dir)
     plot_lr_trends(train_log, args.output_dir)
     plot_detection_accuracy_trends(train_log, args.output_dir)
+    plot_top1_accuracy_trends(train_log, args.output_dir)
+    plot_top5_accuracy_trends(train_log, args.output_dir)
 
 if __name__ == '__main__':
     main()
