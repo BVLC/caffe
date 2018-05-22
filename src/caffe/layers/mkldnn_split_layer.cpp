@@ -53,7 +53,7 @@ MKLDNNSplitLayer<Dtype>::~MKLDNNSplitLayer() { }
 template <typename Dtype>
 void MKLDNNSplitLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  int count = bottom[0]->count();
+  size_t count = bottom[0]->count();
   for (int i = 0; i < top.size(); ++i) {
     // Do not allow in-place computation in the SplitLayer.  Instead, share data
     // by reference in the forward pass, and keep separate diff allocations in
