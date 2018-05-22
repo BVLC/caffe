@@ -21,6 +21,17 @@ void SoftmaxLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   vector<int> scale_dims = bottom[0]->shape();
   scale_dims[softmax_axis_] = 1;
   scale_.Reshape(scale_dims);
+  if (this->layer_param_.softmax_param().has_scaling_temperature())
+    {
+      temperature_scaling_ = true;
+      temperature_ = this->layer_param_.softmax_param().scaling_temperature();
+      cooled_bottom_.ReshapeLike(*bottom[0]);
+    }
+  else
+    {
+      temperature_scaling_ = false;
+    }
+
 }
 
 template <typename Dtype>
@@ -31,6 +42,13 @@ void SoftmaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   Dtype* scale_data = scale_.mutable_cpu_data();
   int channels = bottom[0]->shape(softmax_axis_);
   int dim = bottom[0]->count() / outer_num_;
+  if (temperature_scaling_)
+    {
+      Dtype * cooled_bottom_data = cooled_bottom_.mutable_cpu_data();
+      caffe_cpu_scale(bottom[0]->count(), (Dtype)1.0/temperature_, bottom_data, cooled_bottom_data);
+      bottom_data = cooled_bottom_data;
+    }
+
   caffe_copy(bottom[0]->count(), bottom_data, top_data);
   // We need to subtract the max to avoid numerical issues, compute the exp,
   // and then normalize.

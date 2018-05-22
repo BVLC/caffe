@@ -92,7 +92,7 @@ cv::Mat ReadImageToCVMat(const string& filename,
     CV_LOAD_IMAGE_GRAYSCALE);
   cv::Mat cv_img_origin = cv::imread(filename, cv_read_flag);
   if (!cv_img_origin.data) {
-    LOG(ERROR) << "Could not open or find file " << filename;
+    LOG(WARNING) << "Could not open or find file " << filename;
     return cv_img_origin;
   }
   if (min_dim > 0 || max_dim > 0) {
@@ -513,25 +513,25 @@ bool ReadTxtToAnnotatedDatum(const string& labelfile, const int height,
       instance_id = 0;
     }
     anno->set_instance_id(instance_id++);
-    LOG_IF(WARNING, xmin > width) << labelfile <<
+    LOG_IF(ERROR, xmin > width) << labelfile <<
       " bounding box exceeds image boundary.";
-    LOG_IF(WARNING, ymin > height) << labelfile <<
+    LOG_IF(ERROR, ymin > height) << labelfile <<
       " bounding box exceeds image boundary.";
-    LOG_IF(WARNING, xmax > width) << labelfile <<
+    LOG_IF(ERROR, xmax > width) << labelfile <<
       " bounding box exceeds image boundary.";
-    LOG_IF(WARNING, ymax > height) << labelfile <<
+    LOG_IF(ERROR, ymax > height) << labelfile <<
       " bounding box exceeds image boundary.";
-    LOG_IF(WARNING, xmin < 0) << labelfile <<
+    LOG_IF(ERROR, xmin < 0) << labelfile <<
       " bounding box exceeds image boundary.";
-    LOG_IF(WARNING, ymin < 0) << labelfile <<
+    LOG_IF(ERROR, ymin < 0) << labelfile <<
       " bounding box exceeds image boundary.";
-    LOG_IF(WARNING, xmax < 0) << labelfile <<
+    LOG_IF(ERROR, xmax < 0) << labelfile <<
       " bounding box exceeds image boundary.";
-    LOG_IF(WARNING, ymax < 0) << labelfile <<
+    LOG_IF(ERROR, ymax < 0) << labelfile <<
       " bounding box exceeds image boundary.";
-    LOG_IF(WARNING, xmin > xmax) << labelfile <<
+    LOG_IF(ERROR, xmin > xmax) << labelfile <<
       " bounding box irregular xmin > xmax." << xmin << " " << xmax;
-    LOG_IF(WARNING, ymin > ymax) << labelfile <<
+    LOG_IF(ERROR, ymin > ymax) << labelfile <<
       " bounding box irregular ymin > ymax." << ymin << " " << ymax;
     // Store the normalized bounding box.
     NormalizedBBox* bbox = anno->mutable_bbox();
@@ -750,5 +750,99 @@ void CVMatToDatum(const cv::Mat& cv_img, Datum* datum) {
   }
   datum->set_data(buffer);
 }
+
+  long int NumberOfImages(const string* source)
+  {
+    long int n = 0;
+    std::string line;
+    std::ifstream infile(source->c_str());
+    while (std::getline(infile, line))
+      {
+        n++;
+      }
+    return n;
+  }
+
+  void ReadImagesListBatch(const string* source, long int start_index, long int n_to_read,
+			   std::vector<std::pair<std::string, std::vector<float> > >&images_vec,
+			   std::ifstream &infile, const bool &fpeek, const int &skip) {
+     images_vec.clear();
+     // Read the file with filenames and labels
+     if (!infile.is_open())
+       {
+	 LOG(INFO) << "Opening file " << *source;
+	 infile.open(source->c_str());
+	 CHECK(infile) << "Error opening file";
+       }
+     std::string line;
+     int line_num = 1;
+     int num_labels = 0;
+     
+     int index = 0;
+     int count = 0;
+     while (std::getline(infile, line) && index < n_to_read) {
+       count++;
+       if (skip > count)
+	 continue;
+       index++;
+       std::istringstream iss(line);
+       string filename;
+       std::vector<float> labels;
+       float label;
+       CHECK(iss >> filename) << "Error reading line " << line_num;
+       while (iss >> label) {
+	 labels.push_back(label);
+       }
+       if (line_num == 1) {
+	 // Use first line to set the number of labels
+	 num_labels = labels.size();
+       }
+       CHECK_EQ(labels.size(), num_labels) <<
+	 filename << " error at line " << line_num << std::endl <<
+	 " All images should have the same number of labels";
+       line_num++;
+       images_vec.push_back(std::make_pair(filename, labels));
+     }
+     DLOG(INFO) << "Read " << line_num - 1 << " images with " <<
+       num_labels << " labels";
+     if (fpeek) {
+       infile.clear();
+       infile.seekg(0, std::ios::beg);
+     }
+  }
+
+  void ReadImagesList(const string& source,
+                    std::vector<std::pair<std::string, std::vector<float> > >*images_vec) {
+  // Read the file with filenames and labels
+  LOG(INFO) << "Opening file " << source;
+  std::ifstream infile(source.c_str());
+  CHECK(infile) << "Error opening file";
+  std::string line;
+  int line_num = 1;
+  int num_labels = 0;
+
+  while (std::getline(infile, line)) {
+    std::istringstream iss(line);
+    string filename;
+    std::vector<float> labels;
+    float label;
+    CHECK(iss >> filename) << "Error reading line " << line_num;
+    while (iss >> label) {
+      labels.push_back(label);
+    }
+    if (line_num == 1) {
+      // Use first line to set the number of labels
+      num_labels = labels.size();
+    }
+    CHECK_EQ(labels.size(), num_labels) <<
+      filename << " error at line " << line_num << std::endl <<
+      " All images should have the same number of labels";
+    line_num++;
+    images_vec->push_back(std::make_pair(filename, labels));
+  }
+  LOG(INFO) << "Read " << line_num - 1 << " images with " <<
+    num_labels << " labels";
+}
+
 #endif  // USE_OPENCV
 }  // namespace caffe

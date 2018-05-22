@@ -82,6 +82,7 @@ __global__ void kernel_channel_dot(const int num, const int channels,
   }
 }
 
+
 template <typename Dtype>
 void SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
@@ -90,6 +91,14 @@ void SoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   Dtype* scale_data = scale_.mutable_gpu_data();
   int count = bottom[0]->count();
   int channels = top[0]->shape(softmax_axis_);
+  if (temperature_scaling_)
+    {
+      Dtype * cooled_bottom_data;
+      cooled_bottom_data = cooled_bottom_.mutable_gpu_data();
+      caffe_gpu_scale(count, (Dtype)1.0/temperature_, bottom_data, cooled_bottom_data);
+      bottom_data = cooled_bottom_data;
+    }
+
   caffe_copy(count, bottom_data, top_data);
   // We need to subtract the max to avoid numerical issues, compute the exp,
   // and then normalize.

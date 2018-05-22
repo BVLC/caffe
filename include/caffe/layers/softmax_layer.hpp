@@ -39,10 +39,15 @@ class SoftmaxLayer : public Layer<Dtype> {
   int outer_num_;
   int inner_num_;
   int softmax_axis_;
+  bool temperature_scaling_;
+  Dtype temperature_;
   /// sum_multiplier is used to carry out sum using BLAS
   Blob<Dtype> sum_multiplier_;
   /// scale is an intermediate Blob to hold temporary results.
   Blob<Dtype> scale_;
+  /// copy of input in order to cool it down   for calibration
+  Blob<Dtype> cooled_bottom_;
+
 };
 
 }  // namespace caffe
