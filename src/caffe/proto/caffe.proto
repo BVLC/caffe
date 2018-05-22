@@ -585,6 +585,7 @@ message LayerParameter {
   optional CtcLossParameter ctc_loss_param = 157;
   optional ContinuationIndicatorParameter continuation_indicator_param = 158;
   optional LabelsequenceAccuracyParameter labelsequence_accuracy_param = 159;
+  optional DiceCoefLossParameter = 208;
 }
 
 // Message that stores parameters used to apply transformation
@@ -761,6 +762,13 @@ message ExpansionParameter {
 
   // The ratio to expand the image.
   optional float max_expand_ratio = 2 [default = 1.];
+}
+
+message DiceCoefLossParameter {
+  optional int32 ignore_label = 1 [default = 0];
+  // set to -1 to compute loss on all labels
+  optional int32 generalized = 2 [default = 0];
+  // apply weights, not implemented yet
 }
 
 // Message that stores parameters shared by loss layers
@@ -1969,6 +1977,7 @@ message V1LayerParameter {
     THRESHOLD = 31;
     SELU = 40;
     SELU_DROPOUT = 41;
+    DICE_LOSS = 42;
   }
   optional LayerType type = 5;
   repeated BlobProto blobs = 6;
