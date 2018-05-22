@@ -60,6 +60,8 @@ msg_priority_threshold=10000
 
 mpi_iallreduce_algo=""
 
+ppn=1
+
 function usage
 {
     script_name=$0
@@ -79,6 +81,7 @@ function usage
     echo "               [--cpu cpu_model]"
     echo "               [--msg_priority on/off] [--msg_priority_threshold 10000]"
     echo "               [--mpi_iallreduce_algo mpi_iallreduce_algo]"
+    echo "               [--ppn ppn]"
     echo ""
     echo "  Parameters:"
     echo "    hostfile: host file includes list of nodes. Only used if you're running with multinode"
@@ -107,6 +110,7 @@ function usage
     echo "    msg_priority: off (default). Enable/disable message priority in MLSL."
     echo "    msg_priority_threshold: 10000 (default), if message priority is on."
     echo "    mpi_iallreduce_algo: adjust MPI iallreduce algorithms for synchronizing gradients in nodes."
+    echo "    ppn: process per node. default is 1."
     echo ""
 }
 
@@ -212,7 +216,7 @@ function execute_command
         exec_command="$xeonbin_"
     fi
 
-    if [ ${numnodes} -gt 1 ] || [ $is_local_run -ne 1 ]; then
+    if [ ${numnodes} -gt 1 ] || [ $is_local_run -ne 1 ] || [ $ppn -gt 1 ]; then
         # Produce the configuration file for mpiexec. 
         # Each line of the config file contains a # host, environment, binary name.
         cfile_=$result_dir_/nodeconfig-${cpu_model}-${numnodes}.txt
@@ -220,7 +224,7 @@ function execute_command
 
         for node in "${nodenames[@]}"
         do
-            echo "-host ${node} -n $ppncpu $exec_command" >> $cfile_
+            echo "-host ${node} -n $ppn $exec_command" >> $cfile_
         done
     fi
     log_file=$result_dir_/outputCluster-${cpu_model}-${numnodes}.txt
@@ -233,7 +237,7 @@ function execute_command
         $sensors_bin >$sensor_log_file
     fi
 
-    if [ ${numnodes} -eq 1 ] && [ $is_local_run -eq 1 ]; then
+    if [ ${numnodes} -eq 1 ] && [ $is_local_run -eq 1 ] && [ $ppn -eq 1 ]; then
         time GLOG_minloglevel=0 $exec_command 2>&1 | tee ${log_file}
     else
         exec_command="-l -configfile $cfile_"
@@ -529,10 +533,6 @@ do
         --help)
             usage
             ;;
-        --engine)
-            engine=$2
-            shift
-            ;;
         --caffe_bin)
             caffe_bin=$2
             shift
@@ -551,6 +551,10 @@ do
             ;;
         --mpi_iallreduce_algo)
             mpi_iallreduce_algo=$2
+            shift
+            ;;
+        --ppn)
+            ppn=$2
             shift
             ;;
         *)
@@ -594,6 +598,7 @@ echo ""
 echo "Settings:"
 echo "    CPU: $cpu_model"
 echo "    Host file: $host_file"
+echo "    PPN (Process Per Node): $ppn"
 echo "    Running mode: $mode"
 echo "    Benchmark: $benchmark_mode"
 echo "    Debug option: $debug"
@@ -690,6 +695,7 @@ if [ $numanode -eq 0 ]; then
 else
     echo "    NUMA configuration: Flat mode."
 fi
+echo ""
 
 if [ ! -d $result_dir ]; then
     echo "Create result directory: $result_dir"
@@ -697,7 +703,7 @@ if [ ! -d $result_dir ]; then
 fi
 
 env_params="--cpu $cpu_model --debug $debug --network $network --num_mlsl_servers $num_mlsl_servers"
-env_params+=" --msg_priority $msg_priority --msg_priority_threshold $msg_priority_threshold"
+env_params+=" --msg_priority $msg_priority --msg_priority_threshold $msg_priority_threshold --ppn $ppn"
 if [ "$network" == "tcp" ]; then
     env_params+=" --netmask $tcp_netmask"
 fi

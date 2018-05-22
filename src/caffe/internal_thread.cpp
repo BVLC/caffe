@@ -42,6 +42,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/util/cpu_info.hpp"
 #include "caffe/util/math_functions.hpp"
 
+#ifdef USE_MLSL
+#include "caffe/multinode/mlsl.hpp"
+#endif
+
 namespace caffe {
 
 InternalThread::~InternalThread() {
@@ -117,6 +121,20 @@ void InternalThread::SetThreadAffinity() {
           break;
         }
       }
+
+#ifdef USE_MLSL
+      // assign affinity cores for each rank if ppn > 1 and ncores is multiply of ppn
+      int ppn = mn::get_ppn();
+      int rank = mn::get_node_rank();
+      if ((ppn > 1) && (ncores / ppn > 0)) {
+        ncores /= ppn;
+        int offset = rank % ppn;
+        if (offset != 0) {
+          // overwrite the affinity cores according to rank
+          memcpy(affinity_cores, affinity_cores + offset * ncores, sizeof(int));
+        }
+      }
+#endif
     }
   }
 
