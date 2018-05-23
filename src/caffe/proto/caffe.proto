@@ -585,6 +585,7 @@ message LayerParameter {
   optional CtcLossParameter ctc_loss_param = 157;
   optional ContinuationIndicatorParameter continuation_indicator_param = 158;
   optional LabelsequenceAccuracyParameter labelsequence_accuracy_param = 159;
+  optional DiceCoefLossParameter dice_coef_loss_param = 208;
 }
 
 // Message that stores parameters used to apply transformation
@@ -761,6 +762,16 @@ message ExpansionParameter {
 
   // The ratio to expand the image.
   optional float max_expand_ratio = 2 [default = 1.];
+}
+
+message DiceCoefLossParameter {
+  enum GeneralizationMode {
+    NONE = 0; // ignore label 0
+    BINARY = 1; // do no ignore any label, not yet implemented
+    BINARY_WEIGHTED = 2; // generalized dice loss for two classes, not yet implemented
+  }
+  optional GeneralizationMode generalization = 2 [default = NONE];
+  
 }
 
 // Message that stores parameters shared by loss layers
@@ -1969,6 +1980,7 @@ message V1LayerParameter {
     THRESHOLD = 31;
     SELU = 40;
     SELU_DROPOUT = 41;
+    DICE_LOSS = 42;
   }
   optional LayerType type = 5;
   repeated BlobProto blobs = 6;
