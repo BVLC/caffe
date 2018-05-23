@@ -42,6 +42,7 @@ __global__ void DiceCoefLossBackward(const int n, const Dtype* x,
     const Dtype beta = Dtype(2.) * loss[i] / denominator[i] * sign;
     out_diff[index] = alpha * x[index] + beta * y[index];
   }
+  // guillo: CHECKED ok for no generalization (same as cpu)
 }
 
 template <typename Dtype>
