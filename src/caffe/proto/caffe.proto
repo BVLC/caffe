@@ -585,7 +585,7 @@ message LayerParameter {
   optional CtcLossParameter ctc_loss_param = 157;
   optional ContinuationIndicatorParameter continuation_indicator_param = 158;
   optional LabelsequenceAccuracyParameter labelsequence_accuracy_param = 159;
-  optional DiceCoefLossParameter = 208;
+  optional DiceCoefLossParameter dice_coef_loss_param = 208;
 }
 
 // Message that stores parameters used to apply transformation
@@ -765,10 +765,13 @@ message ExpansionParameter {
 }
 
 message DiceCoefLossParameter {
-  optional int32 ignore_label = 1 [default = 0];
-  // set to -1 to compute loss on all labels
-  optional int32 generalized = 2 [default = 0];
-  // apply weights, not implemented yet
+  enum GeneralizationMode {
+    NONE = 0; // ignore label 0
+    BINARY = 1; // do no ignore any label, not yet implemented
+    MULTI = 2; // multi class generalisation, not yet implemented
+  }
+  optional GeneralizationMode generalization = 2 [default = NONE];
+  
 }
 
 // Message that stores parameters shared by loss layers
