@@ -33,7 +33,7 @@ void DiceCoefLossLayer<Dtype>::Reshape(
     break;
   case DiceCoefLossParameter_GeneralizationMode_BINARY:
     break;
-  case DiceCoefLossParameter_GeneralizationMode_MULTI:
+  case DiceCoefLossParameter_GeneralizationMode_BINARY_WEIGHTED:
     break;
   }
 }
