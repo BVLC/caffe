@@ -768,7 +768,7 @@ message DiceCoefLossParameter {
   enum GeneralizationMode {
     NONE = 0; // ignore label 0
     BINARY = 1; // do no ignore any label, not yet implemented
-    MULTI = 2; // multi class generalisation, not yet implemented
+    BINARY_WEIGHTED = 2; // generalized dice loss for two classes, not yet implemented
   }
   optional GeneralizationMode generalization = 2 [default = NONE];
   
