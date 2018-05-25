@@ -33,10 +33,12 @@ namespace gflags = google;
 #endif  // GFLAGS_GFLAGS_H_
 
 // Disable the copy and assignment operator for a class.
+#ifndef DISABLE_COPY_AND_ASSIGN
 #define DISABLE_COPY_AND_ASSIGN(classname) \
 private:\
   classname(const classname&);\
   classname& operator=(const classname&)
+#endif
 
 // Instantiate a class with float and double specifications.
 #define INSTANTIATE_CLASS(classname) \
