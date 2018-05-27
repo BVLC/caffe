@@ -464,9 +464,6 @@ void DecodeBBox(
     }
   } else if (code_type == PriorBoxParameter_CodeType_CENTER_SIZE) {
     float prior_width = prior_bbox.xmax() - prior_bbox.xmin();
-    if(prior_bbox.xmin() < 0.0){
-	std::cout<<"x1="<<prior_bbox.xmin()<<",y1="<<prior_bbox.ymin()<<std::endl;
-    }
     CHECK_GT(prior_width, 0);
     float prior_height = prior_bbox.ymax() - prior_bbox.ymin();
     CHECK_GT(prior_height, 0);
