@@ -1,11 +1,4 @@
 name: "yolov2"
-#input: "data"
-#input_shape {
-#  dim: 8 
-#  dim: 3
-#  dim: 416
-#  dim: 416
-#}
 layer {
   name: "data"
   type: "BoxData"
@@ -24,6 +17,28 @@ layer {
   data_param {
     source: "examples/yolo/data/lmdb/trainval_lmdb"
     batch_size: 1 
+    side: 7
+    backend: LMDB
+  }
+}
+layer {
+  name: "data"
+  type: "BoxData"
+  top: "data"
+  top: "label"
+  include {
+    phase: TEST
+  }
+  transform_param {
+    mirror: false
+    mean_value: 104
+    mean_value: 117
+    mean_value: 123
+  }
+  data_param {
+    source: "examples/yolo/data/lmdb/test2007_lmdb"
+    batch_size: 1
+    side: 7
     backend: LMDB
   }
 }

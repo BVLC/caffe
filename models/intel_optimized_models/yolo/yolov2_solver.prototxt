@@ -1,0 +1,19 @@
+net: "models/intel_optimized_models/yolo/yolov2_train.prototxt"
+test_iter: 4952
+test_interval: 3200		#32000
+test_initialization: false
+display: 20
+average_loss: 100
+base_lr: 0.01
+lr_policy: "multistep"
+stepvalue: 16000
+stepvalue: 24000
+stepvalue: 32000
+max_iter: 40000		#32000
+warmup_iter: 520
+warmup_start_lr: 0.001
+momentum: 0.9
+weight_decay: 0.0005
+snapshot: 2000
+snapshot_prefix: "models/intel_optimized_models/yolo/yolov2"
+solver_mode: CPU
