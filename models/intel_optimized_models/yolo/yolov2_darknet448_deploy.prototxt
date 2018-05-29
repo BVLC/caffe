@@ -3,8 +3,8 @@ input: "data"
 input_shape {
   dim: 1
   dim: 3
-  dim: 416
-  dim: 416
+  dim: 448
+  dim: 448
 }
 layer {
   name: "conv1"
