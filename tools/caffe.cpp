@@ -90,7 +90,7 @@ static void get_gpus(vector<int>* gpus) {
   if (FLAGS_gpu == "all") {
     int count = 0;
 #ifndef CPU_ONLY
-    CUDA_CHECK(cudaGetDeviceCount(&count));
+    CAFFE1_CUDA_CHECK(cudaGetDeviceCount(&count));
 #else
     NO_GPU;
 #endif

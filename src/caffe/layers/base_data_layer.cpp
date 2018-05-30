@@ -78,7 +78,7 @@ void BasePrefetchingDataLayer<Dtype>::InternalThreadEntry() {
 #ifndef CPU_ONLY
   cudaStream_t stream;
   if (Caffe::mode() == Caffe::GPU) {
-    CUDA_CHECK(cudaStreamCreateWithFlags(&stream, cudaStreamNonBlocking));
+    CAFFE1_CUDA_CHECK(cudaStreamCreateWithFlags(&stream, cudaStreamNonBlocking));
   }
 #endif
 
@@ -89,7 +89,7 @@ void BasePrefetchingDataLayer<Dtype>::InternalThreadEntry() {
 #ifndef CPU_ONLY
       if (Caffe::mode() == Caffe::GPU) {
         batch->data_.data().get()->async_gpu_push(stream);
-        CUDA_CHECK(cudaStreamSynchronize(stream));
+        CAFFE1_CUDA_CHECK(cudaStreamSynchronize(stream));
       }
 #endif
       prefetch_full_.push(batch);
@@ -99,7 +99,7 @@ void BasePrefetchingDataLayer<Dtype>::InternalThreadEntry() {
   }
 #ifndef CPU_ONLY
   if (Caffe::mode() == Caffe::GPU) {
-    CUDA_CHECK(cudaStreamDestroy(stream));
+    CAFFE1_CUDA_CHECK(cudaStreamDestroy(stream));
   }
 #endif
 }
@@ -176,7 +176,7 @@ void BasePrefetchingSparseDataLayer<Dtype>::InternalThreadEntry() {
 #ifndef CPU_ONLY
   cudaStream_t stream;
   if (Caffe::mode() == Caffe::GPU) {
-    CUDA_CHECK(cudaStreamCreateWithFlags(&stream, cudaStreamNonBlocking));
+    CAFFE1_CUDA_CHECK(cudaStreamCreateWithFlags(&stream, cudaStreamNonBlocking));
   }
 #endif
 
@@ -187,7 +187,7 @@ void BasePrefetchingSparseDataLayer<Dtype>::InternalThreadEntry() {
 #ifndef CPU_ONLY
       if (Caffe::mode() == Caffe::GPU) {
         batch->data_.data().get()->async_gpu_push(stream);
-        CUDA_CHECK(cudaStreamSynchronize(stream));
+        CAFFE1_CUDA_CHECK(cudaStreamSynchronize(stream));
       }
 #endif
       prefetch_full_.push(batch);
@@ -197,7 +197,7 @@ void BasePrefetchingSparseDataLayer<Dtype>::InternalThreadEntry() {
   }
 #ifndef CPU_ONLY
   if (Caffe::mode() == Caffe::GPU) {
-    CUDA_CHECK(cudaStreamDestroy(stream));
+    CAFFE1_CUDA_CHECK(cudaStreamDestroy(stream));
   }
 #endif
 }
