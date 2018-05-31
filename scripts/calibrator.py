@@ -203,23 +203,19 @@ def transform_convolutions(model_path, compiled_model_path):
         inputwith_relu = get_all_top_layers(l, net, index, skip_layers, interesting_layers)
         for si in range(0, len(new_net.layer[index].quantization_param.scale_out)):
             if len(outputwith_relu) > 0 or l.name in u8_layers or conv_relu_flag:  # u8
-                new_net.layer[index].quantization_param.scale_out[si] = round(u8_max / new_net.layer[index].
-                                                                              quantization_param.scale_out[si], 2)
+                new_net.layer[index].quantization_param.scale_out[si] = u8_max / new_net.layer[index].quantization_param.scale_out[si]
             else:  # s8
-                new_net.layer[index].quantization_param.scale_out[si] = round(s8_max / new_net.layer[index].
-                                                                              quantization_param.scale_out[si], 2)
+                new_net.layer[index].quantization_param.scale_out[si] = s8_max / new_net.layer[index].quantization_param.scale_out[si]
 
         for si in range(0, len(new_net.layer[index].quantization_param.scale_in)):
             if len(inputwith_relu) > 0 or l.type == 'Convolution':  # u8
-                new_net.layer[index].quantization_param.scale_in[si] = round(u8_max / new_net.layer[index].
-                                                                             quantization_param.scale_in[si], 2)
+                new_net.layer[index].quantization_param.scale_in[si] = u8_max / new_net.layer[index].quantization_param.scale_in[si]
             else:
                 new_net.layer[index].ClearField('quantization_param')
                 continue
 
         for si in range(0, len(new_net.layer[index].quantization_param.scale_params)):
-            new_net.layer[index].quantization_param.scale_params[si] = round(s8_max / new_net.layer[index].
-                                                                             quantization_param.scale_params[si], 2)
+            new_net.layer[index].quantization_param.scale_params[si] = s8_max / new_net.layer[index].quantization_param.scale_params[si]
 
     with open(model_path, 'w') as f:
         f.write(str(new_net))
