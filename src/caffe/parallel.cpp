@@ -77,21 +77,21 @@ GPUParams<Dtype>::GPUParams(shared_ptr<Solver<Dtype> > root_solver, int device)
     : Params<Dtype>(root_solver) {
 #ifndef CPU_ONLY
   int initial_device;
-  CUDA_CHECK(cudaGetDevice(&initial_device));
+  CAFFE1_CUDA_CHECK(cudaGetDevice(&initial_device));
 
   // Allocate device buffers
-  CUDA_CHECK(cudaSetDevice(device));
-  CUDA_CHECK(cudaMalloc(&data_, size_ * sizeof(Dtype)));
+  CAFFE1_CUDA_CHECK(cudaSetDevice(device));
+  CAFFE1_CUDA_CHECK(cudaMalloc(&data_, size_ * sizeof(Dtype)));
 
   // Copy blob values
   const vector<Blob<Dtype>*>& net =
       root_solver->net()->learnable_params();
   apply_buffers(net, data_, size_, copy);
 
-  CUDA_CHECK(cudaMalloc(&diff_, size_ * sizeof(Dtype)));
+  CAFFE1_CUDA_CHECK(cudaMalloc(&diff_, size_ * sizeof(Dtype)));
   caffe_gpu_set(size_, Dtype(0), diff_);
 
-  CUDA_CHECK(cudaSetDevice(initial_device));
+  CAFFE1_CUDA_CHECK(cudaSetDevice(initial_device));
 #else
   NO_GPU;
 #endif
@@ -100,8 +100,8 @@ GPUParams<Dtype>::GPUParams(shared_ptr<Solver<Dtype> > root_solver, int device)
 template<typename Dtype>
 GPUParams<Dtype>::~GPUParams() {
 #ifndef CPU_ONLY
-  CUDA_CHECK(cudaFree(data_));
-  CUDA_CHECK(cudaFree(diff_));
+  CAFFE1_CUDA_CHECK(cudaFree(data_));
+  CAFFE1_CUDA_CHECK(cudaFree(diff_));
 #endif
 }
 
@@ -125,8 +125,8 @@ void DevicePair::compute(const vector<int> devices, vector<DevicePair>* pairs) {
     for (int i = 0; i < remaining.size(); ++i) {
       for (int j = i + 1; j < remaining.size(); ++j) {
         cudaDeviceProp a, b;
-        CUDA_CHECK(cudaGetDeviceProperties(&a, remaining[i]));
-        CUDA_CHECK(cudaGetDeviceProperties(&b, remaining[j]));
+        CAFFE1_CUDA_CHECK(cudaGetDeviceProperties(&a, remaining[i]));
+        CAFFE1_CUDA_CHECK(cudaGetDeviceProperties(&b, remaining[j]));
         if (a.isMultiGpuBoard && b.isMultiGpuBoard) {
           if (a.multiGpuBoardGroupID == b.multiGpuBoardGroupID) {
             pairs->push_back(DevicePair(remaining[i], remaining[j]));
@@ -150,7 +150,7 @@ void DevicePair::compute(const vector<int> devices, vector<DevicePair>* pairs) {
     for (int i = 0; i < remaining.size(); ++i) {
       for (int j = i + 1; j < remaining.size(); ++j) {
         int access;
-        CUDA_CHECK(
+        CAFFE1_CUDA_CHECK(
             cudaDeviceCanAccessPeer(&access, remaining[i], remaining[j]));
         if (access) {
           pairs->push_back(DevicePair(remaining[i], remaining[j]));
@@ -208,9 +208,9 @@ P2PSync<Dtype>::P2PSync(shared_ptr<Solver<Dtype> > root_solver,
       solver_() {
 #ifndef CPU_ONLY
   int initial_device;
-  CUDA_CHECK(cudaGetDevice(&initial_device));
+  CAFFE1_CUDA_CHECK(cudaGetDevice(&initial_device));
   const int self = param.device_id();
-  CUDA_CHECK(cudaSetDevice(self));
+  CAFFE1_CUDA_CHECK(cudaSetDevice(self));
 
   if (parent == NULL) {
     solver_ = root_solver;
@@ -226,19 +226,19 @@ P2PSync<Dtype>::P2PSync(shared_ptr<Solver<Dtype> > root_solver,
     // Enable p2p access between devices
     const int peer = parent->solver_->param().device_id();
     int access;
-    CUDA_CHECK(cudaDeviceCanAccessPeer(&access, self, peer));
+    CAFFE1_CUDA_CHECK(cudaDeviceCanAccessPeer(&access, self, peer));
     if (access) {
-      CUDA_CHECK(cudaDeviceEnablePeerAccess(peer, 0));
+      CAFFE1_CUDA_CHECK(cudaDeviceEnablePeerAccess(peer, 0));
     } else {
       LOG(INFO)<< "GPU " << self << " does not have p2p access to GPU " << peer;
     }
     // Allocate receiving buffer on parent
-    CUDA_CHECK(cudaSetDevice(peer));
-    CUDA_CHECK(cudaMalloc(&parent_grads_, size_ * sizeof(Dtype)));
-    CUDA_CHECK(cudaSetDevice(self));
+    CAFFE1_CUDA_CHECK(cudaSetDevice(peer));
+    CAFFE1_CUDA_CHECK(cudaMalloc(&parent_grads_, size_ * sizeof(Dtype)));
+    CAFFE1_CUDA_CHECK(cudaSetDevice(self));
   }
 
-  CUDA_CHECK(cudaSetDevice(initial_device));
+  CAFFE1_CUDA_CHECK(cudaSetDevice(initial_device));
 #else
   NO_GPU;
 #endif
@@ -248,21 +248,21 @@ template<typename Dtype>
 P2PSync<Dtype>::~P2PSync() {
 #ifndef CPU_ONLY
   int initial_device;
-  CUDA_CHECK(cudaGetDevice(&initial_device));
+  CAFFE1_CUDA_CHECK(cudaGetDevice(&initial_device));
   const int self = solver_->param().device_id();
-  CUDA_CHECK(cudaSetDevice(self));
+  CAFFE1_CUDA_CHECK(cudaSetDevice(self));
 
   if (parent_) {
-    CUDA_CHECK(cudaFree(parent_grads_));
+    CAFFE1_CUDA_CHECK(cudaFree(parent_grads_));
     const int peer = parent_->solver_->param().device_id();
     int access;
-    CUDA_CHECK(cudaDeviceCanAccessPeer(&access, self, peer));
+    CAFFE1_CUDA_CHECK(cudaDeviceCanAccessPeer(&access, self, peer));
     if (access) {
-      CUDA_CHECK(cudaDeviceDisablePeerAccess(peer));
+      CAFFE1_CUDA_CHECK(cudaDeviceDisablePeerAccess(peer));
     }
   }
 
-  CUDA_CHECK(cudaSetDevice(initial_device));
+  CAFFE1_CUDA_CHECK(cudaSetDevice(initial_device));
 #endif
 }
 
@@ -287,7 +287,7 @@ void P2PSync<Dtype>::on_start() {
 #ifndef CPU_ONLY
 #ifdef DEBUG
   int device;
-  CUDA_CHECK(cudaGetDevice(&device));
+  CAFFE1_CUDA_CHECK(cudaGetDevice(&device));
   CHECK(device == solver_->param().device_id());
 #else
 //  CHECK(false);
@@ -306,15 +306,15 @@ void P2PSync<Dtype>::on_start() {
 
 #ifdef DEBUG
     cudaPointerAttributes attributes;
-    CUDA_CHECK(cudaPointerGetAttributes(&attributes, src));
+    CAFFE1_CUDA_CHECK(cudaPointerGetAttributes(&attributes, src));
     CHECK(attributes.device == device);
-    CUDA_CHECK(cudaPointerGetAttributes(&attributes, dst));
+    CAFFE1_CUDA_CHECK(cudaPointerGetAttributes(&attributes, dst));
     CHECK(attributes.device == children_[i]->solver_->param().device_id());
 #endif
 
-    CUDA_CHECK(cudaMemcpyAsync(dst, src, size_ * sizeof(Dtype),
+    CAFFE1_CUDA_CHECK(cudaMemcpyAsync(dst, src, size_ * sizeof(Dtype),
         cudaMemcpyDeviceToDevice, cudaStreamDefault));
-    CUDA_CHECK(cudaStreamSynchronize(cudaStreamDefault));
+    CAFFE1_CUDA_CHECK(cudaStreamSynchronize(cudaStreamDefault));
     children_[i]->queue_.push(this);
   }
 #endif
@@ -325,7 +325,7 @@ void P2PSync<Dtype>::on_gradients_ready() {
 #ifndef CPU_ONLY
 #ifdef DEBUG
   int device;
-  CUDA_CHECK(cudaGetDevice(&device));
+  CAFFE1_CUDA_CHECK(cudaGetDevice(&device));
   CHECK(device == solver_->param().device_id());
 #endif
 
@@ -344,9 +344,9 @@ void P2PSync<Dtype>::on_gradients_ready() {
     }
     CHECK(ok);
     cudaPointerAttributes attributes;
-    CUDA_CHECK(cudaPointerGetAttributes(&attributes, src));
+    CAFFE1_CUDA_CHECK(cudaPointerGetAttributes(&attributes, src));
     CHECK(attributes.device == device);
-    CUDA_CHECK(cudaPointerGetAttributes(&attributes, dst));
+    CAFFE1_CUDA_CHECK(cudaPointerGetAttributes(&attributes, dst));
     CHECK(attributes.device == device);
 #endif
 
@@ -360,15 +360,15 @@ void P2PSync<Dtype>::on_gradients_ready() {
 
 #ifdef DEBUG
     cudaPointerAttributes attributes;
-    CUDA_CHECK(cudaPointerGetAttributes(&attributes, src));
+    CAFFE1_CUDA_CHECK(cudaPointerGetAttributes(&attributes, src));
     CHECK(attributes.device == device);
-    CUDA_CHECK(cudaPointerGetAttributes(&attributes, dst));
+    CAFFE1_CUDA_CHECK(cudaPointerGetAttributes(&attributes, dst));
     CHECK(attributes.device == parent_->solver_->param().device_id());
 #endif
 
-    CUDA_CHECK(cudaMemcpyAsync(dst, src, size_ * sizeof(Dtype),  //
+    CAFFE1_CUDA_CHECK(cudaMemcpyAsync(dst, src, size_ * sizeof(Dtype),  //
         cudaMemcpyDeviceToDevice, cudaStreamDefault));
-    CUDA_CHECK(cudaStreamSynchronize(cudaStreamDefault));
+    CAFFE1_CUDA_CHECK(cudaStreamSynchronize(cudaStreamDefault));
     parent_->queue_.push(this);
   } else {
     // Loss functions divide gradients by the batch size, so to compensate

@@ -131,13 +131,13 @@ Caffe::Caffe()
 }
 
 Caffe::~Caffe() {
-  if (cublas_handle_) CUBLAS_CHECK(cublasDestroy(cublas_handle_));
+  if (cublas_handle_) CAFFE1_CUBLAS_CHECK(cublasDestroy(cublas_handle_));
   if (cusparse_handle_)
     CUSPARSE_CHECK(cusparseDestroy(cusparse_handle_));
   if (cusparse_mat_descr_)
     CUSPARSE_CHECK(cusparseDestroyMatDescr(cusparse_mat_descr_));
   if (curand_generator_) {
-    CURAND_CHECK(curandDestroyGenerator(curand_generator_));
+    CAFFE1_CURAND_CHECK(curandDestroyGenerator(curand_generator_));
   }
 }
 
@@ -145,9 +145,9 @@ void Caffe::set_random_seed(const unsigned int seed) {
   // Curand seed
   static bool g_curand_availability_logged = false;
   if (Get().curand_generator_) {
-    CURAND_CHECK(curandSetPseudoRandomGeneratorSeed(curand_generator(),
+    CAFFE1_CURAND_CHECK(curandSetPseudoRandomGeneratorSeed(curand_generator(),
         seed));
-    CURAND_CHECK(curandSetGeneratorOffset(curand_generator(), 0));
+    CAFFE1_CURAND_CHECK(curandSetGeneratorOffset(curand_generator(), 0));
   } else {
     if (!g_curand_availability_logged) {
         LOG(ERROR) <<
@@ -161,29 +161,29 @@ void Caffe::set_random_seed(const unsigned int seed) {
 
 void Caffe::SetDevice(const int device_id) {
   int current_device;
-  CUDA_CHECK(cudaGetDevice(&current_device));
+  CAFFE1_CUDA_CHECK(cudaGetDevice(&current_device));
   if (current_device == device_id) {
     return;
   }
   // The call to cudaSetDevice must come before any calls to Get, which
   // may perform initialization using the GPU.
-  CUDA_CHECK(cudaSetDevice(device_id));
-  if (Get().cublas_handle_) CUBLAS_CHECK(cublasDestroy(Get().cublas_handle_));
+  CAFFE1_CUDA_CHECK(cudaSetDevice(device_id));
+  if (Get().cublas_handle_) CAFFE1_CUBLAS_CHECK(cublasDestroy(Get().cublas_handle_));
   if (Get().cusparse_handle_)
     CUSPARSE_CHECK(cusparseDestroy(Get().cusparse_handle_));
   if (Get().cusparse_mat_descr_)
     CUSPARSE_CHECK(cusparseDestroyMatDescr(Get().cusparse_mat_descr_));
   if (Get().curand_generator_) {
-    CURAND_CHECK(curandDestroyGenerator(Get().curand_generator_));
+    CAFFE1_CURAND_CHECK(curandDestroyGenerator(Get().curand_generator_));
   }
-  CUBLAS_CHECK(cublasCreate(&Get().cublas_handle_));
+  CAFFE1_CUBLAS_CHECK(cublasCreate(&Get().cublas_handle_));
   CUSPARSE_CHECK(cusparseCreate(&Get().cusparse_handle_));
   CUSPARSE_CHECK(cusparseCreateMatDescr(&Get().cusparse_mat_descr_));
   cusparseSetMatType(Get().cusparse_mat_descr_, CUSPARSE_MATRIX_TYPE_GENERAL);
   cusparseSetMatIndexBase(Get().cusparse_mat_descr_, CUSPARSE_INDEX_BASE_ZERO);
-  CURAND_CHECK(curandCreateGenerator(&Get().curand_generator_,
+  CAFFE1_CURAND_CHECK(curandCreateGenerator(&Get().curand_generator_,
       CURAND_RNG_PSEUDO_DEFAULT));
-  CURAND_CHECK(curandSetPseudoRandomGeneratorSeed(Get().curand_generator_,
+  CAFFE1_CURAND_CHECK(curandSetPseudoRandomGeneratorSeed(Get().curand_generator_,
       cluster_seedgen()));
 }
 
@@ -194,7 +194,7 @@ void Caffe::DeviceQuery() {
     printf("No cuda device present.\n");
     return;
   }
-  CUDA_CHECK(cudaGetDeviceProperties(&prop, device));
+  CAFFE1_CUDA_CHECK(cudaGetDeviceProperties(&prop, device));
   LOG(INFO) << "Device id:                     " << device;
   LOG(INFO) << "Major revision number:         " << prop.major;
   LOG(INFO) << "Minor revision number:         " << prop.minor;
@@ -249,7 +249,7 @@ int Caffe::FindDevice(const int start_id) {
   // EXCLUSIVE_PROCESS or EXCLUSIVE_THREAD mode, if it succeeds, it also
   // claims the device due to the initialization of the context.
   int count = 0;
-  CUDA_CHECK(cudaGetDeviceCount(&count));
+  CAFFE1_CUDA_CHECK(cudaGetDeviceCount(&count));
   for (int i = start_id; i < count; i++) {
     if (CheckDevice(i)) return i;
   }

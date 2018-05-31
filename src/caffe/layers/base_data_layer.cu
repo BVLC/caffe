@@ -22,7 +22,7 @@ void BasePrefetchingDataLayer<Dtype>::Forward_gpu(
   }
   // Ensure the copy is synchronous wrt the host, so that the next batch isn't
   // copied in meanwhile.
-  CUDA_CHECK(cudaStreamSynchronize(cudaStreamDefault));
+  CAFFE1_CUDA_CHECK(cudaStreamSynchronize(cudaStreamDefault));
   prefetch_free_.push(batch);
 }
 
@@ -57,7 +57,7 @@ void BasePrefetchingSparseDataLayer<Dtype>::Forward_gpu(
 
   // Ensure the copy is synchronous wrt the host, so that the next batch isn't
   // copied in meanwhile.
-  CUDA_CHECK(cudaStreamSynchronize(cudaStreamDefault));
+  CAFFE1_CUDA_CHECK(cudaStreamSynchronize(cudaStreamDefault));
   prefetch_free_.push(batch);
 }
 
