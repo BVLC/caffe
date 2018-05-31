@@ -614,6 +614,8 @@ message LayerParameter {
   
   optional ReorgParameter reorg_param = 159;
   optional RegionLossParameter region_loss_param = 209;
+  // Yolo detection evaluation layer
+  optional EvalDetectionParameter eval_detection_param = 301;
 }
 
 message RegionLossParameter{
@@ -637,6 +639,24 @@ message RegionLossParameter{
   repeated float biases = 16;
   optional string softmax_tree = 17;
   optional string class_map = 18;
+}
+
+message EvalDetectionParameter {
+  enum ScoreType {
+    OBJ = 0;
+    PROB = 1;
+    MULTIPLY = 2;
+  }
+  // Yolo detection evaluation layer
+  optional uint32 side = 1 [default = 7];
+  optional uint32 num_class = 2 [default = 20];
+  optional uint32 num_object = 3 [default = 2];
+  optional float threshold = 4 [default = 0.5];
+  optional bool sqrt = 5 [default = true];
+  optional bool constriant = 6 [default = true];
+  optional ScoreType score_type = 7 [default = MULTIPLY];
+  optional float nms = 8 [default = -1];
+  repeated float biases = 9;
 }
 
 message MultinodeLayerParameter {
