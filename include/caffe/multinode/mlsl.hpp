@@ -96,6 +96,24 @@ namespace caffe {
       return rank;
     }
 
+    inline int get_ppn() {
+      int is_mpi_inited = 0;
+      MPI_Initialized(&is_mpi_inited);
+      assert(is_mpi_inited);
+
+      int ppn = 1;
+      int rank;
+      MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+      MPI_Comm node_comm;
+      MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, rank, MPI_INFO_NULL, &node_comm);
+      MPI_Comm_size(node_comm, &ppn);
+      MPI_Comm_free(&node_comm);
+
+      DLOG(INFO) << "ppn " << ppn;
+
+      return ppn;
+    }
+
     inline bool is_multinode() {
       static bool multinode{ get_world_size() > 1 };
       return multinode;
