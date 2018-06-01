@@ -21,12 +21,6 @@ template <typename Dtype>
 void disp(Blob<Dtype>& swap);
 
 template <typename Dtype>
-inline Dtype sigmoid(Dtype x)
-{
-  return 1. / (1. + exp(-x));
-}
-
-template <typename Dtype>
 Dtype softmax_region(Dtype* input, int classes);
 //template <typename Dtype>
 //Dtype softmax_region(Dtype* input, int n, float temp, Dtype* output);
