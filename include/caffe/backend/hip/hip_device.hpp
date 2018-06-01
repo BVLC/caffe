@@ -8,7 +8,7 @@ namespace caffe {
 
 #ifdef USE_HIP
 
-class hip_device : public device {
+class HipDevice : public Device {
  public:
  protected:
  private:

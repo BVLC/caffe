@@ -65,10 +65,6 @@ else()
   endif()
 endif()
 
-include_directories(SYSTEM ${HDF5_INCLUDE_DIRS} ${HDF5_HL_INCLUDE_DIR})
-list(APPEND Caffe_LINKER_LIBS PUBLIC ${HDF5_LIBRARIES} ${HDF5_HL_LIBRARIES})
-list(APPEND Caffe_INCLUDE_DIRS PUBLIC ${HDF5_INCLUDE_DIRS})
-
 # This code is taken from https://github.com/sh1r0/caffe-android-lib
 if(USE_HDF5)
   find_package(HDF5 COMPONENTS HL REQUIRED)
@@ -242,7 +238,7 @@ endif()
 
 # ---[ clBLAS
 if (USE_CLBLAS AND NOT USE_ISAAC)
-  find_package(clBLAS)
+  find_package(clBLAS REQUIRED)
   if (NOT CLBLAS_FOUND)
     message(FATAL_ERROR "clBLAS required but not found.")
   endif()
@@ -253,7 +249,7 @@ endif()
 
 # ---[ ISAAC
 if (USE_ISAAC)
-  find_package(ISAAC)
+  find_package(ISAAC REQUIRED)
   if (NOT ISAAC_FOUND)
     message(FATAL_ERROR "ISAAC required but not found.")
   endif()
@@ -264,8 +260,10 @@ endif()
 # ---[ CLBlast
 if (USE_CLBLAST)
   find_package(CLBlast REQUIRED)
-  message(STATUS "CLBlast found")
-  list(APPEND Caffe_LINKER_LIBS PUBLIC clblast)
+  if (NOT CLBLAST_FOUND)
+    message(FATAL_ERROR "CLBlast required but not found.")
+  endif()
+  list(APPEND Caffe_LINKER_LIBS PUBLIC ${CLBLAST_LIBRARY})
   list(APPEND Caffe_DEFINITIONS PUBLIC -DUSE_CLBLAST)
 endif()
 

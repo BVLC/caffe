@@ -15,7 +15,7 @@ set(GFLAGS_ROOT_DIR "" CACHE PATH "Folder contains Gflags")
 
 # We are testing only a couple of files in the include directories
 find_path(GFLAGS_INCLUDE_DIR gflags/gflags.h
-    PATHS ${GFLAGS_ROOT_DIR})
+    PATHS ${GFLAGS_ROOT_DIR} /usr/include)
 
 if(MSVC)
     # rely on gflags-config.cmake

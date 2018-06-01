@@ -339,7 +339,7 @@ string LibDNNBlas<MItype, MOtype>::generate_gemm_source(
     ss << this->generate_gemm_core(tuner, false, alpha_term,
                                    alpha_exactly_one);
 
-    if (is_integer_type<MItype>()) {
+    /*if (is_integer_type<MItype>()) {
       // Add up columns of A
       ss << "for (int_tp k = 0; k < TSK; ++k) {" << std::endl;
       ss << "if (tidn == 0) {" << std::endl;
@@ -356,7 +356,7 @@ string LibDNNBlas<MItype, MOtype>::generate_gemm_source(
          << std::endl;
       ss << "}}" << std::endl;
       ss << "}" << std::endl;
-    }
+    }*/
 
     // Synchronize before loading the next tile
     ss << program->local_barrier() << std::endl;

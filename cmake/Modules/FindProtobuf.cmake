@@ -208,7 +208,7 @@ endif()
 # Find the include directory
 find_path(PROTOBUF_INCLUDE_DIR
     google/protobuf/service.h
-    PATHS ${PROTOBUF_SRC_ROOT_FOLDER}/src
+    PATHS ${PROTOBUF_SRC_ROOT_FOLDER}/src /usr/include
 )
 mark_as_advanced(PROTOBUF_INCLUDE_DIR)
 

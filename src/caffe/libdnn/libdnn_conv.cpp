@@ -61,7 +61,7 @@ LibDNNConv<MItype, MOtype>::LibDNNConv(LibDNNConvConfig config)
   for (int id = 0; id < 2; ++id) {
     vector<int_tp> workgroup_sizes;
     for (int_tp i = 0; i < this->dev_ptr_->workgroup_size(id);
-            i += 4) {
+            i += 1) {
       workgroup_sizes.push_back(i);
     }
     fw_tuner_->add_set_param <int_tp>("workgroup_size_" + std::to_string(id),
@@ -956,7 +956,7 @@ string LibDNNConv<MItype, MOtype>::generate_fw_kernels(string name) {
 
   ss << this->generate_gemm_core(fw_tuner_, false, false, false) << std::endl;
 
-  if (is_integer_type<MItype>()) {
+  /*if (is_integer_type<MItype>()) {
     // Add up columns of A
     ss << "for (int_tp k = 0; k < TSK; ++k) {" << std::endl;
     ss << "if (tidn == 0) {" << std::endl;
@@ -973,7 +973,7 @@ string LibDNNConv<MItype, MOtype>::generate_fw_kernels(string name) {
        << std::endl;
     ss << "}}" << std::endl;
     ss << "}" << std::endl;
-  }
+  }*/
 
   // Synchronize before loading the next tile
   ss << this->program_->local_barrier() << std::endl;

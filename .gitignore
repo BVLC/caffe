@@ -86,8 +86,10 @@ cmake_build
 build
 build_opencl
 build_cuda
+build_arm
 .build_opencl
 .build_cuda
+.build_arm
 .build
 .build_debug/*
 .build_release/*

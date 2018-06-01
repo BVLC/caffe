@@ -15,8 +15,8 @@
 if(MSVC)
   find_package(LMDB NO_MODULE)
 else()
-  find_path(LMDB_INCLUDE_DIR NAMES  lmdb.h PATHS "$ENV{LMDB_DIR}/include")
-  find_library(LMDB_LIBRARIES NAMES lmdb   PATHS "$ENV{LMDB_DIR}/lib" )
+  find_path(LMDB_INCLUDE_DIR NAMES  lmdb.h PATHS "$ENV{LMDB_DIR}/include" "/usr/include")
+  find_library(LMDB_LIBRARIES NAMES lmdb   PATHS "$ENV{LMDB_DIR}/lib" "/usr/lib" "/usr/lib64")
 endif()
 
 include(FindPackageHandleStandardArgs)

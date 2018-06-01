@@ -255,8 +255,8 @@ void Quantizer<MItype, MOtype>::update_param(const QuantizerParameter& param) {
     }
   }
 
-  this->in_vals_.compute_values<MItype>(this->flt_min_, this->flt_max_);
-  this->out_vals_.compute_values<MOtype>(this->flt_min_, this->flt_max_);
+  this->in_vals_.template compute_values<MItype>(this->flt_min_, this->flt_max_);
+  this->out_vals_.template compute_values<MOtype>(this->flt_min_, this->flt_max_);
 
   // Need to recompile after changes to the quantizer parameters
   program_ready_ = false;
@@ -393,10 +393,10 @@ void Quantizer<MItype, MOtype>::Forward_cpu(
                                                   ::type>::type>::type Difftype;
 
     const Difftype scal = static_cast<Difftype>(fw_scale_before_cast_val());
-    const Difftype in_zero = this->in_vals_.get_zero<Difftype>();
-    const Difftype out_zero = this->out_vals_.get_zero<Difftype>();
-    const Difftype min_out = this->out_vals_.get_min<Difftype>();
-    const Difftype max_out = this->out_vals_.get_max<Difftype>();
+    const Difftype in_zero = this->in_vals_.template get_zero<Difftype>();
+    const Difftype out_zero = this->out_vals_.template get_zero<Difftype>();
+    const Difftype min_out = this->out_vals_.template get_min<Difftype>();
+    const Difftype max_out = this->out_vals_.template get_max<Difftype>();
     if (fw_scale_divide()) {
       for (size_t i = 0; i < n; ++i) {
         Difftype centered_input = static_cast<Difftype>(input[i]) - in_zero;
@@ -419,10 +419,10 @@ void Quantizer<MItype, MOtype>::Forward_cpu(
                                                   ::type>::type>::type Difftype;
 
     const Difftype scal = static_cast<Difftype>(fw_scale_after_cast_val());
-    const Difftype in_zero = this->in_vals_.get_zero<Difftype>();
-    const Difftype out_zero = this->out_vals_.get_zero<Difftype>();
-    const Difftype min_out = this->out_vals_.get_min<Difftype>();
-    const Difftype max_out = this->out_vals_.get_max<Difftype>();
+    const Difftype in_zero = this->in_vals_.template get_zero<Difftype>();
+    const Difftype out_zero = this->out_vals_.template get_zero<Difftype>();
+    const Difftype min_out = this->out_vals_.template get_min<Difftype>();
+    const Difftype max_out = this->out_vals_.template get_max<Difftype>();
     if (fw_scale_divide()) {
       for (size_t i = 0; i < n; ++i) {
         Difftype centered_output = (static_cast<Difftype>(input[i]) - in_zero)
@@ -492,10 +492,10 @@ void Quantizer<MItype, MOtype>::Backward_cpu(
                                                   ::type>::type>::type Difftype;
 
     const Difftype scal = static_cast<Difftype>(bw_scale_before_cast_val());
-    const Difftype in_zero = this->out_vals_.get_zero<Difftype>();
-    const Difftype out_zero = this->in_vals_.get_zero<Difftype>();
-    const Difftype min_out = this->in_vals_.get_min<Difftype>();
-    const Difftype max_out = this->in_vals_.get_max<Difftype>();
+    const Difftype in_zero = this->out_vals_.template get_zero<Difftype>();
+    const Difftype out_zero = this->in_vals_.template get_zero<Difftype>();
+    const Difftype min_out = this->in_vals_.template get_min<Difftype>();
+    const Difftype max_out = this->in_vals_.template get_max<Difftype>();
     if (bw_scale_divide()) {
       for (size_t i = 0; i < n; ++i) {
         Difftype centered_input = static_cast<Difftype>(input[i]) - in_zero;
@@ -518,10 +518,10 @@ void Quantizer<MItype, MOtype>::Backward_cpu(
                                                   ::type>::type>::type Difftype;
 
     const Difftype scal = static_cast<Difftype>(bw_scale_after_cast_val());
-    const Difftype in_zero = this->out_vals_.get_zero<Difftype>();
-    const Difftype out_zero = this->in_vals_.get_zero<Difftype>();
-    const Difftype min_out = this->in_vals_.get_min<Difftype>();
-    const Difftype max_out = this->in_vals_.get_max<Difftype>();
+    const Difftype in_zero = this->out_vals_.template get_zero<Difftype>();
+    const Difftype out_zero = this->in_vals_.template get_zero<Difftype>();
+    const Difftype min_out = this->in_vals_.template get_min<Difftype>();
+    const Difftype max_out = this->in_vals_.template get_max<Difftype>();
     if (bw_scale_divide()) {
       for (size_t i = 0; i < n; ++i) {
         Difftype centered_output = (static_cast<Difftype>(input[i]) - in_zero)

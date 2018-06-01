@@ -133,7 +133,7 @@ endif()
 configure_file(${caffe_export_hdr_in} ${caffe_export_hdr})
 
 # ---[ Tests
- add_subdirectory(test)
+add_subdirectory(test)
 
 # ---[ Install
 install(DIRECTORY ${Caffe_INCLUDE_DIR}/caffe DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

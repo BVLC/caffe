@@ -53,6 +53,14 @@ string LibDNN<MItype, MOtype>::generate_gemm_core(
        << " = Bsub[k][col + " << (i * rtsn)
        << "];" << std::endl;
   }
+  if (is_integer_type<MItype>()) {
+    ss << "if (tidm == 0) {" << std::endl;
+    for (int i = 0; i < vwn; ++i) {
+      ss << "Bsubcols[col + " << (i * rtsn) << "] += VEC_" << vwn << "_" << i
+         << "(Breg[wn]);" << std::endl;
+    }
+    ss << "}" << std::endl;
+  }
   ss << "}" << std::endl;
 
   // Perform the computation
@@ -62,6 +70,14 @@ string LibDNN<MItype, MOtype>::generate_gemm_core(
   for (int i = 0; i < vwm; ++i) {
     ss << "VEC_" << vwm << "_" << i << "(Areg)" << " = Asub[row + " << (i*rtsm)
        << "][k];" << std::endl;
+  }
+  if (is_integer_type<MItype>()) {
+    ss << "if (tidn == 0) {" << std::endl;
+    for (int i = 0; i < vwm; ++i) {
+      ss << "Asubrows[row + " << (i*rtsm) << "] += VEC_" << vwm << "_" << i
+         << "(Areg);" << std::endl;
+    }
+    ss << "}" << std::endl;
   }
   if (dterm) {
     if (unroll) {

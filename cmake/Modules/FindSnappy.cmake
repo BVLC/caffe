@@ -12,10 +12,10 @@ if(MSVC)
   find_package(Snappy NO_MODULE)
 else()
   find_path(Snappy_INCLUDE_DIR NAMES snappy.h
-                              PATHS ${SNAPPY_ROOT_DIR} ${SNAPPY_ROOT_DIR}/include)
+                              PATHS "${SNAPPY_ROOT_DIR}" "${SNAPPY_ROOT_DIR}/include" "/usr/include")
 
   find_library(Snappy_LIBRARIES NAMES snappy
-                                PATHS ${SNAPPY_ROOT_DIR} ${SNAPPY_ROOT_DIR}/lib)
+                                PATHS "${SNAPPY_ROOT_DIR}" "${SNAPPY_ROOT_DIR}/lib" "/usr/lib" "/usr/lib64")
 endif()
 
 include(FindPackageHandleStandardArgs)

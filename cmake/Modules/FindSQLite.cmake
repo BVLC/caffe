@@ -16,10 +16,10 @@
 # SQLITE3_FOUND	- True if sqlite found.
 
 # Look for the header file.
-FIND_PATH(SQLITE3_INCLUDE_DIR NAMES sqlite3.h sqlite.h)
+FIND_PATH(SQLITE3_INCLUDE_DIR NAMES sqlite3.h sqlite.h PATHS "/usr/include")
 
 # Look for the library.
-FIND_LIBRARY(SQLITE3_LIBRARY NAMES sqlite3 sqlite)
+FIND_LIBRARY(SQLITE3_LIBRARY NAMES sqlite3 sqlite PATHS "/usr/lib" "/usr/lib64")
 
 # Handle the QUIETLY and REQUIRED arguments and set SQLITE3_FOUND to TRUE if all listed variables are TRUE.
 INCLUDE(FindPackageHandleStandardArgs)
