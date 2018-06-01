@@ -9,7 +9,7 @@ template <typename Dtype>
 void DiceCoefLossLayer<Dtype>::Reshape(
   const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   LossLayer<Dtype>::Reshape(bottom, top);
-  CHECK_EQ(bottom[0]->count(1), bottom[1]->count(1))
+    CHECK_EQ(bottom[0]->count(1), bottom[1]->count(1))
       << "Inputs must have the same dimension.";
   const int batchsize = bottom[0]->num();
   const int dim = bottom[0]->count(1);
@@ -47,23 +47,23 @@ void DiceCoefLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   caffe_mul(bottom[0]->count(), bottom[0]->cpu_data(), bottom[0]->cpu_data(),
             tmp_.mutable_cpu_data());
   // result_tmp_ <- 1.*tmp_ * multiplier + 1*results_tmp_
-  caffe_cpu_gemv(CblasNoTrans, bottom[0]->num(), bottom[0]->count(1), Dtype(1.), tmp_.cpu_data(), 
-                    multiplier_.cpu_data(), Dtype(1.), result_tmp_.mutable_cpu_data());
+  caffe_cpu_gemv(CblasNoTrans, bottom[0]->num(), bottom[0]->count(1), Dtype(1.), tmp_.cpu_data(),
+                 multiplier_.cpu_data(), Dtype(1.), result_tmp_.mutable_cpu_data());
   // tmp_ <- b1 * b1
   caffe_mul(bottom[1]->count(), bottom[1]->cpu_data(), bottom[1]->cpu_data(),
-              tmp_.mutable_cpu_data());
+            tmp_.mutable_cpu_data());
   // result_tmp_ <- 1*tmp_*mult + 1*result_tmp
-  caffe_cpu_gemv(CblasNoTrans, bottom[1]->num(), bottom[1]->count(1), Dtype(1.), tmp_.cpu_data(), 
-                    multiplier_.cpu_data(), Dtype(1.), result_tmp_.mutable_cpu_data());
-  // tmp_ <- b0 * b1
-  caffe_mul(bottom[0]->count(), bottom[0]->cpu_data(), bottom[1]->cpu_data(), 
-                tmp_.mutable_cpu_data());
-  // result_ <- 1* tmp_ * multiplier + 1 *result_
-  caffe_cpu_gemv(CblasNoTrans, bottom[1]->num(), bottom[1]->count(1), Dtype(2.), tmp_.cpu_data(), 
-                    multiplier_.cpu_data(), Dtype(1.), result_.mutable_cpu_data());
-  // result_ <- result / result_tmp
-  caffe_div(bottom[0]->num(), result_.cpu_data(), result_tmp_.cpu_data(), result_.mutable_cpu_data());
-  
+  caffe_cpu_gemv(CblasNoTrans, bottom[1]->num(), bottom[1]->count(1), Dtype(1.), tmp_.cpu_data(),
+                 multiplier_.cpu_data(), Dtype(1.), result_tmp_.mutable_cpu_data());
+
+  caffe_mul(bottom[0]->count(), bottom[0]->cpu_data(), bottom[1]->cpu_data(),
+            tmp_.mutable_cpu_data());
+  caffe_cpu_gemv(CblasNoTrans, bottom[1]->num(), bottom[1]->count(1), Dtype(2.), tmp_.cpu_data(),
+                 multiplier_.cpu_data(), Dtype(1.), result_.mutable_cpu_data());
+  caffe_div(bottom[0]->num(), result_.cpu_data(), result_tmp_.cpu_data(),
+            result_.mutable_cpu_data());
+
+
   Dtype loss = Dtype(1) - caffe_cpu_asum(bottom[0]->num(), result_.cpu_data()) / bottom[0]->num();
   top[0]->mutable_cpu_data()[0] = loss;
 }
@@ -81,14 +81,16 @@ void DiceCoefLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
         const Dtype alpha = sign * top[0]->cpu_diff()[0] / result_tmp_.cpu_data()[j];
         // LOG(INFO) << top[0]->cpu_diff()[0];
         caffe_cpu_axpby(
-          bottom[i]->count(1),              // count
-          alpha*Dtype(-2),                  // alpha
-          bottom[index]->cpu_data()+j*bottom[i]->count(1),        // a
-          alpha*result_.cpu_data()[j]*Dtype(2),                      // beta
-          bottom[i]->mutable_cpu_diff()+j*bottom[i]->count(1)
-        );  // b
+                        bottom[i]->count(1),              // count
+                        alpha*Dtype(-2),                  // alpha
+                        bottom[index]->cpu_data()+j*bottom[i]->count(1),        // a
+                        alpha*result_.cpu_data()[j]*Dtype(2),                      // beta
+                        bottom[i]->mutable_cpu_diff()+j*bottom[i]->count(1)
+                        );  // b
         // GUILLO: CHECKED OK for NO GENERALIZATION
-      } 
+        //caffe_scal(bottom[i]->count(1), Dtype(bottom[i]->count(1)),
+        //         bottom[i]->mutable_cpu_diff()+j*bottom[i]->count(1));
+      }
     }
   }
 }
