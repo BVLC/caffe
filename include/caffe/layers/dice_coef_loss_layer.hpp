@@ -50,9 +50,9 @@ class DiceCoefLossLayer : public LossLayer<Dtype> {
    * Unlike most loss layers, in the DiceCoefLossLayer we can backpropagate
    * to both inputs -- override to return true and always allow force_backward.
    */
-  virtual inline bool AllowForceBackward(const int bottom_index) const {
-    return true;
-  }
+  // virtual inline bool AllowForceBackward(const int bottom_index) const {
+  //   return true;
+  //  }
 
  protected:
   /// @copydoc DiceCoefLossLayer
