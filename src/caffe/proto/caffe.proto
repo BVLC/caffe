@@ -770,10 +770,7 @@ message DiceCoefLossParameter {
     BINARY = 1; // do no ignore any label, not yet implemented
     BINARY_WEIGHTED = 2; // generalized dice loss for two classes, not yet implemented
   }
-  optional GeneralizationMode generalization = 3 [default = NONE];
-
-  optional bool squared = 4 [default = false];
-  
+  optional GeneralizationMode generalization = 3 [default = NONE];  
 }
 
 // Message that stores parameters shared by loss layers

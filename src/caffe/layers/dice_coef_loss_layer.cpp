@@ -42,46 +42,31 @@ template <typename Dtype>
 void DiceCoefLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
 
+  // below is ok for no generalization == ignore_label == 0
+  // tmp_ <- b0 * b0
+  caffe_mul(bottom[0]->count(), bottom[0]->cpu_data(), bottom[0]->cpu_data(),
+            tmp_.mutable_cpu_data());
+  // result_tmp_ <- 1.*tmp_ * multiplier + 1*results_tmp_
+  caffe_cpu_gemv(CblasNoTrans, bottom[0]->num(), bottom[0]->count(1), Dtype(1.), tmp_.cpu_data(),
+                 multiplier_.cpu_data(), Dtype(1.), result_tmp_.mutable_cpu_data());
+  // tmp_ <- b1 * b1
+  caffe_mul(bottom[1]->count(), bottom[1]->cpu_data(), bottom[1]->cpu_data(),
+            tmp_.mutable_cpu_data());
+  // result_tmp_ <- 1*tmp_*mult + 1*result_tmp
+  caffe_cpu_gemv(CblasNoTrans, bottom[1]->num(), bottom[1]->count(1), Dtype(1.), tmp_.cpu_data(),
+                 multiplier_.cpu_data(), Dtype(1.), result_tmp_.mutable_cpu_data());
+
+  caffe_mul(bottom[0]->count(), bottom[0]->cpu_data(), bottom[1]->cpu_data(),
+            tmp_.mutable_cpu_data());
+  caffe_cpu_gemv(CblasNoTrans, bottom[1]->num(), bottom[1]->count(1), Dtype(2.), tmp_.cpu_data(),
+                 multiplier_.cpu_data(), Dtype(1.), result_.mutable_cpu_data());
+  caffe_div(bottom[0]->num(), result_.cpu_data(), result_tmp_.cpu_data(),
+            result_.mutable_cpu_data());
 
 
-  if (this->layer_param_.dice_coef_loss_param().squared())
-    {
-      // below is ok for no generalization == ignore_label == 0
-      // tmp_ <- b0 * b0
-      caffe_mul(bottom[0]->count(), bottom[0]->cpu_data(), bottom[0]->cpu_data(),
-                tmp_.mutable_cpu_data());
-      // result_tmp_ <- 1.*tmp_ * multiplier + 1*results_tmp_
-      caffe_cpu_gemv(CblasNoTrans, bottom[0]->num(), bottom[0]->count(1), Dtype(1.), tmp_.cpu_data(),
-                     multiplier_.cpu_data(), Dtype(1.), result_tmp_.mutable_cpu_data());
-      // tmp_ <- b1 * b1
-      caffe_mul(bottom[1]->count(), bottom[1]->cpu_data(), bottom[1]->cpu_data(),
-                tmp_.mutable_cpu_data());
-      // result_tmp_ <- 1*tmp_*mult + 1*result_tmp
-      caffe_cpu_gemv(CblasNoTrans, bottom[1]->num(), bottom[1]->count(1), Dtype(1.), tmp_.cpu_data(),
-                     multiplier_.cpu_data(), Dtype(1.), result_tmp_.mutable_cpu_data());
-    }
-  else
-    {
-  // below unsquared version
-      caffe_cpu_gemv(CblasNoTrans, bottom[0]->num(), bottom[0]->count(1),
-                     Dtype(1.), bottom[0]->cpu_data(),
-                     multiplier_.cpu_data(), Dtype(1.), result_tmp_.mutable_cpu_data());
-      caffe_cpu_gemv(CblasNoTrans, bottom[1]->num(), bottom[1]->count(1),
-                     Dtype(1.),  bottom[1]->cpu_data(),
-                     multiplier_.cpu_data(), Dtype(1.), result_tmp_.mutable_cpu_data());
-    }
-
-      caffe_mul(bottom[0]->count(), bottom[0]->cpu_data(), bottom[1]->cpu_data(),
-                tmp_.mutable_cpu_data());
-      caffe_cpu_gemv(CblasNoTrans, bottom[1]->num(), bottom[1]->count(1), Dtype(2.), tmp_.cpu_data(),
-                     multiplier_.cpu_data(), Dtype(1.), result_.mutable_cpu_data());
-      caffe_div(bottom[0]->num(), result_.cpu_data(), result_tmp_.cpu_data(),
-                result_.mutable_cpu_data());
-
-
-      Dtype loss = Dtype(1) - caffe_cpu_asum(bottom[0]->num(), result_.cpu_data()) / bottom[0]->num();
-      top[0]->mutable_cpu_data()[0] = loss;
-    }
+  Dtype loss = Dtype(1) - caffe_cpu_asum(bottom[0]->num(), result_.cpu_data()) / bottom[0]->num();
+  top[0]->mutable_cpu_data()[0] = loss;
+}
 
 template <typename Dtype>
 void DiceCoefLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
@@ -90,46 +75,22 @@ void DiceCoefLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     if (propagate_down[i]) {
       const Dtype sign = Dtype(1.0);
       const int index = (i == 0) ? 1 : 0;
-      if (this->layer_param_.dice_coef_loss_param().squared())
-        {
-          caffe_copy(bottom[i]->count(), bottom[i]->cpu_data(), bottom[i]->mutable_cpu_diff());
-          for (int j = 0; j < bottom[i]->num(); j++) {
-            //top[0]->cpu_diff()[0] is implicitely this loss weight, 1 for first top blob by default
-            const Dtype alpha = sign * top[0]->cpu_diff()[0] / result_tmp_.cpu_data()[j];
-            // LOG(INFO) << top[0]->cpu_diff()[0];
-            caffe_cpu_axpby(
-                            bottom[i]->count(1),              // count
-                            alpha*Dtype(-2),                  // alpha
-                            bottom[index]->cpu_data()+j*bottom[i]->count(1),        // a
-                            alpha*result_.cpu_data()[j]*Dtype(2),                      // beta
-                            bottom[i]->mutable_cpu_diff()+j*bottom[i]->count(1)
-                            );  // b
+      caffe_copy(bottom[i]->count(), bottom[i]->cpu_data(), bottom[i]->mutable_cpu_diff());
+      for (int j = 0; j < bottom[i]->num(); j++) {
+        //top[0]->cpu_diff()[0] is implicitely this loss weight, 1 for first top blob by default
+        const Dtype alpha = sign * top[0]->cpu_diff()[0] / result_tmp_.cpu_data()[j];
+        // LOG(INFO) << top[0]->cpu_diff()[0];
+        caffe_cpu_axpby(
+                        bottom[i]->count(1),              // count
+                        alpha*Dtype(-2),                  // alpha
+                        bottom[index]->cpu_data()+j*bottom[i]->count(1),        // a
+                        alpha*result_.cpu_data()[j]*Dtype(2),                      // beta
+                        bottom[i]->mutable_cpu_diff()+j*bottom[i]->count(1)
+                        );  // b
         // GUILLO: CHECKED OK for NO GENERALIZATION
-            //caffe_scal(bottom[i]->count(1), Dtype(bottom[i]->count(1)),
-            //         bottom[i]->mutable_cpu_diff()+j*bottom[i]->count(1));
-          }
-        }
-      else
-        {
-          caffe_set(bottom[i]->count(), Dtype(0.), bottom[i]->mutable_cpu_diff());
-          for (int j = 0; j < bottom[i]->num(); j++) {
-            //top[0]->cpu_diff()[0] is implicitely this loss weight, 1 for first top blob by default
-            const Dtype alpha = sign * top[0]->cpu_diff()[0] / result_tmp_.cpu_data()[j];
-            // LOG(INFO) << top[0]->cpu_diff()[0];
-            caffe_cpu_axpby(
-                            bottom[i]->count(1),              // count
-                            alpha*Dtype(-2),                  // alpha
-                            bottom[index]->cpu_data()+j*bottom[i]->count(1),        // a
-                            alpha*result_.cpu_data()[j],                      // beta
-                            bottom[i]->mutable_cpu_diff()+j*bottom[i]->count(1)
-                            );  // b
-           // GUILLO: CHECKED OK for NO GENERALIZATION
-
-          //
-            //            caffe_scal(bottom[i]->count(1), Dtype(bottom[i]->count(1)),
-            //           bottom[i]->mutable_cpu_diff()+j*bottom[i]->count(1));
-          }
-        }
+        //caffe_scal(bottom[i]->count(1), Dtype(bottom[i]->count(1)),
+        //         bottom[i]->mutable_cpu_diff()+j*bottom[i]->count(1));
+      }
     }
   }
 }
