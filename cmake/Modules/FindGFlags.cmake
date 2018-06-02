@@ -15,7 +15,7 @@ set(GFLAGS_ROOT_DIR "" CACHE PATH "Folder contains Gflags")
 
 # We are testing only a couple of files in the include directories
 find_path(GFLAGS_INCLUDE_DIR gflags/gflags.h
-    PATHS ${GFLAGS_ROOT_DIR} /usr/include)
+    PATHS ${GFLAGS_ROOT_DIR} "/usr/include")
 
 if(MSVC)
     # rely on gflags-config.cmake
@@ -24,7 +24,7 @@ if(MSVC)
     set(GFLAGS_LIBRARY ${gflags_LIBRARIES})
     set(GFLAGS_INCLUDE_DIR ${gflags_INCLUDE_DIRS})
 else()
-    find_library(GFLAGS_LIBRARY gflags)
+    find_library(GFLAGS_LIBRARY gflags PATHS "/usr/lib" "/usr/lib64" "/usr/lib/arm-linux-gnueabihf")
 endif()
 
 find_package_handle_standard_args(GFlags DEFAULT_MSG GFLAGS_INCLUDE_DIR GFLAGS_LIBRARY)

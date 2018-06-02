@@ -16,7 +16,7 @@ else()
 
   # Look for the library.
   find_library(LevelDB_LIBRARY NAMES leveldb
-                               PATHS "$ENV{LEVELDB_ROOT}/lib" "/usr/lib" "/usr/lib64"
+                               PATHS "$ENV{LEVELDB_ROOT}/lib" "/usr/lib" "/usr/lib64" "/usr/lib/arm-linux-gnueabihf"
                                DOC "Path to leveldb library." )
 endif()
 

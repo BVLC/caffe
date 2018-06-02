@@ -15,7 +15,7 @@ else()
                               PATHS "${SNAPPY_ROOT_DIR}" "${SNAPPY_ROOT_DIR}/include" "/usr/include")
 
   find_library(Snappy_LIBRARIES NAMES snappy
-                                PATHS "${SNAPPY_ROOT_DIR}" "${SNAPPY_ROOT_DIR}/lib" "/usr/lib" "/usr/lib64")
+                                PATHS "${SNAPPY_ROOT_DIR}" "${SNAPPY_ROOT_DIR}/lib" "/usr/lib" "/usr/lib64" "/usr/lib/arm-linux-gnueabihf")
 endif()
 
 include(FindPackageHandleStandardArgs)

@@ -24,7 +24,7 @@ if(MSVC)
     set(GLOG_INCLUDE_DIR ${glog_INCLUDE_DIRS})
 else()
     find_library(GLOG_LIBRARY glog
-        PATHS ${GLOG_ROOT_DIR}
+        PATHS ${GLOG_ROOT_DIR} "/usr/lib" "/usr/lib64" "/usr/lib/arm-linux-gnueabihf"
         PATH_SUFFIXES lib lib64)
 endif()
 
