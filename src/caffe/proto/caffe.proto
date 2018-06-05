@@ -358,6 +358,10 @@ message SolverParameter {
   repeated int32 stepvalue = 34;
   // the stepsize for learning rate policy "plateau"
   repeated int32 plateau_winsize = 44;
+  
+  // for rate policy "multifixed"
+  repeated float stagelr = 150;
+  repeated int32 stageiter = 151;
 
   // Set clip_gradients to >= 0 to clip parameter gradients to that L2 norm,
   // whenever their actual L2 norm is larger.
