@@ -58,7 +58,7 @@ class DeviceKernel {
   void add_arg(vptr<const void> *arg);
 
  protected:
-  explicit DeviceKernel(Device* dev, KernelArgs args);
+  explicit DeviceKernel(Device* dev, string name, KernelArgs args);
 
   virtual void set_arg(uint_tp idx, const bool *arg) = 0;
   virtual void set_arg(uint_tp idx, const char *arg) = 0;
@@ -103,6 +103,7 @@ class DeviceKernel {
   virtual void set_arg(uint_tp idx, vptr<const void> *arg) = 0;
 
   Device *device_;
+  string name_;
   uint_tp arg_idx_;
   KernelArgs args_;
 };

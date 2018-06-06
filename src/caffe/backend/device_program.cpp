@@ -367,6 +367,27 @@ KernelArg DeviceProgram::create_kernel_arg<uint64_t>(
   return std::make_tuple(type, name, flags);
 }
 
+KernelHint DeviceProgram::create_kernel_hint(KernelHintOption option,
+                                             string value) {
+  return std::make_tuple(option, value);
+}
+KernelHint DeviceProgram::create_kernel_hint(KernelHintOption option,
+                                             int8_t value) {
+  return std::make_tuple(option, std::to_string(value));
+}
+KernelHint DeviceProgram::create_kernel_hint(KernelHintOption option,
+                                             int16_t value) {
+  return std::make_tuple(option, std::to_string(value));
+}
+KernelHint DeviceProgram::create_kernel_hint(KernelHintOption option,
+                                             int32_t value) {
+  return std::make_tuple(option, std::to_string(value));
+}
+KernelHint DeviceProgram::create_kernel_hint(KernelHintOption option,
+                                             int64_t value) {
+  return std::make_tuple(option, std::to_string(value));
+}
+
 string DeviceProgram::string_identifier() {
   return hash_hex_string(identifier_);
 }

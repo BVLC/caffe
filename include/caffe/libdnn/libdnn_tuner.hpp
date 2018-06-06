@@ -90,6 +90,7 @@ class LibDNNTunerParam {
     name_(other.name_), curr_idx_(other.curr_idx_), def_idx_(other.def_idx_)
   {}
 
+  virtual void set_value(int64_t value) = 0;
   virtual int_tp count_values() = 0;
   virtual shared_ptr<LibDNNTunerParam> clone() = 0;
 
@@ -123,6 +124,7 @@ class LibDNNTunerParamInt: public LibDNNTunerParam {
   LibDNNTunerParamInt(LibDNNTunerParamInt& other) :  // NOLINT
     LibDNNTunerParam(other), values_(other.values_) {
   }
+  void set_value(int64_t value);
   int64_t get_value();
   const vector<int64_t>& get_values();
   int_tp count_values();
@@ -143,6 +145,7 @@ class LibDNNTunerParamBool: public LibDNNTunerParam {
   LibDNNTunerParamBool(LibDNNTunerParamBool& other) :  // NOLINT
     LibDNNTunerParam(other), values_(other.values_) {
   }
+  void set_value(int64_t value);
   bool get_value();
   const vector<bool>& get_values();
   int_tp count_values();
@@ -163,6 +166,7 @@ class LibDNNTunerParamReal: public LibDNNTunerParam {
   LibDNNTunerParamReal(LibDNNTunerParamReal& other) :  // NOLINT
     LibDNNTunerParam(other), values_(other.values_) {
   }
+  void set_value(int64_t value);
   double get_value();
   const vector<double>& get_values();
   int_tp count_values();
@@ -269,6 +273,8 @@ class LibDNNTuner {
   T get_param(string name);
   template<class T>
   T get_param(const char* name);
+
+  void load_params(std::map<string, int64_t> params);
 
  protected:
   void snapshot();

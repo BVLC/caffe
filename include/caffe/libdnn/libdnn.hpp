@@ -30,6 +30,8 @@ class LibDNN : public LibDNNBase {
   string generate_gemm_core(shared_ptr<LibDNNTuner> tuner, bool dterm,
                             bool alpha_term, bool alpha_exactly_one);
 
+  std::map<string, int64_t> gemm_like_default_parameters();
+
 };
 
 }  // namespace caffe

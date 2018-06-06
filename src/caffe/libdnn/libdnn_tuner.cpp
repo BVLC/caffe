@@ -20,6 +20,15 @@ void LibDNNTuner::set_benchmark_routine(std::function<double()> fun) {
   this->benchmark_routine_ = fun;
 }
 
+void LibDNNTuner::load_params(std::map<string, int64_t> params) {
+  std::map<string, int64_t>::iterator it;
+  for (it = params.begin(); it != params.end(); ++it) {
+    if (param_map_.find(it->first) != param_map_.end()) {
+      param_map_[it->first]->set_value(it->second);
+    }
+  }
+}
+
 void LibDNNTuner::Tune(libdnnTunerMethod_t method) {
   bool setup_success = setup_routine_();
   int_tp current_param = 0;
@@ -606,6 +615,28 @@ int_tp LibDNNTunerParamReal::count_values() {
 }
 int_tp LibDNNTunerParamBool::count_values() {
   return values_.size();
+}
+
+void LibDNNTunerParamInt::set_value(int64_t value) {
+  for (int i = 0; i < values_.size(); ++i) {
+    if (values_[i] == value) {
+      curr_idx_ = i;
+    }
+  }
+}
+void LibDNNTunerParamReal::set_value(int64_t value) {
+  for (int i = 0; i < values_.size(); ++i) {
+    if (values_[i] == value) {
+      curr_idx_ = i;
+    }
+  }
+}
+void LibDNNTunerParamBool::set_value(int64_t value) {
+  for (int i = 0; i < values_.size(); ++i) {
+    if (values_[i] == value) {
+      curr_idx_ = i;
+    }
+  }
 }
 
 int64_t LibDNNTunerParamInt::get_value() {

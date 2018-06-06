@@ -21,7 +21,8 @@ class CudaDeviceProgram : public DeviceProgram {
   virtual bool Compile(bool load_cache, bool store_cache);
   virtual shared_ptr<DeviceKernel> GetKernel(string name);
 
-  virtual string function(string name, KernelArgs args);
+  virtual string function(string name, KernelArgs args,
+                          KernelHints hints = KernelHints());
   virtual string kernel_loop(string type, string index, string n);
   virtual string setup();
   virtual string atomics();

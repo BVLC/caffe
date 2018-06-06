@@ -20,8 +20,8 @@ class Device;
 
 class OclDeviceKernel : public DeviceKernel {
  public:
-  explicit OclDeviceKernel(Device *dev, viennacl::ocl::kernel ocl_ker,
-             KernelArgs args);
+  explicit OclDeviceKernel(Device *dev, string name,
+                           viennacl::ocl::kernel ocl_ker, KernelArgs args);
 
   virtual void Execute(vector<size_t> group, vector<size_t> local);
   viennacl::ocl::kernel get_ocl_kernel();

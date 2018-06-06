@@ -136,6 +136,11 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     // Set device
     layer_param.set_device(Caffe::GetDefaultDevice()->id());
 
+    // Set autotuning settings
+    if (param_.has_autotune() && !layer_param.has_autotune()) {
+      layer_param.set_autotune(param_.autotune());
+    }
+
     // Set data types
     if (!layer_param.has_bottom_data_type()) {
       layer_param.set_bottom_data_type(proto_data_type<Dtype>());

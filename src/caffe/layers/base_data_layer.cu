@@ -9,14 +9,6 @@ void BasePrefetchingDataLayer<Dtype, MItype, MOtype>::Forward_gpu(
     const vector<Blob<MItype>*>& bottom,
     const vector<Blob<MOtype>*>& top) {
 
-#ifdef USE_OPENCL
-  // Direct async to GPU currently unsupported on OpenCL
-  if (this->device_->backend() == BACKEND_OPENCL) {
-    this->Forward_cpu(bottom, top);
-    return;
-  }
-#endif  // USE_OPENCL
-
   if (prefetch_current_) {
     prefetch_free_.push(prefetch_current_);
   }

@@ -13,6 +13,15 @@ enum DataType {
 	CAFFE_PACKED_BINARY = 7;
 }
 
+enum Autotune {
+	// No autotuning; use default settings
+    CAFFE_AUTOTUNE_DISABLED = 0;
+    // Tune coarse grained (function level)
+    CAFFE_AUTOTUNE_FUNCTION = 1;
+    // Tune fine grained (function parameter level)
+    CAFFE_AUTOTUNE_FUNCTION_PARAMETER = 2;
+}
+
 // Specifies the shape (dimensions) of a Blob.
 message BlobShape {
   repeated int64 dim = 1 [packed = true];
@@ -140,6 +149,9 @@ message NetParameter {
   
   // Enable reduced memory inference
   optional bool reduced_memory_inference = 81 [default = false];
+  
+  // Enable runtime autotuning
+  optional Autotune autotune = 82;
 
   // DEPRECATED: use 'layer' instead.
   repeated V1LayerParameter layers = 2;
@@ -391,6 +403,9 @@ message LayerParameter {
   repeated QuantizerParameter top_quantizer = 17;
   optional QuantizerParameter net_quantizer = 18;
   repeated QuantizerParameter blobs_quantizer = 19;
+  
+  // Enable runtime autotuning
+  optional Autotune autotune = 20;
 
   // The amount of weight to assign each top blob in the objective.
   // Each layer assigns a default value, usually of either 0 or 1,
@@ -1569,4 +1584,9 @@ message MergeCropParameter {
   // Defined once per bottom blob
   repeated bool forward = 2;
   repeated bool backward = 3;
+}
+
+message TuningSet {
+  repeated string name = 1;
+  repeated int64 value = 2;
 }

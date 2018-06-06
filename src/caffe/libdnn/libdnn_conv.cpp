@@ -60,8 +60,7 @@ LibDNNConv<MItype, MOtype>::LibDNNConv(LibDNNConvConfig config)
   // Work groups
   for (int id = 0; id < 2; ++id) {
     vector<int_tp> workgroup_sizes;
-    for (int_tp i = 0; i < this->dev_ptr_->workgroup_size(id);
-            i += 1) {
+    for (int_tp i = 1; i < this->dev_ptr_->workgroup_size(id); i += 1) {
       workgroup_sizes.push_back(i);
     }
     fw_tuner_->add_set_param <int_tp>("workgroup_size_" + std::to_string(id),
@@ -77,14 +76,18 @@ LibDNNConv<MItype, MOtype>::LibDNNConv(LibDNNConvConfig config)
   bw_tuner_->add_range_param<int_tp>("TSK", 8, 1, 32, 1);
   wg_tuner_->add_range_param<int_tp>("TSK", 8, 1, 32, 1);
 
-  fw_tuner_->add_range_param<int_tp>("TSK_UNROLL", 1, 1, 16, 1);
-  bw_tuner_->add_range_param<int_tp>("TSK_UNROLL", 1, 1, 16, 1);
-  wg_tuner_->add_range_param<int_tp>("TSK_UNROLL", 1, 1, 16, 1);
+  fw_tuner_->add_range_param<int_tp>("TSK_UNROLL",
+            std::max(1, 4 / static_cast<int>(safe_sizeof<MItype>())), 1, 16, 1);
+  bw_tuner_->add_range_param<int_tp>("TSK_UNROLL",
+            std::max(1, 4 / static_cast<int>(safe_sizeof<MItype>())), 1, 16, 1);
+  wg_tuner_->add_range_param<int_tp>("TSK_UNROLL",
+            std::max(1, 4 / static_cast<int>(safe_sizeof<MItype>())), 1, 16, 1);
+
 
   // WPTM, WPTN
-  fw_tuner_->add_range_param<int_tp>("WPTM", 4, 4, 16, 4);
-  bw_tuner_->add_range_param<int_tp>("WPTM", 4, 4, 16, 4);
-  wg_tuner_->add_range_param<int_tp>("WPTM", 4, 4, 16, 4);
+  fw_tuner_->add_range_param<int_tp>("WPTM", 8, 4, 16, 4);
+  bw_tuner_->add_range_param<int_tp>("WPTM", 8, 4, 16, 4);
+  wg_tuner_->add_range_param<int_tp>("WPTM", 8, 4, 16, 4);
 
   fw_tuner_->add_set_param<int_tp>("VWM", 4, vector<int_tp>(
       {1, 2, 4, 8, 16 }));
@@ -93,9 +96,9 @@ LibDNNConv<MItype, MOtype>::LibDNNConv(LibDNNConvConfig config)
   wg_tuner_->add_set_param<int_tp>("VWM", 4, vector<int_tp>(
       {1, 2, 4, 8, 16 }));
 
-  fw_tuner_->add_range_param<int_tp>("WPTN", 4, 4, 16, 4);
-  bw_tuner_->add_range_param<int_tp>("WPTN", 4, 4, 16, 4);
-  wg_tuner_->add_range_param<int_tp>("WPTN", 4, 4, 16, 4);
+  fw_tuner_->add_range_param<int_tp>("WPTN", 8, 4, 16, 4);
+  bw_tuner_->add_range_param<int_tp>("WPTN", 8, 4, 16, 4);
+  wg_tuner_->add_range_param<int_tp>("WPTN", 8, 4, 16, 4);
 
   fw_tuner_->add_set_param<int_tp>("VWN", 4, vector<int_tp>(
       {1, 2, 4, 8, 16 }));
@@ -137,57 +140,54 @@ LibDNNConv<MItype, MOtype>::LibDNNConv(LibDNNConvConfig config)
       return (args[0] * args[1]) % (args[2]) == 0;
     });
   fw_tuner_->add_constraint<int64_t>(
-    vector<string>({"TSK", "TSK_UNROLL"}),
-    vector<string>({"TSK_UNROLL"}),
-    [](vector<int64_t> args) -> bool {
-      return args[0] % args[1] == 0;
+    vector<string>({"TSK", "VWM", "VWN", "TSK_UNROLL"}),
+    vector<string>({"TSK_UNROLL"}), [](vector<int64_t> args) -> bool {
+      return args[0] % args[3] == 0 &&
+             args[1] % args[3] == 0 &&
+             args[2] % args[3] == 0;
     });
   bw_tuner_->add_constraint<int64_t>(
-    vector<string>({"TSK", "TSK_UNROLL"}),
-    vector<string>({"TSK_UNROLL"}),
-    [](vector<int64_t> args) -> bool {
-      return args[0] % args[1] == 0;
+    vector<string>({"TSK", "VWM", "VWN", "TSK_UNROLL"}),
+    vector<string>({"TSK_UNROLL"}), [](vector<int64_t> args) -> bool {
+      return args[0] % args[3] == 0 &&
+             args[1] % args[3] == 0 &&
+             args[2] % args[3] == 0;
     });
   wg_tuner_->add_constraint<int64_t>(
-    vector<string>({"TSK", "TSK_UNROLL"}),
-    vector<string>({"TSK_UNROLL"}),
-    [](vector<int64_t> args) -> bool {
-      return args[0] % args[1] == 0;
+    vector<string>({"TSK", "VWM", "VWN", "TSK_UNROLL"}),
+    vector<string>({"TSK_UNROLL"}), [](vector<int64_t> args) -> bool {
+      return args[0] % args[3] == 0 &&
+             args[1] % args[3] == 0 &&
+             args[2] % args[3] == 0;
     });
   fw_tuner_->add_constraint<int64_t>(
     vector<string>({"WPTM", "VWM"}),
-    vector<string>({"WPTM"}),
-    [](vector<int64_t> args) -> bool {
+    vector<string>({"WPTM"}), [](vector<int64_t> args) -> bool {
       return args[0] % args[1] == 0;
     });
   bw_tuner_->add_constraint<int64_t>(
     vector<string>({"WPTM", "VWM"}),
-    vector<string>({"WPTM"}),
-    [](vector<int64_t> args) -> bool {
+    vector<string>({"WPTM"}), [](vector<int64_t> args) -> bool {
       return args[0] % args[1] == 0;
     });
   wg_tuner_->add_constraint<int64_t>(
     vector<string>({"WPTM", "VWM"}),
-    vector<string>({"WPTM"}),
-    [](vector<int64_t> args) -> bool {
+    vector<string>({"WPTM"}), [](vector<int64_t> args) -> bool {
       return args[0] % args[1] == 0;
     });
   fw_tuner_->add_constraint<int64_t>(
     vector<string>({"WPTN", "VWN"}),
-    vector<string>({"WPTN"}),
-    [](vector<int64_t> args) -> bool {
+    vector<string>({"WPTN"}), [](vector<int64_t> args) -> bool {
       return args[0] % args[1] == 0;
     });
   bw_tuner_->add_constraint<int64_t>(
     vector<string>({"WPTN", "VWN"}),
-    vector<string>({"WPTN"}),
-    [](vector<int64_t> args) -> bool {
+    vector<string>({"WPTN"}), [](vector<int64_t> args) -> bool {
       return args[0] % args[1] == 0;
     });
   wg_tuner_->add_constraint<int64_t>(
     vector<string>({"WPTN", "VWN"}),
-    vector<string>({"WPTN"}),
-    [](vector<int64_t> args) -> bool {
+    vector<string>({"WPTN"}), [](vector<int64_t> args) -> bool {
       return args[0] % args[1] == 0;
     });
 
@@ -211,6 +211,23 @@ LibDNNConv<MItype, MOtype>::LibDNNConv(LibDNNConvConfig config)
     bw_tuner_->add_boolean_param("vector_unroll", true, true);
     wg_tuner_->add_boolean_param("vector_unroll", true, true);
   }
+
+  bool dp4a = this->dev_ptr_->CheckCapability(DEVICE_CUDA_DP4A_SUPPORT) &&
+      std::is_same<MItype, uint8_t>::value;
+
+  fw_tuner_->add_boolean_param("DP4A", dp4a, false);
+  bw_tuner_->add_boolean_param("DP4A", dp4a, false);
+  wg_tuner_->add_boolean_param("DP4A", dp4a, false);
+
+  fw_tuner_->add_boolean_param("no_reg_arrs", false, true);
+  bw_tuner_->add_boolean_param("no_reg_arrs", false, false);
+  wg_tuner_->add_boolean_param("no_reg_arrs", false, false);
+
+  // Override default parameters with device-specific defaults
+  std::map<string, int64_t> params = this->gemm_like_default_parameters();
+  fw_tuner_->load_params(params);
+  bw_tuner_->load_params(params);
+  wg_tuner_->load_params(params);
 
   this->GenerateKernels();
   this->CompileKernels();
@@ -690,12 +707,9 @@ string LibDNNConv<MItype, MOtype>::generate_fw_kernels(string name) {
   int vwn = fw_tuner_->get_param<int>("VWN");
   int lpta = (tsm * tsk) / (rtsm * rtsn);
   int lptb = (tsn * tsk) / (rtsm * rtsn);
+  bool no_reg_arrs = fw_tuner_->get_param<bool>("no_reg_arrs");
 
   // Forward kernel
-  /* ss << "__attribute__((reqd_work_group_size("
-     << rtsn << ", " << rtsm << ", 1)))" << std::endl;
-  ss << "__attribute__((vec_type_hint(MItype"
-     << std::min(vwm, vwn) << ")))" << std::endl; */
   KernelArgs args;
   if (is_integer_type<MItype>() || is_integer_type<MOtype>()) {
     args.push_back(this->program_->template create_kernel_arg<int8_t>(
@@ -743,7 +757,20 @@ string LibDNNConv<MItype, MOtype>::generate_fw_kernels(string name) {
     args.push_back(this->program_->template create_kernel_arg<int8_t>(
                                                     "shift", KERNEL_ARG_CONST));
   }
-  ss << this->program_->function(name, args);
+  KernelHints hints;
+  hints.push_back(this->program_->create_kernel_hint(
+                                             KERNEL_REQD_WORK_GROUP_X, rtsn));
+  hints.push_back(this->program_->create_kernel_hint(
+                                             KERNEL_REQD_WORK_GROUP_Y, rtsm));
+  hints.push_back(this->program_->create_kernel_hint(
+                                             KERNEL_REQD_WORK_GROUP_Z, 1));
+  hints.push_back(this->program_->create_kernel_hint(
+                                             KERNEL_HINT_MIN_BLOCKS_PER_MP, 2));
+  hints.push_back(this->program_->create_kernel_hint(KERNEL_HINT_VEC_TYPE,
+                             this->program_->template device_type_name<MItype>()
+                             + std::to_string(std::min(vwm, vwn))));
+
+  ss << this->program_->function(name, args, hints);
 
   // Thread identifiers
   // Local row ID (max: RTSM=TSM/WPTM)
@@ -839,22 +866,6 @@ string LibDNNConv<MItype, MOtype>::generate_fw_kernels(string name) {
 
   // Load one tile of A into local memory
   ss << "{" << std::endl;  // Scoping for loading A
-  /*if (rtsn * rtsm % tsk == 0) {
-    ss << "int_tp tid = tidm * RTSN + tidn;" << std::endl;
-    ss << "int_tp row = tid / TSK;" << std::endl;
-    ss << "int_tp col = tid % TSK;" << std::endl;
-    ss << "int_tp tiledIndex = TSK * t + col;" << std::endl;
-    int rowstep = (rtsn * rtsm) / tsk;
-    for (int i = 0; i < lpta; ++i) {
-      ss << "if ((offM + row + " << i * rowstep << ") < M && tiledIndex < K) {"
-         << std::endl;
-      ss << "Asub[row+" << i * rowstep << "][col] = Aptr[(offM + row + "
-         << i * rowstep << ") * K + tiledIndex];" << std::endl;
-      ss << "} else {" << std::endl;  // M-K-Guard
-      ss << "Asub[row+" << i * rowstep << "][col] = 0.0;" << std::endl;
-      ss << "}";
-    }
-  } else {*/
     ss << "#pragma unroll 4" << std::endl;
     ss << "for (int_tp la = 0; la < LPTA; ++la) {" << std::endl;
     ss << "int_tp tid = tidm * RTSN + tidn;" << std::endl;
@@ -956,25 +967,6 @@ string LibDNNConv<MItype, MOtype>::generate_fw_kernels(string name) {
 
   ss << this->generate_gemm_core(fw_tuner_, false, false, false) << std::endl;
 
-  /*if (is_integer_type<MItype>()) {
-    // Add up columns of A
-    ss << "for (int_tp k = 0; k < TSK; ++k) {" << std::endl;
-    ss << "if (tidn == 0) {" << std::endl;
-    ss << "#pragma unroll" << std::endl;
-    ss << "for (int_tp wm = 0; wm < WPTM; ++wm) {" << std::endl;
-    ss << "Asubrows[tidm * WPTM + wm] += Asub[tidm * WPTM + wm][k];"
-       << std::endl;
-    ss << "}}" << std::endl;
-    // Add up rows of B
-    ss << "if (tidm == 0) {" << std::endl;
-    ss << "#pragma unroll" << std::endl;
-    ss << "for (int_tp wn = 0; wn < WPTN; ++wn) {" << std::endl;
-    ss << "Bsubcols[tidn * WPTN + wn] += Bsub[k][tidn * WPTN + wn];"
-       << std::endl;
-    ss << "}}" << std::endl;
-    ss << "}" << std::endl;
-  }*/
-
   // Synchronize before loading the next tile
   ss << this->program_->local_barrier() << std::endl;
 
@@ -983,141 +975,207 @@ string LibDNNConv<MItype, MOtype>::generate_fw_kernels(string name) {
 
   if (is_integer_type<MItype>()) {
     // Subtract A*B_off and B*A_off
-    ss << "for (int_tp wm = 0; wm < WPTM / VWM; ++wm) {" << std::endl;
-    ss << "int_tp row = tidm + wm * VWM * RTSM;" << std::endl;
-    ss << "for (int_tp wn = 0; wn < WPTN / VWN; ++wn) {" << std::endl;
-    ss << "int_tp col = tidn + wn * VWN * RTSN;" << std::endl;
-    for (int_tp n = 0; n < vwn; ++n) {
-      for (int_tp m = 0; m < vwm; ++m) {
-        ss << "VEC_" << vwn << "_" << n
-           << "(Creg[wm * VWM + " << m << "][wn])"
-           << " -= ((Asubrows[row + " << (m * rtsm)  << "] * im_in_off) +"
-           << "     (Bsubcols[col + " << (n * rtsn) << "] * wg_off));"
-           << std::endl;
+    if (no_reg_arrs) {
+      ss << "int_tp row;" << std::endl;
+      ss << "int_tp col;" << std::endl;
+      for (int_tp wm = 0; wm < wptm / vwm; ++wm) {
+        ss << "row = tidm + " << (wm * vwm * rtsm) << ";" << std::endl;
+        for (int_tp wn = 0; wn < wptn / vwn; ++wn) {
+          ss << "col = tidn + " << (wn * vwn * rtsn) << ";" << std::endl;
+          for (int_tp n = 0; n < vwn; ++n) {
+            for (int_tp m = 0; m < vwm; ++m) {
+              ss << "VEC_" << vwn << "_" << n
+                 << "(Creg_" << (wm * vwm + m) << "_" << wn << ")"
+                 << " -= ((Asubrows[row + " << (m * rtsm)  << "] * im_in_off) +"
+                 << "     (Bsubcols[col + " << (n * rtsn) << "] * wg_off));"
+                 << std::endl;
+            }
+          }
+        }
       }
+    } else {
+      ss << "for (int_tp wm = 0; wm < WPTM / VWM; ++wm) {" << std::endl;
+      ss << "int_tp row = tidm + wm * VWM * RTSM;" << std::endl;
+      ss << "for (int_tp wn = 0; wn < WPTN / VWN; ++wn) {" << std::endl;
+      ss << "int_tp col = tidn + wn * VWN * RTSN;" << std::endl;
+      for (int_tp n = 0; n < vwn; ++n) {
+        for (int_tp m = 0; m < vwm; ++m) {
+          ss << "VEC_" << vwn << "_" << n
+             << "(Creg[wm * VWM + " << m << "][wn])"
+             << " -= ((Asubrows[row + " << (m * rtsm)  << "] * im_in_off) +"
+             << "     (Bsubcols[col + " << (n * rtsn) << "] * wg_off));"
+             << std::endl;
+        }
+      }
+      ss << "}" << std::endl;
+      ss << "}" << std::endl;
     }
-    ss << "}" << std::endl;
-    ss << "}" << std::endl;
     ss << this->program_->local_barrier() << std::endl;
   }
 
   ss << "}" << std::endl;  // Scoping for load & compute block
 
-  // Store the final results in c
-  /*ss << "#pragma unroll 1" << std::endl;
-  ss << "for (int_tp wn=0; wn<WPTN/VWN; ++wn) {" << std::endl;
-  ss << "#pragma unroll" << std::endl;
-  ss << "for (int_tp wm=0; wm<WPTM/VWM; ++wm) {" << std::endl;
-  for (int j = 0; j < vwn; ++j) {
-    for (int i = 0; i < vwm; ++i) {
-      ss << "Asub[(tidn+wn*RTSN)*VWN + " << j << "][(tidm + wn*RTSN)*VWM + " << i << "] = VEC_" << vwm << "_" << i << "(Creg[wn + " << j << "][wm]);" << std::endl;
-    }
-  }
-  ss << "}" << std::endl;
-  ss << "}" << std::endl;
-  ss << "}" << std::endl;  // Scoping for c registers
+  if (no_reg_arrs) {
+    ss << "int_tp globalRow;" << std::endl;
+    ss << "int_tp globalCol;" << std::endl;
+    ss << "MItype biasval;" << std::endl;
+    // Store the final results in C
+    for (int_tp wm = 0; wm < wptm; ++wm) {
+      for (int_tp wn = 0; wn < wptn; ++wn) {
+        ss << "globalRow = offM + tidm + " << (wm * rtsm) << ";"
+           << std::endl;
+        if (bias_term_) {
+          ss << "biasval = Dptr[globalRow];" << std::endl;
+        }
+        ss << "globalCol = offN + tidn + " << (wn * rtsn) << ";"
+           << std::endl;
+        ss << "if (globalRow < M && globalCol < N) {" << std::endl;
 
-  ss << this->program_->local_barrier() << std::endl;
+        if (is_float_type<MItype>()) {
+          // Float type code
+          // Nothing to do here
+        } else {
+          // Quantization type code
+          ss << "{" << std::endl;
+          ss << "Acctype C_tmp = ((Acctype*)(&(Creg_" << wm << "_"
+             << (wn / vwn) << ")))[" << (wn % vwn) << "] + "
+             << "((Acctype)(v_num_tiles * TSK))"
+             << " * ((Acctype)wg_off) * ((Acctype)im_in_off);" << std::endl;
+          ss << "C_tmp = (Acctype)((((Multtype)C_tmp) * ((Multtype)mult))"
+             << "/ ((Multtype)1 << shift_bits));" << std::endl;
 
-  // Store the final results in c
-  ss << "{" << std::endl; // Scoping for storing c
-  ss << "MItype" << vwm << " Creg;" << std::endl;
-  ss << "#pragma unroll 1" << std::endl;
-  ss << "for (int_tp lc = 0; lc < ((TSM*TSN-1)/(RTSM*RTSN))/VWM+1; ++lc) {" << std::endl;
-  ss << "int_tp tid = tidm * RTSN + tidn;" << std::endl;
-  ss << "int_tp id = lc * RTSN * RTSM + tid;" << std::endl;
-  ss << "int_tp row = (id / TSN) * VWM;" << std::endl;
-  ss << "int_tp col = id % TSN;" << std::endl;
-  ss << "int_tp globalRow = offM + row;" << std::endl;
-  ss << "int_tp globalCol = offN + col;" << std::endl;
-  for (int i = 0; i < vwm; ++i) {
-    ss << "VEC_" << vwm << "_" << i << "(Creg) = Asub[col][row + " << i << "];" << std::endl;
-    ss << "if ((globalRow +" << i << ") < M && globalCol < N) {" << std::endl;
-    if (bias_term_) {
-      ss << "Cptr[(globalRow +" << i << ") * N + globalCol] = VEC_" << vwm << "_" << i << "(Creg) + Dptr[globalRow +" << i << "];" << std::endl;
-    } else {
-      ss << "Cptr[(globalRow +" << i << ") * N + globalCol] = VEC_" << vwm << "_" << i << "(Creg);" << std::endl;
-    }
-    ss << "}" << std::endl;
-  }
-  ss << "}" << std::endl;
-  ss << "}" << std::endl; // Scoping for storing C*/
+          // Add quantized bias
+          if (bias_term_) {
+            ss << "Difftype bias_mult_d = (Difftype)bias_mult"
+               << " - (Difftype)bias_mult_off;" << std::endl;
+            ss << "Difftype bias_d = biasval - bias_off;" << std::endl;
+            ss << "Acctype bias_tmp = (Acctype)bias_mult_d * (Acctype)bias_d;"
+               << std::endl;
+            ss << "bias_tmp = (Acctype)((((Multtype)bias_tmp) "
+               << " * ((Multtype)bmult))"
+               << " / ((Multtype)1 << shift_bits));" << std::endl;
+            ss << "int8_t bshift_mod = bshift - shift;" << std::endl;
+            ss << "if (bshift_mod >= 0) {" << std::endl;
+            ss << "bias_tmp = bias_tmp >> bshift_mod;" << std::endl;
+            ss << "} else {" << std::endl;
+            ss << "bias_tmp = bias_tmp << -bshift_mod;" << std::endl;
+            ss << "}" << std::endl;
+            ss << "C_tmp = C_tmp + bias_tmp;" << std::endl;
+          }
+          ss << "if (shift >= 0) {" << std::endl;
+          ss << "Acctype mask = ((Acctype)1 << shift) - (Acctype)1;"
+             << std::endl;
+          ss << "Acctype C_round = (C_tmp & mask) > "
+             << "((mask >> 1) + ((C_tmp < (Acctype)0) ? "
+             << "(Acctype)1 : (Acctype)0)) ? "
+             << "(Acctype)1 : (Acctype)0;" << std::endl;
+          ss << "C_tmp = (C_tmp >> shift) + C_round;" << std::endl;
+          ss << "} else {" << std::endl;
+          ss << "C_tmp = C_tmp << -shift;" << std::endl;
+          ss << "}" << std::endl;
+          ss << "((Acctype*)(&(Creg_" << wm << "_" << (wn/vwn) << ")))["
+             << (wn % vwn) << "] = C_tmp;" << std::endl;
+          ss << "}" << std::endl;
+        }
 
-  // Store the final results in C
-  ss << "#pragma unroll" << std::endl;
-  ss << "for (int_tp wm=0; wm<WPTM; ++wm) {" << std::endl;
-  ss << "int_tp globalRow = offM + tidm + wm * RTSM;"
-     << std::endl;
-  if (bias_term_) {
-    ss << "MItype biasval = Dptr[globalRow];" << std::endl;
-  }
-  ss << "#pragma unroll" << std::endl;
-  ss << "for (int_tp wn=0; wn<WPTN; ++wn) {" << std::endl;
-  ss << "int_tp globalCol = offN + tidn + wn * RTSN;"
-     << std::endl;
-  ss << "if (globalRow < M && globalCol < N) {" << std::endl;
-
-  if (is_float_type<MItype>()) {
-    // Float type code
-    // Nothing to do here
-  } else {
-    // Quantization type code
-    ss << "{" << std::endl;
-    ss << "Acctype C_tmp = ((Acctype*)(&(Creg[wm][wn/VWN])))[wn%VWN] + "
-       << "((Acctype)(v_num_tiles * TSK))"
-       << " * ((Acctype)wg_off) * ((Acctype)im_in_off);" << std::endl;
-    ss << "C_tmp = (Acctype)((((Multtype)C_tmp) * ((Multtype)mult))"
-       << "/ ((Multtype)1 << shift_bits));" << std::endl;
-
-    // Add quantized bias
-    if (bias_term_) {
-      ss << "Difftype bias_mult_d = (Difftype)bias_mult"
-         << " - (Difftype)bias_mult_off;" << std::endl;
-      ss << "Difftype bias_d = biasval - bias_off;" << std::endl;
-      ss << "Acctype bias_tmp = (Acctype)bias_mult_d * (Acctype)bias_d;"
-         << std::endl;
-      ss << "bias_tmp = (Acctype)((((Multtype)bias_tmp) * ((Multtype)bmult))"
-         << "/ ((Multtype)1 << shift_bits));" << std::endl;
-      ss << "int8_t bshift_mod = bshift - shift;" << std::endl;
-      ss << "if (bshift_mod >= 0) {" << std::endl;
-      ss << "bias_tmp = bias_tmp >> bshift_mod;" << std::endl;
-      ss << "} else {" << std::endl;
-      ss << "bias_tmp = bias_tmp << -bshift_mod;" << std::endl;
-      ss << "}" << std::endl;
-      ss << "C_tmp = C_tmp + bias_tmp;" << std::endl;
-    }
-    ss << "if (shift >= 0) {" << std::endl;
-    ss << "Acctype mask = ((Acctype)1 << shift) - (Acctype)1;" << std::endl;
-    ss << "Acctype C_round = (C_tmp & mask) > "
-       << "((mask >> 1) + ((C_tmp < (Acctype)0) ? (Acctype)1 : (Acctype)0)) ? "
-       << "(Acctype)1 : (Acctype)0;" << std::endl;
-    ss << "C_tmp = (C_tmp >> shift) + C_round;" << std::endl;
-    ss << "} else {" << std::endl;
-    ss << "C_tmp = C_tmp << -shift;" << std::endl;
-    ss << "}" << std::endl;
-    ss << "((Acctype*)(&(Creg[wm][wn/VWN])))[wn%VWN] = C_tmp;" << std::endl;
-    ss << "}" << std::endl;
-  }
-
-  stringstream ss_c;
-  if (is_float_type<MItype>()) {
-    // Float type code
-    ss_c << "((Acctype*)(&(Creg[wm][wn/VWN])))[wn % VWN]";
-    if (bias_term_) {
-      ss_c << " + bias_mult * biasval";
+        stringstream ss_c;
+        if (is_float_type<MItype>()) {
+          // Float type code
+          ss_c << "((Acctype*)(&(Creg_" << wm << "_" << (wn/vwn) << ")))["
+               << (wn % vwn) << "]";
+          if (bias_term_) {
+            ss_c << " + bias_mult * biasval";
+          }
+        } else {
+          ss << "((Acctype*)(&(Creg_" << wm << "_" << (wn/vwn) << ")))["
+             << (wn % vwn) << "] += im_out_off;" << std::endl;
+          ss_c << "min(max(((Acctype*)(&(Creg_" << wm << "_" << (wn/vwn)
+               << ")))[" << (wn % vwn) << "], " << "im_out_min), im_out_max)";
+        }
+        ss << "Cptr[globalRow * N + globalCol] = (MOtype)("
+           << ss_c.str() << ");" << std::endl;
+        ss << "}" << std::endl;   // M-N-Guard
+      }
     }
   } else {
-    ss << "((Acctype*)(&(Creg[wm][wn/VWN])))[wn%VWN] += im_out_off;"
+    // Store the final results in C
+    ss << "#pragma unroll" << std::endl;
+    ss << "for (int_tp wm=0; wm<WPTM; ++wm) {" << std::endl;
+    ss << "int_tp globalRow = offM + tidm + wm * RTSM;"
        << std::endl;
-    ss_c << "min(max(((Acctype*)(&(Creg[wm][wn/VWN])))[wn%VWN], "
-         << "im_out_min), im_out_max)";
-  }
-  ss << "Cptr[globalRow * N + globalCol] = (MOtype)(" << ss_c.str() << ");"
-     << std::endl;
+    if (bias_term_) {
+      ss << "MItype biasval = Dptr[globalRow];" << std::endl;
+    }
+    ss << "#pragma unroll" << std::endl;
+    ss << "for (int_tp wn=0; wn<WPTN; ++wn) {" << std::endl;
+    ss << "int_tp globalCol = offN + tidn + wn * RTSN;"
+       << std::endl;
+    ss << "if (globalRow < M && globalCol < N) {" << std::endl;
 
-  ss << "}" << std::endl;   // M-N-Guard
-  ss << "}" << std::endl;   // For (N)
-  ss << "}" << std::endl;   // For (M)
+    if (is_float_type<MItype>()) {
+      // Float type code
+      // Nothing to do here
+    } else {
+      // Quantization type code
+      ss << "{" << std::endl;
+      ss << "Acctype C_tmp = ((Acctype*)(&(Creg[wm][wn/VWN])))[wn%VWN] + "
+         << "((Acctype)(v_num_tiles * TSK))"
+         << " * ((Acctype)wg_off) * ((Acctype)im_in_off);" << std::endl;
+      ss << "C_tmp = (Acctype)((((Multtype)C_tmp) * ((Multtype)mult))"
+         << "/ ((Multtype)1 << shift_bits));" << std::endl;
+
+      // Add quantized bias
+      if (bias_term_) {
+        ss << "Difftype bias_mult_d = (Difftype)bias_mult"
+           << " - (Difftype)bias_mult_off;" << std::endl;
+        ss << "Difftype bias_d = biasval - bias_off;" << std::endl;
+        ss << "Acctype bias_tmp = (Acctype)bias_mult_d * (Acctype)bias_d;"
+           << std::endl;
+        ss << "bias_tmp = (Acctype)((((Multtype)bias_tmp) * ((Multtype)bmult))"
+           << "/ ((Multtype)1 << shift_bits));" << std::endl;
+        ss << "int8_t bshift_mod = bshift - shift;" << std::endl;
+        ss << "if (bshift_mod >= 0) {" << std::endl;
+        ss << "bias_tmp = bias_tmp >> bshift_mod;" << std::endl;
+        ss << "} else {" << std::endl;
+        ss << "bias_tmp = bias_tmp << -bshift_mod;" << std::endl;
+        ss << "}" << std::endl;
+        ss << "C_tmp = C_tmp + bias_tmp;" << std::endl;
+      }
+      ss << "if (shift >= 0) {" << std::endl;
+      ss << "Acctype mask = ((Acctype)1 << shift) - (Acctype)1;" << std::endl;
+      ss << "Acctype C_round = (C_tmp & mask) > "
+         << "((mask >> 1) + ((C_tmp < (Acctype)0) ? "
+         <<   "(Acctype)1 : (Acctype)0)) ? "
+         << "(Acctype)1 : (Acctype)0;" << std::endl;
+      ss << "C_tmp = (C_tmp >> shift) + C_round;" << std::endl;
+      ss << "} else {" << std::endl;
+      ss << "C_tmp = C_tmp << -shift;" << std::endl;
+      ss << "}" << std::endl;
+      ss << "((Acctype*)(&(Creg[wm][wn/VWN])))[wn%VWN] = C_tmp;" << std::endl;
+      ss << "}" << std::endl;
+    }
+
+    stringstream ss_c;
+    if (is_float_type<MItype>()) {
+      // Float type code
+      ss_c << "((Acctype*)(&(Creg[wm][wn/VWN])))[wn % VWN]";
+      if (bias_term_) {
+        ss_c << " + bias_mult * biasval";
+      }
+    } else {
+      ss << "((Acctype*)(&(Creg[wm][wn/VWN])))[wn%VWN] += im_out_off;"
+         << std::endl;
+      ss_c << "min(max(((Acctype*)(&(Creg[wm][wn/VWN])))[wn%VWN], "
+           << "im_out_min), im_out_max)";
+    }
+    ss << "Cptr[globalRow * N + globalCol] = (MOtype)(" << ss_c.str() << ");"
+       << std::endl;
+
+    ss << "}" << std::endl;   // M-N-Guard
+    ss << "}" << std::endl;   // For (N)
+    ss << "}" << std::endl;   // For (M)
+  }
+
   ss << "}" << std::endl;   // Scoping for C registers
 
   // Kernel
@@ -1137,16 +1195,12 @@ string LibDNNConv<MItype, MOtype>::generate_wg_kernels(string name) {
   int rtsm = wg_tuner_->get_param<int>("workgroup_size_1");
   int tsm = wptm * rtsm;
   int tsn = wptn * rtsn;
-  // int vwm = wg_tuner_->get_param<int>("VWM");
-  // int vwn = wg_tuner_->get_param<int>("VWN");
+  int vwm = wg_tuner_->get_param<int>("VWM");
+  int vwn = wg_tuner_->get_param<int>("VWN");
   // int lpta = (tsm * tsk) / (rtsm * rtsn);
   // int lptb = (tsn * tsk) / (rtsm * rtsn);
 
   // Weight kernel
-  /* ss << "__attribute__((reqd_work_group_size("
-     << rtsn << ", " << rtsm << ", 1)))" << std::endl;
-  ss << "__attribute__((vec_type_hint(MItype"
-     << std::min(vwm, vwn) << ")))" << std::endl; */
   KernelArgs args;
   args.push_back(this->program_->template create_kernel_arg<MItype>("im_in",
                KERNEL_ARG_CONST | KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_RESTRICT));
@@ -1162,7 +1216,21 @@ string LibDNNConv<MItype, MOtype>::generate_wg_kernels(string name) {
                                   KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_RESTRICT));
   args.push_back(this->program_->template create_kernel_arg<int_tp>(
                                                "batch_size", KERNEL_ARG_CONST));
-  ss << this->program_->function(name, args);
+
+  KernelHints hints;
+  hints.push_back(this->program_->create_kernel_hint(
+                                             KERNEL_REQD_WORK_GROUP_X, rtsn));
+  hints.push_back(this->program_->create_kernel_hint(
+                                             KERNEL_REQD_WORK_GROUP_Y, rtsm));
+  hints.push_back(this->program_->create_kernel_hint(
+                                             KERNEL_REQD_WORK_GROUP_Z, 1));
+  hints.push_back(this->program_->create_kernel_hint(
+                                             KERNEL_HINT_MIN_BLOCKS_PER_MP, 2));
+  hints.push_back(this->program_->create_kernel_hint(KERNEL_HINT_VEC_TYPE,
+                             this->program_->template device_type_name<MItype>()
+                             + std::to_string(std::min(vwm, vwn))));
+
+  ss << this->program_->function(name, args, hints);
 
   // Thread identifiers
   // Local row ID (max: TSM/WPTM)
@@ -1344,7 +1412,7 @@ string LibDNNConv<MItype, MOtype>::generate_wg_kernels(string name) {
   ss << "}" << std::endl;  // Scoping for load & compute block
 
 
-  // Store the final results in c and D
+  // Store the final results in C and D
   ss << "#pragma unroll" << std::endl;
   ss << "for (int_tp wm=0; wm<WPTM; ++wm) {" << std::endl;
   ss << "int_tp globalRow = offM + tidm + wm * RTSM;"
@@ -1397,8 +1465,8 @@ string LibDNNConv<MItype, MOtype>::generate_bw_kernels(string name) {
   int rtsm = bw_tuner_->get_param<int>("workgroup_size_1");
   int tsm = wptm * rtsm;
   int tsn = wptn * rtsn;
-  // int vwm = bw_tuner_->get_param<int>("VWM");
-  // int vwn = bw_tuner_->get_param<int>("VWN");
+  int vwm = bw_tuner_->get_param<int>("VWM");
+  int vwn = bw_tuner_->get_param<int>("VWN");
   // int lpta = (tsm * tsk) / (rtsm * rtsn);
   // int lptb = (tsn * tsk) / (rtsm * rtsn);
 
@@ -1414,7 +1482,21 @@ string LibDNNConv<MItype, MOtype>::generate_bw_kernels(string name) {
   }
   args.push_back(this->program_->template create_kernel_arg<MItype>("im_in",
                                   KERNEL_ARG_GLOBAL_MEM | KERNEL_ARG_RESTRICT));
-  ss << this->program_->function(name, args);
+
+  KernelHints hints;
+  hints.push_back(this->program_->create_kernel_hint(
+                                             KERNEL_REQD_WORK_GROUP_X, rtsn));
+  hints.push_back(this->program_->create_kernel_hint(
+                                             KERNEL_REQD_WORK_GROUP_Y, rtsm));
+  hints.push_back(this->program_->create_kernel_hint(
+                                             KERNEL_REQD_WORK_GROUP_Z, 1));
+  hints.push_back(this->program_->create_kernel_hint(
+                                             KERNEL_HINT_MIN_BLOCKS_PER_MP, 2));
+  hints.push_back(this->program_->create_kernel_hint(KERNEL_HINT_VEC_TYPE,
+                             this->program_->template device_type_name<MItype>()
+                             + std::to_string(std::min(vwm, vwn))));
+
+  ss << this->program_->function(name, args, hints);
 
   // Thread identifiers
   // Local row ID (max: TSM/WPTM)

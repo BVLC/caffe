@@ -71,6 +71,13 @@ const char* clGetErrorString(cl_int error);
     CHECK_EQ(error, CL_SUCCESS) << " " << clGetErrorString(error); \
   } while (0)
 
+#define OCL_CHECK_MESSAGE(condition, message) \
+  do { \
+    cl_int error = (condition); \
+    CHECK_EQ(error, CL_SUCCESS) << " " << clGetErrorString(error) \
+                                       << " (" << message << ")"; \
+  } while (0)
+
 #ifdef USE_FFT
 #include "caffe/util/cl_fft_state.hpp"
 #define CLFFT_CHECK(condition) \

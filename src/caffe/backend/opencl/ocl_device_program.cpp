@@ -217,14 +217,64 @@ shared_ptr<DeviceKernel> OclDeviceProgram::GetKernel(string name) {
   }
   */
 
-  return make_shared<OclDeviceKernel>(device_, kernel, args);
+  return make_shared<OclDeviceKernel>(device_, name, kernel, args);
 }
 
-string OclDeviceProgram::function(string name, KernelArgs args) {
+string OclDeviceProgram::function(string name, KernelArgs args,
+                                  KernelHints hints) {
   args_.insert(make_pair(name, args));
   stringstream ss;
-  ss << "__kernel void ";
-  ss << name << "(";
+  ss << "__kernel" << std::endl;
+
+  vector<int> reqd_work_group(3, 0);
+  vector<int> hint_work_group(3, 0);
+
+  for (uint_tp i = 0; i < hints.size(); ++i) {
+    switch(std::get<0>(hints[i])) {
+      case KERNEL_HINT_VEC_TYPE:
+        ss << "__attribute__((vec_type_hint(" << std::get<1>(hints[i])
+           << ")))" << std::endl;
+        break;
+      case KERNEL_REQD_WORK_GROUP_X:
+        reqd_work_group[0] = std::stoi(std::get<1>(hints[i]));
+        break;
+      case KERNEL_REQD_WORK_GROUP_Y:
+        reqd_work_group[1] = std::stoi(std::get<1>(hints[i]));
+        break;
+      case KERNEL_REQD_WORK_GROUP_Z:
+        reqd_work_group[2] = std::stoi(std::get<1>(hints[i]));
+        break;
+      case KERNEL_HINT_WORK_GROUP_X:
+        hint_work_group[0] = std::stoi(std::get<1>(hints[i]));
+        break;
+      case KERNEL_HINT_WORK_GROUP_Y:
+        hint_work_group[1] = std::stoi(std::get<1>(hints[i]));
+        break;
+      case KERNEL_HINT_WORK_GROUP_Z:
+        hint_work_group[2] = std::stoi(std::get<1>(hints[i]));
+        break;
+    }
+  }
+
+  if (reqd_work_group[0] > 0 &&
+      reqd_work_group[1] > 0 &&
+      reqd_work_group[2] > 0) {
+    ss << "__attribute__((reqd_work_group_size("
+       << reqd_work_group[0] << ","
+       << reqd_work_group[1] << ","
+       << reqd_work_group[2] << ")))" << std::endl;
+  }
+
+  if (hint_work_group[0] > 0 &&
+      hint_work_group[1] > 0 &&
+      hint_work_group[2] > 0) {
+    ss << "__attribute__((work_group_size_hint("
+       << hint_work_group[0] << ","
+       << hint_work_group[1] << ","
+       << hint_work_group[2] << ")))" << std::endl;
+  }
+
+  ss << "void " << name << "(";
   for (uint_tp i = 0; i < args.size(); ++i) {
     uint64_t flags = std::get<2>(args[i]);
     if ((flags & KERNEL_ARG_GLOBAL_MEM) == KERNEL_ARG_GLOBAL_MEM) {

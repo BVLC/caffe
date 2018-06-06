@@ -14,7 +14,8 @@ endif()
 #target_include_directories(pycaffe PUBLIC ${PYTHON_INCLUDE_DIRS} ${NUMPY_INCLUDE_DIR})
 target_link_libraries(pycaffe PUBLIC ${Caffe_LINK} ${PYTHON_LIBRARIES})
 
-if(UNIX OR APPLE)
+if(NOT USE_ARM_CROSS_COMPILE)
+  if(UNIX OR APPLE)
     set(__linkname "${PROJECT_SOURCE_DIR}/python/caffe/_caffe.so")
     add_custom_command(TARGET pycaffe POST_BUILD
                        COMMAND ln -sf $<TARGET_LINKER_FILE:pycaffe> "${__linkname}"
@@ -22,13 +23,14 @@ if(UNIX OR APPLE)
                        COMMAND touch ${PROJECT_SOURCE_DIR}/python/caffe/proto/__init__.py
                        COMMAND cp ${proto_gen_folder}/*.py ${PROJECT_SOURCE_DIR}/python/caffe/proto/
                        COMMENT "Creating symlink ${__linkname} -> ${PROJECT_BINARY_DIR}/lib/_caffe${Caffe_POSTFIX}.so")
-elseif(WIN32)
+  elseif(WIN32)
     add_custom_command(TARGET pycaffe POST_BUILD
                        COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:pycaffe> ${PROJECT_SOURCE_DIR}/python/caffe
                        COMMAND ${CMAKE_COMMAND} -E make_directory ${PROJECT_SOURCE_DIR}/python/caffe/proto
                        COMMAND ${CMAKE_COMMAND} -E touch ${PROJECT_SOURCE_DIR}/python/caffe/proto/__init__.py
                        COMMAND (robocopy  "\"${proto_gen_folder}\" \"${PROJECT_SOURCE_DIR}/python/caffe/proto\" *.py") ^& IF %ERRORLEVEL% LEQ 4 set ERRORLEVEL=0
                        COMMENT "Creating symlink ${__linkname} -> ${PROJECT_BINARY_DIR}/lib/_caffe.pyd")
+  endif()
 endif()
 
 if(MSVC AND COPY_PREREQUISITES)

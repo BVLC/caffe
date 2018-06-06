@@ -19,7 +19,8 @@ class DeviceProgram {
   virtual bool Compile(bool load_cache, bool store_cache) = 0;
   virtual shared_ptr<DeviceKernel> GetKernel(string name) = 0;
 
-  virtual string function(string name, vector<KernelArg> args) = 0;
+  virtual string function(string name, KernelArgs args,
+                          KernelHints hints = KernelHints()) = 0;
   virtual string kernel_loop(string type, string index, string n) = 0;
   virtual string setup() = 0;
   virtual string atomics() = 0;
@@ -111,6 +112,12 @@ class DeviceProgram {
 
   template<typename Dtype>
   KernelArg create_kernel_arg(string name, uint64_t flags = KERNEL_ARG_NONE);
+
+  KernelHint create_kernel_hint(KernelHintOption option, string value);
+  KernelHint create_kernel_hint(KernelHintOption option, int8_t value);
+  KernelHint create_kernel_hint(KernelHintOption option, int16_t value);
+  KernelHint create_kernel_hint(KernelHintOption option, int32_t value);
+  KernelHint create_kernel_hint(KernelHintOption option, int64_t value);
 
  protected:
   DeviceProgram(Device* dev);

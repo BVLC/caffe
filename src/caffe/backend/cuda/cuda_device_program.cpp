@@ -159,15 +159,61 @@ shared_ptr<DeviceKernel> CudaDeviceProgram::GetKernel(string name) {
     args = pos->second;
   }
 
-  return make_shared<CudaDeviceKernel>(device_, kernel, args);
+  return make_shared<CudaDeviceKernel>(device_, name, kernel, args);
 }
 
-string CudaDeviceProgram::function(string name,
-             vector<std::tuple<string, string, uint64_t>> args) {
+string CudaDeviceProgram::function(string name, KernelArgs args,
+                                   KernelHints hints) {
   args_.insert(make_pair(name, args));
   stringstream ss;
   ss << " extern \"C\" ";
-  ss << "__global__ void ";
+  ss << "__global__ void " << std::endl;
+
+  int_tp max_threads_per_block = 0;
+  int_tp min_blocks_per_mp = 0;
+  for (uint_tp i = 0; i < hints.size(); ++i) {
+    switch(std::get<0>(hints[i])) {
+      case KERNEL_REQD_WORK_GROUP_X:
+        max_threads_per_block = std::max(max_threads_per_block *
+                                         std::stoi(std::get<1>(hints[i])),
+                                         std::stoi(std::get<1>(hints[i])));
+        break;
+      case KERNEL_REQD_WORK_GROUP_Y:
+        max_threads_per_block = std::max(max_threads_per_block *
+                                         std::stoi(std::get<1>(hints[i])),
+                                         std::stoi(std::get<1>(hints[i])));
+        break;
+      case KERNEL_REQD_WORK_GROUP_Z:
+        max_threads_per_block = std::max(max_threads_per_block *
+                                         std::stoi(std::get<1>(hints[i])),
+                                         std::stoi(std::get<1>(hints[i])));
+        break;
+      case KERNEL_HINT_WORK_GROUP_X:
+        max_threads_per_block = std::max(max_threads_per_block *
+                                         std::stoi(std::get<1>(hints[i])),
+                                         std::stoi(std::get<1>(hints[i])));
+        break;
+      case KERNEL_HINT_WORK_GROUP_Y:
+        max_threads_per_block = std::max(max_threads_per_block *
+                                         std::stoi(std::get<1>(hints[i])),
+                                         std::stoi(std::get<1>(hints[i])));
+        break;
+      case KERNEL_HINT_WORK_GROUP_Z:
+        max_threads_per_block = std::max(max_threads_per_block *
+                                         std::stoi(std::get<1>(hints[i])),
+                                         std::stoi(std::get<1>(hints[i])));
+        break;
+      case KERNEL_HINT_MIN_BLOCKS_PER_MP:
+        min_blocks_per_mp = std::stoi(std::get<1>(hints[i]));
+        break;
+    }
+  }
+
+  if (max_threads_per_block > 0 and min_blocks_per_mp > 0) {
+    ss << "__launch_bounds__(" << max_threads_per_block << ","
+                               << min_blocks_per_mp << ")" << std::endl;
+  }
+
   ss << name << "(";
   for (uint_tp i = 0; i < args.size(); ++i) {
     uint64_t flags = std::get<2>(args[i]);

@@ -42,6 +42,20 @@ const uint64_t KERNEL_ARG_LOCAL_MEM     =            1ULL <<   2;
 const uint64_t KERNEL_ARG_MEM_OFFSET    =            1ULL <<   3;
 const uint64_t KERNEL_ARG_RESTRICT      =            1ULL <<   4;
 
+enum KernelHintOption {
+  KERNEL_HINT_WORK_GROUP_X,
+  KERNEL_HINT_WORK_GROUP_Y,
+  KERNEL_HINT_WORK_GROUP_Z,
+  KERNEL_HINT_VEC_TYPE,
+  KERNEL_HINT_MIN_BLOCKS_PER_MP,
+  KERNEL_REQD_WORK_GROUP_X,
+  KERNEL_REQD_WORK_GROUP_Y,
+  KERNEL_REQD_WORK_GROUP_Z
+};
+
+typedef tuple<KernelHintOption, string>              KernelHint;
+typedef vector<KernelHint>                           KernelHints;
+
 
 
 }  // namespace caffe

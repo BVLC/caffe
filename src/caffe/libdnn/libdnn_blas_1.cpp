@@ -175,7 +175,11 @@ string LibDNNBlas<MItype, MOtype>::generate_axpby_source(
     ss << "x_tmp = (Acctype)((((Multtype)x_tmp) * ((Multtype)alpha_mult))"
        << "/ ((Multtype)1 << shift_bits));" << std::endl;
     ss << "if (alpha_shift >= 0) {" << std::endl;
-    ss << "x_tmp = x_tmp >> alpha_shift;" << std::endl;
+    ss << "Acctype mask = ((Acctype)1 << alpha_shift) - (Acctype)1;" << std::endl;
+    ss << "Acctype x_round = (x_tmp & mask) > "
+       << "((mask >> 1) + ((x_tmp < (Acctype)0) ? (Acctype)1 : (Acctype)0)) ? "
+       << "(Acctype)1 : (Acctype)0;" << std::endl;
+    ss << "x_tmp = (x_tmp >> alpha_shift) + x_round;" << std::endl;
     ss << "} else {" << std::endl;
     ss << "x_tmp = x_tmp << -alpha_shift;" << std::endl;
     ss << "}" << std::endl;
@@ -189,7 +193,11 @@ string LibDNNBlas<MItype, MOtype>::generate_axpby_source(
     ss << "y_tmp = (Acctype)((((Multtype)y_tmp) * ((Multtype)beta_mult))"
        << "/ ((Multtype)1 << shift_bits));" << std::endl;
     ss << "if (beta_shift >= 0) {" << std::endl;
-    ss << "y_tmp = y_tmp >> beta_shift;" << std::endl;
+    ss << "Acctype mask = ((Acctype)1 << beta_shift) - (Acctype)1;" << std::endl;
+    ss << "Acctype y_round = (y_tmp & mask) > "
+       << "((mask >> 1) + ((y_tmp < (Acctype)0) ? (Acctype)1 : (Acctype)0)) ? "
+       << "(Acctype)1 : (Acctype)0;" << std::endl;
+    ss << "y_tmp = (y_tmp >> beta_shift) + y_round;" << std::endl;
     ss << "} else {" << std::endl;
     ss << "y_tmp = y_tmp << -beta_shift;" << std::endl;
     ss << "}" << std::endl;

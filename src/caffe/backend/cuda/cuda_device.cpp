@@ -42,6 +42,8 @@ void CudaDevice::Init() {
   max_group_sizes_[1] = prop.maxGridSize[1];
   max_group_sizes_[2] = prop.maxGridSize[2];
   max_local_size_ = prop.maxThreadsPerBlock;
+  cuda_major_ = prop.major;
+  cuda_minor_ = prop.minor;
 
   this->preferred_vector_widths_[safe_type_name<char>()] = 4;
   this->preferred_vector_widths_[safe_type_name<int8_t>()] = 4;
@@ -234,6 +236,8 @@ bool CudaDevice::CheckCapability(DeviceCapability cap) {
     case DEVICE_64_BIT_ADDRESS:
       // Report host pointer size
       return sizeof(void*) == 8;
+    case DEVICE_CUDA_DP4A_SUPPORT:
+      return cuda_major_ >= 6 && cuda_minor_ >= 1;
     default:
       return false;
   }

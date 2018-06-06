@@ -11,8 +11,7 @@ void LibDNNBlas<MItype, MOtype>::initialize_gemm_tuner(
   // Work groups
   for (int id = 0; id < 2; ++id) {
     vector<int_tp> workgroup_sizes;
-    for (int_tp i = 0; i < this->dev_ptr_->workgroup_size(id);
-            i += 4) {
+    for (int_tp i = 1; i < this->dev_ptr_->workgroup_size(id); i += 1) {
       workgroup_sizes.push_back(i);
     }
     tuner->add_set_param <int_tp>("workgroup_size_" + std::to_string(id),
@@ -20,10 +19,12 @@ void LibDNNBlas<MItype, MOtype>::initialize_gemm_tuner(
   }
 
   tuner->add_range_param<int_tp>("TSK", 8, 1, 32, 1);
-  tuner->add_range_param<int_tp>("TSK_UNROLL", 1, 1, 16, 1);
-  tuner->add_range_param<int_tp>("WPTM", 4, 4, 16, 4);
+  tuner->add_range_param<int_tp>("TSK_UNROLL",
+            std::max(1, 4 / static_cast<int>(safe_sizeof<MItype>())), 1, 16, 1);
+
+  tuner->add_range_param<int_tp>("WPTM", 8, 4, 16, 4);
   tuner->add_set_param<int_tp>("VWM", 4, vector<int_tp>({1, 2, 4, 8, 16}));
-  tuner->add_range_param<int_tp>("WPTN", 4, 4, 16, 4);
+  tuner->add_range_param<int_tp>("WPTN", 8, 4, 16, 4);
   tuner->add_set_param<int_tp>("VWN", 4, vector<int_tp>({1, 2, 4, 8, 16}));
 
   tuner->add_constraint<int64_t>(
@@ -39,9 +40,11 @@ void LibDNNBlas<MItype, MOtype>::initialize_gemm_tuner(
     });
 
   tuner->add_constraint<int64_t>(
-    vector<string>({"TSK", "TSK_UNROLL"}),
+    vector<string>({"TSK", "VWM", "VWN", "TSK_UNROLL"}),
     vector<string>({"TSK_UNROLL"}), [](vector<int64_t> args) -> bool {
-      return args[0] % args[1] == 0;
+      return args[0] % args[3] == 0 &&
+             args[1] % args[3] == 0 &&
+             args[2] % args[3] == 0;
     });
 
   tuner->add_constraint<int64_t>(
@@ -68,6 +71,17 @@ void LibDNNBlas<MItype, MOtype>::initialize_gemm_tuner(
     // save registers by not doing it
     tuner->add_boolean_param("vector_unroll", true, true);
   }
+
+  bool dp4a = this->dev_ptr_->CheckCapability(DEVICE_CUDA_DP4A_SUPPORT) &&
+      std::is_same<MItype, uint8_t>::value;
+
+  tuner->add_boolean_param("DP4A", dp4a, false);
+
+  tuner->add_boolean_param("no_reg_arrs", false, false);
+
+  // Override default parameters with device-specific defaults
+  std::map<string, int64_t> params = this->gemm_like_default_parameters();
+  tuner->load_params(params);
 }
 
 template<typename MItype, typename MOtype>
@@ -213,8 +227,21 @@ string LibDNNBlas<MItype, MOtype>::generate_gemm_source(
                                                              KERNEL_ARG_CONST));
   }
 
+  KernelHints hints;
+  hints.push_back(this->program_->create_kernel_hint(
+                                             KERNEL_REQD_WORK_GROUP_X, rtsn));
+  hints.push_back(this->program_->create_kernel_hint(
+                                             KERNEL_REQD_WORK_GROUP_Y, rtsm));
+  hints.push_back(this->program_->create_kernel_hint(
+                                             KERNEL_REQD_WORK_GROUP_Z, 1));
+  hints.push_back(this->program_->create_kernel_hint(
+                                             KERNEL_HINT_MIN_BLOCKS_PER_MP, 2));
+  hints.push_back(this->program_->create_kernel_hint(KERNEL_HINT_VEC_TYPE,
+                             this->program_->template device_type_name<MItype>()
+                             + std::to_string(std::min(vwm, vwn))));
 
-  ss << program->function("libdnn_gemm", args);
+
+  ss << program->function("libdnn_gemm", args, hints);
 
   // Thread identifiers
   // Local row ID (max: RTSM=TSM/WPTM)
@@ -410,7 +437,12 @@ string LibDNNBlas<MItype, MOtype>::generate_gemm_source(
       ss << "C_tmp = (Acctype)((((Multtype)C_tmp) * ((Multtype)mult))"
          << "/ ((Multtype)1 << shift_bits));" << std::endl;
       ss << "if (shift >= 0) {" << std::endl;
-      ss << "C_tmp = C_tmp >> shift;" << std::endl;
+      ss << "Acctype mask = ((Acctype)1 << shift) - (Acctype)1;" << std::endl;
+      ss << "Acctype C_round = (C_tmp & mask) > "
+         << "((mask >> 1) + ((C_tmp < (Acctype)0) ? "
+         << "(Acctype)1 : (Acctype)0)) ? "
+         << "(Acctype)1 : (Acctype)0;" << std::endl;
+      ss << "C_tmp = (C_tmp >> shift) + C_round;" << std::endl;
       ss << "} else {" << std::endl;
       ss << "C_tmp = C_tmp << -shift;" << std::endl;
       ss << "}" << std::endl;
@@ -422,7 +454,13 @@ string LibDNNBlas<MItype, MOtype>::generate_gemm_source(
         ss << "C_tmp = (Acctype)((((Multtype)C_tmp) * ((Multtype)alpha_mult))"
            << "/ ((Multtype)1 << shift_bits));" << std::endl;
         ss << "if (alpha_shift >= 0) {" << std::endl;
-        ss << "C_tmp = C_tmp >> alpha_shift;" << std::endl;
+        ss << "Acctype mask = ((Acctype)1 << alpha_shift) - (Acctype)1;"
+           << std::endl;
+        ss << "Acctype C_round = (C_tmp & mask) > "
+           << "((mask >> 1) + ((C_tmp < (Acctype)0) ? "
+           << "(Acctype)1 : (Acctype)0)) ? "
+           << "(Acctype)1 : (Acctype)0;" << std::endl;
+        ss << "C_tmp = (C_tmp >> alpha_shift) + C_round;" << std::endl;
         ss << "} else {" << std::endl;
         ss << "C_tmp = C_tmp << -alpha_shift;" << std::endl;
         ss << "}" << std::endl;
@@ -449,7 +487,13 @@ string LibDNNBlas<MItype, MOtype>::generate_gemm_source(
         ss << "C_tmp = (Acctype)((((Multtype)C_tmp) * ((Multtype)beta_mult))"
            << "/ ((Multtype)1 << shift_bits));" << std::endl;
         ss << "if (beta_shift >= 0) {" << std::endl;
-        ss << "C_tmp = C_tmp >> beta_shift;" << std::endl;
+        ss << "Acctype mask = ((Acctype)1 << beta_shift) - (Acctype)1;"
+           << std::endl;
+        ss << "Acctype C_round = (C_tmp & mask) > "
+           << "((mask >> 1) + ((C_tmp < (Acctype)0) ? "
+           << "(Acctype)1 : (Acctype)0)) ? "
+           << "(Acctype)1 : (Acctype)0;" << std::endl;
+        ss << "C_tmp = (C_tmp >> beta_shift) + C_round;" << std::endl;
         ss << "} else {" << std::endl;
         ss << "C_tmp = C_tmp << -beta_shift;" << std::endl;
         ss << "}" << std::endl;

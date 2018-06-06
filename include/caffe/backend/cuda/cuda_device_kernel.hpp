@@ -12,7 +12,8 @@ class Device;
 
 class CudaDeviceKernel : public DeviceKernel {
  public:
-  explicit CudaDeviceKernel(Device *dev, shared_ptr<CUfunction> cuda_kernel,
+  explicit CudaDeviceKernel(Device *dev, string name,
+                            shared_ptr<CUfunction> cuda_kernel,
                             KernelArgs args);
   virtual void Execute(vector<size_t> group, vector<size_t> local);
 

@@ -169,6 +169,8 @@ class CudaDevice : public Device {
 
   vector<char*> cuda_headers_;
   vector<char*> cuda_header_sources_;
+  int cuda_minor_;
+  int cuda_major_;
 };
 
 #endif  // USE_CUDA

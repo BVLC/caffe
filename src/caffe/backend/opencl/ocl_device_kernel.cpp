@@ -10,8 +10,11 @@ namespace caffe {
 
 #ifdef USE_OPENCL
 
-OclDeviceKernel::OclDeviceKernel(Device* dev, viennacl::ocl::kernel ocl_ker,
-                                 KernelArgs args) : DeviceKernel(dev, args),
+OclDeviceKernel::OclDeviceKernel(Device* dev,
+                                 string name,
+                                 viennacl::ocl::kernel ocl_ker,
+                                 KernelArgs args) :
+                                     DeviceKernel(dev, name, args),
                                  ocl_arg_offsets_(args.size()),
                                  ocl_kernel_(ocl_ker) {
   int_tp offset = 0;
@@ -62,10 +65,10 @@ void OclDeviceKernel::Execute(vector<size_t> group,
   }
   */
 
-  OCL_CHECK(clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
-                                   kernel, work_dim, NULL,
-                                   global_ws_ptr, local_ws_ptr,
-                                   0, NULL, NULL));
+  OCL_CHECK_MESSAGE(clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
+                                           kernel, work_dim, NULL,
+                                           global_ws_ptr, local_ws_ptr,
+                                           0, NULL, NULL), this->name_);
 
   // Reset kernel arguments
   this->arg_idx_ = 0;

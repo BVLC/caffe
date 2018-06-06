@@ -10,8 +10,10 @@ namespace caffe {
 #ifdef USE_CUDA
 
 CudaDeviceKernel::CudaDeviceKernel(Device* dev,
+                                   string name,
                                    shared_ptr<CUfunction> cuda_kernel,
-                                   KernelArgs args) : DeviceKernel(dev, args),
+                                   KernelArgs args) :
+                                       DeviceKernel(dev, name, args),
                                    cuda_args_(0),
                                    cuda_kernel_(cuda_kernel) {
 }
@@ -45,7 +47,7 @@ void CudaDeviceKernel::Execute(vector<size_t> group,
   cuCtxSynchronize();
   if (result != CUDA_SUCCESS) {
     LOG(FATAL) << "Kernel launch failed (" << cudaGetErrorString(result) << ")"
-               << std::endl;
+               << " (" << this->name_ << ")" << std::endl;
   }
   CUDA_POST_KERNEL_CHECK;
 
