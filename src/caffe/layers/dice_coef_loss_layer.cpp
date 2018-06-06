@@ -27,6 +27,7 @@ void DiceCoefLossLayer<Dtype>::Reshape(
   caffe_set(batchsize, smooth, result_tmp_.mutable_cpu_data());
   caffe_set(batchsize, smooth, result_.mutable_cpu_data());
 
+  // TODO check in case of multiclass unweigthed + ignore
 
   switch (this->layer_param_.dice_coef_loss_param().generalization()) {
   case DiceCoefLossParameter_GeneralizationMode_NONE:
@@ -61,6 +62,10 @@ void DiceCoefLossLayer<Dtype>::Reshape(
           caffe_set(imgsize, Dtype(0.), mask_.mutable_cpu_data()+(dim+imgsize)*ignore_label_);
       weight_multiplier_.ReshapeLike(*bottom[0]);
     }
+  else if (ignore_label_ != -1)
+    caffe_set(bottom[1]->count(2), Dtype(0.), multiplier_.mutable_cpu_data()+imgsize*ignore_label_);
+
+
 }
 
 
@@ -78,8 +83,7 @@ void DiceCoefLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       caffe_powx(bottom[1]->num() * bottom[1]->channels(),weights_.cpu_data(), Dtype(-2.),
                  weights_.mutable_cpu_data());
 
-      //  put them into multiplier_   TODO does not work, bad dimension, mutplilier is used below as
-      // a vector identical for every image
+      //  put them into our multiplexed multiplier
       caffe_cpu_gemm(CblasTrans, CblasNoTrans,
                      bottom[1]->num(), bottom[1]->count(1), bottom[1]->channels(),
                      Dtype(1.), weights_.cpu_data(), mask_.cpu_data(), Dtype(0.),
