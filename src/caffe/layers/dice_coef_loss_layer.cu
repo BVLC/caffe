@@ -10,16 +10,39 @@ void DiceCoefLossLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   int count = bottom[0]->count();
 
+  if (do_weight_)
+    {
+      caffe_gpu_gemm(CblasNoTrans, CblasTrans, bottom[1]->num(), bottom[1]->channels(),
+                     bottom[1]->count(1), Dtype(1.), bottom[1]->gpu_data(), mask_.gpu_data(), Dtype(1.),
+                     weights_.mutable_gpu_data());
+      caffe_powx(bottom[1]->num() * bottom[1]->channels(),weights_.gpu_data(), Dtype(-2.),
+                 weights_.mutable_gpu_data());
+      caffe_gpu_gemm(CblasTrans, CblasNoTrans,
+                     bottom[1]->num(), bottom[1]->count(1), bottom[1]->channels(),
+                     Dtype(1.), weights_.gpu_data(), mask_.gpu_data(), Dtype(0.),
+                     weight_multiplier_.mutable_gpu_data());
+
+    }
+
   caffe_gpu_mul(count, bottom[0]->gpu_data(), bottom[0]->gpu_data(),
                 tmp_.mutable_gpu_data());
+  if (do_weight_)
+    caffe_mul(bottom[0]->count(), weight_multiplier_.gpu_data(), tmp_.gpu_data(),
+              tmp_.mutable_gpu_data());
   caffe_gpu_gemv(CblasNoTrans, bottom[0]->num(), bottom[0]->count(1), Dtype(1.), tmp_.gpu_data(),
                  multiplier_.gpu_data(), Dtype(1.), result_tmp_.mutable_gpu_data());
   caffe_gpu_mul(count, bottom[1]->gpu_data(), bottom[1]->gpu_data(),
                 tmp_.mutable_gpu_data());
+  if (do_weight_)
+    caffe_mul(bottom[0]->count(), weight_multiplier_.gpu_data(), tmp_.gpu_data(),
+              tmp_.mutable_gpu_data());
   caffe_gpu_gemv(CblasNoTrans, bottom[1]->num(), bottom[1]->count(1), Dtype(1.), tmp_.gpu_data(),
                  multiplier_.gpu_data(), Dtype(1.), result_tmp_.mutable_gpu_data());
   caffe_gpu_mul(count, bottom[0]->gpu_data(), bottom[1]->gpu_data(),
                 tmp_.mutable_gpu_data());
+  if (do_weight_)
+    caffe_mul(bottom[0]->count(), weight_multiplier_.gpu_data(), tmp_.gpu_data(),
+              tmp_.mutable_gpu_data());
   caffe_gpu_gemv(CblasNoTrans, bottom[1]->num(), bottom[1]->count(1), Dtype(2.), tmp_.gpu_data(),
                  multiplier_.gpu_data(), Dtype(1.), result_.mutable_gpu_data());
   caffe_gpu_div(bottom[0]->num(), result_.gpu_data(), result_tmp_.gpu_data(),
@@ -44,7 +67,6 @@ __global__ void DiceCoefLossBackward(const int n, const Dtype* x,
       beta = Dtype(2.) * loss[i] / denominator[i] * sign;
       out_diff[index] = alpha * x[index] + beta * y[index];
    }
-          // guillo: CHECKED ok for no generalization (same as cpu)
 }
 
 template <typename Dtype>
@@ -62,6 +84,10 @@ void DiceCoefLossLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
             sign, result_.gpu_data(), result_tmp_.gpu_data(), bottom[i]->count(1));
           CUDA_POST_KERNEL_CHECK;
         }
+        if (do_weight_)
+          caffe_mul(bottom[i]->count(), weight_multiplier_.gpu_data(), bottom[i]->gpu_diff(),
+                    bottom[i]->mutable_gpu_diff());
+
         }
 }
 

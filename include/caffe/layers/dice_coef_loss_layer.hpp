@@ -103,8 +103,13 @@ class DiceCoefLossLayer : public LossLayer<Dtype> {
   Blob<Dtype> result_;
   Blob<Dtype> result_tmp_;
   Blob<Dtype> tmp_;
-  
   Dtype smooth;
+  int nclasses_;
+  bool do_weight_;
+  int ignore_label_;
+  Blob<Dtype> weights_;
+  Blob<Dtype> weight_multiplier_;
+  Blob<Dtype> mask_;
 };
 
 }  // namespace caffe
