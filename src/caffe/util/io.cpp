@@ -86,10 +86,13 @@ void WriteProtoToBinaryFile(const Message& proto, const char* filename) {
 cv::Mat ReadImageToCVMat(const string& filename,
 			 const int height, const int width, const int min_dim, const int max_dim,
 			 const bool is_color,
-			 const bool nearest_neighbour_interp) {
+			 const bool nearest_neighbour_interp,
+			 const bool unchanged) {
   cv::Mat cv_img;
   int cv_read_flag = (is_color ? CV_LOAD_IMAGE_COLOR :
     CV_LOAD_IMAGE_GRAYSCALE);
+  if (unchanged)
+    cv_read_flag = CV_LOAD_IMAGE_UNCHANGED;
   cv::Mat cv_img_origin = cv::imread(filename, cv_read_flag);
   if (!cv_img_origin.data) {
     LOG(WARNING) << "Could not open or find file " << filename;
@@ -168,9 +171,9 @@ static bool matchExt(const std::string & fn,
 bool ReadImageToDatum(const string& filename, const int label,
     const int height, const int width, const int min_dim, const int max_dim,
 		      const bool is_color, const bool nearest_neighbour_interp,
-		      const std::string & encoding, Datum* datum) {
+		      const std::string & encoding, Datum* datum, const bool unchanged) {
   cv::Mat cv_img = ReadImageToCVMat(filename, height, width, min_dim, max_dim,
-                                    is_color, nearest_neighbour_interp);
+                                    is_color, nearest_neighbour_interp, unchanged);
   if (cv_img.data) {
     if (encoding.size()) {
       if ( (cv_img.channels() == 3) == is_color && !height && !width &&
@@ -726,29 +729,43 @@ void EncodeCVMatToDatum(const cv::Mat& cv_img, const string& encoding,
 }
 
 void CVMatToDatum(const cv::Mat& cv_img, Datum* datum) {
-  CHECK(cv_img.depth() == CV_8U) << "Image data type must be unsigned byte";
+  //CHECK(cv_img.depth() == CV_8U) << "Image data type must be unsigned byte";
   datum->set_channels(cv_img.channels());
   datum->set_height(cv_img.rows);
   datum->set_width(cv_img.cols);
   datum->clear_data();
-  datum->clear_float_data();
   datum->set_encoded(false);
-  int datum_channels = datum->channels();
-  int datum_height = datum->height();
-  int datum_width = datum->width();
-  int datum_size = datum_channels * datum_height * datum_width;
-  std::string buffer(datum_size, ' ');
-  for (int h = 0; h < datum_height; ++h) {
-    const uchar* ptr = cv_img.ptr<uchar>(h);
-    int img_index = 0;
-    for (int w = 0; w < datum_width; ++w) {
-      for (int c = 0; c < datum_channels; ++c) {
-        int datum_index = (c * datum_height + h) * datum_width + w;
-        buffer[datum_index] = static_cast<char>(ptr[img_index++]);
+  if (cv_img.depth() != CV_8U) {
+    int datum_channels = datum->channels();
+    int datum_height = datum->height();
+    int datum_width = datum->width();
+    int datum_size = datum_channels * datum_height * datum_width;
+    for (int h = 0; h < datum_height; ++h) {
+      for (int w = 0; w < datum_width; ++w) {
+	datum->add_float_data(cv_img.at<float>(h,w));
       }
     }
+    return;
   }
-  datum->set_data(buffer);
+  else {
+    datum->clear_float_data();
+    int datum_channels = datum->channels();
+    int datum_height = datum->height();
+    int datum_width = datum->width();
+    int datum_size = datum_channels * datum_height * datum_width;
+    std::string buffer(datum_size, ' ');
+    for (int h = 0; h < datum_height; ++h) {
+      const uchar* ptr = cv_img.ptr<uchar>(h);
+      int img_index = 0;
+      for (int w = 0; w < datum_width; ++w) {
+	for (int c = 0; c < datum_channels; ++c) {
+	  int datum_index = (c * datum_height + h) * datum_width + w;
+	  buffer[datum_index] = static_cast<char>(ptr[img_index++]);
+	}
+      }
+    }
+    datum->set_data(buffer);
+  }
 }
 
   long int NumberOfImages(const string* source)
