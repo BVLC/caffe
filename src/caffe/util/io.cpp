@@ -220,7 +220,7 @@ bool ReadRichImageToAnnotatedDatum(const string& filename,
   }
   anno_datum->clear_annotation_group();
   if (!boost::filesystem::exists(labelfile)) {
-    return true;
+    return false;
   }
   switch (type) {
     case AnnotatedDatum_AnnotationType_BBOX:
