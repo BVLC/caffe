@@ -48,6 +48,14 @@ void NetBase::set_quant_mode(QuantizerMode quant_mode) {
   }
 }
 
+vector<shared_ptr<QuantizerBase> > NetBase::get_all_quantizers() {
+  vector<shared_ptr<QuantizerBase> > all_quant_base_vec;
+  for (int_tp i = 0; i < this->layers().size(); ++i) {
+    vector<shared_ptr<QuantizerBase> > quant_base_vec =
+        this->layers()[i]->get_all_quantizers();
+  }
+  return all_quant_base_vec;
+}
 
 template<typename Dtype>
 Net<Dtype>::Net(const NetParameter& param, Device* device_context)

@@ -65,6 +65,9 @@ class NetBase {
   }
   /// @brief sets the quantizer mode for all quantizers in the network
   void set_quant_mode(QuantizerMode quant_mode);
+
+  vector<shared_ptr<QuantizerBase> > get_all_quantizers();
+
   /**
    * @brief returns the bottom vecs for each layer -- usually you won't
    *        need this unless you do per-layer checks such as gradients.

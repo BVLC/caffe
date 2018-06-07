@@ -27,6 +27,8 @@ class MOELayer : public Layer<Dtype, MItype, MOtype> {
 
   virtual inline const char* type() const { return "MOE"; }
 
+  virtual vector<shared_ptr<QuantizerBase> > get_all_quantizers();
+
  protected:
   virtual void Forward_cpu(const vector<Blob<MItype>*>& bottom,
       const vector<Blob<MOtype>*>& top);
@@ -41,7 +43,8 @@ class MOELayer : public Layer<Dtype, MItype, MOtype> {
 
 
   shared_ptr<Net<float> > gating_net_;
-  vector<shared_ptr<Net<float> > > expert_nets_;
+  Blob<MOtype>* gating_;
+  vector<vector<shared_ptr<Net<float> > > > expert_nets_;
 
  private:
   void GenerateProgram();

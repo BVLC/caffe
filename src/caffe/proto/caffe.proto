@@ -1097,6 +1097,7 @@ message MOEParameter {
   optional NetParameter gating_net = 1;
   repeated NetParameter expert_net = 2;
   repeated int64 expert_instances = 3;
+  optional int64 select_experts = 4;
   
   enum BottomMapping {
   	GATING = 1;
@@ -1104,7 +1105,7 @@ message MOEParameter {
   	GATING_AND_EXPERT = 3;
   }
   
-  repeated BottomMapping map_bottom = 4;
+  repeated BottomMapping map_bottom = 5;
 }
 
 // Message that stores parameters used by ReductionLayer

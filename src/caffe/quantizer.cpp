@@ -871,6 +871,10 @@ void Quantizer<MItype, MOtype>::GenerateKernels() {
   ss << this->program_->template define_vector_type<MItype>("MItype", 0, 4);
   ss << this->program_->template define_vector_type<MOtype>("MOtype", 0, 4);
 
+  ss << this->program_->template helper_functions<MItype>();
+  if (!is_same<MItype, MOtype>::value) {
+    ss << this->program_->template helper_functions<MOtype>();
+  }
 
   // Quantizer forward
   {
@@ -1140,7 +1144,8 @@ void Quantizer<MItype, MOtype>::GenerateKernels() {
     ss << this->program_->function("pseudo_quant_in", args);
     ss << this->program_->kernel_loop("uint_tp", "i", "n");
     if (is_float_type<MItype>()) {
-      ss << "out[i] = (min(max(round(in[i] / scal) + inter_zero,"
+      ss << "out[i] = (MItype)(min(max((MItype)(round(in[i] / scal))"
+         << " + inter_zero,"
          << "min_inter), max_inter) - inter_zero) * scal;" << std::endl;
     }
     ss << "}" << std::endl;
@@ -1167,7 +1172,8 @@ void Quantizer<MItype, MOtype>::GenerateKernels() {
     ss << this->program_->function("pseudo_quant_out", args);
     ss << this->program_->kernel_loop("uint_tp", "i", "n");
     if (is_float_type<MOtype>()) {
-      ss << "out[i] = (min(max(round(in[i] / scal) + inter_zero,"
+      ss << "out[i] = (MOtype)(min(max((MOtype)(round(in[i] / scal))"
+         << " + inter_zero,"
          << "min_inter), max_inter) - inter_zero) * scal;" << std::endl;
     }
     ss << "}" << std::endl;

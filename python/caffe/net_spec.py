@@ -80,6 +80,8 @@ def assign_proto(proto, name, val):
             setattr(proto, name, val)
         except (AttributeError):
             getattr(proto, name).append(val)
+        except (TypeError):
+            getattr(proto, name).MergeFrom(val)
 
 class Top(object):
     """A Top specifies a single output blob (which could be one of several
