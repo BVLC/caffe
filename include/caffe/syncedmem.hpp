@@ -56,10 +56,10 @@ class SyncedMemory {
     HEAD_AT_GPU,
     SYNCED
   };
-  SyncedHead head() {
+  SyncedHead head() const {
     return head_;
   }
-  uint_tp size() {
+  uint_tp size() const {
     return size_;
   }
 

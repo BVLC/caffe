@@ -173,9 +173,10 @@ class Solver : public SolverBase {
   void CheckSnapshotWritePermissions();
 
 
- protected:
   // Make and apply the update value for the current iteration.
   virtual void ApplyUpdate() = 0;
+
+ protected:
   string SnapshotFilename(const string extension);
   string SnapshotToBinaryProto();
   string SnapshotToHDF5();

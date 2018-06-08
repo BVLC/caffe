@@ -1136,7 +1136,9 @@ BOOST_PYTHON_MODULE(_caffe) {
   bp::class_<SolverParameter>("SolverParameter", bp::no_init)
     .add_property("max_iter", &SolverParameter::max_iter)
     .add_property("display", &SolverParameter::display)
-    .add_property("layer_wise_reduce", &SolverParameter::layer_wise_reduce);
+    .add_property("layer_wise_reduce", &SolverParameter::layer_wise_reduce)
+    .add_property("base_lr", &SolverParameter::base_lr,
+           &SolverParameter::set_base_lr);
 
   bp::class_<SolverBase, shared_ptr<SolverBase>, boost::noncopyable>(
     "Solver", bp::no_init)
@@ -1153,7 +1155,10 @@ BOOST_PYTHON_MODULE(_caffe) {
     .def("solve", &Solver_Solve_NoGIL, Solver_SolveOverloads())
     .def("restore", &SolverBase::Restore)
     .def("snapshot", &SolverBase::Snapshot)
-    .def("share_weights", &share_weights);
+    .def("share_weights", &share_weights)
+    .def("apply_update", &SolverBase::ApplyUpdate)
+    .add_property("param", bp::make_function(&SolverBase::param,
+                  bp::return_internal_reference<>()));
   BP_REGISTER_SHARED_PTR_TO_PYTHON_NO_TEMPLATE(SolverBase);
 
   bp::class_<NetState>("NetState", bp::init<>())
