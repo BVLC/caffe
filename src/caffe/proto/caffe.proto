@@ -936,6 +936,9 @@ message PoolingParameter {
   // If global_pooling then it will pool over the size of the bottom by doing
   // kernel_h = bottom->height and kernel_w = bottom->width
   optional bool global_pooling = 12 [default = false];
+  // valid_ave_pooling will ignore the padded elements when doing AVE pooling
+  // calculation, since the padded elements are invalid. 
+  optional bool valid_ave_pooling = 13 [default = false];
 }
 
 message PowerParameter {
