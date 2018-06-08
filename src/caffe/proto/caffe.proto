@@ -825,6 +825,8 @@ message ImageDataParameter {
   // data.
   optional bool mirror = 6 [default = false];
   optional string root_folder = 12 [default = ""];
+  // Use the following separator. The default is a space.
+  optional string separator = 13 [default = " "];
 }
 
 message InfogainLossParameter {
