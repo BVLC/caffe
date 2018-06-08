@@ -50,9 +50,12 @@ void NetBase::set_quant_mode(QuantizerMode quant_mode) {
 
 vector<shared_ptr<QuantizerBase> > NetBase::get_all_quantizers() {
   vector<shared_ptr<QuantizerBase> > all_quant_base_vec;
-  for (int_tp i = 0; i < this->layers().size(); ++i) {
+  for (size_t i = 0; i < this->layers().size(); ++i) {
     vector<shared_ptr<QuantizerBase> > quant_base_vec =
         this->layers()[i]->get_all_quantizers();
+    for (size_t j = 0; j < quant_base_vec.size(); ++j) {
+      all_quant_base_vec.push_back(quant_base_vec[j]);
+    }
   }
   return all_quant_base_vec;
 }
@@ -303,16 +306,6 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     if (!layer_contributes_loss) {
       layer_need_backward_[layer_id] = false;
     }
-    if (layer_need_backward_[layer_id]) {
-      if (Caffe::root_solver()) {
-        LOG(INFO) << layer_names_[layer_id] << " needs backward computation.";
-      }
-    } else {
-      if (Caffe::root_solver()) {
-        LOG(INFO) << layer_names_[layer_id]
-                  << " does not need backward computation.";
-      }
-    }
     for (int_tp bottom_id = 0; bottom_id < bottom_vecs_[layer_id].size();
         ++bottom_id) {
       if (layer_contributes_loss) {
@@ -345,6 +338,18 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
       for (int_tp param_id = 0; param_id < layers_[layer_id]->blobs_size();
           ++param_id) {
         layers_[layer_id]->set_param_propagate_down(param_id, true);
+      }
+    }
+  }
+  for (int_tp layer_id = layers_.size() - 1; layer_id >= 0; --layer_id) {
+    if (layer_need_backward_[layer_id]) {
+      if (Caffe::root_solver()) {
+        LOG(INFO) << layer_names_[layer_id] << " needs backward computation.";
+      }
+    } else {
+      if (Caffe::root_solver()) {
+        LOG(INFO) << layer_names_[layer_id]
+                  << " does not need backward computation.";
       }
     }
   }

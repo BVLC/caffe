@@ -21,7 +21,7 @@ class SplitLayer : public Layer<Dtype, MItype, MOtype> {
   explicit SplitLayer(const LayerParameter& param)
       : Layer<Dtype, MItype, MOtype>(param) {}
   virtual void Reshape(const vector<Blob<MItype>*>& bottom,
-      const vector<Blob<MOtype>*>& top);
+                       const vector<Blob<MOtype>*>& top);
 
   virtual inline const char* type() const { return "Split"; }
   virtual inline int_tp ExactNumBottomBlobs() const { return 1; }

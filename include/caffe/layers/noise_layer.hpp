@@ -1,6 +1,5 @@
-#ifndef CAFFE_MOE_LAYER_HPP_
-#define CAFFE_MOE_LAYER_HPP_
-
+#ifndef CAFFE_NOISE_LAYER_HPP_
+#define CAFFE_NOISE_LAYER_HPP_
 
 #include <vector>
 
@@ -10,24 +9,17 @@
 
 namespace caffe {
 
-// Forward declare net
-template<typename Dtype>
-class Net;
-
-
 template<typename Dtype, typename MItype, typename MOtype>
-class MOELayer : public Layer<Dtype, MItype, MOtype> {
+class NoiseLayer : public Layer<Dtype, MItype, MOtype> {
  public:
-  explicit MOELayer(const LayerParameter& param)
+  explicit NoiseLayer(const LayerParameter& param)
       : Layer<Dtype, MItype, MOtype>(param) {}
   virtual void LayerSetUp(const vector<Blob<MItype>*>& bottom,
                           const vector<Blob<MOtype>*>& top);
   virtual void Reshape(const vector<Blob<MItype>*>& bottom,
                        const vector<Blob<MOtype>*>& top);
 
-  virtual inline const char* type() const { return "MOE"; }
-
-  virtual vector<shared_ptr<QuantizerBase> > get_all_quantizers();
+  virtual inline const char* type() const { return "Noise"; }
 
  protected:
   virtual void Forward_cpu(const vector<Blob<MItype>*>& bottom,
@@ -41,16 +33,9 @@ class MOELayer : public Layer<Dtype, MItype, MOtype> {
       const vector<bool>& propagate_down,
       const vector<Blob<MItype>*>& bottom);
 
-  int_tp parallel_nets_;
-  shared_ptr<Net<float> > gating_net_;
-  Blob<MOtype>* gating_;
-  vector<vector<shared_ptr<Net<float> > > > expert_nets_;
-
- private:
-  void GenerateProgram();
+  Blob<Dtype> noise_;
 };
 
 }  // namespace caffe
 
-
-#endif  // CAFFE_LAYERS_MOE_LAYER_HPP_
+#endif   // CAFFE_NOISE_LAYER_HPP_

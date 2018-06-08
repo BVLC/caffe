@@ -1,6 +1,10 @@
 #include "caffe/layers/moe_layer.hpp"
 #include "caffe/net.hpp"
 
+#ifdef USE_OPENMP
+#include <omp.h>
+#endif  // USE_OPENMP
+
 namespace caffe {
 
 template<typename Dtype, typename MItype, typename MOtype>
@@ -35,9 +39,18 @@ template<typename Dtype, typename MItype, typename MOtype>
 void MOELayer<Dtype, MItype, MOtype>::LayerSetUp(
                                             const vector<Blob<MItype>*>& bottom,
                                             const vector<Blob<MOtype>*>& top) {
+#ifdef USE_OPENMP
+  this->parallel_nets_ = omp_get_thread_limit();
+#else  // USE_OPENMP
+  this->parallel_nets_ = 1;
+#endif  // USE_OPENMP
+
   MOEParameter moe_param = this->layer_param().moe_param();
   if (moe_param.has_gating_net()) {
-    gating_net_ = make_shared<Net<float> >(moe_param.gating_net(),
+    NetParameter gating_net_param = moe_param.gating_net();
+    gating_net_param.mutable_state()->set_phase(this->phase_);
+    gating_net_param.set_force_backward(this->phase_ == caffe::TRAIN);
+    gating_net_ = make_shared<Net<float> >(gating_net_param,
                                            this->device_);
     vector<shared_ptr<BlobBase> > gating_net_params = gating_net_->params();
     for (size_t i = 0; i < gating_net_params.size(); ++i) {
@@ -56,9 +69,12 @@ void MOELayer<Dtype, MItype, MOtype>::LayerSetUp(
       vector<shared_ptr<Net<float> > > expert_nets;
       vector<shared_ptr<BlobBase> > expert_net_params_zero;
       for (size_t k = 0;
-           k < (Caffe::mode() == TEST ? bottom[0]->shape()[0] : 1); ++k) {
+           k < (this->phase_ == caffe::TEST ? this->parallel_nets_ : 1); ++k) {
+        NetParameter expert_net_param = moe_param.expert_net(i);
+        expert_net_param.mutable_state()->set_phase(this->phase_);
+        expert_net_param.set_force_backward(this->phase_ == caffe::TRAIN);
         shared_ptr<Net<float> > expert_net =
-            make_shared<Net<float> >(moe_param.expert_net(i), this->device_);
+            make_shared<Net<float> >(expert_net_param, this->device_);
         vector<shared_ptr<BlobBase> > expert_net_params = expert_net->params();
         if (k == 0) {
           // If multiple copies of an expert exists, register the first and
@@ -119,7 +135,7 @@ void MOELayer<Dtype, MItype, MOtype>::Reshape(
             this->layer_param().moe_param().map_bottom(l) ==
                 MOEParameter_BottomMapping_GATING_AND_EXPERT) {
           vector<int_tp> shape = bottom[l]->shape();
-          shape[0] = Caffe::mode() == TEST ? 1 : shape[0];
+          shape[0] = this->phase_ == caffe::TEST ? 1 : shape[0];
           expert_input_blobs[k]->Reshape(shape);
           ++k;
         }
@@ -129,7 +145,9 @@ void MOELayer<Dtype, MItype, MOtype>::Reshape(
         const vector<BlobBase*>& expert_output_blobs =
             this->expert_nets_[j][i]->output_blobs();
         for (size_t l = 0; l < top.size(); ++l) {
-          top[l]->Reshape(expert_output_blobs[l]->shape());
+          vector<int_tp> shape = expert_output_blobs[l]->shape();
+          shape[0] = bottom[0]->shape()[0];
+          top[l]->Reshape(shape);
         }
       }
     }
@@ -160,8 +178,7 @@ void MOELayer<Dtype, MItype, MOtype>::Forward_cpu(
 
   // Forward gating network
   float loss = 0;
-  gating_ = static_cast<Blob<MOtype>*>(
-      this->gating_net_->Forward(&loss)[0]);
+  gating_ = static_cast<Blob<MOtype>*>(this->gating_net_->Forward(&loss)[0]);
   MOtype* gating_data = gating_->mutable_cpu_data();
 
   vector<vector<int_tp> > batch_selectors;
@@ -178,9 +195,9 @@ void MOELayer<Dtype, MItype, MOtype>::Forward_cpu(
     for (size_t j = 0; j < gating_->shape()[1]; ++j) {
       for (size_t k = 0; k < select_experts; ++k) {
         if (expert_selectors[k] == -1 ||
-            gating_data[i * gating_->shape()[1] + expert_selectors[k]]
-                        < gating_data[i * gating_->shape()[1] + j]) {
-          for (size_t l = k + 1; l < select_experts; ++l) {
+            gating_data[i * gating_->shape()[1] + expert_selectors[k]] <
+            gating_data[i * gating_->shape()[1] + j]) {
+          for (size_t l = select_experts-1; l > k; --l) {
             expert_selectors[l] = expert_selectors[l - 1];
           }
           expert_selectors[k] = j;
@@ -198,6 +215,8 @@ void MOELayer<Dtype, MItype, MOtype>::Forward_cpu(
       MOtype select = MOtype(0);
       for (size_t k = 0; k < select_experts; ++k) {
         if (batch_selectors[i][k] == j) {
+          // std::cout << "Select " << select_experts << ", " << i << ", "
+          //           << k << ", " << j << std::endl;
           select = MOtype(1);
           break;
         }
@@ -211,14 +230,20 @@ void MOELayer<Dtype, MItype, MOtype>::Forward_cpu(
   }
 
   // Forward experts
-  if (Caffe::mode() == TEST) {
+  if (this->phase_ == caffe::TEST) {
     // Forward expert networks (partial, only forward selected experts
     // per batch item)
+#pragma omp parallel for
     for (size_t i = 0; i < gating_->shape()[0]; ++i) {
+#ifdef USE_OPENMP
+      int_tp tidx = omp_get_thread_num();
+#else  // USE_OPENMP
+      int_tp tidx = 0;
+#endif  // USE_OPENMP
       vector<int_tp> expert_selectors = batch_selectors[i];
       for (size_t p = 0; p < select_experts; ++p) {
         const vector<BlobBase*>& expert_input_blobs =
-            this->expert_nets_[expert_selectors[p]][i]->input_blobs();
+            this->expert_nets_[expert_selectors[p]][tidx]->input_blobs();
         int_tp k = 0;
         for (size_t l = 0; l < bottom.size(); ++l) {
           if (this->layer_param().moe_param().map_bottom_size() <= l ||
@@ -234,13 +259,14 @@ void MOELayer<Dtype, MItype, MOtype>::Forward_cpu(
           }
         }
         const vector<BlobBase*> result_vec =
-                     this->expert_nets_[expert_selectors[p]][i]->Forward(&loss);
+                     this->expert_nets_[expert_selectors[p]][tidx]->
+                                                                 Forward(&loss);
         for (size_t k = 0; k < result_vec.size(); ++k) {
           Blob<MOtype>* result = static_cast<Blob<MOtype>*>(result_vec[k]);
           caffe_axpby(
               top[k]->count(1),
               gating_data[i * gating_->shape()[1] + expert_selectors[p]],
-              result->cpu_data() + i * top[k]->count(1),
+              result->cpu_data(),
               MOtype(1),
               top[k]->mutable_cpu_data() + i * top[k]->count(1));
         }
@@ -375,4 +401,14 @@ INSTANTIATE_CLASS_3T_GUARDED(MOELayer, (uint8_t), (uint8_t), PROTO_TYPES);
 INSTANTIATE_CLASS_3T_GUARDED(MOELayer, (uint16_t), (uint16_t), PROTO_TYPES);
 INSTANTIATE_CLASS_3T_GUARDED(MOELayer, (uint32_t), (uint32_t), PROTO_TYPES);
 INSTANTIATE_CLASS_3T_GUARDED(MOELayer, (uint64_t), (uint64_t), PROTO_TYPES);
+
+REGISTER_LAYER_CLASS(MOE);
+REGISTER_LAYER_CLASS_INST(MOE, (half_fp), (half_fp), PROTO_TYPES);
+REGISTER_LAYER_CLASS_INST(MOE, (float), (float), PROTO_TYPES);
+REGISTER_LAYER_CLASS_INST(MOE, (double), (double), PROTO_TYPES);
+REGISTER_LAYER_CLASS_INST(MOE, (uint8_t), (uint8_t), PROTO_TYPES);
+REGISTER_LAYER_CLASS_INST(MOE, (uint16_t), (uint16_t), PROTO_TYPES);
+REGISTER_LAYER_CLASS_INST(MOE, (uint32_t), (uint32_t), PROTO_TYPES);
+REGISTER_LAYER_CLASS_INST(MOE, (uint64_t), (uint64_t), PROTO_TYPES);
+
 }  // namespace caffe

@@ -26,10 +26,18 @@ void InputLayer<Dtype, MItype, MOtype>::LayerSetUp(
 INSTANTIATE_CLASS_3T_GUARDED(InputLayer, (half_fp), (half_fp), (half_fp));
 INSTANTIATE_CLASS_3T_GUARDED(InputLayer, (float), (float), (float));
 INSTANTIATE_CLASS_3T_GUARDED(InputLayer, (double), (double), (double));
+INSTANTIATE_CLASS_3T_GUARDED(InputLayer, (uint8_t), (uint8_t), (uint8_t));
+INSTANTIATE_CLASS_3T_GUARDED(InputLayer, (uint16_t), (uint16_t), (uint16_t));
+INSTANTIATE_CLASS_3T_GUARDED(InputLayer, (uint32_t), (uint32_t), (uint32_t));
+INSTANTIATE_CLASS_3T_GUARDED(InputLayer, (uint64_t), (uint64_t), (uint64_t));
 
 REGISTER_LAYER_CLASS(Input);
 REGISTER_LAYER_CLASS_INST(Input, (half_fp), (half_fp), (half_fp));
 REGISTER_LAYER_CLASS_INST(Input, (float), (float), (float));
 REGISTER_LAYER_CLASS_INST(Input, (double), (double), (double));
+REGISTER_LAYER_CLASS_INST(Input, (uint8_t), (uint8_t), (uint8_t));
+REGISTER_LAYER_CLASS_INST(Input, (uint16_t), (uint16_t), (uint16_t));
+REGISTER_LAYER_CLASS_INST(Input, (uint32_t), (uint32_t), (uint32_t));
+REGISTER_LAYER_CLASS_INST(Input, (uint64_t), (uint64_t), (uint64_t));
 
 }  // namespace caffe

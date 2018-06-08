@@ -60,6 +60,9 @@ class SolverBase {
   virtual void Snapshot() = 0;
   virtual void SnapshotSolverState(const string& model_filename) = 0;
 
+  // Make and apply the update value for the current iteration.
+  virtual void ApplyUpdate() = 0;
+
   void update_solver_param(const SolverParameter& param) {
     param_ = param;
   }

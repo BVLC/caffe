@@ -40,7 +40,7 @@
 namespace caffe {
 
 #ifndef OPENCL_QUEUE_COUNT
-#define OPENCL_QUEUE_COUNT 1
+#define OPENCL_QUEUE_COUNT 8
 #endif  // OPENCL_QUEUE_COUNT
 
 #if defined(USE_CLBLAS) && defined(USE_CLBLAST)

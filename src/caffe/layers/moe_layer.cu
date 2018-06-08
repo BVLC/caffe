@@ -29,8 +29,7 @@ void MOELayer<Dtype, MItype, MOtype>::Forward_gpu(
 
   // Forward gating network
   float loss = 0;
-  gating_ = static_cast<Blob<MOtype>*>(
-      this->gating_net_->Forward(&loss)[0]);
+  gating_ = static_cast<Blob<MOtype>*>(this->gating_net_->Forward(&loss)[0]);
   MOtype* gating_data = gating_->mutable_cpu_data();
 
   vector<vector<int_tp> > batch_selectors;
@@ -47,9 +46,9 @@ void MOELayer<Dtype, MItype, MOtype>::Forward_gpu(
     for (size_t j = 0; j < gating_->shape()[1]; ++j) {
       for (size_t k = 0; k < select_experts; ++k) {
         if (expert_selectors[k] == -1 ||
-            gating_data[i * gating_->shape()[1] + expert_selectors[k]]
-                        < gating_data[i * gating_->shape()[1] + j]) {
-          for (size_t l = k + 1; l < select_experts; ++l) {
+            gating_data[i * gating_->shape()[1] + expert_selectors[k]] <
+            gating_data[i * gating_->shape()[1] + j]) {
+          for (size_t l = select_experts-1; l > k; --l) {
             expert_selectors[l] = expert_selectors[l - 1];
           }
           expert_selectors[k] = j;
@@ -67,6 +66,8 @@ void MOELayer<Dtype, MItype, MOtype>::Forward_gpu(
       MOtype select = MOtype(0);
       for (size_t k = 0; k < select_experts; ++k) {
         if (batch_selectors[i][k] == j) {
+          // std::cout << "Select " << select_experts << ", " << i << ", "
+          //           << k << ", " << j << std::endl;
           select = MOtype(1);
           break;
         }
@@ -80,14 +81,23 @@ void MOELayer<Dtype, MItype, MOtype>::Forward_gpu(
   }
 
   // Forward experts
-  if (Caffe::mode() == TEST) {
+  if (this->phase_ == caffe::TEST) {
     // Forward expert networks (partial, only forward selected experts
     // per batch item)
+#pragma omp parallel for
     for (size_t i = 0; i < gating_->shape()[0]; ++i) {
+      Caffe::SelectDevice(this->device_->id(), false);
+#ifdef USE_OPENMP
+      int_tp tidx = omp_get_thread_num();
+#else  // USE_OPENMP
+      int_tp tidx = 0;
+#endif  // USE_OPENMP
+      this->device_->SwitchQueue(tidx);
+
       vector<int_tp> expert_selectors = batch_selectors[i];
       for (size_t p = 0; p < select_experts; ++p) {
         const vector<BlobBase*>& expert_input_blobs =
-            this->expert_nets_[expert_selectors[p]][i]->input_blobs();
+            this->expert_nets_[expert_selectors[p]][tidx]->input_blobs();
         int_tp k = 0;
         for (size_t l = 0; l < bottom.size(); ++l) {
           if (this->layer_param().moe_param().map_bottom_size() <= l ||
@@ -103,18 +113,20 @@ void MOELayer<Dtype, MItype, MOtype>::Forward_gpu(
           }
         }
         const vector<BlobBase*> result_vec =
-                     this->expert_nets_[expert_selectors[p]][i]->Forward(&loss);
+                     this->expert_nets_[expert_selectors[p]][tidx]->
+                                                                 Forward(&loss);
         for (size_t k = 0; k < result_vec.size(); ++k) {
           Blob<MOtype>* result = static_cast<Blob<MOtype>*>(result_vec[k]);
           this->device_->template axpby<MOtype>(
               top[k]->count(1),
               gating_data[i * gating_->shape()[1] + expert_selectors[p]],
-              result->gpu_data() + i * top[k]->count(1),
+              result->gpu_data(),
               MOtype(1),
               top[k]->mutable_gpu_data() + i * top[k]->count(1));
         }
       }
     }
+    this->device_->FinishQueues();
   } else {
     // Forward expert networks (full batch)
     for (size_t j = 0; j < this->expert_nets_.size(); ++j) {
@@ -139,7 +151,8 @@ void MOELayer<Dtype, MItype, MOtype>::Forward_gpu(
       for (size_t k = 0; k < result_vec.size(); ++k) {
         Blob<MOtype>* result = static_cast<Blob<MOtype>*>(result_vec[k]);
         for (size_t i = 0; i < gating_->shape()[0]; ++i) {
-          this->device_->template axpby(top[k]->count(1),
+          this->device_->template axpby(
+                      top[k]->count(1),
                       gating_data[i * gating_->shape()[1] + j],
                       result->gpu_data() + i * top[k]->count(1),
                       MOtype(1),

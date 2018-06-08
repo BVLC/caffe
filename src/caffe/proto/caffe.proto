@@ -385,7 +385,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 151 (last added: moe_param)
+// LayerParameter next available layer-specific ID: 152 (last added: noise_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -505,6 +505,7 @@ message LayerParameter {
   optional MergeCropParameter mergecrop_param = 148;
   optional AffinityParameter affinity_param = 149;
   optional MOEParameter moe_param = 150;
+  optional NoiseParameter noise_param = 151;
 }
 
 // Message that stores parameters used to apply transformation
@@ -1581,10 +1582,15 @@ message MergeCropParameter {
   }
   optional MergeOp operation = 1 [default = STACK];
   
-  // Forward and backward enable/disable
+  // Forward and backward enable/disableN
   // Defined once per bottom blob
   repeated bool forward = 2;
   repeated bool backward = 3;
+}
+
+message NoiseParameter {
+  optional float mu = 1 [default = 0.0];
+  optional float sigma = 2 [default = 1.0];
 }
 
 message TuningSet {
