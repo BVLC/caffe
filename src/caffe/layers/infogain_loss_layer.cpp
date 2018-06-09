@@ -157,9 +157,9 @@ void InfogainLossLayer<Dtype, MItype, MOtype>::Forward_cpu(
       DCHECK_LT(label_value, num_labels_);
       for (int_tp l = 0; l < num_labels_; l++) {
         loss -= infogain_mat[label_value * num_labels_ + l] *
-          log(std::max(
-                prob_data[i * inner_num_*num_labels_ + l * inner_num_ + j],
-                Dtype(kLOG_THRESHOLD)));
+          std::log(std::max(
+                  prob_data[i * inner_num_*num_labels_ + l * inner_num_ + j],
+                  Dtype(kLOG_THRESHOLD)));
       }
       ++count;
     }

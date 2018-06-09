@@ -172,6 +172,9 @@ uint_tp Device::memory_usage() {
 
 uint_tp Device::peak_memory_usage() {
   return peak_memory_usage_;
+#ifndef NDEBUG
+  std::cout << "Peak memory usage: " << peak_memory_usage_ << std::endl;
+#endif  // NDEBUG
 }
 
 void Device::increase_memory_usage(uint_tp bytes) {
@@ -179,6 +182,10 @@ void Device::increase_memory_usage(uint_tp bytes) {
   if (memory_usage_ > peak_memory_usage_) {
     peak_memory_usage_ = memory_usage_;
   }
+#ifndef NDEBUG
+  std::cout << "Current memory usage: " << memory_usage_ << std::endl;
+  std::cout << "Peak memory usage: " << peak_memory_usage_ << std::endl;
+#endif  // NDEBUG
 }
 
 void Device::decrease_memory_usage(uint_tp bytes) {

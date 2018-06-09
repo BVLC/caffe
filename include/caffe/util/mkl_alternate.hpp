@@ -38,10 +38,10 @@ extern "C" {
   }
 
 DEFINE_VSL_UNARY_FUNC(Sqr, Y[i] = a[i] * a[i])
-DEFINE_VSL_UNARY_FUNC(Sqrt, Y[i] = sqrt(a[i]))
-DEFINE_VSL_UNARY_FUNC(Exp, Y[i] = exp(a[i]))
-DEFINE_VSL_UNARY_FUNC(Ln, Y[i] = log(a[i]))
-DEFINE_VSL_UNARY_FUNC(Abs, Y[i] = fabs(a[i]))
+DEFINE_VSL_UNARY_FUNC(Sqrt, Y[i] = std::sqrt(a[i]))
+DEFINE_VSL_UNARY_FUNC(Exp, Y[i] = std::exp(a[i]))
+DEFINE_VSL_UNARY_FUNC(Ln, Y[i] = std::log(a[i]))
+DEFINE_VSL_UNARY_FUNC(Abs, Y[i] = std::fabs(a[i]))
 
 // a simple way to define the vsl unary functions with singular parameter b.
 // The operation should be in the form e.g. Y[i] = pow(a[i], b)

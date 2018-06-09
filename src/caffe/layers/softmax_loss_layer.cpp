@@ -96,25 +96,25 @@ void SoftmaxWithLossLayer<Dtype, MItype, MOtype>::Forward_cpu(
     const vector<Blob<MOtype>*>& top) {
   // The forward pass computes the softmax prob values.
   softmax_layer_->Forward(softmax_bottom_vec_, softmax_top_vec_);
+  Dtype min_value = FLT_MIN;
+  if (std::is_same<Dtype, half_fp>::value) {
+    min_value = HALF_MIN;
+  }
   const Dtype* prob_data = prob_.cpu_data();
   const Dtype* label = bottom[1]->cpu_data();
   int_tp dim = prob_.count() / outer_num_;
   int_tp count = 0;
-  Dtype loss = 0;
+  Dtype loss = Dtype(0);
   for (int_tp i = 0; i < outer_num_; ++i) {
-    for (int_tp j = 0; j < inner_num_; j++) {
+    for (int_tp j = 0; j < inner_num_; ++j) {
       const int_tp label_value = static_cast<int_tp>(label[i * inner_num_ + j]);
       if (has_ignore_label_ && label_value == ignore_label_) {
         continue;
       }
       DCHECK_GE(label_value, 0);
       DCHECK_LT(label_value, prob_.shape(softmax_axis_));
-      Dtype min_value = FLT_MIN;
-      if (std::is_same<Dtype, half_fp>::value) {
-        min_value = HALF_MIN;
-      }
-      loss -= log(std::max(prob_data[i * dim + label_value * inner_num_ + j],
-                           Dtype(min_value)));
+      loss -= std::log(std::max(
+          prob_data[i * dim + label_value * inner_num_ + j], Dtype(min_value)));
       ++count;
     }
   }

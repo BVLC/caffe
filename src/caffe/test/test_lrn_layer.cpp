@@ -257,7 +257,7 @@ template <typename Dtype>
 class CuDNNLRNLayerTest : public GPUDeviceTest<Dtype> {
  protected:
   CuDNNLRNLayerTest()
-      : epsilon_(Dtype(1e-5)),
+      : epsilon_(Dtype(1e-3)),
         blob_bottom_(new Blob<Dtype>()),
         blob_top_(new Blob<Dtype>()) {}
   virtual void SetUp() {

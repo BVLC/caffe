@@ -1000,7 +1000,7 @@ TYPED_TEST(CuDNNNeuronLayerTest, TestSigmoidCuDNN) {
     const TypeParam* bottom_data = this->blob_bottom_->cpu_data();
     const TypeParam* top_data = this->blob_top_->cpu_data();
     for (int_tp i = 0; i < this->blob_bottom_->count(); ++i) {
-      EXPECT_FLOAT_EQ(top_data[i], 1. / (1 + exp(-bottom_data[i])));
+      EXPECT_NEAR(top_data[i], 1. / (1 + exp(-bottom_data[i])), 1e-3);
       // check that we squashed the value between 0 and 1
       EXPECT_GE(top_data[i], 0.);
       EXPECT_LE(top_data[i], 1.);
@@ -1029,10 +1029,10 @@ TYPED_TEST(CuDNNNeuronLayerTest, TestTanHCuDNN) {
       for (int_tp j = 0; j < this->blob_bottom_->channels(); ++j) {
         for (int_tp k = 0; k < this->blob_bottom_->height(); ++k) {
           for (int_tp l = 0; l < this->blob_bottom_->width(); ++l) {
-            EXPECT_GE(this->blob_top_->data_at(i, j, k, l) + 1e-4,
+            EXPECT_GE(this->blob_top_->data_at(i, j, k, l) + 1e-3,
                (exp(2*this->blob_bottom_->data_at(i, j, k, l)) - 1) /
                (exp(2*this->blob_bottom_->data_at(i, j, k, l)) + 1));
-            EXPECT_LE(this->blob_top_->data_at(i, j, k, l) - 1e-4,
+            EXPECT_LE(this->blob_top_->data_at(i, j, k, l) - 1e-3,
                (exp(2*this->blob_bottom_->data_at(i, j, k, l)) - 1) /
                (exp(2*this->blob_bottom_->data_at(i, j, k, l)) + 1));
           }

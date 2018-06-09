@@ -58,17 +58,33 @@ void OclDeviceKernel::Execute(vector<size_t> group,
     local_ws_ptr = NULL;
   }
 
-  /*
-  for (int_tp i = 0; i < work_dim; ++i) {
-    std::cout << "Global: " << global_ws[i] << std::endl;
-    std::cout << "Local: " << local_ws[i] << std::endl;
-  }
-  */
+
+  cl_event event;
 
   OCL_CHECK_MESSAGE(clEnqueueNDRangeKernel(ctx.get_queue().handle().get(),
                                            kernel, work_dim, NULL,
                                            global_ws_ptr, local_ws_ptr,
-                                           0, NULL, NULL), this->name_);
+                                           0, NULL, &event), this->name_);
+
+  // Verbose kernel debugging
+#ifndef NDEBUG
+  cl_int error;
+  cl_int status;
+  error = clWaitForEvents(1, &event);
+  if (error != CL_SUCCESS) {
+    error = clGetEventInfo(event, CL_EVENT_COMMAND_EXECUTION_STATUS,
+                           sizeof(status), &status, NULL);
+     OCL_CHECK_MESSAGE(error, this->name_);
+     if(status != CL_COMPLETE ) {
+       LOG(FATAL) << "Error executing the kernel " << status
+                  << " (" << this->name_ << ")";
+    }
+    for (int_tp i = 0; i < work_dim; ++i) {
+      std::cout << "Global: " << global_ws[i] << std::endl;
+      std::cout << "Local: " << local_ws[i] << std::endl;
+    }
+  }
+#endif  // NDEBUG
 
   // Reset kernel arguments
   this->arg_idx_ = 0;

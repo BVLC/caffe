@@ -192,6 +192,8 @@ vptr<void> OclDevice::MallocMemDevice(uint_tp size, void** ptr,
                       CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR,
                       zero_copy_size, *ptr, &err);
 
+    OCL_CHECK(err);
+
     void *mapped_ptr = clEnqueueMapBuffer(ctx.get_queue().handle().get(),
                                           gpu_ptr, true,
                                           CL_MAP_READ | CL_MAP_WRITE,
@@ -421,7 +423,7 @@ void OclDevice::FinishQueues() {
   viennacl::ocl::context &ctx = viennacl::ocl::get_context(id_);
   for (int i = 0; i < num_queues(); ++i) {
     ctx.switch_queue(i);
-    ctx.get_queue().finish();
+    OCL_CHECK(clFinish(ctx.get_queue().handle().get()));
   }
   ctx.switch_queue(0);
   current_queue_id_ = 0;

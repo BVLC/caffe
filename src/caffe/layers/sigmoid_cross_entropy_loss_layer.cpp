@@ -100,7 +100,8 @@ void SigmoidCrossEntropyLossLayer<Dtype, MItype, MOtype>::Forward_cpu(
       continue;
     }
     loss -= input_data[i] * (target[i] - (input_data[i] >= 0)) -
-        log(1 + exp(input_data[i] - 2 * input_data[i] * (input_data[i] >= 0)));
+        std::log(1 + std::exp(input_data[i]
+                                   - 2 * input_data[i] * (input_data[i] >= 0)));
     ++valid_count;
   }
   normalizer_ = get_normalizer(normalization_, valid_count);

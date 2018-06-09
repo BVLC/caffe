@@ -19,7 +19,7 @@ void SoftmaxWithLossLayer<Dtype, MItype, MOtype>::GenerateProgram() {
   ss << this->device_program_->template helper_functions<Dtype>();
 
   KernelArgs fw_args;
-  fw_args.push_back(this->device_program_->template create_kernel_arg<uint_tp>(
+  fw_args.push_back(this->device_program_->template create_kernel_arg<int_tp>(
                     "nthreads", KERNEL_ARG_CONST));
   fw_args.push_back(this->device_program_->template create_kernel_arg<Dtype>(
                     "prob_data", KERNEL_ARG_CONST | KERNEL_ARG_GLOBAL_MEM));
@@ -46,19 +46,19 @@ void SoftmaxWithLossLayer<Dtype, MItype, MOtype>::GenerateProgram() {
   ss << "const int_tp label_value = (int_tpc)(label[n * spatial_dim + s]);"
      << std::endl;
   ss << "if (has_ignore_label && label_value == ignore_label) {" << std::endl;
-  ss << "loss[index] = 0;" << std::endl;
-  ss << "counts[index] = 0;" << std::endl;
+  ss << "loss[index] = (Dtype)0;" << std::endl;
+  ss << "counts[index] = (Dtype)0;" << std::endl;
   ss << "} else {" << std::endl;
   ss << "loss[index] = -log("
-     << "max(prob_data[n * dim + label_value * spatial_dim + s], "
-     << "(Dtype)FLT_MIN));" << std::endl;
+     << "max((float)prob_data[n * dim + label_value * spatial_dim + s], "
+     << "(float)FLT_MIN));" << std::endl;
   ss << "counts[index] = 1;" << std::endl;
   ss << "}" << std::endl;
   ss << "}" << std::endl;
   ss << "}" << std::endl;
 
   KernelArgs bw_args;
-  bw_args.push_back(this->device_program_->template create_kernel_arg<uint_tp>(
+  bw_args.push_back(this->device_program_->template create_kernel_arg<int_tp>(
                     "nthreads", KERNEL_ARG_CONST));
   bw_args.push_back(this->device_program_->template create_kernel_arg<Dtype>(
                     "top", KERNEL_ARG_CONST | KERNEL_ARG_GLOBAL_MEM));

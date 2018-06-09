@@ -16,7 +16,8 @@ void LogLayer<Dtype, MItype, MOtype>::LayerSetUp(
   }
   // If base == -1, interpret the base as e and set log_base = 1 exactly.
   // Otherwise, calculate its log explicitly.
-  const Dtype log_base = (base == Dtype(-1)) ? Dtype(1) : log(base);
+  const Dtype log_base = (base == Dtype(-1)) ? Dtype(1) :
+      static_cast<Dtype>(std::log(base));
   CHECK(!isnan(log_base))
       << "NaN result: log(base) = log(" << base << ") = " << log_base;
   CHECK(!isinf(log_base))

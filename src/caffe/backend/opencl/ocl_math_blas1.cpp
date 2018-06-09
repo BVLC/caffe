@@ -43,7 +43,7 @@ void OclDevice::axpy_half(const uint_tp n, const half_fp alpha,
       &queue));
 
 #else  // default (ViennaCL)
-  Device::axpy(n, alpha, x, y);
+  Device::axpy_half(n, alpha, x, y);
 #endif  // clBLAS, CLBlast, or default (ViennaCL)
 }
 void OclDevice::axpby_half(const uint_tp n, const half_fp alpha,

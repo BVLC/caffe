@@ -63,7 +63,7 @@ TYPED_TEST(SoftmaxLayerTest, TestForward) {
         }
 
         const Dtype delta = std::is_same<Dtype, half_fp>::value ?
-                      2e-2 : 1e-4;
+                      2e-2 : 1e-3;
         for (int_tp j = 0; j < this->blob_bottom_->channels(); ++j) {
           EXPECT_GE(Dtype(this->blob_top_->data_at(i, j, k, l) + delta),
               Dtype(exp(this->blob_bottom_->data_at(i, j, k, l)) / scale))
@@ -133,12 +133,12 @@ TYPED_TEST(CuDNNSoftmaxLayerTest, TestForwardCuDNN) {
             }
             for (int_tp j = 0; j < this->blob_bottom_->channels(); ++j) {
               EXPECT_GE((TypeParam)(this->blob_top_->
-                        data_at(i, j, k, l) + 1e-4),
+                        data_at(i, j, k, l) + 1e-3),
                         (TypeParam)(exp(this->blob_bottom_->
                         data_at(i, j, k, l)) / scale))
                         << "debug: " << i << " " << j;
               EXPECT_LE((TypeParam)(this->blob_top_->
-                        data_at(i, j, k, l) - 1e-4),
+                        data_at(i, j, k, l) - 1e-3),
                         (TypeParam)(exp(this->blob_bottom_->
                         data_at(i, j, k, l)) / scale))
                         << "debug: " << i << " " << j;

@@ -340,9 +340,9 @@ class Device {
                          const half_fp alpha,
                          vptr<const half_fp> x,
                          vptr<half_fp> y,
-                         const QuantizerValues* const alpha_quant,
-                         const QuantizerValues* const x_quant,
-                         const QuantizerValues* const y_quant);
+                         const QuantizerValues* const alpha_quant = nullptr,
+                         const QuantizerValues* const x_quant = nullptr,
+                         const QuantizerValues* const y_quant = nullptr);
   virtual void axpby_half(const uint_tp n, const half_fp alpha,
                     vptr<const half_fp> x, const half_fp beta, vptr<half_fp> y,
                     const QuantizerValues* const alpha_quant = nullptr,

@@ -15,8 +15,13 @@ void Device::axpy_half(const uint_tp n, const half_fp alpha,
                           const QuantizerValues* const alpha_quant,
                           const QuantizerValues* const x_quant,
                           const QuantizerValues* const y_quant) {
-  this->axpby_half(n, alpha, x, half_fp(1), y, alpha_quant, x_quant, nullptr,
-                   y_quant);
+#ifdef USE_LIBDNN
+  this->template GetLibDNNBlas<half_fp, half_fp>()->axpby(n, alpha, x,
+                                     half_fp(1), y,
+                                     alpha_quant, x_quant, nullptr, y_quant);
+#else  // USE_LIBDNN
+  NOT_IMPLEMENTED;
+#endif  // USE_LIBDNN
 }
 void Device::axpby_half(const uint_tp n, const half_fp alpha,
                    vptr<const half_fp> x,

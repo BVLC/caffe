@@ -12,7 +12,7 @@ void MOELayer<Dtype, MItype, MOtype>::Forward_gpu(
 
   // Preload gating network blobs
   const vector<BlobBase*>& gating_input_blobs = this->gating_net_->
-      input_blobs();
+                                                                  input_blobs();
   size_t k = 0;
   for (size_t l = 0; l < bottom.size(); ++l) {
     if (this->layer_param().moe_param().map_bottom_size() <= l ||
@@ -84,7 +84,7 @@ void MOELayer<Dtype, MItype, MOtype>::Forward_gpu(
   if (this->phase_ == caffe::TEST) {
     // Forward expert networks (partial, only forward selected experts
     // per batch item)
-#pragma omp parallel for
+#pragma omp parallel for num_threads(this->parallel_nets_)
     for (size_t i = 0; i < gating_->shape()[0]; ++i) {
       Caffe::SelectDevice(this->device_->id(), false);
 #ifdef USE_OPENMP
@@ -92,12 +92,12 @@ void MOELayer<Dtype, MItype, MOtype>::Forward_gpu(
 #else  // USE_OPENMP
       int_tp tidx = 0;
 #endif  // USE_OPENMP
-      this->device_->SwitchQueue(tidx);
+      this->device_->SwitchQueue(i);
 
       vector<int_tp> expert_selectors = batch_selectors[i];
       for (size_t p = 0; p < select_experts; ++p) {
         const vector<BlobBase*>& expert_input_blobs =
-            this->expert_nets_[expert_selectors[p]][tidx]->input_blobs();
+                   this->expert_nets_[expert_selectors[p]][tidx]->input_blobs();
         int_tp k = 0;
         for (size_t l = 0; l < bottom.size(); ++l) {
           if (this->layer_param().moe_param().map_bottom_size() <= l ||
@@ -108,7 +108,7 @@ void MOELayer<Dtype, MItype, MOtype>::Forward_gpu(
             this->device_->template copy<MItype>(bottom[l]->count(1),
                                bottom[l]->gpu_data() + i * bottom[l]->count(1),
                                static_cast<Blob<MItype>*>(
-                                   expert_input_blobs[k])->mutable_gpu_data());
+                                    expert_input_blobs[k])->mutable_gpu_data());
             ++k;
           }
         }

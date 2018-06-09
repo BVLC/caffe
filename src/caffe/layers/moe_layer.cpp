@@ -2,6 +2,7 @@
 #include "caffe/net.hpp"
 
 #ifdef USE_OPENMP
+#include <thread>
 #include <omp.h>
 #endif  // USE_OPENMP
 
@@ -40,7 +41,12 @@ void MOELayer<Dtype, MItype, MOtype>::LayerSetUp(
                                             const vector<Blob<MItype>*>& bottom,
                                             const vector<Blob<MOtype>*>& top) {
 #ifdef USE_OPENMP
-  this->parallel_nets_ = omp_get_thread_limit();
+  if (this->device_->backend() == BACKEND_CUDA ||
+      this->device_->backend() == BACKEND_CPU) {
+    this->parallel_nets_ = std::thread::hardware_concurrency();
+  } else {
+    this->parallel_nets_ = 1;
+  }
 #else  // USE_OPENMP
   this->parallel_nets_ = 1;
 #endif  // USE_OPENMP
@@ -233,7 +239,7 @@ void MOELayer<Dtype, MItype, MOtype>::Forward_cpu(
   if (this->phase_ == caffe::TEST) {
     // Forward expert networks (partial, only forward selected experts
     // per batch item)
-#pragma omp parallel for
+#pragma omp parallel for num_threads(this->parallel_nets_)
     for (size_t i = 0; i < gating_->shape()[0]; ++i) {
 #ifdef USE_OPENMP
       int_tp tidx = omp_get_thread_num();

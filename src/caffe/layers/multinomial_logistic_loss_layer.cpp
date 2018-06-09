@@ -30,7 +30,7 @@ void MultinomialLogisticLossLayer<Dtype, MItype, MOtype>::Forward_cpu(
     int_tp label = static_cast<int_tp>(bottom_label[i]);
     Dtype prob = std::max(
         bottom_data[i * dim + label], Dtype(kLOG_THRESHOLD));
-    loss -= log(prob);
+    loss -= std::log(prob);
   }
   top[0]->mutable_cpu_data()[0] = loss / num;
 }

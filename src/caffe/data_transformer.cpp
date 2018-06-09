@@ -186,7 +186,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
 }
 
 template<typename Dtype>
-void DataTransformer<Dtype>::Transform(const vector<Datum> & datum_vector,
+void DataTransformer<Dtype>::Transform(const vector<Datum> &datum_vector,
                                        Blob<Dtype>* transformed_blob) {
   const int_tp datum_num = datum_vector.size();
   const int_tp num = transformed_blob->num();
@@ -197,18 +197,19 @@ void DataTransformer<Dtype>::Transform(const vector<Datum> & datum_vector,
   CHECK_GT(datum_num, 0)<< "There is no datum to add";
   CHECK_LE(datum_num, num)<<
   "The size of datum_vector must be no greater than transformed_blob->num()";
+  Dtype* transformed_data = transformed_blob->mutable_cpu_data();
 #pragma omp parallel for
   for (int_tp item_id = 0; item_id < datum_num; ++item_id) {
     Blob<Dtype> uni_blob(1, channels, height, width, device_);
     int_tp offset = transformed_blob->offset(item_id);
-    uni_blob.set_cpu_data(transformed_blob->mutable_cpu_data());
-    Transform(datum_vector[item_id], &uni_blob, offset);
+    uni_blob.set_cpu_data(transformed_data + offset);
+    Transform(datum_vector[item_id], &uni_blob, 0);
   }
 }
 
 #ifdef USE_OPENCV
 template<typename Dtype>
-void DataTransformer<Dtype>::Transform(const vector<cv::Mat> & mat_vector,
+void DataTransformer<Dtype>::Transform(const vector<cv::Mat> &mat_vector,
                                        Blob<Dtype>* transformed_blob) {
   const int_tp mat_num = mat_vector.size();
   const int_tp num = transformed_blob->num();
@@ -219,11 +220,12 @@ void DataTransformer<Dtype>::Transform(const vector<cv::Mat> & mat_vector,
   CHECK_GT(mat_num, 0)<< "There is no MAT to add";
   CHECK_EQ(mat_num, num)<<
   "The size of mat_vector must be equals to transformed_blob->num()";
+  Dtype* transformed_data = transformed_blob->mutable_cpu_data();
 #pragma omp parallel for
   for (int_tp item_id = 0; item_id < mat_num; ++item_id) {
     Blob<Dtype> uni_blob(1, channels, height, width, device_);
     int_tp offset = transformed_blob->offset(item_id);
-    uni_blob.set_cpu_data(transformed_blob->mutable_cpu_data() + offset);
+    uni_blob.set_cpu_data(transformed_data + offset);
     Transform(mat_vector[item_id], &uni_blob, 0);
   }
 }
