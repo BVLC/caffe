@@ -6,6 +6,13 @@ TODO:
 #include <stdint.h>
 #include <vector>
 
+#ifdef USE_OPENCV
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/highgui/highgui_c.h>
+#include <opencv2/imgproc/imgproc.hpp>
+#endif  // USE_OPENCV
+
 #include "hdf5.h"
 #include "hdf5_hl.h"
 
@@ -17,6 +24,8 @@ template <typename Dtype>
 void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   const int batch_size = this->layer_param_.hdf5_data_param().batch_size();
+  bool has_transform = this->layer_param_.has_transform_param();
+  bool is_image = this->layer_param_.hdf5_data_param().image();
   for (int i = 0; i < batch_size; ++i, ++current_row_) {
     if (current_row_ == hdf_blobs_[0]->shape(0)) {
       if (num_files_ > 1) {
@@ -36,11 +45,37 @@ void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       if (this->layer_param_.hdf5_data_param().shuffle())
         std::random_shuffle(data_permutation_.begin(), data_permutation_.end());
     }
+        if (is_image && has_transform) {
+      for (int j = 0; j < this->layer_param_.top_size(); ++j)
+	{
+	  int data_dim = top[j]->count() / top[j]->shape(0);
+	  if (j == 0) { // data, get image + apply transforms + copy to top blob
+	    vector<int> bshape = hdf_blobs_[j]->shape();
+	    int height = bshape[2];
+	    int width = bshape[3];
+	    vector<Dtype> img_data;
+	    img_data.insert(img_data.begin(),&hdf_blobs_[j]->cpu_data()[data_permutation_[current_row_]*data_dim],
+	    		    &hdf_blobs_[j]->cpu_data()[data_permutation_[current_row_]*data_dim]+data_dim);
+	    cv::Mat cv_img(height,width,CV_8UC3,&img_data.at(0)); //TODO: bw
+	    Blob<Dtype> transformed_data;
+	    transformed_data.Reshape(1,3,height,width);
+	    this->data_transformer_->Transform(cv_img, &transformed_data);
+	    caffe_copy(data_dim, transformed_data.mutable_cpu_data(), &top[j]->mutable_gpu_data()[i * data_dim]);
+	  }
+	  else { //label
+	    caffe_copy(data_dim,
+		       &hdf_blobs_[j]->cpu_data()[data_permutation_[current_row_]
+						  * data_dim], &top[j]->mutable_gpu_data()[i * data_dim]);
+	  }
+	}
+    }
+    else {
     for (int j = 0; j < this->layer_param_.top_size(); ++j) {
       int data_dim = top[j]->count() / top[j]->shape(0);
       caffe_copy(data_dim,
           &hdf_blobs_[j]->cpu_data()[data_permutation_[current_row_]
             * data_dim], &top[j]->mutable_gpu_data()[i * data_dim]);
+    }
     }
   }
 }
