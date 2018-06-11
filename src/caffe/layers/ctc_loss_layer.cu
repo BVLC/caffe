@@ -13,7 +13,7 @@ namespace caffe {
       cudaDeviceSynchronize();
       auto options = ctcOptions{};
       options.loc = CTC_GPU;
-      CUDA_CHECK(cudaStreamCreate(&(options.stream)));
+      CAFFE1_CUDA_CHECK(cudaStreamCreate(&(options.stream)));
       options.blank_label = blank_label_;
       int mini_batch = bottom[0]->shape()[1];
       int alphabet_size = alphabet_size_;
@@ -27,7 +27,7 @@ namespace caffe {
                       input_lengths_.data(), alphabet_size,
                       mini_batch, options, &size_bytes));
       void* workspace;
-      CUDA_CHECK(cudaMalloc(&workspace, size_bytes));
+      CAFFE1_CUDA_CHECK(cudaMalloc(&workspace, size_bytes));
       vector<Dtype> cost(mini_batch);
       CHECK_CTC_STATUS(compute_ctc_loss(activations, gradients,
                        flat_labels_.data(),
@@ -37,8 +37,8 @@ namespace caffe {
       Dtype loss = std::accumulate(cost.begin(), cost.end(), Dtype(0));
       top[0]->mutable_cpu_data()[0] = loss / mini_batch;
 
-      CUDA_CHECK(cudaFree(workspace));
-      CUDA_CHECK(cudaStreamDestroy(options.stream));
+      CAFFE1_CUDA_CHECK(cudaFree(workspace));
+      CAFFE1_CUDA_CHECK(cudaStreamDestroy(options.stream));
       CUDA_POST_KERNEL_CHECK;
   }
 

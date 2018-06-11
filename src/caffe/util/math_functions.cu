@@ -24,7 +24,7 @@ void caffe_gpu_gemm<float>(const CBLAS_TRANSPOSE TransA,
       (TransA == CblasNoTrans) ? CUBLAS_OP_N : CUBLAS_OP_T;
   cublasOperation_t cuTransB =
       (TransB == CblasNoTrans) ? CUBLAS_OP_N : CUBLAS_OP_T;
-  CUBLAS_CHECK(cublasSgemm(Caffe::cublas_handle(), cuTransB, cuTransA,
+  CAFFE1_CUBLAS_CHECK(cublasSgemm(Caffe::cublas_handle(), cuTransB, cuTransA,
       N, M, K, &alpha, B, ldb, A, lda, &beta, C, N));
 }
 
@@ -40,7 +40,7 @@ void caffe_gpu_gemm<double>(const CBLAS_TRANSPOSE TransA,
       (TransA == CblasNoTrans) ? CUBLAS_OP_N : CUBLAS_OP_T;
   cublasOperation_t cuTransB =
       (TransB == CblasNoTrans) ? CUBLAS_OP_N : CUBLAS_OP_T;
-  CUBLAS_CHECK(cublasDgemm(Caffe::cublas_handle(), cuTransB, cuTransA,
+  CAFFE1_CUBLAS_CHECK(cublasDgemm(Caffe::cublas_handle(), cuTransB, cuTransA,
       N, M, K, &alpha, B, ldb, A, lda, &beta, C, N));
 }
 
@@ -50,7 +50,7 @@ void caffe_gpu_gemv<float>(const CBLAS_TRANSPOSE TransA, const int M,
     const float beta, float* y) {
   cublasOperation_t cuTransA =
       (TransA == CblasNoTrans) ? CUBLAS_OP_T : CUBLAS_OP_N;
-  CUBLAS_CHECK(cublasSgemv(Caffe::cublas_handle(), cuTransA, N, M, &alpha,
+  CAFFE1_CUBLAS_CHECK(cublasSgemv(Caffe::cublas_handle(), cuTransA, N, M, &alpha,
       A, N, x, 1, &beta, y, 1));
 }
 
@@ -60,36 +60,36 @@ void caffe_gpu_gemv<double>(const CBLAS_TRANSPOSE TransA, const int M,
     const double beta, double* y) {
   cublasOperation_t cuTransA =
       (TransA == CblasNoTrans) ? CUBLAS_OP_T : CUBLAS_OP_N;
-  CUBLAS_CHECK(cublasDgemv(Caffe::cublas_handle(), cuTransA, N, M, &alpha,
+  CAFFE1_CUBLAS_CHECK(cublasDgemv(Caffe::cublas_handle(), cuTransA, N, M, &alpha,
       A, N, x, 1, &beta, y, 1));
 }
 
 template <>
 void caffe_gpu_axpy<float>(const int N, const float alpha, const float* X,
     float* Y) {
-  CUBLAS_CHECK(cublasSaxpy(Caffe::cublas_handle(), N, &alpha, X, 1, Y, 1));
+  CAFFE1_CUBLAS_CHECK(cublasSaxpy(Caffe::cublas_handle(), N, &alpha, X, 1, Y, 1));
 }
 
 template <>
 void caffe_gpu_axpy<double>(const int N, const double alpha, const double* X,
     double* Y) {
-  CUBLAS_CHECK(cublasDaxpy(Caffe::cublas_handle(), N, &alpha, X, 1, Y, 1));
+  CAFFE1_CUBLAS_CHECK(cublasDaxpy(Caffe::cublas_handle(), N, &alpha, X, 1, Y, 1));
 }
 
 void caffe_gpu_memcpy(const size_t N, const void* X, void* Y) {
   if (X != Y) {
-    CUDA_CHECK(cudaMemcpy(Y, X, N, cudaMemcpyDefault));  // NOLINT(caffe/alt_fn)
+    CAFFE1_CUDA_CHECK(cudaMemcpy(Y, X, N, cudaMemcpyDefault));  // NOLINT(caffe/alt_fn)
   }
 }
 
 template <>
 void caffe_gpu_scal<float>(const int N, const float alpha, float *X) {
-  CUBLAS_CHECK(cublasSscal(Caffe::cublas_handle(), N, &alpha, X, 1));
+  CAFFE1_CUBLAS_CHECK(cublasSscal(Caffe::cublas_handle(), N, &alpha, X, 1));
 }
 
 template <>
 void caffe_gpu_scal<double>(const int N, const double alpha, double *X) {
-  CUBLAS_CHECK(cublasDscal(Caffe::cublas_handle(), N, &alpha, X, 1));
+  CAFFE1_CUBLAS_CHECK(cublasDscal(Caffe::cublas_handle(), N, &alpha, X, 1));
 }
 
 template <>
@@ -109,37 +109,37 @@ void caffe_gpu_axpby<double>(const int N, const double alpha, const double* X,
 template <>
 void caffe_gpu_dot<float>(const int n, const float* x, const float* y,
     float* out) {
-  CUBLAS_CHECK(cublasSdot(Caffe::cublas_handle(), n, x, 1, y, 1, out));
+  CAFFE1_CUBLAS_CHECK(cublasSdot(Caffe::cublas_handle(), n, x, 1, y, 1, out));
 }
 
 template <>
 void caffe_gpu_dot<double>(const int n, const double* x, const double* y,
     double * out) {
-  CUBLAS_CHECK(cublasDdot(Caffe::cublas_handle(), n, x, 1, y, 1, out));
+  CAFFE1_CUBLAS_CHECK(cublasDdot(Caffe::cublas_handle(), n, x, 1, y, 1, out));
 }
 
 template <>
 void caffe_gpu_asum<float>(const int n, const float* x, float* y) {
-  CUBLAS_CHECK(cublasSasum(Caffe::cublas_handle(), n, x, 1, y));
+  CAFFE1_CUBLAS_CHECK(cublasSasum(Caffe::cublas_handle(), n, x, 1, y));
 }
 
 template <>
 void caffe_gpu_asum<double>(const int n, const double* x, double* y) {
-  CUBLAS_CHECK(cublasDasum(Caffe::cublas_handle(), n, x, 1, y));
+  CAFFE1_CUBLAS_CHECK(cublasDasum(Caffe::cublas_handle(), n, x, 1, y));
 }
 
 template <>
 void caffe_gpu_scale<float>(const int n, const float alpha, const float *x,
                             float* y) {
-  CUBLAS_CHECK(cublasScopy(Caffe::cublas_handle(), n, x, 1, y, 1));
-  CUBLAS_CHECK(cublasSscal(Caffe::cublas_handle(), n, &alpha, y, 1));
+  CAFFE1_CUBLAS_CHECK(cublasScopy(Caffe::cublas_handle(), n, x, 1, y, 1));
+  CAFFE1_CUBLAS_CHECK(cublasSscal(Caffe::cublas_handle(), n, &alpha, y, 1));
 }
 
 template <>
 void caffe_gpu_scale<double>(const int n, const double alpha, const double *x,
                              double* y) {
-  CUBLAS_CHECK(cublasDcopy(Caffe::cublas_handle(), n, x, 1, y, 1));
-  CUBLAS_CHECK(cublasDscal(Caffe::cublas_handle(), n, &alpha, y, 1));
+  CAFFE1_CUBLAS_CHECK(cublasDcopy(Caffe::cublas_handle(), n, x, 1, y, 1));
+  CAFFE1_CUBLAS_CHECK(cublasDscal(Caffe::cublas_handle(), n, &alpha, y, 1));
 }
 
 template <typename Dtype>
@@ -152,7 +152,7 @@ __global__ void set_kernel(const int n, const Dtype alpha, Dtype* y) {
 template <typename Dtype>
 void caffe_gpu_set(const int N, const Dtype alpha, Dtype* Y) {
   if (alpha == 0) {
-    CUDA_CHECK(cudaMemset(Y, 0, sizeof(Dtype) * N));  // NOLINT(caffe/alt_fn)
+    CAFFE1_CUDA_CHECK(cudaMemset(Y, 0, sizeof(Dtype) * N));  // NOLINT(caffe/alt_fn)
     return;
   }
   // NOLINT_NEXT_LINE(whitespace/operators)
@@ -395,13 +395,13 @@ DEFINE_AND_INSTANTIATE_GPU_UNARY_FUNC(sign, y[index] = (Dtype(0) < x[index])
 DEFINE_AND_INSTANTIATE_GPU_UNARY_FUNC(sgnbit, y[index] = signbit(x[index]));
 
 void caffe_gpu_rng_uniform(const int n, unsigned int* r) {
-  CURAND_CHECK(curandGenerate(Caffe::curand_generator(), r, n));
+  CAFFE1_CURAND_CHECK(curandGenerate(Caffe::curand_generator(), r, n));
 }
 
 template <>
 void caffe_gpu_rng_uniform<float>(const int n, const float a, const float b,
                                   float* r) {
-  CURAND_CHECK(curandGenerateUniform(Caffe::curand_generator(), r, n));
+  CAFFE1_CURAND_CHECK(curandGenerateUniform(Caffe::curand_generator(), r, n));
   const float range = b - a;
   if (range != static_cast<float>(1)) {
     caffe_gpu_scal(n, range, r);
@@ -414,7 +414,7 @@ void caffe_gpu_rng_uniform<float>(const int n, const float a, const float b,
 template <>
 void caffe_gpu_rng_uniform<double>(const int n, const double a, const double b,
                                    double* r) {
-  CURAND_CHECK(curandGenerateUniformDouble(Caffe::curand_generator(), r, n));
+  CAFFE1_CURAND_CHECK(curandGenerateUniformDouble(Caffe::curand_generator(), r, n));
   const double range = b - a;
   if (range != static_cast<double>(1)) {
     caffe_gpu_scal(n, range, r);
@@ -427,14 +427,14 @@ void caffe_gpu_rng_uniform<double>(const int n, const double a, const double b,
 template <>
 void caffe_gpu_rng_gaussian(const int n, const float mu, const float sigma,
                             float* r) {
-  CURAND_CHECK(
+  CAFFE1_CURAND_CHECK(
       curandGenerateNormal(Caffe::curand_generator(), r, n, mu, sigma));
 }
 
 template <>
 void caffe_gpu_rng_gaussian(const int n, const double mu, const double sigma,
                             double* r) {
-  CURAND_CHECK(
+  CAFFE1_CURAND_CHECK(
       curandGenerateNormalDouble(Caffe::curand_generator(), r, n, mu, sigma));
 }
 
@@ -582,7 +582,7 @@ void caffe_gpu_csr_gemm<float>(const CBLAS_TRANSPOSE TransA,
   } else {
     // scale C by beta
     if (beta != 1.0) {
-      CUBLAS_CHECK(cublasSscal(Caffe::cublas_handle() , M * N, &beta, C, 1));
+      CAFFE1_CUBLAS_CHECK(cublasSscal(Caffe::cublas_handle() , M * N, &beta, C, 1));
     }
     const int average_nzz_per_row = nzz/K+1;
     dim3 grids((average_nzz_per_row+64-1)/64, N);
@@ -609,7 +609,7 @@ void caffe_gpu_csr_gemm<double>(const CBLAS_TRANSPOSE TransA,
   } else {
     // scale C by beta
     if (beta != 1.0) {
-      CUBLAS_CHECK(cublasDscal(Caffe::cublas_handle() , M * N, &beta, C, 1));
+      CAFFE1_CUBLAS_CHECK(cublasDscal(Caffe::cublas_handle() , M * N, &beta, C, 1));
     }
     const int average_nzz_per_row = nzz/K+1;
     dim3 grids((average_nzz_per_row+64-1)/64, N);
@@ -644,30 +644,30 @@ void caffe_gpu_csr_gemm<float>(const CBLAS_TRANSPOSE TransA,
     ldb_t = K;
     const float zero = 0.0;
     const float one = 1.0;
-    CUDA_CHECK(cudaMalloc((void**)&Bt, sizeof(float)*K*N));
-    CUBLAS_CHECK(cublasSgeam(Caffe::cublas_handle(), CUBLAS_OP_T, CUBLAS_OP_T, K, N, &one, B, ldb, &zero, B, ldb, Bt, ldb_t));
+    CAFFE1_CUDA_CHECK(cudaMalloc((void**)&Bt, sizeof(float)*K*N));
+    CAFFE1_CUBLAS_CHECK(cublasSgeam(Caffe::cublas_handle(), CUBLAS_OP_T, CUBLAS_OP_T, K, N, &one, B, ldb, &zero, B, ldb, Bt, ldb_t));
   }
 
   int msparse = (TransA == CblasNoTrans) ? M : K;
   int ksparse = (TransA == CblasNoTrans) ? K : M;
   if (orderC == CblasRowMajor){
     float* Ct;
-    CUDA_CHECK(cudaMalloc((void**)&Ct, sizeof(float)*M*N));
+    CAFFE1_CUDA_CHECK(cudaMalloc((void**)&Ct, sizeof(float)*M*N));
     const float zero = 0.0;
     const float one = 1.0;
     if (reuiqre_transpose_B){
       CUSPARSE_CHECK(cusparseScsrmm2(Caffe::cusparse_handle(), cuTransA, CUSPARSE_OPERATION_NON_TRANSPOSE, msparse, N, ksparse,nzz, &alpha, Caffe::cusparse_mat_descr(), A, ptr, indices, Bt,  ldb_t, &zero, Ct, M));
-      CUDA_CHECK(cudaFree(Bt));
+      CAFFE1_CUDA_CHECK(cudaFree(Bt));
     }else{
       CUSPARSE_CHECK(cusparseScsrmm2(Caffe::cusparse_handle(), cuTransA, cuTransB, msparse, N, ksparse,nzz, &alpha, Caffe::cusparse_mat_descr(), A, ptr, indices, B,  ldb, &zero, Ct, M));
     }
-    CUBLAS_CHECK(cublasSgeam(Caffe::cublas_handle(), CUBLAS_OP_T , CUBLAS_OP_N, N, M, &one, Ct, M, &beta, C, N, C, N));
-    CUDA_CHECK(cudaFree(Ct));
+    CAFFE1_CUBLAS_CHECK(cublasSgeam(Caffe::cublas_handle(), CUBLAS_OP_T , CUBLAS_OP_N, N, M, &one, Ct, M, &beta, C, N, C, N));
+    CAFFE1_CUDA_CHECK(cudaFree(Ct));
   }else{
     //this is the default of CUSPARSE by the Matrix B is by default rowmajor
     if (reuiqre_transpose_B){
       CUSPARSE_CHECK(cusparseScsrmm2(Caffe::cusparse_handle(), cuTransA, CUSPARSE_OPERATION_NON_TRANSPOSE, msparse, N, ksparse,nzz, &alpha, Caffe::cusparse_mat_descr(), A, ptr, indices, Bt,  ldb_t, &beta, C, M));
-      CUDA_CHECK(cudaFree(Bt));
+      CAFFE1_CUDA_CHECK(cudaFree(Bt));
     }else{
       CUSPARSE_CHECK(cusparseScsrmm2(Caffe::cusparse_handle(), cuTransA, cuTransB, msparse, N, ksparse,nzz, &alpha, Caffe::cusparse_mat_descr(), A, ptr, indices, B,  ldb, &beta, C, M));
     }
@@ -695,30 +695,30 @@ void caffe_gpu_csr_gemm<double>(const CBLAS_TRANSPOSE TransA,
     ldb_t = K;
     const double zero = 0.0;
     const double one = 1.0;
-    CUDA_CHECK(cudaMalloc((void**)&Bt, sizeof(double)*K*N));
-    CUBLAS_CHECK(cublasDgeam(Caffe::cublas_handle(), CUBLAS_OP_T, CUBLAS_OP_T, K, N, &one, B, ldb, &zero, B, ldb, Bt, ldb_t));
+    CAFFE1_CUDA_CHECK(cudaMalloc((void**)&Bt, sizeof(double)*K*N));
+    CAFFE1_CUBLAS_CHECK(cublasDgeam(Caffe::cublas_handle(), CUBLAS_OP_T, CUBLAS_OP_T, K, N, &one, B, ldb, &zero, B, ldb, Bt, ldb_t));
   }
 
   int msparse = (TransA == CblasNoTrans) ? M : K;
   int ksparse = (TransA == CblasNoTrans) ? K : M;
   if (orderC == CblasRowMajor){
     double* Ct;
-    CUDA_CHECK(cudaMalloc((void**)&Ct, sizeof(double)*M*N));
+    CAFFE1_CUDA_CHECK(cudaMalloc((void**)&Ct, sizeof(double)*M*N));
     const double zero = 0.0;
     const double one = 1.0;
     if (reuiqre_transpose_B){
       CUSPARSE_CHECK(cusparseDcsrmm2(Caffe::cusparse_handle(), cuTransA, CUSPARSE_OPERATION_NON_TRANSPOSE, msparse, N, ksparse,nzz, &alpha, Caffe::cusparse_mat_descr(), A, ptr, indices, Bt,  ldb_t, &zero, Ct, M));
-      CUDA_CHECK(cudaFree(Bt));
+      CAFFE1_CUDA_CHECK(cudaFree(Bt));
     }else{
       CUSPARSE_CHECK(cusparseDcsrmm2(Caffe::cusparse_handle(), cuTransA, cuTransB, msparse, N, ksparse,nzz, &alpha, Caffe::cusparse_mat_descr(), A, ptr, indices, B,  ldb, &zero, Ct, M));
     }
-    CUBLAS_CHECK(cublasDgeam(Caffe::cublas_handle(), CUBLAS_OP_T , CUBLAS_OP_N, N, M, &one, Ct, M, &beta, C, N, C, N));
-    CUDA_CHECK(cudaFree(Ct));
+    CAFFE1_CUBLAS_CHECK(cublasDgeam(Caffe::cublas_handle(), CUBLAS_OP_T , CUBLAS_OP_N, N, M, &one, Ct, M, &beta, C, N, C, N));
+    CAFFE1_CUDA_CHECK(cudaFree(Ct));
   }else{
     //this is the default of CUSPARSE by the Matrix B is by default rowmajor
     if (reuiqre_transpose_B){
       CUSPARSE_CHECK(cusparseDcsrmm2(Caffe::cusparse_handle(), cuTransA, CUSPARSE_OPERATION_NON_TRANSPOSE, msparse, N, ksparse,nzz, &alpha, Caffe::cusparse_mat_descr(), A, ptr, indices, Bt,  ldb_t, &beta, C, M));
-      CUDA_CHECK(cudaFree(Bt));
+      CAFFE1_CUDA_CHECK(cudaFree(Bt));
     }else{
       CUSPARSE_CHECK(cusparseDcsrmm2(Caffe::cusparse_handle(), cuTransA, cuTransB, msparse, N, ksparse,nzz, &alpha, Caffe::cusparse_mat_descr(), A, ptr, indices, B,  ldb, &beta, C, M));
     }

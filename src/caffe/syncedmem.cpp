@@ -14,9 +14,9 @@ SyncedMemory::~SyncedMemory() {
     int initial_device;
     cudaGetDevice(&initial_device);
     if (gpu_device_ != -1) {
-      CUDA_CHECK(cudaSetDevice(gpu_device_));
+      CAFFE1_CUDA_CHECK(cudaSetDevice(gpu_device_));
     }
-    CUDA_CHECK(cudaFree(gpu_ptr_));
+    CAFFE1_CUDA_CHECK(cudaFree(gpu_ptr_));
     cudaSetDevice(initial_device);
   }
 #endif  // CPU_ONLY
@@ -52,8 +52,8 @@ inline void SyncedMemory::to_gpu() {
 #ifndef CPU_ONLY
   switch (head_) {
   case UNINITIALIZED:
-    CUDA_CHECK(cudaGetDevice(&gpu_device_));
-    CUDA_CHECK(cudaMalloc(&gpu_ptr_, size_));
+    CAFFE1_CUDA_CHECK(cudaGetDevice(&gpu_device_));
+    CAFFE1_CUDA_CHECK(cudaMalloc(&gpu_ptr_, size_));
     own_gpu_data_ = true;
     caffe_gpu_memset(size_, 0, gpu_ptr_);
     head_ = HEAD_AT_GPU;
@@ -61,8 +61,8 @@ inline void SyncedMemory::to_gpu() {
     break;
   case HEAD_AT_CPU:
     if (gpu_ptr_ == NULL) {
-      CUDA_CHECK(cudaGetDevice(&gpu_device_));
-      CUDA_CHECK(cudaMalloc(&gpu_ptr_, size_));
+      CAFFE1_CUDA_CHECK(cudaGetDevice(&gpu_device_));
+      CAFFE1_CUDA_CHECK(cudaMalloc(&gpu_ptr_, size_));
       own_gpu_data_ = true;
     }
     caffe_gpu_memcpy(size_, cpu_ptr_, gpu_ptr_);
@@ -84,7 +84,7 @@ void SyncedMemory::clear_data() {
   }
 #ifndef CPU_ONLY
   if (gpu_ptr_ && own_gpu_data_) {
-    CUDA_CHECK(cudaFree(gpu_ptr_));
+    CAFFE1_CUDA_CHECK(cudaFree(gpu_ptr_));
     gpu_ptr_ = NULL;
   }
 #endif  // CPU_ONLY
@@ -132,9 +132,9 @@ const void* SyncedMemory::gpu_data() {
     int initial_device;
     cudaGetDevice(&initial_device);
     if (gpu_device_ != -1) {
-      CUDA_CHECK(cudaSetDevice(gpu_device_));
+      CAFFE1_CUDA_CHECK(cudaSetDevice(gpu_device_));
     }
-    CUDA_CHECK(cudaFree(gpu_ptr_));
+    CAFFE1_CUDA_CHECK(cudaFree(gpu_ptr_));
     cudaSetDevice(initial_device);
   }
   gpu_ptr_ = data;
@@ -156,9 +156,9 @@ const void* SyncedMemory::gpu_data() {
     int initial_device;
     cudaGetDevice(&initial_device);
     if (gpu_device_ != -1) {
-      CUDA_CHECK(cudaSetDevice(gpu_device_));
+      CAFFE1_CUDA_CHECK(cudaSetDevice(gpu_device_));
     }
-    CUDA_CHECK(cudaFree(gpu_ptr_));
+    CAFFE1_CUDA_CHECK(cudaFree(gpu_ptr_));
     cudaSetDevice(initial_device);
   }
   gpu_ptr_ = data;
@@ -177,7 +177,7 @@ const void* SyncedMemory::gpu_data() {
     size_ = size;
   }
   if (gpu_ptr_ && own_gpu_data_) {
-    CUDA_CHECK(cudaFree(gpu_ptr_));
+    CAFFE1_CUDA_CHECK(cudaFree(gpu_ptr_));
   }
 
   gpu_ptr_ = data;
@@ -209,12 +209,12 @@ void* SyncedMemory::mutable_gpu_data() {
 void SyncedMemory::async_gpu_push(const cudaStream_t& stream) {
   CHECK(head_ == HEAD_AT_CPU);
   if (gpu_ptr_ == NULL) {
-    CUDA_CHECK(cudaGetDevice(&gpu_device_));
-    CUDA_CHECK(cudaMalloc(&gpu_ptr_, size_));
+    CAFFE1_CUDA_CHECK(cudaGetDevice(&gpu_device_));
+    CAFFE1_CUDA_CHECK(cudaMalloc(&gpu_ptr_, size_));
     own_gpu_data_ = true;
   }
   const cudaMemcpyKind put = cudaMemcpyHostToDevice;
-  CUDA_CHECK(cudaMemcpyAsync(gpu_ptr_, cpu_ptr_, size_, put, stream));
+  CAFFE1_CUDA_CHECK(cudaMemcpyAsync(gpu_ptr_, cpu_ptr_, size_, put, stream));
   // Assume caller will synchronize on the stream before use
   head_ = SYNCED;
 }

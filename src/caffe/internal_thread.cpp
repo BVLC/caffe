@@ -23,7 +23,7 @@ void InternalThread::StartInternalThread() {
 
   int device = 0;
 #ifndef CPU_ONLY
-  CUDA_CHECK(cudaGetDevice(&device));
+  CAFFE1_CUDA_CHECK(cudaGetDevice(&device));
 #endif
   Caffe::Brew mode = Caffe::mode();
   int rand_seed = caffe_rng_rand();
@@ -42,7 +42,7 @@ void InternalThread::StartInternalThread() {
 void InternalThread::entry(int device, Caffe::Brew mode, int rand_seed,
     int solver_count, bool root_solver) {
 #ifndef CPU_ONLY
-  CUDA_CHECK(cudaSetDevice(device));
+  CAFFE1_CUDA_CHECK(cudaSetDevice(device));
 #endif
   Caffe::set_mode(mode);
   Caffe::set_random_seed(rand_seed);

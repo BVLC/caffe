@@ -15,7 +15,7 @@ namespace caffe {
 inline void CaffeMallocHost(void** ptr, size_t size, bool* use_cuda) {
   /*#ifndef CPU_ONLY
   if (Caffe::mode() == Caffe::GPU) {
-    CUDA_CHECK(cudaMallocHost(ptr, size));
+    CAFFE1_CUDA_CHECK(cudaMallocHost(ptr, size));
     *use_cuda = true;
     return;
   }
@@ -29,7 +29,7 @@ inline void CaffeMallocHost(void** ptr, size_t size, bool* use_cuda) {
 inline void CaffeFreeHost(void* ptr, bool use_cuda) {
   /*#ifndef CPU_ONLY
   if (use_cuda) {
-    CUDA_CHECK(cudaFreeHost(ptr));
+    CAFFE1_CUDA_CHECK(cudaFreeHost(ptr));
     return;
   }
   #endif*/

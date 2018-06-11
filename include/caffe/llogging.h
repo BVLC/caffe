@@ -108,9 +108,9 @@ static std::ostream nullstream(0);
 #define CHECK_NE(x, y) CHECK((x) != (y))
 
 #define CHECK_OP_LOG(name, op, val1, val2, log) CHECK((val1) op (val2))
-#ifdef DEBUG
-#define CHECK_EQ(val1,val2) if (0) std::cerr
-#endif
+/* #ifdef DEBUG */
+/* #define CHECK_EQ(val1,val2) if (0) std::cerr */
+/* #endif */
 #endif
 
 #define CHECK_NOTNULL(x) \

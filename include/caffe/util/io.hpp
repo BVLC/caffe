@@ -132,35 +132,36 @@ inline bool ReadFileToDatum(const string& filename, Datum* datum) {
 bool ReadImageToDatum(const string& filename, const int label,
     const int height, const int width, const int min_dim, const int max_dim,
 		      const bool is_color, const bool nearest_neighbour_interp,
-		      const std::string & encoding, Datum* datum);
+		      const std::string & encoding, Datum* datum, const bool unchanged=false);
 
 inline bool ReadImageToDatum(const string& filename, const int label,
 		      const int height, const int width, const int min_dim, const int max_dim,
-		      const bool is_color, const std::string & encoding, Datum* datum)
+			     const bool is_color, const std::string & encoding, Datum* datum,
+			     const bool unchanged=false)
 {
   return ReadImageToDatum(filename, label, height, width, min_dim, max_dim,
-			  is_color, false, encoding, datum);
+			  is_color, false, encoding, datum, unchanged);
 }
 
 inline bool ReadImageToDatum(const string& filename, const int label,
     const int height, const int width, const int min_dim, const int max_dim,
-    const bool is_color, Datum* datum) {
+			     const bool is_color, Datum* datum, const bool unchanged=false) {
   return ReadImageToDatum(filename, label, height, width, min_dim, max_dim,
-                          is_color, false, "", datum);
+                          is_color, false, "", datum, unchanged);
 }
 
 inline bool ReadImageToDatum(const string& filename, const int label,
     const int height, const int width, const int min_dim, const int max_dim,
-    Datum* datum) {
+			     Datum* datum, const bool unchanged) {
   return ReadImageToDatum(filename, label, height, width, min_dim, max_dim,
-                          true, datum);
+                          true, datum, unchanged);
 }
 
 inline bool ReadImageToDatum(const string& filename, const int label,
     const int height, const int width, const bool is_color,
-    const std::string & encoding, Datum* datum) {
+			     const std::string & encoding, Datum* datum, const bool unchanged=false) {
   return ReadImageToDatum(filename, label, height, width, 0, 0, is_color,
-                          encoding, datum);
+                          encoding, datum, unchanged);
 }
 
 inline bool ReadImageToDatum(const string& filename, const int label,
@@ -260,16 +261,13 @@ inline bool MapLabelToDisplayName(const LabelMap& map,
 }
 
 #ifdef USE_OPENCV
-  /*cv::Mat ReadImageToCVMat(const string& filename, const int height,
-    const int width, const int min_dim, const int max_dim, const bool is_color);*/
-
 cv::Mat ReadImageToCVMat(const string& filename, const int height,
     const int width, const int min_dim, const int max_dim);
 
 cv::Mat ReadImageToCVMat(const string& filename,
 			 const int height, const int width, const int min_dim, const int max_dim,
 			 const bool is_color,
-			 const bool nearest_neighbour_interp = false);
+			 const bool nearest_neighbour_interp = false, const bool unchanged = false);
 
 cv::Mat ReadImageToCVMat(const string& filename,
 			 const int height, const int width, const bool is_color, 

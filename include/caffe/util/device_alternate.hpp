@@ -46,14 +46,14 @@ void classname<Dtype>::funcname##_##gpu(const vector<Blob<Dtype>*>& top, \
 //
 
 // CUDA: various checks for different function calls.
-#define CUDA_CHECK(condition) \
+#define CAFFE1_CUDA_CHECK(condition) \
   /* Code block avoids redefinition of cudaError_t error */ \
   do { \
     cudaError_t error = condition; \
     CHECK_EQ(error, cudaSuccess) << " " << cudaGetErrorString(error); \
   } while (0)
 
-#define CUBLAS_CHECK(condition) \
+#define CAFFE1_CUBLAS_CHECK(condition) \
   do { \
     cublasStatus_t status = condition; \
     CHECK_EQ(status, CUBLAS_STATUS_SUCCESS) << " " \
@@ -67,7 +67,7 @@ void classname<Dtype>::funcname##_##gpu(const vector<Blob<Dtype>*>& top, \
       << caffe::cusparseGetErrorString(status); \
   } while (0)
 
-#define CURAND_CHECK(condition) \
+#define CAFFE1_CURAND_CHECK(condition) \
   do { \
     curandStatus_t status = condition; \
     CHECK_EQ(status, CURAND_STATUS_SUCCESS) << " " \
@@ -81,7 +81,7 @@ void classname<Dtype>::funcname##_##gpu(const vector<Blob<Dtype>*>& top, \
        i += blockDim.x * gridDim.x)
 
 // CUDA: check for error after kernel execution and exit loudly if there is one.
-#define CUDA_POST_KERNEL_CHECK CUDA_CHECK(cudaPeekAtLastError())
+#define CUDA_POST_KERNEL_CHECK CAFFE1_CUDA_CHECK(cudaPeekAtLastError())
 
 namespace caffe {
 
