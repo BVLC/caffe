@@ -1,4 +1,5 @@
 #include <opencv2/core/core.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 
 #include <fstream>  // NOLINT(readability/streams)
 #include <iostream>  // NOLINT(readability/streams)
@@ -233,6 +234,7 @@ void DenseImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
             cv::Mat cv_chan = cv_lab_orig == i;
             from_to[1]= i; // where to put newly computed channel
             cv::mixChannels(&cv_chan,1,&cv_lab, 1, from_to, 1);
+						cv::threshold(cv_lab, cv_lab, 0.5, 1., cv::THRESH_BINARY);
           }
       }
 
