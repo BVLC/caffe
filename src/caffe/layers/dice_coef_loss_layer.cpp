@@ -14,6 +14,7 @@ void DiceCoefLossLayer<Dtype>::Reshape(
   const int batchsize = bottom[0]->num();
   const int dim = bottom[0]->count(1);
   nclasses_ = bottom[1]->channels();
+  const int imgsize = bottom[1]->count(2);
 
 
   vector<int> multiplier_shape(1, dim);
@@ -27,7 +28,6 @@ void DiceCoefLossLayer<Dtype>::Reshape(
   caffe_set(batchsize, smooth, result_tmp_.mutable_cpu_data());
   caffe_set(batchsize, smooth, result_.mutable_cpu_data());
 
-  // TODO check in case of multiclass unweigthed + ignore
 
   switch (this->layer_param_.dice_coef_loss_param().generalization()) {
   case DiceCoefLossParameter_GeneralizationMode_NONE:
@@ -55,15 +55,14 @@ void DiceCoefLossLayer<Dtype>::Reshape(
       mask_.Reshape(mask_shape);
       // populate mask, can be transposed
       caffe_set(dim*nclasses_, Dtype(0.), mask_.mutable_cpu_data());
-      unsigned int imgsize = bottom[1]->count(2);
       for (unsigned int i = 0; i< nclasses_; ++i)
         caffe_set(imgsize, Dtype(1.), mask_.mutable_cpu_data()+(dim+imgsize)*i);
       if (ignore_label_ != -1)
           caffe_set(imgsize, Dtype(0.), mask_.mutable_cpu_data()+(dim+imgsize)*ignore_label_);
       weight_multiplier_.ReshapeLike(*bottom[0]);
     }
-  else if (ignore_label_ != -1)
-    caffe_set(bottom[1]->count(2), Dtype(0.), multiplier_.mutable_cpu_data()+imgsize*ignore_label_);
+  else if (ignore_label_ != -1 && nclasses_ > 1)
+    caffe_set(imgsize, Dtype(0.), multiplier_.mutable_cpu_data()+imgsize*ignore_label_);
 
 
 }
