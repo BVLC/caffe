@@ -45,7 +45,8 @@ void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       if (this->layer_param_.hdf5_data_param().shuffle())
         std::random_shuffle(data_permutation_.begin(), data_permutation_.end());
     }
-        if (is_image && has_transform) {
+#ifdef USE_OPENCV
+    if (is_image && has_transform) {
       for (int j = 0; j < this->layer_param_.top_size(); ++j)
 	{
 	  int data_dim = top[j]->count() / top[j]->shape(0);
@@ -56,7 +57,17 @@ void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 	    vector<Dtype> img_data;
 	    img_data.insert(img_data.begin(),&hdf_blobs_[j]->cpu_data()[data_permutation_[current_row_]*data_dim],
 	    		    &hdf_blobs_[j]->cpu_data()[data_permutation_[current_row_]*data_dim]+data_dim);
-	    cv::Mat cv_img(height,width,CV_8UC3,&img_data.at(0)); //TODO: bw
+            cv::Mat cv_img(height,width,CV_8UC3);
+	    for (int c=0;c<3;c++)
+	      {
+		for (int h=0;h<height;h++)
+		  {
+		    for (int w=0;w<width;w++)
+		      {
+			cv_img.at<cv::Vec3b>(cv::Point(w,h))[c] = static_cast<uint8_t>(img_data.at(c*width*height+h*width+w));
+		      }
+		  }
+	      }
 	    Blob<Dtype> transformed_data;
 	    transformed_data.Reshape(1,3,height,width);
 	    this->data_transformer_->Transform(cv_img, &transformed_data);
@@ -70,13 +81,16 @@ void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 	}
     }
     else {
+#endif
     for (int j = 0; j < this->layer_param_.top_size(); ++j) {
       int data_dim = top[j]->count() / top[j]->shape(0);
       caffe_copy(data_dim,
           &hdf_blobs_[j]->cpu_data()[data_permutation_[current_row_]
             * data_dim], &top[j]->mutable_gpu_data()[i * data_dim]);
     }
+#ifdef USE_OPENCV
     }
+#endif
   }
 }
 
