@@ -22,7 +22,7 @@ double tanh_naive(double X) {
     return 1;
   } else {
     // exact expression for tanh, which is unstable for large X
-    double exp2x = exp(2 * X);
+    double exp2x = std::exp(2 * X);
     return (exp2x - 1.0) / (exp2x + 1.0);
   }
 }

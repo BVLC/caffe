@@ -55,7 +55,8 @@ class RandomNumberGeneratorTest : public ::testing::Test {
   }
 
   Dtype mean_bound(const Dtype std, const int_tp sample_size) {
-    return mean_bound_multiplier_ * std / sqrt(static_cast<Dtype>(sample_size));
+    return mean_bound_multiplier_ * std /
+        std::sqrt(static_cast<Dtype>(sample_size));
   }
 
   Dtype mean_bound(const Dtype std) {
@@ -100,7 +101,7 @@ class RandomNumberGeneratorTest : public ::testing::Test {
     const Dtype sample_p_above_mean =
         static_cast<Dtype>(num_above_mean) / sample_size_;
     const Dtype bernoulli_p = (1 - sparse_p) * 0.5;
-    const Dtype bernoulli_std = sqrt(bernoulli_p * (1 - bernoulli_p));
+    const Dtype bernoulli_std = std::sqrt(bernoulli_p * (1 - bernoulli_p));
     const Dtype bernoulli_bound = this->mean_bound(bernoulli_std);
     EXPECT_NEAR(bernoulli_p, sample_p_above_mean, bernoulli_bound);
   }
@@ -115,7 +116,7 @@ class RandomNumberGeneratorTest : public ::testing::Test {
                         const void* cpu_data, const Dtype sparse_p = 0) {
     const Dtype* rng_data = static_cast<const Dtype*>(cpu_data);
     const Dtype true_mean = (lower + upper) / 2;
-    const Dtype true_std = (upper - lower) / sqrt(12);
+    const Dtype true_std = (upper - lower) / std::sqrt(12);
     // Check that sample mean roughly matches true mean.
     const Dtype bound = this->mean_bound(true_std);
     const Dtype sample_mean = this->sample_mean(rng_data);
@@ -153,7 +154,7 @@ class RandomNumberGeneratorTest : public ::testing::Test {
     const Dtype sample_p_above_mean =
         static_cast<Dtype>(num_above_mean) / sample_size_;
     const Dtype bernoulli_p = (1 - sparse_p) * 0.5;
-    const Dtype bernoulli_std = sqrt(bernoulli_p * (1 - bernoulli_p));
+    const Dtype bernoulli_std = std::sqrt(bernoulli_p * (1 - bernoulli_p));
     const Dtype bernoulli_bound = this->mean_bound(bernoulli_std);
     EXPECT_NEAR(bernoulli_p, sample_p_above_mean, bernoulli_bound);
   }
@@ -166,7 +167,7 @@ class RandomNumberGeneratorTest : public ::testing::Test {
   void RngBernoulliChecks(const Dtype p, const void* cpu_data) {
     const int_tp* rng_data = static_cast<const int_tp*>(cpu_data);
     const Dtype true_mean = p;
-    const Dtype true_std = sqrt(p * (1 - p));
+    const Dtype true_std = std::sqrt(p * (1 - p));
     const Dtype bound = this->mean_bound(true_std);
     const Dtype sample_mean = this->sample_mean(rng_data);
     EXPECT_NEAR(sample_mean, true_mean, bound);
@@ -289,7 +290,7 @@ TYPED_TEST(RandomNumberGeneratorTest, TestRngGaussianTimesGaussian) {
 
   // Check that result has mean 0.
   TypeParam mu_product = pow(mu, TypeParam(2));
-  TypeParam sigma_product = sqrt(TypeParam(pow(sigma, TypeParam(2)) / 2));
+  TypeParam sigma_product = std::sqrt(TypeParam(pow(sigma, TypeParam(2)) / 2));
   this->RngGaussianChecks(mu_product, sigma_product, gaussian_data_1);
 }
 
@@ -400,7 +401,7 @@ TYPED_TEST(RandomNumberGeneratorTest, TestRngBernoulliTimesBernoulli) {
   // Check that resulting product has roughly p_a * p_b ones.
   const TypeParam sample_p = this->sample_mean(bernoulli_data_a);
   const TypeParam true_mean = p_a * p_b;
-  const TypeParam true_std = sqrt(true_mean * (1 - true_mean));
+  const TypeParam true_std = std::sqrt(true_mean * (1 - true_mean));
   const TypeParam bound = this->mean_bound(true_std);
   EXPECT_NEAR(true_mean, sample_p, bound);
 }
@@ -490,7 +491,7 @@ TYPED_TEST(RandomNumberGeneratorTest, TestRngGaussianTimesGaussianGPU) {
   // Check that result does not violate checked properties of Gaussian
   // (though it is not actually a Gaussian).
   TypeParam mu_product = pow(mu, TypeParam(2));
-  TypeParam sigma_product = sqrt(TypeParam(pow(sigma, TypeParam(2)) / 2));
+  TypeParam sigma_product = std::sqrt(TypeParam(pow(sigma, TypeParam(2)) / 2));
   this->RngGaussianChecks(mu_product, sigma_product, gaussian_data_1);
 }
 

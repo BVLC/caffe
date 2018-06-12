@@ -66,7 +66,7 @@ void ContrastiveLossLayer<Dtype, MItype, MOtype>::Forward_cpu(
       if (legacy_version) {
         loss += fmax(margin - dist_sq_.cpu_data()[i], Dtype(0.0));
       } else {
-        Dtype dist = std::max<Dtype>(margin - sqrt(dist_sq_.cpu_data()[i]),
+        Dtype dist = std::max<Dtype>(margin - std::sqrt(dist_sq_.cpu_data()[i]),
           Dtype(0.0));
         loss += dist*dist;
       }
@@ -105,7 +105,7 @@ void ContrastiveLossLayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob
             mdist = margin - dist_sq_.cpu_data()[j];
             beta = -alpha;
           } else {
-            Dtype dist = sqrt(dist_sq_.cpu_data()[j]);
+            Dtype dist = std::sqrt(dist_sq_.cpu_data()[j]);
             mdist = margin - dist;
             beta = -alpha * mdist / (dist + Dtype(1e-4));
           }

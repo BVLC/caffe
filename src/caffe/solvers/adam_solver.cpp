@@ -39,7 +39,7 @@ void AdamSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
   Blob<Dtype>* val_t = this->temp_[param_id].get();
 
   const uint_tp t = this->iter_  + 1;
-  const Dtype correction = sqrt(Dtype(1) - pow(beta2, Dtype(t))) /
+  const Dtype correction = std::sqrt(Dtype(1) - pow(beta2, Dtype(t))) /
       (Dtype(1.) - pow(beta1, Dtype(t)));
   const uint_tp n = net_params[param_id]->count();
   const Dtype eps_hat = this->param_.delta();

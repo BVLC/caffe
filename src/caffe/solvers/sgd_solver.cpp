@@ -61,7 +61,7 @@ Dtype SGDSolver<Dtype>::GetLearningRate() {
     CHECK_GE(this->param_.gamma(), 0);
     CHECK_GT(this->param_.stepsize(), 0);
     rate = this->param_.base_lr() * (Dtype(1.) /
-        (Dtype(1.) + exp(-this->param_.gamma() * (Dtype(this->iter_) -
+        (Dtype(1.) + std::exp(-this->param_.gamma() * (Dtype(this->iter_) -
                     Dtype(this->param_.stepsize())))));
   } else {
     LOG(FATAL) << "Unknown learning rate policy: " << lr_policy;

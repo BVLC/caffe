@@ -85,7 +85,7 @@ void DropoutLayer<Dtype, MItype, MOtype>::Forward_gpu(
     vector<size_t> local;
     this->device_->get_threads(&work_size, &group, &local, kernel.get(), true);
   } else {
-    this->device_->copy(count, bottom_data, top_data);
+    this->device_->template copy<Dtype>(count, bottom_data, top_data);
   }
 }
 
@@ -115,7 +115,8 @@ void DropoutLayer<Dtype, MItype, MOtype>::Backward_gpu(
       this->device_->get_threads(&work_size, &group, &local, kernel.get(),
                                  true);
     } else {
-      this->device_->copy(top[0]->count(), top_diff, bottom_diff);
+      this->device_->template copy<Dtype>(top[0]->count(), top_diff,
+                                          bottom_diff);
     }
   }
 }

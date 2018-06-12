@@ -9,7 +9,7 @@ namespace caffe {
 
 template<typename Dtype, typename MItype, typename MOtype>
 inline Dtype sigmoid(Dtype X) {
-  return 1. / (1. + exp(-X));
+  return 1. / (1. + std::exp(-X));
 }
 
 template<typename Dtype, typename MItype, typename MOtype>

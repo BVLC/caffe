@@ -59,17 +59,17 @@ TYPED_TEST(SoftmaxLayerTest, TestForward) {
         // Test exact values
         Dtype scale = 0;
         for (int_tp j = 0; j < this->blob_bottom_->channels(); ++j) {
-          scale += exp(this->blob_bottom_->data_at(i, j, k, l));
+          scale += std::exp(this->blob_bottom_->data_at(i, j, k, l));
         }
 
         const Dtype delta = std::is_same<Dtype, half_fp>::value ?
                       2e-2 : 1e-3;
         for (int_tp j = 0; j < this->blob_bottom_->channels(); ++j) {
           EXPECT_GE(Dtype(this->blob_top_->data_at(i, j, k, l) + delta),
-              Dtype(exp(this->blob_bottom_->data_at(i, j, k, l)) / scale))
+              Dtype(std::exp(this->blob_bottom_->data_at(i, j, k, l)) / scale))
               << "debug: " << i << " " << j;
           EXPECT_LE(Dtype(this->blob_top_->data_at(i, j, k, l) - delta),
-              Dtype(exp(this->blob_bottom_->data_at(i, j, k, l)) / scale))
+              Dtype(std::exp(this->blob_bottom_->data_at(i, j, k, l)) / scale))
               << "debug: " << i << " " << j;
         }
       }
@@ -129,17 +129,17 @@ TYPED_TEST(CuDNNSoftmaxLayerTest, TestForwardCuDNN) {
             // Test exact values
             TypeParam scale = 0;
             for (int_tp j = 0; j < this->blob_bottom_->channels(); ++j) {
-              scale += exp(this->blob_bottom_->data_at(i, j, k, l));
+              scale += std::exp(this->blob_bottom_->data_at(i, j, k, l));
             }
             for (int_tp j = 0; j < this->blob_bottom_->channels(); ++j) {
               EXPECT_GE((TypeParam)(this->blob_top_->
                         data_at(i, j, k, l) + 1e-3),
-                        (TypeParam)(exp(this->blob_bottom_->
+                        (TypeParam)(std::exp(this->blob_bottom_->
                         data_at(i, j, k, l)) / scale))
                         << "debug: " << i << " " << j;
               EXPECT_LE((TypeParam)(this->blob_top_->
                         data_at(i, j, k, l) - 1e-3),
-                        (TypeParam)(exp(this->blob_bottom_->
+                        (TypeParam)(std::exp(this->blob_bottom_->
                         data_at(i, j, k, l)) / scale))
                         << "debug: " << i << " " << j;
             }

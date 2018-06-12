@@ -32,12 +32,12 @@ std::map<string, int64_t> LibDNN<MItype, MOtype>
     params["workgroup_size_0"] = 8;
     params["workgroup_size_1"] = 8;
     params["workgroup_size_2"] = 1;
-    params["TSK"] = 16 / safe_sizeof<MItype>();;
-    params["TSK_UNROLL"] = 16 / safe_sizeof<MItype>();
-    params["WPTM"] = 16 / safe_sizeof<MItype>();
-    params["WPTN"] = 16 / safe_sizeof<MItype>();
-    params["VWM"] = 16 / safe_sizeof<MItype>();
-    params["VWN"] = 16 / safe_sizeof<MItype>();
+    params["TSK"] = 8 / safe_sizeof<MItype>();;
+    params["TSK_UNROLL"] = 8 / safe_sizeof<MItype>();
+    params["WPTM"] = 8 / safe_sizeof<MItype>();
+    params["WPTN"] = 8 / safe_sizeof<MItype>();
+    params["VWM"] = 8 / safe_sizeof<MItype>();
+    params["VWN"] = 8 / safe_sizeof<MItype>();
   }
 
   if (this->dev_ptr_->name().find("VideoCore IV") != string::npos) {

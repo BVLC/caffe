@@ -48,7 +48,7 @@ class SigmoidCrossEntropyLossLayerTest : public MultiDeviceTest<TypeParam> {
                                          const Dtype* target) {
     Dtype loss = 0;
     for (int_tp i = 0; i < count; ++i) {
-      const Dtype prediction = 1 / (1 + exp(-input[i]));
+      const Dtype prediction = 1 / (1 + std::exp(-input[i]));
       EXPECT_LE(prediction, 1);
       EXPECT_GE(prediction, 0);
       EXPECT_LE(target[i], 1);

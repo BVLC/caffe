@@ -26,7 +26,7 @@ void ELULayer<Dtype, MItype, MOtype>::Forward_cpu(
   Dtype alpha = this->layer_param_.elu_param().alpha();
   for (int i = 0; i < count; ++i) {
     top_data[i] = std::max(bottom_data[i], Dtype(0))
-        + alpha * (exp(std::min(bottom_data[i], Dtype(0))) - Dtype(1));
+        + alpha * (std::exp(std::min(bottom_data[i], Dtype(0))) - Dtype(1));
   }
 }
 

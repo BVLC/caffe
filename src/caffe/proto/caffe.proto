@@ -1099,6 +1099,7 @@ message MOEParameter {
   repeated NetParameter expert_net = 2;
   repeated int64 expert_instances = 3;
   optional int64 select_experts = 4;
+  optional bool full_forward = 6 [default = false];
   
   enum BottomMapping {
   	GATING = 1;

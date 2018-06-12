@@ -343,7 +343,7 @@ class Layer : public LayerBase {
       quant_param.set_input_data_type(layer_param_.compute_data_type());
       quant_param.set_output_data_type(layer_param_.top_data_type());
       if (!quant_param.has_name()) {
-        quant_param.set_name(layer_param_.bottom_size() > i ?
+        quant_param.set_name(layer_param_.top_size() > i ?
             layer_param_.top(i) : this->layer_param_.name() + "_top_"
             + std::to_string(i) + "_quant");      }
       top_quants_.push_back(

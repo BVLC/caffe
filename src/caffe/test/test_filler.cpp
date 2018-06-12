@@ -311,8 +311,8 @@ class XavierFillerTest : public ::testing::Test {
     }
     mean /= count;
     ex2 /= count;
-    Dtype std = sqrt(ex2 - mean*mean);
-    Dtype target_std = sqrt(2.0 / n);
+    Dtype std = std::sqrt(ex2 - mean*mean);
+    Dtype target_std = std::sqrt(2.0 / n);
     EXPECT_NEAR(mean, 0.0, 0.1);
     EXPECT_NEAR(std, target_std, 0.1);
   }
@@ -419,8 +419,8 @@ class MSRAFillerTest : public ::testing::Test {
     }
     mean /= count;
     ex2 /= count;
-    Dtype std = sqrt(ex2 - mean*mean);
-    Dtype target_std = sqrt(2.0 / n);
+    Dtype std = std::sqrt(ex2 - mean*mean);
+    Dtype target_std = std::sqrt(2.0 / n);
     EXPECT_NEAR(mean, 0.0, 0.1);
     EXPECT_NEAR(std, target_std, 0.1);
   }

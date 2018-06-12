@@ -17,8 +17,8 @@ void BNLLLayer<Dtype, MItype, MOtype>::Forward_cpu(
   const int_tp count = bottom[0]->count();
   for (int_tp i = 0; i < count; ++i) {
     top_data[i] = bottom_data[i] > 0 ?
-        bottom_data[i] + std::log(1. + exp(-bottom_data[i])) :
-        std::log(1. + exp(bottom_data[i]));
+        bottom_data[i] + std::log(1. + std::exp(-bottom_data[i])) :
+        std::log(1. + std::exp(bottom_data[i]));
   }
 }
 
@@ -34,7 +34,7 @@ void BNLLLayer<Dtype, MItype, MOtype>::Backward_cpu(
     const int_tp count = bottom[0]->count();
     Dtype expval;
     for (int_tp i = 0; i < count; ++i) {
-      expval = exp(std::min(bottom_data[i], Dtype(kBNLL_THRESHOLD)));
+      expval = std::exp(std::min(bottom_data[i], Dtype(kBNLL_THRESHOLD)));
       bottom_diff[i] = top_diff[i] * expval / (expval + 1.);
     }
   }

@@ -35,7 +35,7 @@ class LossLayer : public Layer<Dtype, MItype, MOtype> {
 
   /**
    * @brief For convenience and backwards compatibility, instruct the Net to
-   *      automatically allocate a single top Blob for LossLayers, int_tpo which
+   *      automatically allocate a single top Blob for LossLayers, into which
    *      they output their singleton loss, (even if the user didn't specify
    *      one in the prototxt, etc.).
    */

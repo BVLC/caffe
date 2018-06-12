@@ -32,6 +32,7 @@ void MOELayer<Dtype, MItype, MOtype>::Forward_gpu(
   gating_ = static_cast<Blob<MOtype>*>(this->gating_net_->Forward(&loss)[0]);
   MOtype* gating_data = gating_->mutable_cpu_data();
 
+  vector<int_tp> select_count(gating_->shape()[1], 0);
   vector<vector<int_tp> > batch_selectors;
 
   // Reset all top blobs
@@ -56,7 +57,26 @@ void MOELayer<Dtype, MItype, MOtype>::Forward_gpu(
         }
       }
     }
+    for(size_t k = 0; k < select_experts; ++k) {
+      select_count[expert_selectors[k]] += 1;
+    }
     batch_selectors.push_back(expert_selectors);
+  }
+
+  // Generate load balancing loss
+  if (this->phase_ == caffe::TRAIN) {
+    MOtype* observed_count = top[top.size()-2]->mutable_cpu_data();
+    MOtype* expected_count = top[top.size()-1]->mutable_cpu_data();
+    for (size_t j = 0; j < gating_->shape()[1]; ++j) {
+      MOtype norm_observed = static_cast<MOtype>(select_count[j])
+          / static_cast<MOtype>(gating_->shape()[0]);
+      MOtype norm_expected = static_cast<MOtype>(select_experts)
+          / static_cast<MOtype>(gating_->shape()[1]);
+      for (size_t i = 0; i < gating_->shape()[0]; ++i) {
+        observed_count[i * select_count.size() + j] = norm_observed;
+        expected_count[i * select_count.size() + j] = norm_expected;
+      }
+    }
   }
 
   // Make gating data sparse and renormalize
@@ -81,7 +101,8 @@ void MOELayer<Dtype, MItype, MOtype>::Forward_gpu(
   }
 
   // Forward experts
-  if (this->phase_ == caffe::TEST) {
+  if (this->phase_ == caffe::TEST &&
+      !this->layer_param().moe_param().full_forward()) {
     // Forward expert networks (partial, only forward selected experts
     // per batch item)
 #pragma omp parallel for num_threads(this->parallel_nets_)
@@ -176,11 +197,11 @@ void MOELayer<Dtype, MItype, MOtype>::Backward_gpu(
     caffe_set(bottom[i]->count(), MItype(0), bottom_diff);
   }
 
-  // Reset gating diff
+  // Set gating diff to load balancing diff
   const MOtype* gating_data = gating_->cpu_data();
   MOtype* gating_diff = gating_->mutable_cpu_diff();
-  caffe_set(gating_->count(), MOtype(0), gating_diff);
-
+  const MOtype* observed_diff = top[top.size()-2]->cpu_diff();
+  caffe_copy(gating_->count(), observed_diff, gating_diff);
 
   // Backward all experts
   for (size_t j = 0; j < this->expert_nets_.size(); ++j) {

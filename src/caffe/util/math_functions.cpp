@@ -272,7 +272,7 @@ void caffe_sqr<double>(const int_tp n, const double* a, double* y) {
 template<typename Dtype>
 void caffe_sqrt(const int_tp n, const Dtype* a, Dtype* y) {
   for (int_tp i = 0; i < n; ++i) {
-    y[i] = sqrt(a[i]);
+    y[i] = std::sqrt(a[i]);
   }
 }
 
@@ -296,7 +296,7 @@ void caffe_sqrt<double>(const int_tp n, const double* a, double* y) {
 template<typename Dtype>
 void caffe_exp(const int_tp n, const Dtype* a, Dtype* y) {
   for (int_tp i = 0; i < n; ++i) {
-    y[i] = exp(a[i]);
+    y[i] = std::exp(a[i]);
   }
 }
 

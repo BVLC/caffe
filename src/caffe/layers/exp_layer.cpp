@@ -26,7 +26,8 @@ void ExpLayer<Dtype, MItype, MOtype>::LayerSetUp(
   const Dtype input_shift = this->layer_param_.exp_param().shift();
   inner_scale_ = log_base * input_scale;
   outer_scale_ = (input_shift == Dtype(0)) ? Dtype(1) :
-     ( (base != Dtype(-1)) ? pow(base, input_shift) : exp(input_shift) );
+     ((base != Dtype(-1)) ? pow(base, input_shift) :
+         static_cast<Dtype>(std::exp(input_shift)));
 
   this->InitializeQuantizers(bottom, top);
 }
