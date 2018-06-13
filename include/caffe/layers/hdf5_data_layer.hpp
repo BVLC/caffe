@@ -23,7 +23,7 @@ template <typename Dtype>
 class HDF5DataLayer : public Layer<Dtype> {
  public:
   explicit HDF5DataLayer(const LayerParameter& param)
-      : Layer<Dtype>(param) {}
+    : Layer<Dtype>(param),transform_param_(param.transform_param()) {}
   virtual ~HDF5DataLayer();
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
@@ -55,6 +55,8 @@ class HDF5DataLayer : public Layer<Dtype> {
   std::vector<shared_ptr<Blob<Dtype> > > hdf_blobs_;
   std::vector<unsigned int> data_permutation_;
   std::vector<unsigned int> file_permutation_;
+  shared_ptr<DataTransformer<Dtype> > data_transformer_;
+  TransformationParameter transform_param_;
 };
 
 }  // namespace caffe
