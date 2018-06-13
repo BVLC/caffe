@@ -364,6 +364,13 @@ string OclDeviceProgram::setup() {
   ss << "#if defined(cl_khr_fp16)" << std::endl;
   ss << "#pragma OPENCL EXTENSION cl_khr_fp16 : enable" << std::endl;
   ss << "#define HALF_SUPPORT_AVAILABLE" << std::endl;
+  // Provide half max/min if not defined
+  ss << "#ifndef HALF_MAX" << std::endl;
+  ss << "#define HALF_MAX 65504.f" << std::endl;
+  ss << "#endif" << std::endl;
+  ss << "#ifndef HALF_MIN" << std::endl;
+  ss << "#define HALF_MIN 6.10352e-5f" << std::endl;
+  ss << "#endif" << std::endl;
   ss << "#endif" << std::endl;
 
   ss << this->define_type<int_tp>("int_tp");

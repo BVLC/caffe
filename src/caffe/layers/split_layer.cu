@@ -10,7 +10,16 @@ void SplitLayer<Dtype, MItype, MOtype>::Forward_gpu(
                                       const vector<Blob<MItype>*>& bottom,
                                       const vector<Blob<MOtype>*>& top) {
   for (int_tp i = 0; i < top.size(); ++i) {
-    top[i]->ShareData(*bottom[0]);
+    if (this->layer_param().bottom_shared_index_size() > 0 ||
+        this->layer_param().top_shared_index_size() > 0) {
+      // Using shared blobs, copy data instead of sharing the blob
+      this->device_->template copy<Dtype>(bottom[0]->count(),
+                                          bottom[0]->gpu_data(),
+                                          top[i]->mutable_gpu_data());
+    } else {
+    // Normal mode
+      top[i]->ShareData(*bottom[0]);
+    }
   }
 }
 
