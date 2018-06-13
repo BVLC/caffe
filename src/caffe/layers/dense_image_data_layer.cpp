@@ -325,7 +325,6 @@ void DenseImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     DLOG(INFO) << "     Read time: " << read_time / 1000 << " ms.";
   else
 		DLOG(INFO) << "     Read (+ one_hot_encoding of labels) time: " << read_time / 1000 << " ms.";
-
   DLOG(INFO) << "Transform time: " << trans_time / 1000 << " ms.";
 }
 
