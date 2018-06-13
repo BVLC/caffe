@@ -226,15 +226,14 @@ void DenseImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
         CHECK(cv_lab_orig.data) << "Could not load " << lines_[lines_id_].second;
         cv_lab = cv::Mat(cv_lab_orig.rows,cv_lab_orig.cols,
                          CV_MAKETYPE(cv_lab_orig.depth(),(one_hot_nclasses_)));
-        //cv_chan = cv::Mat(cv_lab_orig.rows,cv_lab_orig.cols,CV_MAKETYPE(depth,1));
+				cv::Mat cv_chan;
         int from_to[] = {0, 0};
         for (int i=0; i<one_hot_nclasses_; ++i)
           {
-            //cv_chan = cv::compare(cv_lab_orig,i,cv_chan, cv::CMP_EQ);
-            cv::Mat cv_chan = cv_lab_orig == i;
+            cv_chan = cv_lab_orig == i;
             from_to[1]= i; // where to put newly computed channel
+						cv::threshold(cv_chan, cv_chan, 0.5, 1., cv::THRESH_BINARY);
             cv::mixChannels(&cv_chan,1,&cv_lab, 1, from_to, 1);
-						cv::threshold(cv_lab, cv_lab, 0.5, 1., cv::THRESH_BINARY);
           }
       }
 
@@ -325,7 +324,7 @@ void DenseImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   if (one_hot_nclasses_ == 0)
     DLOG(INFO) << "     Read time: " << read_time / 1000 << " ms.";
   else
-    DLOG(INFO) << "     Read (+ one_hot_encoding of labels) time: " << read_time / 1000 << " ms.";
+		DLOG(INFO) << "     Read (+ one_hot_encoding of labels) time: " << read_time / 1000 << " ms.";
 
   DLOG(INFO) << "Transform time: " << trans_time / 1000 << " ms.";
 }
