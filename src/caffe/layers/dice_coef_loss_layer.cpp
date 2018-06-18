@@ -23,24 +23,27 @@ void DiceCoefLossLayer<Dtype>::Reshape(
   result_tmp_.Reshape(result_shape);
   multiplier_.Reshape(multiplier_shape);
   tmp_.ReshapeLike(*bottom[0]);
-  smooth = Dtype(1.);
-  caffe_set(dim, Dtype(1), multiplier_.mutable_cpu_data());
+  caffe_set(dim, Dtype(1.), multiplier_.mutable_cpu_data());
 
 
   switch (this->layer_param_.dice_coef_loss_param().generalization()) {
   case DiceCoefLossParameter_GeneralizationMode_NONE:
     CHECK_EQ(nclasses_, 1) << "channel != 1 for single dice";
     do_weight_ = false;
+    ignore_label_ = -1;
+    smooth = Dtype(1./2.);
     break;
   case DiceCoefLossParameter_GeneralizationMode_MULTICLASS:
     CHECK_NE(nclasses_, 1) << "channel == 1 for multiclass";
     do_weight_ = false;
     ignore_label_ = this->layer_param_.dice_coef_loss_param().ignore_label();
+    smooth = Dtype(1.0/(float) nclasses_);
     break;
   case DiceCoefLossParameter_GeneralizationMode_MULTICLASS_WEIGHTED:
     CHECK_NE(nclasses_, 1) << "channel == 1 for multiclass";
     do_weight_ = true;
     ignore_label_ = this->layer_param_.dice_coef_loss_param().ignore_label();
+    smooth = Dtype(0.);
     break;
   }
   if (do_weight_)
@@ -54,11 +57,11 @@ void DiceCoefLossLayer<Dtype>::Reshape(
       // populate mask, can be transposed
       caffe_set(dim*nclasses_, Dtype(0.), mask_.mutable_cpu_data());
       for (unsigned int i = 0; i< nclasses_; ++i)
-        caffe_set(imgsize, Dtype(1.), mask_.mutable_cpu_data()+(dim+imgsize)*i);
+        caffe_set(imgsize, Dtype(1.), mask_.mutable_cpu_data()[(dim+imgsize)*i]);
       if (ignore_label_ != -1)
           caffe_set(imgsize, Dtype(0.), mask_.mutable_cpu_data()+(dim+imgsize)*ignore_label_);
       weight_multiplier_.ReshapeLike(*bottom[0]);
-			smooth = Dtype(1./(float)(imgsize*imgsize));
+      //			smooth *= Dtype(1./(float)(imgsize*imgsize));
     }
   else if (ignore_label_ != -1 && nclasses_ > 1)
     caffe_set(imgsize, Dtype(0.), multiplier_.mutable_cpu_data()+imgsize*ignore_label_);
@@ -80,7 +83,7 @@ void DiceCoefLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
                      weights_.mutable_cpu_data());
       // do 1/w^2
       caffe_powx(bottom[1]->num() * bottom[1]->channels(),weights_.cpu_data(), Dtype(-2.),
-                 weights_.mutable_cpu_data());
+                     weights_.mutable_cpu_data());
 
       //  put them into our multiplexed multiplier
       caffe_cpu_gemm(CblasTrans, CblasNoTrans,
@@ -144,7 +147,6 @@ void DiceCoefLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 												alpha*result_.cpu_data()[j]*Dtype(2),                      // beta
 												bottom[i]->mutable_cpu_diff()+j*bottom[i]->count(1)
 												);  // b
-
 			}
 			if (do_weight_)
 				caffe_mul(bottom[i]->count(), weight_multiplier_.cpu_data(), bottom[i]->cpu_data(),
