@@ -321,7 +321,7 @@ int train() {
 
 #ifdef USE_MLSL
   if (caffe::mn::is_multinode()) {
-    MPI_Barrier(MPI_COMM_WORLD);
+    caffe::mn::barrier();
     LOG(INFO) << "Configuring multinode setup";
     if (!caffe::mn::is_param_server()) {
       caffe::MultiSync<float> sync(solver);

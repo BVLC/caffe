@@ -180,7 +180,7 @@ void DetectionOutputLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       // Clean all outputs.
       if (output_format_ == "VOC") {
 #ifdef USE_MLSL
-        MPI_Barrier(MPI_COMM_WORLD);
+        mn::barrier();
 #endif
         boost::filesystem::path output_directory(output_directory_);
         for (map<int, string>::iterator it = label_to_name_.begin();
