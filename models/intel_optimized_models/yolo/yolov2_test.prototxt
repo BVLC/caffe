@@ -22,7 +22,7 @@ layer {
   data_param {
     #source: "examples/yolo/data/lmdb/test2007_lmdb"
     source: "/lustre/dataset/lmdb/voc/VOC0712_test_lmdb"
-    batch_size: 1 
+    batch_size: 8 
     backend: LMDB
   }
   annotated_data_param {

@@ -4,7 +4,7 @@ CAFFE_HOME=../..
 
 PROTO=$CAFFE_HOME/models/intel_optimized_models/yolo/yolov2_test.prototxt
 MODEL=$CAFFE_HOME/models/intel_optimized_models/yolo/yolov2_iter_80000.caffemodel
-ITER=500
+ITER=619
 
 echo $MODEL
 
