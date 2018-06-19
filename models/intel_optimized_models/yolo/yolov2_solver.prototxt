@@ -21,6 +21,6 @@ stageiter: 80000
 max_iter: 80000
 momentum: 0.9
 weight_decay: 0.0005
-snapshot: 2500
+snapshot: 500
 snapshot_prefix: "models/intel_optimized_models/yolo/yolov2"
 solver_mode: CPU
