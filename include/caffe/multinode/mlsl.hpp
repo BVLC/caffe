@@ -49,7 +49,13 @@ namespace caffe {
 
 #define MLSL_DEFAULT_COLOR -1
 
+    extern MLSL::Distribution *global_distrib;
+
     void init(int* argc, char** argv[]);
+
+    inline void barrier() {
+      global_distrib->Barrier(MLSL::GT_DATA);
+    }
 
     inline void free(void *addr) {
       return MLSL::Environment::GetEnv().Free(addr);
@@ -85,15 +91,11 @@ namespace caffe {
     }
 
     inline int get_world_size() {
-      int size = 0;
-      MPI_Comm_size(MPI_COMM_WORLD, &size);
-      return size;
+      return global_distrib->GetProcessCount(MLSL::GT_DATA);
     }
 
     inline int get_node_rank() {
-      int rank = -1;
-      MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-      return rank;
+      return global_distrib->GetProcessIdx(MLSL::GT_DATA);
     }
 
     inline int get_ppn() {
