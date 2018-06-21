@@ -57,7 +57,7 @@ void DiceCoefLossLayer<Dtype>::Reshape(
       // populate mask, can be transposed
       caffe_set(dim*nclasses_, Dtype(0.), mask_.mutable_cpu_data());
       for (unsigned int i = 0; i< nclasses_; ++i)
-        caffe_set(imgsize, Dtype(1.), mask_.mutable_cpu_data()[(dim+imgsize)*i]);
+        caffe_set(imgsize, Dtype(1.), mask_.mutable_cpu_data()+(dim+imgsize)*i);
       if (ignore_label_ != -1)
           caffe_set(imgsize, Dtype(0.), mask_.mutable_cpu_data()+(dim+imgsize)*ignore_label_);
       weight_multiplier_.ReshapeLike(*bottom[0]);
