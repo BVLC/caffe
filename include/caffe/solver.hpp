@@ -126,13 +126,11 @@ class Solver {
   virtual void ApplyUpdate() = 0;
 
  protected:
+  virtual void Solve(const char* resume_file,
+                     const NetParameter* net_param, const SolverState* state);
   string SnapshotFilename(const string& extension) const;
   string SnapshotToBinaryProto();
   string SnapshotToHDF5();
-
-  virtual void Solve(const char* resume_file,
-                     const NetParameter* net_param, const SolverState* state);
-
   // The test routine
   void TestAll();
   void Test(const int test_net_id = 0);
