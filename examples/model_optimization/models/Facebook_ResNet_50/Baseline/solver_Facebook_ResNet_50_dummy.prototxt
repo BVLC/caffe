@@ -1,0 +1,19 @@
+#net: "resnet_50_16_nodes_2k_batch_100_warmup3/train_val.prototxt"
+test_iter: 1000
+test_interval: 625
+test_initialization: false
+display: 40
+base_lr: 0.8
+lr_policy: "multistep"
+stepvalue:18750
+stepvalue:37500
+stepvalue:50000
+gamma: 0.1
+max_iter: 1	#62556 #56300
+#warmup_iter: 1876 #3125 # 1281167 / 2048 * 5 epochs
+#warmup_start_lr: 0.1
+momentum: 0.9
+weight_decay: 0.0001
+snapshot: 6250
+#snapshot_prefix: "resnet_50_16_nodes_2k_batch_100_warmup3"
+solver_mode: CPU
