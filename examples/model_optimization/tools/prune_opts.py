@@ -14,11 +14,11 @@ def prune_by_sum_min(weight, axis = 1):
     sorted_index = np.argsort(weight_sum)
     return sorted_index
 
-def measure_kl2(src, dst):
+def measure_entropy2(src, dst):
     kl = scipy.stats.entropy(src, dst)
     return kl
 
-def measure_kl(src):
+def measure_entropy(src):
     kl = -scipy.stats.entropy(src)
     return kl
 
@@ -35,8 +35,8 @@ def prune_by_kl(weight, ic_num, oc_num, k_size):
     kls = []
     for index in range(0, oc_num):
         weight_copy = np.fabs(copy.deepcopy(weight[index]).flatten())
-        weight_copy[weight_copy == 0] = 1e-6
-        kl = measure_kl(weight_copy)
+        weight_copy[weight_copy < 1e-6] = 1e-6
+        kl = measure_entropy(weight_copy)
         kls.append(kl)
 
     sorted_index = np.argsort(kls)
