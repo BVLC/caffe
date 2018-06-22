@@ -122,14 +122,17 @@ class Solver {
    */
   virtual inline const char* type() const { return ""; }
 
- protected:
-  virtual void Solve(const char* resume_file,
-                     const NetParameter* net_param, const SolverState* state);
   // Make and apply the update value for the current iteration.
   virtual void ApplyUpdate() = 0;
+
+ protected:
   string SnapshotFilename(const string& extension) const;
   string SnapshotToBinaryProto();
   string SnapshotToHDF5();
+
+  virtual void Solve(const char* resume_file,
+                     const NetParameter* net_param, const SolverState* state);
+
   // The test routine
   void TestAll();
   void Test(const int test_net_id = 0);
