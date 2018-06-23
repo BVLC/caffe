@@ -39,7 +39,8 @@ class DenseImageDataLayer : public BasePrefetchingDataLayer<Dtype> {
   int lines_id_;
   Blob<Dtype> transformed_label_;
   std::mt19937 rg_;
-  std::uniform_int_distribution<int> rd_;  
+  std::uniform_int_distribution<int> rd_;
+  int one_hot_nclasses_;
 };
 
 

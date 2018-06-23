@@ -1,4 +1,5 @@
 #include <opencv2/core/core.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 
 #include <fstream>  // NOLINT(readability/streams)
 #include <iostream>  // NOLINT(readability/streams)
@@ -42,6 +43,7 @@ void DenseImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bott
   const int crop_width  = this->layer_param_.dense_image_data_param().crop_width();
   const bool is_color  = this->layer_param_.dense_image_data_param().is_color();
   string root_folder = this->layer_param_.dense_image_data_param().root_folder();
+  one_hot_nclasses_ = this->layer_param_.dense_image_data_param().one_hot_nclasses();
 
   CHECK((new_height == 0 && new_width == 0) ||
       (new_height > 0 && new_width > 0)) << "Current implementation requires "
@@ -100,25 +102,52 @@ void DenseImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bott
       this->prefetch_[i].data_.Reshape(batch_size, channels, crop_size, crop_size);
       this->transformed_data_.Reshape(1, channels, crop_size, crop_size);
       // similarly reshape label data blobs
-      top[1]->Reshape(batch_size, 1, crop_size, crop_size);
-      this->prefetch_[i].label_.Reshape(batch_size, 1, crop_size, crop_size);
-      this->transformed_label_.Reshape(1, 1, crop_size, crop_size);
+      if (one_hot_nclasses_ == 0)
+        {
+          top[1]->Reshape(batch_size, 1, crop_size, crop_size);
+          this->prefetch_[i].label_.Reshape(batch_size, 1, crop_size, crop_size);
+          this->transformed_label_.Reshape(1, 1, crop_size, crop_size);
+        }
+      else
+        {
+          top[1]->Reshape(batch_size, one_hot_nclasses_, crop_size, crop_size);
+          this->prefetch_[i].label_.Reshape(batch_size, one_hot_nclasses_, crop_size, crop_size);
+          this->transformed_label_.Reshape(1, one_hot_nclasses_, crop_size, crop_size);
+        }
     } else if (crop_height > 0 && crop_width > 0) {
       top[0]->Reshape(batch_size, channels, crop_height, crop_width);
       this->prefetch_[i].data_.Reshape(batch_size, channels, crop_height, crop_width);
       this->transformed_data_.Reshape(1, channels, crop_height, crop_width);
       // similarly reshape label data blobs
-      top[1]->Reshape(batch_size, 1, crop_height, crop_width);
-      this->prefetch_[i].label_.Reshape(batch_size, 1, crop_height, crop_width);
-      this->transformed_label_.Reshape(1, 1, crop_height, crop_width);
+      if (one_hot_nclasses_ == 0)
+        {
+          top[1]->Reshape(batch_size, 1, crop_height, crop_width);
+          this->prefetch_[i].label_.Reshape(batch_size, 1, crop_height, crop_width);
+          this->transformed_label_.Reshape(1, 1, crop_height, crop_width);
+        }
+      else
+        {
+          top[1]->Reshape(batch_size, one_hot_nclasses_, crop_height, crop_width);
+          this->prefetch_[i].label_.Reshape(batch_size, one_hot_nclasses_, crop_height, crop_width);
+          this->transformed_label_.Reshape(1, one_hot_nclasses_, crop_height, crop_width);
+        }
     } else {
       top[0]->Reshape(batch_size, channels, height, width);
       this->prefetch_[i].data_.Reshape(batch_size, channels, height, width);
       this->transformed_data_.Reshape(1, channels, height, width);
       // similarly reshape label data blobs
-      top[1]->Reshape(batch_size, 1, height, width);
-      this->prefetch_[i].label_.Reshape(batch_size, 1, height, width);
-      this->transformed_label_.Reshape(1, 1, height, width);
+      if (one_hot_nclasses_ == 0)
+        {
+          top[1]->Reshape(batch_size, 1, height, width);
+          this->prefetch_[i].label_.Reshape(batch_size, 1, height, width);
+          this->transformed_label_.Reshape(1, 1, height, width);
+        }
+      else
+        {
+          top[1]->Reshape(batch_size, one_hot_nclasses_, height, width);
+          this->prefetch_[i].label_.Reshape(batch_size, one_hot_nclasses_, height, width);
+          this->transformed_label_.Reshape(1, one_hot_nclasses_, height, width);
+        }
     }
   }
   LOG(INFO) << "output data size: " << top[0]->num() << ","
@@ -161,8 +190,16 @@ void DenseImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
         cv_img.rows, cv_img.cols);
     this->transformed_data_.Reshape(1, cv_img.channels(),
         cv_img.rows, cv_img.cols);
-    batch->label_.Reshape(1, 1, cv_img.rows, cv_img.cols);
-    this->transformed_label_.Reshape(1, 1, cv_img.rows, cv_img.cols);
+    if (one_hot_nclasses_ == 0)
+      {
+        batch->label_.Reshape(1, 1, cv_img.rows, cv_img.cols);
+        this->transformed_label_.Reshape(1, 1, cv_img.rows, cv_img.cols);
+      }
+    else
+      {
+        batch->label_.Reshape(1, one_hot_nclasses_, cv_img.rows, cv_img.cols);
+        this->transformed_label_.Reshape(1, one_hot_nclasses_, cv_img.rows, cv_img.cols);
+      }
   }
   Dtype* prefetch_data = batch->data_.mutable_cpu_data();
   Dtype* prefetch_label = batch->label_.mutable_cpu_data();
@@ -175,9 +212,31 @@ void DenseImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     cv::Mat cv_img = ReadImageToCVMat(root_folder + lines_[lines_id_].first,
         new_height, new_width, is_color);
     CHECK(cv_img.data) << "Could not load " << lines_[lines_id_].first;
-    cv::Mat cv_lab = ReadImageToCVMat(root_folder + lines_[lines_id_].second,
-        new_height, new_width, false, true);
-    CHECK(cv_lab.data) << "Could not load " << lines_[lines_id_].second;
+    cv::Mat cv_lab;
+    if (one_hot_nclasses_ == 0)
+      {
+        cv_lab = ReadImageToCVMat(root_folder + lines_[lines_id_].second,
+                                  new_height, new_width, false, true);
+        CHECK(cv_lab.data) << "Could not load " << lines_[lines_id_].second;
+      }
+    else
+      {
+        cv::Mat cv_lab_orig = ReadImageToCVMat(root_folder + lines_[lines_id_].second,
+                                               new_height, new_width, false, true);
+        CHECK(cv_lab_orig.data) << "Could not load " << lines_[lines_id_].second;
+        cv_lab = cv::Mat(cv_lab_orig.rows,cv_lab_orig.cols,
+                         CV_MAKETYPE(cv_lab_orig.depth(),(one_hot_nclasses_)));
+				cv::Mat cv_chan;
+        int from_to[] = {0, 0};
+        for (int i=0; i<one_hot_nclasses_; ++i)
+          {
+            cv_chan = cv_lab_orig == i;
+            from_to[1]= i; // where to put newly computed channel
+						cv::threshold(cv_chan, cv_chan, 0.5, 1., cv::THRESH_BINARY);
+            cv::mixChannels(&cv_chan,1,&cv_lab, 1, from_to, 1);
+          }
+      }
+
     read_time += timer.MicroSeconds();
     timer.Start();
     // Apply random horizontal mirror of images
@@ -262,7 +321,10 @@ void DenseImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   }
   batch_timer.Stop();
   DLOG(INFO) << "Prefetch batch: " << batch_timer.MilliSeconds() << " ms.";
-  DLOG(INFO) << "     Read time: " << read_time / 1000 << " ms.";
+  if (one_hot_nclasses_ == 0)
+    DLOG(INFO) << "     Read time: " << read_time / 1000 << " ms.";
+  else
+		DLOG(INFO) << "     Read (+ one_hot_encoding of labels) time: " << read_time / 1000 << " ms.";
   DLOG(INFO) << "Transform time: " << trans_time / 1000 << " ms.";
 }
 

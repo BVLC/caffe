@@ -766,11 +766,13 @@ message ExpansionParameter {
 
 message DiceCoefLossParameter {
   enum GeneralizationMode {
-    NONE = 0; // ignore label 0
-    BINARY = 1; // do no ignore any label, not yet implemented
-    BINARY_WEIGHTED = 2; // generalized dice loss for two classes, not yet implemented
+    NONE = 0; // binary, ignore label 0
+    MULTICLASS = 1; // loss on all labels, number of labels =  input channel size
+    MULTICLASS_WEIGHTED = 2; // generalized + weigthed, weight = 1/|target|^2
   }
-  optional GeneralizationMode generalization = 3 [default = NONE];  
+  optional GeneralizationMode generalization = 3 [default = NONE];
+
+  optional int32 ignore_label = 4 [default = -1]; // set to zero to ignore label 0, e.g. background
 }
 
 // Message that stores parameters shared by loss layers
@@ -1133,6 +1135,8 @@ message DenseImageDataParameter {
   optional uint32 crop_width = 11 [default = 0];
   optional uint32 crop_height = 12 [default = 0];
   optional bool rotate = 13 [default = false];
+  // one_hot encoding of labels, if 0: normal, if != 0: number of classes ~ channels
+  optional uint32 one_hot_nclasses = 14 [default = 0];
 }
 
 message DropoutParameter {
