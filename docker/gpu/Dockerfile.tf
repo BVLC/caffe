@@ -107,7 +107,7 @@ RUN chmod -R 777 /home/jenkins
 
 RUN apt-get update && apt-get install -y --no-install-recommends \ 
     emacs \
-	  golang \
+    golang \
     python-dev 
          
 ################################	
