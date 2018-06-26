@@ -31,13 +31,11 @@ RUN apt-get update && \
     software-properties-common \
     python-dev \
     build-essential \
-    curl \
     git \
     iputils-ping \
     zip \
     unzip \
     tree \
-    nano \
     tzdata \
     mlocate \
     vim \
