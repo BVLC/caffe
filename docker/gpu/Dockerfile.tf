@@ -105,9 +105,10 @@ RUN chmod -R 777 /home/jenkins
 
 RUN apt-get update && apt-get install -y --no-install-recommends \ 
     emacs \
-    golang \
-    python-dev 
-         
+    golang && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+          
 ################################	
 # Updating PIP and Dependences #
 ################################
