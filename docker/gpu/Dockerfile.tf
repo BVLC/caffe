@@ -1,4 +1,4 @@
-FROM yi/caffe:gpu
+FROM yi/caffe:cpu
  
 LABEL MAINTAINER="Igor Rabkin<igor.rabkin@xiaoyi.com>"
 
