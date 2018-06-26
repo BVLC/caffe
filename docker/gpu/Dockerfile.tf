@@ -130,7 +130,7 @@ RUN pip --no-cache-dir install wheel
   ARG TFLOW=tensorflow-1.7.1-cp27-cp27mu-linux_x86_64.whl
   ARG CRED="server:123server123"
   RUN  curl -u ${CRED} ftp://yifileserver/DOCKER_IMAGES/Tensorflow/CPU/${TFLOW} -o ${TFLOW} && \
-       pip --no-cache-dir install --upgrade /${TFLOW} && \
+       pip --no-cache-dir install /${TFLOW} && \
        rm -f /${TFLOW}   
 
 
