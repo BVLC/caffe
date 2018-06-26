@@ -50,7 +50,7 @@ RUN  pip uninstall python-dateutil && \
      rm -rf python-dateutil-2.6.1 python-dateutil-2.6.1.tar.gz
 
 
-RUN git clone -b ${CLONE_TAG} --depth 1 https://github.com/BVLC/caffe.git . && \
+RUN git clone -b ${CAFFE_VERSION} --depth 1 https://github.com/igor71/caffe . && \
     pip install --upgrade pip && \
     cd python && for req in $(cat requirements.txt) pydot; do pip install $req; done && cd .. && \
     mkdir build && cd build && \
