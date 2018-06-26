@@ -1,11 +1,17 @@
 FROM ubuntu:16.04
-LABEL maintainer caffe-maint@googlegroups.com
+
+MAINTAINER Igor Rabkin <igor.rabkin@xiaoyi.com>
+
+ARG CAFFE_VERSION=1.0
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
         build-essential \
         cmake \
         git \
         wget \
+        curl \
+        nano \
+        doxygen \
         libatlas-base-dev \
         libboost-all-dev \
         libgflags-dev \
@@ -27,15 +33,28 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 ENV CAFFE_ROOT=/opt/caffe
 WORKDIR $CAFFE_ROOT
 
-# FIXME: use ARG instead of ENV once DockerHub supports this
-# https://github.com/docker/hub-feedback/issues/460
-ENV CLONE_TAG=1.0
+################################
+# Updating PIP and Dependences #
+################################
 
-RUN git clone -b ${CLONE_TAG} --depth 1 https://github.com/BVLC/caffe.git . && \
+RUN curl -fSsL -O https://bootstrap.pypa.io/get-pip.py && \
+    python get-pip.py && \
+    rm get-pip.py
+
+RUN  pip uninstall python-dateutil && \
+     wget https://pypi.python.org/packages/54/bb/f1db86504f7a49e1d9b9301531181b00a1c7325dc85a29160ee3eaa73a54/python-dateutil-2.6.1.tar.gz#md5=db38f6b4511cefd76014745bb0cc45a4 && \
+     tar -xvf python-dateutil-2.6.1.tar.gz && \
+     cd python-dateutil-2.6.1 && \
+     python setup.py install && \
+     cd .. && \
+     rm -rf python-dateutil-2.6.1 python-dateutil-2.6.1.tar.gz
+
+
+RUN git clone -b ${CAFFE_VERSION} --depth 1 https://github.com/igor71/caffe . && \
     pip install --upgrade pip && \
     cd python && for req in $(cat requirements.txt) pydot; do pip install $req; done && cd .. && \
     mkdir build && cd build && \
-    cmake -DCPU_ONLY=1 .. && \
+    cmake -D CPU_ONLY=1 .. && \
     make -j"$(nproc)"
 
 ENV PYCAFFE_ROOT $CAFFE_ROOT/python
