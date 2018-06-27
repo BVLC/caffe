@@ -13,12 +13,12 @@ namespace caffe {
 template<>
 void caffe_axpy<float>(const int_tp n, const float alpha, const float* X,
                        float* Y) {
-  cblas_saxpy(n, alpha, X, 1, Y, 1);
+  cblas_saxpy(n, alpha, X, int_tp(1), Y, int_tp(1));
 }
 template<>
 void caffe_axpy<double>(const int_tp n, const double alpha, const double* X,
                         double* Y) {
-  cblas_daxpy(n, alpha, X, 1, Y, 1);
+  cblas_daxpy(n, alpha, X, int_tp(1), Y, int_tp(1));
 }
 template<typename Dtype>
 void caffe_axpy(const int_tp n, const Dtype alpha,
@@ -43,17 +43,17 @@ template<>
 void caffe_axpby<half_fp>(const int_tp n,
                         const half_fp alpha, const half_fp* X,
                         const half_fp beta, half_fp* Y) {
-  cblas_haxpby(n, alpha, X, 1, beta, Y, 1);
+  cblas_haxpby(n, alpha, X, int_tp(1), beta, Y, int_tp(1));
 }
 template<>
 void caffe_axpby<float>(const int_tp n, const float alpha, const float* X,
                             const float beta, float* Y) {
-  cblas_saxpby(n, alpha, X, 1, beta, Y, 1);
+  cblas_saxpby(n, alpha, X, int_tp(1), beta, Y, int_tp(1));
 }
 template<>
 void caffe_axpby<double>(const int_tp n, const double alpha,
                              const double* X, const double beta, double* Y) {
-  cblas_daxpby(n, alpha, X, 1, beta, Y, 1);
+  cblas_daxpby(n, alpha, X, int_tp(1), beta, Y, int_tp(1));
 }
 template<typename Dtype>
 void caffe_axpby(const int_tp n, const Dtype alpha, const Dtype* X,
@@ -137,11 +137,11 @@ template uint64_t caffe_dot<uint64_t>(const int_tp n, const uint64_t* X,
 
 template<>
 float caffe_dot(const int_tp n, const float* X, const float* Y) {
-  return caffe_strided_dot(n, X, 1, Y, 1);
+  return caffe_strided_dot(n, X, int_tp(1), Y, int_tp(1));
 }
 template<>
 double caffe_dot(const int_tp n, const double* X, const double* Y) {
-  return caffe_strided_dot(n, X, 1, Y, 1);
+  return caffe_strided_dot(n, X, int_tp(1), Y, int_tp(1));
 }
 
 // ASUM
@@ -154,11 +154,11 @@ half_fp caffe_asum<half_fp>(const int_tp n, const half_fp* x) {
 }
 template<>
 float caffe_asum<float>(const int_tp n, const float* x) {
-  return cblas_sasum(n, x, 1);
+  return cblas_sasum(n, x, int_tp(1));
 }
 template<>
 double caffe_asum<double>(const int_tp n, const double* x) {
-  return cblas_dasum(n, x, 1);
+  return cblas_dasum(n, x, int_tp(1));
 }
 template<typename Dtype>
 Dtype caffe_asum(const int_tp n, const Dtype* x) {
@@ -196,25 +196,25 @@ template void caffe_scale<uint64_t>(const int_tp n, const uint64_t alpha,
 template<>
 void caffe_scale<float>(const int_tp n, const float alpha, const float *X,
                             float* Y) {
-  cblas_scopy(n, X, 1, Y, 1);
-  cblas_sscal(n, alpha, Y, 1);
+  cblas_scopy(n, X, int_tp(1), Y, int_tp(1));
+  cblas_sscal(n, alpha, Y, int_tp(1));
 }
 
 template<>
 void caffe_scale<double>(const int_tp n, const double alpha,
                              const double *X, double* Y) {
-  cblas_dcopy(n, X, 1, Y, 1);
-  cblas_dscal(n, alpha, Y, 1);
+  cblas_dcopy(n, X, int_tp(1), Y, int_tp(1));
+  cblas_dscal(n, alpha, Y, int_tp(1));
 }
 
 // SCAL
 template<>
 void caffe_scal<float>(const int_tp n, const float alpha, float *X) {
-  cblas_sscal(n, alpha, X, 1);
+  cblas_sscal(n, alpha, X, int_tp(1));
 }
 template<>
 void caffe_scal<double>(const int_tp n, const double alpha, double *X) {
-  cblas_dscal(n, alpha, X, 1);
+  cblas_dscal(n, alpha, X, int_tp(1));
 }
 template<typename Dtype>
 void caffe_scal(const int_tp n, const Dtype alpha, Dtype *X) {

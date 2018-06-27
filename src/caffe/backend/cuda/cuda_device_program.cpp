@@ -169,8 +169,8 @@ string CudaDeviceProgram::function(string name, KernelArgs args,
   ss << " extern \"C\" ";
   ss << "__global__ void " << std::endl;
 
-  int_tp max_threads_per_block = 0;
-  int_tp min_blocks_per_mp = 0;
+  int32_t max_threads_per_block = 0;
+  int32_t min_blocks_per_mp = 0;
   for (uint_tp i = 0; i < hints.size(); ++i) {
     switch(std::get<0>(hints[i])) {
       case KERNEL_REQD_WORK_GROUP_X:

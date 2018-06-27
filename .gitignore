@@ -87,9 +87,11 @@ build
 build_opencl
 build_cuda
 build_arm
+build_64
 .build_opencl
 .build_cuda
 .build_arm
+.build_64
 .build
 .build_debug/*
 .build_release/*
