@@ -25,8 +25,13 @@ else
 endif
 
 # All of the directories containing code.
-SRC_DIRS := $(shell find * -type d -exec bash -c "find {} -maxdepth 1 \
-	\( -name '*.cpp' -o -name '*.proto' \) | grep -q ." \; -print)
+ifeq ($(PYTORCH_LINK), 1)
+	SRC_DIRS := $(shell find * -type d -exec bash -c "find {} -maxdepth 1 \
+		\( -name '*.cpp' \) | grep -q ." \; -print)
+else
+	SRC_DIRS := $(shell find * -type d -exec bash -c "find {} -maxdepth 1 \
+		\( -name '*.cpp' -o -name '*.proto' \) | grep -q ." \; -print)
+endif
 
 # The target shared library name
 LIBRARY_NAME := $(PROJECT)
@@ -60,13 +65,20 @@ TOOL_SRCS := $(shell find tools -name "*.cpp")
 EXAMPLE_SRCS := $(shell find examples -name "*.cpp")
 # BUILD_INCLUDE_DIR contains any generated header files we want to include.
 BUILD_INCLUDE_DIR := $(BUILD_DIR)/src
+
+ifeq ($(PYTORCH_LINK), 1)
+	INCLUDE_DIRS += ../../../pytorch_root
+	LIBRARIES += caffe2_protos
+else
 # PROTO_SRCS are the protocol buffer definitions
-PROTO_SRC_DIR := src/$(PROJECT)/proto
-PROTO_SRCS := $(wildcard $(PROTO_SRC_DIR)/*.proto)
+	PROTO_SRC_DIR := src/$(PROJECT)/proto
+	PROTO_SRCS := $(wildcard $(PROTO_SRC_DIR)/*.proto)
 # PROTO_BUILD_DIR will contain the .cc and obj files generated from
 # PROTO_SRCS; PROTO_BUILD_INCLUDE_DIR will contain the .h header files
-PROTO_BUILD_DIR := $(BUILD_DIR)/$(PROTO_SRC_DIR)
-PROTO_BUILD_INCLUDE_DIR := $(BUILD_INCLUDE_DIR)/$(PROJECT)/proto
+	PROTO_BUILD_DIR := $(BUILD_DIR)/$(PROTO_SRC_DIR)
+	PROTO_BUILD_INCLUDE_DIR := $(BUILD_INCLUDE_DIR)/$(PROJECT)/proto
+endif
+
 # NONGEN_CXX_SRCS includes all source/header files except those generated
 # automatically (e.g., by proto).
 NONGEN_CXX_SRCS := $(shell find \
@@ -175,7 +187,7 @@ INCLUDE_DIRS += $(BUILD_INCLUDE_DIR) ./src ./include
 ifneq ($(CPU_ONLY), 1)
 	INCLUDE_DIRS += $(CUDA_INCLUDE_DIR)
 	LIBRARY_DIRS += $(CUDA_LIB_DIR)
-	LIBRARIES := cudart cublas cusparse curand
+	LIBRARIES += cudart cublas cusparse curand
 endif
 
 LIBRARIES += glog gflags protobuf boost_system boost_filesystem boost_regex m hdf5_hl hdf5
