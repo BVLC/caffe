@@ -879,10 +879,20 @@ void Net<Dtype>::CompilationRuleConvSumFusion(const NetParameter& param,
   bool switch_flag = false;
   bool next_layer_is_eltwise_flag = false;
   bool has_relu_flag = true;
+  bool need_fusion_flag;
+  std::set<string> invalid_fusion_blob_names;
 
   for (int i = 0; i < param.layer_size(); i++) {
     LayerParameter* layer_param =
         (const_cast<NetParameter&>(param)).mutable_layer(i);
+    
+    need_fusion_flag = true;
+    
+    if(layer_param->type().compare("Split") == 0 && layer_param->top_size() > 2) {
+      for(int j = 0; j < layer_param->top_size() - 1; j++) {
+        invalid_fusion_blob_names.insert(layer_param->top(j));
+      }
+    }
 
     if (layer_param->type().compare("Convolution") == 0 &&
         (layer_param->has_engine() == false ||
@@ -895,6 +905,19 @@ void Net<Dtype>::CompilationRuleConvSumFusion(const NetParameter& param,
 
       if (child_layers_params.size() > 0 &&
           child_layers_params[0]->type().compare("Eltwise") == 0) {
+        
+        for (int k = 0; k < child_layers_params[0]->bottom_size(); k++) {
+          if (invalid_fusion_blob_names.count(
+                  child_layers_params[0]->bottom(k)) > 0) {
+            need_fusion_flag = false;
+            break;
+          }
+        }
+        if (!need_fusion_flag) {
+          param_compiled->add_layer()->CopyFrom(*layer_param);
+          continue;
+        }
+
         std::vector<const LayerParameter*> grand_child_layers_params;
         Net<Dtype>::GetBlobConsumers(grand_child_layers_params,
                                      child_layers_params[0]->top(0), param,
