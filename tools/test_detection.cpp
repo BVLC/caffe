@@ -297,6 +297,10 @@ int test_detection() {
 }
 
 int main(int argc, char** argv) {
+#ifdef USE_MLSL
+  caffe::mn::init(&argc, &argv);
+#endif
+
   ::google::InitGoogleLogging(argv[0]);
   // Print output to stderr (while still logging).
   FLAGS_alsologtostderr = 1;
