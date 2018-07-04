@@ -730,7 +730,8 @@ void Net<Dtype>::CompilationRuleConvReluFusion(const NetParameter& param,
           convolution_top_blob_name.replace(0,
                                           scale_top_blob_name.size(),
                                           scale_top_blob_name);
-
+        }
+        if(!use_negative_slope) {
           layer_param->mutable_convolution_param()->set_relu(true);
           layer_param->mutable_convolution_param()->set_negative_slope(0);
         }
