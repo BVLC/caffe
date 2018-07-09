@@ -164,10 +164,15 @@ public:
     //For test the parameters of kernel/stride/pad
     int GetKernelWidth()  { return kernel_w_; }
     int GetKernelHeight() { return kernel_h_; }
+    int GetKernelDepth()  { return kernel_d_; }
+
     int GetStrideWidth()  { return stride_w_; }
     int GetStrideHeight() { return stride_h_; }
+    int GetStrideDepth()  { return stride_d_; }
+
     int GetPadWidth()     { return pad_w_; }
     int GetPadHeight()    { return pad_h_; }
+    int GetPadDepth()     { return pad_d_; }
 protected:
     virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
     virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
@@ -199,8 +204,8 @@ private:
     shared_ptr<primitive> fwd_bottom_data_primitive, fwd_weights_data_primitive, fwd_bias_data_primitive
                     , bwdd_top_diff_primitive, bwdd_weights_data_primitive
                     , bwdw_top_diff_primitive, bwdw_bottom_data_primitive;
-    int32_t width_, height_, width_out_, height_out_, kernel_w_, kernel_h_, stride_w_, stride_h_;
-    int  pad_w_, pad_h_;
+    int32_t width_, height_, depth_, width_out_, height_out_, depth_out_, kernel_w_, kernel_h_, kernel_d_, stride_w_, stride_h_, stride_d_;
+    int  pad_w_, pad_h_, pad_d_;
     mkldnn::algorithm  conv_algorithm;
 
     /* In case of (iter_size > 1) we need additional buffers */

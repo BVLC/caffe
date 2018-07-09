@@ -99,14 +99,24 @@ void MKLDNNSplitLayer<Dtype>::InitSplitBwd(const vector<Blob<Dtype>*>& bottom,
   memory::data_type data_type = memory::data_type::f32;
   // TODO: shouldn't we have format here that is well suited for earlier layer.
   // eg. Netcompiler should some of knowledge provided
-  memory::format mfmt_nchw = memory::format::nchw;
-  memory::format diff_dst_mfmt = mfmt_nchw;
+  memory::format data_mfmt;
+  memory::format diff_dst_mfmt;
+
+  size_t dim_src = bottom[0]->shape().size();
+  if (dim_src == 5) {
+    data_mfmt = memory::format::ncdhw;
+    diff_dst_mfmt = data_mfmt;
+  } else {
+    data_mfmt = memory::format::nchw;
+    diff_dst_mfmt = data_mfmt;
+  }
 
   // Dimensions of bottom and top blobs. There is a number of
   // top blobs each of the same size as the bottom one
   memory::dims bottom_tz;
-  bottom_tz.resize(4);
-  for(int i=0; i<4; i++) {
+  dim_src = std::max<size_t>((size_t)4, dim_src);
+  bottom_tz.resize(dim_src);
+  for(size_t i=0; i<dim_src; i++) {
     if(i < this->sizes_src_.size()) {
       bottom_tz[i] = static_cast<int>(this->sizes_src_[i]);
     } else {
@@ -116,7 +126,7 @@ void MKLDNNSplitLayer<Dtype>::InitSplitBwd(const vector<Blob<Dtype>*>& bottom,
 
   shared_ptr<memory::primitive_desc> prv_diff_dst_mpd;
   shared_ptr<memory::primitive_desc> usr_diff_dst_mpd(
-    new memory::primitive_desc({bottom_tz, data_type, mfmt_nchw},
+    new memory::primitive_desc({bottom_tz, data_type, data_mfmt},
         cpu_engine));
 
   // We will get final destination layout of bottom diff after first top...
@@ -137,7 +147,7 @@ void MKLDNNSplitLayer<Dtype>::InitSplitBwd(const vector<Blob<Dtype>*>& bottom,
 
   memory::dims top_tz = bottom_tz;
   shared_ptr<memory::primitive_desc> usr_diff_src_mpd(
-    new memory::primitive_desc({top_tz, data_type, mfmt_nchw},
+    new memory::primitive_desc({top_tz, data_type, data_mfmt},
         cpu_engine));
 
   // Gather diff descriptors of top difs (inputs for BW)
@@ -148,7 +158,7 @@ void MKLDNNSplitLayer<Dtype>::InitSplitBwd(const vector<Blob<Dtype>*>& bottom,
   bwd_top_diffs_primitives_at_.clear();
   for (int i = 0; i < top.size(); ++i) {
     // If diff is in private layout then copy descriptor from it
-    memory::format diff_src_mfmt = mfmt_nchw;
+    memory::format diff_src_mfmt = data_mfmt;
     bool top_diff_is_prv = top[i]->prv_diff() != NULL;
     if (top_diff_is_prv) {
       shared_ptr<MKLDNNMemoryDescriptor<Dtype, true> > mem_descr

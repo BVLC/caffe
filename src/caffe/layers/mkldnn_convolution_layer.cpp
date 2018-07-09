@@ -63,8 +63,8 @@ MKLDNNConvolutionLayer<Dtype>::MKLDNNConvolutionLayer(const LayerParameter& para
             , fwd_bottom_data_primitive(NULL), fwd_weights_data_primitive(NULL), fwd_bias_data_primitive(NULL)
             , bwdd_top_diff_primitive(NULL), bwdd_weights_data_primitive(NULL)
             , bwdw_top_diff_primitive(NULL), bwdw_bottom_data_primitive(NULL)
-            , width_(0), height_(0), width_out_(0), height_out_(0), kernel_w_(0), kernel_h_(0)
-            , stride_w_(0), stride_h_(0), pad_w_(0), pad_h_(0),
+            , width_(0), height_(0), depth_(0), width_out_(0), height_out_(0), depth_out_(0), kernel_w_(0), kernel_h_(0), kernel_d_(0)
+            , stride_w_(0), stride_h_(0), stride_d_(0), pad_w_(0), pad_h_(0), pad_d_(0),
             bwdw_weights_diff_iter(NULL),
             bwdw_bias_diff_iter(NULL),
             bwdw_weights_diff_memory_iter(NULL),
@@ -79,25 +79,56 @@ template <typename Dtype>
 void MKLDNNConvolutionLayer<Dtype>::compute_output_shape()
 {
     ConvolutionLayer<Dtype>::compute_output_shape();
-    CHECK_GT(this->output_shape_.size(), 1) << "Expect at least 2D spatial dimension!";
-    this->height_out_ = this->output_shape_[0];
-    this->width_out_ = this->output_shape_[1];
+    CHECK_GT(this->output_shape_.size(), 1) << "MKLDNN Convolution layer expects at least 2D spatial output dimension!";
+    CHECK_LT(this->output_shape_.size(), 4) << "MKLDNN Convolution layer expects at most 3D spatial output dimension!";
+    if (this->output_shape_.size() == 2) {
+      this->height_out_ = this->output_shape_[0];
+      this->width_out_ = this->output_shape_[1];
+    } else {
+      this->depth_out_ = this->output_shape_[0];
+      this->height_out_ = this->output_shape_[1];
+      this->width_out_ = this->output_shape_[2];
+    }
 }
 
 template <typename Dtype>
 void MKLDNNConvolutionLayer<Dtype>::init_properties(const vector<Blob<Dtype>*>& bottom
                                                 , const vector<Blob<Dtype>*>& top)
 {
-    this->stride_w_ = this->stride_.cpu_data()[1];
-    this->stride_h_ = this->stride_.cpu_data()[0];
-    this->width_ = bottom[0]->width();
-    this->height_ = bottom[0]->height();
-    this->channels_ = bottom[0]->channels();
-    this->num_ = bottom[0]->num();
-    this->pad_w_ = this->pad_.cpu_data()[1];
-    this->pad_h_ = this->pad_.cpu_data()[0];
-    this->kernel_w_ = this->kernel_shape_.cpu_data()[1];
-    this->kernel_h_  = this->kernel_shape_.cpu_data()[0];
+    CHECK_GT(this->num_spatial_axes_, 1) << "MKLDNN Convolution layer expects at least 2D spatial input dimension!";
+    CHECK_LT(this->num_spatial_axes_, 4) << "MKLDNN Convolution layer expects at most 3D spatial input dimension!";
+
+    this->num_ = bottom[0]->shape(0);
+    this->channels_ = bottom[0]->shape(1);
+    if (this->num_spatial_axes_ == 3) {
+      this->depth_ = bottom[0]->shape(2);
+      this->height_ = bottom[0]->shape(3);
+      this->width_ = bottom[0]->shape(4);
+
+      this->stride_d_ = this->stride_.cpu_data()[0];
+      this->stride_h_ = this->stride_.cpu_data()[1];
+      this->stride_w_ = this->stride_.cpu_data()[2];
+
+      this->pad_d_ = this->pad_.cpu_data()[0];
+      this->pad_h_ = this->pad_.cpu_data()[1];
+      this->pad_w_ = this->pad_.cpu_data()[2];
+
+      this->kernel_d_ = this->kernel_shape_.cpu_data()[0];
+      this->kernel_h_  = this->kernel_shape_.cpu_data()[1];
+      this->kernel_w_ = this->kernel_shape_.cpu_data()[2];
+    } else if (this->num_spatial_axes_ == 2) {
+      this->height_ = bottom[0]->shape(2);
+      this->width_ = bottom[0]->shape(3);
+
+      this->stride_h_ = this->stride_.cpu_data()[0];
+      this->stride_w_ = this->stride_.cpu_data()[1];
+
+      this->pad_h_ = this->pad_.cpu_data()[0];
+      this->pad_w_ = this->pad_.cpu_data()[1];
+
+      this->kernel_h_  = this->kernel_shape_.cpu_data()[0];
+      this->kernel_w_ = this->kernel_shape_.cpu_data()[1];
+    }
 
     string _conv_algorithm = this->layer_param_.convolution_param().conv_algorithm();
     if(_conv_algorithm == "direct")
@@ -141,10 +172,18 @@ void MKLDNNConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom
                                             , const vector<Blob<Dtype>*>& top)
 {
     VLOG(1) << " MKLDNNConvolutionLayer<Dtype>::Reshape: " << this->layer_param_.name();
-    this->reshape = (this->width_ == bottom[0]->width() &&
-                     this->height_ == bottom[0]->height() &&
-                     this->channels_ == bottom[0]->channels() &&
-                     this->num_ == bottom[0]->num()) ? false : true;
+    if (this->num_spatial_axes_ == 3) {
+      this->reshape = (this->depth_ == bottom[0]->shape(2) &&
+                       this->width_ == bottom[0]->shape(4) &&
+                       this->height_ == bottom[0]->shape(3) &&
+                       this->channels_ == bottom[0]->shape(1) &&
+                       this->num_ == bottom[0]->shape(0)) ? false : true;
+    } else if (this->num_spatial_axes_ == 2) {
+      this->reshape = (this->width_ == bottom[0]->shape(3) &&
+                       this->height_ == bottom[0]->shape(2) &&
+                       this->channels_ == bottom[0]->shape(1) &&
+                       this->num_ == bottom[0]->shape(0)) ? false : true;
+    }
     init_properties(bottom, top);
     BaseConvolutionLayer<Dtype>::ReshapeForMKL(bottom, top);
 #ifndef DISABLE_CONV_SUM_FUSION
@@ -173,21 +212,27 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
     int32_t iw = this->width_;
     int32_t ih = this->height_;
     int32_t ic = this->channels_;
+    int32_t id = this->depth_;
 
     int32_t ow = this->width_out_;
     int32_t oh = this->height_out_;
     int32_t oc = this->num_output_;
+    int32_t od = this->depth_out_;
 
     int32_t kw = this->kernel_w_;
     int32_t kh = this->kernel_h_;
+    int32_t kd = this->kernel_d_;
 
     int32_t sw = this->stride_w_;
     int32_t sh = this->stride_h_;
+    int32_t sd = this->stride_d_;
 
     int32_t pw = this->pad_w_;
     int32_t ph = this->pad_h_;
-    memory::dims convolutionStrides {sh, sw};
-    memory::dims padding {ph, pw};
+    int32_t pd = this->pad_d_;
+
+    memory::dims convolutionStrides;
+    memory::dims padding;
     memory::dims padding_r;
     memory::dims dilation;
     bool dilated_conv = false;
@@ -196,8 +241,19 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
       dilation.push_back(dilation_data[i] - 1);
       if (dilation_data[i] != 1) dilated_conv = true;
     }
-    padding_r.push_back((oh - 1) * sh - ih + ((kh - 1) * (dilation_data[0]) + 1) - ph);
-    padding_r.push_back((ow - 1) * sw - iw + ((kw - 1) * (dilation_data[1]) + 1) - pw);
+
+    if (this->num_spatial_axes_ == 3) {
+      convolutionStrides = {sd, sh, sw};
+      padding = {pd, ph, pw};
+      padding_r.push_back((od - 1) * sd - id + ((kd - 1) * (dilation_data[0]) + 1) - pd);
+      padding_r.push_back((oh - 1) * sh - ih + ((kh - 1) * (dilation_data[1]) + 1) - ph);
+      padding_r.push_back((ow - 1) * sw - iw + ((kw - 1) * (dilation_data[2]) + 1) - pw);
+    } else if (this->num_spatial_axes_ == 2) {
+      convolutionStrides = {sh, sw};
+      padding = {ph, pw};
+      padding_r.push_back((oh - 1) * sh - ih + ((kh - 1) * (dilation_data[0]) + 1) - ph);
+      padding_r.push_back((ow - 1) * sw - iw + ((kw - 1) * (dilation_data[1]) + 1) - pw);
+    }
 
     // ---- Initialize memory descriptors (fromat = any) to create convolution descriptor -------------
     memory::data_type mpcsn = memory::data_type::f32;
@@ -239,10 +295,21 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
     memory::data_type bias_dt = this->need_quantize_ ? memory::data_type::s32 : memory::data_type::f32;
     memory::format mfmt_any = memory::format::any;
 
-    memory::dims bottom_tz = {n, ic, ih, iw};
-    memory::dims bias_tz = {oc};
-    memory::dims top_tz = {n, oc, oh, ow};
-    memory::dims weights_tz = (g!= 1) ? memory::dims{g, oc/g, ic/g, kh, kw} : memory::dims{oc, ic, kh, kw};
+    memory::dims bottom_tz;
+    memory::dims bias_tz;
+    memory::dims top_tz;
+    memory::dims weights_tz;
+    if (this->num_spatial_axes_ == 3) {
+      bottom_tz = {n, ic, id, ih, iw};
+      bias_tz = {oc};
+      top_tz = {n, oc, od, oh, ow};
+      weights_tz = (g!= 1) ? memory::dims{g, oc/g, ic/g, kd, kh, kw} : memory::dims{oc, ic, kd, kh, kw};
+    } else if (this->num_spatial_axes_ == 2) {
+      bottom_tz = {n, ic, ih, iw};
+      bias_tz = {oc};
+      top_tz = {n, oc, oh, ow};
+      weights_tz = (g!= 1) ? memory::dims{g, oc/g, ic/g, kh, kw} : memory::dims{oc, ic, kh, kw};
+    }
 
     // ---- Memory descriptors for initializing of convolution primitive descriptor -------------
     memory::desc init_bottom_md({bottom_tz}, bottom_dt, mfmt_any);
@@ -365,14 +432,21 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
     info_mem_pd<Dtype>(prv_fwd_top_data_memory_pd, "conv_dst:" + this->layer_param_.name());
     
     // ---- Create usr memory primitive descriptors -------------
-    memory::format mfmt_nchw = memory::format::nchw;
-    memory::format weights_mfmt = (g!= 1) ? memory::format::goihw : memory::format::oihw;
+    memory::format data_mfmt;
+    memory::format weights_mfmt;
+    if (this->num_spatial_axes_ == 3) {
+      data_mfmt = memory::format::ncdhw;
+      weights_mfmt = (g!= 1) ? memory::format::goidhw : memory::format::oidhw;
+    } else if (this->num_spatial_axes_ == 2) {
+      data_mfmt = memory::format::nchw;
+      weights_mfmt = (g!= 1) ? memory::format::goihw : memory::format::oihw;
+    }
 
     // TODO: There should not be a problem to use this for Backward as well
     
-    shared_ptr<MemPD> usr_bottom_data_memory_pd(new MemPD({{bottom_tz}, mpcsn, mfmt_nchw}, cpu_engine));
+    shared_ptr<MemPD> usr_bottom_data_memory_pd(new MemPD({{bottom_tz}, mpcsn, data_mfmt}, cpu_engine));
     shared_ptr<MemPD> usr_bias_data_memory_pd(new MemPD({{bias_tz}, mpcsn, memory::format::x}, cpu_engine));
-    shared_ptr<MemPD> usr_top_data_memory_pd(new MemPD({{top_tz}, mpcsn, mfmt_nchw}, cpu_engine));
+    shared_ptr<MemPD> usr_top_data_memory_pd(new MemPD({{top_tz}, mpcsn, data_mfmt}, cpu_engine));
     shared_ptr<MemPD> usr_weights_data_memory_pd(new MemPD({{weights_tz}, mpcsn, weights_mfmt}, cpu_engine));
 
     // ---  init primitive and prv_memory descriptors ----------------------
@@ -500,21 +574,27 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionBwd(const vector<Blob<Dtype>*
     int32_t iw = this->width_;
     int32_t ih = this->height_;
     int32_t ic = this->channels_;
+    int32_t id = this->depth_;
 
     int32_t ow = this->width_out_;
     int32_t oh = this->height_out_;
+    int32_t od = this->depth_out_;
     int32_t oc = this->num_output_;
 
     int32_t kw = this->kernel_w_;
     int32_t kh = this->kernel_h_;
+    int32_t kd = this->kernel_d_;
 
     int32_t sw = this->stride_w_;
     int32_t sh = this->stride_h_;
+    int32_t sd = this->stride_d_;
 
     int32_t pw = this->pad_w_;
     int32_t ph = this->pad_h_;
-    memory::dims convolutionStrides {sh, sw};
-    memory::dims padding {ph, pw};
+    int32_t pd = this->pad_d_;
+
+    memory::dims convolutionStrides;
+    memory::dims padding;
     memory::dims padding_r;
     memory::dims dilation;
     bool dilated_conv = false;
@@ -523,17 +603,38 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionBwd(const vector<Blob<Dtype>*
       dilation.push_back(dilation_data[i] - 1);
       if (dilation_data[i] != 1) dilated_conv = true;
     }
-    padding_r.push_back((oh - 1) * sh - ih + ((kh - 1) * (dilation_data[0]) + 1) - ph);
-    padding_r.push_back((ow - 1) * sw - iw + ((kw - 1) * (dilation_data[1]) + 1) - pw);
+    if (this->num_spatial_axes_ == 3) {
+      convolutionStrides = {sd, sh, sw};
+      padding = {pd, ph, pw};
+      padding_r.push_back((od - 1) * sd - id + ((kd - 1) * (dilation_data[0]) + 1) - pd);
+      padding_r.push_back((oh - 1) * sh - ih + ((kh - 1) * (dilation_data[1]) + 1) - ph);
+      padding_r.push_back((ow - 1) * sw - iw + ((kw - 1) * (dilation_data[2]) + 1) - pw);
+    } else if (this->num_spatial_axes_ == 2) {
+      convolutionStrides = {sh, sw};
+      padding = {ph, pw};
+      padding_r.push_back((oh - 1) * sh - ih + ((kh - 1) * (dilation_data[0]) + 1) - ph);
+      padding_r.push_back((ow - 1) * sw - iw + ((kw - 1) * (dilation_data[1]) + 1) - pw);
+    }
 
     // ---- Initialize memory descriptors (fromat = any) to create convolution descriptor -------------
     memory::data_type mpcsn = memory::data_type::f32;
     memory::format mfmt_any = memory::format::any;
 
-    memory::dims bottom_tz = {n, ic, ih, iw};
-    memory::dims bias_tz = {oc};
-    memory::dims top_tz = {n, oc, oh, ow};
-    memory::dims weights_tz = ( g!= 1) ? memory::dims{g, oc/g, ic/g, kh, kw} : memory::dims{oc, ic, kh, kw};
+    memory::dims bottom_tz;
+    memory::dims bias_tz;
+    memory::dims top_tz;
+    memory::dims weights_tz;
+    if (this->num_spatial_axes_ == 3) {
+      bottom_tz = {n, ic, id, ih, iw};
+      bias_tz = {oc};
+      top_tz = {n, oc, od, oh, ow};
+      weights_tz = ( g!= 1) ? memory::dims{g, oc/g, ic/g, kd, kh, kw} : memory::dims{oc, ic, kd, kh, kw};
+    } else if (this->num_spatial_axes_ == 2) {
+      bottom_tz = {n, ic, ih, iw};
+      bias_tz = {oc};
+      top_tz = {n, oc, oh, ow};
+      weights_tz = ( g!= 1) ? memory::dims{g, oc/g, ic/g, kh, kw} : memory::dims{oc, ic, kh, kw};
+    }
 
     // ---- Memory descriptors for initializing of convolution primitive descriptor -------------
     memory::desc init_bottom_md({bottom_tz}, mpcsn, mfmt_any);
@@ -617,13 +718,19 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionBwd(const vector<Blob<Dtype>*
     shared_ptr<MemPD> prv_bwdw_weights_diff_memory_pd(new MemPD(convBwdWeights_pd->diff_weights_primitive_desc()));
 
     // ---- Create usr memory primitive descriptors -------------
-    memory::format mfmt_nchw = memory::format::nchw;
-    memory::format weights_mfmt = ( g!= 1) ? memory::format::goihw : memory::format::oihw;
-
+    memory::format data_mfmt;
+    memory::format weights_mfmt;
+    if (this->num_spatial_axes_ == 3) {
+      data_mfmt = memory::format::ncdhw;
+      weights_mfmt = ( g!= 1) ? memory::format::goidhw : memory::format::oidhw;
+    } else if (this->num_spatial_axes_ == 2) {
+      data_mfmt = memory::format::nchw;
+      weights_mfmt = ( g!= 1) ? memory::format::goihw : memory::format::oihw;
+    }
     // ???!!! can we use usr memory primitive descrittors for backward??
-    shared_ptr<MemPD> usr_bottom_data_memory_pd(new MemPD({{bottom_tz}, mpcsn, mfmt_nchw}, cpu_engine));
+    shared_ptr<MemPD> usr_bottom_data_memory_pd(new MemPD({{bottom_tz}, mpcsn, data_mfmt}, cpu_engine));
     shared_ptr<MemPD> usr_bias_data_memory_pd(new MemPD({{bias_tz}, mpcsn, memory::format::x}, cpu_engine));
-    shared_ptr<MemPD> usr_top_data_memory_pd(new MemPD({{top_tz}, mpcsn, mfmt_nchw}, cpu_engine));
+    shared_ptr<MemPD> usr_top_data_memory_pd(new MemPD({{top_tz}, mpcsn, data_mfmt}, cpu_engine));
     shared_ptr<MemPD> usr_weights_data_memory_pd(new MemPD({{weights_tz}, mpcsn, weights_mfmt}, cpu_engine));
 
 
