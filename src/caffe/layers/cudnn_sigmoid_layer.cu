@@ -5,11 +5,11 @@
 
 namespace caffe {
 
-template <typename Dtype>
-void CuDNNSigmoidLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-    const vector<Blob<Dtype>*>& top) {
-  const Dtype* bottom_data = bottom[0]->gpu_data();
-  Dtype* top_data = top[0]->mutable_gpu_data();
+template<typename Dtype, typename MItype, typename MOtype>
+void CuDNNSigmoidLayer<Dtype, MItype, MOtype>::Forward_gpu(const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
+  const Dtype* bottom_data = bottom[0]->gpu_data().get_cuda_ptr();
+  Dtype* top_data = top[0]->mutable_gpu_data().get_cuda_ptr();
 #if CUDNN_VERSION_MIN(5, 0, 0)
   CUDNN_CHECK(cudnnActivationForward(this->handle_,
         activ_desc_,
@@ -27,18 +27,19 @@ void CuDNNSigmoidLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 #endif
 }
 
-template <typename Dtype>
-void CuDNNSigmoidLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
+template<typename Dtype, typename MItype, typename MOtype>
+void CuDNNSigmoidLayer<Dtype, MItype, MOtype>::Backward_gpu(
+    const vector<Blob<MOtype>*>& top,
     const vector<bool>& propagate_down,
-    const vector<Blob<Dtype>*>& bottom) {
+    const vector<Blob<MItype>*>& bottom) {
   if (!propagate_down[0]) {
     return;
   }
 
-  const Dtype* top_data = top[0]->gpu_data();
-  const Dtype* top_diff = top[0]->gpu_diff();
-  const Dtype* bottom_data = bottom[0]->gpu_data();
-  Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
+  const Dtype* top_data = top[0]->gpu_data().get_cuda_ptr();
+  const Dtype* top_diff = top[0]->gpu_diff().get_cuda_ptr();
+  const Dtype* bottom_data = bottom[0]->gpu_data().get_cuda_ptr();
+  Dtype* bottom_diff = bottom[0]->mutable_gpu_diff().get_cuda_ptr();
 #if CUDNN_VERSION_MIN(5, 0, 0)
   CUDNN_CHECK(cudnnActivationBackward(this->handle_,
         activ_desc_,
@@ -58,7 +59,16 @@ void CuDNNSigmoidLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 #endif
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(CuDNNSigmoidLayer);
+
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(CuDNNSigmoidLayer, Forward_gpu,
+                                  (float), (float), (float));
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(CuDNNSigmoidLayer, Forward_gpu,
+                                  (double), (double), (double));
+
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(CuDNNSigmoidLayer, Backward_gpu,
+                                  (float), (float), (float));
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(CuDNNSigmoidLayer, Backward_gpu,
+                                  (double), (double), (double));
 
 }  // namespace caffe
 #endif

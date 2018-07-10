@@ -19,8 +19,8 @@ namespace caffe {
  *        channels. The number of axes of input blob should be greater than or
  *        equal to 2. The 1st axis (0-based) is seen as channels.
  */
-template <typename Dtype>
-class PReLULayer : public NeuronLayer<Dtype> {
+template<typename Dtype, typename MItype, typename MOtype>
+class PReLULayer : public NeuronLayer<Dtype, MItype, MOtype> {
  public:
   /**
    * @param param provides PReLUParameter prelu_param,
@@ -31,44 +31,44 @@ class PReLULayer : public NeuronLayer<Dtype> {
    *     negative slopes are shared across channels.
    */
   explicit PReLULayer(const LayerParameter& param)
-      : NeuronLayer<Dtype>(param) {}
+      : NeuronLayer<Dtype, MItype, MOtype>(param) {}
 
-  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
+  virtual void LayerSetUp(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
 
-  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
 
   virtual inline const char* type() const { return "PReLU"; }
 
  protected:
   /**
    * @param bottom input Blob vector (length 1)
-   *   -# @f$ (N \times C \times ...) @f$
-   *      the inputs @f$ x @f$
+   *   -# @f$ (n \times c \times ...) @f$
+   *      the inputs @f$ X @f$
    * @param top output Blob vector (length 1)
-   *   -# @f$ (N \times C \times ...) @f$
+   *   -# @f$ (n \times c \times ...) @f$
    *      the computed outputs for each channel @f$i@f$ @f$
    *        y_i = \max(0, x_i) + a_i \min(0, x_i)
    *      @f$.
    */
-  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
-  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_cpu(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
 
   /**
    * @brief Computes the error gradient w.r.t. the PReLU inputs.
    *
    * @param top output Blob vector (length 1), providing the error gradient with
    *      respect to the outputs
-   *   -# @f$ (N \times C \times ...) @f$
-   *      containing error gradients @f$ \frac{\partial E}{\partial y} @f$
-   *      with respect to computed outputs @f$ y @f$
+   *   -# @f$ (n \times c \times ...) @f$
+   *      containing error gradients @f$ \frac{\partial E}{\partial Y} @f$
+   *      with respect to computed outputs @f$ Y @f$
    * @param propagate_down see Layer::Backward.
    * @param bottom input Blob vector (length 1)
-   *   -# @f$ (N \times C \times ...) @f$
-   *      the inputs @f$ x @f$; For each channel @f$i@f$, backward fills their
+   *   -# @f$ (n \times c \times ...) @f$
+   *      the inputs @f$ X @f$; For each channel @f$i@f$, backward fills their
    *      diff with gradients @f$
    *        \frac{\partial E}{\partial x_i} = \left\{
    *        \begin{array}{lr}
@@ -85,15 +85,22 @@ class PReLULayer : public NeuronLayer<Dtype> {
    *        \end{array} \right.
    *      @f$.
    */
-  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
-  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_cpu(const vector<Blob<MOtype>*>& top,
+      const vector<bool>& propagate_down,
+      const vector<Blob<MItype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<MOtype>*>& top,
+      const vector<bool>& propagate_down,
+      const vector<Blob<MItype>*>& bottom);
+
+  virtual void GenerateProgram();
 
   bool channel_shared_;
-  Blob<Dtype> multiplier_;  // dot multiplier for backward computation of params
-  Blob<Dtype> backward_buff_;  // temporary buffer for backward computation
-  Blob<Dtype> bottom_memory_;  // memory for in-place computation
+  // dot multiplier for backward computation of params
+  Blob<Dtype> multiplier_;
+  // temporary buffer for backward computation
+  Blob<Dtype> backward_buff_;
+  // memory for in-place computation
+  Blob<Dtype> bottom_memory_;
 };
 
 }  // namespace caffe

@@ -4,8 +4,13 @@
 #ifndef CAFFE_CAFFE_HPP_
 #define CAFFE_CAFFE_HPP_
 
+#include "backend/cuda/cuda_device.hpp"
+#include "backend/opencl/ocl_device.hpp"
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
+#include "caffe/definitions.hpp"
+#include "caffe/backend/backend.hpp"
+#include "caffe/backend/device.hpp"
 #include "caffe/filler.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/layer_factory.hpp"
@@ -17,5 +22,7 @@
 #include "caffe/util/benchmark.hpp"
 #include "caffe/util/io.hpp"
 #include "caffe/util/upgrade_proto.hpp"
+
+
 
 #endif  // CAFFE_CAFFE_HPP_

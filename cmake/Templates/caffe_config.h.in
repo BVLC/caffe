@@ -1,3 +1,6 @@
+#ifndef CAFFE_CONFIG_HPP_
+#define CAFFE_CONFIG_HPP_
+
 /* Sources directory */
 #define SOURCE_FOLDER "${PROJECT_SOURCE_DIR}"
 
@@ -7,6 +10,13 @@
 /* This is an absolute path so that we can run test from any build
  * directory */
 #define ABS_TEST_DATA_DIR "${PROJECT_SOURCE_DIR}/src/caffe/test/test_data/"
+#define EXAMPLES_SOURCE_DIR "${PROJECT_SOURCE_DIR}/examples/"
 
+#ifdef USE_CUDA
 /* Test device */
 #define CUDA_TEST_DEVICE ${CUDA_TEST_DEVICE}
+#endif  // USE_CUDA
+
+#define CAFFE_STORAGE_PATH_OVERRIDE "${CAFFE_STORAGE_PATH_OVERRIDE}"
+
+#endif  // CAFFE_CONFIG_HPP_

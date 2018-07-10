@@ -1566,10 +1566,6 @@ def CheckForMultilineCommentsAndStrings(filename, clean_lines, linenum, error):
 
 
 caffe_alt_function_list = (
-    ('memset', ['caffe_set', 'caffe_memset']),
-    ('cudaMemset', ['caffe_gpu_set', 'caffe_gpu_memset']),
-    ('memcpy', ['caffe_copy']),
-    ('cudaMemcpy', ['caffe_copy', 'caffe_gpu_memcpy']),
     )
 
 

@@ -1,3 +1,4 @@
+#ifdef USE_HDF5
 #include <string>
 #include <vector>
 
@@ -43,10 +44,10 @@ class HDF5OutputLayerTest : public MultiDeviceTest<TypeParam> {
   Blob<Dtype>* const blob_label_;
   vector<Blob<Dtype>*> blob_bottom_vec_;
   vector<Blob<Dtype>*> blob_top_vec_;
-  int num_;
-  int channels_;
-  int height_;
-  int width_;
+  int_tp num_;
+  int_tp channels_;
+  int_tp height_;
+  int_tp width_;
 };
 
 template<typename TypeParam>
@@ -56,10 +57,10 @@ void HDF5OutputLayerTest<TypeParam>::CheckBlobEqual(const Blob<Dtype>& b1,
   EXPECT_EQ(b1.channels(), b2.channels());
   EXPECT_EQ(b1.height(), b2.height());
   EXPECT_EQ(b1.width(), b2.width());
-  for (int n = 0; n < b1.num(); ++n) {
-    for (int c = 0; c < b1.channels(); ++c) {
-      for (int h = 0; h < b1.height(); ++h) {
-        for (int w = 0; w < b1.width(); ++w) {
+  for (int_tp n = 0; n < b1.num(); ++n) {
+    for (int_tp c = 0; c < b1.channels(); ++c) {
+      for (int_tp h = 0; h < b1.height(); ++h) {
+        for (int_tp w = 0; w < b1.width(); ++w) {
           EXPECT_EQ(b1.data_at(n, c, h, w), b2.data_at(n, c, h, w));
         }
       }
@@ -67,7 +68,7 @@ void HDF5OutputLayerTest<TypeParam>::CheckBlobEqual(const Blob<Dtype>& b1,
   }
 }
 
-TYPED_TEST_CASE(HDF5OutputLayerTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(HDF5OutputLayerTest, TestDtypesFloatAndDevices);
 
 TYPED_TEST(HDF5OutputLayerTest, TestForward) {
   typedef typename TypeParam::Dtype Dtype;
@@ -93,7 +94,7 @@ TYPED_TEST(HDF5OutputLayerTest, TestForward) {
   // This code block ensures that the layer is deconstructed and
   //   the output hdf5 file is closed.
   {
-    HDF5OutputLayer<Dtype> layer(param);
+    HDF5OutputLayer<Dtype, Dtype, Dtype> layer(param);
     layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     EXPECT_EQ(layer.file_name(), this->output_file_name_);
     layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
@@ -120,3 +121,4 @@ TYPED_TEST(HDF5OutputLayerTest, TestForward) {
 }
 
 }  // namespace caffe
+#endif  // USE_HDF5

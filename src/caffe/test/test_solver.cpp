@@ -35,13 +35,13 @@ class SolverTest : public MultiDeviceTest<TypeParam> {
       default:
         LOG(FATAL) << "Unknown Caffe mode: " << Caffe::mode();
     }
-    solver_.reset(new SGDSolver<Dtype>(param));
+    solver_.reset(new SGDSolver<Dtype>(param, Caffe::GetDefaultDevice()));
   }
 
   shared_ptr<Solver<Dtype> > solver_;
 };
 
-TYPED_TEST_CASE(SolverTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(SolverTest, TestDtypesFloatAndDevices);
 
 TYPED_TEST(SolverTest, TestInitTrainTestNets) {
   const string& proto =

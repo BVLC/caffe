@@ -18,7 +18,7 @@ for specifying nets. In particular, the automatically generated layer names
 are not guaranteed to be forward-compatible.
 """
 
-from collections import OrderedDict, Counter
+from collections import OrderedDict, Counter, Iterable
 
 from .proto import caffe_pb2
 from google import protobuf
@@ -76,8 +76,12 @@ def assign_proto(proto, name, val):
         for k, v in six.iteritems(val):
             assign_proto(getattr(proto, name), k, v)
     else:
-        setattr(proto, name, val)
-
+        try:
+            setattr(proto, name, val)
+        except (AttributeError):
+            getattr(proto, name).append(val)
+        except (TypeError):
+            getattr(proto, name).MergeFrom(val)
 
 class Top(object):
     """A Top specifies a single output blob (which could be one of several
@@ -86,6 +90,7 @@ class Top(object):
     def __init__(self, fn, n):
         self.fn = fn
         self.n = n
+        self.name = None
 
     def to_proto(self):
         """Generate a NetParameter that contains all layers needed to compute
@@ -94,7 +99,21 @@ class Top(object):
         return to_proto(self)
 
     def _to_proto(self, layers, names, autonames):
-        return self.fn._to_proto(layers, names, autonames)
+        if (isinstance(self.fn, Iterable)):
+            returns = []
+            first = None
+            for fn in self.fn:
+                if (first == None):
+                    returns = returns + [fn._to_proto(layers, names, autonames)]
+                    first = fn
+                else:
+                    names[fn] = names[first]
+                    for firsttop, nexttop in zip(first.tops, fn.tops):
+                        names[nexttop] = names[firsttop]
+                    returns = returns + [fn._to_proto(layers, names, autonames)]
+            return returns
+        else:
+            return self.fn._to_proto(layers, names, autonames)
 
 
 class Function(object):
@@ -102,9 +121,10 @@ class Function(object):
     are Tops from other layers)."""
 
     def __init__(self, type_name, inputs, params):
+        self.name = None
         self.type_name = type_name
         for index, input in enumerate(inputs):
-            if not isinstance(input, Top):
+            if not isinstance(input, Top) and not isinstance(input, Iterable):
                 raise TypeError('%s input %d is not a Top (type is %s)' %
                                 (type_name, index, type(input)))
         self.inputs = inputs
@@ -128,8 +148,11 @@ class Function(object):
 
     def _get_top_name(self, top, names, autonames):
         if top not in names:
-            autonames[top.fn.type_name] += 1
-            names[top] = top.fn.type_name + str(autonames[top.fn.type_name])
+            if top.name != None:
+                names[top] = top.name
+            else:
+                autonames[top.fn.type_name] += 1
+                names[top] = top.fn.type_name + str(autonames[top.fn.type_name])
         return names[top]
 
     def _to_proto(self, layers, names, autonames):
@@ -137,8 +160,22 @@ class Function(object):
             return
         bottom_names = []
         for inp in self.inputs:
-            inp._to_proto(layers, names, autonames)
-            bottom_names.append(layers[inp.fn].top[inp.n])
+            # Test if the input is a single top element or a bundle
+            if (isinstance(inp, Iterable)):
+                first = None
+                for subinp in inp:
+                    if (first == None):
+                        # First function name in a bundle is chosen normally
+                        subinp._to_proto(layers, names, autonames)
+                        bottom_names.append(layers[subinp.fn].top[subinp.n])
+                        first = subinp
+                    else:
+                        # Transfer the name to each bundled function
+                        names[subinp.n] = layers[first.fn].top[first.n]
+                        subinp._to_proto(layers, names, autonames)
+            else:
+                inp._to_proto(layers, names, autonames)
+                bottom_names.append(layers[inp.fn].top[inp.n])
         layer = caffe_pb2.LayerParameter()
         layer.type = self.type_name
         layer.bottom.extend(bottom_names)
@@ -186,11 +223,26 @@ class NetSpec(object):
         return self.__getattr__(item)
 
     def to_proto(self):
-        names = {v: k for k, v in six.iteritems(self.tops)}
+        names = {(v if (not isinstance(v, Iterable)) else frozenset(v)): (v.name if (not isinstance(v, Iterable) and v.name != None) else k) for k, v in six.iteritems(self.tops)}
         autonames = Counter()
         layers = OrderedDict()
+        # First pass to propagate top names
         for name, top in six.iteritems(self.tops):
-            top._to_proto(layers, names, autonames)
+            if (isinstance(top, Iterable)):
+                first = None
+                for subtop in top:
+                    if (first == None):
+                        names[subtop] = name
+                        first = subtop
+                    else:
+                        names[subtop] = names[first]
+        
+        # Second pass to call to_proto for all tops (and functions)
+        for name, top in six.iteritems(self.tops):
+            if (isinstance(top, Iterable)):
+                subtop._to_proto(layers, names, autonames)
+            else:
+                top._to_proto(layers, names, autonames)
         net = caffe_pb2.NetParameter()
         net.layer.extend(layers.values())
         return net

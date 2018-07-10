@@ -1,0 +1,53 @@
+SET(FFTW3F_INCLUDE_SEARCH_PATHS
+  /usr/include
+  /usr/local/include
+  /opt/fftw3/include
+  $ENV{FFTW3F_HOME}
+  $ENV{FFTW3F_HOME}/include
+)
+
+SET(FFTW3F_LIB_SEARCH_PATHS
+        /lib/
+        /lib64/
+        /usr/lib
+        /usr/lib64
+        /usr/local/lib
+        /usr/local/lib64
+        /opt/fftw3f/lib
+        $ENV{FFTW3F_HOME}
+        $ENV{FFTW3F_HOME}/lib
+ )
+
+FIND_PATH(FFTW3F_INCLUDE_DIR NAMES fftw3.h PATHS ${FFTW3F_INCLUDE_SEARCH_PATHS})
+FIND_LIBRARY(FFTW3F_LIBRARY NAMES fftw3f PATHS ${FFTW3F_LIB_SEARCH_PATHS})
+
+SET(FFTW3F_FOUND ON)
+
+#    Check include files
+IF(NOT FFTW3F_INCLUDE_DIR)
+    SET(FFTW3F_FOUND OFF)
+    MESSAGE(STATUS "Could not find FFTW3F include. Turning FFTW3F_FOUND off")
+ENDIF()
+
+#    Check libraries
+IF(NOT FFTW3F_LIBRARY)
+    SET(FFTW3F_FOUND OFF)
+    MESSAGE(STATUS "Could not find FFTW3F lib. Turning FFTW3F_FOUND off")
+ENDIF()
+
+IF (FFTW3F_FOUND)
+  IF (NOT FFTW3F_FIND_QUIETLY)
+    MESSAGE(STATUS "Found FFTW3F libraries: ${FFTW3F_LIBRARY}")
+    MESSAGE(STATUS "Found FFTW3F include: ${FFTW3F_INCLUDE_DIR}")
+  ENDIF (NOT FFTW3F_FIND_QUIETLY)
+ELSE (FFTW3F_FOUND)
+  IF (FFTW3F_FIND_REQUIRED)
+    MESSAGE(FATAL_ERROR "Could not find FFTW3F")
+  ENDIF (FFTW3F_FIND_REQUIRED)
+ENDIF (FFTW3F_FOUND)
+
+MARK_AS_ADVANCED(
+    FFTW3F_INCLUDE_DIR
+    FFTW3F_LIBRARY
+)
+

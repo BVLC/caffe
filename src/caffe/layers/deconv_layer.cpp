@@ -4,31 +4,15 @@
 
 namespace caffe {
 
-template <typename Dtype>
-void DeconvolutionLayer<Dtype>::compute_output_shape() {
-  const int* kernel_shape_data = this->kernel_shape_.cpu_data();
-  const int* stride_data = this->stride_.cpu_data();
-  const int* pad_data = this->pad_.cpu_data();
-  const int* dilation_data = this->dilation_.cpu_data();
-  this->output_shape_.clear();
-  for (int i = 0; i < this->num_spatial_axes_; ++i) {
-    // i + 1 to skip channel axis
-    const int input_dim = this->input_shape(i + 1);
-    const int kernel_extent = dilation_data[i] * (kernel_shape_data[i] - 1) + 1;
-    const int output_dim = stride_data[i] * (input_dim - 1)
-        + kernel_extent - 2 * pad_data[i];
-    this->output_shape_.push_back(output_dim);
-  }
-}
-
-template <typename Dtype>
-void DeconvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {
+template<typename Dtype, typename MItype, typename MOtype>
+void DeconvolutionLayer<Dtype, MItype, MOtype>::Forward_cpu(
+      const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top) {
   const Dtype* weight = this->blobs_[0]->cpu_data();
-  for (int i = 0; i < bottom.size(); ++i) {
+  for (int_tp i = 0; i < bottom.size(); ++i) {
     const Dtype* bottom_data = bottom[i]->cpu_data();
     Dtype* top_data = top[i]->mutable_cpu_data();
-    for (int n = 0; n < this->num_; ++n) {
+    for (int_tp n = 0; n < this->num_; ++n) {
       this->backward_cpu_gemm(bottom_data + n * this->bottom_dim_, weight,
           top_data + n * this->top_dim_);
       if (this->bias_term_) {
@@ -39,24 +23,26 @@ void DeconvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   }
 }
 
-template <typename Dtype>
-void DeconvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+template<typename Dtype, typename MItype, typename MOtype>
+void DeconvolutionLayer<Dtype, MItype, MOtype>::Backward_cpu(
+     const vector<Blob<MOtype>*>& top,
+     const vector<bool>& propagate_down,
+     const vector<Blob<MItype>*>& bottom) {
   const Dtype* weight = this->blobs_[0]->cpu_data();
   Dtype* weight_diff = this->blobs_[0]->mutable_cpu_diff();
-  for (int i = 0; i < top.size(); ++i) {
+  for (int_tp i = 0; i < top.size(); ++i) {
     const Dtype* top_diff = top[i]->cpu_diff();
     const Dtype* bottom_data = bottom[i]->cpu_data();
     Dtype* bottom_diff = bottom[i]->mutable_cpu_diff();
     // Bias gradient, if necessary.
     if (this->bias_term_ && this->param_propagate_down_[1]) {
       Dtype* bias_diff = this->blobs_[1]->mutable_cpu_diff();
-      for (int n = 0; n < this->num_; ++n) {
+      for (int_tp n = 0; n < this->num_; ++n) {
         this->backward_cpu_bias(bias_diff, top_diff + n * this->top_dim_);
       }
     }
     if (this->param_propagate_down_[0] || propagate_down[i]) {
-      for (int n = 0; n < this->num_; ++n) {
+      for (int_tp n = 0; n < this->num_; ++n) {
         // Gradient w.r.t. weight. Note that we will accumulate diffs.
         if (this->param_propagate_down_[0]) {
           this->weight_cpu_gemm(top_diff + n * this->top_dim_,
@@ -78,6 +64,18 @@ void DeconvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 STUB_GPU(DeconvolutionLayer);
 #endif
 
-INSTANTIATE_CLASS(DeconvolutionLayer);
+
+INSTANTIATE_CLASS_3T_GUARDED(DeconvolutionLayer,
+                             (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(DeconvolutionLayer,
+                             (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(DeconvolutionLayer,
+                             (uint8_t), (uint8_t), (uint8_t));
+INSTANTIATE_CLASS_3T_GUARDED(DeconvolutionLayer,
+                             (uint16_t), (uint16_t), (uint16_t));
+INSTANTIATE_CLASS_3T_GUARDED(DeconvolutionLayer,
+                             (uint32_t), (uint32_t), (uint32_t));
+INSTANTIATE_CLASS_3T_GUARDED(DeconvolutionLayer,
+                             (uint64_t), (uint64_t), (uint64_t));
 
 }  // namespace caffe

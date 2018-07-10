@@ -5,11 +5,12 @@
 
 namespace caffe {
 
-template <typename Dtype>
-void CuDNNLCNLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-    const vector<Blob<Dtype>*>& top) {
-  const Dtype* bottom_data = bottom[0]->gpu_data();
-  Dtype* top_data = top[0]->mutable_gpu_data();
+template<typename Dtype, typename MItype, typename MOtype>
+void CuDNNLCNLayer<Dtype, MItype, MOtype>::Forward_gpu(
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
+  const Dtype* bottom_data = bottom[0]->gpu_data().get_cuda_ptr();
+  Dtype* top_data = top[0]->mutable_gpu_data().get_cuda_ptr();
 
   CUDNN_CHECK(cudnnDivisiveNormalizationForward(
         handle_, norm_desc_, CUDNN_DIVNORM_PRECOMPUTED_MEANS,
@@ -21,13 +22,14 @@ void CuDNNLCNLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
         top_desc_, top_data) );
 }
 
-template <typename Dtype>
-void CuDNNLCNLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
-    const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
-  const Dtype* top_diff = top[0]->gpu_diff();
-  const Dtype* top_data = top[0]->gpu_data();
-  const Dtype* bottom_data = bottom[0]->gpu_data();
-  Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
+template<typename Dtype, typename MItype, typename MOtype>
+void CuDNNLCNLayer<Dtype, MItype, MOtype>::Backward_gpu(
+    const vector<Blob<MOtype>*>& top,
+    const vector<bool>& propagate_down, const vector<Blob<MItype>*>& bottom) {
+  const Dtype* top_diff = top[0]->gpu_diff().get_cuda_ptr();
+  const Dtype* top_data = top[0]->gpu_data().get_cuda_ptr();
+  const Dtype* bottom_data = bottom[0]->gpu_data().get_cuda_ptr();
+  Dtype* bottom_diff = bottom[0]->mutable_gpu_diff().get_cuda_ptr();
 
   CUDNN_CHECK(cudnnDivisiveNormalizationBackward(
         handle_, norm_desc_, CUDNN_DIVNORM_PRECOMPUTED_MEANS,
@@ -40,7 +42,16 @@ void CuDNNLCNLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         NULL) );
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(CuDNNLCNLayer);
+
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(CuDNNLCNLayer, Forward_gpu,
+                                  (float), (float), (float));
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(CuDNNLCNLayer, Forward_gpu,
+                                  (double), (double), (double));
+
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(CuDNNLCNLayer, Backward_gpu,
+                                  (float), (float), (float));
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(CuDNNLCNLayer, Backward_gpu,
+                                  (double), (double), (double));
 
 }  // namespace caffe
 #endif

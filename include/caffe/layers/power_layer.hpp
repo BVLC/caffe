@@ -12,12 +12,12 @@
 namespace caffe {
 
 /**
- * @brief Computes @f$ y = (\alpha x + \beta) ^ \gamma @f$,
+ * @brief Computes @f$ Y = (\alpha X + \beta) ^ \gamma @f$,
  *        as specified by the scale @f$ \alpha @f$, shift @f$ \beta @f$,
  *        and power @f$ \gamma @f$.
  */
-template <typename Dtype>
-class PowerLayer : public NeuronLayer<Dtype> {
+template<typename Dtype, typename MItype, typename MOtype>
+class PowerLayer : public NeuronLayer<Dtype, MItype, MOtype> {
  public:
   /**
    * @param param provides PowerParameter power_param,
@@ -27,52 +27,54 @@ class PowerLayer : public NeuronLayer<Dtype> {
    *   - power (\b optional, default 1) the power @f$ \gamma @f$
    */
   explicit PowerLayer(const LayerParameter& param)
-      : NeuronLayer<Dtype>(param) {}
-  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
+      : NeuronLayer<Dtype, MItype, MOtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
 
   virtual inline const char* type() const { return "Power"; }
 
  protected:
   /**
    * @param bottom input Blob vector (length 1)
-   *   -# @f$ (N \times C \times H \times W) @f$
-   *      the inputs @f$ x @f$
+   *   -# @f$ (n \times c \times H \times W) @f$
+   *      the inputs @f$ X @f$
    * @param top output Blob vector (length 1)
-   *   -# @f$ (N \times C \times H \times W) @f$
+   *   -# @f$ (n \times c \times H \times W) @f$
    *      the computed outputs @f$
-   *        y = (\alpha x + \beta) ^ \gamma
+   *        Y = (\alpha X + \beta) ^ \gamma
    *      @f$
    */
-  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
-  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_cpu(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
 
   /**
    * @brief Computes the error gradient w.r.t. the power inputs.
    *
    * @param top output Blob vector (length 1), providing the error gradient with
    *      respect to the outputs
-   *   -# @f$ (N \times C \times H \times W) @f$
-   *      containing error gradients @f$ \frac{\partial E}{\partial y} @f$
-   *      with respect to computed outputs @f$ y @f$
+   *   -# @f$ (n \times c \times H \times W) @f$
+   *      containing error gradients @f$ \frac{\partial E}{\partial Y} @f$
+   *      with respect to computed outputs @f$ Y @f$
    * @param propagate_down see Layer::Backward.
    * @param bottom input Blob vector (length 1)
-   *   -# @f$ (N \times C \times H \times W) @f$
-   *      the inputs @f$ x @f$; Backward fills their diff with
+   *   -# @f$ (n \times c \times H \times W) @f$
+   *      the inputs @f$ X @f$; Backward fills their diff with
    *      gradients @f$
-   *        \frac{\partial E}{\partial x} =
-   *            \frac{\partial E}{\partial y}
-   *            \alpha \gamma (\alpha x + \beta) ^ {\gamma - 1} =
-   *            \frac{\partial E}{\partial y}
-   *            \frac{\alpha \gamma y}{\alpha x + \beta}
+   *        \frac{\partial E}{\partial X} =
+   *            \frac{\partial E}{\partial Y}
+   *            \alpha \gamma (\alpha X + \beta) ^ {\gamma - 1} =
+   *            \frac{\partial E}{\partial Y}
+   *            \frac{\alpha \gamma Y}{\alpha X + \beta}
    *      @f$ if propagate_down[0]
    */
-  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
-  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_cpu(const vector<Blob<MOtype>*>& top,
+      const vector<bool>& propagate_down,
+      const vector<Blob<MItype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<MOtype>*>& top,
+      const vector<bool>& propagate_down,
+      const vector<Blob<MItype>*>& bottom);
 
   /// @brief @f$ \gamma @f$ from layer_param_.power_param()
   Dtype power_;

@@ -17,41 +17,43 @@ namespace caffe {
  * TODO(dox): thorough documentation for Forward, Backward, and proto params.
  */
 
-template <typename Dtype>
-class CropLayer : public Layer<Dtype> {
+template<typename Dtype, typename MItype, typename MOtype>
+class CropLayer : public Layer<Dtype, MItype, MOtype> {
  public:
   explicit CropLayer(const LayerParameter& param)
-      : Layer<Dtype>(param) {}
-  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
-  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
+      : Layer<Dtype, MItype, MOtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
+  virtual void Reshape(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
 
   virtual inline const char* type() const { return "Crop"; }
-  virtual inline int ExactNumBottomBlobs() const { return 2; }
-  virtual inline int ExactNumTopBlobs() const { return 1; }
+  virtual inline int_tp ExactNumBottomBlobs() const { return 2; }
+  virtual inline int_tp ExactNumTopBlobs() const { return 1; }
 
  protected:
-  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
-  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
-  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
-  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Forward_cpu(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
+  virtual void Backward_cpu(const vector<Blob<MOtype>*>& top,
+      const vector<bool>& propagate_down,
+      const vector<Blob<MItype>*>& bottom);
+  virtual void Forward_gpu(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
+  virtual void Backward_gpu(const vector<Blob<MOtype>*>& top,
+      const vector<bool>& propagate_down,
+      const vector<Blob<MItype>*>& bottom);
 
-  Blob<int> offsets;
-  Blob<int> src_strides_;
-  Blob<int> dest_strides_;
+  Blob<int_tp> offsets;
+  Blob<int_tp> src_strides_;
+  Blob<int_tp> dst_strides_;
 
  private:
   // Recursive copy function.
-  void crop_copy(const vector<Blob<Dtype>*>& bottom,
-               const vector<Blob<Dtype>*>& top,
-               const int* offsets,
-               vector<int> indices,
-               int cur_dim,
+  void crop_copy(const vector<Blob<MItype>*>& bottom,
+               const vector<Blob<MOtype>*>& top,
+               const int_tp* offsets,
+               vector<int_tp> indices,
+               int_tp cur_dim,
                const Dtype* src_data,
                Dtype* dest_data,
                bool is_forward);
@@ -61,17 +63,19 @@ class CropLayer : public Layer<Dtype> {
   // a CUDA kernel for the innermost two dimensions for performance reasons.  An
   // alterantive implementation could rely on the kernel more by passing
   // offsets, but this is problematic because of its variable length.
-  // Since in the standard (N,C,W,H) case N,C are usually not cropped a speedup
+  // Since in the standard (n,c,W,H) case n,c are usually not cropped a speedup
   // could be achieved by not looping the application of the copy_kernel around
   // these dimensions.
-  void crop_copy_gpu(const vector<Blob<Dtype>*>& bottom,
-                const vector<Blob<Dtype>*>& top,
-                const vector<int>& offsets,
-                vector<int> indices,
-                int cur_dim,
+  void crop_copy_gpu(const vector<Blob<MItype>*>& bottom,
+                const vector<Blob<MOtype>*>& top,
+                const vector<int_tp>& offsets,
+                vector<int_tp> indices,
+                int_tp cur_dim,
                 const Dtype* src_data,
                 Dtype* dest_data,
                 bool is_forward);
+
+  void GenerateProgram();
 };
 }  // namespace caffe
 

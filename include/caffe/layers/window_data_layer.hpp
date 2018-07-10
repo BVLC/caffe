@@ -21,34 +21,36 @@ namespace caffe {
  *
  * TODO(dox): thorough documentation for Forward and proto params.
  */
-template <typename Dtype>
-class WindowDataLayer : public BasePrefetchingDataLayer<Dtype> {
+template<typename Dtype, typename MItype, typename MOtype>
+class WindowDataLayer
+    : public BasePrefetchingDataLayer<Dtype, MItype, MOtype> {
  public:
   explicit WindowDataLayer(const LayerParameter& param)
-      : BasePrefetchingDataLayer<Dtype>(param) {}
+      : BasePrefetchingDataLayer<Dtype, MItype, MOtype>(param) {}
   virtual ~WindowDataLayer();
-  virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
+  virtual void DataLayerSetUp(
+      const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
 
   virtual inline const char* type() const { return "WindowData"; }
-  virtual inline int ExactNumBottomBlobs() const { return 0; }
-  virtual inline int ExactNumTopBlobs() const { return 2; }
+  virtual inline int_tp ExactNumBottomBlobs() const { return 0; }
+  virtual inline int_tp ExactNumTopBlobs() const { return 2; }
 
  protected:
-  virtual unsigned int PrefetchRand();
-  virtual void load_batch(Batch<Dtype>* batch);
+  virtual uint_tp PrefetchRand();
+  virtual void load_batch(Batch<MOtype>* batch);
 
   shared_ptr<Caffe::RNG> prefetch_rng_;
-  vector<std::pair<std::string, vector<int> > > image_database_;
+  vector<pair<string, vector<int_tp> > > image_database_;
   enum WindowField { IMAGE_INDEX, LABEL, OVERLAP, X1, Y1, X2, Y2, NUM };
   vector<vector<float> > fg_windows_;
   vector<vector<float> > bg_windows_;
-  Blob<Dtype> data_mean_;
-  vector<Dtype> mean_values_;
+  Blob<MItype> data_mean_;
+  vector<MItype> mean_values_;
   bool has_mean_file_;
   bool has_mean_values_;
   bool cache_images_;
-  vector<std::pair<std::string, Datum > > image_database_cache_;
+  vector<pair<string, Datum > > image_database_cache_;
 };
 
 }  // namespace caffe

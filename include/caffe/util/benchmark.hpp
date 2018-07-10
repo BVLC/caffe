@@ -3,8 +3,6 @@
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 
-#include "caffe/util/device_alternate.hpp"
-
 namespace caffe {
 
 class Timer {
@@ -28,9 +26,15 @@ class Timer {
   bool running_;
   bool has_run_at_least_once_;
 #ifndef CPU_ONLY
-  cudaEvent_t start_gpu_;
-  cudaEvent_t stop_gpu_;
-#endif
+#ifdef USE_CUDA
+  cudaEvent_t start_gpu_cuda_;
+  cudaEvent_t stop_gpu_cuda_;
+#endif  // USE_CUDA
+#ifdef USE_OPENCL
+  cl_event start_gpu_cl_;
+  cl_event stop_gpu_cl_;
+#endif  // USE_OPENCL
+#endif  // !CPU_ONLY
   boost::posix_time::ptime start_cpu_;
   boost::posix_time::ptime stop_cpu_;
   float elapsed_milliseconds_;

@@ -2,7 +2,6 @@
 Wrap the internal caffe C++ module (_caffe.so) with a clean, Pythonic
 interface.
 """
-
 from collections import OrderedDict
 try:
     from itertools import izip_longest
@@ -10,8 +9,9 @@ except:
     from itertools import zip_longest as izip_longest
 import numpy as np
 
-from ._caffe import Net, SGDSolver, NesterovSolver, AdaGradSolver, \
-        RMSPropSolver, AdaDeltaSolver, AdamSolver, NCCL, Timer
+from ._caffe import data_type, NCCL, Timer, NetParameter, NetState, Net, \
+                    SolverParameter
+    
 import caffe.io
 
 import six
@@ -31,6 +31,35 @@ def _Net_blobs(self):
         self._blobs_dict = OrderedDict(zip(self._blob_names, self._blobs))
     return self._blobs_dict
 
+@property
+def _Net_layer_bottom_blobs(self):
+    """
+    An OrderedDict of network layer bottom blobs indexed by layer name
+    """
+    if not hasattr(self, '_layer_bottom_blobs_dict'):
+        layer_names = []
+        blobs = []
+        for layer in self.layers:
+            layer_blobs = [self.blobs[blob_name] for blob_name in layer.layer_param.bottom]
+            blobs.append(layer_blobs)
+            layer_names.append(layer.layer_param.name)
+        self._layer_bottom_blobs_dict = OrderedDict(zip(layer_names, blobs))
+    return self._layer_bottom_blobs_dict
+
+@property
+def _Net_layer_top_blobs(self):
+    """
+    An OrderedDict of network layer bottom blobs indexed by layer name
+    """
+    if not hasattr(self, '_layer_top_blobs_dict'):
+        layer_names = []
+        blobs = []
+        for layer in self.layers:
+            layer_blobs = [self.blobs[blob_name] for blob_name in layer.layer_param.top]
+            blobs.append(layer_blobs)
+            layer_names.append(layer.layer_param.name)
+        self._layer_top_blobs_dict = OrderedDict(zip(layer_names, blobs))
+    return self._layer_top_blobs_dict
 
 @property
 def _Net_blob_loss_weights(self):
@@ -53,7 +82,6 @@ def _Net_layer_dict(self):
         self._layer_dict = OrderedDict(zip(self._layer_names, self.layers))
     return self._layer_dict
 
-
 @property
 def _Net_params(self):
     """
@@ -67,6 +95,14 @@ def _Net_params(self):
                                             self._layer_names, self.layers)
                                         if len(lr.blobs) > 0])
     return self._params_dict
+
+@property
+def _Net_layers_dict(self):
+    """
+    An OrderedDict (bottom to top, i.e., input to output) of network
+    layers indexed by name
+    """
+    return OrderedDict(zip(self._layer_names, self.layers))
 
 
 @property
@@ -258,16 +294,25 @@ def _Net_forward_backward_all(self, blobs=None, diffs=None, **kwargs):
     return all_outs, all_diffs
 
 
-def _Net_set_input_arrays(self, data, labels):
+def _Net_set_input_arrays(self, index, data, labels):
     """
     Set input arrays of the in-memory MemoryDataLayer.
     (Note: this is only for networks declared with the memory data layer.)
     """
-    if labels.ndim == 1:
+    if (not labels == None) and (labels.ndim == 1):
         labels = np.ascontiguousarray(labels[:, np.newaxis, np.newaxis,
                                              np.newaxis])
-    return self._set_input_arrays(data, labels)
+    return self._set_input_arrays(index, data, labels)
 
+def _Net_set_layer_input_arrays(self, layer, data, labels):
+    """
+    Set input arrays of the in-memory MemoryDataLayer.
+    (Note: this is only for networks declared with the memory data layer.)
+    """
+    if (not labels == None) and (labels.ndim == 1):
+        labels = np.ascontiguousarray(labels[:, np.newaxis, np.newaxis,
+                                             np.newaxis])
+    return self._set_layer_input_arrays(layer, data, labels)
 
 def _Net_batch(self, blobs):
     """
@@ -330,6 +375,8 @@ def _Net_get_id_name(func, field):
 
 # Attach methods to Net.
 Net.blobs = _Net_blobs
+Net.layer_bottom_blobs = _Net_layer_bottom_blobs
+Net.layer_top_blobs = _Net_layer_top_blobs
 Net.blob_loss_weights = _Net_blob_loss_weights
 Net.layer_dict = _Net_layer_dict
 Net.params = _Net_params
@@ -338,6 +385,7 @@ Net.backward = _Net_backward
 Net.forward_all = _Net_forward_all
 Net.forward_backward_all = _Net_forward_backward_all
 Net.set_input_arrays = _Net_set_input_arrays
+Net.set_layer_input_arrays = _Net_set_layer_input_arrays
 Net._batch = _Net_batch
 Net.inputs = _Net_inputs
 Net.outputs = _Net_outputs

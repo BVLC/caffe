@@ -5,32 +5,32 @@
 
 namespace caffe {
 
-template <typename Dtype>
-void CuDNNReLULayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {
-  ReLULayer<Dtype>::LayerSetUp(bottom, top);
+template<typename Dtype, typename MItype, typename MOtype>
+void CuDNNReLULayer<Dtype, MItype, MOtype>::LayerSetUp(
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
+  ReLULayer<Dtype, MItype, MOtype>::LayerSetUp(bottom, top);
   // initialize cuDNN
   CUDNN_CHECK(cudnnCreate(&handle_));
-  cudnn::createTensor4dDesc<Dtype>(&bottom_desc_);
-  cudnn::createTensor4dDesc<Dtype>(&top_desc_);
+  cudnn::createTensorNdDesc<Dtype>(&bottom_desc_);
+  cudnn::createTensorNdDesc<Dtype>(&top_desc_);
   cudnn::createActivationDescriptor<Dtype>(&activ_desc_, CUDNN_ACTIVATION_RELU);
   handles_setup_ = true;
 }
 
-template <typename Dtype>
-void CuDNNReLULayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {
-  ReLULayer<Dtype>::Reshape(bottom, top);
-  const int N = bottom[0]->num();
-  const int K = bottom[0]->channels();
-  const int H = bottom[0]->height();
-  const int W = bottom[0]->width();
-  cudnn::setTensor4dDesc<Dtype>(&bottom_desc_, N, K, H, W);
-  cudnn::setTensor4dDesc<Dtype>(&top_desc_, N, K, H, W);
+template<typename Dtype, typename MItype, typename MOtype>
+void CuDNNReLULayer<Dtype, MItype, MOtype>::Reshape(
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
+  ReLULayer<Dtype, MItype, MOtype>::Reshape(bottom, top);
+  cudnn::setTensorNdDesc<Dtype>(&bottom_desc_, bottom[0]->shape().size(),
+                                &(bottom[0]->shape()[0]));
+  cudnn::setTensorNdDesc<Dtype>(&top_desc_, top[0]->shape().size(),
+                                &(top[0]->shape()[0]));
 }
 
-template <typename Dtype>
-CuDNNReLULayer<Dtype>::~CuDNNReLULayer() {
+template<typename Dtype, typename MItype, typename MOtype>
+CuDNNReLULayer<Dtype, MItype, MOtype>::~CuDNNReLULayer() {
   // Check that handles have been setup before destroying.
   if (!handles_setup_) { return; }
 
@@ -40,7 +40,8 @@ CuDNNReLULayer<Dtype>::~CuDNNReLULayer() {
   cudnnDestroy(this->handle_);
 }
 
-INSTANTIATE_CLASS(CuDNNReLULayer);
+INSTANTIATE_CLASS_3T_GUARDED(CuDNNReLULayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(CuDNNReLULayer, (double), (double), (double));
 
 }  // namespace caffe
 #endif

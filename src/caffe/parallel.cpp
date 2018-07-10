@@ -1,3 +1,8 @@
+#ifdef CMAKE_BUILD
+  #include "caffe_config.h"
+#endif
+
+#ifdef USE_CUDA
 #ifdef USE_NCCL
 
 #include <cuda_runtime.h>
@@ -22,11 +27,11 @@ enum Op {
 };
 
 template<typename Dtype>
-static void apply_buffers(const vector<Blob<Dtype>*>& blobs,
-                          Dtype* buffer, size_t total_size, Op op) {
+static void apply_buffers(const vector<Blob<Dtype>*>& blobs, Dtype* buffer,
+                          uint_tp total_size, Op op) {
   Dtype* ptr = buffer;
   for (int i = 0; i < blobs.size(); ++i) {
-    int size = blobs[i]->count();
+    int_tp size = blobs[i]->count();
     switch (op) {
       case copy: {
         // Init buffer to current values of blobs
@@ -56,8 +61,8 @@ static void apply_buffers(const vector<Blob<Dtype>*>& blobs,
 
 // Buffer size necessary to store given blobs
 template<typename Dtype>
-static size_t total_size(const vector<Blob<Dtype>*>& params) {
-  size_t size = 0;
+static uint_tp total_size(const vector<Blob<Dtype>*>& params) {
+  uint_tp size = 0;
   for (int i = 0; i < params.size(); ++i)
     size += params[i]->count();
   // Size have at least one byte, otherwise cudaMalloc fails if net has no
@@ -88,7 +93,7 @@ GPUParams<Dtype>::GPUParams(shared_ptr<Solver<Dtype> > root_solver, int device)
   apply_buffers(net, data_, size_, copy);
 
   CUDA_CHECK(cudaMalloc(&diff_, size_ * sizeof(Dtype)));
-  caffe_gpu_set(size_, Dtype(0), diff_);
+  this->device_->set(size_, Dtype(0), diff_);
 
   CUDA_CHECK(cudaSetDevice(initial_device));
 }
@@ -198,6 +203,7 @@ void NCCL<Dtype>::Broadcast() {
   }
 }
 
+// TODO: Rewrite this function for OpenCL
 template<typename Dtype>
 void NCCL<Dtype>::run(int layer) {
   CHECK(solver_->param().layer_wise_reduce());
@@ -229,7 +235,7 @@ void NCCL<Dtype>::run(int layer) {
                              size,
                              nccl::dataType<Dtype>::type,
                              ncclSum, comm_, stream_));
-    caffe_gpu_scal(size, (Dtype) 1.0 / Caffe::solver_count(),
+    this->device_->scal(size, (Dtype) 1.0 / Caffe::solver_count(),
                    blobs[0]->mutable_gpu_diff(), stream_);
   }
 }
@@ -250,7 +256,7 @@ void NCCL<Dtype>::on_gradients_ready() {
     NCCL_CHECK(ncclAllReduce(diff_, diff_, static_cast<int>(size_),
                              nccl::dataType<Dtype>::type, ncclSum, comm_,
                              cudaStreamDefault));
-    caffe_gpu_scal(static_cast<int>(size_),
+    this->device_->scal(static_cast<int>(size_),
                    (Dtype) 1.0 / Caffe::solver_count(), diff_);
   }
 }
@@ -316,7 +322,6 @@ class Worker : public InternalThread {
     }
 #endif
   }
-
   shared_ptr<Solver<Dtype> > rank0_;
   int device_;
   boost::barrier* barrier_;
@@ -369,3 +374,4 @@ INSTANTIATE_CLASS(NCCL);
 }  // namespace caffe
 
 #endif  // USE_NCCL
+#endif  // USE_CUDA

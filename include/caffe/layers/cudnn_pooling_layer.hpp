@@ -9,6 +9,10 @@
 
 #include "caffe/layers/pooling_layer.hpp"
 
+#ifdef USE_CUDNN  // cuDNN acceleration library.
+#include "caffe/util/cudnn.hpp"
+#endif
+
 namespace caffe {
 
 #ifdef USE_CUDNN
@@ -16,25 +20,26 @@ namespace caffe {
  * @brief cuDNN implementation of PoolingLayer.
  *        Fallback to PoolingLayer for CPU mode.
 */
-template <typename Dtype>
-class CuDNNPoolingLayer : public PoolingLayer<Dtype> {
+template<typename Dtype, typename MItype, typename MOtype>
+class CuDNNPoolingLayer : public PoolingLayer<Dtype, MItype, MOtype> {
  public:
   explicit CuDNNPoolingLayer(const LayerParameter& param)
-      : PoolingLayer<Dtype>(param), handles_setup_(false) {}
-  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
-  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
+      : PoolingLayer<Dtype, MItype, MOtype>(param), handles_setup_(false) {}
+  virtual void LayerSetUp(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
+  virtual void Reshape(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
   virtual ~CuDNNPoolingLayer();
   // Currently, cuDNN does not support the extra top blob.
-  virtual inline int MinTopBlobs() const { return -1; }
-  virtual inline int ExactNumTopBlobs() const { return 1; }
+  virtual inline int_tp MinTopBlobs() const { return -1; }
+  virtual inline int_tp ExactNumTopBlobs() const { return 1; }
 
  protected:
-  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
-  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Forward_gpu(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
+  virtual void Backward_gpu(const vector<Blob<MOtype>*>& top,
+      const vector<bool>& propagate_down,
+      const vector<Blob<MItype>*>& bottom);
 
   bool handles_setup_;
   cudnnHandle_t             handle_;

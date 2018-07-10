@@ -72,14 +72,14 @@ int main(int argc, char** argv) {
   const string encode_type = FLAGS_encode_type;
 
   std::ifstream infile(argv[2]);
-  std::vector<std::pair<std::string, int> > lines;
-  std::string line;
+  vector<std::pair<string, int> > lines;
+  string line;
   size_t pos;
-  int label;
+  int_tp label;
   while (std::getline(infile, line)) {
     pos = line.find_last_of(' ');
     label = atoi(line.substr(pos + 1).c_str());
-    lines.push_back(std::make_pair(line.substr(0, pos), label));
+    lines.push_back(make_pair(line.substr(0, pos), label));
   }
   if (FLAGS_shuffle) {
     // randomly shuffle data
@@ -91,8 +91,8 @@ int main(int argc, char** argv) {
   if (encode_type.size() && !encoded)
     LOG(INFO) << "encode_type specified, assuming encoded=true.";
 
-  int resize_height = std::max<int>(0, FLAGS_resize_height);
-  int resize_width = std::max<int>(0, FLAGS_resize_width);
+  int_tp resize_height = std::max<int_tp>(0, FLAGS_resize_height);
+  int_tp resize_width = std::max<int_tp>(0, FLAGS_resize_width);
 
   // Create new DB
   scoped_ptr<db::DB> db(db::GetDB(FLAGS_backend));
@@ -100,19 +100,19 @@ int main(int argc, char** argv) {
   scoped_ptr<db::Transaction> txn(db->NewTransaction());
 
   // Storing to db
-  std::string root_folder(argv[1]);
+  string root_folder(argv[1]);
   Datum datum;
-  int count = 0;
-  int data_size = 0;
+  int_tp count = 0;
+  int_tp data_size = 0;
   bool data_size_initialized = false;
 
-  for (int line_id = 0; line_id < lines.size(); ++line_id) {
+  for (int_tp line_id = 0; line_id < lines.size(); ++line_id) {
     bool status;
-    std::string enc = encode_type;
+    string enc = encode_type;
     if (encoded && !enc.size()) {
       // Guess the encoding type from the file name
       string fn = lines[line_id].first;
-      size_t p = fn.rfind('.');
+      uint_tp p = fn.rfind('.');
       if ( p == fn.npos )
         LOG(WARNING) << "Failed to guess the encoding of '" << fn << "'";
       enc = fn.substr(p+1);
@@ -127,7 +127,7 @@ int main(int argc, char** argv) {
         data_size = datum.channels() * datum.height() * datum.width();
         data_size_initialized = true;
       } else {
-        const std::string& data = datum.data();
+        const string& data = datum.data();
         CHECK_EQ(data.size(), data_size) << "Incorrect data field size "
             << data.size();
       }

@@ -7,12 +7,16 @@
 #  SNAPPY_FOUND
 #  Snappy_INCLUDE_DIR
 #  Snappy_LIBRARIES
+if(MSVC)
+  # rely on snappy-config.cmake
+  find_package(Snappy NO_MODULE)
+else()
+  find_path(Snappy_INCLUDE_DIR NAMES snappy.h
+                              PATHS "${SNAPPY_ROOT_DIR}" "${SNAPPY_ROOT_DIR}/include" "/usr/include")
 
-find_path(Snappy_INCLUDE_DIR NAMES snappy.h
-                             PATHS ${SNAPPY_ROOT_DIR} ${SNAPPY_ROOT_DIR}/include)
-
-find_library(Snappy_LIBRARIES NAMES snappy
-                              PATHS ${SNAPPY_ROOT_DIR} ${SNAPPY_ROOT_DIR}/lib)
+  find_library(Snappy_LIBRARIES NAMES snappy
+                                PATHS "${SNAPPY_ROOT_DIR}" "${SNAPPY_ROOT_DIR}/lib" "/usr/lib" "/usr/lib64" "/usr/lib/arm-linux-gnueabihf")
+endif()
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(Snappy DEFAULT_MSG Snappy_INCLUDE_DIR Snappy_LIBRARIES)

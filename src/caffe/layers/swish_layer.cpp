@@ -6,54 +6,60 @@
 
 namespace caffe {
 
-template <typename Dtype>
-void SwishLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {
-  NeuronLayer<Dtype>::LayerSetUp(bottom, top);
-  sigmoid_bottom_vec_.clear();
-  sigmoid_bottom_vec_.push_back(sigmoid_input_.get());
-  sigmoid_top_vec_.clear();
-  sigmoid_top_vec_.push_back(sigmoid_output_.get());
-  sigmoid_layer_->SetUp(sigmoid_bottom_vec_, sigmoid_top_vec_);
+template<typename Dtype, typename MItype, typename MOtype>
+inline Dtype sigmoid(Dtype x) {
+  return 0.5 * tanh(0.5 * x) + 0.5;
 }
 
-template <typename Dtype>
-void SwishLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
+template<typename Dtype, typename MItype, typename MOtype>
+void SwishLayer<Dtype, MItype, MOtype>::LayerSetUp(
+      const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  NeuronLayer<Dtype>::Reshape(bottom, top);
-  sigmoid_input_->ReshapeLike(*bottom[0]);
-  sigmoid_layer_->Reshape(sigmoid_bottom_vec_, sigmoid_top_vec_);
+  NeuronLayer<Dtype, MItype, MOtype>::LayerSetUp(bottom, top);
 }
 
-template <typename Dtype>
-void SwishLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-    const vector<Blob<Dtype>*>& top) {
-  const Dtype* bottom_data = bottom[0]->cpu_data();
-  Dtype* sigmoid_input_data = sigmoid_input_->mutable_cpu_data();
-  Dtype* top_data = top[0]->mutable_cpu_data();
-  const int count = bottom[0]->count();
+template<typename Dtype, typename MItype, typename MOtype>
+void SwishLayer<Dtype, MItype, MOtype>::Reshape(
+      const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  NeuronLayer<Dtype, MItype, MOtype>::Reshape(bottom, top);
+
+  if (Caffe::mode() == Caffe::GPU && this->device_program_.get() == nullptr) {
+    this->GenerateProgram();
+  }
+}
+
+template<typename Dtype, typename MItype, typename MOtype>
+void SwishLayer<Dtype, MItype, MOtype>::Forward_cpu(
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
+  const MItype* bottom_data = bottom[0]->cpu_data();
+  MOtype* top_data = top[0]->mutable_cpu_data();
+  const int_tp count = bottom[0]->count();
   Dtype beta = this->layer_param_.swish_param().beta();
-  caffe_copy(count, bottom_data, sigmoid_input_data);
-  caffe_scal(count, beta, sigmoid_input_data);
-  sigmoid_layer_->Forward(sigmoid_bottom_vec_, sigmoid_top_vec_);
-  caffe_mul(count, bottom_data, sigmoid_output_->cpu_data(), top_data);
+  for (int_tp i = 0; i < count; ++i) {
+    top_data[i] = bottom_data[i] *
+        sigmoid<Dtype, MItype, MOtype>(beta * bottom_data[i]);
+  }
 }
 
-template <typename Dtype>
-void SwishLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+template<typename Dtype, typename MItype, typename MOtype>
+void SwishLayer<Dtype, MItype, MOtype>::Backward_cpu(
+    const vector<Blob<MOtype>*>& top,
     const vector<bool>& propagate_down,
-    const vector<Blob<Dtype>*>& bottom) {
+    const vector<Blob<MItype>*>& bottom) {
   if (propagate_down[0]) {
-    const Dtype* top_data = top[0]->cpu_data();
-    const Dtype* top_diff = top[0]->cpu_diff();
-    const Dtype* sigmoid_output_data = sigmoid_output_->cpu_data();
-    Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
-    const int count = bottom[0]->count();
+    const MItype* bottom_data = bottom[0]->cpu_data();
+    const MOtype* top_data = top[0]->cpu_data();
+    const MOtype* top_diff = top[0]->cpu_diff();
+    MItype* bottom_diff = bottom[0]->mutable_cpu_diff();
+    const int_tp count = bottom[0]->count();
     Dtype beta = this->layer_param_.swish_param().beta();
-    for (int i = 0; i < count; ++i) {
+    for (int_tp i = 0; i < count; ++i) {
       const Dtype swish_x = top_data[i];
-      bottom_diff[i] = top_diff[i] * (beta * swish_x + sigmoid_output_data[i]
-          * (1. - beta * swish_x));
+      bottom_diff[i] = top_diff[i] * (beta * swish_x +
+          sigmoid<Dtype, MItype, MOtype>(beta * bottom_data[i]) *
+          (1. - beta * swish_x));
     }
   }
 }
@@ -62,7 +68,13 @@ void SwishLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 STUB_GPU(SwishLayer);
 #endif
 
-INSTANTIATE_CLASS(SwishLayer);
+INSTANTIATE_CLASS_3T_GUARDED(SwishLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(SwishLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(SwishLayer, (double), (double), (double));
+
 REGISTER_LAYER_CLASS(Swish);
+REGISTER_LAYER_CLASS_INST(Swish, (half_fp), (half_fp), (half_fp));
+REGISTER_LAYER_CLASS_INST(Swish, (float), (float), (float));
+REGISTER_LAYER_CLASS_INST(Swish, (double), (double), (double));
 
 }  // namespace caffe

@@ -2,12 +2,15 @@
 #define CAFFE_INTERNAL_THREAD_HPP_
 
 #include "caffe/common.hpp"
+#include "caffe/backend/device.hpp"
 
 /**
  Forward declare boost::thread instead of including boost/thread.hpp
  to avoid a boost/NVCC issues (#1009, #1010) on OSX.
  */
-namespace boost { class thread; }
+namespace boost {
+class thread;
+}
 
 namespace caffe {
 
@@ -18,7 +21,9 @@ namespace caffe {
  */
 class InternalThread {
  public:
-  InternalThread() : thread_() {}
+  InternalThread()
+      : thread_() {
+  }
   virtual ~InternalThread();
 
   /**
@@ -26,7 +31,7 @@ class InternalThread {
    * thread values, e.g. device id, solver index etc. The random seed
    * is initialized using caffe_rng_rand.
    */
-  void StartInternalThread();
+  void StartInternalThread(Device* device_context);
 
   /** Will not return until the internal thread has exited. */
   void StopInternalThread();
@@ -35,15 +40,18 @@ class InternalThread {
 
  protected:
   /* Implement this method in your subclass
-      with the code you want your thread to run. */
-  virtual void InternalThreadEntry() {}
+   with the code you want your thread to run. */
+  virtual void InternalThreadEntry() {
+  }
 
   /* Should be tested when running loops to exit when requested. */
   bool must_stop();
 
+  Device* thread_device_;
+
  private:
-  void entry(int device, Caffe::Brew mode, int rand_seed,
-      int solver_count, int solver_rank, bool multiprocess);
+  void entry(Device* dev, Caffe::Brew mode, int_tp rand_seed,
+      int_tp solver_count, int_tp solver_rank, bool multiprocess);
 
   shared_ptr<boost::thread> thread_;
 };

@@ -19,31 +19,33 @@ const float kLOG_THRESHOLD = 1e-20;
  * LossLayers are typically only capable of backpropagating to their first input
  * -- the predictions.
  */
-template <typename Dtype>
-class LossLayer : public Layer<Dtype> {
+template<typename Dtype, typename MItype, typename MOtype>
+class LossLayer : public Layer<Dtype, MItype, MOtype> {
  public:
   explicit LossLayer(const LayerParameter& param)
-     : Layer<Dtype>(param) {}
+     : Layer<Dtype, MItype, MOtype>(param) {}
   virtual void LayerSetUp(
-      const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
+      const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
   virtual void Reshape(
-      const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top);
+      const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
 
-  virtual inline int ExactNumBottomBlobs() const { return 2; }
+  virtual inline int_tp ExactNumBottomBlobs() const { return 2; }
 
   /**
    * @brief For convenience and backwards compatibility, instruct the Net to
-   *        automatically allocate a single top Blob for LossLayers, into which
-   *        they output their singleton loss, (even if the user didn't specify
-   *        one in the prototxt, etc.).
+   *      automatically allocate a single top Blob for LossLayers, into which
+   *      they output their singleton loss, (even if the user didn't specify
+   *      one in the prototxt, etc.).
    */
   virtual inline bool AutoTopBlobs() const { return true; }
-  virtual inline int ExactNumTopBlobs() const { return 1; }
+  virtual inline int_tp ExactNumTopBlobs() const { return 1; }
   /**
    * We usually cannot backpropagate to the labels; ignore force_backward for
    * these inputs.
    */
-  virtual inline bool AllowForceBackward(const int bottom_index) const {
+  virtual inline bool AllowForceBackward(const int_tp bottom_index) const {
     return bottom_index != 1;
   }
 };

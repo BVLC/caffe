@@ -7,19 +7,20 @@
 
 namespace caffe {
 
-template <typename Dtype>
-inline Dtype sigmoid(Dtype x) {
-  return 1. / (1. + exp(-x));
+template<typename Dtype, typename MItype, typename MOtype>
+inline Dtype sigmoid(Dtype X) {
+  return 1. / (1. + std::exp(-X));
 }
 
-template <typename Dtype>
-inline Dtype tanh(Dtype x) {
-  return 2. * sigmoid(2. * x) - 1.;
+template<typename Dtype, typename MItype, typename MOtype>
+inline Dtype tanh(Dtype X) {
+  return 2. * sigmoid<Dtype, MItype, MOtype>(2. * X) - 1.;
 }
 
-template <typename Dtype>
-void LSTMUnitLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
-    const vector<Blob<Dtype>*>& top) {
+template<typename Dtype, typename MItype, typename MOtype>
+void LSTMUnitLayer<Dtype, MItype, MOtype>::Reshape(
+                                         const vector<Blob<MItype>*>& bottom,
+                                         const vector<Blob<MOtype>*>& top) {
   const int num_instances = bottom[0]->shape(1);
   for (int i = 0; i < bottom.size(); ++i) {
     if (i == 2) {
@@ -35,11 +36,16 @@ void LSTMUnitLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   top[0]->ReshapeLike(*bottom[0]);
   top[1]->ReshapeLike(*bottom[0]);
   X_acts_.ReshapeLike(*bottom[1]);
+
+  if (Caffe::mode() == Caffe::GPU && this->device_program_.get() == nullptr) {
+    this->GenerateProgram();
+  }
 }
 
-template <typename Dtype>
-void LSTMUnitLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-    const vector<Blob<Dtype>*>& top) {
+template<typename Dtype, typename MItype, typename MOtype>
+void LSTMUnitLayer<Dtype, MItype, MOtype>::Forward_cpu(
+                                         const vector<Blob<MItype>*>& bottom,
+                                         const vector<Blob<MOtype>*>& top) {
   const int num = bottom[0]->shape(1);
   const int x_dim = hidden_dim_ * 4;
   const Dtype* C_prev = bottom[0]->cpu_data();
@@ -49,15 +55,15 @@ void LSTMUnitLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   Dtype* H = top[1]->mutable_cpu_data();
   for (int n = 0; n < num; ++n) {
     for (int d = 0; d < hidden_dim_; ++d) {
-      const Dtype i = sigmoid(X[d]);
+      const Dtype i = sigmoid<Dtype, MItype, MOtype>(X[d]);
       const Dtype f = (*cont == 0) ? 0 :
-          (*cont * sigmoid(X[1 * hidden_dim_ + d]));
-      const Dtype o = sigmoid(X[2 * hidden_dim_ + d]);
-      const Dtype g = tanh(X[3 * hidden_dim_ + d]);
+          (*cont * sigmoid<Dtype, MItype, MOtype>(X[1 * hidden_dim_ + d]));
+      const Dtype o = sigmoid<Dtype, MItype, MOtype>(X[2 * hidden_dim_ + d]);
+      const Dtype g = tanh<Dtype, MItype, MOtype>(X[3 * hidden_dim_ + d]);
       const Dtype c_prev = C_prev[d];
       const Dtype c = f * c_prev + i * g;
       C[d] = c;
-      const Dtype tanh_c = tanh(c);
+      const Dtype tanh_c = tanh<Dtype, MItype, MOtype>(c);
       H[d] = o * tanh_c;
     }
     C_prev += hidden_dim_;
@@ -68,9 +74,11 @@ void LSTMUnitLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   }
 }
 
-template <typename Dtype>
-void LSTMUnitLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
-    const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+template<typename Dtype, typename MItype, typename MOtype>
+void LSTMUnitLayer<Dtype, MItype, MOtype>::Backward_cpu(
+                                         const vector<Blob<MOtype>*>& top,
+                                         const vector<bool>& propagate_down,
+                                         const vector<Blob<MItype>*>& bottom) {
   CHECK(!propagate_down[2]) << "Cannot backpropagate to sequence indicators.";
   if (!propagate_down[0] && !propagate_down[1]) { return; }
 
@@ -87,14 +95,14 @@ void LSTMUnitLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   Dtype* X_diff = bottom[1]->mutable_cpu_diff();
   for (int n = 0; n < num; ++n) {
     for (int d = 0; d < hidden_dim_; ++d) {
-      const Dtype i = sigmoid(X[d]);
+      const Dtype i = sigmoid<Dtype, MItype, MOtype>(X[d]);
       const Dtype f = (*cont == 0) ? 0 :
-          (*cont * sigmoid(X[1 * hidden_dim_ + d]));
-      const Dtype o = sigmoid(X[2 * hidden_dim_ + d]);
-      const Dtype g = tanh(X[3 * hidden_dim_ + d]);
+          (*cont * sigmoid<Dtype, MItype, MOtype>(X[1 * hidden_dim_ + d]));
+      const Dtype o = sigmoid<Dtype, MItype, MOtype>(X[2 * hidden_dim_ + d]);
+      const Dtype g = tanh<Dtype, MItype, MOtype>(X[3 * hidden_dim_ + d]);
       const Dtype c_prev = C_prev[d];
       const Dtype c = C[d];
-      const Dtype tanh_c = tanh(c);
+      const Dtype tanh_c = tanh<Dtype, MItype, MOtype>(c);
       Dtype* c_prev_diff = C_prev_diff + d;
       Dtype* i_diff = X_diff + d;
       Dtype* f_diff = X_diff + 1 * hidden_dim_ + d;
@@ -124,7 +132,13 @@ void LSTMUnitLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 STUB_GPU(LSTMUnitLayer);
 #endif
 
-INSTANTIATE_CLASS(LSTMUnitLayer);
+INSTANTIATE_CLASS_3T_GUARDED(LSTMUnitLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(LSTMUnitLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(LSTMUnitLayer, (double), (double), (double));
+
 REGISTER_LAYER_CLASS(LSTMUnit);
+REGISTER_LAYER_CLASS_INST(LSTMUnit, (half_fp), (half_fp), (half_fp));
+REGISTER_LAYER_CLASS_INST(LSTMUnit, (float), (float), (float));
+REGISTER_LAYER_CLASS_INST(LSTMUnit, (double), (double), (double));
 
 }  // namespace caffe

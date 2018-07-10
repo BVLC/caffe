@@ -1,3 +1,4 @@
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -10,9 +11,10 @@
 
 namespace caffe {
 
-template <typename Dtype>
-void RecurrentLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {
+template<typename Dtype, typename MItype, typename MOtype>
+void RecurrentLayer<Dtype, MItype, MOtype>::LayerSetUp(
+      const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top) {
   CHECK_GE(bottom[0]->num_axes(), 2)
       << "bottom[0] must have at least 2 axes -- (#timesteps, #streams, ...)";
   T_ = bottom[0]->shape(0);
@@ -54,7 +56,7 @@ void RecurrentLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   LayerParameter* input_layer_param = net_param.add_layer();
   input_layer_param->set_type("Input");
   InputParameter* input_param = input_layer_param->mutable_input_param();
-  input_layer_param->add_top("x");
+  input_layer_param->add_top("X");
   BlobShape input_shape;
   for (int i = 0; i < bottom[0]->num_axes(); ++i) {
     input_shape.add_dim(bottom[0]->shape(i));
@@ -105,26 +107,28 @@ void RecurrentLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   }
 
   // Create the unrolled net.
-  unrolled_net_.reset(new Net<Dtype>(net_param));
+  unrolled_net_.reset(new Net<Dtype>(net_param, this->device_));
   unrolled_net_->set_debug_info(
       this->layer_param_.recurrent_param().debug_info());
 
   // Setup pointers to the inputs.
-  x_input_blob_ = CHECK_NOTNULL(unrolled_net_->blob_by_name("x").get());
-  cont_input_blob_ = CHECK_NOTNULL(unrolled_net_->blob_by_name("cont").get());
+  x_input_blob_ = static_cast<Blob<Dtype>*>(
+      CHECK_NOTNULL(unrolled_net_->blob_by_name("X").get()));
+  cont_input_blob_ = static_cast<Blob<Dtype>*>(
+      CHECK_NOTNULL(unrolled_net_->blob_by_name("cont").get()));
   if (static_input_) {
-    x_static_input_blob_ =
-        CHECK_NOTNULL(unrolled_net_->blob_by_name("x_static").get());
+    x_static_input_blob_ = static_cast<Blob<Dtype>*>(
+        CHECK_NOTNULL(unrolled_net_->blob_by_name("x_static").get()));
   }
 
   // Setup pointers to paired recurrent inputs/outputs.
   recur_input_blobs_.resize(num_recur_blobs);
   recur_output_blobs_.resize(num_recur_blobs);
   for (int i = 0; i < recur_input_names.size(); ++i) {
-    recur_input_blobs_[i] =
-        CHECK_NOTNULL(unrolled_net_->blob_by_name(recur_input_names[i]).get());
-    recur_output_blobs_[i] =
-        CHECK_NOTNULL(unrolled_net_->blob_by_name(recur_output_names[i]).get());
+    recur_input_blobs_[i] = static_cast<Blob<Dtype>*>(
+      CHECK_NOTNULL(unrolled_net_->blob_by_name(recur_input_names[i]).get()));
+    recur_output_blobs_[i] = static_cast<Blob<Dtype>*>(
+      CHECK_NOTNULL(unrolled_net_->blob_by_name(recur_output_names[i]).get()));
   }
 
   // Setup pointers to outputs.
@@ -132,11 +136,11 @@ void RecurrentLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       << "OutputBlobNames must provide an output blob name for each top.";
   output_blobs_.resize(output_names.size());
   for (int i = 0; i < output_names.size(); ++i) {
-    output_blobs_[i] =
-        CHECK_NOTNULL(unrolled_net_->blob_by_name(output_names[i]).get());
+    output_blobs_[i] = static_cast<Blob<Dtype>*>(
+        CHECK_NOTNULL(unrolled_net_->blob_by_name(output_names[i]).get()));
   }
 
-  // We should have 2 inputs (x and cont), plus a number of recurrent inputs,
+  // We should have 2 inputs (X and cont), plus a number of recurrent inputs,
   // plus maybe a static input.
   CHECK_EQ(2 + num_recur_blobs + static_input_,
            unrolled_net_->input_blobs().size());
@@ -149,13 +153,15 @@ void RecurrentLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     if (unrolled_net_->param_owners()[i] == -1) {
       LOG(INFO) << "Adding parameter " << i << ": "
                 << unrolled_net_->param_display_names()[i];
-      this->blobs_.push_back(unrolled_net_->params()[i]);
+      this->blobs_.push_back(
+          static_pointer_cast<Blob<Dtype> >(unrolled_net_->params()[i]));
     }
   }
   // Check that param_propagate_down is set for all of the parameters in the
   // unrolled net; set param_propagate_down to true in this layer.
   for (int i = 0; i < unrolled_net_->layers().size(); ++i) {
-    for (int j = 0; j < unrolled_net_->layers()[i]->blobs().size(); ++j) {
+
+    for (int j = 0; j < unrolled_net_->layers()[i]->blobs_size(); ++j) {
       CHECK(unrolled_net_->layers()[i]->param_propagate_down(j))
           << "param_propagate_down not set for layer " << i << ", param " << j;
     }
@@ -177,11 +183,14 @@ void RecurrentLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   for (int i = last_layer_index_ + 1, j = 0; i < layer_names.size(); ++i, ++j) {
     CHECK_EQ(layer_names[i], pseudo_losses[j]);
   }
+
+  this->InitializeQuantizers(bottom, top);
 }
 
-template <typename Dtype>
-void RecurrentLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {
+template<typename Dtype, typename MItype, typename MOtype>
+void RecurrentLayer<Dtype, MItype, MOtype>::Reshape(
+      const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top) {
   CHECK_GE(bottom[0]->num_axes(), 2)
       << "bottom[0] must have at least 2 axes -- (#timesteps, #streams, ...)";
   CHECK_EQ(T_, bottom[0]->shape(0)) << "input number of timesteps changed";
@@ -191,7 +200,7 @@ void RecurrentLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   CHECK_EQ(T_, bottom[1]->shape(0));
   CHECK_EQ(N_, bottom[1]->shape(1));
   x_input_blob_->ReshapeLike(*bottom[0]);
-  vector<int> cont_shape = bottom[1]->shape();
+  vector<int_tp> cont_shape = bottom[1]->shape();
   cont_input_blob_->Reshape(cont_shape);
   if (static_input_) {
     x_static_input_blob_->ReshapeLike(*bottom[2]);
@@ -233,8 +242,8 @@ void RecurrentLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   }
 }
 
-template <typename Dtype>
-void RecurrentLayer<Dtype>::Reset() {
+template<typename Dtype, typename MItype, typename MOtype>
+void RecurrentLayer<Dtype, MItype, MOtype>::Reset() {
   // "Reset" the hidden state of the net by zeroing out all recurrent outputs.
   for (int i = 0; i < recur_output_blobs_.size(); ++i) {
     caffe_set(recur_output_blobs_[i]->count(), Dtype(0),
@@ -242,9 +251,10 @@ void RecurrentLayer<Dtype>::Reset() {
   }
 }
 
-template <typename Dtype>
-void RecurrentLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-    const vector<Blob<Dtype>*>& top) {
+template<typename Dtype, typename MItype, typename MOtype>
+void RecurrentLayer<Dtype, MItype, MOtype>::Forward_cpu(
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
   // Hacky fix for test time: reshare all the internal shared blobs, which may
   // currently point to a stale owner blob that was dropped when Solver::Test
   // called test_net->ShareTrainedLayersWith(net_.get()).
@@ -274,9 +284,11 @@ void RecurrentLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   }
 }
 
-template <typename Dtype>
-void RecurrentLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
-    const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+template<typename Dtype, typename MItype, typename MOtype>
+void RecurrentLayer<Dtype, MItype, MOtype>::Backward_cpu(
+    const vector<Blob<MOtype>*>& top,
+    const vector<bool>& propagate_down,
+    const vector<Blob<MItype>*>& bottom) {
   CHECK(!propagate_down[1]) << "Cannot backpropagate to sequence indicators.";
 
   // TODO: skip backpropagation to inputs and parameters inside the unrolled
@@ -291,6 +303,8 @@ void RecurrentLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 STUB_GPU_FORWARD(RecurrentLayer, Forward);
 #endif
 
-INSTANTIATE_CLASS(RecurrentLayer);
+INSTANTIATE_CLASS_3T_GUARDED(RecurrentLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(RecurrentLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(RecurrentLayer, (double), (double), (double));
 
 }  // namespace caffe

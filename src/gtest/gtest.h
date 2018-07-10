@@ -54,6 +54,8 @@
 #include <limits>
 #include <vector>
 
+#include "caffe/util/half_fp.hpp"
+
 // Copyright 2005, Google Inc.
 // All rights reserved.
 //
@@ -2766,6 +2768,18 @@ class TypeWithSize {
 
 // The specialization for size 4.
 template <>
+class TypeWithSize<2> {
+ public:
+  // unsigned int has size 4 in both gcc and MSVC.
+  //
+  // As base/basictypes.h doesn't compile on Windows, we cannot use
+  // uint32, uint64, and etc here.
+  typedef int16_t Int;
+  typedef uint16_t UInt;
+};
+
+// The specialization for size 4.
+template <>
 class TypeWithSize<4> {
  public:
   // unsigned int has size 4 in both gcc and MSVC.
@@ -2791,6 +2805,8 @@ class TypeWithSize<8> {
 };
 
 // Integer types of known sizes.
+typedef TypeWithSize<2>::Int Int16;
+typedef TypeWithSize<2>::UInt UInt16;
 typedef TypeWithSize<4>::Int Int32;
 typedef TypeWithSize<4>::UInt UInt32;
 typedef TypeWithSize<8>::Int Int64;
@@ -7017,10 +7033,10 @@ class FloatingPoint {
 
   // The mask for the fraction bits.
   static const Bits kFractionBitMask =
-    ~static_cast<Bits>(0) >> (kExponentBitCount + 1);
+    static_cast<Bits>(~0ull) >> (kExponentBitCount + 1);
 
   // The mask for the exponent bits.
-  static const Bits kExponentBitMask = ~(kSignBitMask | kFractionBitMask);
+  static const Bits kExponentBitMask = static_cast<Bits>(~(kSignBitMask | kFractionBitMask));
 
   // How many ULP's (Units in the Last Place) we want to tolerate when
   // comparing two numbers.  The larger the value, the more error we
@@ -7042,7 +7058,8 @@ class FloatingPoint {
   // around may change its bits, although the new value is guaranteed
   // to be also a NAN.  Therefore, don't expect this constructor to
   // preserve the bits in x when x is a NAN.
-  explicit FloatingPoint(const RawType& x) { u_.value_ = x; }
+  //explicit FloatingPoint(const RawType& x) { u_.bits_ = *(const Bits*)(&x); }
+  explicit FloatingPoint(const RawType x) { memcpy(&u_.bits_, &x, sizeof(RawType)); }
 
   // Static methods
 
@@ -7050,9 +7067,11 @@ class FloatingPoint {
   //
   // This function is needed to test the AlmostEquals() method.
   static RawType ReinterpretBits(const Bits bits) {
-    FloatingPoint fp(0);
-    fp.u_.bits_ = bits;
-    return fp.u_.value_;
+    //FloatingPoint fp(0);
+    //fp.u_.bits_ = bits;
+    RawType val;
+    memcpy(&val, &bits, sizeof(RawType));
+    return val;
   }
 
   // Returns the floating-point number that represent positive infinity.
@@ -7091,15 +7110,23 @@ class FloatingPoint {
     // The IEEE standard says that any comparison operation involving
     // a NAN must return false.
     if (is_nan() || rhs.is_nan()) return false;
+    int distance = DistanceBetweenSignAndMagnitudeNumbers(u_.bits_, rhs.u_.bits_);
+    return distance <= kMaxUlps;
+  }
 
-    return DistanceBetweenSignAndMagnitudeNumbers(u_.bits_, rhs.u_.bits_)
-        <= kMaxUlps;
+  bool LT(const FloatingPoint&rhs) const {
+    if (is_nan() || rhs.is_nan()) return false;
+    return ReinterpretBits(u_.bits_) < ReinterpretBits(rhs.u_.bits_);
+  }
+
+  bool GT(const FloatingPoint&rhs) const {
+    if (is_nan() || rhs.is_nan()) return false;
+    return ReinterpretBits(u_.bits_) > ReinterpretBits(rhs.u_.bits_);
   }
 
  private:
   // The data type used to store the actual floating-point number.
   union FloatingPointUnion {
-    RawType value_;  // The raw floating-point number.
     Bits bits_;      // The bits that represent the number.
   };
 
@@ -7142,6 +7169,7 @@ class FloatingPoint {
 
 // Typedefs the instances of the FloatingPoint template class that we
 // care to use.
+typedef FloatingPoint<caffe::half_fp> Half;
 typedef FloatingPoint<float> Float;
 typedef FloatingPoint<double> Double;
 
@@ -9427,7 +9455,7 @@ void DefaultPrintNonContainerTo(const T& value, ::std::ostream* os) {
   // impossible to define #1 (e.g. when foo is ::std, defining
   // anything in it is undefined behavior unless you are a compiler
   // vendor.).
-  *os << value;
+  *os << caffe::fixup_arg_type(value);
 }
 
 }  // namespace testing_internal
@@ -18580,9 +18608,68 @@ AssertionResult CmpHelperFloatingPointEQ(const char* expected_expression,
                                          const char* actual_expression,
                                          RawType expected,
                                          RawType actual) {
-  const FloatingPoint<RawType> lhs(expected), rhs(actual);
+
+  auto expect_val = expected;
+  auto actual_val = actual;
+  const FloatingPoint<decltype (expect_val)> lhs(expect_val), rhs(actual_val);
 
   if (lhs.AlmostEquals(rhs)) {
+    return AssertionSuccess();
+  }
+
+  ::std::stringstream expected_ss;
+  expected_ss << std::setprecision(std::numeric_limits<RawType>::digits10 + 2)
+              << expected;
+
+  ::std::stringstream actual_ss;
+  actual_ss << std::setprecision(std::numeric_limits<RawType>::digits10 + 2)
+            << actual;
+
+  return EqFailure(expected_expression,
+                   actual_expression,
+                   StringStreamToString(&expected_ss),
+                   StringStreamToString(&actual_ss),
+                   false);
+}
+
+template <typename RawType>
+AssertionResult CmpHelperFloatingPointGE(const char* expected_expression,
+                                         const char* actual_expression,
+                                         RawType expected,
+                                         RawType actual) {
+  auto expect_val = expected;
+  auto actual_val = actual;
+  const FloatingPoint<decltype (expect_val)> lhs(expect_val), rhs(actual_val);
+  if (lhs.AlmostEquals(rhs) || lhs.GT(rhs)) {
+    return AssertionSuccess();
+  }
+
+  ::std::stringstream expected_ss;
+  expected_ss << std::setprecision(std::numeric_limits<RawType>::digits10 + 2)
+              << expected;
+
+  ::std::stringstream actual_ss;
+  actual_ss << std::setprecision(std::numeric_limits<RawType>::digits10 + 2)
+            << actual;
+
+  return EqFailure(expected_expression,
+                   actual_expression,
+                   StringStreamToString(&expected_ss),
+                   StringStreamToString(&actual_ss),
+                   false);
+}
+
+template <typename RawType>
+AssertionResult CmpHelperFloatingPointLE(const char* expected_expression,
+                                         const char* actual_expression,
+                                         RawType expected,
+                                         RawType actual) {
+
+  auto expect_val = expected;
+  auto actual_val = actual;
+  const FloatingPoint<decltype (expect_val)> lhs(expect_val), rhs(actual_val);
+
+  if (lhs.AlmostEquals(rhs) || lhs.LT(rhs)) {
     return AssertionSuccess();
   }
 
@@ -19226,17 +19313,25 @@ AssertionResult AssertPred5Helper(const char* pred_text,
 //   ASSERT_GT(records.size(), 0) << "There is no record left.";
 
 #define EXPECT_EQ(expected, actual) \
-  EXPECT_PRED_FORMAT2(::testing::internal:: \
-                      EqHelper<GTEST_IS_NULL_LITERAL_(expected)>::Compare, \
-                      expected, actual)
+    EXPECT_PRED_FORMAT2(::testing::internal:: \
+                        EqHelper<GTEST_IS_NULL_LITERAL_(expected)>::Compare, \
+                        expected, actual)
+
 #define EXPECT_NE(expected, actual) \
   EXPECT_PRED_FORMAT2(::testing::internal::CmpHelperNE, expected, actual)
 #define EXPECT_LE(val1, val2) \
-  EXPECT_PRED_FORMAT2(::testing::internal::CmpHelperLE, val1, val2)
+  if (!std::is_same<decltype(val1), caffe::half_fp>::value) \
+    EXPECT_PRED_FORMAT2(::testing::internal::CmpHelperLE, val1, val2); \
+  else \
+    EXPECT_FLOAT_LE(val1, val2)
+
 #define EXPECT_LT(val1, val2) \
   EXPECT_PRED_FORMAT2(::testing::internal::CmpHelperLT, val1, val2)
 #define EXPECT_GE(val1, val2) \
-  EXPECT_PRED_FORMAT2(::testing::internal::CmpHelperGE, val1, val2)
+  if (!std::is_same<decltype(val1), caffe::half_fp>::value) \
+    EXPECT_PRED_FORMAT2(::testing::internal::CmpHelperGE, val1, val2); \
+  else \
+    EXPECT_FLOAT_GE(val1, val2)
 #define EXPECT_GT(val1, val2) \
   EXPECT_PRED_FORMAT2(::testing::internal::CmpHelperGT, val1, val2)
 
@@ -19330,9 +19425,41 @@ AssertionResult AssertPred5Helper(const char* pred_text,
 // FloatingPoint template class in gtest-internal.h if you are
 // interested in the implementation details.
 
-#define EXPECT_FLOAT_EQ(expected, actual)\
-  EXPECT_PRED_FORMAT2(::testing::internal::CmpHelperFloatingPointEQ<float>, \
-                      expected, actual)
+#define IS_DOUBLE_TYPE(val) \
+     (std::is_same<decltype(val), double>::value || \
+      std::is_same<decltype(val), const double>::value || \
+      std::is_same<decltype(val), const double &>::value || \
+      std::is_same<decltype(val), double &>::value)
+
+#define EXPECT_FLOAT_GE(expected, actual)\
+  if (IS_DOUBLE_TYPE(expected)) \
+    EXPECT_PRED_FORMAT2(::testing::internal::CmpHelperFloatingPointGE<float>, \
+                        expected,\
+                        actual);\
+  else \
+    EXPECT_PRED_FORMAT2(::testing::internal::CmpHelperFloatingPointGE<decltype(expected)>, \
+                        expected,\
+                        actual)
+
+#define EXPECT_FLOAT_LE(expected, actual)\
+  if (IS_DOUBLE_TYPE(expected)) \
+    EXPECT_PRED_FORMAT2(::testing::internal::CmpHelperFloatingPointLE<float>, \
+                        expected,\
+                        actual); \
+  else \
+    EXPECT_PRED_FORMAT2(::testing::internal::CmpHelperFloatingPointLE<decltype(expected)>, \
+                        expected,\
+                        actual)
+
+#define EXPECT_FLOAT_EQ(expected, actual) \
+  if (IS_DOUBLE_TYPE(expected)) \
+    EXPECT_PRED_FORMAT2(::testing::internal::CmpHelperFloatingPointEQ<float>, \
+                        (float)expected,\
+                        (float)actual); \
+  else \
+    EXPECT_PRED_FORMAT2(::testing::internal::CmpHelperFloatingPointEQ<decltype(expected)>, \
+                        expected,\
+                        actual)
 
 #define EXPECT_DOUBLE_EQ(expected, actual)\
   EXPECT_PRED_FORMAT2(::testing::internal::CmpHelperFloatingPointEQ<double>, \

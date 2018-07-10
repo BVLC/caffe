@@ -14,7 +14,7 @@
 
 namespace caffe {
 
-template <typename Dtype> class RecurrentLayer;
+template<typename Dtype, typename MItype, typename MOtype> class RecurrentLayer;
 
 /**
  * @brief Processes time-varying inputs using a simple recurrent neural network
@@ -26,11 +26,11 @@ template <typename Dtype> class RecurrentLayer;
  *     o_t := \tanh[ W_{ho} h_t + b_o ]
  * @f$.
  */
-template <typename Dtype>
-class RNNLayer : public RecurrentLayer<Dtype> {
+template<typename Dtype, typename MItype, typename MOtype>
+class RNNLayer : public RecurrentLayer<Dtype, MItype, MOtype> {
  public:
   explicit RNNLayer(const LayerParameter& param)
-      : RecurrentLayer<Dtype>(param) {}
+      : RecurrentLayer<Dtype, MItype, MOtype>(param) {}
 
   virtual inline const char* type() const { return "RNN"; }
 

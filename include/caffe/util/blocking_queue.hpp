@@ -24,7 +24,7 @@ class BlockingQueue {
   // Return element without removing it
   T peek();
 
-  size_t size() const;
+  uint_tp size() const;
 
  protected:
   /**

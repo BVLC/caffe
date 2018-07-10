@@ -18,7 +18,7 @@ class ThresholdLayerTest : public MultiDeviceTest<TypeParam> {
   ThresholdLayerTest()
       : blob_bottom_(new Blob<Dtype>(2, 3, 6, 5)),
         blob_top_(new Blob<Dtype>()) {
-    Caffe::set_random_seed(1701);
+    Caffe::set_random_seed(1701, Caffe::GetDefaultDevice());
     // fill the values
     FillerParameter filler_param;
     GaussianFiller<Dtype> filler(filler_param);
@@ -33,13 +33,13 @@ class ThresholdLayerTest : public MultiDeviceTest<TypeParam> {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-TYPED_TEST_CASE(ThresholdLayerTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(ThresholdLayerTest, TestDtypesFloatAndDevices);
 
 
 TYPED_TEST(ThresholdLayerTest, TestSetup) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  ThresholdLayer<Dtype> layer(layer_param);
+  ThresholdLayer<Dtype, Dtype, Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   EXPECT_EQ(this->blob_top_->num(), this->blob_bottom_->num());
   EXPECT_EQ(this->blob_top_->channels(), this->blob_bottom_->channels());
@@ -50,14 +50,14 @@ TYPED_TEST(ThresholdLayerTest, TestSetup) {
 TYPED_TEST(ThresholdLayerTest, Test) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
-  ThresholdLayer<Dtype> layer(layer_param);
+  ThresholdLayer<Dtype, Dtype, Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   // Now, check values
   const Dtype* bottom_data = this->blob_bottom_->cpu_data();
   const Dtype* top_data = this->blob_top_->cpu_data();
   const Dtype threshold_ = layer_param.threshold_param().threshold();
-  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_bottom_->count(); ++i) {
     EXPECT_GE(top_data[i], 0.);
     EXPECT_LE(top_data[i], 1.);
     if (top_data[i] == 0) {
@@ -75,7 +75,7 @@ TYPED_TEST(ThresholdLayerTest, Test2) {
   ThresholdParameter* threshold_param =
     layer_param.mutable_threshold_param();
   threshold_param->set_threshold(0.5);
-  ThresholdLayer<Dtype> layer(layer_param);
+  ThresholdLayer<Dtype, Dtype, Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   // Now, check values
@@ -83,7 +83,7 @@ TYPED_TEST(ThresholdLayerTest, Test2) {
   const Dtype* top_data = this->blob_top_->cpu_data();
   const Dtype threshold_ = layer_param.threshold_param().threshold();
   EXPECT_FLOAT_EQ(threshold_, 0.5);
-  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+  for (int_tp i = 0; i < this->blob_bottom_->count(); ++i) {
     EXPECT_GE(top_data[i], 0.);
     EXPECT_LE(top_data[i], 1.);
     if (top_data[i] == 0) {

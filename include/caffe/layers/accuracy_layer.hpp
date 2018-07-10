@@ -15,8 +15,8 @@ namespace caffe {
  * @brief Computes the classification accuracy for a one-of-many
  *        classification task.
  */
-template <typename Dtype>
-class AccuracyLayer : public Layer<Dtype> {
+template<typename Dtype, typename MItype, typename MOtype>
+class AccuracyLayer : public Layer<Dtype, MItype, MOtype> {
  public:
   /**
    * @param param provides AccuracyParameter accuracy_param,
@@ -27,37 +27,37 @@ class AccuracyLayer : public Layer<Dtype> {
    *     correct if the correct label is among the top 5 predicted labels.
    */
   explicit AccuracyLayer(const LayerParameter& param)
-      : Layer<Dtype>(param) {}
-  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
-  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
+      : Layer<Dtype, MItype, MOtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
+  virtual void Reshape(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
 
   virtual inline const char* type() const { return "Accuracy"; }
-  virtual inline int ExactNumBottomBlobs() const { return 2; }
+  virtual inline int_tp ExactNumBottomBlobs() const { return 2; }
 
   // If there are two top blobs, then the second blob will contain
   // accuracies per class.
-  virtual inline int MinTopBlobs() const { return 1; }
-  virtual inline int MaxTopBlobs() const { return 2; }
+  virtual inline int_tp MinTopBlobs() const { return 1; }
+  virtual inline int_tp MaxTopBlobs() const { return 2; }
 
  protected:
   /**
    * @param bottom input Blob vector (length 2)
-   *   -# @f$ (N \times C \times H \times W) @f$
-   *      the predictions @f$ x @f$, a Blob with values in
+   *   -# @f$ (n \times c \times H \times W) @f$
+   *      the predictions @f$ X @f$, a Blob with values in
    *      @f$ [-\infty, +\infty] @f$ indicating the predicted score for each of
-   *      the @f$ K = CHW @f$ classes. Each @f$ x_n @f$ is mapped to a predicted
+   *      the @f$ k = CHW @f$ classes. Each @f$ x_n @f$ is mapped to a predicted
    *      label @f$ \hat{l}_n @f$ given by its maximal index:
    *      @f$ \hat{l}_n = \arg\max\limits_k x_{nk} @f$
-   *   -# @f$ (N \times 1 \times 1 \times 1) @f$
+   *   -# @f$ (n \times 1 \times 1 \times 1) @f$
    *      the labels @f$ l @f$, an integer-valued Blob with values
-   *      @f$ l_n \in [0, 1, 2, ..., K - 1] @f$
-   *      indicating the correct class label among the @f$ K @f$ classes
+   *      @f$ l_n \in [0, 1, 2, ..., k - 1] @f$
+   *      indicating the correct class label among the @f$ k @f$ classes
    * @param top output Blob vector (length 1)
    *   -# @f$ (1 \times 1 \times 1 \times 1) @f$
    *      the computed accuracy: @f$
-   *        \frac{1}{N} \sum\limits_{n=1}^N \delta\{ \hat{l}_n = l_n \}
+   *        \frac{1}{n} \sum\limits_{n=1}^n \delta\{ \hat{l}_n = l_n \}
    *      @f$, where @f$
    *      \delta\{\mathrm{condition}\} = \left\{
    *         \begin{array}{lr}
@@ -66,30 +66,35 @@ class AccuracyLayer : public Layer<Dtype> {
    *         \end{array} \right.
    *      @f$
    */
-  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
-  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
+
+  virtual void Forward_cpu(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
 
 
   /// @brief Not implemented -- AccuracyLayer cannot be used as a loss.
-  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
-    for (int i = 0; i < propagate_down.size(); ++i) {
+  virtual void Backward_cpu(const vector<Blob<MOtype>*>& top,
+      const vector<bool>& propagate_down,
+      const vector<Blob<MItype>*>& bottom) {
+    for (int_tp i = 0; i < propagate_down.size(); ++i) {
       if (propagate_down[i]) { NOT_IMPLEMENTED; }
     }
   }
-  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<MOtype>*>& top,
+      const vector<bool>& propagate_down,
+      const vector<Blob<MItype>*>& bottom);
 
-  int label_axis_, outer_num_, inner_num_;
 
-  int top_k_;
+  void GenerateProgram();
+
+  int_tp label_axis_, outer_num_, inner_num_;
+  int_tp top_k_;
 
   /// Whether to ignore instances with a certain label.
   bool has_ignore_label_;
   /// The label indicating that an instance should be ignored.
-  int ignore_label_;
+  int_tp ignore_label_;
   /// Keeps counts of the number of samples per class.
   Blob<Dtype> nums_buffer_;
 };

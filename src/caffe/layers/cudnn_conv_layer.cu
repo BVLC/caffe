@@ -5,18 +5,18 @@
 
 namespace caffe {
 
-__global__ void sync_conv_groups() { }
+template<typename Dtype, typename MItype, typename MOtype>
+void CuDNNConvolutionLayer<Dtype, MItype, MOtype>::Forward_gpu(
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
 
-template <typename Dtype>
-void CuDNNConvolutionLayer<Dtype>::Forward_gpu(
-    const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
-  const Dtype* weight = this->blobs_[0]->gpu_data();
-  for (int i = 0; i < bottom.size(); ++i) {
-    const Dtype* bottom_data = bottom[i]->gpu_data();
-    Dtype* top_data = top[i]->mutable_gpu_data();
+  const Dtype* weight = this->blobs_[0]->gpu_data().get_cuda_ptr();
+  for (int_tp i = 0; i < bottom.size(); ++i) {
+    const Dtype* bottom_data = bottom[i]->gpu_data().get_cuda_ptr();
+    Dtype* top_data = top[i]->mutable_gpu_data().get_cuda_ptr();
 
     // Forward through cuDNN in parallel over groups.
-    for (int g = 0; g < this->group_; g++) {
+    for (int_tp g = 0; g < this->group_; g++) {
       // Filters.
       CUDNN_CHECK(cudnnConvolutionForward(handle_[g],
             cudnn::dataType<Dtype>::one,
@@ -29,7 +29,7 @@ void CuDNNConvolutionLayer<Dtype>::Forward_gpu(
 
       // Bias.
       if (this->bias_term_) {
-        const Dtype* bias_data = this->blobs_[1]->gpu_data();
+        const Dtype* bias_data = this->blobs_[1]->gpu_data().get_cuda_ptr();
         CUDNN_CHECK(cudnnAddTensor(handle_[g],
               cudnn::dataType<Dtype>::one,
               bias_desc_, bias_data + bias_offset_ * g,
@@ -40,28 +40,29 @@ void CuDNNConvolutionLayer<Dtype>::Forward_gpu(
 
     // Synchronize the work across groups, each of which went into its own
     // stream, by launching an empty kernel into the default (null) stream.
-    // NOLINT_NEXT_LINE(whitespace/operators)
-    sync_conv_groups<<<1, 1>>>();
+    float arg = 0.0;
+    this->device_->null_kernel(arg);
   }
 }
 
-template <typename Dtype>
-void CuDNNConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
-    const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+template<typename Dtype, typename MItype, typename MOtype>
+void CuDNNConvolutionLayer<Dtype, MItype, MOtype>::Backward_gpu(
+    const vector<Blob<MOtype>*>& top,
+    const vector<bool>& propagate_down, const vector<Blob<MItype>*>& bottom) {
   const Dtype* weight = NULL;
   Dtype* weight_diff = NULL;
   if (this->param_propagate_down_[0]) {
-    weight = this->blobs_[0]->gpu_data();
-    weight_diff = this->blobs_[0]->mutable_gpu_diff();
+    weight = this->blobs_[0]->gpu_data().get_cuda_ptr();
+    weight_diff = this->blobs_[0]->mutable_gpu_diff().get_cuda_ptr();
   }
   Dtype* bias_diff = NULL;
   if (this->bias_term_ && this->param_propagate_down_[1]) {
-    bias_diff = this->blobs_[1]->mutable_gpu_diff();
+    bias_diff = this->blobs_[1]->mutable_gpu_diff().get_cuda_ptr();
   }
-  for (int i = 0; i < top.size(); ++i) {
-    const Dtype* top_diff = top[i]->gpu_diff();
+  for (int_tp i = 0; i < top.size(); ++i) {
+    const Dtype* top_diff = top[i]->gpu_diff().get_cuda_ptr();
     // Backward through cuDNN in parallel over groups and gradients.
-    for (int g = 0; g < this->group_; g++) {
+    for (int_tp g = 0; g < this->group_; g++) {
       // Gradient w.r.t. bias.
       if (this->bias_term_ && this->param_propagate_down_[1]) {
         CUDNN_CHECK(cudnnConvolutionBackwardBias(handle_[0*this->group_ + g],
@@ -73,7 +74,7 @@ void CuDNNConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 
       // Gradient w.r.t. weights.
       if (this->param_propagate_down_[0]) {
-        const Dtype* bottom_data = bottom[i]->gpu_data();
+        const Dtype* bottom_data = bottom[i]->gpu_data().get_cuda_ptr();
         CUDNN_CHECK(cudnnConvolutionBackwardFilter(
               handle_[1*this->group_ + g],
               cudnn::dataType<Dtype>::one,
@@ -89,9 +90,9 @@ void CuDNNConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
       // Gradient w.r.t. bottom data.
       if (propagate_down[i]) {
         if (weight == NULL) {
-          weight = this->blobs_[0]->gpu_data();
+          weight = this->blobs_[0]->gpu_data().get_cuda_ptr();
         }
-        Dtype* bottom_diff = bottom[i]->mutable_gpu_diff();
+        Dtype* bottom_diff = bottom[i]->mutable_gpu_diff().get_cuda_ptr();
         CUDNN_CHECK(cudnnConvolutionBackwardData(
               handle_[2*this->group_ + g],
               cudnn::dataType<Dtype>::one,
@@ -107,12 +108,21 @@ void CuDNNConvolutionLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 
     // Synchronize the work across groups, each of which went into its own
     // stream, by launching an empty kernel into the default (null) stream.
-    // NOLINT_NEXT_LINE(whitespace/operators)
-    sync_conv_groups<<<1, 1>>>();
+    float arg = 0.0;
+    this->device_->null_kernel(arg);
   }
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(CuDNNConvolutionLayer);
+
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(CuDNNConvolutionLayer, Forward_gpu,
+                                  (float), (float), (float));
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(CuDNNConvolutionLayer, Forward_gpu,
+                                  (double), (double), (double));
+
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(CuDNNConvolutionLayer, Backward_gpu,
+                                  (float), (float), (float));
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(CuDNNConvolutionLayer, Backward_gpu,
+                                  (double), (double), (double));
 
 }  // namespace caffe
 #endif

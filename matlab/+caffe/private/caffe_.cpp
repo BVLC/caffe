@@ -17,7 +17,7 @@
 
 #include "caffe/caffe.hpp"
 
-#define MEX_ARGS int nlhs, mxArray **plhs, int nrhs, const mxArray **prhs
+#define MEX_ARGS int_tp nlhs, mxArray **plhs, int_tp nrhs, const mxArray **prhs
 
 using namespace caffe;  // NOLINT(build/namespaces)
 
@@ -34,7 +34,7 @@ void mxCHECK_FILE_EXIST(const char* file) {
   std::ifstream f(file);
   if (!f.good()) {
     f.close();
-    std::string msg("Could not open file ");
+    string msg("Could not open file ");
     msg += file;
     mxERROR(msg.c_str());
   }
@@ -45,7 +45,14 @@ void mxCHECK_FILE_EXIST(const char* file) {
 static vector<shared_ptr<Solver<float> > > solvers_;
 static vector<shared_ptr<Net<float> > > nets_;
 // init_key is generated at the beginning and every time you call reset
+#ifndef _MSC_VER  // We are not using MSVC.
 static double init_key = static_cast<double>(caffe_rng_rand());
+#else  // We are using MSVC.
+// The original statement may cause MATLAB halt on Windows when cuBLAS is used.
+// Using a negative number as a flag instead of calling caffe_rng_rand().
+// init_key will be generated in entry function: mexFunction().
+static double init_key = -1;
+#endif  // !_MSC_VER
 
 /** -----------------------------------------------------------------
  ** data conversion functions
@@ -78,9 +85,9 @@ static void mx_mat_to_blob(const mxArray* mx_mat, Blob<float>* blob,
 // Copy Blob data or diff to matlab array
 static mxArray* blob_to_mx_mat(const Blob<float>* blob,
     WhichMemory data_or_diff) {
-  const int num_axes = blob->num_axes();
+  const int_tp num_axes = blob->num_axes();
   vector<mwSize> dims(num_axes);
-  for (int blob_axis = 0, mat_axis = num_axes - 1; blob_axis < num_axes;
+  for (int_tp blob_axis = 0, mat_axis = num_axes - 1; blob_axis < num_axes;
        ++blob_axis, --mat_axis) {
     dims[mat_axis] = static_cast<mwSize>(blob->shape(blob_axis));
   }
@@ -106,20 +113,20 @@ static mxArray* blob_to_mx_mat(const Blob<float>* blob,
   return mx_mat;
 }
 
-// Convert vector<int> to matlab row vector
-static mxArray* int_vec_to_mx_vec(const vector<int>& int_vec) {
+// Convert vector<int_tp> to matlab row vector
+static mxArray* int_vec_to_mx_vec(const vector<int_tp>& int_vec) {
   mxArray* mx_vec = mxCreateDoubleMatrix(int_vec.size(), 1, mxREAL);
   double* vec_mem_ptr = mxGetPr(mx_vec);
-  for (int i = 0; i < int_vec.size(); i++) {
+  for (int_tp i = 0; i < int_vec.size(); i++) {
     vec_mem_ptr[i] = static_cast<double>(int_vec[i]);
   }
   return mx_vec;
 }
 
 // Convert vector<string> to matlab cell vector of strings
-static mxArray* str_vec_to_mx_strcell(const vector<std::string>& str_vec) {
+static mxArray* str_vec_to_mx_strcell(const vector<string>& str_vec) {
   mxArray* mx_strcell = mxCreateCellMatrix(str_vec.size(), 1);
-  for (int i = 0; i < str_vec.size(); i++) {
+  for (int_tp i = 0; i < str_vec.size(); i++) {
     mxSetCell(mx_strcell, i, mxCreateString(str_vec[i].c_str()));
   }
   return mx_strcell;
@@ -145,15 +152,15 @@ static T* handle_to_ptr(const mxArray* mx_handle) {
 
 // Create a handle struct vector, without setting up each handle in it
 template <typename T>
-static mxArray* create_handle_vec(int ptr_num) {
-  const int handle_field_num = 2;
+static mxArray* create_handle_vec(int_tp ptr_num) {
+  const int_tp handle_field_num = 2;
   const char* handle_fields[handle_field_num] = { "ptr", "init_key" };
   return mxCreateStructMatrix(ptr_num, 1, handle_field_num, handle_fields);
 }
 
 // Set up a handle in a handle struct vector by its index
 template <typename T>
-static void setup_handle(const T* ptr, int index, mxArray* mx_handle_vec) {
+static void setup_handle(const T* ptr, int_tp index, mxArray* mx_handle_vec) {
   mxArray* mx_ptr = mxCreateNumericMatrix(1, 1, mxUINT64_CLASS, mxREAL);
   *reinterpret_cast<uint64_t*>(mxGetData(mx_ptr)) =
       reinterpret_cast<uint64_t>(ptr);
@@ -173,7 +180,7 @@ static mxArray* ptr_to_handle(const T* ptr) {
 template <typename T>
 static mxArray* ptr_vec_to_handle_vec(const vector<shared_ptr<T> >& ptr_vec) {
   mxArray* mx_handle_vec = create_handle_vec<T>(ptr_vec.size());
-  for (int i = 0; i < ptr_vec.size(); i++) {
+  for (int_tp i = 0; i < ptr_vec.size(); i++) {
     setup_handle(ptr_vec[i].get(), i, mx_handle_vec);
   }
   return mx_handle_vec;
@@ -188,10 +195,7 @@ static void get_solver(MEX_ARGS) {
       "Usage: caffe_('get_solver', solver_file)");
   char* solver_file = mxArrayToString(prhs[0]);
   mxCHECK_FILE_EXIST(solver_file);
-  SolverParameter solver_param;
-  ReadSolverParamsFromTextFileOrDie(solver_file, &solver_param);
-  shared_ptr<Solver<float> > solver(
-      SolverRegistry<float>::CreateSolver(solver_param));
+  shared_ptr<Solver<float> > solver(new caffe::SGDSolver<float>(solver_file));
   solvers_.push_back(solver);
   plhs[0] = ptr_to_handle<Solver<float> >(solver.get());
   mxFree(solver_file);
@@ -213,7 +217,7 @@ static void solver_get_attr(MEX_ARGS) {
   mxCHECK(nrhs == 1 && mxIsStruct(prhs[0]),
       "Usage: caffe_('solver_get_attr', hSolver)");
   Solver<float>* solver = handle_to_ptr<Solver<float> >(prhs[0]);
-  const int solver_attr_num = 2;
+  const int_tp solver_attr_num = 2;
   const char* solver_attrs[solver_attr_num] = { "hNet_net", "hNet_test_nets" };
   mxArray* mx_solver_attr = mxCreateStructMatrix(1, 1, solver_attr_num,
       solver_attrs);
@@ -256,7 +260,7 @@ static void solver_step(MEX_ARGS) {
   mxCHECK(nrhs == 2 && mxIsStruct(prhs[0]) && mxIsDouble(prhs[1]),
       "Usage: caffe_('solver_step', hSolver, iters)");
   Solver<float>* solver = handle_to_ptr<Solver<float> >(prhs[0]);
-  int iters = mxGetScalar(prhs[1]);
+  int_tp iters = mxGetScalar(prhs[1]);
   solver->Step(iters);
 }
 
@@ -298,7 +302,7 @@ static void net_get_attr(MEX_ARGS) {
   mxCHECK(nrhs == 1 && mxIsStruct(prhs[0]),
       "Usage: caffe_('net_get_attr', hNet)");
   Net<float>* net = handle_to_ptr<Net<float> >(prhs[0]);
-  const int net_attr_num = 6;
+  const int_tp net_attr_num = 6;
   const char* net_attrs[net_attr_num] = { "hLayer_layers", "hBlob_blobs",
       "input_blob_indices", "output_blob_indices", "layer_names", "blob_names"};
   mxArray* mx_net_attr = mxCreateStructMatrix(1, 1, net_attr_num,
@@ -370,7 +374,7 @@ static void layer_get_attr(MEX_ARGS) {
   mxCHECK(nrhs == 1 && mxIsStruct(prhs[0]),
       "Usage: caffe_('layer_get_attr', hLayer)");
   Layer<float>* layer = handle_to_ptr<Layer<float> >(prhs[0]);
-  const int layer_attr_num = 1;
+  const int_tp layer_attr_num = 1;
   const char* layer_attrs[layer_attr_num] = { "hBlob_blobs" };
   mxArray* mx_layer_attr = mxCreateStructMatrix(1, 1, layer_attr_num,
       layer_attrs);
@@ -392,10 +396,10 @@ static void blob_get_shape(MEX_ARGS) {
   mxCHECK(nrhs == 1 && mxIsStruct(prhs[0]),
       "Usage: caffe_('blob_get_shape', hBlob)");
   Blob<float>* blob = handle_to_ptr<Blob<float> >(prhs[0]);
-  const int num_axes = blob->num_axes();
+  const int_tp num_axes = blob->num_axes();
   mxArray* mx_shape = mxCreateDoubleMatrix(1, num_axes, mxREAL);
   double* shape_mem_mtr = mxGetPr(mx_shape);
-  for (int blob_axis = 0, mat_axis = num_axes - 1; blob_axis < num_axes;
+  for (int_tp blob_axis = 0, mat_axis = num_axes - 1; blob_axis < num_axes;
        ++blob_axis, --mat_axis) {
     shape_mem_mtr[mat_axis] = static_cast<double>(blob->shape(blob_axis));
   }
@@ -409,11 +413,11 @@ static void blob_reshape(MEX_ARGS) {
   Blob<float>* blob = handle_to_ptr<Blob<float> >(prhs[0]);
   const mxArray* mx_shape = prhs[1];
   double* shape_mem_mtr = mxGetPr(mx_shape);
-  const int num_axes = mxGetNumberOfElements(mx_shape);
-  vector<int> blob_shape(num_axes);
-  for (int blob_axis = 0, mat_axis = num_axes - 1; blob_axis < num_axes;
+  const int_tp num_axes = mxGetNumberOfElements(mx_shape);
+  vector<int_tp> blob_shape(num_axes);
+  for (int_tp blob_axis = 0, mat_axis = num_axes - 1; blob_axis < num_axes;
        ++blob_axis, --mat_axis) {
-    blob_shape[blob_axis] = static_cast<int>(shape_mem_mtr[mat_axis]);
+    blob_shape[blob_axis] = static_cast<int_tp>(shape_mem_mtr[mat_axis]);
   }
   blob->Reshape(blob_shape);
 }
@@ -466,7 +470,7 @@ static void set_mode_gpu(MEX_ARGS) {
 static void set_device(MEX_ARGS) {
   mxCHECK(nrhs == 1 && mxIsDouble(prhs[0]),
       "Usage: caffe_('set_device', device_id)");
-  int device_id = static_cast<int>(mxGetScalar(prhs[0]));
+  int_tp device_id = static_cast<int_tp>(mxGetScalar(prhs[0]));
   Caffe::SetDevice(device_id);
 }
 
@@ -508,12 +512,12 @@ static void write_mean(MEX_ARGS) {
   mxCHECK(nrhs == 2 && mxIsSingle(prhs[0]) && mxIsChar(prhs[1]),
       "Usage: caffe_('write_mean', mean_data, mean_proto_file)");
   char* mean_proto_file = mxArrayToString(prhs[1]);
-  int ndims = mxGetNumberOfDimensions(prhs[0]);
+  int_tp ndims = mxGetNumberOfDimensions(prhs[0]);
   mxCHECK(ndims >= 2 && ndims <= 3, "mean_data must have at 2 or 3 dimensions");
   const mwSize *dims = mxGetDimensions(prhs[0]);
-  int width = dims[0];
-  int height = dims[1];
-  int channels;
+  int_tp width = dims[0];
+  int_tp height = dims[1];
+  int_tp channels;
   if (ndims == 3)
     channels = dims[2];
   else
@@ -583,13 +587,17 @@ static handler_registry handlers[] = {
  **/
 // Usage: caffe_(api_command, arg1, arg2, ...)
 void mexFunction(MEX_ARGS) {
+#ifdef _MSC_VER
+  if (init_key == -1)
+    init_key = static_cast<double>(caffe_rng_rand());
+#endif  // _MSC_VER
   mexLock();  // Avoid clearing the mex file.
   mxCHECK(nrhs > 0, "Usage: caffe_(api_command, arg1, arg2, ...)");
   // Handle input command
   char* cmd = mxArrayToString(prhs[0]);
   bool dispatched = false;
   // Dispatch to cmd handler
-  for (int i = 0; handlers[i].func != NULL; i++) {
+  for (int_tp i = 0; handlers[i].func != NULL; i++) {
     if (handlers[i].cmd.compare(cmd) == 0) {
       handlers[i].func(nlhs, plhs, nrhs-1, prhs+1);
       dispatched = true;

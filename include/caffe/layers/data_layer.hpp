@@ -13,17 +13,18 @@
 
 namespace caffe {
 
-template <typename Dtype>
-class DataLayer : public BasePrefetchingDataLayer<Dtype> {
+template<typename Dtype, typename MItype, typename MOtype>
+class DataLayer
+    : public BasePrefetchingDataLayer<Dtype, MItype, MOtype> {
  public:
   explicit DataLayer(const LayerParameter& param);
   virtual ~DataLayer();
-  virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
+  virtual void DataLayerSetUp(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
   virtual inline const char* type() const { return "Data"; }
-  virtual inline int ExactNumBottomBlobs() const { return 0; }
-  virtual inline int MinTopBlobs() const { return 1; }
-  virtual inline int MaxTopBlobs() const { return 2; }
+  virtual inline int_tp ExactNumBottomBlobs() const { return 0; }
+  virtual inline int_tp MinTopBlobs() const { return 1; }
+  virtual inline int_tp MaxTopBlobs() const { return 2; }
 
  protected:
   void Next();

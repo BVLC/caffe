@@ -17,25 +17,27 @@ namespace caffe {
  *
  * TODO(dox): thorough documentation for Forward and proto params.
  */
-template <typename Dtype>
-class BaseDataLayer : public Layer<Dtype> {
+template<typename Dtype, typename MItype, typename MOtype>
+class BaseDataLayer : public Layer<Dtype, MItype, MOtype> {
  public:
   explicit BaseDataLayer(const LayerParameter& param);
   // LayerSetUp: implements common data layer setup functionality, and calls
   // DataLayerSetUp to do special data layer setup for individual layer types.
   // This method may not be overridden except by the BasePrefetchingDataLayer.
-  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
-  virtual void DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {}
+  virtual void LayerSetUp(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
+  virtual void DataLayerSetUp(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top) {}
   // Data layers have no bottoms, so reshaping is trivial.
-  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {}
+  virtual void Reshape(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top) {}
 
-  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {}
-  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {}
+  virtual void Backward_cpu(const vector<Blob<MOtype>*>& top,
+      const vector<bool>& propagate_down,
+      const vector<Blob<MItype>*>& bottom) {}
+  virtual void Backward_gpu(const vector<Blob<MOtype>*>& top,
+      const vector<bool>& propagate_down,
+      const vector<Blob<MItype>*>& bottom) {}
 
  protected:
   TransformationParameter transform_param_;
@@ -43,38 +45,38 @@ class BaseDataLayer : public Layer<Dtype> {
   bool output_labels_;
 };
 
-template <typename Dtype>
+template <typename MOtype>
 class Batch {
  public:
-  Blob<Dtype> data_, label_;
+  Blob<MOtype> data_, label_;
 };
 
-template <typename Dtype>
+template<typename Dtype, typename MItype, typename MOtype>
 class BasePrefetchingDataLayer :
-    public BaseDataLayer<Dtype>, public InternalThread {
+    public BaseDataLayer<Dtype, MItype, MOtype>, public InternalThread {
  public:
   explicit BasePrefetchingDataLayer(const LayerParameter& param);
   // LayerSetUp: implements common data layer setup functionality, and calls
   // DataLayerSetUp to do special data layer setup for individual layer types.
   // This method may not be overridden.
-  void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
+  void LayerSetUp(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
 
-  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
-  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_cpu(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
 
  protected:
   virtual void InternalThreadEntry();
-  virtual void load_batch(Batch<Dtype>* batch) = 0;
+  virtual void load_batch(Batch<MOtype>* batch) = 0;
 
-  vector<shared_ptr<Batch<Dtype> > > prefetch_;
-  BlockingQueue<Batch<Dtype>*> prefetch_free_;
-  BlockingQueue<Batch<Dtype>*> prefetch_full_;
-  Batch<Dtype>* prefetch_current_;
+  vector<shared_ptr<Batch<MOtype> > > prefetch_;
+  BlockingQueue<Batch<MOtype>*> prefetch_free_;
+  BlockingQueue<Batch<MOtype>*> prefetch_full_;
+  Batch<MOtype>* prefetch_current_;
 
-  Blob<Dtype> transformed_data_;
+  Blob<MOtype> transformed_data_;
 };
 
 }  // namespace caffe

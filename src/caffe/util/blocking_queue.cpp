@@ -80,12 +80,31 @@ T BlockingQueue<T>::peek() {
 }
 
 template<typename T>
-size_t BlockingQueue<T>::size() const {
+uint_tp BlockingQueue<T>::size() const {
   boost::mutex::scoped_lock lock(sync_->mutex_);
   return queue_.size();
 }
 
+#ifdef USE_HALF
+template class BlockingQueue<Batch<half_fp>*>;
+#endif
+#ifdef USE_SINGLE
 template class BlockingQueue<Batch<float>*>;
+#endif
+#ifdef USE_DOUBLE
 template class BlockingQueue<Batch<double>*>;
+#endif
+#ifdef USE_INT_QUANT_8
+template class BlockingQueue<Batch<uint8_t>*>;
+#endif
+#ifdef USE_INT_QUANT_16
+template class BlockingQueue<Batch<uint16_t>*>;
+#endif
+#ifdef USE_INT_QUANT_32
+template class BlockingQueue<Batch<uint32_t>*>;
+#endif
+#ifdef USE_INT_QUANT_64
+template class BlockingQueue<Batch<uint64_t>*>;
+#endif
 
 }  // namespace caffe

@@ -5,23 +5,36 @@
 
 namespace caffe {
 
-template <typename Dtype>
-void ELULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-    const vector<Blob<Dtype>*>& top) {
+template<typename Dtype, typename MItype, typename MOtype>
+void ELULayer<Dtype, MItype, MOtype>::Reshape(
+                            const vector<Blob<MItype>*>& bottom,
+                            const vector<Blob<MOtype>*>& top) {
+  NeuronLayer<Dtype, MItype, MOtype>::Reshape(bottom, top);
+
+  if (Caffe::mode() == Caffe::GPU && this->device_program_.get() == nullptr) {
+    this->GenerateProgram();
+  }
+}
+
+template<typename Dtype, typename MItype, typename MOtype>
+void ELULayer<Dtype, MItype, MOtype>::Forward_cpu(
+                                    const vector<Blob<MItype>*>& bottom,
+                                    const vector<Blob<MOtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = top[0]->mutable_cpu_data();
   const int count = bottom[0]->count();
   Dtype alpha = this->layer_param_.elu_param().alpha();
   for (int i = 0; i < count; ++i) {
     top_data[i] = std::max(bottom_data[i], Dtype(0))
-        + alpha * (exp(std::min(bottom_data[i], Dtype(0))) - Dtype(1));
+        + alpha * (std::exp(std::min(bottom_data[i], Dtype(0))) - Dtype(1));
   }
 }
 
-template <typename Dtype>
-void ELULayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
-    const vector<bool>& propagate_down,
-    const vector<Blob<Dtype>*>& bottom) {
+template<typename Dtype, typename MItype, typename MOtype>
+void ELULayer<Dtype, MItype, MOtype>::Backward_cpu(
+                                    const vector<Blob<MOtype>*>& top,
+                                    const vector<bool>& propagate_down,
+                                    const vector<Blob<MItype>*>& bottom) {
   if (propagate_down[0]) {
     const Dtype* bottom_data = bottom[0]->cpu_data();
     const Dtype* top_data = top[0]->cpu_data();
@@ -41,7 +54,13 @@ void ELULayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 STUB_GPU(ELULayer);
 #endif
 
-INSTANTIATE_CLASS(ELULayer);
+INSTANTIATE_CLASS_3T_GUARDED(ELULayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(ELULayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(ELULayer, (double), (double), (double));
+
 REGISTER_LAYER_CLASS(ELU);
+REGISTER_LAYER_CLASS_INST(ELU, (half_fp), (half_fp), (half_fp));
+REGISTER_LAYER_CLASS_INST(ELU, (float), (float), (float));
+REGISTER_LAYER_CLASS_INST(ELU, (double), (double), (double));
 
 }  // namespace caffe

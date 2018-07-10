@@ -8,7 +8,7 @@
 #include "caffe/proto/caffe.pb.h"
 
 #include "caffe/layers/neuron_layer.hpp"
-#include "caffe/layers/sigmoid_layer.hpp"
+
 
 namespace caffe {
 
@@ -19,8 +19,8 @@ namespace caffe {
  * [1] Prajit Ramachandran, Barret Zoph, Quoc V. Le. "Searching for
  *     Activation Functions". arXiv preprint arXiv:1710.05941v2 (2017).
  */
-template <typename Dtype>
-class SwishLayer : public NeuronLayer<Dtype> {
+template<typename Dtype, typename MItype, typename MOtype>
+class SwishLayer : public NeuronLayer<Dtype, MItype, MOtype> {
  public:
   /**
    * @param param provides SwishParameter swish_param,
@@ -29,10 +29,7 @@ class SwishLayer : public NeuronLayer<Dtype> {
    *     the value @f$ \beta @f$ in the @f$ y = x \sigma (\beta x) @f$.
    */
   explicit SwishLayer(const LayerParameter& param)
-      : NeuronLayer<Dtype>(param),
-        sigmoid_layer_(new SigmoidLayer<Dtype>(param)),
-        sigmoid_input_(new Blob<Dtype>()),
-        sigmoid_output_(new Blob<Dtype>()) {}
+      : NeuronLayer<Dtype, MItype, MOtype>(param) {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
@@ -51,10 +48,10 @@ class SwishLayer : public NeuronLayer<Dtype> {
    *        y = x \sigma (\beta x)
    *      @f$.
    */
-  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
-  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_cpu(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
 
   /**
    * @brief Computes the error gradient w.r.t. the sigmoid inputs.
@@ -74,21 +71,12 @@ class SwishLayer : public NeuronLayer<Dtype> {
    *              \sigma (\beta x)(1 - \beta y))
    *      @f$ if propagate_down[0]
    */
-  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
-  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_cpu(const vector<Blob<MOtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<MItype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<MOtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<MItype>*>& bottom);
 
-  /// The internal SigmoidLayer
-  shared_ptr<SigmoidLayer<Dtype> > sigmoid_layer_;
-  /// sigmoid_input_ stores the input of the SigmoidLayer.
-  shared_ptr<Blob<Dtype> > sigmoid_input_;
-  /// sigmoid_output_ stores the output of the SigmoidLayer.
-  shared_ptr<Blob<Dtype> > sigmoid_output_;
-  /// bottom vector holder to call the underlying SigmoidLayer::Forward
-  vector<Blob<Dtype>*> sigmoid_bottom_vec_;
-  /// top vector holder to call the underlying SigmoidLayer::Forward
-  vector<Blob<Dtype>*> sigmoid_top_vec_;
+  virtual void GenerateProgram();
 };
 
 }  // namespace caffe

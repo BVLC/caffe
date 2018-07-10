@@ -98,6 +98,8 @@ def main(argv):
 
     if args.gpu:
         caffe.set_mode_gpu()
+        caffe.set_devices((0,))
+        caffe.select_device(0, True)
         print("GPU mode")
     else:
         caffe.set_mode_cpu()

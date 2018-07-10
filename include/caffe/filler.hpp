@@ -15,63 +15,71 @@
 namespace caffe {
 
 /// @brief Fills a Blob with constant or randomly-generated data.
-template <typename Dtype>
+template<typename Dtype>
 class Filler {
  public:
-  explicit Filler(const FillerParameter& param) : filler_param_(param) {}
-  virtual ~Filler() {}
+  explicit Filler(const FillerParameter& param)
+      : filler_param_(param) {
+  }
+  virtual ~Filler() {
+  }
   virtual void Fill(Blob<Dtype>* blob) = 0;
  protected:
   FillerParameter filler_param_;
-};  // class Filler
+};
+// class Filler
 
-
-/// @brief Fills a Blob with constant values @f$ x = 0 @f$.
-template <typename Dtype>
+/// @brief Fills a Blob with constant values @f$ X = 0 @f$.
+template<typename Dtype>
 class ConstantFiller : public Filler<Dtype> {
  public:
   explicit ConstantFiller(const FillerParameter& param)
-      : Filler<Dtype>(param) {}
+      : Filler<Dtype>(param) {
+  }
   virtual void Fill(Blob<Dtype>* blob) {
     Dtype* data = blob->mutable_cpu_data();
-    const int count = blob->count();
+    const int_tp count = blob->count();
     const Dtype value = this->filler_param_.value();
     CHECK(count);
-    for (int i = 0; i < count; ++i) {
+    for (int_tp i = 0; i < count; ++i) {
       data[i] = value;
     }
     CHECK_EQ(this->filler_param_.sparse(), -1)
-         << "Sparsity not supported by this Filler.";
+      << "Sparsity not supported by this Filler.";
   }
 };
 
-/// @brief Fills a Blob with uniformly distributed values @f$ x\sim U(a, b) @f$.
-template <typename Dtype>
+/// @brief Fills a Blob with uniformly distributed values @f$ X\sim U(a, b) @f$.
+template<typename Dtype>
 class UniformFiller : public Filler<Dtype> {
  public:
   explicit UniformFiller(const FillerParameter& param)
-      : Filler<Dtype>(param) {}
+      : Filler<Dtype>(param) {
+  }
   virtual void Fill(Blob<Dtype>* blob) {
     CHECK(blob->count());
     caffe_rng_uniform<Dtype>(blob->count(), Dtype(this->filler_param_.min()),
-        Dtype(this->filler_param_.max()), blob->mutable_cpu_data());
+                             Dtype(this->filler_param_.max()),
+                             blob->mutable_cpu_data());
     CHECK_EQ(this->filler_param_.sparse(), -1)
-         << "Sparsity not supported by this Filler.";
+      << "Sparsity not supported by this Filler.";
   }
 };
 
-/// @brief Fills a Blob with Gaussian-distributed values @f$ x = a @f$.
-template <typename Dtype>
+/// @brief Fills a Blob with Gaussian-distributed values @f$ X = a @f$.
+template<typename Dtype>
 class GaussianFiller : public Filler<Dtype> {
  public:
   explicit GaussianFiller(const FillerParameter& param)
-      : Filler<Dtype>(param) {}
+      : Filler<Dtype>(param) {
+  }
   virtual void Fill(Blob<Dtype>* blob) {
     Dtype* data = blob->mutable_cpu_data();
     CHECK(blob->count());
     caffe_rng_gaussian<Dtype>(blob->count(), Dtype(this->filler_param_.mean()),
-        Dtype(this->filler_param_.std()), blob->mutable_cpu_data());
-    int sparse = this->filler_param_.sparse();
+                              Dtype(this->filler_param_.std()),
+                              blob->mutable_cpu_data());
+    int_tp sparse = this->filler_param_.sparse();
     CHECK_GE(sparse, -1);
     if (sparse >= 0) {
       // Sparse initialization is implemented for "weight" blobs; i.e. matrices.
@@ -79,12 +87,13 @@ class GaussianFiller : public Filler<Dtype> {
       // number of outputs.  The 'sparse' variable specifies the mean number
       // of non-zero input weights for a given output.
       CHECK_GE(blob->num_axes(), 1);
-      const int num_outputs = blob->shape(0);
+      const int_tp num_outputs = blob->shape(0);
       Dtype non_zero_probability = Dtype(sparse) / Dtype(num_outputs);
-      rand_vec_.reset(new SyncedMemory(blob->count() * sizeof(int)));
-      int* mask = reinterpret_cast<int*>(rand_vec_->mutable_cpu_data());
+      rand_vec_.reset(
+          new SyncedMemory(blob->count() * sizeof(int_tp), blob->get_device()));
+      int_tp* mask = reinterpret_cast<int_tp*>(rand_vec_->mutable_cpu_data());
       caffe_rng_bernoulli(blob->count(), non_zero_probability, mask);
-      for (int i = 0; i < blob->count(); ++i) {
+      for (int_tp i = 0; i < blob->count(); ++i) {
         data[i] *= mask[i];
       }
     }
@@ -94,42 +103,43 @@ class GaussianFiller : public Filler<Dtype> {
   shared_ptr<SyncedMemory> rand_vec_;
 };
 
-/** @brief Fills a Blob with values @f$ x \in [0, 1] @f$
+/** @brief Fills a Blob with values @f$ X \in [0, 1] @f$
  *         such that @f$ \forall i \sum_j x_{ij} = 1 @f$.
  */
-template <typename Dtype>
+template<typename Dtype>
 class PositiveUnitballFiller : public Filler<Dtype> {
  public:
   explicit PositiveUnitballFiller(const FillerParameter& param)
-      : Filler<Dtype>(param) {}
+      : Filler<Dtype>(param) {
+  }
   virtual void Fill(Blob<Dtype>* blob) {
     Dtype* data = blob->mutable_cpu_data();
     DCHECK(blob->count());
     caffe_rng_uniform<Dtype>(blob->count(), 0, 1, blob->mutable_cpu_data());
     // We expect the filler to not be called very frequently, so we will
     // just use a simple implementation
-    int dim = blob->count() / blob->shape(0);
+    int_tp dim = blob->count() / blob->shape(0);
     CHECK(dim);
-    for (int i = 0; i < blob->shape(0); ++i) {
+    for (int_tp i = 0; i < blob->shape(0); ++i) {
       Dtype sum = 0;
-      for (int j = 0; j < dim; ++j) {
+      for (int_tp j = 0; j < dim; ++j) {
         sum += data[i * dim + j];
       }
-      for (int j = 0; j < dim; ++j) {
+      for (int_tp j = 0; j < dim; ++j) {
         data[i * dim + j] /= sum;
       }
     }
     CHECK_EQ(this->filler_param_.sparse(), -1)
-         << "Sparsity not supported by this Filler.";
+      << "Sparsity not supported by this Filler.";
   }
 };
 
 /**
- * @brief Fills a Blob with values @f$ x \sim U(-a, +a) @f$ where @f$ a @f$ is
+ * @brief Fills a Blob with values @f$ X \sim U(-a, +a) @f$ where @f$ a @f$ is
  *        set inversely proportional to number of incoming nodes, outgoing
  *        nodes, or their average.
  *
- * A Filler based on the paper [Bengio and Glorot 2010]: Understanding
+ * a Filler based on the paper [Bengio and Glorot 2010]: Understanding
  * the difficulty of training deep feedforward neuralnetworks.
  *
  * It fills the incoming matrix by randomly sampling uniform data from [-scale,
@@ -140,40 +150,42 @@ class PositiveUnitballFiller : public Filler<Dtype> {
  *
  * TODO(dox): make notation in above comment consistent with rest & use LaTeX.
  */
-template <typename Dtype>
+template<typename Dtype>
 class XavierFiller : public Filler<Dtype> {
  public:
   explicit XavierFiller(const FillerParameter& param)
-      : Filler<Dtype>(param) {}
+      : Filler<Dtype>(param) {
+  }
   virtual void Fill(Blob<Dtype>* blob) {
     CHECK(blob->count());
-    int fan_in = blob->count() / blob->shape(0);
+    int_tp fan_in = blob->count() / blob->shape(0);
     // Compatibility with ND blobs
-    int fan_out = blob->num_axes() > 1 ?
-                  blob->count() / blob->shape(1) :
-                  blob->count();
+    int_tp fan_out = blob->num_axes() > 1 ?
+                     blob->count() / blob->shape(1) :
+                     blob->count();
     Dtype n = fan_in;  // default to fan_in
-    if (this->filler_param_.variance_norm() ==
-        FillerParameter_VarianceNorm_AVERAGE) {
+    if (this->filler_param_.variance_norm()
+        == FillerParameter_VarianceNorm_AVERAGE) {
       n = (fan_in + fan_out) / Dtype(2);
-    } else if (this->filler_param_.variance_norm() ==
-        FillerParameter_VarianceNorm_FAN_OUT) {
+    } else if (this->filler_param_.variance_norm()
+        == FillerParameter_VarianceNorm_FAN_OUT) {
       n = fan_out;
     }
     Dtype scale = sqrt(Dtype(3) / n);
     caffe_rng_uniform<Dtype>(blob->count(), -scale, scale,
-        blob->mutable_cpu_data());
+                             blob->mutable_cpu_data());
     CHECK_EQ(this->filler_param_.sparse(), -1)
-         << "Sparsity not supported by this Filler.";
+      << "Sparsity not supported by this Filler.";
   }
 };
 
+
 /**
- * @brief Fills a Blob with values @f$ x \sim N(0, \sigma^2) @f$ where
+ * @brief Fills a Blob with values @f$ X \sim n(0, \sigma^2) @f$ where
  *        @f$ \sigma^2 @f$ is set inversely proportional to number of incoming
  *        nodes, outgoing nodes, or their average.
  *
- * A Filler based on the paper [He, Zhang, Ren and Sun 2015]: Specifically
+ * a Filler based on the paper [He, Zhang, Ren and Sun 2015]: Specifically
  * accounts for ReLU nonlinearities.
  *
  * Aside: for another perspective on the scaling factor, see the derivation of
@@ -185,39 +197,40 @@ class XavierFiller : public Filler<Dtype> {
  * a, b, c) where a * b * c = fan_in and num * b * c = fan_out. Note that this
  * is currently not the case for inner product layers.
  */
-template <typename Dtype>
+template<typename Dtype>
 class MSRAFiller : public Filler<Dtype> {
  public:
   explicit MSRAFiller(const FillerParameter& param)
-      : Filler<Dtype>(param) {}
+      : Filler<Dtype>(param) {
+  }
   virtual void Fill(Blob<Dtype>* blob) {
     CHECK(blob->count());
-    int fan_in = blob->count() / blob->shape(0);
+    int_tp fan_in = blob->count() / blob->shape(0);
     // Compatibility with ND blobs
-    int fan_out = blob->num_axes() > 1 ?
-                  blob->count() / blob->shape(1) :
-                  blob->count();
+    int_tp fan_out = blob->num_axes() > 1 ?
+                     blob->count() / blob->shape(1) :
+                     blob->count();
     Dtype n = fan_in;  // default to fan_in
-    if (this->filler_param_.variance_norm() ==
-        FillerParameter_VarianceNorm_AVERAGE) {
+    if (this->filler_param_.variance_norm()
+        == FillerParameter_VarianceNorm_AVERAGE) {
       n = (fan_in + fan_out) / Dtype(2);
-    } else if (this->filler_param_.variance_norm() ==
-        FillerParameter_VarianceNorm_FAN_OUT) {
+    } else if (this->filler_param_.variance_norm()
+        == FillerParameter_VarianceNorm_FAN_OUT) {
       n = fan_out;
     }
     Dtype std = sqrt(Dtype(2) / n);
     caffe_rng_gaussian<Dtype>(blob->count(), Dtype(0), std,
-        blob->mutable_cpu_data());
+                              blob->mutable_cpu_data());
     CHECK_EQ(this->filler_param_.sparse(), -1)
-         << "Sparsity not supported by this Filler.";
+      << "Sparsity not supported by this Filler.";
   }
 };
 
 /*!
 @brief Fills a Blob with coefficients for bilinear interpolation.
 
-A common use case is with the DeconvolutionLayer acting as upsampling.
-You can upsample a feature map with shape of (B, C, H, W) by any integer factor
+a common use case is with the DeconvolutionLayer acting as upsampling.
+You can upsample a feature map with shape of (b, c, H, W) by any integer factor
 using the following proto.
 \code
 layer {
@@ -225,7 +238,7 @@ layer {
   bottom: "{{bottom_name}}" top: "{{top_name}}"
   convolution_param {
     kernel_size: {{2 * factor - factor % 2}} stride: {{factor}}
-    num_output: {{C}} group: {{C}}
+    num_output: {{c}} group: {{c}}
     pad: {{ceil((factor - 1) / 2.)}}
     weight_filler: { type: "bilinear" } bias_term: false
   }
@@ -233,11 +246,11 @@ layer {
 }
 \endcode
 Please use this by replacing `{{}}` with your values. By specifying
-`num_output: {{C}} group: {{C}}`, it behaves as
+`num_output: {{c}} group: {{c}}`, it behaves as
 channel-wise convolution. The filter shape of this deconvolution layer will be
-(C, 1, K, K) where K is `kernel_size`, and this filler will set a (K, K)
+(c, 1, k, k) where k is `kernel_size`, and this filler will set a (k, k)
 interpolation kernel for every channel of the filter identically. The resulting
-shape of the top feature map will be (B, C, factor * H, factor * W).
+shape of the top feature map will be (b, c, factor * H, factor * W).
 Note that the learning rate and the
 weight decay are set to 0 in order to keep coefficient values of bilinear
 interpolation unchanged during training. If you apply this to an image, this
@@ -255,9 +268,9 @@ class BilinearFiller : public Filler<Dtype> {
     CHECK_EQ(blob->num_axes(), 4) << "Blob must be 4 dim.";
     CHECK_EQ(blob->width(), blob->height()) << "Filter must be square";
     Dtype* data = blob->mutable_cpu_data();
-    int f = ceil(blob->width() / 2.);
+    int_tp f = ceil(blob->width() / 2.);
     Dtype c = (blob->width() - 1) / (2. * f);
-    for (int i = 0; i < blob->count(); ++i) {
+    for (int_tp i = 0; i < blob->count(); ++i) {
       Dtype x = i % blob->width();
       Dtype y = (i / blob->width()) % blob->height();
       data[i] = (1 - fabs(x / f - c)) * (1 - fabs(y / f - c));
@@ -273,9 +286,9 @@ class BilinearFiller : public Filler<Dtype> {
  * Ideally this would be replaced by a factory pattern, but we will leave it
  * this way for now.
  */
-template <typename Dtype>
+template<typename Dtype>
 Filler<Dtype>* GetFiller(const FillerParameter& param) {
-  const std::string& type = param.type();
+  const string& type = param.type();
   if (type == "constant") {
     return new ConstantFiller<Dtype>(param);
   } else if (type == "gaussian") {
@@ -286,14 +299,14 @@ Filler<Dtype>* GetFiller(const FillerParameter& param) {
     return new UniformFiller<Dtype>(param);
   } else if (type == "xavier") {
     return new XavierFiller<Dtype>(param);
-  } else if (type == "msra") {
-    return new MSRAFiller<Dtype>(param);
   } else if (type == "bilinear") {
     return new BilinearFiller<Dtype>(param);
+  } else if (type == "msra") {
+    return new MSRAFiller<Dtype>(param);
   } else {
     CHECK(false) << "Unknown filler name: " << param.type();
   }
-  return (Filler<Dtype>*)(NULL);
+  return (Filler<Dtype>*) (NULL);
 }
 
 }  // namespace caffe

@@ -24,36 +24,37 @@ namespace caffe {
  * as its gradient computation is more numerically stable.
  *
  * @param bottom input Blob vector (length 2)
- *   -# @f$ (N \times C \times H \times W) @f$
+ *   -# @f$ (n \times c \times H \times W) @f$
  *      the predictions @f$ \hat{p} @f$, a Blob with values in
  *      @f$ [0, 1] @f$ indicating the predicted probability of each of the
- *      @f$ K = CHW @f$ classes.  Each prediction vector @f$ \hat{p}_n @f$
+ *      @f$ k = CHW @f$ classes.  Each prediction vector @f$ \hat{p}_n @f$
  *      should sum to 1 as in a probability distribution: @f$
- *      \forall n \sum\limits_{k=1}^K \hat{p}_{nk} = 1 @f$.
- *   -# @f$ (N \times 1 \times 1 \times 1) @f$
+ *      \forall n \sum\limits_{k=1}^k \hat{p}_{nk} = 1 @f$.
+ *   -# @f$ (n \times 1 \times 1 \times 1) @f$
  *      the labels @f$ l @f$, an integer-valued Blob with values
- *      @f$ l_n \in [0, 1, 2, ..., K - 1] @f$
- *      indicating the correct class label among the @f$ K @f$ classes
+ *      @f$ l_n \in [0, 1, 2, ..., k - 1] @f$
+ *      indicating the correct class label among the @f$ k @f$ classes
  * @param top output Blob vector (length 1)
  *   -# @f$ (1 \times 1 \times 1 \times 1) @f$
  *      the computed multinomial logistic loss: @f$ E =
- *        \frac{-1}{N} \sum\limits_{n=1}^N \log(\hat{p}_{n,l_n})
+ *        \frac{-1}{n} \sum\limits_{n=1}^n \log(\hat{p}_{n,l_n})
  *      @f$
  */
-template <typename Dtype>
-class MultinomialLogisticLossLayer : public LossLayer<Dtype> {
+template<typename Dtype, typename MItype, typename MOtype>
+class MultinomialLogisticLossLayer
+    : public LossLayer<Dtype, MItype, MOtype> {
  public:
   explicit MultinomialLogisticLossLayer(const LayerParameter& param)
-      : LossLayer<Dtype>(param) {}
-  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
+      : LossLayer<Dtype, MItype, MOtype>(param) {}
+  virtual void Reshape(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
 
   virtual inline const char* type() const { return "MultinomialLogisticLoss"; }
 
  protected:
   /// @copydoc MultinomialLogisticLossLayer
-  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_cpu(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
 
   /**
    * @brief Computes the multinomial logistic loss error gradient w.r.t. the
@@ -77,14 +78,15 @@ class MultinomialLogisticLossLayer : public LossLayer<Dtype> {
    *      propagate_down[1] must be false as we can't compute gradients with
    *      respect to the labels.
    * @param bottom input Blob vector (length 2)
-   *   -# @f$ (N \times C \times H \times W) @f$
+   *   -# @f$ (n \times c \times H \times W) @f$
    *      the predictions @f$ \hat{p} @f$; Backward computes diff
    *      @f$ \frac{\partial E}{\partial \hat{p}} @f$
-   *   -# @f$ (N \times 1 \times 1 \times 1) @f$
+   *   -# @f$ (n \times 1 \times 1 \times 1) @f$
    *      the labels -- ignored as we can't compute their error gradients
    */
-  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_cpu(const vector<Blob<MOtype>*>& top,
+      const vector<bool>& propagate_down,
+      const vector<Blob<MItype>*>& bottom);
 };
 
 }  // namespace caffe

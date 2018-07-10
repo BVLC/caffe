@@ -10,22 +10,25 @@
 
 namespace caffe {
 
-template <typename Dtype>
-void LSTMLayer<Dtype>::RecurrentInputBlobNames(vector<string>* names) const {
+template<typename Dtype, typename MItype, typename MOtype>
+void LSTMLayer<Dtype, MItype, MOtype>::RecurrentInputBlobNames(
+    vector<string>* names) const {
   names->resize(2);
   (*names)[0] = "h_0";
   (*names)[1] = "c_0";
 }
 
-template <typename Dtype>
-void LSTMLayer<Dtype>::RecurrentOutputBlobNames(vector<string>* names) const {
+template<typename Dtype, typename MItype, typename MOtype>
+void LSTMLayer<Dtype, MItype, MOtype>::RecurrentOutputBlobNames(
+    vector<string>* names) const {
   names->resize(2);
   (*names)[0] = "h_" + format_int(this->T_);
   (*names)[1] = "c_T";
 }
 
-template <typename Dtype>
-void LSTMLayer<Dtype>::RecurrentInputShapes(vector<BlobShape>* shapes) const {
+template<typename Dtype, typename MItype, typename MOtype>
+void LSTMLayer<Dtype, MItype, MOtype>::RecurrentInputShapes(
+    vector<BlobShape>* shapes) const {
   const int num_output = this->layer_param_.recurrent_param().num_output();
   const int num_blobs = 2;
   shapes->resize(num_blobs);
@@ -37,14 +40,16 @@ void LSTMLayer<Dtype>::RecurrentInputShapes(vector<BlobShape>* shapes) const {
   }
 }
 
-template <typename Dtype>
-void LSTMLayer<Dtype>::OutputBlobNames(vector<string>* names) const {
+template<typename Dtype, typename MItype, typename MOtype>
+void LSTMLayer<Dtype, MItype, MOtype>::OutputBlobNames(
+    vector<string>* names) const {
   names->resize(1);
   (*names)[0] = "h";
 }
 
-template <typename Dtype>
-void LSTMLayer<Dtype>::FillUnrolledNet(NetParameter* net_param) const {
+template<typename Dtype, typename MItype, typename MOtype>
+void LSTMLayer<Dtype, MItype, MOtype>::FillUnrolledNet(
+    NetParameter* net_param) const {
   const int num_output = this->layer_param_.recurrent_param().num_output();
   CHECK_GT(num_output, 0) << "num_output must be positive";
   const FillerParameter& weight_filler =
@@ -103,15 +108,15 @@ void LSTMLayer<Dtype>::FillUnrolledNet(NetParameter* net_param) const {
   cont_slice_param->add_bottom("cont");
   cont_slice_param->mutable_slice_param()->set_axis(0);
 
-  // Add layer to transform all timesteps of x to the hidden state dimension.
-  //     W_xc_x = W_xc * x + b_c
+  // Add layer to transform all timesteps of X to the hidden state dimension.
+  //     W_xc_x = W_xc * X + b_c
   {
     LayerParameter* x_transform_param = net_param->add_layer();
     x_transform_param->CopyFrom(biased_hidden_param);
     x_transform_param->set_name("x_transform");
     x_transform_param->add_param()->set_name("W_xc");
     x_transform_param->add_param()->set_name("b_c");
-    x_transform_param->add_bottom("x");
+    x_transform_param->add_bottom("X");
     x_transform_param->add_top("W_xc_x");
     x_transform_param->add_propagate_down(true);
   }
@@ -133,7 +138,7 @@ void LSTMLayer<Dtype>::FillUnrolledNet(NetParameter* net_param) const {
     BlobShape* new_shape =
          reshape_param->mutable_reshape_param()->mutable_shape();
     new_shape->add_dim(1);  // One timestep.
-    // Should infer this->N as the dimension so we can reshape on batch size.
+    // Should infer this->n as the dimension so we can reshape on batch size.
     new_shape->add_dim(-1);
     new_shape->add_dim(
         x_static_transform_param->inner_product_param().num_output());
@@ -238,7 +243,13 @@ void LSTMLayer<Dtype>::FillUnrolledNet(NetParameter* net_param) const {
   net_param->add_layer()->CopyFrom(output_concat_layer);
 }
 
-INSTANTIATE_CLASS(LSTMLayer);
+INSTANTIATE_CLASS_3T_GUARDED(LSTMLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(LSTMLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(LSTMLayer, (double), (double), (double));
+
 REGISTER_LAYER_CLASS(LSTM);
+REGISTER_LAYER_CLASS_INST(LSTM, (half_fp), (half_fp), (half_fp));
+REGISTER_LAYER_CLASS_INST(LSTM, (float), (float), (float));
+REGISTER_LAYER_CLASS_INST(LSTM, (double), (double), (double));
 
 }  // namespace caffe

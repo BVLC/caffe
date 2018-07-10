@@ -15,24 +15,24 @@ namespace caffe {
  * @brief Computes the hinge loss for a one-of-many classification task.
  *
  * @param bottom input Blob vector (length 2)
- *   -# @f$ (N \times C \times H \times W) @f$
+ *   -# @f$ (n \times c \times H \times W) @f$
  *      the predictions @f$ t @f$, a Blob with values in
  *      @f$ [-\infty, +\infty] @f$ indicating the predicted score for each of
- *      the @f$ K = CHW @f$ classes. In an SVM, @f$ t @f$ is the result of
+ *      the @f$ k = CHW @f$ classes. In an SVM, @f$ t @f$ is the result of
  *      taking the inner product @f$ X^T W @f$ of the D-dimensional features
- *      @f$ X \in \mathcal{R}^{D \times N} @f$ and the learned hyperplane
- *      parameters @f$ W \in \mathcal{R}^{D \times K} @f$, so a Net with just
+ *      @f$ X \in \mathcal{R}^{D \times n} @f$ and the learned hyperplane
+ *      parameters @f$ W \in \mathcal{R}^{D \times k} @f$, so a Net with just
  *      an InnerProductLayer (with num_output = D) providing predictions to a
  *      HingeLossLayer and no other learnable parameters or losses is
  *      equivalent to an SVM.
- *   -# @f$ (N \times 1 \times 1 \times 1) @f$
+ *   -# @f$ (n \times 1 \times 1 \times 1) @f$
  *      the labels @f$ l @f$, an integer-valued Blob with values
- *      @f$ l_n \in [0, 1, 2, ..., K - 1] @f$
- *      indicating the correct class label among the @f$ K @f$ classes
+ *      @f$ l_n \in [0, 1, 2, ..., k - 1] @f$
+ *      indicating the correct class label among the @f$ k @f$ classes
  * @param top output Blob vector (length 1)
  *   -# @f$ (1 \times 1 \times 1 \times 1) @f$
  *      the computed hinge loss: @f$ E =
- *        \frac{1}{N} \sum\limits_{n=1}^N \sum\limits_{k=1}^K
+ *        \frac{1}{n} \sum\limits_{n=1}^n \sum\limits_{k=1}^k
  *        [\max(0, 1 - \delta\{l_n = k\} t_{nk})] ^ p
  *      @f$, for the @f$ L^p @f$ norm
  *      (defaults to @f$ p = 1 @f$, the L1 norm; L2 norm, as in L2-SVM,
@@ -44,28 +44,28 @@ namespace caffe {
  *         \end{array} \right.
  *      @f$
  *
- * In an SVM, @f$ t \in \mathcal{R}^{N \times K} @f$ is the result of taking
+ * In an SVM, @f$ t \in \mathcal{R}^{n \times k} @f$ is the result of taking
  * the inner product @f$ X^T W @f$ of the features
- * @f$ X \in \mathcal{R}^{D \times N} @f$
+ * @f$ X \in \mathcal{R}^{D \times n} @f$
  * and the learned hyperplane parameters
- * @f$ W \in \mathcal{R}^{D \times K} @f$. So, a Net with just an
+ * @f$ W \in \mathcal{R}^{D \times k} @f$. So, a Net with just an
  * InnerProductLayer (with num_output = @f$k@f$) providing predictions to a
  * HingeLossLayer is equivalent to an SVM (assuming it has no other learned
  * outside the InnerProductLayer and no other losses outside the
  * HingeLossLayer).
  */
-template <typename Dtype>
-class HingeLossLayer : public LossLayer<Dtype> {
+template<typename Dtype, typename MItype, typename MOtype>
+class HingeLossLayer : public LossLayer<Dtype, MItype, MOtype> {
  public:
   explicit HingeLossLayer(const LayerParameter& param)
-      : LossLayer<Dtype>(param) {}
+      : LossLayer<Dtype, MItype, MOtype>(param) {}
 
   virtual inline const char* type() const { return "HingeLoss"; }
 
  protected:
   /// @copydoc HingeLossLayer
-  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_cpu(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
 
   /**
    * @brief Computes the hinge loss error gradient w.r.t. the predictions.
@@ -88,14 +88,15 @@ class HingeLossLayer : public LossLayer<Dtype> {
    *      propagate_down[1] must be false as we can't compute gradients with
    *      respect to the labels.
    * @param bottom input Blob vector (length 2)
-   *   -# @f$ (N \times C \times H \times W) @f$
+   *   -# @f$ (n \times c \times H \times W) @f$
    *      the predictions @f$t@f$; Backward computes diff
    *      @f$ \frac{\partial E}{\partial t} @f$
-   *   -# @f$ (N \times 1 \times 1 \times 1) @f$
+   *   -# @f$ (n \times 1 \times 1 \times 1) @f$
    *      the labels -- ignored as we can't compute their error gradients
    */
-  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_cpu(const vector<Blob<MOtype>*>& top,
+      const vector<bool>& propagate_down,
+      const vector<Blob<MItype>*>& bottom);
 };
 
 

@@ -9065,7 +9065,7 @@ const char* TypedTestCasePState::VerifyRegisteredTestNames(
   registered_tests = SkipSpaces(registered_tests);
 
   Message errors;
-  ::std::set<String> tests;
+  std::set<string> tests;
   for (const char* names = registered_tests; names != NULL;
        names = SkipComma(names)) {
     const String name = GetPrefixUntilComma(names);

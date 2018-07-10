@@ -19,13 +19,13 @@ class MultinomialLogisticLossLayerTest : public CPUDeviceTest<Dtype> {
       : blob_bottom_data_(new Blob<Dtype>(10, 5, 1, 1)),
         blob_bottom_label_(new Blob<Dtype>(10, 1, 1, 1)),
         blob_top_loss_(new Blob<Dtype>()) {
-    Caffe::set_random_seed(1701);
+    Caffe::set_random_seed(1701, Caffe::GetDefaultDevice());
     // fill the values
     FillerParameter filler_param;
     PositiveUnitballFiller<Dtype> filler(filler_param);
     filler.Fill(this->blob_bottom_data_);
     blob_bottom_vec_.push_back(blob_bottom_data_);
-    for (int i = 0; i < blob_bottom_label_->count(); ++i) {
+    for (int_tp i = 0; i < blob_bottom_label_->count(); ++i) {
       blob_bottom_label_->mutable_cpu_data()[i] = caffe_rng_rand() % 5;
     }
     blob_bottom_vec_.push_back(blob_bottom_label_);
@@ -43,12 +43,12 @@ class MultinomialLogisticLossLayerTest : public CPUDeviceTest<Dtype> {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-TYPED_TEST_CASE(MultinomialLogisticLossLayerTest, TestDtypes);
+TYPED_TEST_CASE(MultinomialLogisticLossLayerTest, TestDtypesFloat);
 
 
 TYPED_TEST(MultinomialLogisticLossLayerTest, TestGradientCPU) {
   LayerParameter layer_param;
-  MultinomialLogisticLossLayer<TypeParam> layer(layer_param);
+  MultinomialLogisticLossLayer<TypeParam, TypeParam, TypeParam> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   GradientChecker<TypeParam> checker(1e-2, 2*1e-2, 1701, 0, 0.05);
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,

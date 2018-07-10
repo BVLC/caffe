@@ -5,28 +5,45 @@
 
 namespace caffe {
 
-template <typename Dtype>
-void AbsValLayer<Dtype>::Forward_gpu(
-    const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
-  const int count = top[0]->count();
-  Dtype* top_data = top[0]->mutable_gpu_data();
-  caffe_gpu_abs(count, bottom[0]->gpu_data(), top_data);
+template<typename Dtype, typename MItype, typename MOtype>
+void AbsValLayer<Dtype, MItype, MOtype>::Forward_gpu(
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
+  const int_tp count = top[0]->count();
+  this->device_->template abs<Dtype>(count, bottom[0]->gpu_data(),
+                                     top[0]->mutable_gpu_data());
 }
 
-template <typename Dtype>
-void AbsValLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
-    const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
-  const int count = top[0]->count();
-  const Dtype* top_diff = top[0]->gpu_diff();
+template<typename Dtype, typename MItype, typename MOtype>
+void AbsValLayer<Dtype, MItype, MOtype>::Backward_gpu(
+                            const vector<Blob<MOtype>*>& top,
+                            const vector<bool>& propagate_down,
+                            const vector<Blob<MItype>*>& bottom) {
+  const int_tp count = top[0]->count();
+  vptr<const MOtype> top_diff = top[0]->gpu_diff();
   if (propagate_down[0]) {
-    const Dtype* bottom_data = bottom[0]->gpu_data();
-    Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
-    caffe_gpu_sign(count, bottom_data, bottom_diff);
-    caffe_gpu_mul(count, bottom_diff, top_diff, bottom_diff);
+    vptr<const MItype> bottom_data = bottom[0]->gpu_data();
+    vptr<MItype> bottom_diff = bottom[0]->mutable_gpu_diff();
+
+    this->device_->template sign<Dtype>(count, bottom_data, bottom_diff);
+    this->device_->template mul<Dtype>(count, bottom_diff, top_diff,
+                                       bottom_diff);
   }
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(AbsValLayer);
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(AbsValLayer, Forward_gpu,
+                                  (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(AbsValLayer, Forward_gpu,
+                                  (float), (float), (float));
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(AbsValLayer, Forward_gpu,
+                                  (double), (double), (double));
+
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(AbsValLayer, Backward_gpu,
+                                  (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(AbsValLayer, Backward_gpu,
+                                  (float), (float), (float));
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(AbsValLayer, Backward_gpu,
+                                  (double), (double), (double));
 
 
 }  // namespace caffe

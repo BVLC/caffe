@@ -14,7 +14,7 @@ namespace caffe {
 
 /**
  * @brief Computes the cross-entropy (logistic) loss @f$
- *          E = \frac{-1}{n} \sum\limits_{n=1}^N \left[
+ *          E = \frac{-1}{n} \sum\limits_{n=1}^n \left[
  *                  p_n \log \hat{p}_n +
  *                  (1 - p_n) \log(1 - \hat{p}_n)
  *              \right]
@@ -26,41 +26,42 @@ namespace caffe {
  * At test time, this layer can be replaced simply by a SigmoidLayer.
  *
  * @param bottom input Blob vector (length 2)
- *   -# @f$ (N \times C \times H \times W) @f$
- *      the scores @f$ x \in [-\infty, +\infty]@f$,
+ *   -# @f$ (n \times c \times H \times W) @f$
+ *      the scores @f$ X \in [-\infty, +\infty]@f$,
  *      which this layer maps to probability predictions
  *      @f$ \hat{p}_n = \sigma(x_n) \in [0, 1] @f$
  *      using the sigmoid function @f$ \sigma(.) @f$ (see SigmoidLayer).
- *   -# @f$ (N \times C \times H \times W) @f$
- *      the targets @f$ y \in [0, 1] @f$
+ *   -# @f$ (n \times c \times H \times W) @f$
+ *      the targets @f$ Y \in [0, 1] @f$
  * @param top output Blob vector (length 1)
  *   -# @f$ (1 \times 1 \times 1 \times 1) @f$
  *      the computed cross-entropy loss: @f$
- *          E = \frac{-1}{n} \sum\limits_{n=1}^N \left[
+ *          E = \frac{-1}{n} \sum\limits_{n=1}^n \left[
  *                  p_n \log \hat{p}_n + (1 - p_n) \log(1 - \hat{p}_n)
  *              \right]
  *      @f$
  */
-template <typename Dtype>
-class SigmoidCrossEntropyLossLayer : public LossLayer<Dtype> {
+template<typename Dtype, typename MItype, typename MOtype>
+class SigmoidCrossEntropyLossLayer
+    : public LossLayer<Dtype, MItype, MOtype> {
  public:
   explicit SigmoidCrossEntropyLossLayer(const LayerParameter& param)
-      : LossLayer<Dtype>(param),
-          sigmoid_layer_(new SigmoidLayer<Dtype>(param)),
+      : LossLayer<Dtype, MItype, MOtype>(param),
+          sigmoid_layer_(new SigmoidLayer<Dtype, Dtype, Dtype>(param)),
           sigmoid_output_(new Blob<Dtype>()) {}
-  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
-  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
+  virtual void LayerSetUp(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
+  virtual void Reshape(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
 
   virtual inline const char* type() const { return "SigmoidCrossEntropyLoss"; }
 
  protected:
   /// @copydoc SigmoidCrossEntropyLossLayer
-  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
-  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_cpu(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
 
   /**
    * @brief Computes the sigmoid cross-entropy loss error gradient w.r.t. the
@@ -84,28 +85,32 @@ class SigmoidCrossEntropyLossLayer : public LossLayer<Dtype> {
    *      propagate_down[1] must be false as gradient computation with respect
    *      to the targets is not implemented.
    * @param bottom input Blob vector (length 2)
-   *   -# @f$ (N \times C \times H \times W) @f$
-   *      the predictions @f$x@f$; Backward computes diff
-   *      @f$ \frac{\partial E}{\partial x} =
-   *          \frac{1}{n} \sum\limits_{n=1}^N (\hat{p}_n - p_n)
+   *   -# @f$ (n \times c \times H \times W) @f$
+   *      the predictions @f$X@f$; Backward computes diff
+   *      @f$ \frac{\partial E}{\partial X} =
+   *          \frac{1}{n} \sum\limits_{n=1}^n (\hat{p}_n - p_n)
    *      @f$
-   *   -# @f$ (N \times 1 \times 1 \times 1) @f$
+   *   -# @f$ (n \times 1 \times 1 \times 1) @f$
    *      the labels -- ignored as we can't compute their error gradients
    */
-  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
-  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_cpu(const vector<Blob<MOtype>*>& top,
+      const vector<bool>& propagate_down,
+      const vector<Blob<MItype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<MOtype>*>& top,
+      const vector<bool>& propagate_down,
+      const vector<Blob<MItype>*>& bottom);
 
   /// Read the normalization mode parameter and compute the normalizer based
   /// on the blob size.  If normalization_mode is VALID, the count of valid
   /// outputs will be read from valid_count, unless it is -1 in which case
   /// all outputs are assumed to be valid.
   virtual Dtype get_normalizer(
-      LossParameter_NormalizationMode normalization_mode, int valid_count);
+      LossParameter_NormalizationMode normalization_mode, int_tp valid_count);
+
+  virtual void GenerateProgram();
 
   /// The internal SigmoidLayer used to map predictions to probabilities.
-  shared_ptr<SigmoidLayer<Dtype> > sigmoid_layer_;
+  shared_ptr<SigmoidLayer<Dtype, Dtype, Dtype> > sigmoid_layer_;
   /// sigmoid_output stores the output of the SigmoidLayer.
   shared_ptr<Blob<Dtype> > sigmoid_output_;
   /// bottom vector holder to call the underlying SigmoidLayer::Forward
@@ -116,7 +121,7 @@ class SigmoidCrossEntropyLossLayer : public LossLayer<Dtype> {
   /// Whether to ignore instances with a certain label.
   bool has_ignore_label_;
   /// The label indicating that an instance should be ignored.
-  int ignore_label_;
+  int_tp ignore_label_;
   /// How to normalize the loss.
   LossParameter_NormalizationMode normalization_;
   Dtype normalizer_;

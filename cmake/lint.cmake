@@ -1,9 +1,14 @@
 
 set(CMAKE_SOURCE_DIR ..)
-set(LINT_COMMAND ${CMAKE_SOURCE_DIR}/scripts/cpp_lint.py)
+set(python_executable)
+if(WIN32)
+  set(python_executable ${PYTHON_EXECUTABLE})
+endif()
+set(LINT_COMMAND ${python_executable} ${CMAKE_SOURCE_DIR}/scripts/cpp_lint.py)
 set(SRC_FILE_EXTENSIONS h hpp hu c cpp cu cc)
 set(EXCLUDE_FILE_EXTENSTIONS pb.h pb.cc)
 set(LINT_DIRS include src/caffe examples tools python matlab)
+set(EXCLUDE_DIRS include/3rdparty)
 
 cmake_policy(SET CMP0009 NEW)  # suppress cmake warning
 
@@ -21,8 +26,15 @@ foreach(ext ${EXCLUDE_FILE_EXTENSTIONS})
     set(EXCLUDED_FILES ${EXCLUDED_FILES} ${FOUND_FILES})
 endforeach()
 
+foreach(dir ${EXCLUDE_DIRS})
+    file(GLOB_RECURSE FOUND_FILES ${CMAKE_SOURCE_DIR}/${dir}/*.*)
+    set(EXCLUDED_FILES ${EXCLUDED_SOURCES} ${FOUND_FILES})
+endforeach()
+
 # exclude generated pb files
-list(REMOVE_ITEM LINT_SOURCES ${EXCLUDED_FILES})
+if(EXCLUDED_FILES)
+  list(REMOVE_ITEM LINT_SOURCES ${EXCLUDED_FILES})
+endif()
 
 execute_process(
     COMMAND ${LINT_COMMAND} ${LINT_SOURCES}

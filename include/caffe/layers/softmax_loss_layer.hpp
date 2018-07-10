@@ -23,25 +23,25 @@ namespace caffe {
  * At test time, this layer can be replaced simply by a SoftmaxLayer.
  *
  * @param bottom input Blob vector (length 2)
- *   -# @f$ (N \times C \times H \times W) @f$
- *      the predictions @f$ x @f$, a Blob with values in
+ *   -# @f$ (n \times c \times H \times W) @f$
+ *      the predictions @f$ X @f$, a Blob with values in
  *      @f$ [-\infty, +\infty] @f$ indicating the predicted score for each of
- *      the @f$ K = CHW @f$ classes. This layer maps these scores to a
+ *      the @f$ k = CHW @f$ classes. This layer maps these scores to a
  *      probability distribution over classes using the softmax function
  *      @f$ \hat{p}_{nk} = \exp(x_{nk}) /
  *      \left[\sum_{k'} \exp(x_{nk'})\right] @f$ (see SoftmaxLayer).
- *   -# @f$ (N \times 1 \times 1 \times 1) @f$
+ *   -# @f$ (n \times 1 \times 1 \times 1) @f$
  *      the labels @f$ l @f$, an integer-valued Blob with values
- *      @f$ l_n \in [0, 1, 2, ..., K - 1] @f$
- *      indicating the correct class label among the @f$ K @f$ classes
+ *      @f$ l_n \in [0, 1, 2, ..., k - 1] @f$
+ *      indicating the correct class label among the @f$ k @f$ classes
  * @param top output Blob vector (length 1)
  *   -# @f$ (1 \times 1 \times 1 \times 1) @f$
  *      the computed cross-entropy classification loss: @f$ E =
- *        \frac{-1}{N} \sum\limits_{n=1}^N \log(\hat{p}_{n,l_n})
+ *        \frac{-1}{n} \sum\limits_{n=1}^n \log(\hat{p}_{n,l_n})
  *      @f$, for softmax output class probabilites @f$ \hat{p} @f$
  */
-template <typename Dtype>
-class SoftmaxWithLossLayer : public LossLayer<Dtype> {
+template<typename Dtype, typename MItype, typename MOtype>
+class SoftmaxWithLossLayer : public LossLayer<Dtype, MItype, MOtype> {
  public:
    /**
     * @param param provides LossParameter loss_param, with options:
@@ -52,22 +52,22 @@ class SoftmaxWithLossLayer : public LossLayer<Dtype> {
     *    present; otherwise the loss is simply summed over spatial locations.
     */
   explicit SoftmaxWithLossLayer(const LayerParameter& param)
-      : LossLayer<Dtype>(param) {}
-  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
-  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
+      : LossLayer<Dtype, MItype, MOtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
+  virtual void Reshape(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
 
   virtual inline const char* type() const { return "SoftmaxWithLoss"; }
-  virtual inline int ExactNumTopBlobs() const { return -1; }
-  virtual inline int MinTopBlobs() const { return 1; }
-  virtual inline int MaxTopBlobs() const { return 2; }
+  virtual inline int_tp ExactNumTopBlobs() const { return -1; }
+  virtual inline int_tp MinTopBlobs() const { return 1; }
+  virtual inline int_tp MaxTopBlobs() const { return 2; }
 
  protected:
-  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
-  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_cpu(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
   /**
    * @brief Computes the softmax loss error gradient w.r.t. the predictions.
    *
@@ -89,26 +89,28 @@ class SoftmaxWithLossLayer : public LossLayer<Dtype> {
    *      propagate_down[1] must be false as we can't compute gradients with
    *      respect to the labels.
    * @param bottom input Blob vector (length 2)
-   *   -# @f$ (N \times C \times H \times W) @f$
-   *      the predictions @f$ x @f$; Backward computes diff
-   *      @f$ \frac{\partial E}{\partial x} @f$
-   *   -# @f$ (N \times 1 \times 1 \times 1) @f$
+   *   -# @f$ (n \times c \times H \times W) @f$
+   *      the predictions @f$ X @f$; Backward computes diff
+   *      @f$ \frac{\partial E}{\partial X} @f$
+   *   -# @f$ (n \times 1 \times 1 \times 1) @f$
    *      the labels -- ignored as we can't compute their error gradients
    */
-  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
-  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_cpu(const vector<Blob<MOtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<MItype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<MOtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<MItype>*>& bottom);
 
   /// Read the normalization mode parameter and compute the normalizer based
   /// on the blob size.  If normalization_mode is VALID, the count of valid
   /// outputs will be read from valid_count, unless it is -1 in which case
   /// all outputs are assumed to be valid.
   virtual Dtype get_normalizer(
-      LossParameter_NormalizationMode normalization_mode, int valid_count);
+      LossParameter_NormalizationMode normalization_mode, int_tp valid_count);
+
+  virtual void GenerateProgram();
 
   /// The internal SoftmaxLayer used to map predictions to a distribution.
-  shared_ptr<Layer<Dtype> > softmax_layer_;
+  shared_ptr<Layer<Dtype, Dtype, Dtype> > softmax_layer_;
   /// prob stores the output probability predictions from the SoftmaxLayer.
   Blob<Dtype> prob_;
   /// bottom vector holder used in call to the underlying SoftmaxLayer::Forward
@@ -118,11 +120,11 @@ class SoftmaxWithLossLayer : public LossLayer<Dtype> {
   /// Whether to ignore instances with a certain label.
   bool has_ignore_label_;
   /// The label indicating that an instance should be ignored.
-  int ignore_label_;
+  int_tp ignore_label_;
   /// How to normalize the output loss.
   LossParameter_NormalizationMode normalization_;
 
-  int softmax_axis_, outer_num_, inner_num_;
+  int_tp softmax_axis_, outer_num_, inner_num_;
 };
 
 }  // namespace caffe

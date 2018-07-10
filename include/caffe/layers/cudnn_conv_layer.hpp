@@ -9,9 +9,14 @@
 
 #include "caffe/layers/conv_layer.hpp"
 
+#ifdef USE_CUDNN  // cuDNN acceleration library.
+#include "caffe/util/cudnn.hpp"
+#endif
+
 namespace caffe {
 
 #ifdef USE_CUDNN
+
 /*
  * @brief cuDNN implementation of ConvolutionLayer.
  *        Fallback to ConvolutionLayer for CPU mode.
@@ -26,22 +31,24 @@ namespace caffe {
  * but for fully-convolutional models and large inputs the CAFFE engine can be
  * faster as long as it fits in memory.
 */
-template <typename Dtype>
-class CuDNNConvolutionLayer : public ConvolutionLayer<Dtype> {
+template<typename Dtype, typename MItype, typename MOtype>
+class CuDNNConvolutionLayer : public ConvolutionLayer<Dtype, MItype, MOtype> {
  public:
   explicit CuDNNConvolutionLayer(const LayerParameter& param)
-      : ConvolutionLayer<Dtype>(param), handles_setup_(false) {}
-  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
-  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
+      : ConvolutionLayer<Dtype, MItype, MOtype>(param), handles_setup_(false) {
+    this->deconvolution_ = false;
+  }
+  virtual void LayerSetUp(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
+  virtual void Reshape(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
   virtual ~CuDNNConvolutionLayer();
 
  protected:
-  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
-  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Forward_gpu(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
+  virtual void Backward_gpu(const vector<Blob<MOtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<MItype>*>& bottom);
 
   bool handles_setup_;
   cudnnHandle_t* handle_;
@@ -56,14 +63,14 @@ class CuDNNConvolutionLayer : public ConvolutionLayer<Dtype> {
   cudnnTensorDescriptor_t    bias_desc_;
   cudnnFilterDescriptor_t      filter_desc_;
   vector<cudnnConvolutionDescriptor_t> conv_descs_;
-  int bottom_offset_, top_offset_, bias_offset_;
+  int_tp bottom_offset_, top_offset_, bias_offset_;
 
   size_t *workspace_fwd_sizes_;
   size_t *workspace_bwd_data_sizes_;
   size_t *workspace_bwd_filter_sizes_;
   size_t workspaceSizeInBytes;  // size of underlying storage
   void *workspaceData;  // underlying storage
-  void **workspace;  // aliases into workspaceData
+  void **workspace;  // aliases int_tpo workspaceData
 };
 #endif
 

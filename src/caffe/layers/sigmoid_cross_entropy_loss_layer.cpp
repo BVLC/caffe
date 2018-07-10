@@ -6,10 +6,11 @@
 
 namespace caffe {
 
-template <typename Dtype>
-void SigmoidCrossEntropyLossLayer<Dtype>::LayerSetUp(
-    const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
-  LossLayer<Dtype>::LayerSetUp(bottom, top);
+template<typename Dtype, typename MItype, typename MOtype>
+void SigmoidCrossEntropyLossLayer<Dtype, MItype, MOtype>::LayerSetUp(
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
+  LossLayer<Dtype, MItype, MOtype>::LayerSetUp(bottom, top);
   sigmoid_bottom_vec_.clear();
   sigmoid_bottom_vec_.push_back(bottom[0]);
   sigmoid_top_vec_.clear();
@@ -32,22 +33,27 @@ void SigmoidCrossEntropyLossLayer<Dtype>::LayerSetUp(
   }
 }
 
-template <typename Dtype>
-void SigmoidCrossEntropyLossLayer<Dtype>::Reshape(
-    const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
-  LossLayer<Dtype>::Reshape(bottom, top);
+template<typename Dtype, typename MItype, typename MOtype>
+void SigmoidCrossEntropyLossLayer<Dtype, MItype, MOtype>::Reshape(
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
+  LossLayer<Dtype, MItype, MOtype>::Reshape(bottom, top);
   outer_num_ = bottom[0]->shape(0);  // batch size
   inner_num_ = bottom[0]->count(1);  // instance size: |output| == |target|
   CHECK_EQ(bottom[0]->count(), bottom[1]->count()) <<
       "SIGMOID_CROSS_ENTROPY_LOSS layer inputs must have the same count.";
   sigmoid_layer_->Reshape(sigmoid_bottom_vec_, sigmoid_top_vec_);
+
+  if (Caffe::mode() == Caffe::GPU && this->device_program_.get() == nullptr) {
+    this->GenerateProgram();
+  }
 }
 
 // TODO(shelhamer) loss normalization should be pulled up into LossLayer,
 // instead of duplicated here and in SoftMaxWithLossLayer
-template <typename Dtype>
-Dtype SigmoidCrossEntropyLossLayer<Dtype>::get_normalizer(
-    LossParameter_NormalizationMode normalization_mode, int valid_count) {
+template<typename Dtype, typename MItype, typename MOtype>
+Dtype SigmoidCrossEntropyLossLayer<Dtype, MItype, MOtype>::get_normalizer(
+    LossParameter_NormalizationMode normalization_mode, int_tp valid_count) {
   Dtype normalizer;
   switch (normalization_mode) {
     case LossParameter_NormalizationMode_FULL:
@@ -75,9 +81,10 @@ Dtype SigmoidCrossEntropyLossLayer<Dtype>::get_normalizer(
   return std::max(Dtype(1.0), normalizer);
 }
 
-template <typename Dtype>
-void SigmoidCrossEntropyLossLayer<Dtype>::Forward_cpu(
-    const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
+template<typename Dtype, typename MItype, typename MOtype>
+void SigmoidCrossEntropyLossLayer<Dtype, MItype, MOtype>::Forward_cpu(
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
   // The forward pass computes the sigmoid outputs.
   sigmoid_bottom_vec_[0] = bottom[0];
   sigmoid_layer_->Forward(sigmoid_bottom_vec_, sigmoid_top_vec_);
@@ -87,30 +94,31 @@ void SigmoidCrossEntropyLossLayer<Dtype>::Forward_cpu(
   const Dtype* target = bottom[1]->cpu_data();
   int valid_count = 0;
   Dtype loss = 0;
-  for (int i = 0; i < bottom[0]->count(); ++i) {
+  for (int_tp i = 0; i < bottom[0]->count(); ++i) {
     const int target_value = static_cast<int>(target[i]);
     if (has_ignore_label_ && target_value == ignore_label_) {
       continue;
     }
     loss -= input_data[i] * (target[i] - (input_data[i] >= 0)) -
-        log(1 + exp(input_data[i] - 2 * input_data[i] * (input_data[i] >= 0)));
+        std::log(1 + std::exp(input_data[i]
+                                   - 2 * input_data[i] * (input_data[i] >= 0)));
     ++valid_count;
   }
   normalizer_ = get_normalizer(normalization_, valid_count);
   top[0]->mutable_cpu_data()[0] = loss / normalizer_;
 }
 
-template <typename Dtype>
-void SigmoidCrossEntropyLossLayer<Dtype>::Backward_cpu(
-    const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down,
-    const vector<Blob<Dtype>*>& bottom) {
+template<typename Dtype, typename MItype, typename MOtype>
+void SigmoidCrossEntropyLossLayer<Dtype, MItype, MOtype>::Backward_cpu(
+    const vector<Blob<MOtype>*>& top, const vector<bool>& propagate_down,
+    const vector<Blob<MItype>*>& bottom) {
   if (propagate_down[1]) {
     LOG(FATAL) << this->type()
                << " Layer cannot backpropagate to label inputs.";
   }
   if (propagate_down[0]) {
     // First, compute the diff
-    const int count = bottom[0]->count();
+    const int_tp count = bottom[0]->count();
     const Dtype* sigmoid_output_data = sigmoid_output_->cpu_data();
     const Dtype* target = bottom[1]->cpu_data();
     Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
@@ -134,7 +142,19 @@ void SigmoidCrossEntropyLossLayer<Dtype>::Backward_cpu(
 STUB_GPU(SigmoidCrossEntropyLossLayer);
 #endif
 
-INSTANTIATE_CLASS(SigmoidCrossEntropyLossLayer);
+INSTANTIATE_CLASS_3T_GUARDED(SigmoidCrossEntropyLossLayer,
+                             (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(SigmoidCrossEntropyLossLayer,
+                             (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(SigmoidCrossEntropyLossLayer,
+                             (double), (double), (double));
+
 REGISTER_LAYER_CLASS(SigmoidCrossEntropyLoss);
+REGISTER_LAYER_CLASS_INST(SigmoidCrossEntropyLoss,
+                          (half_fp), (half_fp), (half_fp));
+REGISTER_LAYER_CLASS_INST(SigmoidCrossEntropyLoss,
+                          (float), (float), (float));
+REGISTER_LAYER_CLASS_INST(SigmoidCrossEntropyLoss,
+                          (double), (double), (double));
 
 }  // namespace caffe

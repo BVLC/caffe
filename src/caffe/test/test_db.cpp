@@ -30,7 +30,7 @@ class DBTest : public ::testing::Test {
     scoped_ptr<db::DB> db(db::GetDB(TypeParam::backend));
     db->Open(this->source_, db::NEW);
     scoped_ptr<db::Transaction> txn(db->NewTransaction());
-    for (int i = 0; i < 2; ++i) {
+    for (int_tp i = 0; i < 2; ++i) {
       Datum datum;
       ReadImageToDatum(root_images_ + keys[i], i, &datum);
       string out;
@@ -47,17 +47,9 @@ class DBTest : public ::testing::Test {
   string root_images_;
 };
 
-struct TypeLevelDB {
-  static DataParameter_DB backend;
-};
 DataParameter_DB TypeLevelDB::backend = DataParameter_DB_LEVELDB;
-
-struct TypeLMDB {
-  static DataParameter_DB backend;
-};
 DataParameter_DB TypeLMDB::backend = DataParameter_DB_LMDB;
 
-// typedef ::testing::Types<TypeLmdb> TestTypes;
 typedef ::testing::Types<TypeLevelDB, TypeLMDB> TestTypes;
 
 TYPED_TEST_CASE(DBTest, TestTypes);

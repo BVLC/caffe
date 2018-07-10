@@ -5,12 +5,15 @@
 
 namespace caffe {
 
-template <typename Dtype>
-void DummyDataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {
-  const int num_top = top.size();
+template<typename Dtype, typename MItype, typename MOtype>
+void DummyDataLayer<Dtype, MItype, MOtype>::LayerSetUp(
+      const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top) {
+  this->InitializeQuantizers(bottom, top);
+
+  const int_tp num_top = top.size();
   const DummyDataParameter& param = this->layer_param_.dummy_data_param();
-  const int num_data_filler = param.data_filler_size();
+  const int_tp num_data_filler = param.data_filler_size();
   CHECK(num_data_filler == 0 || num_data_filler == 1 ||
         num_data_filler == num_top)
       << "Number of data fillers must be 0, 1 or equal to the number of tops: "
@@ -65,7 +68,7 @@ void DummyDataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   } else {
     refill_.resize(num_top);
     fillers_.resize(num_top);
-    for (int i = 0; i < num_top; ++i) {
+    for (int_tp i = 0; i < num_top; ++i) {
       fillers_[i].reset(GetFiller<Dtype>(param.data_filler(i)));
       // Refill on each iteration iff not using a constant filler,
       // but use the inverse of this rule for the first run.
@@ -73,18 +76,18 @@ void DummyDataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
           (strcmp(param.data_filler(i).type().c_str(), "constant") == 0);
     }
   }
-  for (int i = 0; i < num_top; ++i) {
+  for (int_tp i = 0; i < num_top; ++i) {
     if (legacy_dims) {
-      const int num = (param.num_size() == 1) ? param.num(0) : param.num(i);
-      const int channels =
+      const int_tp num = (param.num_size() == 1) ? param.num(0) : param.num(i);
+      const int_tp channels =
           (param.channels_size() == 1) ? param.channels(0) : param.channels(i);
-      const int height =
+      const int_tp height =
           (param.height_size() == 1) ? param.height(0) : param.height(i);
-      const int width =
+      const int_tp width =
           (param.width_size() == 1) ? param.width(0) : param.width(i);
       top[i]->Reshape(num, channels, height, width);
     } else {
-      const int shape_index = (param.shape_size() == 1) ? 0 : i;
+      const int_tp shape_index = (param.shape_size() == 1) ? 0 : i;
       top[i]->Reshape(param.shape(shape_index));
     }
   }
@@ -92,23 +95,30 @@ void DummyDataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   this->Forward(bottom, top);
   // Invert the inverted refill_ values to refill the desired (non-constant)
   // Blobs in every usual forward pass.
-  for (int i = 0; i < refill_.size(); ++i) {
+  for (int_tp i = 0; i < refill_.size(); ++i) {
     refill_[i] = !refill_[i];
   }
 }
 
-template <typename Dtype>
-void DummyDataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {
-  for (int i = 0; i < top.size(); ++i) {
-    const int filler_id = (fillers_.size() > 1) ? i : 0;
+template<typename Dtype, typename MItype, typename MOtype>
+void DummyDataLayer<Dtype, MItype, MOtype>::Forward_cpu(
+      const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top) {
+  for (int_tp i = 0; i < top.size(); ++i) {
+    const int_tp filler_id = (fillers_.size() > 1) ? i : 0;
     if (refill_[filler_id]) {
       fillers_[filler_id]->Fill(top[i]);
     }
   }
 }
 
-INSTANTIATE_CLASS(DummyDataLayer);
+INSTANTIATE_CLASS_3T_GUARDED(DummyDataLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(DummyDataLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(DummyDataLayer, (double), (double), (double));
+
 REGISTER_LAYER_CLASS(DummyData);
+REGISTER_LAYER_CLASS_INST(DummyData, (half_fp), (half_fp), (half_fp));
+REGISTER_LAYER_CLASS_INST(DummyData, (float), (float), (float));
+REGISTER_LAYER_CLASS_INST(DummyData, (double), (double), (double));
 
 }  // namespace caffe

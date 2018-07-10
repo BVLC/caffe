@@ -18,13 +18,11 @@ bool InternalThread::must_stop() {
   return thread_ && thread_->interruption_requested();
 }
 
-void InternalThread::StartInternalThread() {
+void InternalThread::StartInternalThread(Device* dev) {
   CHECK(!is_started()) << "Threads should persist and not be restarted.";
 
-  int device = 0;
-#ifndef CPU_ONLY
-  CUDA_CHECK(cudaGetDevice(&device));
-#endif
+  thread_device_ = dev;
+
   Caffe::Brew mode = Caffe::mode();
   int rand_seed = caffe_rng_rand();
   int solver_count = Caffe::solver_count();
@@ -32,20 +30,18 @@ void InternalThread::StartInternalThread() {
   bool multiprocess = Caffe::multiprocess();
 
   try {
-    thread_.reset(new boost::thread(&InternalThread::entry, this, device, mode,
+    thread_.reset(new boost::thread(&InternalThread::entry, this, dev, mode,
           rand_seed, solver_count, solver_rank, multiprocess));
   } catch (std::exception& e) {
-    LOG(FATAL) << "Thread exception: " << e.what();
+    LOG(FATAL)<< "Thread exception: " << e.what();
   }
 }
 
-void InternalThread::entry(int device, Caffe::Brew mode, int rand_seed,
-    int solver_count, int solver_rank, bool multiprocess) {
-#ifndef CPU_ONLY
-  CUDA_CHECK(cudaSetDevice(device));
-#endif
+void InternalThread::entry(Device* dev, Caffe::Brew mode, int_tp rand_seed,
+    int_tp solver_count, int_tp solver_rank, bool multiprocess) {
+  Caffe::SelectDevice(dev);
   Caffe::set_mode(mode);
-  Caffe::set_random_seed(rand_seed);
+  Caffe::set_random_seed(rand_seed, thread_device_);
   Caffe::set_solver_count(solver_count);
   Caffe::set_solver_rank(solver_rank);
   Caffe::set_multiprocess(multiprocess);

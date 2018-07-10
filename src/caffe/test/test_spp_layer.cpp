@@ -28,7 +28,7 @@ class SPPLayerTest : public MultiDeviceTest<TypeParam> {
         blob_bottom_3_(new Blob<Dtype>()),
         blob_top_(new Blob<Dtype>()) {}
   virtual void SetUp() {
-    Caffe::set_random_seed(1701);
+    Caffe::set_random_seed(1701, Caffe::GetDefaultDevice());
     blob_bottom_->Reshape(2, 3, 9, 8);
     blob_bottom_2_->Reshape(4, 3, 1024, 765);
     blob_bottom_3_->Reshape(10, 3, 7, 7);
@@ -53,13 +53,13 @@ class SPPLayerTest : public MultiDeviceTest<TypeParam> {
   vector<Blob<Dtype>*> blob_top_vec_;
 };
 
-TYPED_TEST_CASE(SPPLayerTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(SPPLayerTest, TestDtypesFloatAndDevices);
 
 TYPED_TEST(SPPLayerTest, TestSetup) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   layer_param.mutable_spp_param()->set_pyramid_height(3);
-  SPPLayer<Dtype> layer(layer_param);
+  SPPLayer<Dtype, Dtype, Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   // expected number of pool results is geometric sum
   // (1 - r ** n)/(1 - r) where r = 4 and n = pyramid_height
@@ -76,7 +76,7 @@ TYPED_TEST(SPPLayerTest, TestEqualOutputDims) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   layer_param.mutable_spp_param()->set_pyramid_height(5);
-  SPPLayer<Dtype> layer(layer_param);
+  SPPLayer<Dtype, Dtype, Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_2_, this->blob_top_vec_);
   // expected number of pool results is geometric sum
   // (1 - r ** n)/(1 - r) where r = 4 and n = pyramid_height
@@ -93,7 +93,7 @@ TYPED_TEST(SPPLayerTest, TestEqualOutputDims2) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   layer_param.mutable_spp_param()->set_pyramid_height(3);
-  SPPLayer<Dtype> layer(layer_param);
+  SPPLayer<Dtype, Dtype, Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_3_, this->blob_top_vec_);
   // expected number of pool results is geometric sum
   // (1 - r ** n)/(1 - r) where r = 4 and n = pyramid_height
@@ -110,7 +110,7 @@ TYPED_TEST(SPPLayerTest, TestForwardBackward) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   layer_param.mutable_spp_param()->set_pyramid_height(3);
-  SPPLayer<Dtype> layer(layer_param);
+  SPPLayer<Dtype, Dtype, Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   vector<bool> propagate_down(this->blob_bottom_vec_.size(), true);
@@ -123,7 +123,7 @@ TYPED_TEST(SPPLayerTest, TestGradient) {
   LayerParameter layer_param;
   SPPParameter* spp_param = layer_param.mutable_spp_param();
   spp_param->set_pyramid_height(3);
-  SPPLayer<Dtype> layer(layer_param);
+  SPPLayer<Dtype, Dtype, Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-4, 1e-2);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,

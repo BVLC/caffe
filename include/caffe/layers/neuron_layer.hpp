@@ -10,21 +10,21 @@
 namespace caffe {
 
 /**
- * @brief An interface for layers that take one blob as input (@f$ x @f$)
- *        and produce one equally-sized blob as output (@f$ y @f$), where
+ * @brief An interface for layers that take one blob as input (@f$ X @f$)
+ *        and produce one equally-sized blob as output (@f$ Y @f$), where
  *        each element of the output depends only on the corresponding input
  *        element.
  */
-template <typename Dtype>
-class NeuronLayer : public Layer<Dtype> {
+template<typename Dtype, typename MItype, typename MOtype>
+class NeuronLayer : public Layer<Dtype, MItype, MOtype> {
  public:
   explicit NeuronLayer(const LayerParameter& param)
-     : Layer<Dtype>(param) {}
-  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
+     : Layer<Dtype, MItype, MOtype>(param) {}
+  virtual void Reshape(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
 
-  virtual inline int ExactNumBottomBlobs() const { return 1; }
-  virtual inline int ExactNumTopBlobs() const { return 1; }
+  virtual inline int_tp ExactNumBottomBlobs() const { return 1; }
+  virtual inline int_tp ExactNumTopBlobs() const { return 1; }
 };
 
 }  // namespace caffe

@@ -30,40 +30,42 @@ namespace caffe {
  * with `bias_term: true` after each `BatchNormLayer` to handle both the bias
  * and scaling factor.
  *
- * [1] S. Ioffe and C. Szegedy, "Batch Normalization: Accelerating Deep Network
- *     Training by Reducing Internal Covariate Shift." arXiv preprint
+ * [1] S. Ioffe and c. Szegedy, "Batch Normalization: Accelerating Deep Network
+ *     Training by Reducing internal Covariate Shift." arXiv preprint_tp
  *     arXiv:1502.03167 (2015).
  *
  * TODO(dox): thorough documentation for Forward, Backward, and proto params.
  */
-template <typename Dtype>
-class BatchNormLayer : public Layer<Dtype> {
+template<typename Dtype, typename MItype, typename MOtype>
+class BatchNormLayer : public Layer<Dtype, MItype, MOtype> {
  public:
   explicit BatchNormLayer(const LayerParameter& param)
-      : Layer<Dtype>(param) {}
-  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
-  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
+      : Layer<Dtype, MItype, MOtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
+  virtual void Reshape(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
 
   virtual inline const char* type() const { return "BatchNorm"; }
-  virtual inline int ExactNumBottomBlobs() const { return 1; }
-  virtual inline int ExactNumTopBlobs() const { return 1; }
+  virtual inline int_tp ExactNumBottomBlobs() const { return 1; }
+  virtual inline int_tp ExactNumTopBlobs() const { return 1; }
 
  protected:
-  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
-  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
-  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
-  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-     const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Forward_cpu(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
+  virtual void Backward_cpu(const vector<Blob<MOtype>*>& top,
+      const vector<bool>& propagate_down,
+      const vector<Blob<MItype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<MOtype>*>& top,
+     const vector<bool>& propagate_down,
+     const vector<Blob<MItype>*>& bottom);
 
   Blob<Dtype> mean_, variance_, temp_, x_norm_;
   bool use_global_stats_;
   Dtype moving_average_fraction_;
-  int channels_;
+  int_tp channels_;
   Dtype eps_;
 
   // extra temporarary variables is used to carry out sums/broadcasting

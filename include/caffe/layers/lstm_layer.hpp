@@ -14,7 +14,8 @@
 
 namespace caffe {
 
-template <typename Dtype> class RecurrentLayer;
+template<typename Dtype, typename MItype, typename MOtype>
+class RecurrentLayer;
 
 /**
  * @brief Processes sequential inputs using a "Long Short-Term Memory" (LSTM)
@@ -44,11 +45,11 @@ template <typename Dtype> class RecurrentLayer;
  * [3] Graves, Alex. "Generating sequences with recurrent neural networks."
  *     arXiv preprint arXiv:1308.0850 (2013).
  */
-template <typename Dtype>
-class LSTMLayer : public RecurrentLayer<Dtype> {
+template<typename Dtype, typename MItype, typename MOtype>
+class LSTMLayer : public RecurrentLayer<Dtype, MItype, MOtype> {
  public:
   explicit LSTMLayer(const LayerParameter& param)
-      : RecurrentLayer<Dtype>(param) {}
+      : RecurrentLayer<Dtype, MItype, MOtype>(param) {}
 
   virtual inline const char* type() const { return "LSTM"; }
 
@@ -61,21 +62,21 @@ class LSTMLayer : public RecurrentLayer<Dtype> {
 };
 
 /**
- * @brief A helper for LSTMLayer: computes a single timestep of the
+ * @brief a helper for LSTMLayer: computes a single timestep of the
  *        non-linearity of the LSTM, producing the updated cell and hidden
  *        states.
  */
-template <typename Dtype>
-class LSTMUnitLayer : public Layer<Dtype> {
+template<typename Dtype, typename MItype, typename MOtype>
+class LSTMUnitLayer : public Layer<Dtype, MItype, MOtype> {
  public:
   explicit LSTMUnitLayer(const LayerParameter& param)
-      : Layer<Dtype>(param) {}
-  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
+      : Layer<Dtype, MItype, MOtype>(param) {}
+  virtual void Reshape(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
 
   virtual inline const char* type() const { return "LSTMUnit"; }
-  virtual inline int ExactNumBottomBlobs() const { return 3; }
-  virtual inline int ExactNumTopBlobs() const { return 2; }
+  virtual inline int_tp ExactNumBottomBlobs() const { return 3; }
+  virtual inline int_tp ExactNumTopBlobs() const { return 2; }
 
   virtual inline bool AllowForceBackward(const int bottom_index) const {
     // Can't propagate to sequence continuation indicators.
@@ -85,38 +86,38 @@ class LSTMUnitLayer : public Layer<Dtype> {
  protected:
   /**
    * @param bottom input Blob vector (length 3)
-   *   -# @f$ (1 \times N \times D) @f$
+   *   -# @f$ (1 \times n \times D) @f$
    *      the previous timestep cell state @f$ c_{t-1} @f$
-   *   -# @f$ (1 \times N \times 4D) @f$
+   *   -# @f$ (1 \times n \times 4D) @f$
    *      the "gate inputs" @f$ [i_t', f_t', o_t', g_t'] @f$
-   *   -# @f$ (1 \times N) @f$
+   *   -# @f$ (1 \times n) @f$
    *      the sequence continuation indicators  @f$ \delta_t @f$
    * @param top output Blob vector (length 2)
-   *   -# @f$ (1 \times N \times D) @f$
+   *   -# @f$ (1 \times n \times D) @f$
    *      the updated cell state @f$ c_t @f$, computed as:
    *          i_t := \sigmoid[i_t']
    *          f_t := \sigmoid[f_t']
    *          o_t := \sigmoid[o_t']
    *          g_t := \tanh[g_t']
    *          c_t := cont_t * (f_t .* c_{t-1}) + (i_t .* g_t)
-   *   -# @f$ (1 \times N \times D) @f$
+   *   -# @f$ (1 \times n \times D) @f$
    *      the updated hidden state @f$ h_t @f$, computed as:
    *          h_t := o_t .* \tanh[c_t]
    */
-  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
-  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
+  virtual void Forward_cpu(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
 
   /**
    * @brief Computes the error gradient w.r.t. the LSTMUnit inputs.
    *
    * @param top output Blob vector (length 2), providing the error gradient with
    *        respect to the outputs
-   *   -# @f$ (1 \times N \times D) @f$:
+   *   -# @f$ (1 \times n \times D) @f$:
    *      containing error gradients @f$ \frac{\partial E}{\partial c_t} @f$
    *      with respect to the updated cell state @f$ c_t @f$
-   *   -# @f$ (1 \times N \times D) @f$:
+   *   -# @f$ (1 \times n \times D) @f$:
    *      containing error gradients @f$ \frac{\partial E}{\partial h_t} @f$
    *      with respect to the updated cell state @f$ h_t @f$
    * @param propagate_down see Layer::Backward.
@@ -124,10 +125,10 @@ class LSTMUnitLayer : public Layer<Dtype> {
    *        with respect to the LSTMUnit inputs @f$ c_{t-1} @f$ and the gate
    *        inputs are computed.  Computatation of the error gradients w.r.t.
    *        the sequence indicators is not implemented.
-   *   -# @f$ (1 \times N \times D) @f$
+   *   -# @f$ (1 \times n \times D) @f$
    *      the error gradient w.r.t. the previous timestep cell state
    *      @f$ c_{t-1} @f$
-   *   -# @f$ (1 \times N \times 4D) @f$
+   *   -# @f$ (1 \times n \times 4D) @f$
    *      the error gradient w.r.t. the "gate inputs"
    *      @f$ [
    *          \frac{\partial E}{\partial i_t}
@@ -135,14 +136,18 @@ class LSTMUnitLayer : public Layer<Dtype> {
    *          \frac{\partial E}{\partial o_t}
    *          \frac{\partial E}{\partial g_t}
    *          ] @f$
-   *   -# @f$ (1 \times 1 \times N) @f$
+   *   -# @f$ (1 \times 1 \times n) @f$
    *      the gradient w.r.t. the sequence continuation indicators
    *      @f$ \delta_t @f$ is currently not computed.
    */
-  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
-  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Backward_cpu(const vector<Blob<MOtype>*>& top,
+      const vector<bool>& propagate_down,
+      const vector<Blob<MItype>*>& bottom);
+  virtual void Backward_gpu(const vector<Blob<MOtype>*>& top,
+      const vector<bool>& propagate_down,
+      const vector<Blob<MItype>*>& bottom);
+
+  void GenerateProgram();
 
   /// @brief The hidden and output dimension.
   int hidden_dim_;

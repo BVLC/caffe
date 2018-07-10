@@ -38,13 +38,13 @@ namespace caffe {
     vector<Blob<Dtype>*> blob_top_vec_;
   };
 
-  TYPED_TEST_CASE(BatchNormLayerTest, TestDtypesAndDevices);
+  TYPED_TEST_CASE(BatchNormLayerTest, TestDtypesFloatAndDevices);
 
   TYPED_TEST(BatchNormLayerTest, TestForward) {
     typedef typename TypeParam::Dtype Dtype;
     LayerParameter layer_param;
 
-    BatchNormLayer<Dtype> layer(layer_param);
+    BatchNormLayer<Dtype, Dtype, Dtype> layer(layer_param);
     layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
     layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
 
@@ -68,7 +68,8 @@ namespace caffe {
       sum /= height * width * num;
       var /= height * width * num;
 
-      const Dtype kErrorBound = 0.001;
+      const Dtype kErrorBound = std::is_same<Dtype, half_fp>::value ?
+                                1e-1 : 1e-3;
       // expect zero mean
       EXPECT_NEAR(0, sum, kErrorBound);
       // expect unit variance
@@ -88,7 +89,7 @@ namespace caffe {
     blob_bottom_vec.push_back(&blob_inplace);
     blob_top_vec.push_back(&blob_inplace);
 
-    BatchNormLayer<Dtype> layer(layer_param);
+    BatchNormLayer<Dtype, Dtype, Dtype> layer(layer_param);
     layer.SetUp(blob_bottom_vec, blob_top_vec);
     layer.Forward(blob_bottom_vec, blob_top_vec);
 
@@ -112,7 +113,8 @@ namespace caffe {
       sum /= height * width * num;
       var /= height * width * num;
 
-      const Dtype kErrorBound = 0.001;
+      const Dtype kErrorBound = std::is_same<Dtype, half_fp>::value ?
+                                1e-1 : 1e-3;
       // expect zero mean
       EXPECT_NEAR(0, sum, kErrorBound);
       // expect unit variance
@@ -124,7 +126,7 @@ namespace caffe {
     typedef typename TypeParam::Dtype Dtype;
     LayerParameter layer_param;
 
-    BatchNormLayer<Dtype> layer(layer_param);
+    BatchNormLayer<Dtype, Dtype, Dtype> layer(layer_param);
     GradientChecker<Dtype> checker(1e-2, 1e-4);
     checker.CheckGradientExhaustive(&layer, this->blob_bottom_vec_,
         this->blob_top_vec_);

@@ -14,7 +14,7 @@
 
 namespace caffe {
 
-template <typename Dtype> class RecurrentLayer;
+template<typename Dtype, typename MItype, typename MOtype> class RecurrentLayer;
 
 /**
  * @brief An abstract class for implementing recurrent behavior inside of an
@@ -22,20 +22,20 @@ template <typename Dtype> class RecurrentLayer;
  *        you should use one of its implementations which defines the recurrent
  *        architecture, such as RNNLayer or LSTMLayer.
  */
-template <typename Dtype>
-class RecurrentLayer : public Layer<Dtype> {
+template<typename Dtype, typename MItype, typename MOtype>
+class RecurrentLayer : public Layer<Dtype, MItype, MOtype> {
  public:
   explicit RecurrentLayer(const LayerParameter& param)
-      : Layer<Dtype>(param) {}
-  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
-  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
+      : Layer<Dtype, MItype, MOtype>(param) {}
+  virtual void LayerSetUp(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
+  virtual void Reshape(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
   virtual void Reset();
 
   virtual inline const char* type() const { return "Recurrent"; }
-  virtual inline int MinBottomBlobs() const {
-    int min_bottoms = 2;
+  virtual inline int_tp MinBottomBlobs() const {
+    int_tp min_bottoms = 2;
     if (this->layer_param_.recurrent_param().expose_hidden()) {
       vector<string> inputs;
       this->RecurrentInputBlobNames(&inputs);
@@ -43,9 +43,9 @@ class RecurrentLayer : public Layer<Dtype> {
     }
     return min_bottoms;
   }
-  virtual inline int MaxBottomBlobs() const { return MinBottomBlobs() + 1; }
-  virtual inline int ExactNumTopBlobs() const {
-    int num_tops = 1;
+  virtual inline int_tp MaxBottomBlobs() const { return MinBottomBlobs() + 1; }
+  virtual inline int_tp ExactNumTopBlobs() const {
+    int_tp num_tops = 1;
     if (this->layer_param_.recurrent_param().expose_hidden()) {
       vector<string> outputs;
       this->RecurrentOutputBlobNames(&outputs);
@@ -98,16 +98,16 @@ class RecurrentLayer : public Layer<Dtype> {
   /**
    * @param bottom input Blob vector (length 2-3)
    *
-   *   -# @f$ (T \times N \times ...) @f$
-   *      the time-varying input @f$ x @f$.  After the first two axes, whose
+   *   -# @f$ (T \times n \times ...) @f$
+   *      the time-varying input @f$ X @f$.  After the first two axes, whose
    *      dimensions must correspond to the number of timesteps @f$ T @f$ and
-   *      the number of independent streams @f$ N @f$, respectively, its
+   *      the number of independent streams @f$ n @f$, respectively, its
    *      dimensions may be arbitrary.  Note that the ordering of dimensions --
-   *      @f$ (T \times N \times ...) @f$, rather than
-   *      @f$ (N \times T \times ...) @f$ -- means that the @f$ N @f$
+   *      @f$ (T \times n \times ...) @f$, rather than
+   *      @f$ (n \times T \times ...) @f$ -- means that the @f$ n @f$
    *      independent input streams must be "interleaved".
    *
-   *   -# @f$ (T \times N) @f$
+   *   -# @f$ (T \times n) @f$
    *      the sequence continuation indicators @f$ \delta @f$.
    *      These inputs should be binary (0 or 1) indicators, where
    *      @f$ \delta_{t,n} = 0 @f$ means that timestep @f$ t @f$ of stream
@@ -119,35 +119,35 @@ class RecurrentLayer : public Layer<Dtype> {
    *      @f$ t-1 @f$, and the previous hidden state @f$ h_{t-1} @f$ affects the
    *      updated hidden state and output.
    *
-   *   -# @f$ (N \times ...) @f$ (optional)
+   *   -# @f$ (n \times ...) @f$ (optional)
    *      the static (non-time-varying) input @f$ x_{static} @f$.
    *      After the first axis, whose dimension must be the number of
    *      independent streams, its dimensions may be arbitrary.
    *      This is mathematically equivalent to using a time-varying input of
-   *      @f$ x'_t = [x_t; x_{static}] @f$ -- i.e., tiling the static input
+   *      @f$ X'_t = [x_t; x_{static}] @f$ -- i.e., tiling the static input
    *      across the @f$ T @f$ timesteps and concatenating with the time-varying
    *      input.  Note that if this input is used, all timesteps in a single
-   *      batch within a particular one of the @f$ N @f$ streams must share the
+   *      batch within a particular one of the @f$ n @f$ streams must share the
    *      same static input, even if the sequence continuation indicators
    *      suggest that difference sequences are ending and beginning within a
    *      single batch.  This may require padding and/or truncation for uniform
    *      length.
    *
    * @param top output Blob vector (length 1)
-   *   -# @f$ (T \times N \times D) @f$
-   *      the time-varying output @f$ y @f$, where @f$ D @f$ is
+   *   -# @f$ (T \times n \times D) @f$
+   *      the time-varying output @f$ Y @f$, where @f$ D @f$ is
    *      <code>recurrent_param.num_output()</code>.
    *      Refer to documentation for particular RecurrentLayer implementations
-   *      (such as RNNLayer and LSTMLayer) for the definition of @f$ y @f$.
+   *      (such as RNNLayer and LSTMLayer) for the definition of @f$ Y @f$.
    */
-  virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
-  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
-  virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+  virtual void Forward_cpu(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
+  virtual void Forward_gpu(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top);
+  virtual void Backward_cpu(const vector<Blob<MOtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<MItype>*>& bottom);
 
-  /// @brief A Net to implement the Recurrent functionality.
+  /// @brief a Net to implement the Recurrent functionality.
   shared_ptr<Net<Dtype> > unrolled_net_;
 
   /// @brief The number of independent streams to process simultaneously.

@@ -9,6 +9,7 @@ Caffe network visualization: draw the NetParameter protobuffer.
     Caffe.
 """
 
+import os
 from caffe.proto import caffe_pb2
 
 """
@@ -20,6 +21,35 @@ try:
     import pydotplus as pydot
 except ImportError:
     import pydot
+
+
+if os.name == 'nt':
+    # Workaround to find graphviz executables
+    # with graphviz conda package under windows
+
+    # Monkeypatch the pydot package
+    pydot_find_graphviz = pydot.graphviz.find_graphviz
+
+    def resolve_graphviz_executables():
+        """
+        Resolve the graphviz executables by adding a `graphviz` suffix
+        to folders located on path
+        """
+        # first check if we can find the executables the normal way
+        progs = pydot_find_graphviz()
+        if not progs:
+            directories = os.environ['PATH'].split(';')
+            suffix = 'graphviz'
+            progs = {}
+            for directory in directories:
+                for exe in ['dot', 'twopi', 'neato', 'circo', 'fdp']:
+                    full_path = os.path.join(directory, suffix,
+                                             '{}.exe'.format(exe))
+                    if os.path.exists(full_path):
+                        progs[exe] = full_path
+        return progs
+
+    pydot.graphviz.find_graphviz = resolve_graphviz_executables
 
 # Internal layer and blob styles.
 LAYER_STYLE_DEFAULT = {'shape': 'record',
@@ -142,9 +172,14 @@ def get_layer_label(layer, rankdir, display_lrm=False):
     # Describe parameters for spatial operation layers
     if layer.type in ['Convolution', 'Deconvolution', 'Pooling']:
         if layer.type == 'Pooling':
-            kernel_size = layer.pooling_param.kernel_size
-            stride = layer.pooling_param.stride
-            padding = layer.pooling_param.pad
+            kernel_size = layer.pooling_param.kernel_size[0] if \
+                len(layer.pooling_param.kernel_size) else 1
+            stride = layer.pooling_param.stride[0] if \
+                len(layer.pooling_param.stride) else 1
+            padding = layer.pooling_param.pad[0] if \
+                len(layer.pooling_param.pad) else 0
+            dilation = layer.pooling_param.dilation[0] if \
+                len(layer.pooling_param.dilation) else 1
         else:
             kernel_size = layer.convolution_param.kernel_size[0] if \
                 len(layer.convolution_param.kernel_size) else 1
@@ -152,10 +187,13 @@ def get_layer_label(layer, rankdir, display_lrm=False):
                 len(layer.convolution_param.stride) else 1
             padding = layer.convolution_param.pad[0] if \
                 len(layer.convolution_param.pad) else 0
+            dilation = layer.convolution_param.dilation[0] if \
+                len(layer.convolution_param.dilation) else 1
         spatial_descriptor = separator.join([
             "kernel size: %d" % kernel_size,
             "stride: %d" % stride,
             "pad: %d" % padding,
+            "dilation: %d" % dilation,
         ])
         descriptors_list.append(spatial_descriptor)
 
@@ -187,7 +225,8 @@ def choose_color_by_layertype(layertype):
     return color
 
 
-def get_pydot_graph(caffe_net, rankdir, label_edges=True, phase=None, display_lrm=False):
+def get_pydot_graph(caffe_net, rankdir, margin, page, pagesize, size, 
+                    label_edges=True, phase=None, display_lrm=False):
     """Create a data structure which represents the `caffe_net`.
 
     Parameters
@@ -211,6 +250,13 @@ def get_pydot_graph(caffe_net, rankdir, label_edges=True, phase=None, display_lr
     pydot_graph = pydot.Dot(caffe_net.name if caffe_net.name else 'Net',
                             graph_type='digraph',
                             rankdir=rankdir)
+
+    if margin != '': pydot_graph.set('margin',margin)
+    if page != '': pydot_graph.set('page', page)
+    if pagesize != '': pydot_graph.set('pagesize', pagesize)
+    if size != '': pydot_graph.set('size', size)
+
+
     pydot_nodes = {}
     pydot_edges = []
     for layer in caffe_net.layer:
@@ -265,7 +311,8 @@ def get_pydot_graph(caffe_net, rankdir, label_edges=True, phase=None, display_lr
     return pydot_graph
 
 
-def draw_net(caffe_net, rankdir, ext='png', phase=None, display_lrm=False):
+def draw_net(caffe_net, rankdir, margin='', page='', pagesize='', size='',
+             ext='png', phase=None, display_lrm=False):
     """Draws a caffe net and returns the image string encoded using the given
     extension.
 
@@ -286,11 +333,12 @@ def draw_net(caffe_net, rankdir, ext='png', phase=None, display_lrm=False):
     string :
         Postscript representation of the graph.
     """
-    return get_pydot_graph(caffe_net, rankdir, phase=phase,
-                           display_lrm=display_lrm).create(format=ext)
+    return get_pydot_graph(caffe_net, rankdir, margin, page, pagesize,
+                           size, display_lrm=display_lrm).create(format=ext)
 
 
-def draw_net_to_file(caffe_net, filename, rankdir='LR', phase=None, display_lrm=False):
+def draw_net_to_file(caffe_net, filename, rankdir='LR', margin='', page='',
+                     pagesize='', size='', phase=None, display_lrm=False):
     """Draws a caffe net, and saves it to file using the format given as the
     file extension. Use '.raw' to output raw text that you can manually feed
     to graphviz to draw graphs.
@@ -311,4 +359,5 @@ def draw_net_to_file(caffe_net, filename, rankdir='LR', phase=None, display_lrm=
     """
     ext = filename[filename.rfind('.')+1:]
     with open(filename, 'wb') as fid:
-        fid.write(draw_net(caffe_net, rankdir, ext, phase, display_lrm))
+        fid.write(draw_net(caffe_net, rankdir, margin, page, pagesize,
+                           size, ext, phase, display_lrm))

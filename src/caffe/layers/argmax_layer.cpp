@@ -7,9 +7,10 @@
 
 namespace caffe {
 
-template <typename Dtype>
-void ArgMaxLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {
+template<typename Dtype, typename MItype, typename MOtype>
+void ArgMaxLayer<Dtype, MItype, MOtype>::LayerSetUp(
+      const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top) {
   const ArgMaxParameter& argmax_param = this->layer_param_.argmax_param();
   out_max_val_ = argmax_param.out_max_val();
   top_k_ = argmax_param.top_k();
@@ -27,14 +28,20 @@ void ArgMaxLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       << "top_k must be less than or equal to"
         " the dimension of the flattened bottom blob per instance.";
   }
+  CHECK_LE(bottom[0]->count(1), type_max_integer_representable<MOtype>())
+    << "flattened bottom blob dimension must be less than or equal to the "
+        "highest representable integer of the top data type.";
+
+  this->InitializeQuantizers(bottom, top);
 }
 
-template <typename Dtype>
-void ArgMaxLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {
-  int num_top_axes = bottom[0]->num_axes();
+template<typename Dtype, typename MItype, typename MOtype>
+void ArgMaxLayer<Dtype, MItype, MOtype>::Reshape(
+      const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top) {
+  int_tp num_top_axes = bottom[0]->num_axes();
   if ( num_top_axes < 3 ) num_top_axes = 3;
-  std::vector<int> shape(num_top_axes, 1);
+  vector<int_tp> shape(num_top_axes, 1);
   if (has_axis_) {
     // Produces max_ind or max_val per axis
     shape = bottom[0]->shape();
@@ -51,12 +58,13 @@ void ArgMaxLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   top[0]->Reshape(shape);
 }
 
-template <typename Dtype>
-void ArgMaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-    const vector<Blob<Dtype>*>& top) {
+template<typename Dtype, typename MItype, typename MOtype>
+void ArgMaxLayer<Dtype, MItype, MOtype>::Forward_cpu(
+       const vector<Blob<MItype>*>& bottom,
+       const vector<Blob<MOtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = top[0]->mutable_cpu_data();
-  int dim, axis_dist;
+  int_tp dim, axis_dist;
   if (has_axis_) {
     dim = bottom[0]->shape(axis_);
     // Distance between values of axis in blob
@@ -65,17 +73,17 @@ void ArgMaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     dim = bottom[0]->count(1);
     axis_dist = 1;
   }
-  int num = bottom[0]->count() / dim;
-  std::vector<std::pair<Dtype, int> > bottom_data_vector(dim);
-  for (int i = 0; i < num; ++i) {
-    for (int j = 0; j < dim; ++j) {
-      bottom_data_vector[j] = std::make_pair(
+  int_tp num = bottom[0]->count() / dim;
+  vector<std::pair<Dtype, int_tp> > bottom_data_vector(dim);
+  for (int_tp i = 0; i < num; ++i) {
+    for (int_tp j = 0; j < dim; ++j) {
+      bottom_data_vector[j] = make_pair(
         bottom_data[(i / axis_dist * dim + j) * axis_dist + i % axis_dist], j);
     }
     std::partial_sort(
         bottom_data_vector.begin(), bottom_data_vector.begin() + top_k_,
-        bottom_data_vector.end(), std::greater<std::pair<Dtype, int> >());
-    for (int j = 0; j < top_k_; ++j) {
+        bottom_data_vector.end(), std::greater<std::pair<Dtype, int_tp> >());
+    for (int_tp j = 0; j < top_k_; ++j) {
       if (out_max_val_) {
         if (has_axis_) {
           // Produces max_val per axis
@@ -95,7 +103,13 @@ void ArgMaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   }
 }
 
-INSTANTIATE_CLASS(ArgMaxLayer);
+INSTANTIATE_CLASS_3T_GUARDED(ArgMaxLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(ArgMaxLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(ArgMaxLayer, (double), (double), (double));
+
 REGISTER_LAYER_CLASS(ArgMax);
+REGISTER_LAYER_CLASS_INST(ArgMax, (half_fp), (half_fp), (half_fp));
+REGISTER_LAYER_CLASS_INST(ArgMax, (float), (float), (float));
+REGISTER_LAYER_CLASS_INST(ArgMax, (double), (double), (double));
 
 }  // namespace caffe

@@ -9,6 +9,10 @@
 
 #include "caffe/layers/deconv_layer.hpp"
 
+#ifdef USE_CUDNN  // cuDNN acceleration library.
+#include "caffe/util/cudnn.hpp"
+#endif
+
 namespace caffe {
 
 #ifdef USE_CUDNN
@@ -21,23 +25,37 @@ namespace caffe {
  * inputs. Caffe + cuDNN further speeds up the computation through forward
  * parallelism across groups and backward parallelism across gradients.
 */
-template <typename Dtype>
-class CuDNNDeconvolutionLayer : public DeconvolutionLayer<Dtype> {
+template<typename Dtype, typename MItype, typename MOtype>
+class CuDNNDeconvolutionLayer
+    : public BaseConvolutionLayer<Dtype, MItype, MOtype> {
  public:
   explicit CuDNNDeconvolutionLayer(const LayerParameter& param)
-    : DeconvolutionLayer<Dtype>(param), handles_setup_(false) {}
-  virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-                          const vector<Blob<Dtype>*>& top);
-  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
-                       const vector<Blob<Dtype>*>& top);
+    : BaseConvolutionLayer<Dtype, MItype, MOtype>(param),
+      handles_setup_(false) {
+    this->deconvolution_ = true;
+  }
+  virtual void LayerSetUp(const vector<Blob<MItype>*>& bottom,
+                          const vector<Blob<MOtype>*>& top);
+  virtual void Reshape(const vector<Blob<MItype>*>& bottom,
+                       const vector<Blob<MOtype>*>& top);
   virtual ~CuDNNDeconvolutionLayer();
 
  protected:
-  virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-                           const vector<Blob<Dtype>*>& top);
-  virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
+  virtual void Forward_cpu(const vector<Blob<MItype>*>& bottom,
+                           const vector<Blob<MOtype>*>& top) {
+    NOT_IMPLEMENTED;
+  }
+  virtual void Backward_cpu(const vector<Blob<MOtype>*>& top,
                             const vector<bool>& propagate_down,
-                            const vector<Blob<Dtype>*>& bottom);
+                            const vector<Blob<MItype>*>& bottom) {
+    NOT_IMPLEMENTED;
+  }
+
+  virtual void Forward_gpu(const vector<Blob<MItype>*>& bottom,
+                           const vector<Blob<MOtype>*>& top);
+  virtual void Backward_gpu(const vector<Blob<MOtype>*>& top,
+                            const vector<bool>& propagate_down,
+                            const vector<Blob<MItype>*>& bottom);
 
   bool handles_setup_;
   cudnnHandle_t* handle_;

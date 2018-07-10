@@ -1,10 +1,10 @@
-if(CPU_ONLY)
+if(NOT USE_CUDA)
   return()
 endif()
 
 # Known NVIDIA GPU achitectures Caffe can be compiled for.
 # This list will be used for CUDA_ARCH_NAME = All option
-set(Caffe_known_gpu_archs "20 21(20) 30 35 50 60 61")
+set(Caffe_known_gpu_archs "30 35 50 60 61")
 
 ################################################################################################
 # A function for automatic detection of GPUs installed  (if autodetection is enabled)
@@ -36,8 +36,12 @@ function(caffe_detect_installed_gpus out_variable)
                     ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
 
     if(__nvcc_res EQUAL 0)
+      # nvcc outputs text containing line breaks when building with MSVC.
+      # The line below prevents CMake from inserting a variable with line
+      # breaks in the cache
+      string(REGEX MATCH "([1-9].[0-9])" __nvcc_out "${__nvcc_out}")
       string(REPLACE "2.1" "2.1(2.0)" __nvcc_out "${__nvcc_out}")
-      set(CUDA_gpu_detect_output ${__nvcc_out} CACHE INTERNAL "Returned GPU architetures from caffe_detect_gpus tool" FORCE)
+      set(CUDA_gpu_detect_output ${__nvcc_out} CACHE INTERNAL "Returned GPU architetures from caffe_detect_gpus tool" FORCE)      
     endif()
   endif()
 
@@ -56,7 +60,7 @@ endfunction()
 #   caffe_select_nvcc_arch_flags(out_variable)
 function(caffe_select_nvcc_arch_flags out_variable)
   # List of arch names
-  set(__archs_names "Fermi" "Kepler" "Maxwell" "Pascal" "All" "Manual")
+  set(__archs_names "Kepler" "Maxwell" "Pascal" "All" "Manual")
   set(__archs_name_default "All")
   if(NOT CMAKE_CROSSCOMPILING)
     list(APPEND __archs_names "Auto")
@@ -83,9 +87,7 @@ function(caffe_select_nvcc_arch_flags out_variable)
     unset(CUDA_ARCH_PTX CACHE)
   endif()
 
-  if(${CUDA_ARCH_NAME} STREQUAL "Fermi")
-    set(__cuda_arch_bin "20 21(20)")
-  elseif(${CUDA_ARCH_NAME} STREQUAL "Kepler")
+  if(${CUDA_ARCH_NAME} STREQUAL "Kepler")
     set(__cuda_arch_bin "30 35")
   elseif(${CUDA_ARCH_NAME} STREQUAL "Maxwell")
     set(__cuda_arch_bin "50")
@@ -147,20 +149,23 @@ macro(caffe_cuda_compile objlist_variable)
   foreach(var CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_RELEASE CMAKE_CXX_FLAGS_DEBUG)
     set(${var}_backup_in_cuda_compile_ "${${var}}")
 
-    # we remove /EHa as it generates warnings under windows
+    # We remove /EHa as it generates warnings under windows
     string(REPLACE "/EHa" "" ${var} "${${var}}")
 
   endforeach()
 
   if(UNIX OR APPLE)
-    list(APPEND CUDA_NVCC_FLAGS -Xcompiler -fPIC)
+    list(APPEND CUDA_NVCC_FLAGS -Xcompiler -fPIC,-std=c++11)
   endif()
 
   if(APPLE)
     list(APPEND CUDA_NVCC_FLAGS -Xcompiler -Wno-unused-function)
   endif()
 
-  cuda_compile(cuda_objcs ${ARGN})
+  # Skip NVCC in favor of C++ compiler (may disable certain CUDA backend parts)
+  if(NOT FORCE_COMPILE_CU_AS_CPP)
+    cuda_compile(cuda_objcs ${ARGN})
+  endif()
 
   foreach(var CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_RELEASE CMAKE_CXX_FLAGS_DEBUG)
     set(${var} "${${var}_backup_in_cuda_compile_}")
@@ -180,11 +185,21 @@ function(detect_cuDNN)
 
   find_path(CUDNN_INCLUDE cudnn.h
             PATHS ${CUDNN_ROOT} $ENV{CUDNN_ROOT} ${CUDA_TOOLKIT_INCLUDE}
+            PATH_SUFFIXES include
             DOC "Path to cuDNN include directory." )
+           
+  unset(_path_suffixes)
+  if(MSVC AND ${CMAKE_SIZEOF_VOID_P} EQUAL 8)
+    set(_path_suffixes PATH_SUFFIXES lib/x64)
+  else()
+    set(_path_suffixes PATH_SUFFIXES lib/Win32)    
+  endif()
 
   # dynamic libs have different suffix in mac and linux
   if(APPLE)
     set(CUDNN_LIB_NAME "libcudnn.dylib")
+  elseif(MSVC)
+    set(CUDNN_LIB_NAME "cudnn")
   else()
     set(CUDNN_LIB_NAME "libcudnn.so")
   endif()
@@ -192,8 +207,9 @@ function(detect_cuDNN)
   get_filename_component(__libpath_hist ${CUDA_CUDART_LIBRARY} PATH)
   find_library(CUDNN_LIBRARY NAMES ${CUDNN_LIB_NAME}
    PATHS ${CUDNN_ROOT} $ENV{CUDNN_ROOT} ${CUDNN_INCLUDE} ${__libpath_hist} ${__libpath_hist}/../lib
+   ${_path_suffixes}
    DOC "Path to cuDNN library.")
-  
+
   if(CUDNN_INCLUDE AND CUDNN_LIBRARY)
     set(HAVE_CUDNN  TRUE PARENT_SCOPE)
     set(CUDNN_FOUND TRUE PARENT_SCOPE)
@@ -237,8 +253,9 @@ endfunction()
 ###  Non macro section
 ################################################################################################
 
-find_package(CUDA 5.5 QUIET)
+find_package(CUDA 7.5 QUIET)
 find_cuda_helper_libs(curand)  # cmake 2.8.7 compatibility which doesn't search for curand
+find_cuda_helper_libs(nvrtc)  # cmake 3.9.6 compatibility which doesn't search for nvrtc
 
 if(NOT CUDA_FOUND)
   return()
@@ -247,8 +264,12 @@ endif()
 set(HAVE_CUDA TRUE)
 message(STATUS "CUDA detected: " ${CUDA_VERSION})
 list(APPEND Caffe_INCLUDE_DIRS PUBLIC ${CUDA_INCLUDE_DIRS})
-list(APPEND Caffe_LINKER_LIBS PUBLIC ${CUDA_CUDART_LIBRARY}
-                                     ${CUDA_curand_LIBRARY} ${CUDA_CUBLAS_LIBRARIES})
+list(APPEND Caffe_LINKER_LIBS PUBLIC ${CUDA_CUDA_LIBRARY}
+								     ${CUDA_CUDART_LIBRARY}
+                                     ${CUDA_curand_LIBRARY}
+                                     ${CUDA_nvrtc_LIBRARY}
+                                     ${CUDA_CUBLAS_LIBRARIES})
+list(APPEND Caffe_DEFINITIONS PUBLIC -DUSE_CUDA)
 
 # cudnn detection
 if(USE_CUDNN)
@@ -257,6 +278,8 @@ if(USE_CUDNN)
     list(APPEND Caffe_DEFINITIONS PUBLIC -DUSE_CUDNN)
     list(APPEND Caffe_INCLUDE_DIRS PUBLIC ${CUDNN_INCLUDE})
     list(APPEND Caffe_LINKER_LIBS PUBLIC ${CUDNN_LIBRARY})
+  else()
+    message(FATAL_ERROR "CuDNN requested, but not found.")
   endif()
 endif()
 

@@ -1,0 +1,53 @@
+SET(CLFFT_INCLUDE_SEARCH_PATHS
+  /usr/include
+  /usr/local/include
+  /opt/clFFT/include
+  $ENV{CLFFT_HOME}
+  $ENV{CLFFT_HOME}/include
+)
+
+SET(CLFFT_LIB_SEARCH_PATHS
+        /lib/
+        /lib64/
+        /usr/lib
+        /usr/lib64
+        /usr/local/lib
+        /usr/local/lib64
+        /opt/clFFT/lib
+        $ENV{CLFFT_HOME}
+        $ENV{CLFFT_HOME}/lib
+ )
+
+FIND_PATH(CLFFT_INCLUDE_DIR NAMES clFFT.h PATHS ${CLFFT_INCLUDE_SEARCH_PATHS})
+FIND_LIBRARY(CLFFT_LIBRARY NAMES clFFT PATHS ${CLFFT_LIB_SEARCH_PATHS})
+
+SET(CLFFT_FOUND ON)
+
+#    Check include files
+IF(NOT CLFFT_INCLUDE_DIR)
+    SET(CLFFT_FOUND OFF)
+    MESSAGE(STATUS "Could not find CLFFT include. Turning CLFFT_FOUND off")
+ENDIF()
+
+#    Check libraries
+IF(NOT CLFFT_LIBRARY)
+    SET(CLFFT_FOUND OFF)
+    MESSAGE(STATUS "Could not find CLFFT lib. Turning CLFFT_FOUND off")
+ENDIF()
+
+IF (CLFFT_FOUND)
+  IF (NOT CLFFT_FIND_QUIETLY)
+    MESSAGE(STATUS "Found CLFFT libraries: ${CLFFT_LIBRARY}")
+    MESSAGE(STATUS "Found CLFFT include: ${CLFFT_INCLUDE_DIR}")
+  ENDIF (NOT CLFFT_FIND_QUIETLY)
+ELSE (CLFFT_FOUND)
+  IF (CLFFT_FIND_REQUIRED)
+    MESSAGE(FATAL_ERROR "Could not find CLFFT")
+  ENDIF (CLFFT_FIND_REQUIRED)
+ENDIF (CLFFT_FOUND)
+
+MARK_AS_ADVANCED(
+    CLFFT_INCLUDE_DIR
+    CLFFT_LIBRARY
+)
+

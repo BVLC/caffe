@@ -31,7 +31,7 @@ class SolverFactoryTest : public MultiDeviceTest<TypeParam> {
   }
 };
 
-TYPED_TEST_CASE(SolverFactoryTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(SolverFactoryTest, TestDtypesFloatAndDevices);
 
 TYPED_TEST(SolverFactoryTest, TestCreateSolver) {
   typedef typename TypeParam::Dtype Dtype;
@@ -42,7 +42,8 @@ TYPED_TEST(SolverFactoryTest, TestCreateSolver) {
   for (typename SolverRegistry<Dtype>::CreatorRegistry::iterator iter =
        registry.begin(); iter != registry.end(); ++iter) {
     solver_param.set_type(iter->first);
-    solver.reset(SolverRegistry<Dtype>::CreateSolver(solver_param));
+    solver.reset(SolverRegistry<Dtype>::CreateSolver(solver_param,
+                                                    Caffe::GetDefaultDevice()));
     EXPECT_EQ(iter->first, solver->type());
   }
 }

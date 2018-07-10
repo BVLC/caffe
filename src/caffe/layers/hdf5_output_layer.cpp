@@ -1,3 +1,4 @@
+#ifdef USE_HDF5
 #include <vector>
 
 #include "hdf5.h"
@@ -8,26 +9,29 @@
 
 namespace caffe {
 
-template <typename Dtype>
-void HDF5OutputLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-    const vector<Blob<Dtype>*>& top) {
+template<typename Dtype, typename MItype, typename MOtype>
+void HDF5OutputLayer<Dtype, MItype, MOtype>::LayerSetUp(
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
   file_name_ = this->layer_param_.hdf5_output_param().file_name();
   file_id_ = H5Fcreate(file_name_.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT,
                        H5P_DEFAULT);
   CHECK_GE(file_id_, 0) << "Failed to open HDF5 file" << file_name_;
   file_opened_ = true;
+  this->InitializeQuantizers(bottom, top);
 }
 
-template <typename Dtype>
-HDF5OutputLayer<Dtype>::~HDF5OutputLayer<Dtype>() {
+template<typename Dtype, typename MItype, typename MOtype>
+HDF5OutputLayer<Dtype, MItype, MOtype>::
+    ~HDF5OutputLayer<Dtype, MItype, MOtype>() {
   if (file_opened_) {
     herr_t status = H5Fclose(file_id_);
     CHECK_GE(status, 0) << "Failed to close HDF5 file " << file_name_;
   }
 }
 
-template <typename Dtype>
-void HDF5OutputLayer<Dtype>::SaveBlobs() {
+template<typename Dtype, typename MItype, typename MOtype>
+void HDF5OutputLayer<Dtype, MItype, MOtype>::SaveBlobs() {
   // TODO: no limit on the number of blobs
   LOG(INFO) << "Saving HDF5 file " << file_name_;
   CHECK_EQ(data_blob_.num(), label_blob_.num()) <<
@@ -37,19 +41,20 @@ void HDF5OutputLayer<Dtype>::SaveBlobs() {
   LOG(INFO) << "Successfully saved " << data_blob_.num() << " rows";
 }
 
-template <typename Dtype>
-void HDF5OutputLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {
+template<typename Dtype, typename MItype, typename MOtype>
+void HDF5OutputLayer<Dtype, MItype, MOtype>::Forward_cpu(
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
   CHECK_GE(bottom.size(), 2);
   CHECK_EQ(bottom[0]->num(), bottom[1]->num());
   data_blob_.Reshape(bottom[0]->num(), bottom[0]->channels(),
                      bottom[0]->height(), bottom[0]->width());
   label_blob_.Reshape(bottom[1]->num(), bottom[1]->channels(),
                      bottom[1]->height(), bottom[1]->width());
-  const int data_datum_dim = bottom[0]->count() / bottom[0]->num();
-  const int label_datum_dim = bottom[1]->count() / bottom[1]->num();
+  const int_tp data_datum_dim = bottom[0]->count() / bottom[0]->num();
+  const int_tp label_datum_dim = bottom[1]->count() / bottom[1]->num();
 
-  for (int i = 0; i < bottom[0]->num(); ++i) {
+  for (int_tp i = 0; i < bottom[0]->num(); ++i) {
     caffe_copy(data_datum_dim, &bottom[0]->cpu_data()[i * data_datum_dim],
         &data_blob_.mutable_cpu_data()[i * data_datum_dim]);
     caffe_copy(label_datum_dim, &bottom[1]->cpu_data()[i * label_datum_dim],
@@ -58,9 +63,9 @@ void HDF5OutputLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   SaveBlobs();
 }
 
-template <typename Dtype>
-void HDF5OutputLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+template<typename Dtype, typename MItype, typename MOtype>
+void HDF5OutputLayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob<MOtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<MItype>*>& bottom) {
   return;
 }
 
@@ -68,7 +73,14 @@ void HDF5OutputLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 STUB_GPU(HDF5OutputLayer);
 #endif
 
-INSTANTIATE_CLASS(HDF5OutputLayer);
+INSTANTIATE_CLASS_3T_GUARDED(HDF5OutputLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(HDF5OutputLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(HDF5OutputLayer, (double), (double), (double));
+
 REGISTER_LAYER_CLASS(HDF5Output);
+REGISTER_LAYER_CLASS_INST(HDF5Output, (half_fp), (half_fp), (half_fp));
+REGISTER_LAYER_CLASS_INST(HDF5Output, (float), (float), (float));
+REGISTER_LAYER_CLASS_INST(HDF5Output, (double), (double), (double));
 
 }  // namespace caffe
+#endif  // USE_HDF5

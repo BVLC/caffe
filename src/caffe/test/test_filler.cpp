@@ -17,13 +17,13 @@ class ConstantFillerTest : public ::testing::Test {
     filler_param_.set_value(10.);
     filler_.reset(new ConstantFiller<Dtype>(filler_param_));
   }
-  virtual void test_params(const vector<int>& shape) {
+  virtual void test_params(const vector<int_tp>& shape) {
     EXPECT_TRUE(blob_);
     blob_->Reshape(shape);
     filler_->Fill(blob_);
-    const int count = blob_->count();
+    const int_tp count = blob_->count();
     const Dtype* data = blob_->cpu_data();
-    for (int i = 0; i < count; ++i) {
+    for (int_tp i = 0; i < count; ++i) {
       EXPECT_EQ(data[i], filler_param_.value());
     }
   }
@@ -33,10 +33,10 @@ class ConstantFillerTest : public ::testing::Test {
   shared_ptr<ConstantFiller<Dtype> > filler_;
 };
 
-TYPED_TEST_CASE(ConstantFillerTest, TestDtypes);
+TYPED_TEST_CASE(ConstantFillerTest, TestDtypesFloat);
 
 TYPED_TEST(ConstantFillerTest, TestFill) {
-  vector<int> blob_shape;
+  vector<int_tp> blob_shape;
   blob_shape.push_back(2);
   blob_shape.push_back(3);
   blob_shape.push_back(4);
@@ -45,19 +45,19 @@ TYPED_TEST(ConstantFillerTest, TestFill) {
 }
 
 TYPED_TEST(ConstantFillerTest, TestFill1D) {
-  vector<int> blob_shape(1, 15);
+  vector<int_tp> blob_shape(1, 15);
   this->test_params(blob_shape);
 }
 
 TYPED_TEST(ConstantFillerTest, TestFill2D) {
-  vector<int> blob_shape;
+  vector<int_tp> blob_shape;
   blob_shape.push_back(8);
   blob_shape.push_back(3);
   this->test_params(blob_shape);
 }
 
 TYPED_TEST(ConstantFillerTest, TestFill5D) {
-  vector<int> blob_shape;
+  vector<int_tp> blob_shape;
   blob_shape.push_back(2);
   blob_shape.push_back(3);
   blob_shape.push_back(4);
@@ -77,13 +77,13 @@ class UniformFillerTest : public ::testing::Test {
     filler_param_.set_max(2.);
     filler_.reset(new UniformFiller<Dtype>(filler_param_));
   }
-  virtual void test_params(const vector<int>& shape) {
+  virtual void test_params(const vector<int_tp>& shape) {
     EXPECT_TRUE(blob_);
     blob_->Reshape(shape);
     filler_->Fill(blob_);
-    const int count = blob_->count();
+    const int_tp count = blob_->count();
     const Dtype* data = blob_->cpu_data();
-    for (int i = 0; i < count; ++i) {
+    for (int_tp i = 0; i < count; ++i) {
       EXPECT_GE(data[i], filler_param_.min());
       EXPECT_LE(data[i], filler_param_.max());
     }
@@ -94,10 +94,10 @@ class UniformFillerTest : public ::testing::Test {
   shared_ptr<UniformFiller<Dtype> > filler_;
 };
 
-TYPED_TEST_CASE(UniformFillerTest, TestDtypes);
+TYPED_TEST_CASE(UniformFillerTest, TestDtypesFloat);
 
 TYPED_TEST(UniformFillerTest, TestFill) {
-  vector<int> blob_shape;
+  vector<int_tp> blob_shape;
   blob_shape.push_back(2);
   blob_shape.push_back(3);
   blob_shape.push_back(4);
@@ -106,19 +106,19 @@ TYPED_TEST(UniformFillerTest, TestFill) {
 }
 
 TYPED_TEST(UniformFillerTest, TestFill1D) {
-  vector<int> blob_shape(1, 15);
+  vector<int_tp> blob_shape(1, 15);
   this->test_params(blob_shape);
 }
 
 TYPED_TEST(UniformFillerTest, TestFill2D) {
-  vector<int> blob_shape;
+  vector<int_tp> blob_shape;
   blob_shape.push_back(8);
   blob_shape.push_back(3);
   this->test_params(blob_shape);
 }
 
 TYPED_TEST(UniformFillerTest, TestFill5D) {
-  vector<int> blob_shape;
+  vector<int_tp> blob_shape;
   blob_shape.push_back(2);
   blob_shape.push_back(3);
   blob_shape.push_back(4);
@@ -135,21 +135,21 @@ class PositiveUnitballFillerTest : public ::testing::Test {
         filler_param_() {
     filler_.reset(new PositiveUnitballFiller<Dtype>(filler_param_));
   }
-  virtual void test_params(const vector<int>& shape) {
+  virtual void test_params(const vector<int_tp>& shape) {
     EXPECT_TRUE(blob_);
     blob_->Reshape(shape);
     filler_->Fill(blob_);
-    const int num = blob_->shape(0);
-    const int count = blob_->count();
-    const int dim = count / num;
+    const int_tp num = blob_->shape(0);
+    const int_tp count = blob_->count();
+    const int_tp dim = count / num;
     const Dtype* data = blob_->cpu_data();
-    for (int i = 0; i < count; ++i) {
+    for (int_tp i = 0; i < count; ++i) {
       EXPECT_GE(data[i], 0);
       EXPECT_LE(data[i], 1);
     }
-    for (int i = 0; i < num; ++i) {
+    for (int_tp i = 0; i < num; ++i) {
       Dtype sum = Dtype(0);
-      for (int j = 0; j < dim; ++j) {
+      for (int_tp j = 0; j < dim; ++j) {
         sum += data[i * dim + j];
       }
       EXPECT_GE(sum, 0.999);
@@ -162,10 +162,10 @@ class PositiveUnitballFillerTest : public ::testing::Test {
   shared_ptr<PositiveUnitballFiller<Dtype> > filler_;
 };
 
-TYPED_TEST_CASE(PositiveUnitballFillerTest, TestDtypes);
+TYPED_TEST_CASE(PositiveUnitballFillerTest, TestDtypesFloat);
 
 TYPED_TEST(PositiveUnitballFillerTest, TestFill) {
-  vector<int> blob_shape;
+  vector<int_tp> blob_shape;
   blob_shape.push_back(2);
   blob_shape.push_back(3);
   blob_shape.push_back(4);
@@ -174,19 +174,19 @@ TYPED_TEST(PositiveUnitballFillerTest, TestFill) {
 }
 
 TYPED_TEST(PositiveUnitballFillerTest, TestFill1D) {
-  vector<int> blob_shape(1, 15);
+  vector<int_tp> blob_shape(1, 15);
   this->test_params(blob_shape);
 }
 
 TYPED_TEST(PositiveUnitballFillerTest, TestFill2D) {
-  vector<int> blob_shape;
+  vector<int_tp> blob_shape;
   blob_shape.push_back(8);
   blob_shape.push_back(3);
   this->test_params(blob_shape);
 }
 
 TYPED_TEST(PositiveUnitballFillerTest, TestFill5D) {
-  vector<int> blob_shape;
+  vector<int_tp> blob_shape;
   blob_shape.push_back(2);
   blob_shape.push_back(3);
   blob_shape.push_back(4);
@@ -205,27 +205,27 @@ class GaussianFillerTest : public ::testing::Test {
     filler_param_.set_std(0.1);
     filler_.reset(new GaussianFiller<Dtype>(filler_param_));
   }
-  virtual void test_params(const vector<int>& shape,
-      const Dtype tolerance = Dtype(5), const int repetitions = 100) {
+  virtual void test_params(const vector<int_tp>& shape,
+      const Dtype tolerance = Dtype(5), const int_tp repetitions = 100) {
     // Tests for statistical properties should be ran multiple times.
     EXPECT_TRUE(blob_);
     blob_->Reshape(shape);
-    for (int i = 0; i < repetitions; ++i) {
+    for (int_tp i = 0; i < repetitions; ++i) {
       test_params_iter(shape, tolerance);
     }
   }
-  virtual void test_params_iter(const vector<int>& shape,
+  virtual void test_params_iter(const vector<int_tp>& shape,
       const Dtype tolerance) {
     // This test has a configurable tolerance parameter - by default it was
     // equal to 5.0 which is very loose - allowing some tuning (e.g. for tests
     // on smaller blobs the actual variance will be larger than desired, so the
     // tolerance can be increased to account for that).
     filler_->Fill(blob_);
-    const int count = blob_->count();
+    const int_tp count = blob_->count();
     const Dtype* data = blob_->cpu_data();
     Dtype mean = Dtype(0);
     Dtype var = Dtype(0);
-    for (int i = 0; i < count; ++i) {
+    for (int_tp i = 0; i < count; ++i) {
       mean += data[i];
       var += data[i] * data[i];
     }
@@ -244,10 +244,10 @@ class GaussianFillerTest : public ::testing::Test {
   shared_ptr<GaussianFiller<Dtype> > filler_;
 };
 
-TYPED_TEST_CASE(GaussianFillerTest, TestDtypes);
+TYPED_TEST_CASE(GaussianFillerTest, TestDtypesFloat);
 
 TYPED_TEST(GaussianFillerTest, TestFill) {
-  vector<int> blob_shape;
+  vector<int_tp> blob_shape;
   blob_shape.push_back(2);
   blob_shape.push_back(3);
   blob_shape.push_back(4);
@@ -263,7 +263,7 @@ TYPED_TEST(GaussianFillerTest, TestFill1D) {
 }
 
 TYPED_TEST(GaussianFillerTest, TestFill2D) {
-  vector<int> blob_shape;
+  vector<int_tp> blob_shape;
   blob_shape.push_back(8);
   blob_shape.push_back(15);
   const TypeParam tolerance = TypeParam(3);
@@ -271,7 +271,7 @@ TYPED_TEST(GaussianFillerTest, TestFill2D) {
 }
 
 TYPED_TEST(GaussianFillerTest, TestFill5D) {
-  vector<int> blob_shape;
+  vector<int_tp> blob_shape;
   blob_shape.push_back(2);
   blob_shape.push_back(3);
   blob_shape.push_back(4);
@@ -289,10 +289,10 @@ class XavierFillerTest : public ::testing::Test {
         filler_param_() {
   }
   virtual void test_params(FillerParameter_VarianceNorm variance_norm,
-      Dtype n, const vector<int>& shape, const int repetitions = 100) {
+      Dtype n, const vector<int_tp>& shape, const int_tp repetitions = 100) {
     EXPECT_TRUE(blob_);
     blob_->Reshape(shape);
-    for (int i = 0; i < repetitions; ++i) {
+    for (int_tp i = 0; i < repetitions; ++i) {
       test_params_iter(variance_norm, n);
     }
   }
@@ -301,18 +301,18 @@ class XavierFillerTest : public ::testing::Test {
     filler_param_.set_variance_norm(variance_norm);
     filler_.reset(new XavierFiller<Dtype>(filler_param_));
     filler_->Fill(blob_);
-    const int count = blob_->count();
+    const int_tp count = blob_->count();
     const Dtype* data = blob_->cpu_data();
     Dtype mean = 0.;
     Dtype ex2 = 0.;
-    for (int i = 0; i < count; ++i) {
+    for (int_tp i = 0; i < count; ++i) {
       mean += data[i];
       ex2 += data[i] * data[i];
     }
     mean /= count;
     ex2 /= count;
-    Dtype std = sqrt(ex2 - mean*mean);
-    Dtype target_std = sqrt(2.0 / n);
+    Dtype std = std::sqrt(ex2 - mean*mean);
+    Dtype target_std = std::sqrt(2.0 / n);
     EXPECT_NEAR(mean, 0.0, 0.1);
     EXPECT_NEAR(std, target_std, 0.1);
   }
@@ -322,10 +322,10 @@ class XavierFillerTest : public ::testing::Test {
   shared_ptr<XavierFiller<Dtype> > filler_;
 };
 
-TYPED_TEST_CASE(XavierFillerTest, TestDtypes);
+TYPED_TEST_CASE(XavierFillerTest, TestDtypesFloat);
 
 TYPED_TEST(XavierFillerTest, TestFillFanIn) {
-  vector<int> blob_shape;
+  vector<int_tp> blob_shape;
   blob_shape.push_back(1000);
   blob_shape.push_back(2);
   blob_shape.push_back(4);
@@ -335,7 +335,7 @@ TYPED_TEST(XavierFillerTest, TestFillFanIn) {
 }
 
 TYPED_TEST(XavierFillerTest, TestFillFanOut) {
-  vector<int> blob_shape;
+  vector<int_tp> blob_shape;
   blob_shape.push_back(1000);
   blob_shape.push_back(2);
   blob_shape.push_back(4);
@@ -345,7 +345,7 @@ TYPED_TEST(XavierFillerTest, TestFillFanOut) {
 }
 
 TYPED_TEST(XavierFillerTest, TestFillAverage) {
-  vector<int> blob_shape;
+  vector<int_tp> blob_shape;
   blob_shape.push_back(1000);
   blob_shape.push_back(2);
   blob_shape.push_back(4);
@@ -357,7 +357,7 @@ TYPED_TEST(XavierFillerTest, TestFillAverage) {
 TYPED_TEST(XavierFillerTest, TestFill1D) {
   // This makes little sense but at least we will know that we can fill it
   EXPECT_TRUE(this->blob_);
-  vector<int> blob_shape(1, 25);
+  vector<int_tp> blob_shape(1, 25);
   this->blob_->Reshape(blob_shape);
   this->filler_param_.set_variance_norm(FillerParameter_VarianceNorm_AVERAGE);
   this->filler_.reset(new XavierFiller<TypeParam>(this->filler_param_));
@@ -366,7 +366,7 @@ TYPED_TEST(XavierFillerTest, TestFill1D) {
 
 TYPED_TEST(XavierFillerTest, TestFill2D) {
   EXPECT_TRUE(this->blob_);
-  vector<int> blob_shape;
+  vector<int_tp> blob_shape;
   blob_shape.push_back(8);
   blob_shape.push_back(3);
   this->blob_->Reshape(blob_shape);
@@ -377,7 +377,7 @@ TYPED_TEST(XavierFillerTest, TestFill2D) {
 
 TYPED_TEST(XavierFillerTest, TestFill5D) {
   EXPECT_TRUE(this->blob_);
-  vector<int> blob_shape;
+  vector<int_tp> blob_shape;
   blob_shape.push_back(2);
   blob_shape.push_back(3);
   blob_shape.push_back(4);
@@ -397,10 +397,10 @@ class MSRAFillerTest : public ::testing::Test {
         filler_param_() {
   }
   virtual void test_params(FillerParameter_VarianceNorm variance_norm,
-      Dtype n, const vector<int>& shape, const int repetitions = 100) {
+      Dtype n, const vector<int_tp>& shape, const int_tp repetitions = 100) {
     EXPECT_TRUE(blob_);
     blob_->Reshape(shape);
-    for (int i = 0; i < repetitions; ++i) {
+    for (int_tp i = 0; i < repetitions; ++i) {
       test_params_iter(variance_norm, n);
     }
   }
@@ -409,18 +409,18 @@ class MSRAFillerTest : public ::testing::Test {
     filler_param_.set_variance_norm(variance_norm);
     filler_.reset(new MSRAFiller<Dtype>(filler_param_));
     filler_->Fill(blob_);
-    const int count = blob_->count();
+    const int_tp count = blob_->count();
     const Dtype* data = blob_->cpu_data();
     Dtype mean = 0.;
     Dtype ex2 = 0.;
-    for (int i = 0; i < count; ++i) {
+    for (int_tp i = 0; i < count; ++i) {
       mean += data[i];
       ex2 += data[i] * data[i];
     }
     mean /= count;
     ex2 /= count;
-    Dtype std = sqrt(ex2 - mean*mean);
-    Dtype target_std = sqrt(2.0 / n);
+    Dtype std = std::sqrt(ex2 - mean*mean);
+    Dtype target_std = std::sqrt(2.0 / n);
     EXPECT_NEAR(mean, 0.0, 0.1);
     EXPECT_NEAR(std, target_std, 0.1);
   }
@@ -430,10 +430,10 @@ class MSRAFillerTest : public ::testing::Test {
   shared_ptr<MSRAFiller<Dtype> > filler_;
 };
 
-TYPED_TEST_CASE(MSRAFillerTest, TestDtypes);
+TYPED_TEST_CASE(MSRAFillerTest, TestDtypesFloat);
 
 TYPED_TEST(MSRAFillerTest, TestFillFanIn) {
-  vector<int> blob_shape;
+  vector<int_tp> blob_shape;
   blob_shape.push_back(1000);
   blob_shape.push_back(2);
   blob_shape.push_back(4);
@@ -443,7 +443,7 @@ TYPED_TEST(MSRAFillerTest, TestFillFanIn) {
 }
 
 TYPED_TEST(MSRAFillerTest, TestFillFanOut) {
-  vector<int> blob_shape;
+  vector<int_tp> blob_shape;
   blob_shape.push_back(1000);
   blob_shape.push_back(2);
   blob_shape.push_back(4);
@@ -453,7 +453,7 @@ TYPED_TEST(MSRAFillerTest, TestFillFanOut) {
 }
 
 TYPED_TEST(MSRAFillerTest, TestFillAverage) {
-  vector<int> blob_shape;
+  vector<int_tp> blob_shape;
   blob_shape.push_back(1000);
   blob_shape.push_back(2);
   blob_shape.push_back(4);
@@ -465,7 +465,7 @@ TYPED_TEST(MSRAFillerTest, TestFillAverage) {
 TYPED_TEST(MSRAFillerTest, TestFill1D) {
   // Like with Xavier - no checking for correctness, just if it can be filled.
   EXPECT_TRUE(this->blob_);
-  vector<int> blob_shape(1, 25);
+  vector<int_tp> blob_shape(1, 25);
   this->blob_->Reshape(blob_shape);
   this->filler_param_.set_variance_norm(FillerParameter_VarianceNorm_AVERAGE);
   this->filler_.reset(new MSRAFiller<TypeParam>(this->filler_param_));
@@ -474,7 +474,7 @@ TYPED_TEST(MSRAFillerTest, TestFill1D) {
 
 TYPED_TEST(MSRAFillerTest, TestFill2D) {
   EXPECT_TRUE(this->blob_);
-  vector<int> blob_shape;
+  vector<int_tp> blob_shape;
   blob_shape.push_back(8);
   blob_shape.push_back(3);
   this->blob_->Reshape(blob_shape);
@@ -485,7 +485,7 @@ TYPED_TEST(MSRAFillerTest, TestFill2D) {
 
 TYPED_TEST(MSRAFillerTest, TestFill5D) {
   EXPECT_TRUE(this->blob_);
-  vector<int> blob_shape;
+  vector<int_tp> blob_shape;
   blob_shape.push_back(2);
   blob_shape.push_back(3);
   blob_shape.push_back(4);
@@ -504,19 +504,19 @@ class BilinearFillerTest : public ::testing::Test {
     : blob_(new Blob<Dtype>()),
       filler_param_() {
   }
-  virtual void test_params(const vector<int>& shape) {
+  virtual void test_params(const vector<int_tp>& shape) {
     EXPECT_TRUE(blob_);
     blob_->Reshape(shape);
     filler_.reset(new BilinearFiller<Dtype>(filler_param_));
     filler_->Fill(blob_);
     CHECK_EQ(blob_->num_axes(), 4);
-    const int outer_num = blob_->count(0, 2);
-    const int inner_num = blob_->count(2, 4);
+    const int_tp outer_num = blob_->count(0, 2);
+    const int_tp inner_num = blob_->count(2, 4);
     const Dtype* data = blob_->cpu_data();
-    int f = ceil(blob_->shape(3) / 2.);
+    int_tp f = ceil(blob_->shape(3) / 2.);
     Dtype c = (blob_->shape(3) - 1) / (2. * f);
-    for (int i = 0; i < outer_num; ++i) {
-      for (int j = 0; j < inner_num; ++j) {
+    for (int_tp i = 0; i < outer_num; ++i) {
+      for (int_tp j = 0; j < inner_num; ++j) {
         Dtype x = j % blob_->shape(3);
         Dtype y = (j / blob_->shape(3)) % blob_->shape(2);
         Dtype expected_value = (1 - fabs(x / f - c)) * (1 - fabs(y / f - c));
@@ -531,11 +531,11 @@ class BilinearFillerTest : public ::testing::Test {
   shared_ptr<BilinearFiller<Dtype> > filler_;
 };
 
-TYPED_TEST_CASE(BilinearFillerTest, TestDtypes);
+TYPED_TEST_CASE(BilinearFillerTest, TestDtypesFloat);
 
 TYPED_TEST(BilinearFillerTest, TestFillOdd) {
-  const int n = 7;
-  vector<int> blob_shape;
+  const int_tp n = 7;
+  vector<int_tp> blob_shape;
   blob_shape.push_back(1000);
   blob_shape.push_back(2);
   blob_shape.push_back(n);
@@ -543,8 +543,8 @@ TYPED_TEST(BilinearFillerTest, TestFillOdd) {
   this->test_params(blob_shape);
 }
 TYPED_TEST(BilinearFillerTest, TestFillEven) {
-  const int n = 6;
-  vector<int> blob_shape;
+  const int_tp n = 6;
+  vector<int_tp> blob_shape;
   blob_shape.push_back(1000);
   blob_shape.push_back(2);
   blob_shape.push_back(n);

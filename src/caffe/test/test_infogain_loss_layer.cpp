@@ -25,14 +25,14 @@ class InfogainLossLayerTest : public MultiDeviceTest<TypeParam> {
         blob_top_loss_(new Blob<Dtype>()),
         blob_top_prob_(new Blob<Dtype>()),
         inner_(2), outer_(4*2), num_labels_(5) {
-    Caffe::set_random_seed(1701);
+    Caffe::set_random_seed(1701, Caffe::GetDefaultDevice());
     FillerParameter filler_param;
     filler_param.set_min(-0.5);
     filler_param.set_max(2.0);
     UniformFiller<Dtype> filler(filler_param);
     filler.Fill(this->blob_bottom_data_);
     blob_bottom_vec_.push_back(blob_bottom_data_);
-    for (int i = 0; i < blob_bottom_label_->count(); ++i) {
+    for (int_tp i = 0; i < blob_bottom_label_->count(); ++i) {
       blob_bottom_label_->mutable_cpu_data()[i] =
         caffe_rng_rand() % num_labels_;
     }
@@ -62,7 +62,7 @@ class InfogainLossLayerTest : public MultiDeviceTest<TypeParam> {
   int inner_, outer_, num_labels_;
 };
 
-TYPED_TEST_CASE(InfogainLossLayerTest, TestDtypesAndDevices);
+TYPED_TEST_CASE(InfogainLossLayerTest, TestDtypesFloatAndDevices);
 
 TYPED_TEST(InfogainLossLayerTest, TestInfogainLoss) {
   typedef typename TypeParam::Dtype Dtype;
@@ -75,7 +75,7 @@ TYPED_TEST(InfogainLossLayerTest, TestInfogainLoss) {
   lw->clear();
   lw->push_back(1);
   lw->push_back(1);*/
-  InfogainLossLayer<Dtype> layer(layer_param);
+  InfogainLossLayer<Dtype, Dtype, Dtype> layer(layer_param);
   layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
   layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
   // Now, check values
@@ -103,7 +103,8 @@ TYPED_TEST(InfogainLossLayerTest, TestInfogainLoss) {
       }
       for ( int l = 0; l < this->num_labels_; l++ ) {
         EXPECT_NEAR(prob[i*this->num_labels_*this->inner_ + l*this->inner_ + j],
-          est_prob[l]/den, 1e-6);
+          est_prob[l]/den,
+          (std::is_same<Dtype, half_fp>::value) ? 1e-3 : 1e-6);
       }
     }
   }
@@ -113,21 +114,22 @@ TYPED_TEST(InfogainLossLayerTest, TestInfogainLoss) {
       int gt = static_cast<int>(labels[i*this->inner_+j]);
       for ( int l = 0; l < this->num_labels_; l++ ) {
         loss -= H[gt*this->num_labels_ + l] *
-          log(std::max(
+          std::log(std::max(
             prob[i*this->num_labels_*this->inner_ + l*this->inner_ + j],
             Dtype(kLOG_THRESHOLD)));
       }
     }
   }
   EXPECT_NEAR(this->blob_top_loss_->cpu_data()[0],
-    loss/(this->outer_*this->inner_), 1e-6);
+    loss/(this->outer_*this->inner_),
+    (std::is_same<Dtype, half_fp>::value) ? 1e-3 : 1e-6);
 }
 
 TYPED_TEST(InfogainLossLayerTest, TestGradient) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   layer_param.mutable_infogain_loss_param()->set_axis(2);
-  InfogainLossLayer<Dtype> layer(layer_param);
+  InfogainLossLayer<Dtype, Dtype, Dtype> layer(layer_param);
   this->blob_top_vec_.clear();  // ignore prob top.
   this->blob_top_vec_.push_back(this->blob_top_loss_);
   GradientChecker<Dtype> checker(1e-4, 2e-2, 1701);  // no "kink"

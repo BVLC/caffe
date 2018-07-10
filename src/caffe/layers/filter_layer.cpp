@@ -5,24 +5,27 @@
 
 namespace caffe {
 
-template <typename Dtype>
-void FilterLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {
+template<typename Dtype, typename MItype, typename MOtype>
+void FilterLayer<Dtype, MItype, MOtype>::LayerSetUp(
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
   CHECK_EQ(top.size(), bottom.size() - 1);
   first_reshape_ = true;
+  this->InitializeQuantizers(bottom, top);
 }
 
-template <typename Dtype>
-void FilterLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {
+template<typename Dtype, typename MItype, typename MOtype>
+void FilterLayer<Dtype, MItype, MOtype>::Reshape(
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
   // bottom[0...k-1] are the blobs to filter
   // bottom[last] is the "selector_blob"
-  int selector_index = bottom.size() - 1;
-  for (int i = 1; i < bottom[selector_index]->num_axes(); ++i) {
+  int_tp selector_index = bottom.size() - 1;
+  for (int_tp i = 1; i < bottom[selector_index]->num_axes(); ++i) {
     CHECK_EQ(bottom[selector_index]->shape(i), 1)
         << "Selector blob dimensions must be singletons (1), except the first";
   }
-  for (int i = 0; i < bottom.size() - 1; ++i) {
+  for (int_tp i = 0; i < bottom.size() - 1; ++i) {
     CHECK_EQ(bottom[selector_index]->shape(0), bottom[i]->shape(0)) <<
         "Each bottom should have the same 0th dimension as the selector blob";
   }
@@ -33,7 +36,8 @@ void FilterLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   // look for non-zero elements in bottom[0]. Items of each bottom that
   // have the same index as the items in bottom[0] with value == non-zero
   // will be forwarded
-  for (int item_id = 0; item_id < bottom[selector_index]->shape(0); ++item_id) {
+  for (int_tp item_id = 0; item_id < bottom[selector_index]->shape(0);
+      ++item_id) {
     // we don't need an offset because item size == 1
     const Dtype* tmp_data_selector = bottom_data_selector + item_id;
     if (*tmp_data_selector) {
@@ -41,57 +45,57 @@ void FilterLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     }
   }
   // only filtered items will be forwarded
-  int new_tops_num = indices_to_forward_.size();
+  int_tp new_tops_num = indices_to_forward_.size();
   // init
   if (first_reshape_) {
     new_tops_num = bottom[0]->shape(0);
     first_reshape_ = false;
   }
-  for (int t = 0; t < top.size(); ++t) {
-    int num_axes = bottom[t]->num_axes();
-    vector<int> shape_top(num_axes);
+  for (int_tp t = 0; t < top.size(); ++t) {
+    int_tp num_axes = bottom[t]->num_axes();
+    vector<int_tp> shape_top(num_axes);
     shape_top[0] = new_tops_num;
-    for (int ts = 1; ts < num_axes; ++ts)
+    for (int_tp ts = 1; ts < num_axes; ++ts)
       shape_top[ts] = bottom[t]->shape(ts);
     top[t]->Reshape(shape_top);
   }
 }
 
-template <typename Dtype>
-void FilterLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {
-  int new_tops_num = indices_to_forward_.size();
+template<typename Dtype, typename MItype, typename MOtype>
+void FilterLayer<Dtype, MItype, MOtype>::Forward_cpu(const vector<Blob<MItype>*>& bottom,
+      const vector<Blob<MOtype>*>& top) {
+  int_tp new_tops_num = indices_to_forward_.size();
   // forward all filtered items for all bottoms but the Selector (bottom[last])
-  for (int t = 0; t < top.size(); ++t) {
+  for (int_tp t = 0; t < top.size(); ++t) {
     const Dtype* bottom_data = bottom[t]->cpu_data();
     Dtype* top_data = top[t]->mutable_cpu_data();
-    int dim = bottom[t]->count() / bottom[t]->shape(0);
-    for (int n = 0; n < new_tops_num; ++n) {
-      int data_offset_top = n * dim;
-      int data_offset_bottom = indices_to_forward_[n] * bottom[t]->count(1);
+    int_tp dim = bottom[t]->count() / bottom[t]->shape(0);
+    for (int_tp n = 0; n < new_tops_num; ++n) {
+      int_tp data_offset_top = n * dim;
+      int_tp data_offset_bottom = indices_to_forward_[n] * bottom[t]->count(1);
       caffe_copy(dim, bottom_data + data_offset_bottom,
           top_data + data_offset_top);
     }
   }
 }
 
-template <typename Dtype>
-void FilterLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+template<typename Dtype, typename MItype, typename MOtype>
+void FilterLayer<Dtype, MItype, MOtype>::Backward_cpu(const vector<Blob<MOtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<MItype>*>& bottom) {
   if (propagate_down[bottom.size() - 1]) {
     LOG(FATAL) << this->type()
                << "Layer cannot backpropagate to filter index inputs";
   }
-  for (int i = 0; i < top.size(); i++) {
+  for (int_tp i = 0; i < top.size(); i++) {
     // bottom[last] is the selector and never needs backpropagation
     // so we can iterate over top vector because top.size() == bottom.size() -1
     if (propagate_down[i]) {
-      const int dim = top[i]->count() / top[i]->shape(0);
-      int next_to_backward_offset = 0;
-      int batch_offset = 0;
-      int data_offset_bottom = 0;
-      int data_offset_top = 0;
-      for (int n = 0; n < bottom[i]->shape(0); n++) {
+      const int_tp dim = top[i]->count() / top[i]->shape(0);
+      int_tp next_to_backward_offset = 0;
+      int_tp batch_offset = 0;
+      int_tp data_offset_bottom = 0;
+      int_tp data_offset_top = 0;
+      for (int_tp n = 0; n < bottom[i]->shape(0); n++) {
         data_offset_bottom = n * dim;
         if (next_to_backward_offset >= indices_to_forward_.size()) {
           // we already visited all items that were been forwarded, so
@@ -119,7 +123,13 @@ void FilterLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 STUB_GPU(FilterLayer);
 #endif
 
-INSTANTIATE_CLASS(FilterLayer);
+INSTANTIATE_CLASS_3T_GUARDED(FilterLayer, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(FilterLayer, (float), (float), (float));
+INSTANTIATE_CLASS_3T_GUARDED(FilterLayer, (double), (double), (double));
+
 REGISTER_LAYER_CLASS(Filter);
+REGISTER_LAYER_CLASS_INST(Filter, (half_fp), (half_fp), (half_fp));
+REGISTER_LAYER_CLASS_INST(Filter, (float), (float), (float));
+REGISTER_LAYER_CLASS_INST(Filter, (double), (double), (double));
 
 }  // namespace caffe

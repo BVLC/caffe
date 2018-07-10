@@ -5,16 +5,18 @@
 
 namespace caffe {
 
-template <typename Dtype>
-void CuDNNReLULayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-    const vector<Blob<Dtype>*>& top) {
+template<typename Dtype, typename MItype, typename MOtype>
+void CuDNNReLULayer<Dtype, MItype, MOtype>::Forward_gpu(
+    const vector<Blob<MItype>*>& bottom,
+    const vector<Blob<MOtype>*>& top) {
   // Fallback to standard Caffe for leaky ReLU.
-  if (ReLULayer<Dtype>::layer_param_.relu_param().negative_slope() != 0) {
-    return ReLULayer<Dtype>::Forward_gpu(bottom, top);
+  if (ReLULayer<Dtype, MItype, MOtype>::
+      layer_param_.relu_param().negative_slope() != 0) {
+    return ReLULayer<Dtype, MItype, MOtype>::Forward_gpu(bottom, top);
   }
 
-  const Dtype* bottom_data = bottom[0]->gpu_data();
-  Dtype* top_data = top[0]->mutable_gpu_data();
+  const Dtype* bottom_data = bottom[0]->gpu_data().get_cuda_ptr();
+  Dtype* top_data = top[0]->mutable_gpu_data().get_cuda_ptr();
 #if CUDNN_VERSION_MIN(5, 0, 0)
   CUDNN_CHECK(cudnnActivationForward(this->handle_,
         activ_desc_,
@@ -32,26 +34,28 @@ void CuDNNReLULayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 #endif
 }
 
-template <typename Dtype>
-void CuDNNReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
+template<typename Dtype, typename MItype, typename MOtype>
+void CuDNNReLULayer<Dtype, MItype, MOtype>::Backward_gpu(
+    const vector<Blob<MOtype>*>& top,
     const vector<bool>& propagate_down,
-    const vector<Blob<Dtype>*>& bottom) {
+    const vector<Blob<MItype>*>& bottom) {
   if (!propagate_down[0]) {
     return;
   }
 
   // Fallback to standard Caffe for leaky ReLU.
-  if (ReLULayer<Dtype>::layer_param_.relu_param().negative_slope() != 0) {
-    return ReLULayer<Dtype>::Backward_gpu(top, propagate_down, bottom);
+  if (ReLULayer<Dtype, MItype, MOtype>::
+      layer_param_.relu_param().negative_slope() != 0) {
+    return ReLULayer<Dtype, MItype, MOtype>::
+        Backward_gpu(top, propagate_down, bottom);
   }
 
-  const Dtype* top_data = top[0]->gpu_data();
-  const Dtype* top_diff = top[0]->gpu_diff();
-  const Dtype* bottom_data = bottom[0]->gpu_data();
-  Dtype* bottom_diff = bottom[0]->mutable_gpu_diff();
+  const Dtype* top_data = top[0]->gpu_data().get_cuda_ptr();
+  const Dtype* top_diff = top[0]->gpu_diff().get_cuda_ptr();
+  const Dtype* bottom_data = bottom[0]->gpu_data().get_cuda_ptr();
+  Dtype* bottom_diff = bottom[0]->mutable_gpu_diff().get_cuda_ptr();
 #if CUDNN_VERSION_MIN(5, 0, 0)
-  CUDNN_CHECK(cudnnActivationBackward(this->handle_,
-        activ_desc_,
+  CUDNN_CHECK(cudnnActivationBackward(this->handle_, activ_desc_,
         cudnn::dataType<Dtype>::one,
         this->top_desc_, top_data, this->top_desc_, top_diff,
         this->bottom_desc_, bottom_data,
@@ -68,7 +72,16 @@ void CuDNNReLULayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 #endif
 }
 
-INSTANTIATE_LAYER_GPU_FUNCS(CuDNNReLULayer);
+
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(CuDNNReLULayer, Forward_gpu,
+                                  (float), (float), (float));
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(CuDNNReLULayer, Forward_gpu,
+                                  (double), (double), (double));
+
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(CuDNNReLULayer, Backward_gpu,
+                                  (float), (float), (float));
+INSTANTIATE_CLASST_FUNC_3T_GUARDED(CuDNNReLULayer, Backward_gpu,
+                                  (double), (double), (double));
 
 }  // namespace caffe
 #endif
