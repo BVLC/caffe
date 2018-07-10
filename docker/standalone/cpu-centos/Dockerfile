@@ -47,25 +47,16 @@ RUN rpm -iUvh https://dl.fedoraproject.org/pub/epel/7/x86_64/Packages/e/epel-rel
         libjpeg-turbo-devel && \
     yum clean all
 
-ENV CAFFE_ROOT=/opt/caffe
-WORKDIR $CAFFE_ROOT
-
-# FIXME: clone a specific git tag and use ARG instead of ENV once DockerHub supports this.
-ENV CLONE_TAG=master
-
-RUN git clone -b ${CLONE_TAG} --depth 1 https://github.com/intel/caffe.git . && \
-    pip install --upgrade pip && \
-    for req in $(cat python/requirements.txt) pydot; do pip --no-cache-dir install $req; done && \
-    mkdir build && cd build && \
-    cmake -DCPU_ONLY=1 -DUSE_MLSL=1 -DCMAKE_BUILD_TYPE=Release .. && \
-    make all -j"$(nproc)"
-
-ENV PYCAFFE_ROOT $CAFFE_ROOT/python
-ENV PYTHONPATH $PYCAFFE_ROOT:$PYTHONPATH
-ENV PATH $CAFFE_ROOT/build/tools:$PYCAFFE_ROOT:$PATH
-RUN echo "$CAFFE_ROOT/build/lib" >> /etc/ld.so.conf.d/caffe.conf && ldconfig
-
-WORKDIR /opt/caffe
+# Install conda and Intel Caffe conda package
+WORKDIR /root/
+RUN wget -c https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh && \ 
+    bash Miniconda2-latest-Linux-x86_64.sh -b && \ 
+    ./miniconda2/bin/conda config --add channels intel && \ 
+    ./miniconda2/bin/conda install -c intel caffe && \ 
+    rm -rf /root/miniconda2/pkgs/* && \
+    rm ~/Miniconda2-latest-Linux-x86_64.sh -f && \
+    echo "export PATH=/root/miniconda2/bin:$PATH" >> /root/.bashrc
+WORKDIR /root/miniconda2/caffe
 
 # If you want to deploy container in HOST network mode, Install SSH service and config it to Non-standard Port. Or you needn’t below rows.
 RUN mkdir /var/run/sshd && \
