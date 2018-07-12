@@ -164,7 +164,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   // loss.  We can skip backward computation for blobs that don't contribute
   // to the loss.
   // Also checks if all bottom blobs don't need backward computation (possible
-  // because the skip_propagate_down param) and so we can skip bacward
+  // because the skip_propagate_down param) and so we can skip backward
   // computation for the entire layer
   set<string> blobs_under_loss;
   set<string> blobs_skip_backp;
@@ -768,7 +768,7 @@ void Net<Dtype>::CopyTrainedLayersFrom(const NetParameter& param) {
 }
 
 template <typename Dtype>
-void Net<Dtype>::CopyTrainedLayersFrom(const string trained_filename) {
+void Net<Dtype>::CopyTrainedLayersFrom(const string& trained_filename) {
   if (H5Fis_hdf5(trained_filename.c_str())) {
     CopyTrainedLayersFromHDF5(trained_filename);
   } else {
@@ -778,14 +778,14 @@ void Net<Dtype>::CopyTrainedLayersFrom(const string trained_filename) {
 
 template <typename Dtype>
 void Net<Dtype>::CopyTrainedLayersFromBinaryProto(
-    const string trained_filename) {
+    const string& trained_filename) {
   NetParameter param;
   ReadNetParamsFromBinaryFileOrDie(trained_filename, &param);
   CopyTrainedLayersFrom(param);
 }
 
 template <typename Dtype>
-void Net<Dtype>::CopyTrainedLayersFromHDF5(const string trained_filename) {
+void Net<Dtype>::CopyTrainedLayersFromHDF5(const string& trained_filename) {
   hid_t file_hid = H5Fopen(trained_filename.c_str(), H5F_ACC_RDONLY,
                            H5P_DEFAULT);
   CHECK_GE(file_hid, 0) << "Couldn't open " << trained_filename;

@@ -187,7 +187,7 @@ message SolverParameter {
 
   optional int32 snapshot = 14 [default = 0]; // The snapshot interval
   // The prefix for the snapshot.
-  // If not set then is replaced by prototxt file path without extention.
+  // If not set then is replaced by prototxt file path without extension.
   // If is set to directory then is augmented by prototxt file name
   // without extention.
   optional string snapshot_prefix = 15;
@@ -248,8 +248,8 @@ message SolverParameter {
 
   // Path to caffemodel file(s) with pretrained weights to initialize finetuning.
   // Tha same as command line --weights parameter for caffe train command.
-  // If command line --weights parameter if specified, it has higher priority
-  // and owerwrites this one(s).
+  // If command line --weights parameter is specified, it has higher priority
+  // and overwrites this one(s).
   // If --snapshot command line parameter is specified, this one(s) are ignored.
   // If several model files are expected, they can be listed in a one 
   // weights parameter separated by ',' (like in a command string) or
