@@ -7,9 +7,10 @@ TODO:
 - add ability to shuffle filenames if flag is set
 */
 #include <fstream>  // NOLINT(readability/streams)
+#include <functional>
 #include <string>
-#include <vector>
 #include <utility>
+#include <vector>
 
 #include "hdf5.h"
 #include "hdf5_hl.h"
@@ -18,48 +19,51 @@ TODO:
 #include "caffe/layers/hdf5_data_layer.hpp"
 #include "caffe/util/hdf5.hpp"
 
-namespace std
-{
-  template<class Dtype> struct hash<std::unique_ptr<caffe::hdf5DataLayerDetail::HDF5FileDataHandler<Dtype>>>
-  {
-    typedef std::unique_ptr<caffe::hdf5DataLayerDetail::HDF5FileDataHandler<Dtype>> argument_type;
+namespace std {
+  template<class Dtype> struct hash<
+    std::unique_ptr<caffe::hdf5DataLayerDetail::HDF5FileDataHandler<Dtype>>> {
+    typedef std::unique_ptr<
+      caffe::hdf5DataLayerDetail::HDF5FileDataHandler<Dtype>> argument_type;
     typedef std::size_t result_type;
-    result_type operator()(argument_type const& s) const noexcept
-    {
+    result_type operator()(argument_type const& s) const noexcept {
       result_type h = 0;
-      for(const auto& a: s->files())
-          h ^= (std::hash<std::string>{}(a) << 1);
+      for (const auto& a : s->files())
+          h ^= (std::hash<std::string> {}(a) << 1);
       return h;
     }
   };
 
-  template<class Dtype> struct equal_to<std::unique_ptr<caffe::hdf5DataLayerDetail::HDF5FileDataHandler<Dtype>>>
-  {
-    typedef std::unique_ptr<caffe::hdf5DataLayerDetail::HDF5FileDataHandler<Dtype>> first_argument_type;
+  template<class Dtype> struct equal_to<
+    std::unique_ptr<caffe::hdf5DataLayerDetail::HDF5FileDataHandler<Dtype>>> {
+    typedef std::unique_ptr<
+      caffe::hdf5DataLayerDetail::HDF5FileDataHandler<Dtype>>
+        first_argument_type;
     typedef first_argument_type second_argument_type;
     typedef bool result_type;
 
-    result_type operator()(first_argument_type const& a, second_argument_type const& b) const noexcept
-    {
-      return std::equal_to<std::vector<std::string>>{}(a->files(),b->files());
+    result_type operator()(first_argument_type const& a,
+        second_argument_type const& b) const noexcept {
+      return std::equal_to<std::vector<std::string>> {}(a->files(), b->files());
     }
   };
-}
+}  // namespace std
 
 namespace caffe {
 
 namespace hdf5DataLayerDetail {
 
 template <typename Dtype>
-HDF5FileDataHandler<Dtype>::HDF5FileDataHandler(const std::vector<std::string>& files, LayerParameter& layer_param)
-  : hdf_filenames_(files), file_permutation_(files.size()), layer_param_(layer_param) {
+HDF5FileDataHandler<Dtype>::HDF5FileDataHandler(
+    const std::vector<std::string>& files, LayerParameter* layer_param)
+  : hdf_filenames_(files), file_permutation_(files.size()),
+    layer_param_(layer_param) {
   // Default to identity permutation.
   for (int i = 0; i < file_permutation_.size(); i++) {
     file_permutation_[i] = i;
   }
 
   // Shuffle if needed.
-  if (this->layer_param_.hdf5_data_param().shuffle()) {
+  if (this->layer_param_->hdf5_data_param().shuffle()) {
     std::random_shuffle(file_permutation_.begin(), file_permutation_.end());
   }
 }
@@ -67,45 +71,43 @@ HDF5FileDataHandler<Dtype>::HDF5FileDataHandler(const std::vector<std::string>& 
 template <typename Dtype>
 void HDF5DataManager<Dtype>::createInstance() {
   std::unique_lock<std::mutex> lock(_createInstanceMutex, std::try_to_lock);
-  if(lock) {
+  if (lock) {
     _instance.reset(new HDF5DataManager);
   }
 }
 
 template <typename Dtype>
 HDF5FileDataHandler<Dtype>* HDF5DataManager<Dtype>::registerFileSet
-  (const std::vector<std::string>& files, LayerParameter& layer_param) {
-  auto handler = std::unique_ptr<HDF5FileDataHandler<Dtype>>(new HDF5FileDataHandler<Dtype>(files, layer_param));
+  (const std::vector<std::string>& files, LayerParameter* layer_param) {
+  auto handler = std::unique_ptr<HDF5FileDataHandler<Dtype>>(
+      new HDF5FileDataHandler<Dtype>(files, layer_param));
   std::unique_lock<std::mutex> lock(instanceMutex_);
   auto ins = handlers_.insert(std::move(handler));
-  return ins.first->get(); // we do not care if insertion was blocked, if it was we use the present instance
+  // we do not care if insertion was blocked,
+  // if it was we use the present instance
+  return ins.first->get();
 }
 
 template <typename Dtype>
 std::shared_ptr<HDF5FileDataBuffer<Dtype>> HDF5FileDataHandler<Dtype>::getBuffer
   (std::shared_ptr<HDF5FileDataBuffer<Dtype>> prev) {
-  if(!current_buffer_.expired())
-  {
+  if (!current_buffer_.expired()) {
     auto tmp = current_buffer_.lock();
-    if(prev != tmp)
+    if (prev != tmp)
       return tmp;
   }
   std::unique_lock<std::mutex> loadDataLock(loadDataMutex_, std::try_to_lock);
-  if(loadDataLock)
-  {
+  if (loadDataLock) {
     ++current_file_;
-    if(current_file_ == file_permutation_.size())
-    {
+    if (current_file_ == file_permutation_.size()) {
       current_file_ = 0;
       DLOG(INFO) << "Looping around to first file.";
     }
-    auto tmp = std::make_shared<HDF5FileDataBuffer<Dtype>>
-      (current_file_, hdf_filenames_[file_permutation_[current_file_]], layer_param_);
+    auto tmp = std::make_shared<HDF5FileDataBuffer<Dtype>>(current_file_,
+        hdf_filenames_[file_permutation_[current_file_]], layer_param_);
     current_buffer_ = tmp;
     return tmp;
-  }
-  else
-  {
+  } else {
     loadDataLock.lock();
     return current_buffer_.lock();
   }
@@ -116,7 +118,7 @@ std::shared_ptr<HDF5FileDataBuffer<Dtype>> HDF5FileDataHandler<Dtype>::getBuffer
 // void HDF5DataLayer<Dtype>::LoadHDF5FileData(const char* filename) {
 template <typename Dtype>
 HDF5FileDataBuffer<Dtype>::HDF5FileDataBuffer
-  (unsigned int idx, const std::string& filename, LayerParameter& layer_param) {
+  (unsigned int idx, const std::string& filename, LayerParameter* layer_param) {
   DLOG(INFO) << "Loading HDF5 file: " << filename;
 
   hid_t file_id = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
@@ -124,7 +126,7 @@ HDF5FileDataBuffer<Dtype>::HDF5FileDataBuffer
     LOG(FATAL) << "Failed opening HDF5 file: " << filename;
   }
 
-  int top_size = layer_param.top_size();
+  int top_size = layer_param->top_size();
   hdf_blobs_.resize(top_size);
 
   const int MIN_DATA_DIM = 1;
@@ -133,7 +135,7 @@ HDF5FileDataBuffer<Dtype>::HDF5FileDataBuffer
   for (int i = 0; i < top_size; ++i) {
     hdf_blobs_[i] = shared_ptr<Blob<Dtype> >(new Blob<Dtype>());
     // Allow reshape here, as we are loading data not params
-    hdf5_load_nd_dataset(file_id, layer_param.top(i).c_str(),
+    hdf5_load_nd_dataset(file_id, layer_param->top(i).c_str(),
         MIN_DATA_DIM, MAX_DATA_DIM, hdf_blobs_[i].get(), true);
   }
 
@@ -152,7 +154,7 @@ HDF5FileDataBuffer<Dtype>::HDF5FileDataBuffer
     data_permutation_[i] = i;
 
   // Shuffle if needed.
-  if (layer_param.hdf5_data_param().shuffle()) {
+  if (layer_param->hdf5_data_param().shuffle()) {
     std::random_shuffle(data_permutation_.begin(), data_permutation_.end());
     DLOG(INFO) << "Successfully loaded " << hdf_blobs_[0]->shape(0)
                << " rows (shuffled)";
@@ -161,7 +163,7 @@ HDF5FileDataBuffer<Dtype>::HDF5FileDataBuffer
   }
 }
 
-}
+}  // namespace hdf5DataLayerDetail
 
 template <typename Dtype>
 HDF5DataLayer<Dtype>::~HDF5DataLayer<Dtype>() { }
@@ -187,12 +189,13 @@ void HDF5DataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   }
   source_file.close();
   LOG(INFO) << "Number of HDF5 files: " << hdf_filenames.size();
-  CHECK_GE(hdf_filenames.size(), 1) << "Must have at least 1 HDF5 filename listed in "
-    << source;
+  CHECK_GE(hdf_filenames.size(), 1)
+    << "Must have at least 1 HDF5 filename listed in " << source;
 
   const int top_size = this->layer_param_.top_size();
-  data_handler_ = hdf5DataLayerDetail::HDF5DataManager<Dtype>::instance().registerFileSet
-    (hdf_filenames, this->layer_param_);
+  data_handler_ =
+    hdf5DataLayerDetail::HDF5DataManager<Dtype>::instance().registerFileSet
+    (hdf_filenames, &this->layer_param_);
 
 
   current_buffer_ = data_handler_->getBuffer(nullptr);
@@ -241,8 +244,9 @@ void HDF5DataLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     for (int j = 0; j < this->layer_param_.top_size(); ++j) {
       int data_dim = top[j]->count() / top[j]->shape(0);
       caffe_copy(data_dim,
-          &current_buffer_->hdf_blobs()[j]->cpu_data()[current_buffer_->data_permutation()[current_row_]
-            * data_dim], &top[j]->mutable_cpu_data()[i * data_dim]);
+          &current_buffer_->hdf_blobs()[j]->cpu_data()[
+            current_buffer_->data_permutation()[current_row_] * data_dim],
+          &top[j]->mutable_cpu_data()[i * data_dim]);
     }
     Next();
   }

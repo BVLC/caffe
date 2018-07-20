@@ -24,8 +24,9 @@ void HDF5DataLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     for (int j = 0; j < this->layer_param_.top_size(); ++j) {
       int data_dim = top[j]->count() / top[j]->shape(0);
       caffe_copy(data_dim,
-          &current_buffer_->hdf_blobs()[j]->cpu_data()[current_buffer_->data_permutation()[current_row_]
-            * data_dim], &top[j]->mutable_gpu_data()[i * data_dim]);
+          &current_buffer_->hdf_blobs()[j]->cpu_data()[
+             current_buffer_->data_permutation()[current_row_] * data_dim],
+           &top[j]->mutable_gpu_data()[i * data_dim]);
     }
     Next();
   }

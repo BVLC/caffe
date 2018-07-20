@@ -3,11 +3,11 @@
 
 #include "hdf5.h"
 
-#include <string>
-#include <vector>
-#include <mutex>
-#include <unordered_set>
 #include <memory>
+#include <mutex>
+#include <string>
+#include <unordered_set>
+#include <vector>
 
 #include "caffe/blob.hpp"
 #include "caffe/layer.hpp"
@@ -20,23 +20,26 @@ namespace caffe {
 namespace hdf5DataLayerDetail {
 
   template <typename Dtype>
-  class HDF5FileDataBuffer
-  {
+  class HDF5FileDataBuffer {
     unsigned int file_idx_;
     std::vector<shared_ptr<Blob<Dtype> > > hdf_blobs_;
     std::vector<unsigned int> data_permutation_;
-    public:
 
-      HDF5FileDataBuffer(unsigned int idx, const std::string& file, LayerParameter& layer_param);
+   public:
+      HDF5FileDataBuffer(unsigned int idx, const std::string& file,
+        LayerParameter* layer_param);
 
     unsigned int file_idx() const {return file_idx_;}
-    const std::vector<shared_ptr<Blob<Dtype> > >& hdf_blobs() const {return hdf_blobs_;}
-    const std::vector<unsigned int>& data_permutation() const {return data_permutation_;}
+    const std::vector<shared_ptr<Blob<Dtype> > >& hdf_blobs() const {
+     return hdf_blobs_;
+    }
+    const std::vector<unsigned int>& data_permutation() const {
+     return data_permutation_;
+    }
   };
 
   template <typename Dtype>
-  class HDF5FileDataHandler
-  {
+  class HDF5FileDataHandler {
     int current_file_ = 0;
     std::vector<std::string> hdf_filenames_;
     std::vector<unsigned int> file_permutation_;
@@ -44,38 +47,38 @@ namespace hdf5DataLayerDetail {
 
     std::mutex loadDataMutex_;
 
-    LayerParameter& layer_param_;
+    LayerParameter* layer_param_;
 
-    public:
-      HDF5FileDataHandler(const std::vector<std::string>& files, LayerParameter& layer_param);
+   public:
+      HDF5FileDataHandler(const std::vector<std::string>& files,
+        LayerParameter* layer_param);
 
     const std::vector<std::string>& files() const {return hdf_filenames_;}
 
     /*!
      * @param prev last buffer the caller went through
      * */
-    std::shared_ptr<HDF5FileDataBuffer<Dtype>> getBuffer(std::shared_ptr<HDF5FileDataBuffer<Dtype>> prev);
+    std::shared_ptr<HDF5FileDataBuffer<Dtype>> getBuffer(
+      std::shared_ptr<HDF5FileDataBuffer<Dtype>> prev);
   };
 
   template <typename Dtype>
-  class HDF5DataManager
-  {
+  class HDF5DataManager {
     static void createInstance();
     static std::unique_ptr<HDF5DataManager<Dtype>> _instance;
     static std::mutex _createInstanceMutex;
 
-    public:
-
+   public:
     inline static HDF5DataManager& instance() {
       if (!_instance)
         createInstance();
       return *_instance;
     }
 
-    HDF5FileDataHandler<Dtype>* registerFileSet(const std::vector<std::string>& files, LayerParameter& layer_param);
+    HDF5FileDataHandler<Dtype>* registerFileSet(
+      const std::vector<std::string>& files, LayerParameter* layer_param);
 
-    protected:
-
+   protected:
     std::unordered_set<std::unique_ptr<HDF5FileDataHandler<Dtype>>> handlers_;
     std::mutex instanceMutex_;
   };
@@ -84,7 +87,7 @@ namespace hdf5DataLayerDetail {
   std::unique_ptr<HDF5DataManager<Dtype>> HDF5DataManager<Dtype>::_instance;
   template<class Dtype>
   std::mutex HDF5DataManager<Dtype>::_createInstanceMutex;
-}
+}  // namespace hdf5DataLayerDetail
 
 /**
  * @brief Provides data to the Net from HDF5 files.
@@ -121,7 +124,8 @@ class HDF5DataLayer : public Layer<Dtype> {
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {}
 
   hdf5DataLayerDetail::HDF5FileDataHandler<Dtype>* data_handler_;
-  std::shared_ptr<hdf5DataLayerDetail::HDF5FileDataBuffer<Dtype>> current_buffer_;
+  std::shared_ptr<hdf5DataLayerDetail::HDF5FileDataBuffer<Dtype>>
+    current_buffer_;
   hsize_t current_row_;
   uint64_t offset_;
 };
