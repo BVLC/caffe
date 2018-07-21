@@ -27,7 +27,7 @@ namespace hdf5DataLayerDetail {
 
    public:
       HDF5FileDataBuffer(unsigned int idx, const std::string& file,
-        LayerParameter* layer_param);
+        const LayerParameter& layer_param);
 
     unsigned int file_idx() const {return file_idx_;}
     const std::vector<shared_ptr<Blob<Dtype> > >& hdf_blobs() const {
@@ -40,18 +40,18 @@ namespace hdf5DataLayerDetail {
 
   template <typename Dtype>
   class HDF5FileDataHandler {
-    int current_file_ = 0;
+    int current_file_ = -1;
     std::vector<std::string> hdf_filenames_;
     std::vector<unsigned int> file_permutation_;
     std::weak_ptr<HDF5FileDataBuffer<Dtype>> current_buffer_;
 
     std::mutex loadDataMutex_;
 
-    LayerParameter* layer_param_;
+    LayerParameter layer_param_;
 
    public:
       HDF5FileDataHandler(const std::vector<std::string>& files,
-        LayerParameter* layer_param);
+        const LayerParameter& layer_param);
 
     const std::vector<std::string>& files() const {return hdf_filenames_;}
 
@@ -76,7 +76,7 @@ namespace hdf5DataLayerDetail {
     }
 
     HDF5FileDataHandler<Dtype>* registerFileSet(
-      const std::vector<std::string>& files, LayerParameter* layer_param);
+      const std::vector<std::string>& files, const LayerParameter& layer_param);
 
    protected:
     std::unordered_set<std::unique_ptr<HDF5FileDataHandler<Dtype>>> handlers_;

@@ -54,7 +54,7 @@ namespace hdf5DataLayerDetail {
 
 template <typename Dtype>
 HDF5FileDataHandler<Dtype>::HDF5FileDataHandler(
-    const std::vector<std::string>& files, LayerParameter* layer_param)
+    const std::vector<std::string>& files, const LayerParameter& layer_param)
   : hdf_filenames_(files), file_permutation_(files.size()),
     layer_param_(layer_param) {
   // Default to identity permutation.
@@ -63,7 +63,7 @@ HDF5FileDataHandler<Dtype>::HDF5FileDataHandler(
   }
 
   // Shuffle if needed.
-  if (this->layer_param_->hdf5_data_param().shuffle()) {
+  if (this->layer_param_.hdf5_data_param().shuffle()) {
     std::random_shuffle(file_permutation_.begin(), file_permutation_.end());
   }
 }
@@ -78,7 +78,7 @@ void HDF5DataManager<Dtype>::createInstance() {
 
 template <typename Dtype>
 HDF5FileDataHandler<Dtype>* HDF5DataManager<Dtype>::registerFileSet
-  (const std::vector<std::string>& files, LayerParameter* layer_param) {
+  (const std::vector<std::string>& files, const LayerParameter& layer_param) {
   auto handler = std::unique_ptr<HDF5FileDataHandler<Dtype>>(
       new HDF5FileDataHandler<Dtype>(files, layer_param));
   std::unique_lock<std::mutex> lock(instanceMutex_);
@@ -118,7 +118,8 @@ std::shared_ptr<HDF5FileDataBuffer<Dtype>> HDF5FileDataHandler<Dtype>::getBuffer
 // void HDF5DataLayer<Dtype>::LoadHDF5FileData(const char* filename) {
 template <typename Dtype>
 HDF5FileDataBuffer<Dtype>::HDF5FileDataBuffer
-  (unsigned int idx, const std::string& filename, LayerParameter* layer_param) {
+  (unsigned int idx, const std::string& filename
+    , const LayerParameter& layer_param) {
   DLOG(INFO) << "Loading HDF5 file: " << filename;
 
   hid_t file_id = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
@@ -126,7 +127,7 @@ HDF5FileDataBuffer<Dtype>::HDF5FileDataBuffer
     LOG(FATAL) << "Failed opening HDF5 file: " << filename;
   }
 
-  int top_size = layer_param->top_size();
+  int top_size = layer_param.top_size();
   hdf_blobs_.resize(top_size);
 
   const int MIN_DATA_DIM = 1;
@@ -135,7 +136,7 @@ HDF5FileDataBuffer<Dtype>::HDF5FileDataBuffer
   for (int i = 0; i < top_size; ++i) {
     hdf_blobs_[i] = shared_ptr<Blob<Dtype> >(new Blob<Dtype>());
     // Allow reshape here, as we are loading data not params
-    hdf5_load_nd_dataset(file_id, layer_param->top(i).c_str(),
+    hdf5_load_nd_dataset(file_id, layer_param.top(i).c_str(),
         MIN_DATA_DIM, MAX_DATA_DIM, hdf_blobs_[i].get(), true);
   }
 
@@ -154,7 +155,7 @@ HDF5FileDataBuffer<Dtype>::HDF5FileDataBuffer
     data_permutation_[i] = i;
 
   // Shuffle if needed.
-  if (layer_param->hdf5_data_param().shuffle()) {
+  if (layer_param.hdf5_data_param().shuffle()) {
     std::random_shuffle(data_permutation_.begin(), data_permutation_.end());
     DLOG(INFO) << "Successfully loaded " << hdf_blobs_[0]->shape(0)
                << " rows (shuffled)";
@@ -195,7 +196,7 @@ void HDF5DataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   const int top_size = this->layer_param_.top_size();
   data_handler_ =
     hdf5DataLayerDetail::HDF5DataManager<Dtype>::instance().registerFileSet
-    (hdf_filenames, &this->layer_param_);
+    (hdf_filenames, this->layer_param_);
 
 
   current_buffer_ = data_handler_->getBuffer(nullptr);
