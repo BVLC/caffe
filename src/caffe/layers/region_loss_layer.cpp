@@ -563,8 +563,8 @@ void RegionLossLayer<Dtype>::Forward_cpu(
     }
 
     //LOG(INFO) << "show loss";	 
-    diff_.Reshape(bottom[0]->num(), bottom[0]->height()*bottom[0]->width(), num_, bottom[0]->channels() / num_);
-
+    //diff_.Reshape(bottom[0]->num(), bottom[0]->height()*bottom[0]->width(), num_, bottom[0]->channels() / num_);
+    //FIXME: Fix the caffe time crash with BS > 1 (Chong), because this reshape is unnecessary and will cause diff to be cannot acess memory
     Dtype* real_diff = real_diff_.mutable_cpu_data();
     int sindex = 0;
 
