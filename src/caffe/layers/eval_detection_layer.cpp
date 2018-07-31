@@ -6,6 +6,13 @@
 #include "caffe/layers/region_loss_layer.hpp"
 #include "caffe/layers/eval_detection_layer.hpp"
 #include "caffe/util/math_functions.hpp"
+#include "caffe/util/benchmark.hpp"
+
+#ifdef ENABLE_NMS_OPTIMIZATION
+#include "caffe/util/bbox_util.hpp"
+#include <immintrin.h>
+#include "omp.h"
+#endif
 
 namespace caffe {
 
@@ -215,9 +222,58 @@ namespace caffe {
           }
         }*/
         if (nms_threshold >= 0) {
+            //LOG(INFO) << "The value of nms_threshold is: " << nms_threshold;
             std::sort(tmp_boxes.begin(), tmp_boxes.end(), BoxSortDecendScore);
+            //LOG(INFO) << "The value of tmp_boxes size is: " << tmp_boxes.size();
             vector<int> idxes;
+            //Timer NMS_timer;
+            //NMS_timer.Start();
+
+#ifdef ENABLE_NMS_OPTIMIZATION
+            if (_may_i_use_cpu_feature(_FEATURE_AVX512CD | _FEATURE_AVX512F)) {
+                uint64_t boxes_num = tmp_boxes.size();
+                float* x1 = (float*)aligned_alloc(64, boxes_num * sizeof(float));
+                float* y1 = (float*)aligned_alloc(64, boxes_num * sizeof(float));
+                float* x2 = (float*)aligned_alloc(64, boxes_num * sizeof(float));
+                float* y2 = (float*)aligned_alloc(64, boxes_num * sizeof(float));
+
+                uint64_t i = 0;
+#pragma omp parallel for
+                for (i = 0; i < boxes_num; ++i) {
+                    x1[i] = tmp_boxes[i].box_[0] - tmp_boxes[i].box_[2] / 2.0;       //xmin
+                    y1[i] = tmp_boxes[i].box_[1] - tmp_boxes[i].box_[3] / 2.0;       //ymin
+                    x2[i] = tmp_boxes[i].box_[0] + tmp_boxes[i].box_[2] / 2.0;       //xmax
+                    y2[i] = tmp_boxes[i].box_[1] + tmp_boxes[i].box_[3] / 2.0;       //ymax
+                }
+                int* keep_out = (int*)malloc(sizeof(int) * tmp_boxes.size());
+                int num_out = 0;
+                cpu_nms_avx512_parallize_inner(keep_out, &num_out, x1, y1, x2, y2, boxes_num, nms_threshold);
+
+                for (int i = 0; i < num_out; i++) {
+                    idxes.push_back(keep_out[i]);
+                }
+
+                if (x1)
+                    free(x1);
+                if (x2)
+                    free(x2);
+                if (y1)
+                    free(y1);
+                if (y2)
+                    free(y2);
+                if (keep_out)
+                    free(keep_out);
+            }
+            else {
+#endif
             ApplyNms(tmp_boxes, &idxes, nms_threshold);
+#ifdef ENABLE_NMS_OPTIMIZATION
+        }
+#endif
+
+            //NMS_timer.Stop();
+            //LOG(INFO) << "Total NMS Time: " << NMS_timer.MilliSeconds() << " ms.";    //ICC optimization will cause the output is 0.
+            //LOG(INFO) << "Total NMS Time: " << NMS_timer.MicroSeconds()/1000 << " ms.";
             for (int i = 0; i < idxes.size(); ++i) {
                 BoxData box_data = tmp_boxes[idxes[i]];
                 //**************************************************************************************//

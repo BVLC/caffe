@@ -245,6 +245,15 @@ Dtype Calc_iou(const vector<Dtype>& box, const vector<Dtype>& truth) {
   return JaccardOverlap(Bbox1, Bbox2, true);
 }
 
+//Real optimization core of NMS
+void cpu_nms_avx512_parallize_inner(int* __restrict keep_out,
+    int* __restrict num_out,
+    const float* __restrict x1,
+    const float* __restrict y1,
+    const float* __restrict x2,
+    const float* __restrict y2,
+    int64_t boxes_num, float thresh_f);
+
 // Find matches between prediction bboxes and ground truth bboxes.
 //    all_loc_preds: stores the location prediction, where each item contains
 //      location prediction for an image.
