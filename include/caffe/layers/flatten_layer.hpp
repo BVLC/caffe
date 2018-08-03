@@ -40,7 +40,7 @@ class FlattenLayer : public Layer<Dtype> {
    *      the outputs -- i.e., the (virtually) copied, flattened inputs
    */
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top) {};
+      const vector<Blob<Dtype>*>& top) {}
 
   /**
    * @brief Computes the error gradient w.r.t. the concatenate inputs.
@@ -52,7 +52,7 @@ class FlattenLayer : public Layer<Dtype> {
    *        gradient is (virtually) copied
    */
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {};
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {}
 };
 
 }  // namespace caffe
