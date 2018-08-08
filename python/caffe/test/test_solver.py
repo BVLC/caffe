@@ -38,6 +38,17 @@ class TestSolver(unittest.TestCase):
         self.solver.solve()
         self.assertEqual(self.solver.iter, 100)
 
+    def test_apply_update(self):
+        net = self.solver.net
+        data = net.layers[1].blobs[0].data[...]
+        # Reset the weights of that layer to 0
+        data[...] = 0
+        net.layers[1].blobs[0].diff[...] = 1
+        # Apply the update, the initial learning rate should be 0.01
+        self.solver.apply_update()
+        # Check that the new weights are -0.01, with a precision of 1e-7
+        self.assertTrue((data - -0.01 * np.ones(data.shape)).max() < 1e-7)
+
     def test_net_memory(self):
         """Check that nets survive after the solver is destroyed."""
 
