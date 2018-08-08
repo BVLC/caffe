@@ -100,7 +100,20 @@ void MKLDNNConvolutionLayer<Dtype>::init_properties(const vector<Blob<Dtype>*>& 
 
     this->num_ = bottom[0]->shape(0);
     this->channels_ = bottom[0]->shape(1);
-    if (this->num_spatial_axes_ == 3) {
+
+    if (this->num_spatial_axes_ == 2) {
+      this->height_ = bottom[0]->shape(2);
+      this->width_ = bottom[0]->shape(3);
+
+      this->stride_h_ = this->stride_.cpu_data()[0];
+      this->stride_w_ = this->stride_.cpu_data()[1];
+
+      this->pad_h_ = this->pad_.cpu_data()[0];
+      this->pad_w_ = this->pad_.cpu_data()[1];
+
+      this->kernel_h_  = this->kernel_shape_.cpu_data()[0];
+      this->kernel_w_ = this->kernel_shape_.cpu_data()[1];
+    } else {
       this->depth_ = bottom[0]->shape(2);
       this->height_ = bottom[0]->shape(3);
       this->width_ = bottom[0]->shape(4);
@@ -116,18 +129,6 @@ void MKLDNNConvolutionLayer<Dtype>::init_properties(const vector<Blob<Dtype>*>& 
       this->kernel_d_ = this->kernel_shape_.cpu_data()[0];
       this->kernel_h_  = this->kernel_shape_.cpu_data()[1];
       this->kernel_w_ = this->kernel_shape_.cpu_data()[2];
-    } else if (this->num_spatial_axes_ == 2) {
-      this->height_ = bottom[0]->shape(2);
-      this->width_ = bottom[0]->shape(3);
-
-      this->stride_h_ = this->stride_.cpu_data()[0];
-      this->stride_w_ = this->stride_.cpu_data()[1];
-
-      this->pad_h_ = this->pad_.cpu_data()[0];
-      this->pad_w_ = this->pad_.cpu_data()[1];
-
-      this->kernel_h_  = this->kernel_shape_.cpu_data()[0];
-      this->kernel_w_ = this->kernel_shape_.cpu_data()[1];
     }
 
     string _conv_algorithm = this->layer_param_.convolution_param().conv_algorithm();
@@ -172,15 +173,15 @@ void MKLDNNConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom
                                             , const vector<Blob<Dtype>*>& top)
 {
     VLOG(1) << " MKLDNNConvolutionLayer<Dtype>::Reshape: " << this->layer_param_.name();
-    if (this->num_spatial_axes_ == 3) {
+    if (this->num_spatial_axes_ == 2) {
+      this->reshape = (this->width_ == bottom[0]->shape(3) &&
+                       this->height_ == bottom[0]->shape(2) &&
+                       this->channels_ == bottom[0]->shape(1) &&
+                       this->num_ == bottom[0]->shape(0)) ? false : true;
+    } else {
       this->reshape = (this->depth_ == bottom[0]->shape(2) &&
                        this->width_ == bottom[0]->shape(4) &&
                        this->height_ == bottom[0]->shape(3) &&
-                       this->channels_ == bottom[0]->shape(1) &&
-                       this->num_ == bottom[0]->shape(0)) ? false : true;
-    } else if (this->num_spatial_axes_ == 2) {
-      this->reshape = (this->width_ == bottom[0]->shape(3) &&
-                       this->height_ == bottom[0]->shape(2) &&
                        this->channels_ == bottom[0]->shape(1) &&
                        this->num_ == bottom[0]->shape(0)) ? false : true;
     }
@@ -242,17 +243,17 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
       if (dilation_data[i] != 1) dilated_conv = true;
     }
 
-    if (this->num_spatial_axes_ == 3) {
+    if (this->num_spatial_axes_ == 2) {
+      convolutionStrides = {sh, sw};
+      padding = {ph, pw};
+      padding_r.push_back((oh - 1) * sh - ih + ((kh - 1) * (dilation_data[0]) + 1) - ph);
+      padding_r.push_back((ow - 1) * sw - iw + ((kw - 1) * (dilation_data[1]) + 1) - pw);
+    } else {
       convolutionStrides = {sd, sh, sw};
       padding = {pd, ph, pw};
       padding_r.push_back((od - 1) * sd - id + ((kd - 1) * (dilation_data[0]) + 1) - pd);
       padding_r.push_back((oh - 1) * sh - ih + ((kh - 1) * (dilation_data[1]) + 1) - ph);
       padding_r.push_back((ow - 1) * sw - iw + ((kw - 1) * (dilation_data[2]) + 1) - pw);
-    } else if (this->num_spatial_axes_ == 2) {
-      convolutionStrides = {sh, sw};
-      padding = {ph, pw};
-      padding_r.push_back((oh - 1) * sh - ih + ((kh - 1) * (dilation_data[0]) + 1) - ph);
-      padding_r.push_back((ow - 1) * sw - iw + ((kw - 1) * (dilation_data[1]) + 1) - pw);
     }
 
     // ---- Initialize memory descriptors (fromat = any) to create convolution descriptor -------------
@@ -299,16 +300,16 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
     memory::dims bias_tz;
     memory::dims top_tz;
     memory::dims weights_tz;
-    if (this->num_spatial_axes_ == 3) {
-      bottom_tz = {n, ic, id, ih, iw};
-      bias_tz = {oc};
-      top_tz = {n, oc, od, oh, ow};
-      weights_tz = (g!= 1) ? memory::dims{g, oc/g, ic/g, kd, kh, kw} : memory::dims{oc, ic, kd, kh, kw};
-    } else if (this->num_spatial_axes_ == 2) {
+    if (this->num_spatial_axes_ == 2) {
       bottom_tz = {n, ic, ih, iw};
       bias_tz = {oc};
       top_tz = {n, oc, oh, ow};
       weights_tz = (g!= 1) ? memory::dims{g, oc/g, ic/g, kh, kw} : memory::dims{oc, ic, kh, kw};
+    } else {
+      bottom_tz = {n, ic, id, ih, iw};
+      bias_tz = {oc};
+      top_tz = {n, oc, od, oh, ow};
+      weights_tz = (g!= 1) ? memory::dims{g, oc/g, ic/g, kd, kh, kw} : memory::dims{oc, ic, kd, kh, kw};
     }
 
     // ---- Memory descriptors for initializing of convolution primitive descriptor -------------
@@ -434,13 +435,13 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
     // ---- Create usr memory primitive descriptors -------------
     memory::format data_mfmt;
     memory::format weights_mfmt;
-    if (this->num_spatial_axes_ == 3) {
-      data_mfmt = memory::format::ncdhw;
-      weights_mfmt = (g!= 1) ? memory::format::goidhw : memory::format::oidhw;
-    } else if (this->num_spatial_axes_ == 2) {
+    if (this->num_spatial_axes_ == 2) {
       data_mfmt = memory::format::nchw;
       weights_mfmt = (g!= 1) ? memory::format::goihw : memory::format::oihw;
-    }
+    } else {
+      data_mfmt = memory::format::ncdhw;
+      weights_mfmt = (g!= 1) ? memory::format::goidhw : memory::format::oidhw;
+    } 
 
     // TODO: There should not be a problem to use this for Backward as well
     
@@ -603,17 +604,17 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionBwd(const vector<Blob<Dtype>*
       dilation.push_back(dilation_data[i] - 1);
       if (dilation_data[i] != 1) dilated_conv = true;
     }
-    if (this->num_spatial_axes_ == 3) {
+    if (this->num_spatial_axes_ == 2) {
+      convolutionStrides = {sh, sw};
+      padding = {ph, pw};
+      padding_r.push_back((oh - 1) * sh - ih + ((kh - 1) * (dilation_data[0]) + 1) - ph);
+      padding_r.push_back((ow - 1) * sw - iw + ((kw - 1) * (dilation_data[1]) + 1) - pw);
+    } else {
       convolutionStrides = {sd, sh, sw};
       padding = {pd, ph, pw};
       padding_r.push_back((od - 1) * sd - id + ((kd - 1) * (dilation_data[0]) + 1) - pd);
       padding_r.push_back((oh - 1) * sh - ih + ((kh - 1) * (dilation_data[1]) + 1) - ph);
       padding_r.push_back((ow - 1) * sw - iw + ((kw - 1) * (dilation_data[2]) + 1) - pw);
-    } else if (this->num_spatial_axes_ == 2) {
-      convolutionStrides = {sh, sw};
-      padding = {ph, pw};
-      padding_r.push_back((oh - 1) * sh - ih + ((kh - 1) * (dilation_data[0]) + 1) - ph);
-      padding_r.push_back((ow - 1) * sw - iw + ((kw - 1) * (dilation_data[1]) + 1) - pw);
     }
 
     // ---- Initialize memory descriptors (fromat = any) to create convolution descriptor -------------
@@ -624,17 +625,17 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionBwd(const vector<Blob<Dtype>*
     memory::dims bias_tz;
     memory::dims top_tz;
     memory::dims weights_tz;
-    if (this->num_spatial_axes_ == 3) {
-      bottom_tz = {n, ic, id, ih, iw};
-      bias_tz = {oc};
-      top_tz = {n, oc, od, oh, ow};
-      weights_tz = ( g!= 1) ? memory::dims{g, oc/g, ic/g, kd, kh, kw} : memory::dims{oc, ic, kd, kh, kw};
-    } else if (this->num_spatial_axes_ == 2) {
+    if (this->num_spatial_axes_ == 2) {
       bottom_tz = {n, ic, ih, iw};
       bias_tz = {oc};
       top_tz = {n, oc, oh, ow};
       weights_tz = ( g!= 1) ? memory::dims{g, oc/g, ic/g, kh, kw} : memory::dims{oc, ic, kh, kw};
-    }
+    } else {
+      bottom_tz = {n, ic, id, ih, iw};
+      bias_tz = {oc};
+      top_tz = {n, oc, od, oh, ow};
+      weights_tz = ( g!= 1) ? memory::dims{g, oc/g, ic/g, kd, kh, kw} : memory::dims{oc, ic, kd, kh, kw};
+    } 
 
     // ---- Memory descriptors for initializing of convolution primitive descriptor -------------
     memory::desc init_bottom_md({bottom_tz}, mpcsn, mfmt_any);
@@ -720,12 +721,12 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionBwd(const vector<Blob<Dtype>*
     // ---- Create usr memory primitive descriptors -------------
     memory::format data_mfmt;
     memory::format weights_mfmt;
-    if (this->num_spatial_axes_ == 3) {
-      data_mfmt = memory::format::ncdhw;
-      weights_mfmt = ( g!= 1) ? memory::format::goidhw : memory::format::oidhw;
-    } else if (this->num_spatial_axes_ == 2) {
+    if (this->num_spatial_axes_ == 2) {
       data_mfmt = memory::format::nchw;
       weights_mfmt = ( g!= 1) ? memory::format::goihw : memory::format::oihw;
+    } else {
+      data_mfmt = memory::format::ncdhw;
+      weights_mfmt = ( g!= 1) ? memory::format::goidhw : memory::format::oidhw;
     }
     // ???!!! can we use usr memory primitive descrittors for backward??
     shared_ptr<MemPD> usr_bottom_data_memory_pd(new MemPD({{bottom_tz}, mpcsn, data_mfmt}, cpu_engine));
