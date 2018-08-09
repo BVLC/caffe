@@ -368,7 +368,7 @@ namespace caffe {
 
         //******************************************************** Label ********************************************************//
         vector<vector<vector<Dtype> > > labels;
-        labels.resize(bottom[0]->num()); //batch_size
+        labels.resize(bottom[0]->num() + 1); //Fix: batch_size + 1, the conner case is for dummy data with BS=1, and label=1, viloate access in "labels[item_id].push_back(box);"
         int num_boxes = bottom[1]->height();
         //int start = -1;
 
