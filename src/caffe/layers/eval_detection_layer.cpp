@@ -356,11 +356,19 @@ namespace caffe {
 
         Dtype* swap_data = swap.mutable_cpu_data();
         int index = 0;
-        for (int b = 0; b < bottom[0]->num(); ++b) {
-            for (int h = 0; h < bottom[0]->height(); ++h) {
-                for (int w = 0; w < bottom[0]->width(); ++w) {
-                    for (int c = 0; c < bottom[0]->channels(); ++c) {
-                        swap_data[index++] = bottom[0]->data_at(b, c, h, w);
+
+        int n_value = bottom[0]->num();
+        int h_value = bottom[0]->height();
+        int w_value = bottom[0]->width();
+        int c_value = bottom[0]->channels();
+        const Dtype* input_data = bottom[0]->cpu_data();
+
+        for (int b = 0; b < n_value; ++b) {
+            for (int h = 0; h < h_value; ++h) {
+                for (int w = 0; w < w_value; ++w) {
+                    for (int c = 0; c < c_value; ++c) {
+                        //swap_data[index++] = bottom[0]->data_at(b, c, h, w);      //"index" is Not safe for OpenMP
+                        swap_data[index++] = input_data[((b * c_value + c) * h_value + h) * w_value + w];
                     }
                 }
             }
