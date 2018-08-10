@@ -78,11 +78,19 @@ class InternalThread {
   /* Should be tested when running loops to exit when requested. */
   bool must_stop();
 
-  void SetThreadAffinity();
+  void SetThreadAffinity(
+#ifdef USE_MLSL
+    int ppn, int rank
+#endif
+  );
 
  private:
   void entry(int device, Caffe::Brew mode, int rand_seed, int solver_count,
-      bool root_solver);
+    bool root_solver
+#ifdef USE_MLSL
+    , int ppn, int rank
+#endif
+  );
 
   shared_ptr<boost::thread> thread_;
 };
