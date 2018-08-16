@@ -1,4 +1,4 @@
-efer to http://caffe.berkeleyvision.org/installation.html
+# Refer to http://caffe.berkeleyvision.org/installation.html
 # Contributions simplifying and improving our build system are welcome!
 
 USE_OPENCV := 1
