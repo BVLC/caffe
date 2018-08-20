@@ -118,7 +118,6 @@ cv::Mat ReadImageToCVMat(const string& filename,
                  scale_factor, scale_factor);
     }
   } else if (height > 0 && width > 0) {
-    cv::resize(cv_img_origin, cv_img, cv::Size(width, height));
     int cv_interp_flag = nearest_neighbour_interp ? CV_INTER_NN :
                                                     CV_INTER_LINEAR;
     cv::resize(cv_img_origin, cv_img, cv::Size(width, height), 0, 0,
