@@ -76,7 +76,6 @@ class PadLayer : public Layer<Dtype> {
   int WIDTH_OUT_;
 
  private:
-
 };
 }  // namespace caffe
 

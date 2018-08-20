@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <vector>
 
 #include "gtest/gtest.h"
@@ -22,7 +23,7 @@ class PadLayerTest : public MultiDeviceTest<TypeParam> {
   // have values in the middle copied to the padding on both sides.
   PadLayerTest()
       : blob_bottom_small_(new Blob<Dtype>(2, 4, 5, 4)),
-	blob_bottom_big_(new Blob<Dtype>(2, 4, 7, 6)),
+        blob_bottom_big_(new Blob<Dtype>(2, 4, 7, 6)),
         blob_top_(new Blob<Dtype>()) {}
   virtual void SetUp() {
     // fill the values
@@ -74,7 +75,8 @@ TYPED_TEST(PadLayerTest, SetupShapePad1) {
     if (i < 2) {
       EXPECT_EQ(this->blob_bottom_small_->shape(i), this->blob_top_->shape(i));
     } else {
-      EXPECT_EQ(this->blob_bottom_small_->shape(i)+2, this->blob_top_->shape(i));
+      EXPECT_EQ(this->blob_bottom_small_->shape(i)+2,
+                this->blob_top_->shape(i));
     }
   }
 }
@@ -90,7 +92,8 @@ TYPED_TEST(PadLayerTest, SetupShapePad2) {
     if (i < 2) {
       EXPECT_EQ(this->blob_bottom_small_->shape(i), this->blob_top_->shape(i));
     } else {
-      EXPECT_EQ(this->blob_bottom_small_->shape(i)+4, this->blob_top_->shape(i));
+      EXPECT_EQ(this->blob_bottom_small_->shape(i)+4,
+                this->blob_top_->shape(i));
     }
   }
 }
@@ -108,9 +111,9 @@ TYPED_TEST(PadLayerTest, ForwardDefault) {
     for (int c = 0; c < this->blob_bottom_small_->channels(); ++c) {
       for (int h = 0; h < this->blob_bottom_small_->height(); ++h) {
         for (int w = 0; w < this->blob_bottom_small_->width(); ++w) {
-	  // If one fails, don't continue with a bazillion messages
-	  ASSERT_EQ(this->blob_top_->data_at(n, c, h, w),
-		    this->blob_bottom_small_->data_at(n, c, h, w));
+          // If one fails, don't continue with a bazillion messages
+          ASSERT_EQ(this->blob_top_->data_at(n, c, h, w),
+                    this->blob_bottom_small_->data_at(n, c, h, w));
         }
       }
     }
@@ -136,21 +139,24 @@ TYPED_TEST(PadLayerTest, ForwardZeroPad1) {
     for (int c = 0; c < this->blob_bottom_small_->channels(); ++c) {
       for (int h = 0; h <= bbedge; ++h) {
         for (int w = 0; w <= bredge; ++w) {
-	  // If one fails, don't continue with a bazillion messages
-	  ASSERT_EQ(this->blob_bottom_small_->data_at(n, c, h, w),
-		    this->blob_top_->data_at(n, c, h+1, w+1));
-        } // w
-	// Horizontal padding
-	ASSERT_EQ(static_cast<Dtype>(0), this->blob_top_->data_at(n, c, h+1, 0));
-	ASSERT_EQ(static_cast<Dtype>(0), this->blob_top_->data_at(n, c, h+1, tredge));
-      } // h
+          // If one fails, don't continue with a bazillion messages
+          ASSERT_EQ(this->blob_bottom_small_->data_at(n, c, h, w),
+                    this->blob_top_->data_at(n, c, h+1, w+1));
+        }  // w
+        // Horizontal padding
+        ASSERT_EQ(static_cast<Dtype>(0),
+                  this->blob_top_->data_at(n, c, h+1, 0));
+        ASSERT_EQ(static_cast<Dtype>(0),
+                  this->blob_top_->data_at(n, c, h+1, tredge));
+      }  // h
       // Vertical padding
       for (int w = 0; w < this->blob_top_->width(); ++w) {
-	ASSERT_EQ(static_cast<Dtype>(0), this->blob_top_->data_at(n, c, 0, w));
-	ASSERT_EQ(static_cast<Dtype>(0), this->blob_top_->data_at(n, c, tbedge, w));
-      } // w
-    } // c
-  } // n
+        ASSERT_EQ(static_cast<Dtype>(0), this->blob_top_->data_at(n, c, 0, w));
+        ASSERT_EQ(static_cast<Dtype>(0),
+                  this->blob_top_->data_at(n, c, tbedge, w));
+      }  // w
+    }  // c
+  }  // n
 }
 
 TYPED_TEST(PadLayerTest, ForwardZeroPad2) {
@@ -172,25 +178,31 @@ TYPED_TEST(PadLayerTest, ForwardZeroPad2) {
     for (int c = 0; c < this->blob_bottom_small_->channels(); ++c) {
       for (int h = 0; h <= bbedge; ++h) {
         for (int w = 0; w <= bredge; ++w) {
-	  // If one fails, don't continue with a bazillion messages
-	  ASSERT_EQ(this->blob_bottom_small_->data_at(n, c, h, w),
-		    this->blob_top_->data_at(n, c, h+2, w+2));
-	} // w
-	// Horizontal padding
-	ASSERT_EQ(static_cast<Dtype>(0), this->blob_top_->data_at(n, c, h+2, 0));
-	ASSERT_EQ(static_cast<Dtype>(0), this->blob_top_->data_at(n, c, h+2, 1));
-	ASSERT_EQ(static_cast<Dtype>(0), this->blob_top_->data_at(n, c, h+2, tredge));
-	ASSERT_EQ(static_cast<Dtype>(0), this->blob_top_->data_at(n, c, h+2, tredge-1));
-      } // h
+          // If one fails, don't continue with a bazillion messages
+          ASSERT_EQ(this->blob_bottom_small_->data_at(n, c, h, w),
+                    this->blob_top_->data_at(n, c, h+2, w+2));
+        }  // w
+        // Horizontal padding
+        ASSERT_EQ(static_cast<Dtype>(0),
+                  this->blob_top_->data_at(n, c, h+2, 0));
+        ASSERT_EQ(static_cast<Dtype>(0),
+                  this->blob_top_->data_at(n, c, h+2, 1));
+        ASSERT_EQ(static_cast<Dtype>(0),
+                  this->blob_top_->data_at(n, c, h+2, tredge));
+        ASSERT_EQ(static_cast<Dtype>(0),
+                  this->blob_top_->data_at(n, c, h+2, tredge-1));
+      }  // h
       // Vertical padding
       for (int w = 0; w < this->blob_top_->width(); ++w) {
-	ASSERT_EQ(static_cast<Dtype>(0), this->blob_top_->data_at(n, c, 0, w));
-	ASSERT_EQ(static_cast<Dtype>(0), this->blob_top_->data_at(n, c, 1, w));
-	ASSERT_EQ(static_cast<Dtype>(0), this->blob_top_->data_at(n, c, tbedge, w));
-	ASSERT_EQ(static_cast<Dtype>(0), this->blob_top_->data_at(n, c, tbedge-1, w));
-      } // w
-    } // c
-  } // n
+        ASSERT_EQ(static_cast<Dtype>(0), this->blob_top_->data_at(n, c, 0, w));
+        ASSERT_EQ(static_cast<Dtype>(0), this->blob_top_->data_at(n, c, 1, w));
+        ASSERT_EQ(static_cast<Dtype>(0),
+                  this->blob_top_->data_at(n, c, tbedge, w));
+        ASSERT_EQ(static_cast<Dtype>(0),
+                  this->blob_top_->data_at(n, c, tbedge-1, w));
+      }  // w
+    }  // c
+  }  // n
 }
 
 TYPED_TEST(PadLayerTest, ForwardReplPad1) {
@@ -207,25 +219,29 @@ TYPED_TEST(PadLayerTest, ForwardReplPad1) {
     for (int c = 0; c < this->blob_bottom_small_->channels(); ++c) {
       for (int h = 0; h < this->blob_bottom_small_->height(); ++h) {
         for (int w = 0; w < this->blob_bottom_small_->width(); ++w) {
-	  // If one fails, don't continue with a bazillion messages
-	  ASSERT_EQ(this->blob_top_->data_at(n, c, h+1, w+1),
-		    this->blob_bottom_small_->data_at(n, c, h, w));
-        } // w
-	// Horizontal padding
-	ASSERT_EQ(this->blob_top_->data_at(n, c, h+1, 0),
-		  this->blob_bottom_small_->data_at(n, c, h, 0));
-	ASSERT_EQ(this->blob_top_->data_at(n, c, h+1, this->blob_top_->width()-1),
-		  this->blob_bottom_small_->data_at(n, c, h, this->blob_bottom_small_->width()-1));
-      } // h
+          // If one fails, don't continue with a bazillion messages
+          ASSERT_EQ(this->blob_top_->data_at(n, c, h+1, w+1),
+                    this->blob_bottom_small_->data_at(n, c, h, w));
+        }  // w
+        // Horizontal padding
+        ASSERT_EQ(this->blob_top_->data_at(n, c, h+1, 0),
+                  this->blob_bottom_small_->data_at(n, c, h, 0));
+        ASSERT_EQ(this->blob_top_->data_at(n, c, h+1,
+                                           this->blob_top_->width()-1),
+                  this->blob_bottom_small_->data_at(n, c, h,
+                                          this->blob_bottom_small_->width()-1));
+      }  // h
       // Vertical padding
       for (int w = 0; w < this->blob_top_->width(); ++w) {
-	ASSERT_EQ(this->blob_top_->data_at(n, c, 0, w),
-		  this->blob_top_->data_at(n, c, 1, w));
-	ASSERT_EQ(this->blob_top_->data_at(n, c, this->blob_top_->height()-1, w),
-		  this->blob_top_->data_at(n, c, this->blob_top_->height()-2, w));
-      } // w
-    } // c
-  } // n
+        ASSERT_EQ(this->blob_top_->data_at(n, c, 0, w),
+                  this->blob_top_->data_at(n, c, 1, w));
+        ASSERT_EQ(this->blob_top_->data_at(n, c,
+                                           this->blob_top_->height()-1, w),
+                  this->blob_top_->data_at(n, c,
+                                           this->blob_top_->height()-2, w));
+      }  // w
+    }  // c
+  }  // n
 }
 
 TYPED_TEST(PadLayerTest, ForwardReplPad2) {
@@ -247,36 +263,36 @@ TYPED_TEST(PadLayerTest, ForwardReplPad2) {
     for (int c = 0; c < this->blob_bottom_small_->channels(); ++c) {
       for (int h = 0; h <= bbedge; ++h) {
         for (int w = 0; w <= bredge; ++w) {
-	  // If one fails, don't continue with a bazillion messages
-	  ASSERT_EQ(this->blob_top_->data_at(n, c, h+2, w+2),
-		    this->blob_bottom_small_->data_at(n, c, h, w));
-	} // w
-	// Horizontal padding
-	ASSERT_EQ(this->blob_top_->data_at(n, c, h+2, 0),
-		  this->blob_bottom_small_->data_at(n, c, h, 0));
-	ASSERT_EQ(this->blob_top_->data_at(n, c, h+2, 1),
-		  this->blob_bottom_small_->data_at(n, c, h, 0));
-	ASSERT_EQ(this->blob_top_->data_at(n, c, h+2, tredge),
-		  this->blob_bottom_small_->data_at(n, c, h, bredge));
-	ASSERT_EQ(this->blob_top_->data_at(n, c, h+2, tredge-1),
-		  this->blob_bottom_small_->data_at(n, c, h, bredge));
-      } // h
+          // If one fails, don't continue with a bazillion messages
+          ASSERT_EQ(this->blob_top_->data_at(n, c, h+2, w+2),
+                    this->blob_bottom_small_->data_at(n, c, h, w));
+        }  // w
+        // Horizontal padding
+        ASSERT_EQ(this->blob_top_->data_at(n, c, h+2, 0),
+                  this->blob_bottom_small_->data_at(n, c, h, 0));
+        ASSERT_EQ(this->blob_top_->data_at(n, c, h+2, 1),
+                  this->blob_bottom_small_->data_at(n, c, h, 0));
+        ASSERT_EQ(this->blob_top_->data_at(n, c, h+2, tredge),
+                  this->blob_bottom_small_->data_at(n, c, h, bredge));
+        ASSERT_EQ(this->blob_top_->data_at(n, c, h+2, tredge-1),
+                  this->blob_bottom_small_->data_at(n, c, h, bredge));
+      }  // h
       // Vertical padding
       for (int w = 0; w < this->blob_top_->width(); ++w) {
-	const int
-	  wb = std::min(bredge, std::max(0, w-2));
+        const int
+          wb = std::min(bredge, std::max(0, w-2));
 
-	ASSERT_EQ(this->blob_top_->data_at(n, c, 0, w),
-		  this->blob_bottom_small_->data_at(n, c, 0, wb));
-	ASSERT_EQ(this->blob_top_->data_at(n, c, 1, w),
-		  this->blob_bottom_small_->data_at(n, c, 0, wb));
-	ASSERT_EQ(this->blob_top_->data_at(n, c, tbedge, w),
-		  this->blob_bottom_small_->data_at(n, c, bbedge, wb));
-	ASSERT_EQ(this->blob_top_->data_at(n, c, tbedge-1, w),
-		  this->blob_bottom_small_->data_at(n, c, bbedge, wb));
-      } // w
-    } // c
-  } // n
+        ASSERT_EQ(this->blob_top_->data_at(n, c, 0, w),
+                  this->blob_bottom_small_->data_at(n, c, 0, wb));
+        ASSERT_EQ(this->blob_top_->data_at(n, c, 1, w),
+                  this->blob_bottom_small_->data_at(n, c, 0, wb));
+        ASSERT_EQ(this->blob_top_->data_at(n, c, tbedge, w),
+                  this->blob_bottom_small_->data_at(n, c, bbedge, wb));
+        ASSERT_EQ(this->blob_top_->data_at(n, c, tbedge-1, w),
+                  this->blob_bottom_small_->data_at(n, c, bbedge, wb));
+      }  // w
+    }  // c
+  }  // n
 }
 
 TYPED_TEST(PadLayerTest, ForwardReflectPad1) {
@@ -293,25 +309,29 @@ TYPED_TEST(PadLayerTest, ForwardReflectPad1) {
     for (int c = 0; c < this->blob_bottom_small_->channels(); ++c) {
       for (int h = 0; h < this->blob_bottom_small_->height(); ++h) {
         for (int w = 0; w < this->blob_bottom_small_->width(); ++w) {
-	  // If one fails, don't continue with a bazillion messages
-	  ASSERT_EQ(this->blob_top_->data_at(n, c, h+1, w+1),
-		    this->blob_bottom_small_->data_at(n, c, h, w));
-        } // w
-	// Horizontal padding
-	ASSERT_EQ(this->blob_top_->data_at(n, c, h+1, 0),
-		  this->blob_bottom_small_->data_at(n, c, h, 0));
-	ASSERT_EQ(this->blob_top_->data_at(n, c, h+1, this->blob_top_->width()-1),
-		  this->blob_bottom_small_->data_at(n, c, h, this->blob_bottom_small_->width()-1));
-      } // h
+          // If one fails, don't continue with a bazillion messages
+          ASSERT_EQ(this->blob_top_->data_at(n, c, h+1, w+1),
+                    this->blob_bottom_small_->data_at(n, c, h, w));
+        }  // w
+        // Horizontal padding
+        ASSERT_EQ(this->blob_top_->data_at(n, c, h+1, 0),
+                  this->blob_bottom_small_->data_at(n, c, h, 0));
+        ASSERT_EQ(this->blob_top_->data_at(n, c, h+1,
+                                           this->blob_top_->width()-1),
+                  this->blob_bottom_small_->data_at(n, c, h,
+                                          this->blob_bottom_small_->width()-1));
+      }  // h
       // Vertical padding
       for (int w = 0; w < this->blob_top_->width(); ++w) {
-	ASSERT_EQ(this->blob_top_->data_at(n, c, 0, w),
-		  this->blob_top_->data_at(n, c, 1, w));
-	ASSERT_EQ(this->blob_top_->data_at(n, c, this->blob_top_->height()-1, w),
-		  this->blob_top_->data_at(n, c, this->blob_top_->height()-2, w));
-      } // w
-    } // c
-  } // n
+        ASSERT_EQ(this->blob_top_->data_at(n, c, 0, w),
+                  this->blob_top_->data_at(n, c, 1, w));
+        ASSERT_EQ(this->blob_top_->data_at(n, c,
+                                           this->blob_top_->height()-1, w),
+                  this->blob_top_->data_at(n, c,
+                                           this->blob_top_->height()-2, w));
+      }  // w
+    }  // c
+  }  // n
 }
 
 TYPED_TEST(PadLayerTest, ForwardReflectPad2) {
@@ -328,33 +348,41 @@ TYPED_TEST(PadLayerTest, ForwardReflectPad2) {
     for (int c = 0; c < this->blob_bottom_small_->channels(); ++c) {
       for (int h = 0; h < this->blob_bottom_small_->height(); ++h) {
         for (int w = 0; w < this->blob_bottom_small_->width(); ++w) {
-	  // If one fails, don't continue with a bazillion messages
-	  ASSERT_EQ(this->blob_top_->data_at(n, c, h+2, w+2),
-		    this->blob_bottom_small_->data_at(n, c, h, w));
-        } // w
-	// Horizontal padding
-	ASSERT_EQ(this->blob_top_->data_at(n, c, h+2, 0),
-		  this->blob_bottom_small_->data_at(n, c, h, 1));
-	ASSERT_EQ(this->blob_top_->data_at(n, c, h+2, 1),
-		  this->blob_bottom_small_->data_at(n, c, h, 0));
-	ASSERT_EQ(this->blob_top_->data_at(n, c, h+2, this->blob_top_->width()-1),
-		  this->blob_bottom_small_->data_at(n, c, h, this->blob_bottom_small_->width()-2));
-	ASSERT_EQ(this->blob_top_->data_at(n, c, h+2, this->blob_top_->width()-2),
-		  this->blob_bottom_small_->data_at(n, c, h, this->blob_bottom_small_->width()-1));
-      } // h
+          // If one fails, don't continue with a bazillion messages
+          ASSERT_EQ(this->blob_top_->data_at(n, c, h+2, w+2),
+                    this->blob_bottom_small_->data_at(n, c, h, w));
+        }  // w
+        // Horizontal padding
+        ASSERT_EQ(this->blob_top_->data_at(n, c, h+2, 0),
+                  this->blob_bottom_small_->data_at(n, c, h, 1));
+        ASSERT_EQ(this->blob_top_->data_at(n, c, h+2, 1),
+                  this->blob_bottom_small_->data_at(n, c, h, 0));
+        ASSERT_EQ(this->blob_top_->data_at(n, c, h+2,
+                                           this->blob_top_->width()-1),
+                  this->blob_bottom_small_->data_at(n, c, h,
+                                          this->blob_bottom_small_->width()-2));
+        ASSERT_EQ(this->blob_top_->data_at(n, c, h+2,
+                                           this->blob_top_->width()-2),
+                  this->blob_bottom_small_->data_at(n, c, h,
+                                          this->blob_bottom_small_->width()-1));
+      }  // h
       // Vertical padding
       for (int w = 0; w < this->blob_top_->width(); ++w) {
-	ASSERT_EQ(this->blob_top_->data_at(n, c, 0, w),
-		  this->blob_top_->data_at(n, c, 3, w));
-	ASSERT_EQ(this->blob_top_->data_at(n, c, 1, w),
-		  this->blob_top_->data_at(n, c, 2, w));
-	ASSERT_EQ(this->blob_top_->data_at(n, c, this->blob_top_->height()-1, w),
-		  this->blob_top_->data_at(n, c, this->blob_top_->height()-4, w));
-	ASSERT_EQ(this->blob_top_->data_at(n, c, this->blob_top_->height()-2, w),
-		  this->blob_top_->data_at(n, c, this->blob_top_->height()-3, w));
-      } // w
-    } // c
-  } // n
+        ASSERT_EQ(this->blob_top_->data_at(n, c, 0, w),
+                  this->blob_top_->data_at(n, c, 3, w));
+        ASSERT_EQ(this->blob_top_->data_at(n, c, 1, w),
+                  this->blob_top_->data_at(n, c, 2, w));
+        ASSERT_EQ(this->blob_top_->data_at(n, c,
+                                           this->blob_top_->height()-1, w),
+                  this->blob_top_->data_at(n, c,
+                                           this->blob_top_->height()-4, w));
+        ASSERT_EQ(this->blob_top_->data_at(n, c,
+                                           this->blob_top_->height()-2, w),
+                  this->blob_top_->data_at(n, c,
+                                           this->blob_top_->height()-3, w));
+      }  // w
+    }  // c
+  }  // n
 }
 
 TYPED_TEST(PadLayerTest, ForwardReflect101Pad1) {
@@ -371,25 +399,29 @@ TYPED_TEST(PadLayerTest, ForwardReflect101Pad1) {
     for (int c = 0; c < this->blob_bottom_big_->channels(); ++c) {
       for (int h = 0; h < this->blob_bottom_big_->height(); ++h) {
         for (int w = 0; w < this->blob_bottom_big_->width(); ++w) {
-	  // If one fails, don't continue with a bazillion messages
-	  ASSERT_EQ(this->blob_top_->data_at(n, c, h+1, w+1),
-		    this->blob_bottom_big_->data_at(n, c, h, w));
-        } // w
-	// Horizontal padding
-	ASSERT_EQ(this->blob_top_->data_at(n, c, h+1, 0),
-		  this->blob_bottom_big_->data_at(n, c, h, 1));
-	ASSERT_EQ(this->blob_top_->data_at(n, c, h+1, this->blob_top_->width()-1),
-		  this->blob_bottom_big_->data_at(n, c, h, this->blob_bottom_big_->width()-2));
-      } // h
+          // If one fails, don't continue with a bazillion messages
+          ASSERT_EQ(this->blob_top_->data_at(n, c, h+1, w+1),
+                    this->blob_bottom_big_->data_at(n, c, h, w));
+        }  // w
+        // Horizontal padding
+        ASSERT_EQ(this->blob_top_->data_at(n, c, h+1, 0),
+                  this->blob_bottom_big_->data_at(n, c, h, 1));
+        ASSERT_EQ(this->blob_top_->data_at(n, c, h+1,
+                                           this->blob_top_->width()-1),
+                  this->blob_bottom_big_->data_at(n, c, h,
+                                            this->blob_bottom_big_->width()-2));
+      }  // h
       // Vertical padding
       for (int w = 0; w < this->blob_top_->width(); ++w) {
-	ASSERT_EQ(this->blob_top_->data_at(n, c, 0, w),
-		  this->blob_top_->data_at(n, c, 2, w));
-	ASSERT_EQ(this->blob_top_->data_at(n, c, this->blob_top_->height()-1, w),
-		  this->blob_top_->data_at(n, c, this->blob_top_->height()-3, w));
-      } // w
-    } // c
-  } // n
+        ASSERT_EQ(this->blob_top_->data_at(n, c, 0, w),
+                  this->blob_top_->data_at(n, c, 2, w));
+        ASSERT_EQ(this->blob_top_->data_at(n, c,
+                                           this->blob_top_->height()-1, w),
+                  this->blob_top_->data_at(n, c,
+                                           this->blob_top_->height()-3, w));
+      }  // w
+    }  // c
+  }  // n
 }
 
 TYPED_TEST(PadLayerTest, ForwardReflect101Pad2) {
@@ -406,33 +438,41 @@ TYPED_TEST(PadLayerTest, ForwardReflect101Pad2) {
     for (int c = 0; c < this->blob_bottom_big_->channels(); ++c) {
       for (int h = 0; h < this->blob_bottom_big_->height(); ++h) {
         for (int w = 0; w < this->blob_bottom_big_->width(); ++w) {
-	  // If one fails, don't continue with a bazillion messages
-	  ASSERT_EQ(this->blob_top_->data_at(n, c, h+2, w+2),
-		    this->blob_bottom_big_->data_at(n, c, h, w));
-        } // w
-	// Horizontal padding
-	ASSERT_EQ(this->blob_top_->data_at(n, c, h+2, 0),
-		  this->blob_bottom_big_->data_at(n, c, h, 2));
-	ASSERT_EQ(this->blob_top_->data_at(n, c, h+2, 1),
-		  this->blob_bottom_big_->data_at(n, c, h, 1));
-	ASSERT_EQ(this->blob_top_->data_at(n, c, h+2, this->blob_top_->width()-1),
-		  this->blob_bottom_big_->data_at(n, c, h, this->blob_bottom_big_->width()-3));
-	ASSERT_EQ(this->blob_top_->data_at(n, c, h+2, this->blob_top_->width()-2),
-		  this->blob_bottom_big_->data_at(n, c, h, this->blob_bottom_big_->width()-2));
-      } // h
+          // If one fails, don't continue with a bazillion messages
+          ASSERT_EQ(this->blob_top_->data_at(n, c, h+2, w+2),
+                    this->blob_bottom_big_->data_at(n, c, h, w));
+        }  // w
+        // Horizontal padding
+        ASSERT_EQ(this->blob_top_->data_at(n, c, h+2, 0),
+                  this->blob_bottom_big_->data_at(n, c, h, 2));
+        ASSERT_EQ(this->blob_top_->data_at(n, c, h+2, 1),
+                  this->blob_bottom_big_->data_at(n, c, h, 1));
+        ASSERT_EQ(this->blob_top_->data_at(n, c, h+2,
+                                           this->blob_top_->width()-1),
+                  this->blob_bottom_big_->data_at(n, c, h,
+                                            this->blob_bottom_big_->width()-3));
+        ASSERT_EQ(this->blob_top_->data_at(n, c, h+2,
+                                           this->blob_top_->width()-2),
+                  this->blob_bottom_big_->data_at(n, c, h,
+                                            this->blob_bottom_big_->width()-2));
+      }  // h
       // Vertical padding
       for (int w = 0; w < this->blob_top_->width(); ++w) {
-	ASSERT_EQ(this->blob_top_->data_at(n, c, 0, w),
-		  this->blob_top_->data_at(n, c, 4, w));
-	ASSERT_EQ(this->blob_top_->data_at(n, c, 1, w),
-		  this->blob_top_->data_at(n, c, 3, w));
-	ASSERT_EQ(this->blob_top_->data_at(n, c, this->blob_top_->height()-1, w),
-		  this->blob_top_->data_at(n, c, this->blob_top_->height()-5, w));
-	ASSERT_EQ(this->blob_top_->data_at(n, c, this->blob_top_->height()-2, w),
-		  this->blob_top_->data_at(n, c, this->blob_top_->height()-4, w));
-      } // w
-    } // c
-  } // n
+        ASSERT_EQ(this->blob_top_->data_at(n, c, 0, w),
+                  this->blob_top_->data_at(n, c, 4, w));
+        ASSERT_EQ(this->blob_top_->data_at(n, c, 1, w),
+                  this->blob_top_->data_at(n, c, 3, w));
+        ASSERT_EQ(this->blob_top_->data_at(n, c,
+                                           this->blob_top_->height()-1, w),
+                  this->blob_top_->data_at(n, c,
+                                           this->blob_top_->height()-5, w));
+        ASSERT_EQ(this->blob_top_->data_at(n, c,
+                                           this->blob_top_->height()-2, w),
+                  this->blob_top_->data_at(n, c,
+                                           this->blob_top_->height()-4, w));
+      }  // w
+    }  // c
+  }  // n
 }
 
 

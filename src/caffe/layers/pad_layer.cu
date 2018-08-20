@@ -9,7 +9,7 @@ __global__ void PadForward(const int count, const Dtype* in, Dtype* out,
     const int num, const int channel, const int height_in, const int width_in,
     const int pad) {
   CUDA_KERNEL_LOOP(index, count) {
-    int i = index; // Preserve the original value
+    int i = index;  // Preserve the original value
     int height_out = height_in + pad + pad;
     int width_out = width_in + pad + pad;
     int w = i % width_in;
@@ -36,7 +36,9 @@ __global__ void PadForwardPadZero(const int count, Dtype* out,
     }
   }
 }
-// No matching PadBackwardPadZero, since no gradient propagates through zero padding
+
+// No matching PadBackwardPadZero, since no gradient propagates
+// through zero padding
 
 template <typename Dtype>
 __global__ void PadForwardPadLeftAndRightReplicate(const int count, Dtype* out,
@@ -197,52 +199,63 @@ void PadLayer<Dtype>::Forward_gpu(const std::vector<Blob<Dtype>*>& bottom,
     const std::vector<Blob<Dtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = top[0]->mutable_gpu_data();
-  const int count = bottom[0]->count();
+  const int bcount = bottom[0]->count();
+  const int tcount = top[0]->count();
   // First, set all data to be zero for the boundary pixels
-  // CUDA_CHECK(cudaMemset(top_data, 0, sizeof(Dtype) * top[0]->count()));
+  // CUDA_CHECK(cudaMemset(top_data, 0, sizeof(Dtype) * tcount));
   // Copy the main body (not yet setting the padding)
   // NOLINT_NEXT_LINE(whitespace/operators)
-  PadForward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
-      count, bottom_data, top_data, NUM_, CHANNEL_, HEIGHT_IN_, WIDTH_IN_,
+  PadForward<Dtype><<<CAFFE_GET_BLOCKS(bcount), CAFFE_CUDA_NUM_THREADS>>>(
+      bcount, bottom_data, top_data, NUM_, CHANNEL_, HEIGHT_IN_, WIDTH_IN_,
       PAD_);
   CUDA_POST_KERNEL_CHECK;
 
   // Padding
   switch (PAD_TYPE_) {
   case PadParameter::ZERO:
-    PadForwardPadZero<Dtype>
-      <<<CAFFE_GET_BLOCKS(top[0]->count()), CAFFE_CUDA_NUM_THREADS>>>(
-        top[0]->count(), top_data, NUM_, CHANNEL_, HEIGHT_OUT_, WIDTH_OUT_, PAD_);
+    // NOLINT_NEXT_LINE(whitespace/operators)
+    PadForwardPadZero<Dtype><<<CAFFE_GET_BLOCKS(tcount),
+                               CAFFE_CUDA_NUM_THREADS>>>(
+        tcount, top_data, NUM_, CHANNEL_, HEIGHT_OUT_, WIDTH_OUT_,
+        PAD_);
     break;
   case PadParameter::REPLICATE:
     // Left and right first, only in the "body", i.e., not in the
     // vertical padding, then vertical across entire rows.
-    PadForwardPadLeftAndRightReplicate<Dtype>
-      <<<CAFFE_GET_BLOCKS(top[0]->count()), CAFFE_CUDA_NUM_THREADS>>>(
-        top[0]->count(), top_data, NUM_, CHANNEL_, HEIGHT_OUT_, WIDTH_OUT_, PAD_);
-    PadForwardPadTopAndBottomReplicate<Dtype>
-      <<<CAFFE_GET_BLOCKS(top[0]->count()), CAFFE_CUDA_NUM_THREADS>>>(
-        top[0]->count(), top_data, NUM_, CHANNEL_, HEIGHT_OUT_, WIDTH_OUT_, PAD_);
+    // NOLINT_NEXT_LINE(whitespace/operators)
+    PadForwardPadLeftAndRightReplicate<Dtype><<<CAFFE_GET_BLOCKS(
+                                                tcount),
+                                                CAFFE_CUDA_NUM_THREADS>>>(
+        tcount, top_data, NUM_, CHANNEL_, HEIGHT_OUT_, WIDTH_OUT_, PAD_);
+    // NOLINT_NEXT_LINE(whitespace/operators)
+    PadForwardPadTopAndBottomReplicate<Dtype><<<CAFFE_GET_BLOCKS(
+                                                tcount),
+                                                CAFFE_CUDA_NUM_THREADS>>>(
+        tcount, top_data, NUM_, CHANNEL_, HEIGHT_OUT_, WIDTH_OUT_, PAD_);
     break;
   case PadParameter::REFLECT:
     // Left and right first, only in the "body", i.e., not in the
     // vertical padding, then vertical across entire rows.
-    PadForwardPadLeftAndRightReflect<Dtype>
-      <<<CAFFE_GET_BLOCKS(top[0]->count()), CAFFE_CUDA_NUM_THREADS>>>(
-        top[0]->count(), top_data, NUM_, CHANNEL_, HEIGHT_OUT_, WIDTH_OUT_, PAD_);
-    PadForwardPadTopAndBottomReflect<Dtype>
-      <<<CAFFE_GET_BLOCKS(top[0]->count()), CAFFE_CUDA_NUM_THREADS>>>(
-        top[0]->count(), top_data, NUM_, CHANNEL_, HEIGHT_OUT_, WIDTH_OUT_, PAD_);
+    // NOLINT_NEXT_LINE(whitespace/operators)
+    PadForwardPadLeftAndRightReflect<Dtype><<<CAFFE_GET_BLOCKS(tcount),
+                                              CAFFE_CUDA_NUM_THREADS>>>(
+        tcount, top_data, NUM_, CHANNEL_, HEIGHT_OUT_, WIDTH_OUT_, PAD_);
+    // NOLINT_NEXT_LINE(whitespace/operators)
+    PadForwardPadTopAndBottomReflect<Dtype><<<CAFFE_GET_BLOCKS(tcount),
+                                              CAFFE_CUDA_NUM_THREADS>>>(
+        tcount, top_data, NUM_, CHANNEL_, HEIGHT_OUT_, WIDTH_OUT_, PAD_);
     break;
   case PadParameter::REFLECT_101:
     // Left and right first, only in the "body", i.e., not in the
     // vertical padding, then vertical across entire rows.
-    PadForwardPadLeftAndRightReflect101<Dtype>
-      <<<CAFFE_GET_BLOCKS(top[0]->count()), CAFFE_CUDA_NUM_THREADS>>>(
-        top[0]->count(), top_data, NUM_, CHANNEL_, HEIGHT_OUT_, WIDTH_OUT_, PAD_);
-    PadForwardPadTopAndBottomReflect101<Dtype>
-      <<<CAFFE_GET_BLOCKS(top[0]->count()), CAFFE_CUDA_NUM_THREADS>>>(
-        top[0]->count(), top_data, NUM_, CHANNEL_, HEIGHT_OUT_, WIDTH_OUT_, PAD_);
+    // NOLINT_NEXT_LINE(whitespace/operators)
+    PadForwardPadLeftAndRightReflect101<Dtype><<<CAFFE_GET_BLOCKS(tcount),
+                                                 CAFFE_CUDA_NUM_THREADS>>>(
+        tcount, top_data, NUM_, CHANNEL_, HEIGHT_OUT_, WIDTH_OUT_, PAD_);
+    // NOLINT_NEXT_LINE(whitespace/operators)
+    PadForwardPadTopAndBottomReflect101<Dtype><<<CAFFE_GET_BLOCKS(tcount),
+                                                 CAFFE_CUDA_NUM_THREADS>>>(
+        tcount, top_data, NUM_, CHANNEL_, HEIGHT_OUT_, WIDTH_OUT_, PAD_);
     break;
   }
   CUDA_POST_KERNEL_CHECK;
@@ -260,18 +273,19 @@ __global__ void PadBackwardPadLeftAndRightReplicate(const int count, Dtype* out,
 
     // Don't do top or bottom padding, and padding only comes from the
     // left and right edges
-    if (h < pad || h > height_out-1-pad || (w != pad && w != width_out - 1 - pad)) {
+    if (h < pad || h > height_out-1-pad ||
+        (w != pad && w != width_out - 1 - pad)) {
       return;
     }
 
     int off;
     if (w == pad) {
       off = -pad;
-    } else { // w == width_out - 1 - pad
-      off = 1; // To the first pad pixel
+    } else {  // w == width_out - 1 - pad
+      off = 1;  // To the first pad pixel
     }
 
-    for (int dw=0; dw < pad; ++dw) {
+    for (int dw = 0; dw < pad; ++dw) {
       out[index] += out[index + off + dw];
     }
   }
@@ -293,11 +307,11 @@ __global__ void PadBackwardPadTopAndBottomReplicate(const int count, Dtype* out,
     int off;
     if (h == pad) {
       off = -pad*width_out;
-    } else { // h == height_out - 1 - pad
-      off = width_out; // One row, i.e., to the first pad row
+    } else {  // h == height_out - 1 - pad
+      off = width_out;  // One row, i.e., to the first pad row
     }
 
-    for (int dh=0; dh < pad; ++dh) {
+    for (int dh = 0; dh < pad; ++dh) {
       out[index] += out[index + off + dh*width_out];
     }
   }
@@ -320,7 +334,7 @@ __global__ void PadBackwardPadLeftAndRightReflect(const int count, Dtype* out,
 
     // Padding comes from a border of width pad within the main image body
     if ((w < pad || w > 2*pad-1) &&
-	(w > width_out - 1 - pad || w < width_out - 2*pad)) {
+        (w > width_out - 1 - pad || w < width_out - 2*pad)) {
       return;
     }
 
@@ -345,7 +359,7 @@ __global__ void PadBackwardPadTopAndBottomReflect(const int count, Dtype* out,
 
     // Padding comes from a border of width pad within the main image body
     if ((h < pad || h > 2*pad-1) &&
-	(h > height_out - 1 - pad || h < height_out - 2*pad)) {
+        (h > height_out - 1 - pad || h < height_out - 2*pad)) {
       return;
     }
 
@@ -362,8 +376,9 @@ __global__ void PadBackwardPadTopAndBottomReflect(const int count, Dtype* out,
 }
 
 template <typename Dtype>
-__global__ void PadBackwardPadLeftAndRightReflect101(const int count, Dtype* out,
-    const int num, const int channel, const int height_out, const int width_out,
+__global__ void PadBackwardPadLeftAndRightReflect101(const int count,
+    Dtype* out, const int num, const int channel,
+    const int height_out, const int width_out,
     const int pad) {
   CUDA_KERNEL_LOOP(index, count) {
     int i = index;
@@ -378,7 +393,7 @@ __global__ void PadBackwardPadLeftAndRightReflect101(const int count, Dtype* out
 
     // Padding comes from a border of width pad within the main image body
     if ((w < pad+1 || w > 2*pad) &&
-	(w > width_out - 2 - pad || w < width_out - 1 - 2*pad)) {
+        (w > width_out - 2 - pad || w < width_out - 1 - 2*pad)) {
       return;
     }
 
@@ -394,8 +409,9 @@ __global__ void PadBackwardPadLeftAndRightReflect101(const int count, Dtype* out
 }
 
 template <typename Dtype>
-__global__ void PadBackwardPadTopAndBottomReflect101(const int count, Dtype* out,
-    const int num, const int channel, const int height_out, const int width_out,
+__global__ void PadBackwardPadTopAndBottomReflect101(const int count,
+    Dtype* out, const int num, const int channel,
+    const int height_out, const int width_out,
     const int pad) {
   CUDA_KERNEL_LOOP(index, count) {
     int i = index / width_out;
@@ -404,7 +420,7 @@ __global__ void PadBackwardPadTopAndBottomReflect101(const int count, Dtype* out
     // Padding comes from a border of width pad+1 within the main
     // image body, but not right on the edge of the image.
     if ((h < pad+1 || h > 2*pad) &&
-	(h > height_out - 2 - pad || h < height_out - 1 - 2*pad)) {
+        (h > height_out - 2 - pad || h < height_out - 1 - 2*pad)) {
       return;
     }
 
@@ -425,7 +441,7 @@ __global__ void PadBackward(const int count, const Dtype* in, Dtype* out,
     const int num, const int channel, const int height_in, const int width_in,
     const int pad) {
   CUDA_KERNEL_LOOP(index, count) {
-    int i = index; // Preserve original value
+    int i = index;  // Preserve original value
     int height_out = height_in + pad + pad;
     int width_out = width_in + pad + pad;
     int w = i % width_in;
@@ -435,7 +451,7 @@ __global__ void PadBackward(const int count, const Dtype* in, Dtype* out,
     int c = i % channel;
     i /= channel;
     out[index] = in[((i * channel + c) * height_out + h + pad) *
-		    width_out + pad + w];
+                    width_out + pad + w];
   }
 }
 
@@ -454,29 +470,35 @@ void PadLayer<Dtype>::Backward_gpu(const std::vector<Blob<Dtype>*>& top,
     // part to be copied to bottom.
     switch (PAD_TYPE_) {
     case PadParameter::ZERO:
-      break; // No gradient in the padding; it's constant
+      break;  // No gradient in the padding; it's constant
     case PadParameter::REPLICATE:
-      PadBackwardPadTopAndBottomReplicate<Dtype>
-	<<<CAFFE_GET_BLOCKS(tcount), CAFFE_CUDA_NUM_THREADS>>>(
+      // NOLINT_NEXT_LINE(whitespace/operators)
+      PadBackwardPadTopAndBottomReplicate<Dtype><<<CAFFE_GET_BLOCKS(tcount),
+                                                   CAFFE_CUDA_NUM_THREADS>>>(
             tcount, top_diff, NUM_, CHANNEL_, HEIGHT_OUT_, WIDTH_OUT_, PAD_);
-      PadBackwardPadLeftAndRightReplicate<Dtype>
-	<<<CAFFE_GET_BLOCKS(tcount), CAFFE_CUDA_NUM_THREADS>>>(
+      // NOLINT_NEXT_LINE(whitespace/operators)
+      PadBackwardPadLeftAndRightReplicate<Dtype><<<CAFFE_GET_BLOCKS(tcount),
+                                                   CAFFE_CUDA_NUM_THREADS>>>(
             tcount, top_diff, NUM_, CHANNEL_, HEIGHT_OUT_, WIDTH_OUT_, PAD_);
       break;
     case PadParameter::REFLECT:
-      PadBackwardPadTopAndBottomReflect<Dtype>
-	<<<CAFFE_GET_BLOCKS(top[0]->count()), CAFFE_CUDA_NUM_THREADS>>>(
+      // NOLINT_NEXT_LINE(whitespace/operators)
+      PadBackwardPadTopAndBottomReflect<Dtype><<<CAFFE_GET_BLOCKS(tcount),
+                                                 CAFFE_CUDA_NUM_THREADS>>>(
             tcount, top_diff, NUM_, CHANNEL_, HEIGHT_OUT_, WIDTH_OUT_, PAD_);
-      PadBackwardPadLeftAndRightReflect<Dtype>
-	<<<CAFFE_GET_BLOCKS(top[0]->count()), CAFFE_CUDA_NUM_THREADS>>>(
+      // NOLINT_NEXT_LINE(whitespace/operators)
+      PadBackwardPadLeftAndRightReflect<Dtype><<<CAFFE_GET_BLOCKS(tcount),
+                                                 CAFFE_CUDA_NUM_THREADS>>>(
             tcount, top_diff, NUM_, CHANNEL_, HEIGHT_OUT_, WIDTH_OUT_, PAD_);
       break;
     case PadParameter::REFLECT_101:
-      PadBackwardPadTopAndBottomReflect101<Dtype>
-	<<<CAFFE_GET_BLOCKS(top[0]->count()), CAFFE_CUDA_NUM_THREADS>>>(
+      // NOLINT_NEXT_LINE(whitespace/operators)
+      PadBackwardPadTopAndBottomReflect101<Dtype><<<CAFFE_GET_BLOCKS(tcount),
+                                                    CAFFE_CUDA_NUM_THREADS>>>(
             tcount, top_diff, NUM_, CHANNEL_, HEIGHT_OUT_, WIDTH_OUT_, PAD_);
-      PadBackwardPadLeftAndRightReflect101<Dtype>
-	<<<CAFFE_GET_BLOCKS(top[0]->count()), CAFFE_CUDA_NUM_THREADS>>>(
+      // NOLINT_NEXT_LINE(whitespace/operators)
+      PadBackwardPadLeftAndRightReflect101<Dtype><<<CAFFE_GET_BLOCKS(tcount),
+                                                    CAFFE_CUDA_NUM_THREADS>>>(
             tcount, top_diff, NUM_, CHANNEL_, HEIGHT_OUT_, WIDTH_OUT_, PAD_);
       break;
     }
