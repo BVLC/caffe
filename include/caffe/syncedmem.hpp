@@ -73,6 +73,12 @@ class SyncedMemory {
   void async_gpu_push(const cudaStream_t& stream);
 #endif
 
+  // Included for syncing memory of dynamically loaded layers.
+  // Warning: only use this is you know what you are doing.
+  void set_head(SyncedHead new_head) {
+    head_ = new_head;
+  }
+
  private:
   void check_device();
 

@@ -87,6 +87,9 @@ message NetParameter {
   // Net::Backward, and Net::Update.
   optional bool debug_info = 7 [default = false];
 
+  // External layers that are loaded as dynamically liked libraries
+  repeated string external_layers = 9;
+
   // The layers that make up the net.  Each of their configurations, including
   // connectivity and behavior, is specified as a LayerParameter.
   repeated LayerParameter layer = 100;  // ID 100 so layers are printed last.

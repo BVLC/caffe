@@ -201,3 +201,14 @@ endif()
 if(BUILD_docs)
   find_package(Doxygen)
 endif()
+
+# ---[ Halide
+if(BUILD_halide)
+    set(Halide_LINKER_LIBS "")
+    # Add the halide libary
+    find_package(Halide REQUIRED)
+    include_directories(SYSTEM ${HALIDE_INCLUDE_DIR})
+    list(APPEND Caffe_LINKER_LIBS ${HALIDE_LIBRARIES})
+    list(APPEND Halide_LINKER_LIBS ${HALIDE_LIBRARIES})
+
+endif()

@@ -1,3 +1,4 @@
+#include <dlfcn.h>
 #include <algorithm>
 #include <map>
 #include <set>
@@ -16,6 +17,11 @@
 #include "caffe/util/insert_splits.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/upgrade_proto.hpp"
+
+
+#define CHECK_DL { dlsym_error = dlerror(); \
+  if (dlsym_error) { LOG(FATAL) << "Dynamic linking error: " << dlsym_error;} }
+
 
 namespace caffe {
 
@@ -54,6 +60,37 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   // Create a copy of filtered_param with splits added where necessary.
   NetParameter param;
   InsertSplits(filtered_param, &param);
+  // Register the DLL Layers.
+  for (int lyr_id = 0; lyr_id < in_param.external_layers_size(); ++lyr_id) {
+    string library(in_param.external_layers(lyr_id));
+    LOG(INFO) << "External Layers " << library;
+    // Setup external library
+    void* ext_lib_handle;
+    ext_lib_handle = dlopen(library.c_str(), RTLD_LAZY);
+    if (ext_lib_handle == NULL) {
+      LOG(INFO) << "Failed to open dynamic library: " << library;
+      LOG(INFO) << "with error: "<< dlerror();
+      LOG(INFO) << "ProTip: Check that libHalide.so file is in LD_LIBRARY_PATH";
+      LOG(FATAL) << "caffe failed to open dynamic library";
+    }
+    dlerror();
+    const char* dlsym_error;
+    // First get layer name
+    typedef string get_name_t();
+    get_name_t *get_name = reinterpret_cast<get_name_t*>(
+          dlsym(ext_lib_handle, "GetExtLayerName"));
+    CHECK_DL
+    std::string layer_name(get_name());
+    // Then get handle for crator
+    typedef boost::shared_ptr<Layer<Dtype> > create_t(
+          const LayerParameter& param);
+    create_t* create_ext;
+    create_ext = reinterpret_cast<create_t*>(
+          dlsym(ext_lib_handle, "getExtLayer"));
+    CHECK_DL
+    // Then register
+    LayerRegistry<Dtype>::AddCreator(layer_name, create_ext);
+  }
   // Basically, build all the layers and set up their connections.
   name_ = param.name();
   map<string, int> blob_name_to_idx;

@@ -110,3 +110,25 @@ if $WITH_CUDA ; then
   fi
 fi
 
+if $WITH_HALIDE ; then
+  # download halide since it's needed for halide layer
+  HALIDE_DIR=~/halide
+
+  if [ -d "$HALIDE_DIR" ] && [ -e "$HALIDE_DIR/bin" ]; then
+    echo "Using cached halide ..."
+
+  else
+    echo "Building halide from source ..."
+    pushd .
+      rm -rf $HALIDE_DIR
+      mkdir $HALIDE_DIR
+      HALIDE_FILE=halide-linux-64-gcc48-trunk-aa5d5514f179bf0ffe1a2dead0c0eb7300b4069a.tgz
+      wget https://github.com/halide/Halide/releases/download/release_2016_10_25/${HALIDE_FILE}
+      tar -xzf ${HALIDE_FILE} -C $HALIDE_DIR --strip 1
+      chown travis:travis -R $HALIDE_DIR
+      rm ${HALIDE_FILE}
+      echo "Installed halide to:" $HALIDE_DIR
+      ls ${HALIDE_DIR}/bin
+    popd
+  fi
+fi
