@@ -1,3 +1,4 @@
+#ifdef USE_HDF5
 #ifndef CAFFE_UTIL_HDF5_H_
 #define CAFFE_UTIL_HDF5_H_
 
@@ -43,3 +44,4 @@ string hdf5_get_name_by_idx(hid_t loc_id, int idx);
 }  // namespace caffe
 
 #endif   // CAFFE_UTIL_HDF5_H_
+#endif   // USE_HDF5
