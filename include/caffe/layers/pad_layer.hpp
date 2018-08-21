@@ -16,10 +16,12 @@ namespace caffe {
  * pixels to the outside. These pixels are set to values that depend
  * on the value of the padtype parameter. To describe the types,
  * imagine padding along one dimension, that I'll refer to as a row,
- * with all other dimensions held fixed. The index for the first pixel
- * in the row in the unpadded image is 0. The pixel at location i is
- * p[i], and negative i means a pixel in the padding. The types are:
- * 
+ * with all other dimensions held fixed. The following describes the
+ * padding at the beginning of a row; the padding at the end is
+ * analogous. The index for the first pixel in the row in the unpadded
+ * image is 0. The pixel at location i is p[i], and negative i means a
+ * pixel in the padding. The types are:
+ *
  *   'zero': Set the padding to zero. This is what Convolution layers
  *      effectively do with their padding.
  *   'replicate': Copy the border value into the padding. For positive
@@ -38,8 +40,6 @@ namespace caffe {
  *      (p[i]-p[0]) = 2*p[0] - p[i]. This give the padding zero second
  *      difference across the boundary, so that it avoids creating
  *      ridges or valleys at the borders.
- *
- * TODO(dox): thorough documentation for Forward, Backward, and proto params.
  */
 
 template <typename Dtype>
