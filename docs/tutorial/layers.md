@@ -93,6 +93,7 @@ Layers:
 * [Log](layers/log.html) - f(x) = log(x).
 * [BNLL](layers/bnll.html) - f(x) = log(1 + exp(x)).
 * [Threshold](layers/threshold.html) - performs step function at user defined threshold.
+* [Clip](layers/clip.html) - clips a blob between a fixed minimum and maximum value.
 * [Bias](layers/bias.html) - adds a bias to a blob that can either be learned or fixed.
 * [Scale](layers/scale.html) - scales a blob by an amount that can either be learned or fixed.
 
