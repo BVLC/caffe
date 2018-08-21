@@ -1,3 +1,4 @@
+#ifdef USE_HDF5
 #include <string>
 #include <vector>
 
@@ -163,3 +164,4 @@ TYPED_TEST(HDF5DataLayerTest, TestSkip) {
 }
 
 }  // namespace caffe
+#endif  // USE_HDF5
