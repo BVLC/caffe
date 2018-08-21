@@ -1,24 +1,29 @@
+#include <boost/asio.hpp>
 #include <boost/bind.hpp>
 #include <glog/logging.h>
 
-#include <signal.h>
-#include <csignal>
-
 #include "caffe/util/signal_handler.h"
 
+#ifdef SIGHUP
+#define SUPPORTED_SIGNALS SIGINT, SIGHUP
+#else
+#define SUPPORTED_SIGNALS SIGINT
+#endif
+
 namespace {
-  static volatile sig_atomic_t got_sigint = false;
-  static volatile sig_atomic_t got_sighup = false;
+  static boost::asio::io_service io;
+  static boost::asio::signal_set signals(io, SUPPORTED_SIGNALS);
+  static bool got_signal = false;
+  static int received_signal;
   static bool already_hooked_up = false;
 
-  void handle_signal(int signal) {
-    switch (signal) {
-    case SIGHUP:
-      got_sighup = true;
-      break;
-    case SIGINT:
-      got_sigint = true;
-      break;
+  void handle_signal(const boost::system::error_code& error, int signal) {
+    if (!error) {
+      got_signal = true;
+      received_signal = signal;
+      signals.async_wait(handle_signal);
+    } else if (error != boost::asio::error::operation_aborted) {
+        LOG(FATAL) << "Signal handling error: " << error;
     }
   }
 
@@ -27,60 +32,25 @@ namespace {
       LOG(FATAL) << "Tried to hookup signal handlers more than once.";
     }
     already_hooked_up = true;
-
-    struct sigaction sa;
-    // Setup the handler
-    sa.sa_handler = &handle_signal;
-    // Restart the system call, if at all possible
-    sa.sa_flags = SA_RESTART;
-    // Block every signal during the handler
-    sigfillset(&sa.sa_mask);
-    // Intercept SIGHUP and SIGINT
-    if (sigaction(SIGHUP, &sa, NULL) == -1) {
-      LOG(FATAL) << "Cannot install SIGHUP handler.";
-    }
-    if (sigaction(SIGINT, &sa, NULL) == -1) {
-      LOG(FATAL) << "Cannot install SIGINT handler.";
-    }
+    signals.async_wait(handle_signal);
   }
 
   // Set the signal handlers to the default.
   void UnhookHandler() {
     if (already_hooked_up) {
-      struct sigaction sa;
-      // Setup the sighub handler
-      sa.sa_handler = SIG_DFL;
-      // Restart the system call, if at all possible
-      sa.sa_flags = SA_RESTART;
-      // Block every signal during the handler
-      sigfillset(&sa.sa_mask);
-      // Intercept SIGHUP and SIGINT
-      if (sigaction(SIGHUP, &sa, NULL) == -1) {
-        LOG(FATAL) << "Cannot uninstall SIGHUP handler.";
-      }
-      if (sigaction(SIGINT, &sa, NULL) == -1) {
-        LOG(FATAL) << "Cannot uninstall SIGINT handler.";
-      }
-
+      signals.cancel();
       already_hooked_up = false;
     }
   }
 
-  // Return true iff a SIGINT has been received since the last time this
-  // function was called.
-  bool GotSIGINT() {
-    bool result = got_sigint;
-    got_sigint = false;
+  // Return true iff a signal was received.
+  bool GotSignal() {
+    io.poll();
+    bool result = got_signal;
+    got_signal = false;
     return result;
   }
 
-  // Return true iff a SIGHUP has been received since the last time this
-  // function was called.
-  bool GotSIGHUP() {
-    bool result = got_sighup;
-    got_sighup = false;
-    return result;
-  }
 }  // namespace
 
 namespace caffe {
@@ -97,11 +67,15 @@ SignalHandler::~SignalHandler() {
 }
 
 SolverAction::Enum SignalHandler::CheckForSignals() const {
-  if (GotSIGHUP()) {
-    return SIGHUP_action_;
-  }
-  if (GotSIGINT()) {
-    return SIGINT_action_;
+  if (GotSignal()) {
+    switch (received_signal) {
+#ifdef SIGHUP
+    case SIGHUP:
+      return SIGHUP_action_;
+#endif
+    case SIGINT:
+      return SIGINT_action_;
+    }
   }
   return SolverAction::NONE;
 }
