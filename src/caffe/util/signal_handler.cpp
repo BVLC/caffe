@@ -48,7 +48,7 @@ namespace {
   void UnhookHandler() {
     if (already_hooked_up) {
       struct sigaction sa;
-      // Setup the sighub handler
+      // Setup the sighup handler
       sa.sa_handler = SIG_DFL;
       // Restart the system call, if at all possible
       sa.sa_flags = SA_RESTART;
