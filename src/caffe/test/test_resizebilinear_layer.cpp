@@ -109,7 +109,6 @@ class ResizeBilinearLayerTest : public MultiDeviceTest<TypeParam> {
       EXPECT_NEAR(blob_top_->cpu_data()[i + 13], 6.5, epsilon);
       EXPECT_NEAR(blob_top_->cpu_data()[i + 14], 9., epsilon);
       EXPECT_NEAR(blob_top_->cpu_data()[i + 15], 9., epsilon); 
-
 //    EXPECT_NEAR(blob_top_->cpu_data()[i + 16], 3., epsilon); 
 //    EXPECT_NEAR(blob_top_->cpu_data()[i + 17], 4.25, epsilon);
 //    EXPECT_NEAR(blob_top_->cpu_data()[i + 18], 5.5, epsilon);
