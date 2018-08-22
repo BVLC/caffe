@@ -10,7 +10,7 @@ namespace caffe {
 
 template <typename Dtype>
 void ResizeBilinearLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-		const vector<Blob<Dtype>*>& top) {
+    const vector<Blob<Dtype>*>& top) {
   // class ResizeBilinearParameter
   ResizeBilinearParameter rebilinear_param = this->layer_param_.resize_bilinear_param();
   factor_ = rebilinear_param.factor();
@@ -19,7 +19,7 @@ void ResizeBilinearLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 
 template <typename Dtype>
 void ResizeBilinearLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
-		const vector<Blob<Dtype>*>& top) {
+    const vector<Blob<Dtype>*>& top) {
   num_ = bottom[0]->num();
   channels_ = bottom[0]->channels();
   input_height_ = bottom[0]->height();
@@ -27,13 +27,13 @@ void ResizeBilinearLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   ResizeBilinearParameter rebilinear_param = this->layer_param_.resize_bilinear_param();
   if (rebilinear_param.has_factor()) {
     factor_ = rebilinear_param.factor();
-	  output_height_ = static_cast<int>(input_height_ * factor_);
-	  output_width_ = static_cast<int>(input_width_ * factor_);	
+    output_height_ = static_cast<int>(input_height_ * factor_);
+    output_width_ = static_cast<int>(input_width_ * factor_);	
   } else if (rebilinear_param.has_height() && rebilinear_param.has_width()) {
-	  output_height_ = rebilinear_param.height();
-	  output_width_ = rebilinear_param.width();
+    output_height_ = rebilinear_param.height();
+    output_width_ = rebilinear_param.width();
   } else {
-	LOG(FATAL);
+    LOG(FATAL);
   }
   CHECK_GT(input_height_, 0) << "input height shoule be positive";
   CHECK_GT(input_width_, 0) << "input width shoule be positive";
@@ -44,7 +44,7 @@ void ResizeBilinearLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 
 template <typename Dtype>
 void ResizeBilinearLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-		const vector<Blob<Dtype>*>& top) {
+    const vector<Blob<Dtype>*>& top) {
   float height_scale = static_cast<float>(input_height_) / output_height_;
   float width_scale = static_cast<float>(input_width_) / output_width_;
   const Dtype *input_data = bottom[0]->cpu_data();
@@ -76,8 +76,8 @@ void ResizeBilinearLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 
 template <typename Dtype>
 void ResizeBilinearLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
-		const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
-	NOT_IMPLEMENTED;
+    const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+  NOT_IMPLEMENTED;
 }
 
 
