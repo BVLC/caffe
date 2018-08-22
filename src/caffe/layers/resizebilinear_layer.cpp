@@ -80,7 +80,6 @@ void ResizeBilinearLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   NOT_IMPLEMENTED;
 }
 
-
 INSTANTIATE_CLASS(ResizeBilinearLayer);
 REGISTER_LAYER_CLASS(ResizeBilinear);
 
