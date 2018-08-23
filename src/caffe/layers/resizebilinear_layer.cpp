@@ -2,9 +2,9 @@
 #include <cfloat>
 #include <vector>
 
+#include "caffe/layer.hpp"
 #include "caffe/layers/resizebilinear_layer.hpp"
 #include "caffe/util/math_functions.hpp"
-#include "caffe/layer.hpp"
 
 namespace caffe {
 
@@ -12,7 +12,8 @@ template <typename Dtype>
 void ResizeBilinearLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   // class ResizeBilinearParameter
-  ResizeBilinearParameter rebilinear_param = this->layer_param_.resize_bilinear_param();
+  ResizeBilinearParameter rebilinear_param = 
+    this->layer_param_.resize_bilinear_param();
   factor_ = rebilinear_param.factor();
   CHECK_GT(factor_, 0) << "Only supports factor greater than 0";
 } 
@@ -24,7 +25,8 @@ void ResizeBilinearLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   channels_ = bottom[0]->channels();
   input_height_ = bottom[0]->height();
   input_width_ = bottom[0]->width();
-  ResizeBilinearParameter rebilinear_param = this->layer_param_.resize_bilinear_param();
+  ResizeBilinearParameter rebilinear_param = 
+    this->layer_param_.resize_bilinear_param();
   if (rebilinear_param.has_factor()) {
     factor_ = rebilinear_param.factor();
     output_height_ = static_cast<int>(input_height_ * factor_);
@@ -83,4 +85,4 @@ void ResizeBilinearLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 INSTANTIATE_CLASS(ResizeBilinearLayer);
 REGISTER_LAYER_CLASS(ResizeBilinear);
 
-} // namespace caffe
+}  // namespace caffe

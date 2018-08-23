@@ -34,12 +34,12 @@ class ResizeBilinearLayer : public Layer<Dtype> {
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
-  int input_height_, input_width_;	
+  int input_height_, input_width_;
   int output_height_, output_width_;
   int num_, channels_;
-  int factor_;	
+  int factor_;
 };
 
-} // namespace caffe
+}  // namespace caffe
 
-#endif // CAFFE_RESIZEBILINEAR_LAYER_HPP
+#endif  // CAFFE_RESIZEBILINEAR_LAYER_HPP
