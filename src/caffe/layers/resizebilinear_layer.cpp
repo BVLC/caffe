@@ -78,7 +78,6 @@ void ResizeBilinearLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
           output_data[b * channels_ * output_height_ * output_width_ +
             c * output_height_ * output_width_
             + y * output_width_ + x] = interpolation;
-
         }
       }
     }
