@@ -19,7 +19,7 @@ class ResizeBilinearLayerTest : public MultiDeviceTest<TypeParam> {
   ResizeBilinearLayerTest()
     : blob_bottom_(new Blob<Dtype>()),
       blob_top_(new Blob<Dtype>()) {}
-  
+
   virtual void SetUp() {
     Caffe::set_random_seed(1701);
     blob_bottom_->Reshape(2, 3, 6, 5);
@@ -88,68 +88,68 @@ class ResizeBilinearLayerTest : public MultiDeviceTest<TypeParam> {
     //   [1.    1.5     2.      3.5     5.      3.5     2.       2.5     3.      3.   ]
     //   [5.    4.      3.      3.      3.      3.      3.       4.25    5.5     5.5  ]
     //   [9.    6.5     4.      2.5     1.      2.5     4.       6.      8.      8.   ]
-    //   [5.    4.      3.      2.75    2.5     2.75    3.       4.25    5.5     5.5  ] 
+    //   [5.    4.      3.      2.75    2.5     2.75    3.       4.25    5.5     5.5  ]
     //   [1.    1.5     2.      3.      4.      3.      2.       2.5     3.      3.   ]
     //   [1.    1.5     2.      3.      4.      3.      2.       2.5     3.      3.   ]
     Dtype epsilon = 1e-8;
-    for (int i = 0; i < 16 * num * channels; i += 16) { 
-      EXPECT_NEAR(blob_top_->cpu_data()[i + 0], 1., epsilon); 
-      EXPECT_NEAR(blob_top_->cpu_data()[i + 1], 2., epsilon); 
+    for (int i = 0; i < 16 * num * channels; i += 16) {
+      EXPECT_NEAR(blob_top_->cpu_data()[i + 0], 1., epsilon);
+      EXPECT_NEAR(blob_top_->cpu_data()[i + 1], 2., epsilon);
       EXPECT_NEAR(blob_top_->cpu_data()[i + 2], 3., epsilon);
       EXPECT_NEAR(blob_top_->cpu_data()[i + 3], 3., epsilon);
       EXPECT_NEAR(blob_top_->cpu_data()[i + 4], 2.5, epsilon);
-      EXPECT_NEAR(blob_top_->cpu_data()[i + 5], 4.25, epsilon); 
-      EXPECT_NEAR(blob_top_->cpu_data()[i + 6], 6., epsilon); 
+      EXPECT_NEAR(blob_top_->cpu_data()[i + 5], 4.25, epsilon);
+      EXPECT_NEAR(blob_top_->cpu_data()[i + 6], 6., epsilon);
       EXPECT_NEAR(blob_top_->cpu_data()[i + 7], 6., epsilon);
       EXPECT_NEAR(blob_top_->cpu_data()[i + 8], 4., epsilon);
       EXPECT_NEAR(blob_top_->cpu_data()[i + 9], 6.5, epsilon);
-      EXPECT_NEAR(blob_top_->cpu_data()[i + 10], 9., epsilon); 
-      EXPECT_NEAR(blob_top_->cpu_data()[i + 11], 9., epsilon); 
+      EXPECT_NEAR(blob_top_->cpu_data()[i + 10], 9., epsilon);
+      EXPECT_NEAR(blob_top_->cpu_data()[i + 11], 9., epsilon);
       EXPECT_NEAR(blob_top_->cpu_data()[i + 12], 4., epsilon);
       EXPECT_NEAR(blob_top_->cpu_data()[i + 13], 6.5, epsilon);
       EXPECT_NEAR(blob_top_->cpu_data()[i + 14], 9., epsilon);
-      EXPECT_NEAR(blob_top_->cpu_data()[i + 15], 9., epsilon); 
-//    EXPECT_NEAR(blob_top_->cpu_data()[i + 16], 3., epsilon); 
+      EXPECT_NEAR(blob_top_->cpu_data()[i + 15], 9., epsilon);
+//    EXPECT_NEAR(blob_top_->cpu_data()[i + 16], 3., epsilon);
 //    EXPECT_NEAR(blob_top_->cpu_data()[i + 17], 4.25, epsilon);
 //    EXPECT_NEAR(blob_top_->cpu_data()[i + 18], 5.5, epsilon);
-//    EXPECT_NEAR(blob_top_->cpu_data()[i + 19], 5.5, epsilon);  
-//    EXPECT_NEAR(blob_top_->cpu_data()[i + 20], 9., epsilon); 
-//    EXPECT_NEAR(blob_top_->cpu_data()[i + 21], 6.5, epsilon); 
+//    EXPECT_NEAR(blob_top_->cpu_data()[i + 19], 5.5, epsilon);
+//    EXPECT_NEAR(blob_top_->cpu_data()[i + 20], 9., epsilon);
+//    EXPECT_NEAR(blob_top_->cpu_data()[i + 21], 6.5, epsilon);
 //    EXPECT_NEAR(blob_top_->cpu_data()[i + 22], 4., epsilon);
 //    EXPECT_NEAR(blob_top_->cpu_data()[i + 23], 2.5, epsilon);
 //    EXPECT_NEAR(blob_top_->cpu_data()[i + 24], 1., epsilon);
-//    EXPECT_NEAR(blob_top_->cpu_data()[i + 25], 2.5, epsilon); 
-//    EXPECT_NEAR(blob_top_->cpu_data()[i + 26], 4., epsilon); 
+//    EXPECT_NEAR(blob_top_->cpu_data()[i + 25], 2.5, epsilon);
+//    EXPECT_NEAR(blob_top_->cpu_data()[i + 26], 4., epsilon);
 //    EXPECT_NEAR(blob_top_->cpu_data()[i + 27], 6., epsilon);
 //    EXPECT_NEAR(blob_top_->cpu_data()[i + 28], 8., epsilon);
 //    EXPECT_NEAR(blob_top_->cpu_data()[i + 29], 8., epsilon);
-//    EXPECT_NEAR(blob_top_->cpu_data()[i + 30], 5., epsilon); 
-//    EXPECT_NEAR(blob_top_->cpu_data()[i + 31], 4., epsilon); 
+//    EXPECT_NEAR(blob_top_->cpu_data()[i + 30], 5., epsilon);
+//    EXPECT_NEAR(blob_top_->cpu_data()[i + 31], 4., epsilon);
 //    EXPECT_NEAR(blob_top_->cpu_data()[i + 32], 3., epsilon);
 //    EXPECT_NEAR(blob_top_->cpu_data()[i + 33], 2.75, epsilon);
 //    EXPECT_NEAR(blob_top_->cpu_data()[i + 34], 2.5, epsilon);
-//    EXPECT_NEAR(blob_top_->cpu_data()[i + 35], 2.75, epsilon); 
-//    EXPECT_NEAR(blob_top_->cpu_data()[i + 36], 3., epsilon); 
+//    EXPECT_NEAR(blob_top_->cpu_data()[i + 35], 2.75, epsilon);
+//    EXPECT_NEAR(blob_top_->cpu_data()[i + 36], 3., epsilon);
 //    EXPECT_NEAR(blob_top_->cpu_data()[i + 37], 4.25, epsilon);
 //    EXPECT_NEAR(blob_top_->cpu_data()[i + 38], 5.5, epsilon);
 //    EXPECT_NEAR(blob_top_->cpu_data()[i + 39], 5.5, epsilon);
-//    EXPECT_NEAR(blob_top_->cpu_data()[i + 40], 1., epsilon); 
-//    EXPECT_NEAR(blob_top_->cpu_data()[i + 41], 1.5, epsilon); 
+//    EXPECT_NEAR(blob_top_->cpu_data()[i + 40], 1., epsilon);
+//    EXPECT_NEAR(blob_top_->cpu_data()[i + 41], 1.5, epsilon);
 //    EXPECT_NEAR(blob_top_->cpu_data()[i + 42], 2., epsilon);
 //    EXPECT_NEAR(blob_top_->cpu_data()[i + 43], 3., epsilon);
 //    EXPECT_NEAR(blob_top_->cpu_data()[i + 44], 4., epsilon);
-//    EXPECT_NEAR(blob_top_->cpu_data()[i + 45], 3., epsilon); 
-//    EXPECT_NEAR(blob_top_->cpu_data()[i + 46], 2., epsilon); 
+//    EXPECT_NEAR(blob_top_->cpu_data()[i + 45], 3., epsilon);
+//    EXPECT_NEAR(blob_top_->cpu_data()[i + 46], 2., epsilon);
 //    EXPECT_NEAR(blob_top_->cpu_data()[i + 47], 2.5, epsilon);
 //    EXPECT_NEAR(blob_top_->cpu_data()[i + 48], 3., epsilon);
 //    EXPECT_NEAR(blob_top_->cpu_data()[i + 49], 3., epsilon);
-//    EXPECT_NEAR(blob_top_->cpu_data()[i + 50], 1., epsilon); 
-//    EXPECT_NEAR(blob_top_->cpu_data()[i + 51], 1.5, epsilon); 
+//    EXPECT_NEAR(blob_top_->cpu_data()[i + 50], 1., epsilon);
+//    EXPECT_NEAR(blob_top_->cpu_data()[i + 51], 1.5, epsilon);
 //    EXPECT_NEAR(blob_top_->cpu_data()[i + 52], 2., epsilon);
 //    EXPECT_NEAR(blob_top_->cpu_data()[i + 53], 3., epsilon);
 //    EXPECT_NEAR(blob_top_->cpu_data()[i + 54], 4., epsilon);
-//    EXPECT_NEAR(blob_top_->cpu_data()[i + 55], 3., epsilon); 
-//    EXPECT_NEAR(blob_top_->cpu_data()[i + 56], 2., epsilon); 
+//    EXPECT_NEAR(blob_top_->cpu_data()[i + 55], 3., epsilon);
+//    EXPECT_NEAR(blob_top_->cpu_data()[i + 56], 2., epsilon);
 //    EXPECT_NEAR(blob_top_->cpu_data()[i + 57], 2.5, epsilon);
 //    EXPECT_NEAR(blob_top_->cpu_data()[i + 58], 3., epsilon);
 //    EXPECT_NEAR(blob_top_->cpu_data()[i + 59], 3., epsilon);
@@ -163,5 +163,5 @@ TYPED_TEST(ResizeBilinearLayerTest, TestResizeBilinear) {
   this->TestForward();
 }
 
-} // namespace caffe
+}  // namespace caffe
 
