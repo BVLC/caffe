@@ -12,11 +12,11 @@ template <typename Dtype>
 void ResizeBilinearLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   // class ResizeBilinearParameter
-  ResizeBilinearParameter rebilinear_param = 
+  ResizeBilinearParameter rebilinear_param =
     this->layer_param_.resize_bilinear_param();
   factor_ = rebilinear_param.factor();
   CHECK_GT(factor_, 0) << "Only supports factor greater than 0";
-} 
+}
 
 template <typename Dtype>
 void ResizeBilinearLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
@@ -25,12 +25,12 @@ void ResizeBilinearLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   channels_ = bottom[0]->channels();
   input_height_ = bottom[0]->height();
   input_width_ = bottom[0]->width();
-  ResizeBilinearParameter rebilinear_param = 
+  ResizeBilinearParameter rebilinear_param =
     this->layer_param_.resize_bilinear_param();
   if (rebilinear_param.has_factor()) {
     factor_ = rebilinear_param.factor();
     output_height_ = static_cast<int>(input_height_ * factor_);
-    output_width_ = static_cast<int>(input_width_ * factor_);	
+    output_width_ = static_cast<int>(input_width_ * factor_);
   } else if (rebilinear_param.has_height() && rebilinear_param.has_width()) {
     output_height_ = rebilinear_param.height();
     output_width_ = rebilinear_param.width();
@@ -61,15 +61,21 @@ void ResizeBilinearLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
         int x0 = static_cast<int>(std::floor(input_x));
         int x1 = std::min(x0 + 1, input_width_ - 1);
         for (int c = 0; c < channels_; ++c) {
-          Dtype interpolation = static_cast<Dtype>(input_data[b * channels_ * input_height_ * input_width_ + c * input_height_ * input_width_ + y0 * input_width_ + x0] *
-                                    (1 - (input_y - y0)) * (1 - (input_x - x0)) +
-                                 input_data[b * channels_ * input_height_ * input_width_ + c * input_height_ * input_width_ + y1 * input_width_ + x0] *
-                                    (input_y - y0) * (1 - (input_x - x0)) +
-                                 input_data[b * channels_ * input_height_ * input_width_ + c * input_height_ * input_width_ + y0 * input_width_ + x1] *
-                                    (1 - (input_y - y0)) * (input_x - x0) +
-                                 input_data[b * channels_ * input_height_ * input_width_ + c * input_height_ * input_width_ + y1 * input_width_ + x1] *
-                                    (input_y - y0) * (input_x - x0));
-          output_data[b * channels_ * output_height_ * output_width_ + c * output_height_ * output_width_ + y * output_width_ + x] = interpolation;
+          Dtype interpolation = 
+            static_cast<Dtype>(input_data[b * channels_ * input_height_ * 
+                input_width_ + c * input_height_ * input_width_ + y0 * input_width_ + x0] 
+                  * (1 - (input_y - y0)) * (1 - (input_x - x0)) +
+                input_data[b * channels_ * input_height_ * input_width_ + 
+                c * input_height_ * input_width_ + y1 * input_width_ + x0] 
+                  * (input_y - y0) * (1 - (input_x - x0)) +
+                input_data[b * channels_ * input_height_ * input_width_ + 
+                c * input_height_ * input_width_ + y0 * input_width_ + x1] 
+                  * (1 - (input_y - y0)) * (input_x - x0) +
+                input_data[b * channels_ * input_height_ * input_width_ + 
+                c * input_height_ * input_width_ + y1 * input_width_ + x1]
+                  * (input_y - y0) * (input_x - x0));
+          output_data[b * channels_ * output_height_ * output_width_ + 
+            c * output_height_ * output_width_ + y * output_width_ + x] = interpolation;
         }
       }
     }

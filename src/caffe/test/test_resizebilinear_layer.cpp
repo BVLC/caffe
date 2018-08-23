@@ -15,6 +15,7 @@ namespace caffe {
 template <typename TypeParam>
 class ResizeBilinearLayerTest : public MultiDeviceTest<TypeParam> {
   typedef typename TypeParam::Dtype Dtype;
+
  protected:
   ResizeBilinearLayerTest()
     : blob_bottom_(new Blob<Dtype>()),
@@ -43,7 +44,8 @@ class ResizeBilinearLayerTest : public MultiDeviceTest<TypeParam> {
 
   void TestForward() {
     LayerParameter layer_param;
-    ResizeBilinearParameter* rebilinear_param = layer_param.mutable_resize_bilinear_param();
+    ResizeBilinearParameter* rebilinear_param = 
+      layer_param.mutable_resize_bilinear_param();
     rebilinear_param->set_factor(2);
     const int num = 2;
     const int channels = 2;
@@ -85,12 +87,12 @@ class ResizeBilinearLayerTest : public MultiDeviceTest<TypeParam> {
     //   [4.    6.5     9.      9.]
     //   [4.    6.5     9.      9.]
     // test case 2 expected output: NCHW(2, 2, 6, 10)
-    //   [1.    1.5     2.      3.5     5.      3.5     2.       2.5     3.      3.   ]
-    //   [5.    4.      3.      3.      3.      3.      3.       4.25    5.5     5.5  ]
-    //   [9.    6.5     4.      2.5     1.      2.5     4.       6.      8.      8.   ]
-    //   [5.    4.      3.      2.75    2.5     2.75    3.       4.25    5.5     5.5  ]
-    //   [1.    1.5     2.      3.      4.      3.      2.       2.5     3.      3.   ]
-    //   [1.    1.5     2.      3.      4.      3.      2.       2.5     3.      3.   ]
+    //   [1.  1.5   2.    3.5   5.    3.5   2.     2.5   3.    3.   ]
+    //   [5.  4.    3.    3.    3.    3.    3.     4.25  5.5   5.5  ]
+    //   [9.  6.5   4.    2.5   1.    2.5   4.     6.    8.    8.   ]
+    //   [5.  4.    3.    2.75  2.5   2.75  3.     4.25  5.5   5.5  ]
+    //   [1.  1.5   2.    3.    4.    3.    2.     2.5   3.    3.   ]
+    //   [1.  1.5   2.    3.    4.    3.    2.     2.5   3.    3.   ]
     Dtype epsilon = 1e-8;
     for (int i = 0; i < 16 * num * channels; i += 16) {
       EXPECT_NEAR(blob_top_->cpu_data()[i + 0], 1., epsilon);
