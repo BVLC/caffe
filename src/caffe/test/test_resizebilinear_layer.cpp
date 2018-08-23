@@ -44,7 +44,7 @@ class ResizeBilinearLayerTest : public MultiDeviceTest<TypeParam> {
 
   void TestForward() {
     LayerParameter layer_param;
-    ResizeBilinearParameter* rebilinear_param = 
+    ResizeBilinearParameter* rebilinear_param =
       layer_param.mutable_resize_bilinear_param();
     rebilinear_param->set_factor(2);
     const int num = 2;

@@ -61,21 +61,24 @@ void ResizeBilinearLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
         int x0 = static_cast<int>(std::floor(input_x));
         int x1 = std::min(x0 + 1, input_width_ - 1);
         for (int c = 0; c < channels_; ++c) {
-          Dtype interpolation = 
-            static_cast<Dtype>(input_data[b * channels_ * input_height_ * 
-                input_width_ + c * input_height_ * input_width_ + y0 * input_width_ + x0] 
+          Dtype interpolation =
+            static_cast<Dtype>(input_data[b * channels_ * input_height_ *
+                input_width_ + c * input_height_ * input_width_ +
+                y0 * input_width_ + x0]
                   * (1 - (input_y - y0)) * (1 - (input_x - x0)) +
-                input_data[b * channels_ * input_height_ * input_width_ + 
-                c * input_height_ * input_width_ + y1 * input_width_ + x0] 
+                input_data[b * channels_ * input_height_ * input_width_ +
+                c * input_height_ * input_width_ + y1 * input_width_ + x0]
                   * (input_y - y0) * (1 - (input_x - x0)) +
-                input_data[b * channels_ * input_height_ * input_width_ + 
-                c * input_height_ * input_width_ + y0 * input_width_ + x1] 
+                input_data[b * channels_ * input_height_ * input_width_ +
+                c * input_height_ * input_width_ + y0 * input_width_ + x1]
                   * (1 - (input_y - y0)) * (input_x - x0) +
-                input_data[b * channels_ * input_height_ * input_width_ + 
+                input_data[b * channels_ * input_height_ * input_width_ +
                 c * input_height_ * input_width_ + y1 * input_width_ + x1]
                   * (input_y - y0) * (input_x - x0));
-          output_data[b * channels_ * output_height_ * output_width_ + 
-            c * output_height_ * output_width_ + y * output_width_ + x] = interpolation;
+          output_data[b * channels_ * output_height_ * output_width_ +
+            c * output_height_ * output_width_
+            + y * output_width_ + x] = interpolation;
+
         }
       }
     }
