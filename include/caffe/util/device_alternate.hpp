@@ -90,7 +90,8 @@ const int CAFFE_CUDA_MAX_BLOCK_NUM = 65535;
 
 // CUDA: number of blocks for threads.
 inline int CAFFE_GET_BLOCKS(const int N) {
-  const int num_blocks = (N + CAFFE_CUDA_NUM_THREADS - 1) / CAFFE_CUDA_NUM_THREADS;
+  const int num_blocks =
+      (N + CAFFE_CUDA_NUM_THREADS - 1) / CAFFE_CUDA_NUM_THREADS;
   return std::min(num_blocks, CAFFE_CUDA_MAX_BLOCK_NUM);
 }
 
