@@ -83,10 +83,13 @@ const char* curandGetErrorString(curandStatus_t error);
 
 // CUDA: use 512 threads per block
 const int CAFFE_CUDA_NUM_THREADS = 512;
+// CUDA: The maximum number of CUDA Block x
+const int CAFFE_CUDA_MAX_BLOCK_NUM = 65535;
 
 // CUDA: number of blocks for threads.
 inline int CAFFE_GET_BLOCKS(const int N) {
-  return (N + CAFFE_CUDA_NUM_THREADS - 1) / CAFFE_CUDA_NUM_THREADS;
+  const int num_blocks = (N + CAFFE_CUDA_NUM_THREADS - 1) / CAFFE_CUDA_NUM_THREADS;
+  return num_blocks < CAFFE_CUDA_MAX_BLOCK_NUM ? num_blocks : CAFFE_CUDA_MAX_BLOCK_NUM;
 }
 
 }  // namespace caffe
