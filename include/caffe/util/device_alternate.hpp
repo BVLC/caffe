@@ -77,6 +77,8 @@ void classname<Dtype>::funcname##_##gpu(const vector<Blob<Dtype>*>& top, \
 
 namespace caffe {
 
+#include <algorithm>
+
 // CUDA: library error reporting.
 const char* cublasGetErrorString(cublasStatus_t error);
 const char* curandGetErrorString(curandStatus_t error);
@@ -89,7 +91,7 @@ const int CAFFE_CUDA_MAX_BLOCK_NUM = 65535;
 // CUDA: number of blocks for threads.
 inline int CAFFE_GET_BLOCKS(const int N) {
   const int num_blocks = (N + CAFFE_CUDA_NUM_THREADS - 1) / CAFFE_CUDA_NUM_THREADS;
-  return num_blocks < CAFFE_CUDA_MAX_BLOCK_NUM ? num_blocks : CAFFE_CUDA_MAX_BLOCK_NUM;
+  return std::min(num_blocks, CAFFE_CUDA_MAX_BLOCK_NUM);
 }
 
 }  // namespace caffe
