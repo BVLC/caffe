@@ -2,6 +2,8 @@
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 #include <google/protobuf/text_format.h>
 
+#include <boost/filesystem.hpp>
+
 #include <map>
 #include <string>
 
@@ -1018,7 +1020,13 @@ void UpgradeNetBatchNorm(NetParameter* net_param) {
     // the previous BatchNorm layer definition.
     if (net_param->layer(i).type() == "BatchNorm"
         && net_param->layer(i).param_size() == 3) {
-      net_param->mutable_layer(i)->clear_param();
+      // set lr_mult and decay_mult to zero. leave all other param intact.
+      for (int ip = 0; ip < net_param->layer(i).param_size(); ip++) {
+        ParamSpec* fixed_param_spec =
+          net_param->mutable_layer(i)->mutable_param(ip);
+        fixed_param_spec->set_lr_mult(0.f);
+        fixed_param_spec->set_decay_mult(0.f);
+      }
     }
   }
 }
@@ -1089,12 +1097,31 @@ bool UpgradeSolverAsNeeded(const string& param_file, SolverParameter* param) {
   return success;
 }
 
+// Replaces snapshot_prefix of SolverParameter if it is not specified
+// or is set to directory
+void UpgradeSnapshotPrefixProperty(const string& param_file,
+                                   SolverParameter* param) {
+  using boost::filesystem::path;
+  using boost::filesystem::is_directory;
+  if (!param->has_snapshot_prefix()) {
+    param->set_snapshot_prefix(path(param_file).replace_extension().string());
+    LOG(INFO) << "snapshot_prefix was not specified and is set to "
+                + param->snapshot_prefix();
+  } else if (is_directory(param->snapshot_prefix())) {
+    param->set_snapshot_prefix((path(param->snapshot_prefix()) /
+                               path(param_file).stem()).string());
+    LOG(INFO) << "snapshot_prefix was a directory and is replaced to "
+                + param->snapshot_prefix();
+  }
+}
+
 // Read parameters from a file into a SolverParameter proto message.
 void ReadSolverParamsFromTextFileOrDie(const string& param_file,
                                        SolverParameter* param) {
   CHECK(ReadProtoFromTextFile(param_file, param))
       << "Failed to parse SolverParameter file: " << param_file;
   UpgradeSolverAsNeeded(param_file, param);
+  UpgradeSnapshotPrefixProperty(param_file, param);
 }
 
 }  // namespace caffe

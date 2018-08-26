@@ -59,18 +59,60 @@ def get_edge_label(layer):
     return edge_label
 
 
-def get_layer_label(layer, rankdir):
+def get_layer_lr_mult(layer):
+    """Get the learning rate multipliers.
+
+    Get the learning rate multipliers for the given layer. Assumes a
+    Convolution/Deconvolution/InnerProduct layer.
+
+    Parameters
+    ----------
+    layer : caffe_pb2.LayerParameter
+        A Convolution, Deconvolution, or InnerProduct layer.
+
+    Returns
+    -------
+    learning_rates : tuple of floats
+        the learning rate multipliers for the weights and biases.
+    """
+    if layer.type not in ['Convolution', 'Deconvolution', 'InnerProduct']:
+        raise ValueError("%s layers do not have a "
+                         "learning rate multiplier" % layer.type)
+
+    if not hasattr(layer, 'param'):
+        return (1.0, 1.0)
+
+    params = getattr(layer, 'param')
+
+    if len(params) == 0:
+        return (1.0, 1.0)
+
+    if len(params) == 1:
+        lrm0 = getattr(params[0],'lr_mult', 1.0)
+        return (lrm0, 1.0)
+
+    if len(params) == 2:
+        lrm0, lrm1 = [getattr(p,'lr_mult', 1.0) for p in params]
+        return (lrm0, lrm1)
+
+    raise ValueError("Could not parse the learning rate multiplier")
+
+
+def get_layer_label(layer, rankdir, display_lrm=False):
     """Define node label based on layer type.
 
     Parameters
     ----------
-    layer : ?
+    layer : caffe_pb2.LayerParameter
     rankdir : {'LR', 'TB', 'BT'}
         Direction of graph layout.
+    display_lrm : boolean, optional
+        If True include the learning rate multipliers in the label (default is
+        False).
 
     Returns
     -------
-    string :
+    node_label : string
         A label for the current layer
     """
 
@@ -81,36 +123,54 @@ def get_layer_label(layer, rankdir):
     else:
         # If graph orientation is horizontal, vertical space is free and
         # horizontal space is not; separate words with newlines
-        separator = '\\n'
+        separator = r'\n'
 
-    if layer.type == 'Convolution' or layer.type == 'Deconvolution':
-        # Outer double quotes needed or else colon characters don't parse
-        # properly
-        node_label = '"%s%s(%s)%skernel size: %d%sstride: %d%spad: %d"' %\
-                     (layer.name,
-                      separator,
-                      layer.type,
-                      separator,
-                      layer.convolution_param.kernel_size[0] if len(layer.convolution_param.kernel_size._values) else 1,
-                      separator,
-                      layer.convolution_param.stride[0] if len(layer.convolution_param.stride._values) else 1,
-                      separator,
-                      layer.convolution_param.pad[0] if len(layer.convolution_param.pad._values) else 0)
-    elif layer.type == 'Pooling':
+    # Initializes a list of descriptors that will be concatenated into the
+    # `node_label`
+    descriptors_list = []
+    # Add the layer's name
+    descriptors_list.append(layer.name)
+    # Add layer's type
+    if layer.type == 'Pooling':
         pooling_types_dict = get_pooling_types_dict()
-        node_label = '"%s%s(%s %s)%skernel size: %d%sstride: %d%spad: %d"' %\
-                     (layer.name,
-                      separator,
-                      pooling_types_dict[layer.pooling_param.pool],
-                      layer.type,
-                      separator,
-                      layer.pooling_param.kernel_size,
-                      separator,
-                      layer.pooling_param.stride,
-                      separator,
-                      layer.pooling_param.pad)
+        layer_type = '(%s %s)' % (layer.type,
+                                  pooling_types_dict[layer.pooling_param.pool])
     else:
-        node_label = '"%s%s(%s)"' % (layer.name, separator, layer.type)
+        layer_type = '(%s)' % layer.type
+    descriptors_list.append(layer_type)
+
+    # Describe parameters for spatial operation layers
+    if layer.type in ['Convolution', 'Deconvolution', 'Pooling']:
+        if layer.type == 'Pooling':
+            kernel_size = layer.pooling_param.kernel_size
+            stride = layer.pooling_param.stride
+            padding = layer.pooling_param.pad
+        else:
+            kernel_size = layer.convolution_param.kernel_size[0] if \
+                len(layer.convolution_param.kernel_size) else 1
+            stride = layer.convolution_param.stride[0] if \
+                len(layer.convolution_param.stride) else 1
+            padding = layer.convolution_param.pad[0] if \
+                len(layer.convolution_param.pad) else 0
+        spatial_descriptor = separator.join([
+            "kernel size: %d" % kernel_size,
+            "stride: %d" % stride,
+            "pad: %d" % padding,
+        ])
+        descriptors_list.append(spatial_descriptor)
+
+    # Add LR multiplier for learning layers
+    if display_lrm and layer.type in ['Convolution', 'Deconvolution', 'InnerProduct']:
+        lrm0, lrm1 = get_layer_lr_mult(layer)
+        if any([lrm0, lrm1]):
+            lr_mult = "lr mult: %.1f, %.1f" % (lrm0, lrm1)
+            descriptors_list.append(lr_mult)
+
+    # Concatenate the descriptors into one label
+    node_label = separator.join(descriptors_list)
+    # Outer double quotes needed or else colon characters don't parse
+    # properly
+    node_label = '"%s"' % node_label
     return node_label
 
 
@@ -127,7 +187,7 @@ def choose_color_by_layertype(layertype):
     return color
 
 
-def get_pydot_graph(caffe_net, rankdir, label_edges=True, phase=None):
+def get_pydot_graph(caffe_net, rankdir, label_edges=True, phase=None, display_lrm=False):
     """Create a data structure which represents the `caffe_net`.
 
     Parameters
@@ -140,6 +200,9 @@ def get_pydot_graph(caffe_net, rankdir, label_edges=True, phase=None):
     phase : {caffe_pb2.Phase.TRAIN, caffe_pb2.Phase.TEST, None} optional
         Include layers from this network phase.  If None, include all layers.
         (the default is None)
+    display_lrm : boolean, optional
+        If True display the learning rate multipliers when relevant (default is
+        False).
 
     Returns
     -------
@@ -164,7 +227,7 @@ def get_pydot_graph(caffe_net, rankdir, label_edges=True, phase=None):
             included = included and not layer_phase.phase == phase
           if not included:
             continue
-        node_label = get_layer_label(layer, rankdir)
+        node_label = get_layer_label(layer, rankdir, display_lrm=display_lrm)
         node_name = "%s_%s" % (layer.name, layer.type)
         if (len(layer.bottom) == 1 and len(layer.top) == 1 and
            layer.bottom[0] == layer.top[0]):
@@ -202,7 +265,7 @@ def get_pydot_graph(caffe_net, rankdir, label_edges=True, phase=None):
     return pydot_graph
 
 
-def draw_net(caffe_net, rankdir, ext='png', phase=None):
+def draw_net(caffe_net, rankdir, ext='png', phase=None, display_lrm=False):
     """Draws a caffe net and returns the image string encoded using the given
     extension.
 
@@ -214,16 +277,20 @@ def draw_net(caffe_net, rankdir, ext='png', phase=None):
     phase : {caffe_pb2.Phase.TRAIN, caffe_pb2.Phase.TEST, None} optional
         Include layers from this network phase.  If None, include all layers.
         (the default is None)
+    display_lrm : boolean, optional
+        If True display the learning rate multipliers for the learning layers
+        (default is False).
 
     Returns
     -------
     string :
         Postscript representation of the graph.
     """
-    return get_pydot_graph(caffe_net, rankdir, phase=phase).create(format=ext)
+    return get_pydot_graph(caffe_net, rankdir, phase=phase,
+                           display_lrm=display_lrm).create(format=ext)
 
 
-def draw_net_to_file(caffe_net, filename, rankdir='LR', phase=None):
+def draw_net_to_file(caffe_net, filename, rankdir='LR', phase=None, display_lrm=False):
     """Draws a caffe net, and saves it to file using the format given as the
     file extension. Use '.raw' to output raw text that you can manually feed
     to graphviz to draw graphs.
@@ -238,7 +305,10 @@ def draw_net_to_file(caffe_net, filename, rankdir='LR', phase=None):
     phase : {caffe_pb2.Phase.TRAIN, caffe_pb2.Phase.TEST, None} optional
         Include layers from this network phase.  If None, include all layers.
         (the default is None)
+    display_lrm : boolean, optional
+        If True display the learning rate multipliers for the learning layers
+        (default is False).
     """
     ext = filename[filename.rfind('.')+1:]
     with open(filename, 'wb') as fid:
-        fid.write(draw_net(caffe_net, rankdir, ext, phase))
+        fid.write(draw_net(caffe_net, rankdir, ext, phase, display_lrm))

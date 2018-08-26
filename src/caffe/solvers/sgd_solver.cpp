@@ -30,12 +30,16 @@ Dtype SGDSolver<Dtype>::GetLearningRate() {
   if (lr_policy == "fixed") {
     rate = this->param_.base_lr();
   } else if (lr_policy == "step") {
+    CHECK_GT(this->param_.stepsize(), 0);
     this->current_step_ = this->iter_ / this->param_.stepsize();
+    CHECK_GE(this->param_.gamma(), 0);
     rate = this->param_.base_lr() *
         pow(this->param_.gamma(), this->current_step_);
   } else if (lr_policy == "exp") {
+    CHECK_GE(this->param_.gamma(), 0);
     rate = this->param_.base_lr() * pow(this->param_.gamma(), this->iter_);
   } else if (lr_policy == "inv") {
+    CHECK_GE(this->param_.gamma(), 0);
     rate = this->param_.base_lr() *
         pow(Dtype(1) + this->param_.gamma() * this->iter_,
             - this->param_.power());
@@ -46,6 +50,7 @@ Dtype SGDSolver<Dtype>::GetLearningRate() {
       LOG(INFO) << "MultiStep Status: Iteration " <<
       this->iter_ << ", step = " << this->current_step_;
     }
+    CHECK_GE(this->param_.gamma(), 0);
     rate = this->param_.base_lr() *
         pow(this->param_.gamma(), this->current_step_);
   } else if (lr_policy == "poly") {
@@ -53,6 +58,8 @@ Dtype SGDSolver<Dtype>::GetLearningRate() {
         (Dtype(this->iter_) / Dtype(this->param_.max_iter())),
         this->param_.power());
   } else if (lr_policy == "sigmoid") {
+    CHECK_GE(this->param_.gamma(), 0);
+    CHECK_GT(this->param_.stepsize(), 0);
     rate = this->param_.base_lr() * (Dtype(1.) /
         (Dtype(1.) + exp(-this->param_.gamma() * (Dtype(this->iter_) -
           Dtype(this->param_.stepsize())))));
@@ -100,10 +107,10 @@ void SGDSolver<Dtype>::ClipGradients() {
 
 template <typename Dtype>
 void SGDSolver<Dtype>::ApplyUpdate() {
-  CHECK(Caffe::root_solver());
   Dtype rate = GetLearningRate();
   if (this->param_.display() && this->iter_ % this->param_.display() == 0) {
-    LOG(INFO) << "Iteration " << this->iter_ << ", lr = " << rate;
+    LOG_IF(INFO, Caffe::root_solver()) << "Iteration " << this->iter_
+        << ", lr = " << rate;
   }
   ClipGradients();
   for (int param_id = 0; param_id < this->net_->learnable_params().size();
@@ -113,6 +120,10 @@ void SGDSolver<Dtype>::ApplyUpdate() {
     ComputeUpdateValue(param_id, rate);
   }
   this->net_->Update();
+
+  // Increment the internal iter_ counter -- its value should always indicate
+  // the number of times the weights have been updated.
+  ++this->iter_;
 }
 
 template <typename Dtype>
@@ -278,6 +289,8 @@ void SGDSolver<Dtype>::SnapshotSolverStateToBinaryProto(
 template <typename Dtype>
 void SGDSolver<Dtype>::SnapshotSolverStateToHDF5(
     const string& model_filename) {
+// This code is taken from https://github.com/sh1r0/caffe-android-lib
+#ifdef USE_HDF5
   string snapshot_filename =
       Solver<Dtype>::SnapshotFilename(".solverstate.h5");
   LOG(INFO) << "Snapshotting solver state to HDF5 file " << snapshot_filename;
@@ -299,6 +312,11 @@ void SGDSolver<Dtype>::SnapshotSolverStateToHDF5(
   }
   H5Gclose(history_hid);
   H5Fclose(file_hid);
+// This code is taken from https://github.com/sh1r0/caffe-android-lib
+#else
+  LOG(FATAL) << "SnapshotSolverStateToHDF5 requires hdf5;"
+             << " compile with USE_HDF5.";
+#endif  // USE_HDF5
 }
 
 template <typename Dtype>
@@ -323,6 +341,7 @@ void SGDSolver<Dtype>::RestoreSolverStateFromBinaryProto(
 
 template <typename Dtype>
 void SGDSolver<Dtype>::RestoreSolverStateFromHDF5(const string& state_file) {
+#ifdef USE_HDF5
   hid_t file_hid = H5Fopen(state_file.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
   CHECK_GE(file_hid, 0) << "Couldn't open solver state file " << state_file;
   this->iter_ = hdf5_load_int(file_hid, "iter");
@@ -344,6 +363,10 @@ void SGDSolver<Dtype>::RestoreSolverStateFromHDF5(const string& state_file) {
   }
   H5Gclose(history_hid);
   H5Fclose(file_hid);
+#else
+  LOG(FATAL) << "RestoreSolverStateFromHDF5 requires hdf5;"
+             << " compile with USE_HDF5.";
+#endif  // USE_HDF5
 }
 
 INSTANTIATE_CLASS(SGDSolver);

@@ -51,6 +51,7 @@ class PoolingLayer : public Layer<Dtype> {
   int height_, width_;
   int pooled_height_, pooled_width_;
   bool global_pooling_;
+  PoolingParameter_RoundMode round_mode_;
   Blob<Dtype> rand_idx_;
   Blob<int> max_idx_;
 };
