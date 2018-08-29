@@ -64,7 +64,7 @@ void MOELayer<Dtype, MItype, MOtype>::Forward_gpu(
   }
 
   // Generate load balancing loss
-  if (this->phase_ == caffe::TRAIN) {
+  if (this->phase_ == Phase::TRAIN) {
     MOtype* observed_count = top[top.size()-2]->mutable_cpu_data();
     MOtype* expected_count = top[top.size()-1]->mutable_cpu_data();
     for (size_t j = 0; j < gating_->shape()[1]; ++j) {
@@ -101,7 +101,7 @@ void MOELayer<Dtype, MItype, MOtype>::Forward_gpu(
   }
 
   // Forward experts
-  if (this->phase_ == caffe::TEST &&
+  if (this->phase_ == Phase::TEST &&
       !this->layer_param().moe_param().full_forward()) {
     // Forward expert networks (partial, only forward selected experts
     // per batch item)

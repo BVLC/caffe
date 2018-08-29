@@ -262,11 +262,11 @@ int Caffe::FindDevice(const int start_id) {
 
 class Caffe::RNG::Generator {
  public:
-  Generator() : rng_(new caffe::rng_t(cluster_seedgen())) {}
-  explicit Generator(size_t seed) : rng_(new caffe::rng_t(seed)) {}
-  caffe::rng_t* rng() {return rng_.get();}
+  Generator() : rng_(new rng_t(cluster_seedgen())) {}
+  explicit Generator(size_t seed) : rng_(new rng_t(seed)) {}
+  rng_t* rng() {return rng_.get();}
  private:
-  shared_ptr<caffe::rng_t> rng_;
+  shared_ptr<rng_t> rng_;
 };
 
 Caffe::RNG::RNG() : generator_(new Generator()) {}
@@ -657,16 +657,16 @@ int Caffe::FindDevice(const int start_id) {
 class Caffe::RNG::Generator {
  public:
   Generator()
-      : rng_(new caffe::rng_t(cluster_seedgen())) {
+      : rng_(new rng_t(cluster_seedgen())) {
   }
   explicit Generator(size_t seed)
-      : rng_(new caffe::rng_t(seed)) {
+      : rng_(new rng_t(seed)) {
   }
-  caffe::rng_t* rng() {
+  rng_t* rng() {
     return rng_.get();
   }
  private:
-  shared_ptr<caffe::rng_t> rng_;
+  shared_ptr<rng_t> rng_;
 };
 
 Caffe::RNG::RNG()

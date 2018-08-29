@@ -55,7 +55,7 @@ void MOELayer<Dtype, MItype, MOtype>::LayerSetUp(
   if (moe_param.has_gating_net()) {
     NetParameter gating_net_param = moe_param.gating_net();
     gating_net_param.mutable_state()->set_phase(this->phase_);
-    gating_net_param.set_force_backward(this->phase_ == caffe::TRAIN);
+    gating_net_param.set_force_backward(this->phase_ == Phase::TRAIN);
     gating_net_ = make_shared<Net<float> >(gating_net_param,
                                            this->device_);
     vector<shared_ptr<BlobBase> > gating_net_params = gating_net_->params();
@@ -82,12 +82,12 @@ void MOELayer<Dtype, MItype, MOtype>::LayerSetUp(
       vector<shared_ptr<Net<float> > > expert_nets;
       vector<shared_ptr<BlobBase> > expert_net_params_zero;
       for (size_t k = 0;
-           k < ((this->phase_ == caffe::TEST
+           k < ((this->phase_ == Phase::TEST
                && !this->layer_param().moe_param().full_forward()) ?
                    this->parallel_nets_ : 1); ++k) {
         NetParameter expert_net_param = moe_param.expert_net(i);
         expert_net_param.mutable_state()->set_phase(this->phase_);
-        expert_net_param.set_force_backward(this->phase_ == caffe::TRAIN);
+        expert_net_param.set_force_backward(this->phase_ == Phase::TRAIN);
         shared_ptr<Net<float> > expert_net =
             make_shared<Net<float> >(expert_net_param, this->device_);
         vector<shared_ptr<BlobBase> > expert_net_params = expert_net->params();
@@ -157,7 +157,7 @@ void MOELayer<Dtype, MItype, MOtype>::Reshape(
             this->layer_param().moe_param().map_bottom(l) ==
                 MOEParameter_BottomMapping_GATING_AND_EXPERT) {
           vector<int_tp> shape = bottom[l]->shape();
-          shape[0] = (this->phase_ == caffe::TEST &&
+          shape[0] = (this->phase_ == Phase::TEST &&
               !this->layer_param().moe_param().full_forward()) ? 1 : shape[0];
           expert_input_blobs[k]->Reshape(shape);
           ++k;
@@ -241,7 +241,7 @@ void MOELayer<Dtype, MItype, MOtype>::Forward_cpu(
   }
 
   // Generate load balancing loss
-  if (this->phase_ == caffe::TRAIN) {
+  if (this->phase_ == Phase::TRAIN) {
     MOtype* observed_count = top[top.size()-2]->mutable_cpu_data();
     MOtype* expected_count = top[top.size()-1]->mutable_cpu_data();
     for (size_t j = 0; j < gating_->shape()[1]; ++j) {
@@ -278,7 +278,7 @@ void MOELayer<Dtype, MItype, MOtype>::Forward_cpu(
   }
 
   // Forward experts
-  if (this->phase_ == caffe::TEST &&
+  if (this->phase_ == Phase::TEST &&
       !this->layer_param().moe_param().full_forward()) {
     // Forward expert networks (partial, only forward selected experts
     // per batch item)
@@ -368,7 +368,7 @@ void MOELayer<Dtype, MItype, MOtype>::Backward_cpu(
     caffe_set(bottom[i]->count(), MItype(0), bottom_diff);
   }
 
-  // Set gating diff to load balancing diff
+  // Reset gating diff
   const MOtype* gating_data = gating_->cpu_data();
   MOtype* gating_diff = gating_->mutable_cpu_diff();
   const MOtype* observed_diff = top[top.size()-2]->cpu_diff();

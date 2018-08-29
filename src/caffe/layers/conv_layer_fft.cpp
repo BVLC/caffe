@@ -13,7 +13,7 @@
 namespace caffe {
 
 template<typename Dtype, typename MItype, typename MOtype>
-void ConvolutionLayerFFT<Dtype>::compute_output_shape() {
+void ConvolutionLayerFFT<Dtype,MItype,MOtype>::compute_output_shape() {
   const int* kernel_shape_data = this->kernel_shape_.cpu_data();
   const int* stride_data = this->stride_.cpu_data();
   const int* pad_data = this->pad_.cpu_data();
@@ -28,19 +28,19 @@ void ConvolutionLayerFFT<Dtype>::compute_output_shape() {
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-ConvolutionLayerFFT<Dtype>::~ConvolutionLayerFFT<Dtype>() {
+ConvolutionLayerFFT<Dtype,MItype,MOtype>::~ConvolutionLayerFFT<Dtype,MItype,MOtype>() {
   fft_clean();
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void ConvolutionLayerFFT<Dtype>::Reshape(const vector<Blob<MItype>*>& bottom,
+void ConvolutionLayerFFT<Dtype,MItype,MOtype>::Reshape(const vector<Blob<MItype>*>& bottom,
                                          const vector<Blob<MOtype>*>& top) {
   BaseConvolutionLayer<Dtype, MItype, MOtype>::Reshape(bottom, top);
   fft_setup(bottom, top);
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void ConvolutionLayerFFT<Dtype>::fft_setup(const vector<Blob<MItype>*>& bottom,
+void ConvolutionLayerFFT<Dtype,MItype,MOtype>::fft_setup(const vector<Blob<MItype>*>& bottom,
                                            const vector<Blob<MOtype>*>& top) {
   // TODO: Temporary speed-up trick
   /*if (this->group_ == 1) {
@@ -101,7 +101,7 @@ void ConvolutionLayerFFT<Dtype>::fft_setup(const vector<Blob<MItype>*>& bottom,
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void ConvolutionLayerFFT<Dtype>::fft_cpu_setup() {
+void ConvolutionLayerFFT<Dtype,MItype,MOtype>::fft_cpu_setup() {
   if (fft_cpu_initialized_) {
     return;
   }
@@ -144,7 +144,7 @@ void ConvolutionLayerFFT<Dtype>::fft_cpu_setup() {
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void ConvolutionLayerFFT<Dtype>::fft_clean() {
+void ConvolutionLayerFFT<Dtype,MItype,MOtype>::fft_clean() {
   if (fft_cpu_initialized_) {
     fft_cpu_clean();
   }
@@ -156,7 +156,7 @@ void ConvolutionLayerFFT<Dtype>::fft_clean() {
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void ConvolutionLayerFFT<Dtype>::fft_cpu_clean() {
+void ConvolutionLayerFFT<Dtype,MItype,MOtype>::fft_cpu_clean() {
   if (fft_cpu_initialized_) {
     caffe_fft_free<Dtype>(fft_map_in_real_);
     caffe_fft_free<Dtype>(fft_map_in_complex_);
@@ -171,7 +171,7 @@ void ConvolutionLayerFFT<Dtype>::fft_cpu_clean() {
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void ConvolutionLayerFFT<Dtype>::fft_compute_weights() {
+void ConvolutionLayerFFT<Dtype,MItype,MOtype>::fft_compute_weights() {
   int ch_gr = (this->channels_ / this->group_);
   int num_weights = this->num_output_ * ch_gr;
   caffe_memset(num_weights*fft_map_complex_size_*sizeof(std::complex<Dtype>),
@@ -197,7 +197,7 @@ void ConvolutionLayerFFT<Dtype>::fft_compute_weights() {
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void ConvolutionLayerFFT<Dtype>::Forward_cpu_fft_task(const Dtype* bottom_data,
+void ConvolutionLayerFFT<Dtype,MItype,MOtype>::Forward_cpu_fft_task(const Dtype* bottom_data,
          int bottom_data_offset, Dtype* top_data, int top_data_offset, int n) {
   // clear buffer
   caffe_memset((this->num_output_ * fft_map_complex_size_ *
@@ -279,7 +279,7 @@ void ConvolutionLayerFFT<Dtype>::Forward_cpu_fft_task(const Dtype* bottom_data,
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void ConvolutionLayerFFT<Dtype>::Forward_cpu_fft(
+void ConvolutionLayerFFT<Dtype,MItype,MOtype>::Forward_cpu_fft(
          const vector<Blob<MItype>*>& bottom,
          const vector<Blob<MOtype>*>& top) {
   fft_compute_weights();
@@ -295,14 +295,14 @@ void ConvolutionLayerFFT<Dtype>::Forward_cpu_fft(
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void ConvolutionLayerFFT<Dtype>::Forward_cpu(
+void ConvolutionLayerFFT<Dtype,MItype,MOtype>::Forward_cpu(
          const vector<Blob<MItype>*>& bottom,
          const vector<Blob<MOtype>*>& top) {
   Forward_cpu_fft(bottom, top);
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void ConvolutionLayerFFT<Dtype>::Backward_cpu_fft_task(
+void ConvolutionLayerFFT<Dtype,MItype,MOtype>::Backward_cpu_fft_task(
          const vector<Blob<MItype>*>& bottom,
          const vector<Blob<MOtype>*>& top,
          const Dtype* weight, int i, int n) {
@@ -379,7 +379,7 @@ void ConvolutionLayerFFT<Dtype>::Backward_cpu_fft_task(
 }
 
 template<typename Dtype, typename MItype, typename MOtype>
-void ConvolutionLayerFFT<Dtype>::Backward_cpu(
+void ConvolutionLayerFFT<Dtype,MItype,MOtype>::Backward_cpu(
          const vector<Blob<MOtype>*>& top,
          const vector<bool>& propagate_down,
          const vector<Blob<MItype>*>& bottom) {
@@ -422,27 +422,29 @@ void ConvolutionLayerFFT<Dtype>::Backward_cpu(
 #ifdef CPU_ONLY
 // while CPU_ONLY is on, stub functions
 template<typename Dtype, typename MItype, typename MOtype>
-void ConvolutionLayerFFT<Dtype>::fft_gpu_setup() { NO_GPU; }
+void ConvolutionLayerFFT<Dtype,MItype,MOtype>::fft_gpu_setup() { NO_GPU; }
 template<typename Dtype, typename MItype, typename MOtype>
-void ConvolutionLayerFFT<Dtype>::fft_gpu_clean() { NO_GPU; }
+void ConvolutionLayerFFT<Dtype,MItype,MOtype>::fft_gpu_clean() { NO_GPU; }
 template<typename Dtype, typename MItype, typename MOtype>
-void ConvolutionLayerFFT<Dtype>::fft_gpu_compute_weights() { NO_GPU; }
+void ConvolutionLayerFFT<Dtype,MItype,MOtype>::fft_gpu_compute_weights() { NO_GPU; }
 template<typename Dtype, typename MItype, typename MOtype>
-void ConvolutionLayerFFT<Dtype>::Forward_gpu_fft_task(const Dtype* bottom_data,
+void ConvolutionLayerFFT<Dtype,MItype,MOtype>::Forward_gpu_fft_task(const Dtype* bottom_data,
     int bottom_data_offset, Dtype* top_data, int top_data_offset, int n,
     int ch_gr, int out_gr) { NO_GPU; }
 template<typename Dtype, typename MItype, typename MOtype>
-void ConvolutionLayerFFT<Dtype>::Forward_gpu_fft(
+void ConvolutionLayerFFT<Dtype,MItype,MOtype>::Forward_gpu_fft(
     const vector<Blob<MOtype>*>& top) {
     NO_GPU; }
 template<typename Dtype, typename MItype, typename MOtype>
-void ConvolutionLayerFFT<Dtype>::Backward_gpu_fft_task(
+void ConvolutionLayerFFT<Dtype,MItype,MOtype>::Backward_gpu_fft_task(
     const vector<Blob<MOtype>*>& top,
     const Dtype* weight, int i, int n, int ch_gr, int out_gr) { NO_GPU; }
 STUB_GPU(ConvolutionLayerFFT);
 #endif  // CPU_ONLY
 
-INSTANTIATE_CLASS_3T_GUARDED(ConvolutionLayerFFT);
+//INSTANTIATE_CLASS_3T_GUARDED(ConvolutionLayerFFT);
+INSTANTIATE_CLASS_3T_GUARDED(ConvolutionLayerFFT, (half_fp), (half_fp), (half_fp));
+INSTANTIATE_CLASS_3T_GUARDED(ConvolutionLayerFFT, (double), (double), (double));
 
 }  // namespace caffe
 #endif  // USE_FFT

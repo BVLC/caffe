@@ -212,7 +212,7 @@ void LRNLayer<Dtype, MItype, MOtype>::CrossChannelForward_gpu(
     viennacl::ocl::program &program = this->device_->program();
 
 
-    if (this->phase_ == caffe::TRAIN) {
+    if (this->phase_ == Phase::TRAIN) {
       cl_uint argIdx = 0;
       int_tp n_threads = num_ * height_ * width_;
       size_t global_work_size_[1] = {(size_t)n_threads};

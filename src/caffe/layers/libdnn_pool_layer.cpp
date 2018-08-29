@@ -123,7 +123,7 @@ void LibDNNPoolingLayer<Dtype, MItype, MOtype>::Forward_gpu(
   vptr<MOtype> top_data = top[0]->mutable_gpu_data();
   int_tp count = top[0]->count();
 
-  bool test_mode = this->phase_ == caffe::TEST;
+  bool test_mode = this->phase_ == Phase::TEST;
 
   vptr<int_tp> mask;
   vptr<MOtype> top_mask;

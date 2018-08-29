@@ -220,8 +220,8 @@ void WindowDataLayer<Dtype, MItype, MOtype>::DataLayerSetUp(
 template<typename Dtype, typename MItype, typename MOtype>
 uint_tp WindowDataLayer<Dtype, MItype, MOtype>::PrefetchRand() {
   CHECK(prefetch_rng_);
-  caffe::rng_t* prefetch_rng =
-      static_cast<caffe::rng_t*>(prefetch_rng_->generator());
+  rng_t* prefetch_rng =
+      static_cast<rng_t*>(prefetch_rng_->generator());
   return (*prefetch_rng)();
 }
 

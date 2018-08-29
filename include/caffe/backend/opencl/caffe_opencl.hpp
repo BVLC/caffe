@@ -80,6 +80,7 @@ const char* clGetErrorString(cl_int error);
 
 #ifdef USE_FFT
 #include "caffe/util/cl_fft_state.hpp"
+typedef ::caffe::caffe::ClFFTState ClFFTState;
 #define CLFFT_CHECK(condition) \
   do { \
     clfftStatus status = (condition); \

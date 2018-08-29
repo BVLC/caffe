@@ -102,8 +102,8 @@ void ImageDataLayer<Dtype, MItype, MOtype>::DataLayerSetUp(
 
 template<typename Dtype, typename MItype, typename MOtype>
 void ImageDataLayer<Dtype, MItype, MOtype>::ShuffleImages() {
-  caffe::rng_t* prefetch_rng =
-      static_cast<caffe::rng_t*>(prefetch_rng_->generator());
+  rng_t* prefetch_rng =
+      static_cast<rng_t*>(prefetch_rng_->generator());
   shuffle(lines_.begin(), lines_.end(), prefetch_rng);
 }
 

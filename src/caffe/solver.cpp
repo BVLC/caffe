@@ -461,10 +461,10 @@ void Solver<Dtype>::Snapshot() {
   CHECK(Caffe::root_solver());
   string model_filename;
   switch (param_.snapshot_format()) {
-  case caffe::SolverParameter_SnapshotFormat_BINARYPROTO:
+  case SolverParameter_SnapshotFormat_BINARYPROTO:
     model_filename = SnapshotToBinaryProto();
     break;
-  case caffe::SolverParameter_SnapshotFormat_HDF5:
+  case SolverParameter_SnapshotFormat_HDF5:
     model_filename = SnapshotToHDF5();
     break;
   default:
@@ -494,7 +494,7 @@ void Solver<Dtype>::CheckSnapshotWritePermissions() {
 
 template <typename Dtype>
 string Solver<Dtype>::SnapshotFilename(const string extension) {
-  return param_.snapshot_prefix() + "_iter_" + caffe::format_int(iter_)
+  return param_.snapshot_prefix() + "_iter_" + format_int(iter_)
     + extension;
 }
 

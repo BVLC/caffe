@@ -311,7 +311,7 @@ void BaseConvolutionLayer<Dtype, MItype, MOtype>::Reshape(
   }
 }
 
-#ifndef CPU ONLY
+#ifndef CPU_ONLY
 
 template<typename Dtype, typename MItype, typename MOtype>
 shared_ptr<Blob<Dtype> >

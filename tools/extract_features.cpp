@@ -101,7 +101,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
    */
   string feature_extraction_proto(argv[++arg_pos]);
   shared_ptr<Net<Dtype> > feature_extraction_net(
-      new Net<Dtype>(feature_extraction_proto, caffe::TEST,
+      new Net<Dtype>(feature_extraction_proto, caffe::Phase::TEST,
                      Caffe::GetDefaultDevice()));
   feature_extraction_net->CopyTrainedLayersFrom(pretrained_binary_proto);
 

@@ -24,14 +24,14 @@ namespace caffe {
 #ifdef USE_FFT
 
 template<typename Dtype, typename MItype, typename MOtype>
-class ConvolutionLayerFFT : public BaseConvolutionLayer<Dtype> {
+class ConvolutionLayerFFT : public BaseConvolutionLayer<Dtype,MItype,MOtype> {
  public:
   explicit ConvolutionLayerFFT(const LayerParameter& param)
-      : BaseConvolutionLayer<Dtype>(param) , fft_cpu_initialized_(false),
+      : BaseConvolutionLayer<Dtype,MItype,MOtype>(param) , fft_cpu_initialized_(false),
         fft_gpu_initialized_(false) {}
   virtual void Reshape(const vector<Blob<MItype>*>& bottom,
                        const vector<Blob<MOtype>*>& top);
-  virtual ~ConvolutionLayerFFT<Dtype>();
+  virtual ~ConvolutionLayerFFT<Dtype,MItype,MOtype>();
 
   virtual inline const char* type() const { return "Convolution"; }
 

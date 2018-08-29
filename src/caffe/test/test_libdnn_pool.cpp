@@ -848,7 +848,7 @@ class LibDNNComparativePoolTest : public GPUDeviceTest<TypeParam> {
         static_cast<PoolingParameter_PoolMethod>(poolMethodRand(this->rng_)));
 
     std::uniform_int_distribution<int_tp> sizeRand(1,
-        std::max(2, static_cast<int_tp>(pow(ELEMENT_LIMIT / (fmaps * batchsize),
+        std::max(static_cast<int_tp>(2), static_cast<int_tp>(pow(ELEMENT_LIMIT / (fmaps * batchsize),
                     1.0 / (static_cast<double>(dims))))));
 
     BlobShape shape;
@@ -1040,7 +1040,7 @@ class LibDNNComparativePoolTest : public GPUDeviceTest<TypeParam> {
 
 
     std::uniform_int_distribution<int_tp> sizeRand(1,
-        std::max(2, static_cast<int_tp>(pow(ELEMENT_LIMIT / (fmaps * batchsize),
+        std::max(static_cast<int_tp>(2), static_cast<int_tp>(pow(ELEMENT_LIMIT / (fmaps * batchsize),
                     1.0 / (static_cast<double>(dims))))));
 
 

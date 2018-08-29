@@ -11,7 +11,7 @@ void NoiseLayer<Dtype, MItype, MOtype>::Forward_gpu(
     const vector<Blob<MOtype>*>& top) {
   vptr<const Dtype> bottom_data = bottom[0]->gpu_data();
   vptr<Dtype> top_data = top[0]->mutable_gpu_data();
-  if (this->phase_ == caffe::TEST) {
+  if (this->phase_ == Phase::TEST) {
     this->device_->template set<Dtype>(bottom[0]->count(),
                                         Dtype(0), top_data);
   } else {
@@ -38,7 +38,7 @@ void NoiseLayer<Dtype, MItype, MOtype>::Backward_gpu(
   if (propagate_down[0]) {
     vptr<const Dtype> top_diff = top[0]->gpu_diff();
     vptr<Dtype> bottom_diff = bottom[0]->mutable_gpu_diff();
-    if (this->phase_ == caffe::TEST) {
+    if (this->phase_ == Phase::TEST) {
       this->device_->template set<Dtype>(bottom[0]->count(),
                                           Dtype(0), bottom_diff);
     } else {
