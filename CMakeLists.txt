@@ -21,6 +21,7 @@ project(Caffe C CXX)
 set(CAFFE_TARGET_VERSION "1.0.0" CACHE STRING "Caffe logical version")
 set(CAFFE_TARGET_SOVERSION "1.0.0" CACHE STRING "Caffe soname version")
 add_definitions(-DCAFFE_VERSION=${CAFFE_TARGET_VERSION})
+add_definitions(-Wno-delete-non-virtual-dtor -Wno-reorder -Wno-deprecated-declarations -Wno-switch -Wno-literal-conversion -Wno-unused-local-typedef -Wno-unused-variable -Wno-instantiation-after-specialization -Wno-tautological-constant-out-of-range-compare -Wno-return-type -Wno-parentheses)
 
 # This code is taken from https://github.com/sh1r0/caffe-android-lib
 # Search packages for host system instead of packages for target system
