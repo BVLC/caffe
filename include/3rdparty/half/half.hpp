@@ -1077,7 +1077,7 @@ namespace caffe
     friend struct detail::unary_specialized<half_fp>;
     friend struct detail::binary_specialized<half_fp,half_fp>;
     template<typename,typename,std::float_round_style> friend struct detail::half_caster;
-    friend class std::numeric_limits<half_fp>;
+    friend struct std::numeric_limits<half_fp>;
   #if HALF_ENABLE_CPP11_HASH
     friend struct std::hash<half_fp>;
   #endif

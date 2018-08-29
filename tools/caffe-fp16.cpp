@@ -124,11 +124,11 @@ caffe::Phase get_phase_from_flags(caffe::Phase default_value) {
   if (FLAGS_phase == "")
     return default_value;
   if (FLAGS_phase == "TRAIN")
-    return caffe::TRAIN;
+    return caffe::Phase::TRAIN;
   if (FLAGS_phase == "TEST")
-    return caffe::TEST;
+    return caffe::Phase::TEST;
   LOG(FATAL) << "phase must be \"TRAIN\" or \"TEST\"";
-  return caffe::TRAIN;  // Avoid warning
+  return caffe::Phase::TRAIN;  // Avoid warning
 }
 
 // Parse stages from flags
@@ -307,7 +307,7 @@ int test() {
     Caffe::set_mode(Caffe::CPU);
   }
   // Instantiate the caffe net.
-  Net<caffe::half_fp> caffe_net(FLAGS_model, caffe::TEST,
+  Net<caffe::half_fp> caffe_net(FLAGS_model, caffe::Phase::TEST,
                        Caffe::GetDefaultDevice(), FLAGS_level, &stages);
   caffe_net.CopyTrainedLayersFrom(FLAGS_weights);
   LOG(INFO) << "Running for " << FLAGS_iterations << " iterations.";
@@ -370,7 +370,7 @@ RegisterBrewFunction(test);
 // Time: benchmark the execution time of a model.
 int time() {
   CHECK_GT(FLAGS_model.size(), 0) << "Need a model definition to time.";
-  caffe::Phase phase = get_phase_from_flags(caffe::TRAIN);
+  caffe::Phase phase = get_phase_from_flags(caffe::Phase::TRAIN);
   vector<string> stages = get_stages_from_flags();
 
   // Set device id and mode
@@ -399,7 +399,7 @@ int time() {
   caffe::half_fp initial_loss;
   caffe_net.Forward(&initial_loss);
   LOG(INFO) << "Initial loss: " << initial_loss;
-  if (phase == caffe::TRAIN) {
+  if (phase == caffe::Phase::TRAIN) {
     LOG(INFO) << "Performing Backward";
     caffe_net.Backward();
   }
@@ -439,7 +439,7 @@ int time() {
     }
     Caffe::Synchronize(Caffe::GetDefaultDevice()->id());
     forward_time += forward_timer.MicroSeconds();
-    if (phase == caffe::TRAIN) {
+    if (phase == caffe::Phase::TRAIN) {
       backward_timer.Start();
       for (int_tp i = layers.size() - 1; i >= 0; --i) {
         timer.Start();

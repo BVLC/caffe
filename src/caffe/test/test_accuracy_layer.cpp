@@ -47,8 +47,8 @@ class AccuracyLayerTest : public MultiDeviceTest<TypeParam> {
 
     const uint_tp prefetch_rng_seed = caffe_rng_rand();
     shared_ptr<Caffe::RNG> rng(new Caffe::RNG(prefetch_rng_seed));
-    caffe::rng_t* prefetch_rng =
-          static_cast<caffe::rng_t*>(rng->generator());
+    rng_t* prefetch_rng =
+          static_cast<rng_t*>(rng->generator());
     Dtype* label_data = blob_bottom_label_->mutable_cpu_data();
     for (int_tp i = 0; i < blob_bottom_label_->count(); ++i) {
       label_data[i] = (*prefetch_rng)() % 10;

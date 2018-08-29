@@ -257,7 +257,7 @@ TYPED_TEST(GaussianFillerTest, TestFill) {
 }
 
 TYPED_TEST(GaussianFillerTest, TestFill1D) {
-  vector<int> blob_shape(1, 125);
+  vector<int32_t> blob_shape(1, 125);
   const TypeParam tolerance = TypeParam(3);
   this->test_params(blob_shape, tolerance);
 }

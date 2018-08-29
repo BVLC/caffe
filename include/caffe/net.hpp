@@ -172,7 +172,7 @@ class NetBase {
     debug_info_ = value;
   }
 
- protected:
+ public:
   explicit NetBase(Device* device_context);
 
   // Invoked at specific points during an iteration

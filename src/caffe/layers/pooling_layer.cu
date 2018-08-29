@@ -1328,7 +1328,7 @@ void PoolingLayer<Dtype, MItype, MOtype>::Forward_gpu(
           break;
         }
         case PoolingParameter_PoolMethod_STOCHASTIC: {
-          if (this->phase_ == caffe::TRAIN) {
+          if (this->phase_ == Phase::TRAIN) {
             // We need to create the random index as well.
             this->device_->template rng_uniform<Dtype>(count, Dtype(0),
                            Dtype(1), rand_idx_.mutable_gpu_data());

@@ -19,7 +19,7 @@ void caffe_rng_uniform<half_fp>(const int_tp n,
   boost::uniform_real<float> random_distribution(static_cast<float>(a),
     caffe_nextafter<float>(static_cast<float>(b)));
 
-  boost::variate_generator<caffe::rng_t*,
+  boost::variate_generator<rng_t*,
     boost::uniform_real<float>> variate_generator(
     caffe_rng(), random_distribution);
   for (int_tp i = 0; i < n; ++i) {
@@ -37,7 +37,7 @@ void caffe_rng_gaussian<half_fp>(const int_tp n,
   float fsigma = sigma;
   float fa = a;
   boost::normal_distribution<float> random_distribution(fa, fsigma);
-  boost::variate_generator<caffe::rng_t*,
+  boost::variate_generator<rng_t*,
     boost::normal_distribution<float> > variate_generator(
         caffe_rng(), random_distribution);
   for (int_tp i = 0; i < n; ++i) {
@@ -55,7 +55,7 @@ void caffe_rng_gaussian<uint8_t>(const int_tp n, const uint8_t a,
   float fsigma = sigma;
   float fa = a;
   boost::normal_distribution<float> random_distribution(fa, fsigma);
-  boost::variate_generator<caffe::rng_t*,
+  boost::variate_generator<rng_t*,
     boost::normal_distribution<float> > variate_generator(
         caffe_rng(), random_distribution);
   for (int_tp i = 0; i < n; ++i) {
@@ -72,7 +72,7 @@ void caffe_rng_gaussian<uint16_t>(const int_tp n, const uint16_t a,
   float fsigma = sigma;
   float fa = a;
   boost::normal_distribution<float> random_distribution(fa, fsigma);
-  boost::variate_generator<caffe::rng_t*,
+  boost::variate_generator<rng_t*,
     boost::normal_distribution<float>> variate_generator(
         caffe_rng(), random_distribution);
   for (int_tp i = 0; i < n; ++i) {
@@ -89,7 +89,7 @@ void caffe_rng_gaussian<uint32_t>(const int_tp n, const uint32_t a,
   float fsigma = sigma;
   float fa = a;
   boost::normal_distribution<float> random_distribution(fa, fsigma);
-  boost::variate_generator<caffe::rng_t*,
+  boost::variate_generator<rng_t*,
     boost::normal_distribution<float>> variate_generator(
         caffe_rng(), random_distribution);
   for (int_tp i = 0; i < n; ++i) {
@@ -106,7 +106,7 @@ void caffe_rng_gaussian<uint64_t>(const int_tp n, const uint64_t a,
   float fsigma = sigma;
   float fa = a;
   boost::normal_distribution<float> random_distribution(fa, fsigma);
-  boost::variate_generator<caffe::rng_t*,
+  boost::variate_generator<rng_t*,
     boost::normal_distribution<float>> variate_generator(
         caffe_rng(), random_distribution);
   for (int_tp i = 0; i < n; ++i) {
@@ -124,7 +124,7 @@ void caffe_rng_bernoulli<half_fp, int32_t>(const int_tp n,
   CHECK_LE(p, 1);
   float f_p = p;
   boost::bernoulli_distribution<float> random_distribution(f_p);
-  boost::variate_generator<caffe::rng_t*,
+  boost::variate_generator<rng_t*,
   boost::bernoulli_distribution<float> > variate_generator(
       caffe_rng(), random_distribution);
   for (int_tp i = 0; i < n; ++i) {
@@ -142,7 +142,7 @@ void caffe_rng_bernoulli<half_fp, uint32_t>(const int_tp n,
   CHECK_LE(p, 1);
   float f_p = p;
   boost::bernoulli_distribution<float> random_distribution(f_p);
-  boost::variate_generator<caffe::rng_t*,
+  boost::variate_generator<rng_t*,
   boost::bernoulli_distribution<float>> variate_generator(
       caffe_rng(), random_distribution);
   for (int_tp i = 0; i < n; ++i) {
@@ -172,7 +172,7 @@ void caffe_rng_uniform<uint8_t>(const uint_tp n, uint8_t* r) {
   boost::uniform_int<uint8_t> random_distribution(
       std::numeric_limits<uint8_t>::min(),
       std::numeric_limits<uint8_t>::max());
-  boost::variate_generator<caffe::rng_t*, boost::uniform_int<uint8_t> >
+  boost::variate_generator<rng_t*, boost::uniform_int<uint8_t> >
                             variate_generator(caffe_rng(), random_distribution);
   for (uint_tp i = 0; i < n; ++i) {
     r[i] = variate_generator();
@@ -186,7 +186,7 @@ void caffe_rng_uniform<uint16_t>(const uint_tp n, uint16_t* r) {
   boost::uniform_int<uint16_t> random_distribution(
       std::numeric_limits<uint16_t>::min(),
       std::numeric_limits<uint16_t>::max());
-  boost::variate_generator<caffe::rng_t*, boost::uniform_int<uint16_t> >
+  boost::variate_generator<rng_t*, boost::uniform_int<uint16_t> >
                             variate_generator(caffe_rng(), random_distribution);
   for (uint_tp i = 0; i < n; ++i) {
     r[i] = variate_generator();
@@ -200,7 +200,7 @@ void caffe_rng_uniform<uint32_t>(const uint_tp n, uint32_t* r) {
   boost::uniform_int<uint32_t> random_distribution(
       std::numeric_limits<uint32_t>::min(),
       std::numeric_limits<uint32_t>::max());
-  boost::variate_generator<caffe::rng_t*, boost::uniform_int<uint32_t> >
+  boost::variate_generator<rng_t*, boost::uniform_int<uint32_t> >
                             variate_generator(caffe_rng(), random_distribution);
   for (uint_tp i = 0; i < n; ++i) {
     r[i] = variate_generator();
@@ -214,7 +214,7 @@ void caffe_rng_uniform<uint64_t>(const uint_tp n, uint64_t* r) {
   boost::uniform_int<uint64_t> random_distribution(
       std::numeric_limits<uint64_t>::min(),
       std::numeric_limits<uint64_t>::max());
-  boost::variate_generator<caffe::rng_t*, boost::uniform_int<uint64_t> >
+  boost::variate_generator<rng_t*, boost::uniform_int<uint64_t> >
                             variate_generator(caffe_rng(), random_distribution);
   for (uint_tp i = 0; i < n; ++i) {
     r[i] = variate_generator();
@@ -227,7 +227,7 @@ void caffe_rng_uniform(const int_tp n, const Dtype a, const Dtype b, Dtype* r) {
   CHECK(r);
   CHECK_LE(a, b);
   boost::uniform_real<Dtype> random_distribution(a, caffe_nextafter<Dtype>(b));
-  boost::variate_generator<caffe::rng_t*,
+  boost::variate_generator<rng_t*,
   boost::uniform_real<Dtype> > variate_generator(
       caffe_rng(), random_distribution);
   for (int_tp i = 0; i < n; ++i) {
@@ -256,7 +256,7 @@ void caffe_rng_gaussian(const int_tp n, const Dtype a, const Dtype sigma,
   CHECK(r);
   CHECK_GT(sigma, 0);
   boost::normal_distribution<Dtype> random_distribution(a, sigma);
-  boost::variate_generator<caffe::rng_t*,
+  boost::variate_generator<rng_t*,
   boost::normal_distribution<Dtype> > variate_generator(
       caffe_rng(), random_distribution);
   for (int_tp i = 0; i < n; ++i) {
@@ -279,7 +279,7 @@ void caffe_rng_bernoulli(const int_tp n, const Dtype p, Itype* r) {
   CHECK_GE(p, 0);
   CHECK_LE(p, 1);
   boost::bernoulli_distribution<Dtype> random_distribution(p);
-  boost::variate_generator<caffe::rng_t*,
+  boost::variate_generator<rng_t*,
   boost::bernoulli_distribution<Dtype> > variate_generator(
       caffe_rng(), random_distribution);
   for (int_tp i = 0; i < n; ++i) {

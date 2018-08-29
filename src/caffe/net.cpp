@@ -101,7 +101,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   NetParameter converted_param;
   InsertConversions(splitted_param, &converted_param);
 
-  if (in_param.reduced_memory_inference() && phase_ == caffe::TEST) {
+  if (in_param.reduced_memory_inference() && phase_ == Phase::TEST) {
     NetParameter shared_memory_net_param;
     int_tp num_shared_blobs = InsertSharedBlobIndices(converted_param,
                                                       &shared_memory_net_param);
@@ -376,7 +376,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   }
 
   // Set up shared blobs
-  if (param_.reduced_memory_inference() && phase_ == caffe::TEST) {
+  if (param_.reduced_memory_inference() && phase_ == Phase::TEST) {
     this->SetUpSharedBlobs();
   }
 
@@ -897,7 +897,7 @@ void Net<Dtype>::Reshape() {
     layers_[i]->Reshape(bottom_vecs_[i], top_vecs_[i]);
   }
   // Set up shared blobs
-  if (param_.reduced_memory_inference() && phase_ == caffe::TEST) {
+  if (param_.reduced_memory_inference() && phase_ == Phase::TEST) {
     this->SetUpSharedBlobs();
   }
 }

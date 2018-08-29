@@ -14,7 +14,7 @@ namespace caffe {
 typedef boost::mt19937_64 rng_t;
 
 inline rng_t* caffe_rng() {
-  return static_cast<caffe::rng_t*>(Caffe::rng_stream().generator());
+  return static_cast<rng_t*>(Caffe::rng_stream().generator());
 }
 
 // Fisher–Yates algorithm

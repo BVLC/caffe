@@ -277,7 +277,7 @@ template shared_ptr<Blob<uint64_t> > Device::Buffer(vector<int_tp> shape,
 
 void Device::unlock_buffer(int_tp* lock_id) {
   buffer_vec_mutex_.lock();
-  if (*lock_id < buffer_flags_.size() && lock_id > 0) {
+  if (*lock_id < buffer_flags_.size() && *lock_id > 0) {
     bool expected = true;
     while (!(buffer_flags_[*lock_id]->
              compare_exchange_weak(expected, false))) { }

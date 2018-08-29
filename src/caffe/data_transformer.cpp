@@ -557,7 +557,7 @@ template<typename Dtype>
 int_tp DataTransformer<Dtype>::Rand(int_tp n) {
   CHECK(rng_);
   CHECK_GT(n, 0);
-  caffe::rng_t* rng = static_cast<caffe::rng_t*>(rng_->generator());
+  rng_t* rng = static_cast<rng_t*>(rng_->generator());
   return ((*rng)() % n);
 }
 

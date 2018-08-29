@@ -209,7 +209,7 @@ shared_ptr<Layer<Dtype, MItype, MOtype> > GetConvolutionLayer(
 #ifdef USE_FFT
   if (engine == ConvolutionParameter_Engine_FFT) {
     return shared_ptr<Layer<Dtype, MItype, MOtype> >
-             (new ConvolutionLayerFFT<Dtype>(param));
+             (new ConvolutionLayerFFT<Dtype, MItype, MOtype>(param));
   }
 #endif  // USE_FFT
 

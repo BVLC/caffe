@@ -32,7 +32,7 @@ class NetTest : public MultiDeviceTest<TypeParam> {
   }
 
   virtual void InitNetFromProtoFileWithState(const string& proto,
-      Phase phase = caffe::TRAIN, const int level = 0,
+      Phase phase = caffe::Phase::TRAIN, const int level = 0,
       const vector<string>* stages = NULL) {
     NetParameter param;
     CHECK(google::protobuf::TextFormat::ParseFromString(proto, &param));
@@ -787,7 +787,7 @@ class NetTest : public MultiDeviceTest<TypeParam> {
     InitNetFromProtoString(proto);
   }
 
-  virtual void InitAllInOneNet(Phase phase = caffe::TRAIN,
+  virtual void InitAllInOneNet(Phase phase = caffe::Phase::TRAIN,
       const int level = 0, const vector<string>* stages = NULL) {
     string proto =
       "name: 'All-in-one Network'"
@@ -2588,7 +2588,7 @@ TYPED_TEST(NetTest, TestForcePropagateDown) {
 TYPED_TEST(NetTest, TestAllInOneNetTrain) {
   vector<string> stages;
   stages.push_back("train");
-  this->InitAllInOneNet(caffe::TRAIN, 0, &stages);
+  this->InitAllInOneNet(caffe::Phase::TRAIN, 0, &stages);
   bool found_data = false;
   bool found_loss = false;
   for (int i = 0; i < this->net_->layers().size(); ++i) {
@@ -2609,7 +2609,7 @@ TYPED_TEST(NetTest, TestAllInOneNetTrain) {
 TYPED_TEST(NetTest, TestAllInOneNetVal) {
   vector<string> stages;
   stages.push_back("val");
-  this->InitAllInOneNet(caffe::TEST, 0, &stages);
+  this->InitAllInOneNet(caffe::Phase::TEST, 0, &stages);
   bool found_data = false;
   bool found_loss = false;
   for (int i = 0; i < this->net_->layers().size(); ++i) {
@@ -2630,7 +2630,7 @@ TYPED_TEST(NetTest, TestAllInOneNetVal) {
 TYPED_TEST(NetTest, TestAllInOneNetDeploy) {
   vector<string> stages;
   stages.push_back("deploy");
-  this->InitAllInOneNet(caffe::TEST, 0, &stages);
+  this->InitAllInOneNet(caffe::Phase::TEST, 0, &stages);
   bool found_data = false;
   for (int i = 0; i < this->net_->layers().size(); ++i) {
     const string& layer_name = this->net_->layer_names()[i];

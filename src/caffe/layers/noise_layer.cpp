@@ -28,7 +28,7 @@ void NoiseLayer<Dtype, MItype, MOtype>::Forward_cpu(
     const vector<Blob<MOtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = top[0]->mutable_cpu_data();
-  if (this->phase_ == caffe::TEST) {
+  if (this->phase_ == Phase::TEST) {
     caffe_set(bottom[0]->count(), Dtype(0), top_data);
   } else {
     Dtype* noise_data = noise_.mutable_cpu_data();
@@ -51,7 +51,7 @@ void NoiseLayer<Dtype, MItype, MOtype>::Backward_cpu(
   if (propagate_down[0]) {
     const Dtype* top_diff = top[0]->cpu_diff();
     Dtype* bottom_diff = bottom[0]->mutable_cpu_diff();
-    if (this->phase_ == caffe::TEST) {
+    if (this->phase_ == Phase::TEST) {
       caffe_set(bottom[0]->count(), Dtype(0), bottom_diff);
     } else {
       const Dtype* noise_data = noise_.cpu_data();

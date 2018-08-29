@@ -92,6 +92,10 @@ void CuDNNDeconvolutionLayer<Dtype, MItype, MOtype>::Reshape(
     const vector<Blob<MItype>*>& bottom,
     const vector<Blob<MOtype>*>& top) {
   BaseConvolutionLayer<Dtype, MItype, MOtype>::Reshape(bottom, top);
+  CHECK_EQ(2, this->num_spatial_axes_)
+      << "CuDNNDeconvolutionLayer input must have 2 spatial axes "
+      << "(e.g., height and width). "
+      << "Use 'engine: CAFFE' for general ND convolution.";
   bottom_offset_ = this->bottom_dim_ / this->group_;
   top_offset_ = this->top_dim_ / this->group_;
   const int_tp height = bottom[0]->shape(this->channel_axis_ + 1);

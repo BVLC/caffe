@@ -50,7 +50,7 @@ inline void MakeTempFilename(string* temp_filename) {
     temp_files_subpath = path_string;
   }
   *temp_filename =
-    (temp_files_subpath/caffe::format_int(next_temp_file++, 9)).string();
+    (temp_files_subpath/format_int(next_temp_file++, 9)).string();
 }
 
 #ifdef _MSC_VER
