@@ -88,7 +88,7 @@ def get_input_layers(l, net, end):
     return top_layers
 
 
-def get_input_convolutions(l, net, end, interesting_layers):
+def get_input_convolutions(l, net, end, interesting_layers, uninteresting_layers=[]):
     all_input_layers = []
     input_layers = get_input_layers(l, net, end)
     while True:
@@ -106,9 +106,12 @@ def get_input_convolutions(l, net, end, interesting_layers):
                     all_input_layers.append(lp)
                 continue
 
-            new_input_layers = get_input_layers(net.layer[lp[0]], net, lp[0])
-            input_layers.remove(lp)
-            input_layers.extend(new_input_layers)
+            if lp[2] not in uninteresting_layers:
+                new_input_layers = get_input_layers(net.layer[lp[0]], net, lp[0])
+                input_layers.remove(lp)
+                input_layers.extend(new_input_layers)
+            else:
+                input_layers.remove(lp)
 
     return all_input_layers
 
@@ -259,7 +262,8 @@ def transform_convolutions(model_path, compiled_model_path, top_blobs_map, botto
             for (l, index) in concat_layers:
                 index_in_compiled_net = find_index_by_name(l.name, compiled_concat_layers)
                 assert(index_in_compiled_net >= 0)
-                conv_inputs = get_input_convolutions(l, compiled_net, index_in_compiled_net, ["Convolution"])
+                conv_inputs = get_input_convolutions(l, compiled_net, index_in_compiled_net, ["Convolution"], ["Concat"])
+                # TODO: support resonable cross-levels concat scale unify
                 min_concat_scale = sys.float_info.max
                 concat_input_indexes = []
                 for conv_input in conv_inputs:
