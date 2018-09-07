@@ -720,7 +720,7 @@ void RandomOrderChannels(const cv::Mat& in_img, cv::Mat* out_img,
 }
 
 cv::Mat ApplyPerspective(const cv::Mat& in_img, const PerspectiveParameter& param) {
-  cv::Mat out_img = in_img;
+  cv::Mat out_img;
   if (param.prob() == 0.0)
     return in_img;
 
@@ -748,13 +748,24 @@ cv::Mat ApplyPerspective(const cv::Mat& in_img, const PerspectiveParameter& para
     y1 = in_img.rows-1;
     if (param.zoom_out() || param.zoom_in())
       {
-        float x0min, x0max, x1min, x1max, y0min, y0max, y1min, y1max;
-        if (param.zoom_in())
+        bool zoom_in = param.zoom_in();
+        bool zoom_out = param.zoom_out();
+        if (zoom_out && zoom_in)
           {
-            x0max = in_img.cols / 3;
-            x1min = in_img.cols * 2 / 3;
-            y0max = in_img.rows / 3;
-            y1min = in_img.rows * 2 / 3;
+            vector<float> binary_probs= {0.5,0.5};
+            if (roll_weighted_die(binary_probs) == 0)
+              zoom_in = false;
+            else
+              zoom_out = false;
+          }
+
+        float x0min, x0max, x1min, x1max, y0min, y0max, y1min, y1max;
+        if (zoom_in)
+          {
+            x0max = in_img.cols * param.zoom_factor();
+            x1min = in_img.cols * param.zoom_factor() * (1.0/param.zoom_factor()-1.0);
+            y0max = in_img.rows * param.zoom_factor();
+            y1min = in_img.rows * param.zoom_factor() * (1.0/param.zoom_factor()-1.0);
           }
         else
           {
@@ -763,12 +774,12 @@ cv::Mat ApplyPerspective(const cv::Mat& in_img, const PerspectiveParameter& para
             y0max = y0;
             y1min = y1;
           }
-        if (param.zoom_out())
+        if (zoom_out)
           {
-            x0min = -in_img.cols / 3;
-            x1max = in_img.cols * 4 / 3;
-            y0min = -in_img.rows / 3;
-            y1max = in_img.rows * 4 / 3;
+            x0min = -in_img.cols * param.zoom_factor();
+            x1max = in_img.cols * param.zoom_factor() * (1.0/param.zoom_factor()+1.0);
+            y0min = -in_img.rows * param.zoom_factor();
+            y1max = in_img.rows * param.zoom_factor() * (1.0/param.zoom_factor()+1.0);
           }
         else
           {
@@ -799,14 +810,20 @@ cv::Mat ApplyPerspective(const cv::Mat& in_img, const PerspectiveParameter& para
         if (roll_weighted_die(binary_probs) == 1)
           {
             // seen from right
-            caffe_rng_uniform(1, (float) 0.0, (float)in_img.rows / 3 , &outputQuad[0].y);
-            caffe_rng_uniform(1, (float)in_img.rows* 2 / 3, (float)in_img.rows-1, &outputQuad[3].y);
+            caffe_rng_uniform(1, (float) 0.0,
+                              (float)in_img.rows * param.persp_factor() ,
+                              &outputQuad[0].y);
+            caffe_rng_uniform(1,
+                              (float)in_img.rows* param.persp_factor() * (1.0/param.persp_factor()-1.0),
+                              (float)in_img.rows-1, &outputQuad[3].y);
           }
         else
           {
             // seen from left
-            caffe_rng_uniform(1, (float)0.0, (float)in_img.rows / 3 , &outputQuad[1].y);
-            caffe_rng_uniform(1, (float)in_img.rows* 2 / 3, (float)in_img.rows-1, &outputQuad[2].y);
+            caffe_rng_uniform(1, (float)0.0, (float)in_img.rows * param.persp_factor() , &outputQuad[1].y);
+            caffe_rng_uniform(1,
+                              (float)in_img.rows* param.persp_factor() * (1.0/param.persp_factor()-1.0) ,
+                              (float)in_img.rows-1, &outputQuad[2].y);
           }
       }
     if (param.vertical())
@@ -815,14 +832,18 @@ cv::Mat ApplyPerspective(const cv::Mat& in_img, const PerspectiveParameter& para
         if (roll_weighted_die(binary_probs) == 1)
           {
             // seen from up
-            caffe_rng_uniform(1, (float)0.0, (float)in_img.cols / 3 , &outputQuad[3].x);
-            caffe_rng_uniform(1, (float)in_img.cols* 2 / 3, (float)in_img.cols-1, &outputQuad[2].x);
+            caffe_rng_uniform(1, (float)0.0, (float)in_img.cols * param.persp_factor() , &outputQuad[3].x);
+            caffe_rng_uniform(1,
+                              (float)in_img.cols* param.persp_factor() * (1.0/param.persp_factor()-1.0)  ,
+                              (float)in_img.cols-1, &outputQuad[2].x);
           }
         else
           {
             // seen from down
-            caffe_rng_uniform(1, (float)0.0, (float)in_img.cols / 3 , &outputQuad[0].x);
-            caffe_rng_uniform(1, (float)in_img.cols* 2 / 3, (float)in_img.cols-1, &outputQuad[1].x);
+            caffe_rng_uniform(1, (float)0.0, (float)in_img.cols * param.persp_factor() , &outputQuad[0].x);
+            caffe_rng_uniform(1,
+                              (float)in_img.cols* param.persp_factor() * (1.0/param.persp_factor()-1.0),
+                              (float)in_img.cols-1, &outputQuad[1].x);
           }
       }
 
@@ -832,6 +853,8 @@ cv::Mat ApplyPerspective(const cv::Mat& in_img, const PerspectiveParameter& para
     warpPerspective(in_img,out_img,lambda,in_img.size());
 
   }
+  cv::imwrite("/home/infantes/orig.png", in_img);
+  cv::imwrite("/home/infantes/deform.png", out_img);
   return out_img;
 }
 

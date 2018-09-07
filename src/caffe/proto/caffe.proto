@@ -731,6 +731,10 @@ message PerspectiveParameter {
   optional bool zoom_out = 4 [default = true];
   // distance change : look from closer by
   optional bool zoom_in = 5 [default = true];
+  // zoom factor: 0.25 means that image can be *1.25 or /1.25
+  optional float zoom_factor = 6 [default = 0.25];
+  // persp factor: 0.25 means that new image corners  be in *1.25 or 0.75
+  optional float persp_factor = 7 [default = 0.25];
 }
 
 // Message that stores parameters used by data transformer for distortion policy
