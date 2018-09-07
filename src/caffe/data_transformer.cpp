@@ -751,18 +751,19 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
   } else {
     cv_distort_image = cv_resized_image;
   }
-  if (param_.has_perspective_param() && !preserve_pixel_vals) {
-    cv_perspectived_image = ApplyPerspective(cv_distort_image, param_.perspective_param());
-  } else {
-    cv_perspectived_image = cv_distort_image;
-  }
   if (param_.has_noise_param() && !preserve_pixel_vals) {
-    cv_noised_image = ApplyNoise(cv_perspectived_image, param_.noise_param());
+    cv_noised_image = ApplyNoise(cv_distort_image, param_.noise_param());
   } else {
     cv_noised_image = cv_distort_image;
   }
-  int img_height = cv_noised_image.rows;
-  int img_width = cv_noised_image.cols;
+  if (param_.has_perspective_param() && !preserve_pixel_vals) {
+    cv_perspectived_image = ApplyPerspective(cv_noised_image, param_.perspective_param());
+  } else {
+    cv_perspectived_image = cv_noised_image;
+  }
+
+  int img_height = cv_perspectived_image.rows;
+  int img_width = cv_perspectived_image.cols;
   CHECK_GE(img_height, crop_h);
   CHECK_GE(img_width, crop_w);
 
@@ -780,9 +781,9 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
       w_off = (img_width - crop_w) / 2;
     }
     cv::Rect roi(w_off, h_off, crop_w, crop_h);
-    cv_cropped_image = cv_noised_image(roi);
+    cv_cropped_image = cv_perspectived_image(roi);
   } else {
-    cv_cropped_image = cv_noised_image;
+    cv_cropped_image = cv_perspectived_image;
   }
 
   // Return the normalized crop bbox.
