@@ -814,7 +814,7 @@ cv::Mat ApplyPerspective(const cv::Mat& in_img, const PerspectiveParameter& para
                               (float)in_img.rows * param.persp_factor() ,
                               &outputQuad[0].y);
             caffe_rng_uniform(1,
-                              (float)in_img.rows* param.persp_factor() * (1.0/param.persp_factor()-1.0),
+                              (float)(in_img.rows* param.persp_factor() * (1.0/param.persp_factor()-1.0)),
                               (float)in_img.rows-1, &outputQuad[3].y);
           }
         else
@@ -822,7 +822,7 @@ cv::Mat ApplyPerspective(const cv::Mat& in_img, const PerspectiveParameter& para
             // seen from left
             caffe_rng_uniform(1, (float)0.0, (float)in_img.rows * param.persp_factor() , &outputQuad[1].y);
             caffe_rng_uniform(1,
-                              (float)in_img.rows* param.persp_factor() * (1.0/param.persp_factor()-1.0) ,
+                              (float)(in_img.rows* param.persp_factor() * (1.0/param.persp_factor()-1.0)) ,
                               (float)in_img.rows-1, &outputQuad[2].y);
           }
       }
@@ -834,7 +834,7 @@ cv::Mat ApplyPerspective(const cv::Mat& in_img, const PerspectiveParameter& para
             // seen from up
             caffe_rng_uniform(1, (float)0.0, (float)in_img.cols * param.persp_factor() , &outputQuad[3].x);
             caffe_rng_uniform(1,
-                              (float)in_img.cols* param.persp_factor() * (1.0/param.persp_factor()-1.0)  ,
+                              (float)(in_img.cols* param.persp_factor() * (1.0/param.persp_factor()-1.0))  ,
                               (float)in_img.cols-1, &outputQuad[2].x);
           }
         else
@@ -842,7 +842,7 @@ cv::Mat ApplyPerspective(const cv::Mat& in_img, const PerspectiveParameter& para
             // seen from down
             caffe_rng_uniform(1, (float)0.0, (float)in_img.cols * param.persp_factor() , &outputQuad[0].x);
             caffe_rng_uniform(1,
-                              (float)in_img.cols* param.persp_factor() * (1.0/param.persp_factor()-1.0),
+                              (float)(in_img.cols* param.persp_factor() * (1.0/param.persp_factor()-1.0)),
                               (float)in_img.cols-1, &outputQuad[1].x);
           }
       }
