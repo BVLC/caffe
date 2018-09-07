@@ -719,6 +719,123 @@ void RandomOrderChannels(const cv::Mat& in_img, cv::Mat* out_img,
   }
 }
 
+cv::Mat ApplyPerspective(const cv::Mat& in_img, const PerspectiveParameter& param) {
+  cv::Mat out_img = in_img;
+  if (param.prob() == 0.0)
+    return in_img;
+
+  vector<float> binary_probs;
+  if (param.prob() > 0.0)
+    binary_probs = {1.f-param.prob(),param.prob()};
+
+  bool persp = (roll_weighted_die(binary_probs) == 1);
+  if (!persp)
+    {
+      out_img = in_img;
+    }
+  else {
+    // Input Quadilateral or Image plane coordinates
+    cv::Point2f inputQuad[4];
+    // Output Quadilateral or World plane coordinates
+    cv::Point2f outputQuad[4];
+
+    // The 4 points that select quadilateral on the input , from top-left in clockwise order
+    // These four pts are the sides of the rect box used as input
+    int x0, x1, y0, y1;
+    x0 = 0;
+    x1 = in_img.cols-1;
+    y0 = 0;
+    y1 = in_img.rows-1;
+    if (param.zoom_out() || param.zoom_in())
+      {
+        int x0min, x0max, x1min, x1max, y0min, y0max, y1min, y1max;
+        if (param.zoom_in())
+          {
+            x0max = in_img.cols / 3;
+            x1min = in_img.cols * 2 / 3;
+            y0max = in_img.rows / 3;
+            y1min = in_img.rows * 2 / 3;
+          }
+        else
+          {
+            x0max = x0;
+            x1min = x1;
+            y0max = y0;
+            y1min = y1;
+          }
+        if (param.zoom_out())
+          {
+            x0min = -in_img.cols / 3;
+            x1max = in_img.cols * 4 / 3;
+            y0min = -in_img.rows / 3;
+            y1max = in_img.rows * 4 / 3;
+          }
+        else
+          {
+            x0min = x0;
+            x1max = x1;
+            y0min = y0;
+            y1max = y1;
+          }
+        caffe_rng_uniform(1, x0min, x0max, &x0);
+        caffe_rng_uniform(1, x1min, x1max, &x1);
+        caffe_rng_uniform(1, y0min, y0max, &y0);
+        caffe_rng_uniform(1, y1min, y1max, &y1);
+      }
+    
+    inputQuad[0] = cv::Point2f( x0,y0);
+    inputQuad[1] = cv::Point2f( x1,y0);
+    inputQuad[2] = cv::Point2f( x1,y1);
+    inputQuad[3] = cv::Point2f( x0,y1);
+
+    // The 4 points where the mapping is to be done , from top-left in clockwise order
+    outputQuad[0] = cv::Point2f( 0,0 );
+    outputQuad[1] = cv::Point2f( in_img.cols-1,0);
+    outputQuad[2] = cv::Point2f( in_img.cols-1,in_img.rows-1);
+    outputQuad[3] = cv::Point2f( 0,in_img.rows-1);
+    if (param.horizontal())
+      {
+        vector<float> binary_probs= {0.5,0.5};
+        if (roll_weighted_die(binary_probs) == 1)
+          {
+            // seen from right
+            caffe_rng_uniform(1, (float) 0.0, (float)in_img.rows / 3 , &outputQuad[0].y);
+            caffe_rng_uniform(1, (float)in_img.rows* 2 / 3, (float)in_img.rows-1, &outputQuad[3].y);
+          }
+        else
+          {
+            // seen from left
+            caffe_rng_uniform(1, (float)0.0, (float)in_img.rows / 3 , &outputQuad[1].y);
+            caffe_rng_uniform(1, (float)in_img.rows* 2 / 3, (float)in_img.rows-1, &outputQuad[2].y);
+          }
+      }
+    if (param.vertical())
+      {
+        vector<float> binary_probs= {0.5,0.5};
+        if (roll_weighted_die(binary_probs) == 1)
+          {
+            // seen from up
+            caffe_rng_uniform(1, (float)0.0, (float)in_img.cols / 3 , &outputQuad[3].x);
+            caffe_rng_uniform(1, (float)in_img.cols* 2 / 3, (float)in_img.cols-1, &outputQuad[2].x);
+          }
+        else
+          {
+            // seen from down
+            caffe_rng_uniform(1, (float)0.0, (float)in_img.cols / 3 , &outputQuad[0].x);
+            caffe_rng_uniform(1, (float)in_img.cols* 2 / 3, (float)in_img.cols-1, &outputQuad[1].x);
+          }
+      }
+
+    // Get the Perspective Transform Matrix i.e. lambda
+    cv::Mat lambda = getPerspectiveTransform( inputQuad, outputQuad );
+    // Apply the Perspective Transform just found to the src image
+    warpPerspective(in_img,out_img,lambda,in_img.size());
+
+  }
+  return out_img;
+}
+
+
 cv::Mat ApplyDistort(const cv::Mat& in_img, const DistortionParameter& param) {
   cv::Mat out_img = in_img;
   float prob;

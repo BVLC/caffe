@@ -618,6 +618,8 @@ message TransformationParameter {
   optional NoiseParameter noise_param = 9;
   // Distortion policy
   optional DistortionParameter distort_param = 13;
+  // PerspectiveWarp policy
+  optional PerspectiveParameter perspective_param  = 16;
   // Expand policy
   optional ExpansionParameter expand_param = 14;
   // Constraint for emitting the annotation after transformation.
@@ -715,6 +717,20 @@ message NoiseParameter {
 
   // Whether to use all effects
   optional bool all_effects = 14 [default = false];
+}
+
+// Message that stores parameters used by data transformer for perspective warp policy
+message PerspectiveParameter {
+  // Probability of using this distort policy
+  optional float prob = 1 [default = 0.0];
+  // horizontal perspective change (ie look from right or left)
+  optional bool horizontal = 2 [default = true];
+  // horizontal perspective change (ie look from beside or below)
+  optional bool vertical = 3 [default = true];
+  // distance change : look from further away
+  optional bool zoom_out = 4 [default = true];
+  // distance change : look from closer by
+  optional bool zoom_in = 5 [default = true];
 }
 
 // Message that stores parameters used by data transformer for distortion policy
