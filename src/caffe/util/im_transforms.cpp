@@ -763,35 +763,27 @@ cv::Mat ApplyPerspective(const cv::Mat& in_img, const PerspectiveParameter& para
         if (zoom_in)
           {
             x0max = in_img.cols * param.zoom_factor();
-            x1min = in_img.cols * param.zoom_factor() * (1.0/param.zoom_factor()-1.0);
             y0max = in_img.rows * param.zoom_factor();
-            y1min = in_img.rows * param.zoom_factor() * (1.0/param.zoom_factor()-1.0);
           }
         else
           {
             x0max = x0;
-            x1min = x1;
             y0max = y0;
-            y1min = y1;
           }
         if (zoom_out)
           {
             x0min = -in_img.cols * param.zoom_factor();
-            x1max = in_img.cols * param.zoom_factor() * (1.0/param.zoom_factor()+1.0);
             y0min = -in_img.rows * param.zoom_factor();
-            y1max = in_img.rows * param.zoom_factor() * (1.0/param.zoom_factor()+1.0);
           }
         else
           {
             x0min = x0;
-            x1max = x1;
             y0min = y0;
-            y1max = y1;
           }
         caffe_rng_uniform(1, x0min, x0max, &x0);
-        caffe_rng_uniform(1, x1min, x1max, &x1);
+        x1 = in_img.cols - x0;
         caffe_rng_uniform(1, y0min, y0max, &y0);
-        caffe_rng_uniform(1, y1min, y1max, &y1);
+        y1 = in_img.rows - y0;
       }
     
     inputQuad[0] = cv::Point2f( x0,y0);
@@ -813,17 +805,13 @@ cv::Mat ApplyPerspective(const cv::Mat& in_img, const PerspectiveParameter& para
             caffe_rng_uniform(1, (float) 0.0,
                               (float)in_img.rows * param.persp_factor() ,
                               &outputQuad[0].y);
-            caffe_rng_uniform(1,
-                              (float)(in_img.rows* param.persp_factor() * (1.0/param.persp_factor()-1.0)),
-                              (float)in_img.rows-1, &outputQuad[3].y);
+            outputQuad[3].y = in_img.rows - outputQuad[0].y;
           }
         else
           {
             // seen from left
             caffe_rng_uniform(1, (float)0.0, (float)in_img.rows * param.persp_factor() , &outputQuad[1].y);
-            caffe_rng_uniform(1,
-                              (float)(in_img.rows* param.persp_factor() * (1.0/param.persp_factor()-1.0)) ,
-                              (float)in_img.rows-1, &outputQuad[2].y);
+            outputQuad[2].y = in_img.rows - outputQuad[1].y;
           }
       }
     if (param.vertical())
@@ -833,17 +821,13 @@ cv::Mat ApplyPerspective(const cv::Mat& in_img, const PerspectiveParameter& para
           {
             // seen from up
             caffe_rng_uniform(1, (float)0.0, (float)in_img.cols * param.persp_factor() , &outputQuad[3].x);
-            caffe_rng_uniform(1,
-                              (float)(in_img.cols* param.persp_factor() * (1.0/param.persp_factor()-1.0))  ,
-                              (float)in_img.cols-1, &outputQuad[2].x);
+            outputQuad[2].x = in_img.cols - outputQuad[3].x;
           }
         else
           {
             // seen from down
             caffe_rng_uniform(1, (float)0.0, (float)in_img.cols * param.persp_factor() , &outputQuad[0].x);
-            caffe_rng_uniform(1,
-                              (float)(in_img.cols* param.persp_factor() * (1.0/param.persp_factor()-1.0)),
-                              (float)in_img.cols-1, &outputQuad[1].x);
+            outputQuad[1].x = in_img.cols - outputQuad[0].x;
           }
       }
 
@@ -853,8 +837,6 @@ cv::Mat ApplyPerspective(const cv::Mat& in_img, const PerspectiveParameter& para
     warpPerspective(in_img,out_img,lambda,in_img.size());
 
   }
-  cv::imwrite("/home/infantes/orig.png", in_img);
-  cv::imwrite("/home/infantes/deform.png", out_img);
   return out_img;
 }
 
