@@ -741,14 +741,14 @@ cv::Mat ApplyPerspective(const cv::Mat& in_img, const PerspectiveParameter& para
 
     // The 4 points that select quadilateral on the input , from top-left in clockwise order
     // These four pts are the sides of the rect box used as input
-    int x0, x1, y0, y1;
+    float x0, x1, y0, y1;
     x0 = 0;
     x1 = in_img.cols-1;
     y0 = 0;
     y1 = in_img.rows-1;
     if (param.zoom_out() || param.zoom_in())
       {
-        int x0min, x0max, x1min, x1max, y0min, y0max, y1min, y1max;
+        float x0min, x0max, x1min, x1max, y0min, y0max, y1min, y1max;
         if (param.zoom_in())
           {
             x0max = in_img.cols / 3;
