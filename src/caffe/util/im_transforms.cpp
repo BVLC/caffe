@@ -719,7 +719,7 @@ void RandomOrderChannels(const cv::Mat& in_img, cv::Mat* out_img,
   }
 }
 
-cv::Mat ApplyPerspective(const cv::Mat& in_img, const PerspectiveParameter& param) {
+cv::Mat ApplyGeometry(const cv::Mat& in_img, const GeometryParameter& param) {
   cv::Mat out_img;
   if (param.prob() == 0.0)
     return in_img;
@@ -743,10 +743,10 @@ cv::Mat ApplyPerspective(const cv::Mat& in_img, const PerspectiveParameter& para
   x1 = in_img.cols-1;
   y0 = 0;
   y1 = in_img.rows-1;
-  if (param.zoom_out() || param.zoom_in())
+  if (param.zoom_out() || param.zoom_in() || param.all_effects())
     {
-      bool zoom_in = param.zoom_in();
-      bool zoom_out = param.zoom_out();
+      bool zoom_in = param.zoom_in() || param.all_effects();
+      bool zoom_out = param.zoom_out() || param.all_effects() ;
       if (zoom_out && zoom_in)
         {
           vector<float> binary_probs= {0.5,0.5};
@@ -756,7 +756,7 @@ cv::Mat ApplyPerspective(const cv::Mat& in_img, const PerspectiveParameter& para
             zoom_out = false;
         }
 
-      float x0min, x0max, x1min, x1max, y0min, y0max, y1min, y1max;
+      float x0min, x0max, y0min, y0max;
       if (zoom_in)
         {
           x0max = in_img.cols * param.zoom_factor();
@@ -793,7 +793,7 @@ cv::Mat ApplyPerspective(const cv::Mat& in_img, const PerspectiveParameter& para
   outputQuad[1] = cv::Point2f( in_img.cols-1,0);
   outputQuad[2] = cv::Point2f( in_img.cols-1,in_img.rows-1);
   outputQuad[3] = cv::Point2f( 0,in_img.rows-1);
-  if (param.horizontal())
+  if (param.persp_horizontal() || param.all_effects())
     {
       vector<float> binary_probs= {0.5,0.5};
       if (roll_weighted_die(binary_probs) == 1)
@@ -809,7 +809,7 @@ cv::Mat ApplyPerspective(const cv::Mat& in_img, const PerspectiveParameter& para
           outputQuad[2].y = in_img.rows - outputQuad[1].y;
         }
     }
-  if (param.vertical())
+  if (param.persp_vertical() || param.all_effects())
     {
       vector<float> binary_probs= {0.5,0.5};
       if (roll_weighted_die(binary_probs) == 1)

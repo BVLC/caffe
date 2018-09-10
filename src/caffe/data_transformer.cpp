@@ -740,7 +740,7 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
     crop_w = crop_size;
   }
 
-  cv::Mat cv_resized_image, cv_distort_image, cv_perspectived_image, cv_noised_image, cv_cropped_image;
+  cv::Mat cv_resized_image, cv_distort_image, cv_geometry_image, cv_noised_image, cv_cropped_image;
   if (param_.has_resize_param()) {
     cv_resized_image = ApplyResize(cv_img, param_.resize_param());
   } else {
@@ -756,14 +756,14 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
   } else {
     cv_noised_image = cv_distort_image;
   }
-  if (param_.has_perspective_param() && !preserve_pixel_vals) {
-    cv_perspectived_image = ApplyPerspective(cv_noised_image, param_.perspective_param());
+  if (param_.has_geometry_param() && !preserve_pixel_vals) {
+    cv_geometry_image = ApplyGeometry(cv_noised_image, param_.geometry_param());
   } else {
-    cv_perspectived_image = cv_noised_image;
+    cv_geometry_image = cv_noised_image;
   }
 
-  int img_height = cv_perspectived_image.rows;
-  int img_width = cv_perspectived_image.cols;
+  int img_height = cv_geometry_image.rows;
+  int img_width = cv_geometry_image.cols;
   CHECK_GE(img_height, crop_h);
   CHECK_GE(img_width, crop_w);
 
@@ -781,9 +781,9 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
       w_off = (img_width - crop_w) / 2;
     }
     cv::Rect roi(w_off, h_off, crop_w, crop_h);
-    cv_cropped_image = cv_perspectived_image(roi);
+    cv_cropped_image = cv_geometry_image(roi);
   } else {
-    cv_cropped_image = cv_perspectived_image;
+    cv_cropped_image = cv_geometry_image;
   }
 
   // Return the normalized crop bbox.
