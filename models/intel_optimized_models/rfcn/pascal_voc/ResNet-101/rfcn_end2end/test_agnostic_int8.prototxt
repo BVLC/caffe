@@ -4,8 +4,8 @@ input: "im_info"
 input_shape {
   dim: 1
   dim: 3
-  dim: 224
-  dim: 224
+  dim: 600
+  dim: 800
 }
 input_shape {
   dim: 1
