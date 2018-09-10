@@ -167,7 +167,7 @@ void DataLayer<Dtype>::load_batch_and_untransformed_batch(Batch<Dtype>* batch, B
   Dtype* top_label = NULL;  // suppress warnings about uninitialized variables
 
 
-  Dtype* untransformed_top_data;
+  Dtype* untransformed_top_data = NULL;
   Dtype* untransformed_top_label = NULL;  // suppress warnings about uninitialized variables
   if (this->untransformed_top_)
     untransformed_top_data = batch_untransformed->data_.mutable_cpu_data();

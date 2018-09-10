@@ -35,7 +35,7 @@ void BasePrefetchingDataLayer<Dtype>::Forward_gpu(
   CAFFE1_CUDA_CHECK(cudaStreamSynchronize(cudaStreamDefault));
   prefetch_free_.push(batch);
   if (untransformed_top_)
-    prefetch_free_untransformed_.push(batch);
+    prefetch_free_untransformed_.push(batch_untransformed);
 }
 
 template <typename Dtype>

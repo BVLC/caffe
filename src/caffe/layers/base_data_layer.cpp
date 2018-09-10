@@ -129,7 +129,7 @@ void BasePrefetchingDataLayer<Dtype>::InternalThreadEntry() {
 #endif
       prefetch_full_.push(batch);
       if (untransformed_top_)
-        prefetch_full_.push(batch_untransformed);
+        prefetch_full_untransformed_.push(batch_untransformed);
     }
   } catch (boost::thread_interrupted&) {
     // Interrupted exception is expected on shutdown
@@ -175,7 +175,7 @@ void BasePrefetchingDataLayer<Dtype>::Forward_cpu(
 
   prefetch_free_.push(batch);
   if (untransformed_top_)
-    prefetch_free_untransformed_.push(batch);
+    prefetch_free_untransformed_.push(batch_untransformed);
 
 }
 
