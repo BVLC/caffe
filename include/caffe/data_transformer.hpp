@@ -40,7 +40,9 @@ class DataTransformer {
    *    This is destination blob. It can be part of top blob's data if
    *    set_cpu_data() is used. See data_layer.cpp for an example.
    */
-  void Transform(const Datum& datum, Blob<Dtype>* transformed_blob);
+  void Transform(const Datum& datum, Blob<Dtype>* transformed_blob,
+                 const bool preserve_pixel_vals = false,
+                 const bool preserve_annotations = false);
 
   /**
    * @brief Applies the transformation defined in the data layer's
@@ -280,6 +282,8 @@ class DataTransformer {
                  NormalizedBBox* crop_bbox, bool* do_mirror,
 		 const bool preserve_pixel_vals = false,
 		 const bool preserve_annotations = false);
+
+
 
   // Tranformation parameters
   TransformationParameter param_;
