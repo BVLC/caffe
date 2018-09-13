@@ -8,11 +8,21 @@ template <typename Dtype>
 void BasePrefetchingDataLayer<Dtype>::Forward_gpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   Batch<Dtype>* batch = prefetch_full_.pop("Data layer prefetch queue empty");
+  Batch<Dtype>* batch_untransformed;
+  if (untransformed_top_)
+    batch_untransformed = prefetch_full_untransformed_.pop("Data layer prefetch queue empty");
   // Reshape to loaded data.
   top[0]->ReshapeLike(batch->data_);
   // Copy the data
   caffe_copy(batch->data_.count(), batch->data_.gpu_data(),
       top[0]->mutable_gpu_data());
+  if (untransformed_top_)
+    {
+      top[2]->ReshapeLike(batch_untransformed->data_);
+      // Copy the data
+      caffe_copy(batch_untransformed->data_.count(), batch_untransformed->data_.gpu_data(),
+                 top[2]->mutable_gpu_data());
+    }
   if (this->output_labels_) {
     // Reshape to loaded labels.
     top[1]->ReshapeLike(batch->label_);
@@ -24,6 +34,8 @@ void BasePrefetchingDataLayer<Dtype>::Forward_gpu(
   // copied in meanwhile.
   CAFFE1_CUDA_CHECK(cudaStreamSynchronize(cudaStreamDefault));
   prefetch_free_.push(batch);
+  if (untransformed_top_)
+    prefetch_free_untransformed_.push(batch_untransformed);
 }
 
 template <typename Dtype>

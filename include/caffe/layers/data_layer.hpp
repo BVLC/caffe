@@ -26,10 +26,11 @@ class DataLayer : public BasePrefetchingDataLayer<Dtype> {
   virtual inline const char* type() const { return "Data"; }
   virtual inline int ExactNumBottomBlobs() const { return 0; }
   virtual inline int MinTopBlobs() const { return 1; }
-  virtual inline int MaxTopBlobs() const { return 2; }
+  virtual inline int MaxTopBlobs() const { return 3; }
 
  protected:
   virtual void load_batch(Batch<Dtype>* batch);
+  virtual void load_batch_and_untransformed_batch(Batch<Dtype>* batch, Batch<Dtype>* batch_untransformed);
 
   DataReader<Datum> reader_;
 };

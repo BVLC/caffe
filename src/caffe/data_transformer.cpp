@@ -212,11 +212,15 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
 
 template<typename Dtype>
 void DataTransformer<Dtype>::Transform(const Datum& datum,
-                                       Blob<Dtype>* transformed_blob) {
+                                       Blob<Dtype>* transformed_blob,
+                                       const bool preserve_pixel_vals,
+                                       const bool preserve_annotations) {
   NormalizedBBox crop_bbox;
   bool do_mirror;
-  Transform(datum, transformed_blob, &crop_bbox, &do_mirror);
+  Transform(datum, transformed_blob, &crop_bbox, &do_mirror,
+            preserve_pixel_vals, preserve_annotations);
 }
+
 
 template<typename Dtype>
 void DataTransformer<Dtype>::Transform(const vector<Datum> & datum_vector,

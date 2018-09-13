@@ -14,7 +14,7 @@ namespace caffe {
 template <typename Dtype>
 BaseDataLayer<Dtype>::BaseDataLayer(const LayerParameter& param)
     : Layer<Dtype>(param),
-      transform_param_(param.transform_param()) {
+  transform_param_(param.transform_param()) {
 }
 
 template <typename Dtype>
@@ -37,9 +37,17 @@ template <typename Dtype>
 BasePrefetchingDataLayer<Dtype>::BasePrefetchingDataLayer(
     const LayerParameter& param)
     : BaseDataLayer<Dtype>(param),
-      prefetch_free_(), prefetch_full_() {
+  untransformed_top_(false), prefetch_free_(), prefetch_full_(),
+  prefetch_free_untransformed_(),  prefetch_full_untransformed_()  {
+
+  if (param.transform_param().has_untransformed_top() &&
+      param.transform_param().untransformed_top())
+    untransformed_top_ = true;
+
   for (int i = 0; i < PREFETCH_COUNT; ++i) {
     prefetch_free_.push(&prefetch_[i]);
+    if (untransformed_top_)
+      prefetch_free_untransformed_.push(&prefetch_untransformed_[i]);
   }
 }
 
@@ -53,8 +61,12 @@ void BasePrefetchingDataLayer<Dtype>::LayerSetUp(
   // seems to cause failures if we do not so.
   for (int i = 0; i < PREFETCH_COUNT; ++i) {
     prefetch_[i].data_.mutable_cpu_data();
+    if (untransformed_top_)
+      prefetch_untransformed_[i].data_.mutable_cpu_data();
     if (this->output_labels_) {
       prefetch_[i].label_.mutable_cpu_data();
+      if (untransformed_top_)
+        prefetch_untransformed_[i].label_.mutable_cpu_data();
     }
   }
 #ifndef CPU_ONLY
@@ -63,8 +75,15 @@ void BasePrefetchingDataLayer<Dtype>::LayerSetUp(
       prefetch_[i].data_.mutable_gpu_data();
       if (this->output_labels_) {
         prefetch_[i].label_.mutable_gpu_data();
-      }
+     }
     }
+    if (untransformed_top_)
+      for (int i = 0; i < PREFETCH_COUNT; ++i) {
+        prefetch_untransformed_[i].data_.mutable_gpu_data();
+        if (this->output_labels_) {
+          prefetch_untransformed_[i].label_.mutable_gpu_data();
+        }
+      }
   }
 #endif
   DLOG(INFO) << "Initializing prefetch";
@@ -77,22 +96,40 @@ template <typename Dtype>
 void BasePrefetchingDataLayer<Dtype>::InternalThreadEntry() {
 #ifndef CPU_ONLY
   cudaStream_t stream;
+  cudaStream_t stream2;
   if (Caffe::mode() == Caffe::GPU) {
     CAFFE1_CUDA_CHECK(cudaStreamCreateWithFlags(&stream, cudaStreamNonBlocking));
+    if (untransformed_top_)
+      CAFFE1_CUDA_CHECK(cudaStreamCreateWithFlags(&stream2, cudaStreamNonBlocking));
   }
 #endif
 
   try {
     while (!must_stop()) {
       Batch<Dtype>* batch = prefetch_free_.pop();
-      load_batch(batch);
+      Batch<Dtype>* batch_untransformed = NULL;
+      if (untransformed_top_)
+        {
+          batch_untransformed = prefetch_free_untransformed_.pop();
+          load_batch_and_untransformed_batch(batch,batch_untransformed);
+        }
+      else
+        load_batch(batch);
+
 #ifndef CPU_ONLY
       if (Caffe::mode() == Caffe::GPU) {
         batch->data_.data().get()->async_gpu_push(stream);
         CAFFE1_CUDA_CHECK(cudaStreamSynchronize(stream));
+        if (untransformed_top_)
+          {
+            batch_untransformed->data_.data().get()->async_gpu_push(stream2);
+            CAFFE1_CUDA_CHECK(cudaStreamSynchronize(stream2));
+          }
       }
 #endif
       prefetch_full_.push(batch);
+      if (untransformed_top_)
+        prefetch_full_untransformed_.push(batch_untransformed);
     }
   } catch (boost::thread_interrupted&) {
     // Interrupted exception is expected on shutdown
@@ -100,6 +137,8 @@ void BasePrefetchingDataLayer<Dtype>::InternalThreadEntry() {
 #ifndef CPU_ONLY
   if (Caffe::mode() == Caffe::GPU) {
     CAFFE1_CUDA_CHECK(cudaStreamDestroy(stream));
+    if (untransformed_top_)
+      CAFFE1_CUDA_CHECK(cudaStreamDestroy(stream2));
   }
 #endif
 }
@@ -110,9 +149,21 @@ void BasePrefetchingDataLayer<Dtype>::Forward_cpu(
   Batch<Dtype>* batch = prefetch_full_.pop("Data layer prefetch queue empty");
   // Reshape to loaded data.
   top[0]->ReshapeLike(batch->data_);
+
   // Copy the data
   caffe_copy(batch->data_.count(), batch->data_.cpu_data(),
              top[0]->mutable_cpu_data());
+
+  Batch<Dtype>* batch_untransformed;
+  if (untransformed_top_)
+    {
+      batch_untransformed = prefetch_full_untransformed_.pop("Data layer prefetch queue empty");
+      top[2]->ReshapeLike(batch_untransformed->data_);
+      caffe_copy(batch_untransformed->data_.count(), batch_untransformed->data_.cpu_data(),
+                 top[2]->mutable_cpu_data());
+    }
+
+
   DLOG(INFO) << "Prefetch copied";
   if (this->output_labels_) {
     // Reshape to loaded labels.
@@ -123,7 +174,13 @@ void BasePrefetchingDataLayer<Dtype>::Forward_cpu(
   }
 
   prefetch_free_.push(batch);
+  if (untransformed_top_)
+    prefetch_free_untransformed_.push(batch_untransformed);
+
 }
+
+
+
 
 template <typename Dtype>
 BasePrefetchingSparseDataLayer<Dtype>::BasePrefetchingSparseDataLayer(
@@ -239,6 +296,10 @@ void BasePrefetchingSparseDataLayer<Dtype>::Forward_cpu(
 
   prefetch_free_.push(batch);
 }
+
+
+
+
 
 #ifdef CPU_ONLY
 STUB_GPU_FORWARD(BasePrefetchingDataLayer, Forward);

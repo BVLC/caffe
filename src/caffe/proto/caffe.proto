@@ -626,6 +626,7 @@ message TransformationParameter {
   optional EmitConstraint emit_constraint = 10;
   // Random 90 degrees step image rotation.
   optional bool rotate = 15 [default = false];
+  optional bool untransformed_top = 16 [default = false];
 }
 
 // Message that stores parameters used by data transformer for resize policy

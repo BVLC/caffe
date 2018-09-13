@@ -82,11 +82,20 @@ class BasePrefetchingDataLayer :
   virtual void InternalThreadEntry();
   virtual void load_batch(Batch<Dtype>* batch) = 0;
 
+  virtual void load_batch_and_untransformed_batch(Batch<Dtype>* batch, Batch<Dtype>* untransformed_batch) {DLOG(INFO) << "load_untransformed_batch method not implemetend for " << typeid(this).name();}
+
+  bool untransformed_top_;
+
   Batch<Dtype> prefetch_[PREFETCH_COUNT];
+  Batch<Dtype> prefetch_untransformed_[PREFETCH_COUNT];
   BlockingQueue<Batch<Dtype>*> prefetch_free_;
   BlockingQueue<Batch<Dtype>*> prefetch_full_;
+  BlockingQueue<Batch<Dtype>*> prefetch_free_untransformed_;
+  BlockingQueue<Batch<Dtype>*> prefetch_full_untransformed_;
 
   Blob<Dtype> transformed_data_;
+  Blob<Dtype> untransformed_data_;
+
 };
 
 template <typename Dtype>
