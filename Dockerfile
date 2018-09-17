@@ -1,5 +1,5 @@
 FROM nvidia/cuda:9.2-cudnn7-devel-ubuntu16.04
-LABEL maintainer Xperi
+LABEL maintainer mail4mh@gmail.com
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
         build-essential \
