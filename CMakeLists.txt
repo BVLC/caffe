@@ -39,6 +39,7 @@ caffe_option(BUILD_python_layer "Build the Caffe Python layer" ON)
 caffe_option(USE_OPENCV "Build with OpenCV support" OFF)
 caffe_option(USE_LEVELDB "Build with levelDB" OFF)
 caffe_option(USE_LMDB "Build with lmdb" ON)
+caffe_option(USE_HDF5 "Build with hdf5" OFF)
 caffe_option(ALLOW_LMDB_NOLOCK "Allow MDB_NOLOCK when reading LMDB files (only if necessary)" ON)
 caffe_option(USE_OPTIX  "Build with OptiX" OFF)
 
