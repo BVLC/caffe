@@ -1,0 +1,135 @@
+## General
+
+# Disparity Visualizations
+dispnet-pred-*.png
+disparityL_*.pgm
+rgbL_*.ppm
+rgbR_*.ppm
+
+# FR visualizations in the python subdir
+python/dfr*.png
+python/fr*.png
+
+# The symlink to the FR databases
+python/face_recognition_databases
+
+# FR experiment .mat files
+python/experiments
+
+# General output dump directory
+out
+
+# DFT logfile
+test.log
+
+# R animations
+movie*.png
+*.mp4
+
+# Generated dispnet demo output
+dispnet-*.pfm
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.cuo
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+
+# Compiled protocol buffers
+*.pb.h
+*.pb.cc
+*_pb2.py
+
+# Compiled python
+*.pyc
+
+# Compiled MATLAB
+*.mex*
+
+# IPython notebook checkpoints
+.ipynb_checkpoints
+
+# Editor temporaries
+*.swp
+*.swo
+*.ods#
+*~
+
+# Sublime Text settings
+*.sublime-workspace
+*.sublime-project
+
+# Eclipse Project settings
+*.*project
+.settings
+
+# QtCreator files
+*.user
+
+# PyCharm files
+.idea
+
+# Visual Studio Code files
+.vscode
+
+# OSX dir files
+.DS_Store
+
+## Caffe
+
+# User's build configuration
+Makefile.config
+
+# Data and models are either
+# 1. reference, and not casually committed
+# 2. custom, and live on their own unless they're deliberated contributed
+data/*
+models/*
+*.caffemodel
+*.caffemodel.h5
+*.caffemodel.txt
+*.solverstate
+*.solverstate.h5
+*.solverstate.txt
+*.binaryproto
+*leveldb
+*lmdb
+
+# build, distribute, and bins (+ python proto bindings)
+build
+build-d
+.build_debug/*
+.build_release/*
+distribute/*
+*.testbin
+*.bin
+python/caffe/proto/
+cmake_build
+.cmake_build
+
+# Generated documentation
+docs/_site
+docs/gathered
+_site
+doxygen
+docs/dev
+
+# LevelDB files
+*.sst
+*.ldb
+LOCK
+LOG*
+CURRENT
+MANIFEST-*
+
+# log files
+*.log
