@@ -1,47 +1,82 @@
-FROM nvidia/cuda:8.0-cudnn6-devel-ubuntu16.04
-LABEL maintainer caffe-maint@googlegroups.com
+FROM nvidia/cuda:9.2-cudnn7-devel-ubuntu16.04
+LABEL maintainer mail4mh@gmail.com
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
         build-essential \
-        cmake \
+        doxygen \
         git \
-        wget \
-        libatlas-base-dev \
+        graphviz \
+        libavcodec-dev \
+        libavformat-dev \
         libboost-all-dev \
+        libfftw3-dev \
         libgflags-dev \
         libgoogle-glog-dev \
-        libhdf5-serial-dev \
+        libgtk2.0-dev \
         libleveldb-dev \
         liblmdb-dev \
+        libopenblas-dev \
         libopencv-dev \
         libprotobuf-dev \
         libsnappy-dev \
+        libswscale-dev \
+        libthrust-dev \
+        pkg-config \
         protobuf-compiler \
         python-dev \
         python-numpy \
         python-pip \
+        python-scipy \
         python-setuptools \
-        python-scipy && \
+        python-tk \
+        unzip \
+        vim \
+        wget && \
+    apt-get -y autoremove && \
     rm -rf /var/lib/apt/lists/*
 
+# CMake 3.11
+RUN cd /tmp && wget -q https://cmake.org/files/v3.11/cmake-3.11.4.tar.gz && \
+    tar -xf cmake-3.11.4.tar.gz && \
+    cd cmake-3.11.4 && ./configure --prefix=/usr && make -j"$(nproc)" && make install && \
+    cd /tmp && rm -fr /tmp/cmake*
+
+# HDF5 1.10.2
+RUN cd /tmp && wget -q -O hdf5-1.10.2.tar.gz https://www.hdfgroup.org/package/source-gzip-2/?wpdmdl=11810 && \
+    tar -xf hdf5-1.10.2.tar.gz && \
+    cd hdf5-1.10.2 && mkdir build && cd build && \
+    cmake -DCMAKE_INSTALL_PREFIX=/usr .. && make -j"$(nproc)" && make install && \
+    cd /tmp && rm -fr /tmp/hdf5*
+
+# GNU Scientific Library (GSL)
+RUN cd /tmp && wget -q ftp://ftp.gnu.org/gnu/gsl/gsl-2.5.tar.gz && \
+    tar -xf gsl-2.5.tar.gz && \
+    cd gsl-2.5 && ./configure --prefix=/usr && make -j"$(nproc)" && make install && \
+    cd /tmp && rm -fr /tmp/gsl*
+
 ENV CAFFE_ROOT=/opt/caffe
-WORKDIR $CAFFE_ROOT
-
-# FIXME: use ARG instead of ENV once DockerHub supports this
-# https://github.com/docker/hub-feedback/issues/460
-ENV CLONE_TAG=1.0
-
-RUN git clone -b ${CLONE_TAG} --depth 1 https://github.com/BVLC/caffe.git . && \
-    pip install --upgrade pip && \
-    cd python && for req in $(cat requirements.txt) pydot; do pip install $req; done && cd .. && \
-    git clone https://github.com/NVIDIA/nccl.git && cd nccl && make -j install && cd .. && rm -rf nccl && \
-    mkdir build && cd build && \
-    cmake -DUSE_CUDNN=1 -DUSE_NCCL=1 .. && \
-    make -j"$(nproc)"
 
 ENV PYCAFFE_ROOT $CAFFE_ROOT/python
 ENV PYTHONPATH $PYCAFFE_ROOT:$PYTHONPATH
 ENV PATH $CAFFE_ROOT/build/tools:$PYCAFFE_ROOT:$PATH
+
+WORKDIR $CAFFE_ROOT
+
+# Python packages
+RUN pip install --upgrade pip
+COPY python /opt/caffe/python
+RUN cd python && pip install -r requirements.txt
+
+COPY . /opt/caffe
+
+RUN touch /opt/caffe/data/CMakeLists.txt
+
+RUN mkdir -p build && cd build && \
+  cmake -DUSE_OPENCV=ON -DUSE_LEVELDB=ON -DCUDA_ARCH_NAME=Pascal -DBLAS=open .. && \
+  make -j"$(nproc)"
 RUN echo "$CAFFE_ROOT/build/lib" >> /etc/ld.so.conf.d/caffe.conf && ldconfig
 
+ENTRYPOINT caffe
+
 WORKDIR /workspace
+

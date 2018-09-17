@@ -71,7 +71,10 @@ COPY . /opt/caffe
 
 RUN touch /opt/caffe/data/CMakeLists.txt
 
-RUN ./build.sh
+RUN mkdir -p build && cd build && \
+  cmake -DUSE_OPENCV=ON -DUSE_LEVELDB=ON -DCUDA_ARCH_NAME=Pascal -DBLAS=open .. && \
+  make -j"$(nproc)"
+RUN echo "$CAFFE_ROOT/build/lib" >> /etc/ld.so.conf.d/caffe.conf && ldconfig
 
 ENTRYPOINT caffe
 
