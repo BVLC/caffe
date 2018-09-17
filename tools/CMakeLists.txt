@@ -25,6 +25,5 @@ foreach(source ${srcs})
   endif()
 
   # Install
-  install(TARGETS ${name} DESTINATION ${CMAKE_INSTALL_BINDIR})
-
+  install(TARGETS ${name} DESTINATION bin)
 endforeach(source)
