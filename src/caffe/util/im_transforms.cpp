@@ -731,6 +731,11 @@ cv::Mat ApplyGeometry(const cv::Mat& in_img, const GeometryParameter& param) {
   bool persp = (roll_weighted_die(binary_probs) == 1);
   if (!persp)
     return in_img;
+
+  cv::Mat in_img_enlarged;
+  copyMakeBorder(in_img, in_img_enlarged, in_img.rows, in_img.rows, in_img.cols, in_img.cols,
+                 cv::BORDER_REFLECT_101);
+
   // Input Quadilateral or Image plane coordinates
   cv::Point2f inputQuad[4];
   // Output Quadilateral or World plane coordinates
@@ -739,10 +744,10 @@ cv::Mat ApplyGeometry(const cv::Mat& in_img, const GeometryParameter& param) {
   // The 4 points that select quadilateral on the input , from top-left in clockwise order
   // These four pts are the sides of the rect box used as input
   float x0, x1, y0, y1;
-  x0 = 0;
-  x1 = in_img.cols-1;
-  y0 = 0;
-  y1 = in_img.rows-1;
+  x0 = in_img.cols;
+  x1 = 2*in_img.cols-1;
+  y0 = in_img.rows;
+  y1 = 2*in_img.rows -1;
   if (param.zoom_out() || param.zoom_in() || param.all_effects())
     {
       bool zoom_in = param.zoom_in() || param.all_effects();
@@ -759,8 +764,8 @@ cv::Mat ApplyGeometry(const cv::Mat& in_img, const GeometryParameter& param) {
       float x0min, x0max, y0min, y0max;
       if (zoom_in)
         {
-          x0max = in_img.cols * param.zoom_factor();
-          y0max = in_img.rows * param.zoom_factor();
+          x0max = in_img.cols + in_img.cols * param.zoom_factor();
+          y0max = in_img.rows + in_img.rows * param.zoom_factor();
         }
       else
         {
@@ -769,8 +774,8 @@ cv::Mat ApplyGeometry(const cv::Mat& in_img, const GeometryParameter& param) {
         }
       if (zoom_out)
         {
-          x0min = -in_img.cols * param.zoom_factor();
-          y0min = -in_img.rows * param.zoom_factor();
+          x0min = in_img.cols -in_img.cols * param.zoom_factor();
+          y0min = in_img.rows -in_img.rows * param.zoom_factor();
         }
       else
         {
@@ -778,9 +783,9 @@ cv::Mat ApplyGeometry(const cv::Mat& in_img, const GeometryParameter& param) {
           y0min = y0;
         }
       caffe_rng_uniform(1, x0min, x0max, &x0);
-      x1 = in_img.cols - x0;
+      x1 = 3 * in_img.cols - x0;
       caffe_rng_uniform(1, y0min, y0max, &y0);
-      y1 = in_img.rows - y0;
+      y1 = 3 * in_img.rows - y0;
     }
     
   inputQuad[0] = cv::Point2f( x0,y0);
@@ -829,7 +834,8 @@ cv::Mat ApplyGeometry(const cv::Mat& in_img, const GeometryParameter& param) {
   // Get the Perspective Transform Matrix i.e. lambda
   cv::Mat lambda = getPerspectiveTransform( inputQuad, outputQuad );
   // Apply the Perspective Transform just found to the src image
-  warpPerspective(in_img,out_img,lambda,in_img.size());
+  //  warpPerspective(in_img,out_img,lambda,in_img.size());
+  warpPerspective(in_img_enlarged,out_img,lambda,in_img.size());
 
   return out_img;
 }
