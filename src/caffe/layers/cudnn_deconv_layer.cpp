@@ -279,13 +279,14 @@ void CuDNNDeconvolutionLayer<Dtype>::Reshape(
       workspaceData = NULL;
       workspaceSizeInBytes = 0;
 
-      // return here as in case of this error rest of the function does not make sense
+      // return in case of the error rest of the function does not make sense
       return;
     }
 
     // if we succeed in the allocation, set pointer aliases for workspaces
     for (int g = 0; g < (this->group_ * CUDNN_STREAMS_PER_GROUP); g++) {
-      // NOTE these pointers must be aligned. As result max_workspace must be mutiplies of 16
+      // NOTE these pointers must be aligned.
+      // As result max_workspace must be mutiplies of 16
       workspace[g] = reinterpret_cast<char *>(workspaceData) + g*max_workspace;
     }
   }
