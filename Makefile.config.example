@@ -87,6 +87,9 @@ DISABLE_CONV_RELU_FUSION:= 0
 # Use Bn + ReLU fusion to boost inference
 DISABLE_BN_RELU_FUSION := 0
 
+# Use Conv + Concat  fusion to boost inference.
+ENABLE_CONCAT_FUSION := 0
+
 # Use Conv + Eltwise + Relu layer fusion to boost inference.
 DISABLE_CONV_SUM_FUSION := 0
 

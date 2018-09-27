@@ -348,7 +348,6 @@ void RegionLossLayer<Dtype>::Forward_cpu(
     labels.resize(bottom[0]->num()); //batch_size
     int num_boxes = bottom[1]->height();
     //int start = -1;
-    LOG(INFO) << bottom[1]->shape_string();
 
     for (int i = 0; i < num_boxes; ++i) {
         vector<Dtype> box;
@@ -587,8 +586,6 @@ void RegionLossLayer<Dtype>::Forward_cpu(
 
     iter++;
     if (count == 0) count++;	// 0 can be divided
-    LOG(INFO) << "batch_mini_iter: " << iter << " loss: " << loss;
-    LOG(INFO) << "avg_noobj: " << avg_anyobj / (side_*side_*num_*bottom[0]->num()) << " avg_obj: " << avg_obj / count << " avg_iou: " << avg_iou / count << " avg_cat: " << avg_cat / count << " recall: " << recall / count << " class_count: " << class_count;
 }
 
 template <typename Dtype>

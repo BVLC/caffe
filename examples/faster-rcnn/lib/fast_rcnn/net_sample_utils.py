@@ -34,16 +34,36 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-from .pycaffe import Net, SGDSolver, NesterovSolver, AdaGradSolver, RMSPropSolver, AdaDeltaSolver, AdamSolver
-from ._caffe import init_log, log, set_mode_cpu, set_mode_gpu, set_device, compile_net, Layer, get_solver, layer_type_list, set_random_seed
-try:
-    from ._caffe import MultiSync, MultiSolver
-except ImportError:
-    pass
+import caffe
+import google.protobuf.text_format as txtf
+from caffe.proto import caffe_pb2
 
-from ._caffe import __version__
-from .proto.caffe_pb2 import TRAIN, TEST
-from .classifier import Classifier
-from .detector import Detector
-from . import io
-from .net_spec import layers, params, NetSpec, to_proto
+def update_conv_quantized_dict(conv_quantized_dict, tmp_conv_quantized_dict):
+    for conv in conv_quantized_dict:
+        if tmp_conv_quantized_dict[conv][0] > conv_quantized_dict[conv][0]:
+            conv_quantized_dict[conv][0] = tmp_conv_quantized_dict[conv][0]
+
+        if tmp_conv_quantized_dict[conv][1] > conv_quantized_dict[conv][1]:
+            conv_quantized_dict[conv][1] = tmp_conv_quantized_dict[conv][1]
+
+
+def create_quantized_net(raw_net, quantized_net, conv_quantized_dict):
+    net_param = caffe_pb2.NetParameter()
+    with open(raw_net) as f:
+        txtf.Merge(f.read(), net_param)
+    #skip first conv layer when quantizing net
+    first_conv = True
+    for layer_param in net_param.layer:
+        if layer_param.type == "Convolution":
+            if first_conv:
+                first_conv = False
+                continue
+            layer_param.quantization_param.bw_layer_in = 8
+            layer_param.quantization_param.bw_layer_out = 8
+            layer_param.quantization_param.bw_params = 8
+            layer_param.quantization_param.scale_in.append(conv_quantized_dict[layer_param.name][0])
+            layer_param.quantization_param.scale_out.append(conv_quantized_dict[layer_param.name][1])
+            for param_scale in conv_quantized_dict[layer_param.name][2]:
+                layer_param.quantization_param.scale_params.append(param_scale)
+    with open(quantized_net, 'w') as f:
+        f.write(str(net_param))

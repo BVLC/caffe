@@ -63,7 +63,8 @@ public:
                                 , Blob<Dtype>* blob, MKLDNNLayer<Dtype>* mkldnn_layer
                                 , std::vector<float>scale=std::vector<float>(1,1.)
                                 , int mask=0
-                                , bool is_sum=false);
+                                , bool is_sum=false
+                                , bool is_wino=false);
 
 
     ~MKLDNNMemoryDescriptorBase() {}
@@ -141,11 +142,12 @@ protected:
           // TODO: may need initialize memory by 0
         }
     }
-    void set_prv_memory_pd(shared_ptr<memory::primitive_desc> memory_pd, std::vector<float> scale, int mask)  {
+    void set_prv_memory_pd(shared_ptr<memory::primitive_desc> memory_pd, std::vector<float> scale, int mask, bool is_wino)  {
         _prv_memory_pd = memory_pd;
         if (_prv_memory_pd && _usr_memory_pd) {
             check_usr_with_prv_descriptors();
-            this->create_reorder_descriptors(scale, mask);
+            std::vector<float>scale_ext = std::vector<float>(1,1.);            
+            this->create_reorder_descriptors(scale, mask, scale_ext, false, is_wino);
         }
     }
 
@@ -161,7 +163,7 @@ protected:
         _usr_memory_pd = memory_pd;
     }
 
-    void create_reorder_descriptors(std::vector<float> scale, int mask=0, std::vector<float>scale_ext=std::vector<float>(1,1.), bool is_sum=false);
+    void create_reorder_descriptors(std::vector<float> scale, int mask=0, std::vector<float>scale_ext=std::vector<float>(1,1.), bool is_sum=false, bool is_wino=false);
 
     shared_ptr<memory::primitive_desc> _usr_memory_pd;
     shared_ptr<memory::primitive_desc> _prv_memory_pd;
@@ -202,7 +204,8 @@ public:
                         , Blob<Dtype>* blob, MKLDNNLayer<Dtype>* mkldnn_layer
                         , std::vector<float> scale=std::vector<float>(1,1.)
                         , int mask=0
-                        , bool is_sum=false);
+                        , bool is_sum=false
+                        , bool is_wino=false);
 
     virtual void convert_from_prv(void* cpu_ptr);
     virtual void convert_to_prv(void* cpu_ptr);
@@ -249,8 +252,9 @@ public:
                 , Blob<Dtype>* blob, MKLDNNLayer<Dtype>* mkldnn_layer
                 , std::vector<float> scale=std::vector<float>(1,1.)
                 , int mask=0
-                , bool is_sum=false)
-        : MKLDNNMemoryDescriptor<Dtype, false>(usr_memory_pd, prv_memory_pd, blob, mkldnn_layer, scale, mask, is_sum) {}
+                , bool is_sum=false
+                , bool is_wino=false)
+        : MKLDNNMemoryDescriptor<Dtype, false>(usr_memory_pd, prv_memory_pd, blob, mkldnn_layer, scale, mask, is_sum, is_wino) {}
 };
 
 template <typename Dtype>

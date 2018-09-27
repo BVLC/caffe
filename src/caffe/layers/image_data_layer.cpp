@@ -37,6 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #ifdef USE_OPENCV
 #include <opencv2/core/core.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 
 #include <fstream>  // NOLINT(readability/streams)
 #include <iostream>  // NOLINT(readability/streams)
@@ -116,6 +117,11 @@ void ImageDataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
                                     new_height, new_width, is_color, min_height, min_width);
 
   CHECK(cv_img.data) << "Could not load " << lines_[lines_id_].first;
+
+  if (this->layer_param_.transform_param().bgr2rgb()) {
+    cv::cvtColor(cv_img, cv_img, CV_BGR2RGB);
+  }
+
   // Use data_transformer to infer the expected blob shape from a cv_image.
   vector<int> top_shape = this->data_transformer_->InferBlobShape(cv_img);
   this->transformed_data_.Reshape(top_shape);
@@ -171,6 +177,11 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   cv::Mat cv_img = ReadImageToCVMat(root_folder + lines_[lines_id_].first,
       new_height, new_width, is_color, min_height, min_width);
   CHECK(cv_img.data) << "Could not load " << lines_[lines_id_].first;
+
+  if (this->layer_param_.transform_param().bgr2rgb()) {
+    cv::cvtColor(cv_img, cv_img, CV_BGR2RGB);
+  }
+
   // Use data_transformer to infer the expected blob shape from a cv_img.
   vector<int> top_shape = this->data_transformer_->InferBlobShape(cv_img);
   this->transformed_data_.Reshape(top_shape);
@@ -196,6 +207,10 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     cv::Mat cv_img = ReadImageToCVMat(root_folder + lines_[lines_id_].first,
         new_height, new_width, is_color, min_height, min_width);
     CHECK(cv_img.data) << "Could not load " << lines_[lines_id_].first;
+    if (this->layer_param_.transform_param().bgr2rgb()) {
+      cv::cvtColor(cv_img, cv_img, CV_BGR2RGB);
+    }
+
     read_time += timer.MicroSeconds();
     timer.Start();
 // Apply transformations (mirror, crop...) to the image

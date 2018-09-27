@@ -21,6 +21,11 @@ if(DISABLE_BN_RELU_FUSION)
     add_definitions("-DDISABLE_BN_RELU_FUSION")
 endif()
 
+if(ENABLE_CONCAT_FUSION)
+	message(STATUS "conv/concat fusion is enabled!")
+	add_definitions("-DENABLE_CONCAT_FUSION")
+endif()
+
 if(DISABLE_CONV_SUM_FUSION)
 	message(STATUS "conv/eltwise/relu fusion is disabled!")
 	add_definitions("-DDISABLE_CONV_SUM_FUSION")

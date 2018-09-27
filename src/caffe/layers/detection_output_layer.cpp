@@ -246,8 +246,8 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
 
   // Retrieve all prior bboxes. It is same within a batch since we assume all
   // images in a batch are of same dimension.
-  vector<NormalizedBBox> prior_bboxes;
-  vector<vector<float> > prior_variances;
+  vector<NormalizedBBox> prior_bboxes(num_priors_);
+  vector<vector<float> > prior_variances(num_priors_);
   GetPriorBBoxes(prior_data, num_priors_, &prior_bboxes, &prior_variances);
 
   // Decode all loc predictions to bboxes.

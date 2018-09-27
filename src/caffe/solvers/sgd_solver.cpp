@@ -273,6 +273,28 @@ void SGDSolver<Dtype>::ApplyUpdate(int param_id) {
   }
 #endif /* ENABLE_SGD_FUSION */
 
+  const vector<Blob<Dtype>*>& net_params = this->net_->learnable_params();
+  bool need_sync_data_back_to_prv = false;
+  bool need_sync_diff_back_to_prv = false;
+  // This sync logic is specific for the case of oc not exactly being divided by 16. 
+  // mkldnn primitive have padding dimensions for perf boosting on such case.
+  // This causes prv_diff_count() is not equal to count() and makes weight diff point
+  // to cpu buffer rather than mkldnn prv buffer. but if iter_size is larger than 1 at
+  // this time, mkldnn conv layer would directly use the prv buffer of weight diff as
+  // input&output for weight diff accumulation. This makes weight diff calculation wrong.
+  // Syncing weight diff to be in mkldnn prv buffer would work around this issue in mkldnn
+  // conv layer.
+  if (net_params[param_id]->prv_data()
+      && (net_params[param_id]->prv_data_count()
+          != net_params[param_id]->count())) {
+    need_sync_data_back_to_prv = true;
+  }
+  if (net_params[param_id]->prv_diff()
+      && (net_params[param_id]->prv_diff_count()
+          != net_params[param_id]->count())) {
+    need_sync_diff_back_to_prv = true;
+  }
+
   //LOG(INFO) << "No Fusion: Param_id: " << param_id;
   Normalize(param_id);
   
@@ -284,11 +306,19 @@ void SGDSolver<Dtype>::ApplyUpdate(int param_id) {
 
   ComputeUpdateValue(param_id, rate);
 
+
   LOG_PARAM_BLOB(this->net_->learnable_params()[param_id], diff, param_id, "ApplyUpdate: wtinc:");
 
   LOG_PARAM_BLOB(this->net_->learnable_params()[param_id], data, param_id, "ApplyUpdate: weight before update:");
 
   this->net_->learnable_params()[param_id]->Update();
+
+  if (need_sync_diff_back_to_prv) {
+    net_params[param_id]->mutable_prv_diff();
+  }
+  if (need_sync_data_back_to_prv) {
+    net_params[param_id]->mutable_prv_data();
+  }
 
   LOG_PARAM_BLOB(this->net_->learnable_params()[param_id], data, param_id, "ApplyUpdate: weight after update:");
 }
@@ -388,10 +418,22 @@ void SGDSolver<Dtype>::SGDFusion(int param_id, Dtype rate) {
 
 //#pragma region 2. Common condition judgement
   bool prv_diff_condition_flag = false;
+  bool need_sync_data_back_to_prv = false;
+  bool need_sync_diff_back_to_prv = false;
   if (net_params[param_id]->prv_diff()
     && (net_params[param_id]->prv_diff_count()
     == net_params[param_id]->count())) {
       prv_diff_condition_flag = true;
+  }
+  if (net_params[param_id]->prv_diff()
+    && (net_params[param_id]->prv_diff_count()
+    != net_params[param_id]->count())) {
+      need_sync_diff_back_to_prv = true;
+  }
+  if (net_params[param_id]->prv_data()
+    && (net_params[param_id]->prv_data_count()
+    != net_params[param_id]->count())) {
+      need_sync_data_back_to_prv = true;
   }
 //#pragma endregion
 
@@ -493,6 +535,12 @@ void SGDSolver<Dtype>::SGDFusion(int param_id, Dtype rate) {
 
     //Update stage (separate)
     net_params[param_id]->Update();
+  }
+  if (need_sync_data_back_to_prv) {
+    net_params[param_id]->mutable_prv_data();
+  }
+  if (need_sync_diff_back_to_prv) {
+    net_params[param_id]->mutable_prv_diff();
   }
 }
 #endif /* ENABLE_SGD_FUSION */
@@ -655,12 +703,6 @@ void SGDSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
       caffe_copy(net_params[param_id]->count(),
                  history_[param_id]->cpu_data(),
                  net_params[param_id]->mutable_cpu_diff());
-
-      if (net_params[param_id]->prv_diff() 
-          && (net_params[param_id]->prv_diff_count()
-              != net_params[param_id]->count())) {
-          net_params[param_id]->mutable_prv_diff();
-      }
     }
     break;
   }

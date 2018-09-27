@@ -535,7 +535,8 @@ void Net<Dtype>::CompileNet(const NetParameter& param,
   NetParameter param_temp[2];
   void (*CompileRules[]) (const NetParameter& param, NetParameter* param_compiled) =
     {RemoveBNScale<Dtype>, CompilationRuleRemoveScale, CompilationRuleConvReluFusion,
-    CompilationRuleFuseBnRelu, CompilationRuleBNInplace, CompilationRuleSparse, CompilationRuleConvSumFusion};
+    CompilationRuleFuseBnRelu, CompilationRuleBNInplace, CompilationRuleSparse, 
+    CompilationRuleConvSumFusion};
 
   bool disabled[NUM_OF_RULES] = {false};
 
@@ -568,7 +569,7 @@ void Net<Dtype>::CompileNet(const NetParameter& param,
   #undef COMPILE_BN_FOLDING_INDEX
   #undef COMPILE_CONV_RELU_FUSION_INDEX
   #undef COMPILE_BN_RELU_FUSION_INDEX
-  #undef DISABLE_SPARSE_INDEX
+  #undef COMPILE_SPARSE_INDEX
   #undef COMPILE_CONV_SUM_FUSION_INDEX
 }
 
@@ -877,24 +878,21 @@ void Net<Dtype>::CompilationRuleConvSumFusion(const NetParameter& param,
   }
   string blob_need_to_insert;
   LayerParameter* need_to_convert_layer = NULL;
-  bool switch_flag = false;
-  bool next_layer_is_eltwise_flag = false;
   bool has_relu_flag = true;
   bool need_fusion_flag;
   std::set<string> invalid_fusion_blob_names;
 
+
   for (int i = 0; i < param.layer_size(); i++) {
+    need_fusion_flag = true;
     LayerParameter* layer_param =
         (const_cast<NetParameter&>(param)).mutable_layer(i);
-    
-    need_fusion_flag = true;
-    
-    if(layer_param->type().compare("Split") == 0 && layer_param->top_size() > 2) {
-      for(int j = 0; j < layer_param->top_size() - 1; j++) {
+    if (layer_param->type().compare("Split") == 0 &&
+        layer_param->top_size() > 2) {
+      for (int j = 0; j < layer_param->top_size() - 1; j++) {
         invalid_fusion_blob_names.insert(layer_param->top(j));
       }
     }
-
     if (layer_param->type().compare("Convolution") == 0 &&
         (layer_param->has_engine() == false ||
          (layer_param->has_engine() == true &&
@@ -903,10 +901,9 @@ void Net<Dtype>::CompilationRuleConvSumFusion(const NetParameter& param,
       Net<Dtype>::GetBlobConsumers(child_layers_params, layer_param->top(0),
                                    param,
                                    i + 1 < param.layer_size() ? i + 1 : i);
-
       if (child_layers_params.size() > 0 &&
           child_layers_params[0]->type().compare("Eltwise") == 0) {
-        
+
         for (int k = 0; k < child_layers_params[0]->bottom_size(); k++) {
           if (invalid_fusion_blob_names.count(
                   child_layers_params[0]->bottom(k)) > 0) {
@@ -920,6 +917,7 @@ void Net<Dtype>::CompilationRuleConvSumFusion(const NetParameter& param,
         }
 
         std::vector<const LayerParameter*> grand_child_layers_params;
+
         Net<Dtype>::GetBlobConsumers(grand_child_layers_params,
                                      child_layers_params[0]->top(0), param,
                                      i + 1 < param.layer_size() ? i + 1 : i);
@@ -932,66 +930,45 @@ void Net<Dtype>::CompilationRuleConvSumFusion(const NetParameter& param,
           has_relu_flag = false;
         }
 
-        next_layer_is_eltwise_flag = false;
-        for (int blob_count = 0;
-             blob_count < child_layers_params[0]->bottom_size(); blob_count++) {
-          if (child_layers_params[0]->bottom(blob_count) ==
-              layer_param->top(0)) {
-            next_layer_is_eltwise_flag = true;
-            break;
-          }
-        }
-
-        if (next_layer_is_eltwise_flag == false) {
-          param_compiled->add_layer()->CopyFrom(*layer_param);
-          continue;
-        }
-
-        if (child_layers_params[0] !=
-            (const_cast<NetParameter&>(param)).mutable_layer(i + 1)) {
-          if (child_layers_params[0]->bottom(0) == layer_param->top(0)) {
-            switch_flag = true;
-          } else {
-            switch_flag = false;
-          }
+        if (child_layers_params[0]->bottom(0) == layer_param->top(0)) {
           param_compiled->add_layer()->CopyFrom(*layer_param);
           need_to_convert_layer = layer_param;
           continue;
-
-        } else {
-          if (need_to_convert_layer == NULL) {
-            if (child_layers_params[0]->bottom(1) == layer_param->top(0)) {
-              switch_flag = true;
-            } else {
-              switch_flag = false;
-            }
-          }
-
-          if (need_to_convert_layer != NULL) {
-            layer_param->add_bottom(
-                const_cast<string&>(need_to_convert_layer->top(0)));
-            need_to_convert_layer = NULL;
-          } else {
-            if (switch_flag) {
-              layer_param->add_bottom(
-                  const_cast<string&>(child_layers_params[0]->bottom(0)));
-            } else {
-              layer_param->add_bottom(
-                  const_cast<string&>(child_layers_params[0]->bottom(1)));
-            }
-          }
-
-          if (has_relu_flag) {
-            i += 2;  // skip next eltwise and relu
-            const_cast<string&>(layer_param->top(0)) =
-                grand_child_layer_param.top(0);
-            layer_param->mutable_convolution_param()->set_relu(true);
-          } else {
-            i += 1;
-            const_cast<string&>(layer_param->top(0)) =
-                child_layers_params[0]->top(0);
-          }
         }
+
+        if (has_relu_flag) {
+          const_cast<string&>(layer_param->top(0)) =
+              grand_child_layer_param.top(0);
+        } else {
+          const_cast<string&>(layer_param->top(0)) =
+              child_layers_params[0]->top(0);
+        }
+
+        if (need_to_convert_layer != NULL) {
+          layer_param->add_bottom(
+              const_cast<string&>(need_to_convert_layer->top(0)));
+          need_to_convert_layer = NULL;
+        } else {
+          layer_param->add_bottom(
+              const_cast<string&>(child_layers_params[0]->bottom(0)));
+        }
+
+        if (has_relu_flag) {
+          i += 2;  // skip next eltwise and relu
+          layer_param->mutable_convolution_param()->set_relu(true);
+        } else {
+          i += 1;
+        }
+
+        layer_param->mutable_convolution_param()->set_fusion_type(ConvolutionParameter::SUM_FUSION);
+        size_t coeff_size = child_layers_params[0]->eltwise_param().coeff_size();
+        if (coeff_size > 0)
+        {   
+          for (int i = 0; i < coeff_size; ++i) 
+          {
+            layer_param->mutable_convolution_param()->add_coeff(child_layers_params[0]->eltwise_param().coeff(i));
+          }
+        }   
       }
     }
 

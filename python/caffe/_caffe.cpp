@@ -144,6 +144,19 @@ void Log(const string& s) {
 
 void set_random_seed(unsigned int seed) { Caffe::set_random_seed(seed); }
 
+
+//engine string: 1. "MKLDNN"; 2. "MKL2017"; 3. ""
+string  compile_net(const string& raw_net_prototxt, int phase, const string& engine_str = "MKLDNN") {
+  NetParameter raw_net_param;
+  NetParameter compiled_net_param;
+  ReadNetParamsFromTextFileOrDie(raw_net_prototxt, &raw_net_param);
+  raw_net_param.mutable_state()->set_phase(static_cast<Phase>(phase));
+  //This is for CompilationRuleConvBNFusion
+  raw_net_param.mutable_compile_net_state()->set_is_init(true);
+  raw_net_param.set_engine(engine_str);
+  Net<Dtype>::CompileNet(raw_net_param, &compiled_net_param);
+  return compiled_net_param.DebugString();
+}
 // For convenience, check that input files can be opened, and raise an
 // exception that boost will send to Python if not (caffe could still crash
 // later if the input files are disturbed before they are actually used, but
@@ -428,6 +441,7 @@ BOOST_PYTHON_MODULE(_caffe) {
   bp::def("set_random_seed", &set_random_seed);
   bp::def("set_device", &Caffe::SetDevice);
 
+  bp::def("compile_net", &compile_net);
   bp::def("layer_type_list", &LayerRegistry<Dtype>::LayerTypeList);
 
   bp::class_<Net<Dtype>, shared_ptr<Net<Dtype> >, boost::noncopyable >("Net",

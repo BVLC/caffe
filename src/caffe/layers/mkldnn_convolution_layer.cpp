@@ -187,11 +187,12 @@ void MKLDNNConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom
     }
     init_properties(bottom, top);
     BaseConvolutionLayer<Dtype>::ReshapeForMKL(bottom, top);
-#ifndef DISABLE_CONV_SUM_FUSION
-    if (bottom.size() > 1) {
-        top[0]->ShareData(*bottom[1]);
+    // if (bottom.size() > 1) {
+    if (this->layer_param_.convolution_param().fusion_type() ==
+            ConvolutionParameter::SUM_FUSION &&
+        bottom.size() > 1) {
+      top[0]->ShareData(*bottom[1]);
     }
-#endif
 }
 
 template <typename Dtype>
@@ -204,7 +205,6 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
     Dtype negative_slope = 0;
     if(relu)
     {
-        propagation = prop_kind::forward_inference;
         negative_slope = this->layer_param_.relu_param().negative_slope();
     }
 
@@ -271,12 +271,13 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
         }
       }
       else {
-        top_dt = memory::data_type::s32;
+        top_dt = memory::data_type::f32;
       }
     }
-
     bool is_sum = false;
-    if (bottom.size() > 1) {
+    if (this->layer_param_.convolution_param().fusion_type() ==
+            ConvolutionParameter::SUM_FUSION &&
+        bottom.size() > 1) {
       is_sum = true;
 
       memory::data_type bottom_1_dt = memory::data_type::f32;
@@ -289,6 +290,11 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
 
       if (top_dt != bottom_1_dt) {
         top_dt = bottom_1_dt;
+        // FIXME: to simplify the calibration tool to handle different data types of conv sum in residual block
+        if(top_dt ==  memory::data_type::f32){
+          this->need_quantize_ = false;
+          bottom_dt = memory::data_type::f32;
+        }
       }
     }
 
@@ -318,6 +324,15 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
     memory::desc init_top_md({top_tz}, top_dt, mfmt_any);
     memory::desc init_weights_md({weights_tz}, weights_dt, mfmt_any);
 
+    size_t coeff_size = this->layer_param_.convolution_param().coeff_size();
+    float coeff0 = 1;
+    float coeff1 = 1;
+    if (coeff_size == 2) 
+    {
+      coeff0 = this->layer_param_.convolution_param().coeff(0);
+      coeff1 = this->layer_param_.convolution_param().coeff(1);
+    }
+
     primitive_attr attr;
     if (this->need_quantize_) {
       int mask = 0;
@@ -331,7 +346,10 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
       float scale;
       #pragma omp parallel for if (count > 1)
       for(int i=0; i<count; i++){
-        scale = this->scale_out_[0] / (this->scale_in_[0] * this->scale_params_[i]);
+        if (this->scale_params_[i] == 0.0)
+            scale = this->scale_out_[0] * coeff1;
+        else
+            scale = this->scale_out_[0] / (this->scale_in_[0] * this->scale_params_[i]) * coeff1;
         scales[i] = scale;
       }
       attr.set_output_scales(mask, scales);
@@ -347,23 +365,24 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
     mkldnn::algorithm eligibleAlgorithms[2] = {conv_algorithm, algorithm::convolution_direct};
     convFwd_pd = NULL;
     mkldnn::post_ops ops;
-
     float scale = 1.0f;
     Dtype alpha = negative_slope;  // negative slope for mkldnn_eltwise_relu.
     float beta = 1.0f;             // ignored for mkldnn_eltwise_relu.
-#ifndef DISABLE_CONV_SUM_FUSION
-    if (bottom.size() > 1) {
+
+    if (this->layer_param_.convolution_param().fusion_type() ==
+            ConvolutionParameter::SUM_FUSION &&
+        bottom.size() > 1) {
       if (this->need_quantize_) {
         float sum_scale;
         sum_scale =
             this->scale_out_[0] /
-            get_mkldnn_prv_descriptor<Dtype, false>(bottom[1])->get_scale(0);
+            get_mkldnn_prv_descriptor<Dtype, false>(bottom[1])->get_scale(0) * coeff0;
         ops.append_sum(sum_scale);
       } else {
         ops.append_sum(1.0f);
       }
     }
-#endif
+
     if (relu) ops.append_eltwise(scale, eltwise_relu, alpha, beta);
     attr.set_post_ops(ops);
 
@@ -397,12 +416,11 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
       for (subEngineIndex = 0; subEngineIndex < ep.getNumberOfSubEngines();
            subEngineIndex++) {
         try {
-#ifndef DISABLE_CONV_SUM_FUSION
-            if(this->need_quantize_ || relu || bottom.size() > 1) {
-#else
-            if(relu) {
-#endif
-                convFwd_pd.reset(new convolution_forward::primitive_desc(
+          if (this->need_quantize_ || relu ||
+              (this->layer_param_.convolution_param().fusion_type() ==
+                   ConvolutionParameter::SUM_FUSION &&
+               bottom.size() > 1)) {
+            convFwd_pd.reset(new convolution_forward::primitive_desc(
                 *convFwd_desc, attr, ep.getMKLDNNSubEngine(subEngineIndex)));
           } else {
             convFwd_pd.reset(new convolution_forward::primitive_desc(
@@ -471,6 +489,7 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
     fwd_top_data->name = "fwd_top_data      @ " + this->layer_param_.name();
     fwd_top_data_memory = fwd_top_data->create_output_memory();
 
+    bool is_wino = conv_algorithm == algorithm::convolution_winograd ? true : false; 
     if (fwd_weights_data == NULL) {
       if (this->need_quantize_){
         int count = 1; //single channel
@@ -486,7 +505,7 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
         }
         fwd_weights_data.reset(new MKLDNNData<Dtype>(usr_weights_data_memory_pd, prv_fwd_weights_data_memory_pd, this->blobs_[0].get(), this, scale_weight, reorder_mask));
       } else{
-        fwd_weights_data.reset(new MKLDNNData<Dtype>(usr_weights_data_memory_pd, prv_fwd_weights_data_memory_pd, this->blobs_[0].get(), this));
+        fwd_weights_data.reset(new MKLDNNData<Dtype>(usr_weights_data_memory_pd, prv_fwd_weights_data_memory_pd, this->blobs_[0].get(), this, {1.}, 0,  is_sum, is_wino));
       }
       fwd_weights_data->name = "fwd_weights_data  @ " + this->layer_param_.name();
       fwd_weights_data_primitive = fwd_weights_data->create_input(true);
@@ -505,7 +524,10 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
             std::vector<float> scale_bias(count);
             #pragma omp parallel for if (count > 1)
             for(int i=0; i<count; i++){
-              scale_bias[i] = this->scale_in_[0] * this->scale_params_[i];
+              if (this->scale_params_[i] == 0.0)
+                  scale_bias[i] = 1.0;
+              else
+                  scale_bias[i] = this->scale_in_[0] * this->scale_params_[i];
             }
             fwd_bias_data.reset(new MKLDNNData<Dtype>(usr_bias_data_memory_pd, prv_fwd_bias_data_memory_pd, this->blobs_[1].get(), this, scale_bias, reorder_mask));
           } else{
@@ -548,8 +570,8 @@ void MKLDNNConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bott
 
     if( convFwd_pd == NULL || this->reshape)
         InitConvolutionFwd(bottom, top);
-    // making reorders if needed.
-    fwd_bottom_data->sync_before_read();
+
+    fwd_bottom_data->sync_before_read(); 
     fwd_weights_data->sync_before_read();
     if (this->bias_term_)
         fwd_bias_data->sync_before_read();

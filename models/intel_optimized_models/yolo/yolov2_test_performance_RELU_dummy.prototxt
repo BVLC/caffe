@@ -1181,6 +1181,10 @@ layer {
   bottom: "label"
   bottom: "data"
   top: "eval_det"
+  include {
+    phase: TEST
+  }
+
   eval_detection_param {
     side: 17
     num_class: 20

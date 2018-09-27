@@ -230,6 +230,8 @@ message CompileNetState {
   optional bool bn_scale_remove = 2 [default = false];
   optional bool bn_scale_merge = 3 [default = false];
   repeated string kept_bn_layers = 4;
+  repeated string negative_conv_names = 5;
+  repeated uint32 negative_conv_indexes = 6;
 }
 
 message MultinodeParameter {
@@ -748,6 +750,8 @@ message TransformationParameter {
 
     //will flip x flow if flow image input
   optional bool flow = 17 [default = false];
+
+  optional bool bgr2rgb = 18 [ default = false ];
 }
 
 message RandomResizeParameter {
@@ -974,6 +978,9 @@ message ConcatParameter {
   // DEPRECATED: alias for "axis" -- does not support negative indexing.
   optional uint32 concat_dim = 1 [default = 1];
 
+  // For permute and flatten fuse in SSD-VGG16
+  optional bool per_fla_fuse = 4 [default = false];
+
   enum Engine {
     DEFAULT = 0;
     CAFFE = 1;
@@ -1130,6 +1137,13 @@ message ConvolutionParameter {
   optional bool relu = 19 [default = false];
   optional float negative_slope = 20 [default = 0];
   optional string conv_algorithm = 21 [default = "direct"];
+  repeated float coeff = 23; // bypass R-FCN test issue 
+  enum FusionType {
+    NONE_FUSION = 0;
+    SUM_FUSION = 1;
+  }
+  optional FusionType fusion_type = 24 [default = NONE_FUSION];
+
 }
 
 message CropParameter {
@@ -1853,6 +1867,7 @@ message ReshapeParameter {
   //
   optional int32 axis = 2 [default = 0];
   optional int32 num_axes = 3 [default = -1];
+  optional int32 pixelshuffler = 4 [default = 1];
 }
 
 // Message that stores parameters used by ROIPoolingLayer

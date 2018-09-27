@@ -327,7 +327,8 @@ class Net {
   static void CompilationRuleFuseBnRelu(const NetParameter& param,
                                  NetParameter* param_compiled);
 
-  /**
+ 
+   /**
    * @brief If find "Conv--BN--Scale" in current network, merge BN and Scale layer into Convolution
    * layers, this optimization only works in caffe TEST phase now.
    */
@@ -452,6 +453,9 @@ class Net {
   bool bn_scale_remove_;
   bool bn_scale_merge_;
   vector<string> kept_bn_layers_;
+
+  vector<Dtype> first_conv_quantized_shift_;
+  vector<string> first_conv_names_;
   /// @brief The network name
   string name_;
   /// @brief The engine name
