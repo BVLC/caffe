@@ -20,7 +20,7 @@ layer {
     }
   }
   data_param {
-    source: "examples/VOC0712/VOC0712_test_lmdb"
+    source: "/lustre/dataset/lmdb/voc/VOC0712_test_lmdb"
     batch_size: 8
     backend: LMDB
   }

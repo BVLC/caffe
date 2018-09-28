@@ -5,20 +5,20 @@ function(Download_DLCP)
   elseif(HAS_ICPC)
     set(DLCP_CXX "icpc" PARENT_SCOPE)
   else()
-    message(WARNING "weight grad compression is disabled because intel compiler is not found")
+    message("weight grad compression is disabled because intel compiler is not found")
     return()  
   endif()  
 
   set(EXTERNAL_DIR ${CMAKE_SOURCE_DIR}/external)
   set(DLCP_IDEEPDIR ${EXTERNAL_DIR}/ideep)
-  set(DLCP_ROOTDIR ${DLCP_IDEEPDIR}/ideep/dlcp)
+  set(DLCP_ROOTDIR ${DLCP_IDEEPDIR}/dlcp)
   set(DLCP_INCLDIR "${DLCP_ROOTDIR}/include" PARENT_SCOPE)
   set(DLCP_LIBDIR ${DLCP_ROOTDIR}/lib PARENT_SCOPE)
  
   # Download dl compression lib source code if it doesn't exist 
   if (NOT EXISTS ${DLCP_INCLDIR}/dl_compression.h)
     execute_process(COMMAND rm -rf ${DLCP_IDEEPDIR})
-    execute_process(COMMAND git clone https://github.com/intel/ideep.git -b dlcp ${DLCP_IDEEPDIR})
+    execute_process(COMMAND git clone https://github.com/intel/ideep.git -b ideep4py ${DLCP_IDEEPDIR})
   endif()
 
   add_custom_target(DLCP_Build ALL

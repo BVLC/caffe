@@ -51,6 +51,109 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace caffe {
 
 template<typename Dtype>
+void DataTransformer<Dtype>::Transform(const Datum& datum,
+                                       Blob<Dtype>* transformed_blob,
+                                       vector<BoxLabel>* box_labels) {
+  int float_size = datum.float_data_size();
+  CHECK_GT(float_size, 0) << 
+    "Every sample must have label";
+  CHECK_EQ(float_size % 6, 0) <<
+    "Every box label has 6 labels (class, difficult, box)";
+  //*********************************************************************//
+  //get ori_labels
+  vector<BoxLabel> ori_labels;
+  for (int j = 0; j < float_size; j += 6) {
+    BoxLabel box_label;
+    box_label.class_label_ = datum.float_data(j);
+    box_label.difficult_ = datum.float_data(j + 1);
+    for (int k = 2; k < 6; ++k) {
+      box_label.box_[k-2] = datum.float_data(j+k);
+    }
+    ori_labels.push_back(box_label);
+  }
+
+  // If datum is encoded, decoded and transform the cv::image.
+  CHECK(datum.encoded()) << "For box data, datum must be encoded";
+  CHECK(!(param_.force_color() && param_.force_gray()))
+    << "cannot set both force_color and force_gray";
+  cv::Mat cv_img;
+  if (param_.force_color() || param_.force_gray()) {
+  // If force_color then decode in color otherwise decode in gray.
+    cv_img = DecodeDatumToCVMat(datum, param_.force_color());
+  } else {
+    cv_img = DecodeDatumToCVMatNative(datum);
+  }
+
+  if (phase_ == TEST) {
+    *box_labels = ori_labels;
+    Transform(cv_img, transformed_blob);
+    return;
+  }
+
+  int img_width = cv_img.cols;
+  int img_height = cv_img.rows;
+
+  cv::Mat cv_rand_img;
+  // bool mirror = Rand(2);
+  bool mirror = 0;
+  while (box_labels->size() == 0) {
+    float rand_scale = (1. - rand_num_(30) / 100.);
+    int rand_w = static_cast<int>(img_width * rand_scale) - 1;
+    int rand_h = static_cast<int>(img_height * rand_scale) - 1;
+    // LOG(INFO) << "rand_w: " << rand_w << " rand_h: " << rand_h;
+    // LOG(INFO) << "img_width: " << img_width << " img_height: " << img_height;
+    int rand_x = rand_num_(img_width - rand_w);
+    int rand_y = rand_num_(img_height - rand_h);
+    for (int i = 0; i < ori_labels.size(); ++i) {
+      int ori_x = static_cast<int>(ori_labels[i].box_[0] * img_width); //box center(x,y)
+      int ori_y = static_cast<int>(ori_labels[i].box_[1] * img_height);
+      int ori_w = static_cast<int>(ori_labels[i].box_[2] * img_width); //box(w,h)
+      int ori_h = static_cast<int>(ori_labels[i].box_[3] * img_height);
+      if (!(ori_x >= rand_x && ori_x < rand_x + rand_w)) {
+        continue;
+      }
+      if (!(ori_y >= rand_y && ori_y < rand_y + rand_h)) {
+        continue;
+      }
+      BoxLabel box_label;
+      box_label.difficult_ = ori_labels[i].difficult_;
+      box_label.class_label_ = ori_labels[i].class_label_;
+      box_label.box_[0] = float(ori_x - rand_x) / float(rand_w);
+      box_label.box_[1] = float(ori_y - rand_y) / float(rand_h);
+      box_label.box_[2] = float(ori_w) / float(rand_w);
+      box_label.box_[3] = float(ori_h) / float(rand_h);
+      // int xmin = std::max(ori_x - ori_w / 2, rand_x);
+      // int ymin = std::max(ori_y - ori_h / 2, rand_y);
+      // int xmax = std::min(ori_x + ori_w / 2, rand_x + rand_w);
+      // int ymax = std::min(ori_y + ori_h / 2, rand_y + rand_h);
+      // if (xmin > xmax || ymin > ymax) {
+      //   continue;
+      // }
+      // box_label.box_[0] = float(xmin + (xmax - xmin) / 2) / float(rand_w);
+      // box_label.box_[1] = float(ymin + (ymax - ymin) / 2) / float(rand_h);
+      // box_label.box_[2] = float(xmax - xmin) / float(rand_w);
+      // box_label.box_[3] = float(ymax - ymin) / float(rand_h);
+      if (mirror) {
+        box_label.box_[0] = std::max(0., 1. - box_label.box_[0]);
+        box_label.box_[1] = std::max(0., 1. - box_label.box_[1]);
+      }
+      box_labels->push_back(box_label);
+    }
+    if (box_labels->size() > 0) {
+      cv::Rect roi(rand_x, rand_y, rand_w, rand_h); 
+      cv_rand_img = cv_img(roi);
+      if (mirror) {
+        cv::flip(cv_rand_img, cv_rand_img, 1); // horizen flip
+      }
+    }
+  }
+  cv::resize(cv_rand_img, cv_rand_img, cv::Size(img_width, img_height));
+  // Transform the cv::image into blob.
+  Transform(cv_rand_img, transformed_blob);
+  return;
+}
+
+template<typename Dtype>
 DataTransformer<Dtype>::DataTransformer(const TransformationParameter& param,
     Phase phase)
     : param_(param), phase_(phase), data_reader_used(NULL) {
@@ -110,12 +213,15 @@ void DataTransformer<Dtype>::Transform(const Datum& datum, Dtype* transformed_da
     mean = data_mean_.mutable_cpu_data();
   }
   if (has_mean_values) {
-    CHECK(mean_values_.size() == 1 || mean_values_.size() == datum_channels) <<
-     "Specify either 1 mean_value or as many as channels: " << datum_channels;
-    if (datum_channels > 1 && mean_values_.size() == 1) {
-      // Replicate the mean_value for simplicity
-      for (int c = 1; c < datum_channels; ++c) {
-        mean_values_.push_back(mean_values_[0]);
+   #pragma omp critical
+    {
+      CHECK(mean_values_.size() == 1 || mean_values_.size() == datum_channels) <<
+       "Specify either 1 mean_value or as many as channels: " << datum_channels;
+      if (datum_channels > 1 && mean_values_.size() == 1) {
+        // Replicate the mean_value for simplicity
+        for (int c = 1; c < datum_channels; ++c) {
+          mean_values_.push_back(mean_values_[0]);
+        }
       }
     }
   }
@@ -307,12 +413,15 @@ void DataTransformer<Dtype>::Transform(const Datum& datum_in,
     mean = data_mean_.mutable_cpu_data();
   }
   if (has_mean_values) {
-    CHECK(mean_values_.size() == 1 || mean_values_.size() == datum_channels) <<
-     "Specify either 1 mean_value or as many as channels: " << datum_channels;
-    if (datum_channels > 1 && mean_values_.size() == 1) {
-      // Replicate the mean_value for simplicity
-      for (int c = 1; c < datum_channels; ++c) {
-        mean_values_.push_back(mean_values_[0]);
+   #pragma omp critical
+    {
+      CHECK(mean_values_.size() == 1 || mean_values_.size() == datum_channels) <<
+       "Specify either 1 mean_value or as many as channels: " << datum_channels;
+      if (datum_channels > 1 && mean_values_.size() == 1) {
+        // Replicate the mean_value for simplicity
+        for (int c = 1; c < datum_channels; ++c) {
+          mean_values_.push_back(mean_values_[0]);
+        }
       }
     }
   }
@@ -910,12 +1019,15 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img_in,
     mean = data_mean_.mutable_cpu_data();
   }
   if (has_mean_values) {
-    CHECK(mean_values_.size() == 1 || mean_values_.size() == img_channels) <<
-        "Specify either 1 mean_value or as many as channels: " << img_channels;
-    if (img_channels > 1 && mean_values_.size() == 1) {
-      // Replicate the mean_value for simplicity
-      for (int c = 1; c < img_channels; ++c) {
-        mean_values_.push_back(mean_values_[0]);
+   #pragma omp critical
+    {
+      CHECK(mean_values_.size() == 1 || mean_values_.size() == img_channels) <<
+          "Specify either 1 mean_value or as many as channels: " << img_channels;
+      if (img_channels > 1 && mean_values_.size() == 1) {
+        // Replicate the mean_value for simplicity
+        for (int c = 1; c < img_channels; ++c) {
+          mean_values_.push_back(mean_values_[0]);
+        }
       }
     }
   }
@@ -1010,12 +1122,15 @@ void DataTransformer<Dtype>::TransformInv(const Dtype* data, cv::Mat* cv_img,
     mean = data_mean_.mutable_cpu_data();
   }
   if (has_mean_values) {
-    CHECK(mean_values_.size() == 1 || mean_values_.size() == channels) <<
-        "Specify either 1 mean_value or as many as channels: " << channels;
-    if (channels > 1 && mean_values_.size() == 1) {
-      // Replicate the mean_value for simplicity
-      for (int c = 1; c < channels; ++c) {
-        mean_values_.push_back(mean_values_[0]);
+   #pragma omp critical
+    {
+      CHECK(mean_values_.size() == 1 || mean_values_.size() == channels) <<
+          "Specify either 1 mean_value or as many as channels: " << channels;
+      if (channels > 1 && mean_values_.size() == 1) {
+        // Replicate the mean_value for simplicity
+        for (int c = 1; c < channels; ++c) {
+          mean_values_.push_back(mean_values_[0]);
+        }
       }
     }
   }
@@ -1142,12 +1257,15 @@ void DataTransformer<Dtype>::ExpandImage(const cv::Mat& img,
     }
   }
   if (has_mean_values) {
-    CHECK(mean_values_.size() == 1 || mean_values_.size() == img_channels) <<
-        "Specify either 1 mean_value or as many as channels: " << img_channels;
-    if (img_channels > 1 && mean_values_.size() == 1) {
-      // Replicate the mean_value for simplicity
-      for (int c = 1; c < img_channels; ++c) {
-        mean_values_.push_back(mean_values_[0]);
+   #pragma omp critical
+    {
+      CHECK(mean_values_.size() == 1 || mean_values_.size() == img_channels) <<
+          "Specify either 1 mean_value or as many as channels: " << img_channels;
+      if (img_channels > 1 && mean_values_.size() == 1) {
+        // Replicate the mean_value for simplicity
+        for (int c = 1; c < img_channels; ++c) {
+          mean_values_.push_back(mean_values_[0]);
+        }
       }
     }
     vector<cv::Mat> channels(img_channels);
@@ -1499,6 +1617,7 @@ void DataTransformer<Dtype>::ReinitRand() {
     rand_num_.Init();
   }
 }
+
 
 INSTANTIATE_CLASS(DataTransformer);
 

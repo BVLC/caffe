@@ -10,15 +10,21 @@
 from fast_rcnn.config import cfg, get_output_dir
 from fast_rcnn.bbox_transform import clip_boxes, bbox_transform_inv
 import argparse
+from fast_rcnn import net_sample_utils
 from utils.timer import Timer
 import numpy as np
 import cv2
 import caffe
+import os
+import sys
+utilpath = os.path.split(os.path.realpath(__file__))[0] + "/../../../../scripts/"
+print utilpath
+sys.path.insert(0, utilpath)
+import sampling
 from fast_rcnn.nms_wrapper import nms
 import cPickle
 import gzip
 from utils.blob import im_list_to_blob
-import os
 
 def _get_image_blob(im):
     """Converts an image into a network input.
@@ -106,7 +112,7 @@ def _get_blobs(im, rois):
         blobs['rois'] = _get_rois_blob(rois, im_scale_factors)
     return blobs, im_scale_factors
 
-def im_detect(net, im, boxes=None):
+def im_detect(net, im, boxes=None, sample_blobs = None):
     """Detect object classes in an image given object proposals.
 
     Arguments:
@@ -154,6 +160,16 @@ def im_detect(net, im, boxes=None):
         forward_kwargs['rois'] = blobs['rois'].astype(np.float32, copy=False)
     blobs_out = net.forward(**forward_kwargs)
 
+    if sample_blobs != None:
+        for k, _ in net.blobs.items(): # top blob
+            output = np.array(net.blobs[k].data)
+            if k not in sample_blobs.keys():
+                sample_blobs[k] = [output]
+            else:
+                new_outputs = sample_blobs[k]
+                #print "new_outputs type: " + str(type(new_outputs))
+                new_outputs.append(output)
+                sample_blobs[k] = new_outputs
     if cfg.TEST.HAS_RPN:
         assert len(im_scales) == 1, "Only single-image batch implemented"
         rois = net.blobs['rois'].data.copy()
@@ -225,6 +241,28 @@ def apply_nms(all_boxes, thresh):
             nms_boxes[cls_ind][im_ind] = dets[keep, :].copy()
     return nms_boxes
 
+def sample_net(raw_net_prototxt, net, imdb, sampling_iterations, quant_mode, enable_first_conv = False, winograd_algo = False):
+
+    (conv_layers, test_net_top_names, test_net_bottom_names, conv_top_blob_layer_map, conv_bottom_blob_layer_map) = sampling.get_blob_map(net, enable_first_conv)
+    #currently out sample_net only supports TEST with HAS_RPN and AGNOSTIC flag
+    num_images = len(imdb.image_index)
+    image_index = 0
+    box_proposals = None
+    sample_blobs = {}
+    for iter_ in xrange(sampling_iterations):
+	im = cv2.imread(imdb.image_path_at(image_index))
+	im_detect(net, im, box_proposals, sample_blobs)
+	image_index += 1
+
+    params = {}
+    for k, _ in net.params.items():
+        if k not in conv_layers:
+            continue
+        param = np.abs(net.params[k][0].data) # ignore bias
+        params[k] = [param]
+
+    (winograd_bottoms, winograd_convolutions) = sampling.get_winograd_info(raw_net_prototxt, conv_bottom_blob_layer_map, winograd_algo)
+    return (sample_blobs, params, test_net_top_names, test_net_bottom_names, conv_top_blob_layer_map, conv_bottom_blob_layer_map, winograd_bottoms, winograd_convolutions)
 def test_net(net, imdb, max_per_image=400, thresh=-np.inf, vis=False):
     """Test a Fast R-CNN network on an image database."""
     num_images = len(imdb.image_index)

@@ -148,15 +148,18 @@ void DataReader::Body::read_one(DBWrapper* dbw, QueuePair* qp) {
 
 #ifdef USE_MLSL
   string* data = qp->free_.pop();
-  if(first_read_) { /* move each node’s file position to its node ID – this part can be move to the initialization */
-    for(int i=0;i<mn::get_node_id();i++) {
+  if(first_read_) {
+    /* move each node’s file position to its node ID – this part can be move to the initialization */
+    for(int i=0;i<mn::get_node_rank();i++) {
       dbw->Next();
     }
     first_read_ = false;
   }
   *data = dbw->value();
   qp->full_.push(data);
-  for(int i=0;i<mn::get_nodes_count();i++) {
+
+  int node_count = mn::get_num_groups() * mn::get_group_size();
+  for(int i=0;i<node_count;i++) {
     dbw->Next();
   }
 #else

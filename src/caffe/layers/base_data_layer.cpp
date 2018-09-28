@@ -62,6 +62,7 @@ void BaseDataLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   } else {
     output_labels_ = true;
   }
+  box_label_ = false;
   data_transformer_.reset(
       new DataTransformer<Dtype>(transform_param_, this->phase_));
   data_transformer_->InitRand();
@@ -90,7 +91,13 @@ void BasePrefetchingDataLayer<Dtype>::LayerSetUp(
   for (int i = 0; i < PREFETCH_COUNT; ++i) {
     prefetch_[i].data_.mutable_cpu_data();
     if (this->output_labels_) {
-      prefetch_[i].label_.mutable_cpu_data();
+      if (this->box_label_) {
+        for (int j = 0; j < top.size() - 1; ++j) {
+          prefetch_[i].multi_label_[j]->mutable_cpu_data();
+        }
+      } else {
+        prefetch_[i].label_.mutable_cpu_data();
+      }
     }
   }
 #ifndef CPU_ONLY
@@ -98,7 +105,13 @@ void BasePrefetchingDataLayer<Dtype>::LayerSetUp(
     for (int i = 0; i < PREFETCH_COUNT; ++i) {
       prefetch_[i].data_.mutable_gpu_data();
       if (this->output_labels_) {
-        prefetch_[i].label_.mutable_gpu_data();
+        if (this->box_label_) {
+          for (int j = 0; j < top.size() - 1; ++j) {
+            prefetch_[i].multi_label_[j]->mutable_gpu_data();
+          }
+        } else {
+          prefetch_[i].label_.mutable_gpu_data();
+        }
       }
     }
   }
@@ -172,11 +185,19 @@ void BasePrefetchingDataLayer<Dtype>::Forward_cpu(
              top[0]->mutable_cpu_data());
   DLOG(INFO) << "Prefetch copied";
   if (this->output_labels_) {
-    // Reshape to loaded labels.
-    top[1]->ReshapeLike(batch->label_);
-    // Copy the labels.
-    caffe_copy(batch->label_.count(), batch->label_.cpu_data(),
-        top[1]->mutable_cpu_data());
+    if (this->box_label_) {
+      for (int i = 0; i < top.size() - 1; ++i) {
+        top[i+1]->ReshapeLike(*(batch->multi_label_[i]));
+        caffe_copy(batch->multi_label_[i]->count(), batch->multi_label_[i]->cpu_data(),
+            top[i+1]->mutable_cpu_data());
+      }
+    } else {
+      // Reshape to loaded labels.
+      top[1]->ReshapeLike(batch->label_);
+      // Copy the labels.
+      caffe_copy(batch->label_.count(), batch->label_.cpu_data(),
+          top[1]->mutable_cpu_data());
+    }
   }
 
   // TODO: Consider prefetch_data_array and prefetch_label_array

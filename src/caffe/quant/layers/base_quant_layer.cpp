@@ -48,7 +48,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace caffe {
 
 template <typename Dtype>
-BaseQuantLayer<Dtype>::BaseQuantLayer() : need_quantize_(false), is_float_(false) {
+BaseQuantLayer<Dtype>::BaseQuantLayer() : need_quantize_(false) {
 }
 
 INSTANTIATE_CLASS(BaseQuantLayer);

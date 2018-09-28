@@ -67,22 +67,22 @@ void MKLPoolingLayer<Dtype>::Init(
   num_ = bottom[0]->num();
 
   if (pool_param.global_pooling()) {
-    CHECK(!(pool_param.kernel_size_size() ||
+    CHECK(!(pool_param.has_kernel_size() ||
       pool_param.has_kernel_h() || pool_param.has_kernel_w()))
       << "With Global_pooling: true Filter size cannot specified";
   } else {
-    CHECK(!pool_param.kernel_size_size() !=
+    CHECK(!pool_param.has_kernel_size() !=
       !(pool_param.has_kernel_h() && pool_param.has_kernel_w()))
       << "Filter size is kernel_size OR kernel_h and kernel_w; not both";
-    CHECK(pool_param.kernel_size_size() ||
+    CHECK(pool_param.has_kernel_size() ||
       (pool_param.has_kernel_h() && pool_param.has_kernel_w()))
       << "For non-square filters both kernel_h and kernel_w are required.";
   }
-  CHECK((!pool_param.pad_size() && pool_param.has_pad_h()
+  CHECK((!pool_param.has_pad() && pool_param.has_pad_h()
       && pool_param.has_pad_w())
       || (!pool_param.has_pad_h() && !pool_param.has_pad_w()))
       << "pad is pad OR pad_h and pad_w are required.";
-  CHECK((!pool_param.stride_size() && pool_param.has_stride_h()
+  CHECK((!pool_param.has_stride() && pool_param.has_stride_h()
       && pool_param.has_stride_w())
       || (!pool_param.has_stride_h() && !pool_param.has_stride_w()))
       << "Stride is stride OR stride_h and stride_w are required.";
@@ -91,15 +91,8 @@ void MKLPoolingLayer<Dtype>::Init(
     kernel_h_ = bottom[0]->height();
     kernel_w_ = bottom[0]->width();
   } else {
-    if (pool_param.kernel_size_size()) {
-      CHECK(pool_param.kernel_size_size() == 1 || pool_param.kernel_size_size() == 2)
-          << "kernel_size must be specified once, or 2 values for Height and Width";
-      if (pool_param.kernel_size_size() == 1) {
-        kernel_h_ = kernel_w_ = pool_param.kernel_size(0);
-      } else {
-        kernel_h_ = pool_param.kernel_size(0);
-        kernel_w_ = pool_param.kernel_size(1);
-      }
+    if (pool_param.has_kernel_size()) {
+      kernel_h_ = kernel_w_ = pool_param.kernel_size();
     } else {
       kernel_h_ = pool_param.kernel_h();
       kernel_w_ = pool_param.kernel_w();
@@ -108,33 +101,13 @@ void MKLPoolingLayer<Dtype>::Init(
   CHECK_GT(kernel_h_, 0) << "Filter dimensions cannot be zero.";
   CHECK_GT(kernel_w_, 0) << "Filter dimensions cannot be zero.";
   if (!pool_param.has_pad_h()) {
-    // CHECK(pool_param.pad_size() == 0 || pool_param.pad_size() == 1 || pool_param.pad_size() == 2)
-    CHECK(pool_param.pad_size() < 3)
-          << "pad must be specified no more than 3 dimensions";
-    if (pool_param.pad_size() == 0) {
-      pad_h_ = pad_w_ = 0;
-    } else if (pool_param.pad_size() == 1) {
-      pad_h_ = pad_w_ = pool_param.pad(0);
-    } else {
-      pad_h_ = pool_param.pad(0);
-      pad_w_ = pool_param.pad(1);
-    }
+    pad_h_ = pad_w_ = pool_param.pad();
   } else {
     pad_h_ = pool_param.pad_h();
     pad_w_ = pool_param.pad_w();
   }
   if (!pool_param.has_stride_h()) {
-    // CHECK(pool_param.stride_size() == 0 || pool_param.stride_size() == 1 || pool_param.stride_size() == 2)
-    CHECK(pool_param.stride_size() < 3)
-        << "stride must be specified no more than 3 dimensions";
-    if (pool_param.stride_size() == 0) {
-      stride_h_ = stride_w_ = 1;
-    } else if (pool_param.stride_size() == 1) {
-      stride_h_ = stride_w_ = pool_param.stride(0);
-    } else {
-      stride_h_ = pool_param.stride(0);
-      stride_w_ = pool_param.stride(1);
-    }
+    stride_h_ = stride_w_ = pool_param.stride();
   } else {
     stride_h_ = pool_param.stride_h();
     stride_w_ = pool_param.stride_w();

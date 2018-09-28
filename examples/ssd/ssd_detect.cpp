@@ -279,6 +279,9 @@ DEFINE_double(confidence_threshold, 0.01,
     "Only store detections with score higher than the threshold.");
 
 int main(int argc, char** argv) {
+#ifdef USE_MLSL
+  caffe::mn::init(&argc, &argv);
+#endif
   ::google::InitGoogleLogging(argv[0]);
   // Print output to stderr (while still logging)
   FLAGS_alsologtostderr = 1;

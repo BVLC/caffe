@@ -50,12 +50,15 @@ namespace caffe {
     int nServer = 0;
     boost::mutex distrib_lock;
     std::map<std::pair<int,int>, boost::shared_ptr<Distribution>> *distrib_map;
+    MLSL::Distribution *global_distrib = nullptr;
 
     void init(int* argc, char **argv[]) {
       static class initialize {
       public:
         initialize(int* argc, char** argv[]) {
           MLSL::Environment::GetEnv().Init(argc, argv);
+          global_distrib = 
+            MLSL::Environment::GetEnv().CreateDistribution(get_nodes_count(), 1);
           distrib_map =
             new std::map<std::pair<int,int>, boost::shared_ptr<Distribution>>();
           if (use_param_server()) {
@@ -77,6 +80,7 @@ namespace caffe {
         }
         ~initialize() {
           delete distrib_map;
+          MLSL::Environment::GetEnv().DeleteDistribution(global_distrib);
           MLSL::Environment::GetEnv().Finalize();
         }
       } __init{ argc, argv };

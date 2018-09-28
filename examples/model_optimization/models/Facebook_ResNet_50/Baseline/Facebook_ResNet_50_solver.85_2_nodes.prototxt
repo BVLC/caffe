@@ -1,0 +1,21 @@
+net: "examples/model_optimization/models/Facebook_ResNet_50/Facebook_ResNet_50_pruned/Facebook_ResNet_50_train.85.prototxt"
+test_iter: 1000
+test_interval: 100	#500
+test_initialization: false
+display: 40
+base_lr: 0.1
+lr_policy: "multistep"
+stepvalue:150137
+stepvalue:300274
+stepvalue:400365
+stepvalue:430000	#Use to lower the learning rate
+#stepvalue:435000	#Use to lower the learning rate
+gamma: 0.1
+max_iter: 500456	# 62556 is 100 epochs, 56300 is 90 epochs (16 nodes)
+warmup_iter: 15014	# 1281167 / 256 * 3 epochs
+warmup_start_lr: 0.1
+momentum: 0.9
+weight_decay: 0.0001
+snapshot: 100	#500
+snapshot_prefix: "Facebook_resnet_50_2_nodes_256_batch_100_warmup3_15p_finest_tune"
+solver_mode: CPU

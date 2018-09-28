@@ -437,6 +437,7 @@ namespace caffe {
       // communication
       for (int i = layers.size() - 1; i >= 0; i--) {
         for (int j = layer_param_ids[i].size() - 1; j >= 0; j--) {
+          if (!layers[i]->ParamNeedReduce(j)) continue;
           int param_id = layer_param_ids[i][j];
           if (!broadcast_launched[param_id]) {
             if (irecv_done[param_id]) {
@@ -461,6 +462,7 @@ namespace caffe {
         } else {
           std::vector<int> &param_ids = layer_param_ids[layer_id];
           for (int i=param_ids.size() - 1; i >= 0; --i) {
+            if (!layer->ParamNeedReduce(i)) continue;
             launch_param_broadcast(param_ids[i]);
           }
         }
@@ -486,6 +488,7 @@ namespace caffe {
           check_and_launch_broadcast();
           bcast_launched = true;
           for (int i = param_ids.size() - 1; i >= 0; i--) {
+            if (!layers[layer_id]->ParamNeedReduce(i)) continue;
             bcast_launched = bcast_launched & broadcast_launched[param_ids[i]];
           }
         }
@@ -496,6 +499,8 @@ namespace caffe {
 #endif
 
       for (int i = param_ids.size() - 1; i >= 0; i--) {
+        if (!layers[layer_id]->ParamNeedReduce(i)) continue;
+
         int param_id = param_ids[i];
         DLOG(INFO) << " Wait reduce layer id " << layer_id << " param id " << param_id;
         // wait for reduce

@@ -112,6 +112,9 @@ Dtype SoftmaxWithLossLayer<Dtype>::get_normalizer(
     case LossParameter_NormalizationMode_BATCH_SIZE:
       normalizer = Dtype(outer_num_);
       break;
+    case LossParameter_NormalizationMode_PRE_FIXED:
+      normalizer = Dtype(this->layer_param_.loss_param().pre_fixed_normalizer());
+      break;
     case LossParameter_NormalizationMode_NONE:
       normalizer = Dtype(1);
       break;
@@ -119,9 +122,24 @@ Dtype SoftmaxWithLossLayer<Dtype>::get_normalizer(
       LOG(FATAL) << "Unknown normalization mode: "
           << LossParameter_NormalizationMode_Name(normalization_mode);
   }
+#ifdef USE_MLSL
+  if (normalization_mode != LossParameter_NormalizationMode_NONE) {
+    Dtype allnodes_normalizer(normalizer);
+    DLOG(INFO) << "node id: " << mn::get_node_id() << ", normalizer: " << normalizer;
+    if (has_ignore_label_) {
+      mn::allreduce(&allnodes_normalizer, 1);
+    } else {
+      // We assume local bs is same across all nodes
+      allnodes_normalizer *= mn::get_group_size();
+    }
+    normalizer = allnodes_normalizer;
+  }
+#endif
+  DLOG(INFO) << "Final normalizer: " << normalizer;
   // Some users will have no labels for some examples in order to 'turn off' a
   // particular loss in a multi-task setup. The max prevents NaNs in that case.
-  return std::max(Dtype(1.0), normalizer);
+  this->cached_normalizer_ = std::max(Dtype(1.0), normalizer);
+  return this->cached_normalizer_;
 }
 
 template <typename Dtype>
@@ -196,7 +214,7 @@ void SoftmaxWithLossLayer<Dtype>::Forward_cpu(
         loss -= loss_local;
       }
 
-      Dtype normalizer = LossLayer<Dtype>::GetNormalizer(normalization_, outer_num_, inner_num_, count);
+      Dtype normalizer = this->get_normalizer(normalization_, count);
       top[0]->mutable_cpu_data()[0] = loss / normalizer;
       if (top.size() == 2) {
         top[1]->ShareData(prob_);
@@ -282,8 +300,7 @@ void SoftmaxWithLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
           }
         }
         // Scale gradient
-        Dtype normalizer = LossLayer<Dtype>::GetNormalizer(normalization_, outer_num_, inner_num_, count);
-        Dtype loss_weight = top[0]->cpu_diff()[0] / normalizer;
+        Dtype loss_weight = top[0]->cpu_diff()[0] / this->cached_normalizer_;
         caffe_scal(prob_.count(), loss_weight, bottom_diff);
     }
   }

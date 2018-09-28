@@ -116,9 +116,24 @@ Dtype SmoothL1LossOHEMLayer<Dtype>::get_normalizer(
     LOG(FATAL) << "Unknown normalization mode: "
       << LossParameter_NormalizationMode_Name(normalization_mode);
   }
+#ifdef USE_MLSL
+  if (normalization_mode != LossParameter_NormalizationMode_NONE) {
+    Dtype allnodes_normalizer(normalizer);
+    DLOG(INFO) << "node id: " << mn::get_node_id() << ", normalizer: " << normalizer;
+    if (normalization_mode == LossParameter_NormalizationMode_VALID) {
+      mn::allreduce(&allnodes_normalizer, 1);
+    } else {
+      // We assume local bs or pre_fixed_normalizer is same across all nodes
+      allnodes_normalizer *= mn::get_group_size();
+    }
+    normalizer = allnodes_normalizer;
+  }
+#endif
+  DLOG(INFO) << "Final normalizer: " << normalizer;
   // Some users will have no labels for some examples in order to 'turn off' a
   // particular loss in a multi-task setup. The max prevents NaNs in that case.
-  return std::max(Dtype(1.0), normalizer);
+  this->cached_normalizer_ = std::max(Dtype(1.0), normalizer);
+  return this->cached_normalizer_;
 }
 
 template <typename Dtype>
@@ -216,11 +231,7 @@ void SmoothL1LossOHEMLayer<Dtype>::Backward_cpu(
     for (int i = 0; i < 2; ++i) {
       if (propagate_down[i]) {
         const Dtype sign = (i == 0) ? 1 : -1;
-
-        Dtype pre_fixed_normalizer =
-          this->layer_param_.loss_param().pre_fixed_normalizer();
-        Dtype normalizer = get_normalizer(normalization_, pre_fixed_normalizer);
-        Dtype alpha = sign * top[0]->cpu_diff()[0] / normalizer;
+        Dtype alpha = sign * top[0]->cpu_diff()[0] / this->cached_normalizer_;
 
         caffe_cpu_axpby(
           bottom[i]->count(),              // count

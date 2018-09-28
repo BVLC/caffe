@@ -17,7 +17,7 @@ docker run -ti caffe:cpu caffe --version
 ```
 which should show a message like:
 ```
-caffe version 1.1.0
+caffe version 1.1.2
 ```
 
 One can also build and run the Caffe tests in the image using:

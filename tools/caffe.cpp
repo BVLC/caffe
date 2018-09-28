@@ -117,6 +117,8 @@ DEFINE_bool(detection, false,
     "By default it is false and classification is on.");
 DEFINE_bool(fast_compare, false,
     "Optional; Break layer comparison after fast_compare_max errors found");
+DEFINE_bool(sampling, false,
+    "Optional; Caffe test with sampling mode");
 DEFINE_int32(fast_compare_max, 50,
     "Optional; Max errors for fast_compare");
 DEFINE_double(buffer_filler, std::nanf(""), "Buffer filler for compare tool");
@@ -321,7 +323,7 @@ int train() {
 
 #ifdef USE_MLSL
   if (caffe::mn::is_multinode()) {
-    MPI_Barrier(MPI_COMM_WORLD);
+    caffe::mn::barrier();
     LOG(INFO) << "Configuring multinode setup";
     if (!caffe::mn::is_param_server()) {
       caffe::MultiSync<float> sync(solver);
@@ -469,6 +471,10 @@ int test() {
   Net<float> caffe_net(FLAGS_model, caffe::TEST, FLAGS_level, &stages, NULL,
                        FLAGS_engine);
   caffe_net.CopyTrainedLayersFrom(FLAGS_weights);
+
+  if (FLAGS_sampling)
+      return 0;
+
   LOG(INFO) << "Running for " << FLAGS_iterations << " iterations.";
 
   if (FLAGS_detection) {
@@ -495,7 +501,7 @@ int test() {
         } else {
           test_score[idx] += score;
         }
-        const std::string& output_name = caffe_net.blob_names()[
+         const std::string& output_name = caffe_net.blob_names()[
             caffe_net.output_blob_indices()[j]];
         LOG(INFO) << "Batch " << i << ", " << output_name << " = " << score;
       }

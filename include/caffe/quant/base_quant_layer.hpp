@@ -51,10 +51,9 @@ class BaseQuantLayer{
  protected:
   int bw_params_, bw_layer_in_, bw_layer_out_;
   vector<int> fl_params_, fl_layer_in_, fl_layer_out_;
-  vector<float> scale_params_, scale_in_, scale_out_;
+  vector<float> scale_params_, scale_in_, scale_out_; // min_in_;
   int rounding_, precision_;
   bool need_quantize_;
-  bool is_float_;
 };
 
 }  // namespace caffe

@@ -535,7 +535,8 @@ void Net<Dtype>::CompileNet(const NetParameter& param,
   NetParameter param_temp[2];
   void (*CompileRules[]) (const NetParameter& param, NetParameter* param_compiled) =
     {RemoveBNScale<Dtype>, CompilationRuleRemoveScale, CompilationRuleConvReluFusion,
-    CompilationRuleFuseBnRelu, CompilationRuleBNInplace, CompilationRuleSparse, CompilationRuleConvSumFusion};
+    CompilationRuleFuseBnRelu, CompilationRuleBNInplace, CompilationRuleSparse, 
+    CompilationRuleConvSumFusion};
 
   bool disabled[NUM_OF_RULES] = {false};
 
@@ -568,7 +569,7 @@ void Net<Dtype>::CompileNet(const NetParameter& param,
   #undef COMPILE_BN_FOLDING_INDEX
   #undef COMPILE_CONV_RELU_FUSION_INDEX
   #undef COMPILE_BN_RELU_FUSION_INDEX
-  #undef DISABLE_SPARSE_INDEX
+  #undef COMPILE_SPARSE_INDEX
   #undef COMPILE_CONV_SUM_FUSION_INDEX
 }
 
@@ -601,14 +602,16 @@ void Net<Dtype>::CompilationRuleRemoveScale(const NetParameter& param,
           ((layer_param->batch_norm_param().engine() == BatchNormParameter_Engine_DEFAULT) &&
            (layer_param->has_engine() == false)  &&
            (param.engine().compare("MKL2017") == 0)) ||
-          (param.engine() == "" && layer_param->engine().compare("MKL2017") == 0))) ||
+          ((layer_param->batch_norm_param().has_engine() == false) &&
+           (layer_param->engine().compare("MKL2017") == 0)))) ||
         // If current layer is BatchNorm of MKLDNN engine..
         ((layer_param->type().compare("BatchNorm") == 0) &&
          ((layer_param->batch_norm_param().engine() == BatchNormParameter_Engine_MKLDNN) ||
           ((layer_param->batch_norm_param().engine() == BatchNormParameter_Engine_DEFAULT) &&
            (layer_param->has_engine() == false)  &&
            (param.engine().compare("MKLDNN") == 0)) ||
-          (param.engine() == "" && layer_param->engine().compare("MKLDNN") == 0)))) {
+          ((layer_param->batch_norm_param().has_engine() == false) &&
+           (layer_param->engine().compare("MKLDNN") == 0))))) {
       std::vector<const LayerParameter*> consumer_layer_params;
       GetBlobConsumers(consumer_layer_params,
                        layer_param->top(0),
@@ -642,6 +645,10 @@ void Net<Dtype>::CompilationRuleRemoveScale(const NetParameter& param,
         if (consumer_layer_param.blobs_size() == 2) {
           layer_param->add_blobs()->CopyFrom(consumer_layer_param.blobs(0));
           layer_param->add_blobs()->CopyFrom(consumer_layer_param.blobs(1));
+        }
+        if (consumer_layer_param.param_size() == 2) {
+          layer_param->add_param()->CopyFrom(consumer_layer_param.param(0));
+          layer_param->add_param()->CopyFrom(consumer_layer_param.param(1));
         }
       }
     }
@@ -709,7 +716,12 @@ void Net<Dtype>::CompilationRuleConvReluFusion(const NetParameter& param,
         string& convolution_top_blob_name =
             const_cast<string&>(layer_param->top(0));
 
-        if(param.state().phase() == TEST) {
+        float negative_slope1 =
+                  consumer_layer_param.relu_param().negative_slope();
+        if (negative_slope1 != 0) {
+            use_negative_slope = true;
+        }
+        if(param.state().phase() == TEST && !negative_slope1) {
           const string& scale_top_blob_name = consumer_layer_param.top(0);
           // Mark Consumer layer (its name) as the one marked for dropping
           layers_to_drop.insert(consumer_layer_param.name());
@@ -720,13 +732,9 @@ void Net<Dtype>::CompilationRuleConvReluFusion(const NetParameter& param,
                                           scale_top_blob_name.size(),
                                           scale_top_blob_name);
         }
-        float negative_slope1 =
-                  consumer_layer_param.relu_param().negative_slope();
-        if (negative_slope1 != 0) {
-            use_negative_slope = true;
-        } else {
-            layer_param->mutable_convolution_param()->set_relu(true);
-            layer_param->mutable_convolution_param()->set_negative_slope(0);
+        if(!use_negative_slope) {
+          layer_param->mutable_convolution_param()->set_relu(true);
+          layer_param->mutable_convolution_param()->set_negative_slope(0);
         }
         if(param.state().phase() == TRAIN && !use_negative_slope) {
           if(i+1 < param.layer_size()) {
@@ -862,7 +870,7 @@ void Net<Dtype>::CompilationRuleBNInplace(const NetParameter& param,
 
 template <typename Dtype>
 void Net<Dtype>::CompilationRuleConvSumFusion(const NetParameter& param,
-                                     NetParameter* param_compiled) {
+                                              NetParameter* param_compiled) {
   // only apply this rule for inference(TEST) phase
   if (param.state().phase() != TEST || param.engine().compare("MKLDNN") != 0) {
     param_compiled->CopyFrom(param);
@@ -870,19 +878,44 @@ void Net<Dtype>::CompilationRuleConvSumFusion(const NetParameter& param,
   }
   string blob_need_to_insert;
   LayerParameter* need_to_convert_layer = NULL;
+  bool has_relu_flag = true;
+  bool need_fusion_flag;
+  std::set<string> invalid_fusion_blob_names;
+
+
   for (int i = 0; i < param.layer_size(); i++) {
+    need_fusion_flag = true;
     LayerParameter* layer_param =
         (const_cast<NetParameter&>(param)).mutable_layer(i);
-    if (layer_param->type().compare("Convolution") == 0 
-        && (layer_param->has_engine() == false
-        || (layer_param->has_engine() == true
-        && layer_param->engine().compare("MKLDNN") ==0))) {
+    if (layer_param->type().compare("Split") == 0 &&
+        layer_param->top_size() > 2) {
+      for (int j = 0; j < layer_param->top_size() - 1; j++) {
+        invalid_fusion_blob_names.insert(layer_param->top(j));
+      }
+    }
+    if (layer_param->type().compare("Convolution") == 0 &&
+        (layer_param->has_engine() == false ||
+         (layer_param->has_engine() == true &&
+          layer_param->engine().compare("MKLDNN") == 0))) {
       std::vector<const LayerParameter*> child_layers_params;
       Net<Dtype>::GetBlobConsumers(child_layers_params, layer_param->top(0),
                                    param,
                                    i + 1 < param.layer_size() ? i + 1 : i);
+      if (child_layers_params.size() > 0 &&
+          child_layers_params[0]->type().compare("Eltwise") == 0) {
 
-      if (child_layers_params.size() > 0 && child_layers_params[0]->type().compare("Eltwise") == 0) {
+        for (int k = 0; k < child_layers_params[0]->bottom_size(); k++) {
+          if (invalid_fusion_blob_names.count(
+                  child_layers_params[0]->bottom(k)) > 0) {
+            need_fusion_flag = false;
+            break;
+          }
+        }
+        if (!need_fusion_flag) {
+          param_compiled->add_layer()->CopyFrom(*layer_param);
+          continue;
+        }
+
         std::vector<const LayerParameter*> grand_child_layers_params;
 
         Net<Dtype>::GetBlobConsumers(grand_child_layers_params,
@@ -894,18 +927,23 @@ void Net<Dtype>::CompilationRuleConvSumFusion(const NetParameter& param,
                 : *layer_param;
 
         if (grand_child_layer_param.type().compare("ReLU") != 0) {
-          param_compiled->add_layer()->CopyFrom(*layer_param);
-          continue;
+          has_relu_flag = false;
         }
 
-        if (child_layers_params[0]->bottom(0) == layer_param->top(0) ) {
+        if (child_layers_params[0]->bottom(0) == layer_param->top(0)) {
           param_compiled->add_layer()->CopyFrom(*layer_param);
           need_to_convert_layer = layer_param;
           continue;
         }
 
-        const_cast<string&>(layer_param->top(0)) =
-            grand_child_layer_param.top(0);
+        if (has_relu_flag) {
+          const_cast<string&>(layer_param->top(0)) =
+              grand_child_layer_param.top(0);
+        } else {
+          const_cast<string&>(layer_param->top(0)) =
+              child_layers_params[0]->top(0);
+        }
+
         if (need_to_convert_layer != NULL) {
           layer_param->add_bottom(
               const_cast<string&>(need_to_convert_layer->top(0)));
@@ -915,7 +953,22 @@ void Net<Dtype>::CompilationRuleConvSumFusion(const NetParameter& param,
               const_cast<string&>(child_layers_params[0]->bottom(0)));
         }
 
-        i += 2;  // skip next eltwise and relu
+        if (has_relu_flag) {
+          i += 2;  // skip next eltwise and relu
+          layer_param->mutable_convolution_param()->set_relu(true);
+        } else {
+          i += 1;
+        }
+
+        layer_param->mutable_convolution_param()->set_fusion_type(ConvolutionParameter::SUM_FUSION);
+        size_t coeff_size = child_layers_params[0]->eltwise_param().coeff_size();
+        if (coeff_size > 0)
+        {   
+          for (int i = 0; i < coeff_size; ++i) 
+          {
+            layer_param->mutable_convolution_param()->add_coeff(child_layers_params[0]->eltwise_param().coeff(i));
+          }
+        }   
       }
     }
 
@@ -983,6 +1036,8 @@ void Net<Dtype>::CompilationRuleSparse(const NetParameter& param,
           (layer_param->convolution_param().pad_size() == 0 ||
            (layer_param->convolution_param().pad_size() > 0 &&
             layer_param->convolution_param().pad(0) == 0))) {
+        if (potential_sparse_layer == NULL)
+            continue;
         confirmed_sparse_layer = potential_sparse_layer;
 
         if (trigger_sparse_layers.size() > 0) {
@@ -1070,9 +1125,9 @@ void Net<Dtype>::CompilationRuleSparse(const NetParameter& param,
       each_layer_param->add_bottom(pooling_layer_id_top_blob[i]);
       each_layer_param->add_top(pooling_layer_id_top_blob[i] + "_p");
 
-      each_layer_param->mutable_pooling_param()->add_stride(
+      each_layer_param->mutable_pooling_param()->set_stride(
           pooling_layer_id_stride[i]);
-      each_layer_param->mutable_pooling_param()->add_kernel_size(1);
+      each_layer_param->mutable_pooling_param()->set_kernel_size(1);
       each_layer_param->mutable_pooling_param()->set_pool(
           PoolingParameter_PoolMethod_MAX);
 
@@ -1368,6 +1423,7 @@ vector<Dtype> Net<Dtype>::FindMax(Blob<Dtype>* blob, bool is_single) {
         if((i + 1) % step == 0) {
           max_vals.at(index) = std::max(max_val, (Dtype)fabs(data[i]));
           ++index;
+          max_val = (Dtype)(-10);
         } else {
           max_val = std::max(max_val, (Dtype)fabs(data[i]));
         }
@@ -1388,6 +1444,7 @@ vector<Dtype> Net<Dtype>::FindMax(Blob<Dtype>* blob, bool is_single) {
         if((i + 1) % step == 0) {
           max_vals.at(index) = std::max(max_val, (Dtype)fabs(data[i]));
           ++index;
+          max_val = (Dtype)(-10);
         } else {
           max_val = std::max(max_val, (Dtype)fabs(data[i]));
         }
@@ -1857,6 +1914,26 @@ void Net<Dtype>::CopyTrainedLayersFrom(const NetParameter& param_inp) {
   for (vector<string>::iterator it = this->kept_bn_layers_.begin(); it != this->kept_bn_layers_.end(); it++) {
     param_tmp.mutable_compile_net_state()->add_kept_bn_layers(*it);
   }
+  int num_source_layers = param.layer_size();
+  for (int i = 0; i < num_source_layers; ++i) {
+    LayerParameter* source_layer = param.mutable_layer(i);
+    const string& source_layer_name = source_layer->name();
+    int target_layer_id = 0;
+    while (target_layer_id != layer_names_.size() &&
+        layer_names_[target_layer_id] != source_layer_name) {
+      ++target_layer_id;
+    }
+    if (target_layer_id == layer_names_.size()) {
+      continue;
+    }
+    const LayerParameter& layer_param = layers_[target_layer_id]->layer_param();
+    const string& engine_name = layer_param.engine();
+    source_layer->set_engine(engine_name);
+    if ((layer_param.type().compare("BatchNorm") == 0) &&
+        (layer_param.batch_norm_param().has_engine())) {
+      source_layer->mutable_batch_norm_param()->set_engine(layer_param.batch_norm_param().engine());
+    }
+  }
   NetParameter param_compiled;
   CompileNet(param, &param_compiled);
   param = param_compiled;
@@ -1869,7 +1946,7 @@ void Net<Dtype>::CopyTrainedLayersFrom(const NetParameter& param_inp) {
   }
 #endif
 
-  int num_source_layers = param.layer_size();
+  num_source_layers = param.layer_size();
   for (int i = 0; i < num_source_layers; ++i) {
     const LayerParameter& source_layer = param.layer(i);
     const string& source_layer_name = source_layer.name();

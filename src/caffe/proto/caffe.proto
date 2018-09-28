@@ -230,6 +230,8 @@ message CompileNetState {
   optional bool bn_scale_remove = 2 [default = false];
   optional bool bn_scale_merge = 3 [default = false];
   repeated string kept_bn_layers = 4;
+  repeated string negative_conv_names = 5;
+  repeated uint32 negative_conv_indexes = 6;
 }
 
 message MultinodeParameter {
@@ -358,6 +360,10 @@ message SolverParameter {
   repeated int32 stepvalue = 34;
   // the stepsize for learning rate policy "plateau"
   repeated int32 plateau_winsize = 44;
+  
+  // for rate policy "multifixed"
+  repeated float stagelr = 150;
+  repeated int32 stageiter = 151;
 
   // Set clip_gradients to >= 0 to clip parameter gradients to that L2 norm,
   // whenever their actual L2 norm is larger.
@@ -596,8 +602,9 @@ message LayerParameter {
   optional SmoothL1LossParameter smooth_l1_loss_param = 148;
   optional SoftmaxParameter softmax_param = 125;
   optional SPPParameter spp_param = 132;
-  optional SplitParameter split_param = 147;
+  optional SplitParameter split_param = 208;
   optional SliceParameter slice_param = 126;
+  optional SwishParameter swish_param = 147;
   optional TanHParameter tanh_param = 127;
   optional ThresholdParameter threshold_param = 128;
   optional TileParameter tile_param = 138;
@@ -610,6 +617,52 @@ message LayerParameter {
   optional MnActivationParameter mn_activation_param = 151;
   optional MnParamGradCompressParameter mn_grad_compress_param = 156;
   optional QuantizationParameter quantization_param = 158;
+  
+  optional ReorgParameter reorg_param = 159;
+  optional RegionLossParameter region_loss_param = 209;
+  // Yolo detection evaluation layer
+  optional EvalDetectionParameter eval_detection_param = 301;
+}
+
+message RegionLossParameter{
+  //Yolo 9000
+  optional uint32 side = 1 [default = 13];
+  optional uint32 num_class = 2 [default = 20];
+  optional uint32 bias_match = 3 [default = 1];
+  optional uint32 coords = 4 [default = 4];
+  optional uint32 num = 5 [default = 5];
+  optional uint32 softmax = 6 [default = 1];
+  optional float jitter = 7 [default = 0.2];
+  optional uint32 rescore = 8 [default = 1];
+
+  optional float object_scale = 9 [default = 1.0];
+  optional float class_scale = 10 [default = 1.0];
+  optional float noobject_scale = 11 [default = 0.5];
+  optional float coord_scale = 12 [default = 5.0];
+  optional uint32 absolute = 13 [default = 1];
+  optional float thresh = 14 [default = 0.2];
+  optional uint32 random = 15 [default = 1];
+  repeated float biases = 16;
+  optional string softmax_tree = 17;
+  optional string class_map = 18;
+}
+
+message EvalDetectionParameter {
+  enum ScoreType {
+    OBJ = 0;
+    PROB = 1;
+    MULTIPLY = 2;
+  }
+  // Yolo detection evaluation layer
+  optional uint32 side = 1 [default = 7];
+  optional uint32 num_class = 2 [default = 20];
+  optional uint32 num_object = 3 [default = 2];
+  optional float threshold = 4 [default = 0.5];
+  optional bool sqrt = 5 [default = true];
+  optional bool constriant = 6 [default = true];
+  optional ScoreType score_type = 7 [default = MULTIPLY];
+  optional float nms = 8 [default = -1];
+  repeated float biases = 9;
 }
 
 message MultinodeLayerParameter {
@@ -697,6 +750,8 @@ message TransformationParameter {
 
     //will flip x flow if flow image input
   optional bool flow = 17 [default = false];
+
+  optional bool bgr2rgb = 18 [ default = false ];
 }
 
 message RandomResizeParameter {
@@ -923,6 +978,9 @@ message ConcatParameter {
   // DEPRECATED: alias for "axis" -- does not support negative indexing.
   optional uint32 concat_dim = 1 [default = 1];
 
+  // For permute and flatten fuse in SSD-VGG16
+  optional bool per_fla_fuse = 4 [default = false];
+
   enum Engine {
     DEFAULT = 0;
     CAFFE = 1;
@@ -1017,6 +1075,11 @@ message ContrastiveLossParameter {
   optional bool legacy_version = 2 [default = false];
 }
 
+message ReorgParameter {
+  optional uint32 stride = 1;
+  optional bool reverse = 2 [default = false];
+}
+
 message ConvolutionParameter {
   optional uint32 num_output = 1; // The number of outputs for the layer
   optional bool bias_term = 2 [default = true]; // whether to have bias terms
@@ -1074,6 +1137,13 @@ message ConvolutionParameter {
   optional bool relu = 19 [default = false];
   optional float negative_slope = 20 [default = 0];
   optional string conv_algorithm = 21 [default = "direct"];
+  repeated float coeff = 23; // bypass R-FCN test issue 
+  enum FusionType {
+    NONE_FUSION = 0;
+    SUM_FUSION = 1;
+  }
+  optional FusionType fusion_type = 24 [default = NONE_FUSION];
+
 }
 
 message CropParameter {
@@ -1128,6 +1198,8 @@ message DataParameter {
   optional uint32 prefetch = 10 [default = 4];
   // Whether or not DataLayer should shuffle the images at every epoch.
   optional bool shuffle = 11 [default = false];
+  
+  repeated uint32 side = 12;
 }
 
 // Message that store parameters used by DetectionEvaluateLayer
@@ -1377,6 +1449,7 @@ message ImageDataParameter {
 message InfogainLossParameter {
   // Specify the infogain matrix source.
   optional string source = 1;
+  optional int32 axis = 2 [default = 1]; // axis of prob
 }
 
 message InnerProductParameter {
@@ -1560,22 +1633,24 @@ message PoolingParameter {
     AVE = 1;
     STOCHASTIC = 2;
   }
-  optional bool avg_include_pad = 13 [default = true];
   optional PoolMethod pool = 1 [default = MAX]; // The pooling method
-  // Pad, kernel size, and stride are all given as a single value for equal
-  // dimensions in all spatial dimensions, or once per spatial dimension.
-  repeated uint32 pad = 2; // The padding size defaults to 0
-  repeated uint32 kernel_size = 3; // The kernel size (square)
-  repeated uint32 stride = 4; // defaults to 1
+  // For 2D pooling only, Pad, kernel size, and stride are all given as a
+  // single value for equal dimensions in height and width or as Y, X pairs.
+  optional uint32 pad = 4 [default = 0]; // The padding size (equal in Y, X)
+  optional uint32 pad_h = 9 [default = 0]; // The padding height
+  optional uint32 pad_w = 10 [default = 0]; // The padding width
+  optional uint32 kernel_size = 2; // The kernel size (square)
+  optional uint32 kernel_h = 5; // The kernel height
+  optional uint32 kernel_w = 6; // The kernel width
+  optional uint32 stride = 3 [default = 1]; // The stride (equal in Y, X)
+  optional uint32 stride_h = 7; // The stride height
+  optional uint32 stride_w = 8; // The stride width
+  // For 3D pooling only, dimensions in all spatial dimensions, or once
+  // per spatial dimension.
+  repeated uint32 pad_3d = 15; // The padding size defaults to 0
+  repeated uint32 kernel_size_3d = 16; // The kernel size (square)
+  repeated uint32 stride_3d = 17; // defaults to 1
 
-  // For 2D pooling only, the *_h and *_w versions may also be used to
-  // specify both spatial dimensions.
-  optional uint32 pad_h = 5 [default = 0]; // The padding height (2D only)
-  optional uint32 pad_w = 6 [default = 0]; // The padding width (2D only)
-  optional uint32 kernel_h = 7; // The kernel height (2D only)
-  optional uint32 kernel_w = 8; // The kernel width (2D only)
-  optional uint32 stride_h = 9 [default = 1]; // The stride height (2D only)
-  optional uint32 stride_w = 10 [default = 1]; // The stride width (2D only)
   enum Engine {
     DEFAULT = 0;
     CAFFE = 1;
@@ -1587,6 +1662,7 @@ message PoolingParameter {
   // If global_pooling then it will pool over the size of the bottom by doing
   // kernel_h = bottom->height and kernel_w = bottom->width
   optional bool global_pooling = 12 [default = false];
+  optional bool avg_include_pad = 13 [default = true];
   // The axis to interpret as "channels" when performing pooling.
   // Preceding dimensions are treated as independent inputs;
   // succeeding dimensions are treated as "spatial".
@@ -1791,6 +1867,7 @@ message ReshapeParameter {
   //
   optional int32 axis = 2 [default = 0];
   optional int32 num_axes = 3 [default = -1];
+  optional int32 pixelshuffler = 4 [default = 1];
 }
 
 // Message that stores parameters used by ROIPoolingLayer
@@ -1882,6 +1959,15 @@ message SoftmaxParameter {
   // from the end (e.g., -1 for the last axis).
   // Any other axes will be evaluated as independent softmaxes.
   optional int32 axis = 2 [default = 1];
+}
+
+// Message that stores parameters used by SwishLayer
+message SwishParameter {
+  // Beta parameter for the Swish activation function
+  // Described in:
+  // Prajit Ramachandran, Barret Zoph, Quoc V. Le. (2017). Searching for
+  // Activation Functions. https://arxiv.org/abs/1710.05941v2
+  optional float beta = 1 [default = 1];
 }
 
 message TanHParameter {
@@ -2161,6 +2247,6 @@ message PReLUParameter {
 
   // Initial value of a_i. Default is a_i=0.25 for all i.
   optional FillerParameter filler = 1;
-  // Whether or not slope paramters are shared across channels.
+  // Whether or not slope parameters are shared across channels.
   optional bool channel_shared = 2 [default = false];
 }

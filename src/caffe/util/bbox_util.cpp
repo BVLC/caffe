@@ -48,7 +48,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "boost/iterator/counting_iterator.hpp"
 
 #include "caffe/util/bbox_util.hpp"
-
+#ifdef ENABLE_NMS_OPTIMIZATION
+#include <immintrin.h>
+#include "omp.h"
+#endif
 namespace caffe {
 
 bool SortBBoxAscend(const NormalizedBBox& bbox1, const NormalizedBBox& bbox2) {
@@ -82,6 +85,437 @@ template bool SortScorePairDescend(const pair<float, int>& pair1,
                                    const pair<float, int>& pair2);
 template bool SortScorePairDescend(const pair<float, pair<int, int> >& pair1,
                                    const pair<float, pair<int, int> >& pair2);
+#ifdef ENABLE_NMS_OPTIMIZATION
+#define DIVUP(m, n)((m) / (n) + ((m) % (n) > 0))
+
+typedef unsigned long long int uint64_t;
+
+static inline float max(float a, float b) { return (a) > (b) ? (a) : (b); }
+static inline float min(float a, float b) { return (a) < (b) ? (a) : (b); }
+
+#define MASK_ELEM(x, y) \
+  ((uint64_t*)((char*)mask_tbl + x * blocks * sizeof(uint64_t)) + y)
+
+void cpu_nms_avx512_parallize_inner(int* __restrict keep_out, 
+                                    int* __restrict num_out, 
+                                    const float* __restrict x1,
+                                    const float* __restrict y1,
+                                    const float* __restrict x2, 
+                                    const float* __restrict y2,
+                                    int64_t boxes_num, 
+                                    float thresh_f)
+{
+    const int blocks = DIVUP(boxes_num, 64);
+    uint64_t *mask_tbl = (uint64_t *)aligned_alloc(64, blocks * sizeof(uint64_t));
+    memset(mask_tbl, 0, sizeof(uint64_t) * blocks);
+
+    uint64_t i = 0, j = 0;
+    uint64_t num_to_keep = 0;
+
+    for (i = 0; i < boxes_num; i++) {
+
+        if (mask_tbl[i/64] & (1ull << (i % 64))) {
+            continue;
+        }
+
+        keep_out[num_to_keep++] = i;
+
+        __m512 x1_a = _mm512_set1_ps(x1[i]);
+        __m512 x2_a = _mm512_set1_ps(x2[i]);
+        __m512 y1_a = _mm512_set1_ps(y1[i]);
+        __m512 y2_a = _mm512_set1_ps(y2[i]);
+
+        __m512 zero = _mm512_setzero_ps();
+        __m512 Sa_w = _mm512_sub_ps(x2_a, x1_a);
+        __m512 Sa_h = _mm512_sub_ps(y2_a, y1_a);
+
+        __m512 Sa = _mm512_mul_ps(Sa_w, Sa_h);
+
+        __m512 thresh = _mm512_set1_ps(thresh_f);
+
+
+        for (j = i + 1; (j & 0xf) && (j < boxes_num); j ++) {
+
+            if (mask_tbl[j/64] & (1ull << (j % 64))) {
+                continue;
+            }
+
+            float xx1 = max(x1[i], x1[j]);
+            float yy1 = max(y1[i], y1[j]);
+            float xx2 = min(x2[i], x2[j]);
+            float yy2 = min(y2[i], y2[j]);
+
+            float w = max(0.0f, xx2 - xx1 );
+            float h = max(0.0f, yy2 - yy1 );
+
+            float interS = w * h;
+            float Sa = (x2[i] - x1[i] ) * (y2[i] - y1[i] );
+            float Sb = (x2[j] - x1[j] ) * (y2[j] - y1[j] );
+
+            if (interS > thresh_f * (Sa + Sb - interS)) {
+                mask_tbl[j/64] |= 1ull << (j % 64);
+            }
+        }
+
+        if (!(j & 0xf) && (j & 0x1f) && (j + 16 <= boxes_num)) {
+
+            __m512 x1_b = _mm512_load_ps(x1 + j);
+            __m512 y1_b = _mm512_load_ps(y1 + j);
+            __m512 x2_b = _mm512_load_ps(x2 + j);
+            __m512 y2_b = _mm512_load_ps(y2 + j);
+
+            __m512 xx1 = _mm512_max_ps(x1_a, x1_b);
+            __m512 yy1 = _mm512_max_ps(y1_a, y1_b);
+            __m512 xx2 = _mm512_min_ps(x2_a, x2_b);
+            __m512 yy2 = _mm512_min_ps(y2_a, y2_b);
+
+            __m512 w = _mm512_sub_ps(xx2, xx1);
+            __m512 h = _mm512_sub_ps(yy2, yy1);
+
+            w = _mm512_max_ps(w, zero);
+            h = _mm512_max_ps(h, zero);
+
+            __m512 interS = _mm512_mul_ps(w, h);
+
+            __m512 Sb_w = _mm512_sub_ps(x2_b, x1_b);
+            __m512 Sb_h = _mm512_sub_ps(y2_b, y1_b);
+     
+            __m512 Sb = _mm512_mul_ps(Sb_w, Sb_h);
+
+            __m512 ovr = _mm512_add_ps(Sa, Sb);
+            ovr = _mm512_sub_ps(ovr, interS);
+            ovr = _mm512_mul_ps(ovr, thresh);
+
+            __mmask16 gt = _mm512_cmp_ps_mask(interS, ovr, _CMP_GT_OS);
+
+            uint64_t mask = gt;
+
+            mask_tbl[j/64] |= (mask) << (j % 64);
+
+            j += 16;
+        }
+
+        if (!(j & 0x1f) && (j & 0x3f) && (j + 32 <= boxes_num)) {
+
+            __m512 x1_b0 = _mm512_load_ps(x1 + j);
+            __m512 y1_b0 = _mm512_load_ps(y1 + j);
+            __m512 x2_b0 = _mm512_load_ps(x2 + j);
+            __m512 y2_b0 = _mm512_load_ps(y2 + j);
+
+            __m512 x1_b1 = _mm512_load_ps(x1 + j + 16);
+            __m512 y1_b1 = _mm512_load_ps(y1 + j + 16);
+            __m512 x2_b1 = _mm512_load_ps(x2 + j + 16);
+            __m512 y2_b1 = _mm512_load_ps(y2 + j + 16);
+
+            __m512 xx1_0 = _mm512_max_ps(x1_a, x1_b0);
+            __m512 yy1_0 = _mm512_max_ps(y1_a, y1_b0);
+            __m512 xx2_0 = _mm512_min_ps(x2_a, x2_b0);
+            __m512 yy2_0 = _mm512_min_ps(y2_a, y2_b0);
+
+            __m512 xx1_1 = _mm512_max_ps(x1_a, x1_b1);
+            __m512 yy1_1 = _mm512_max_ps(y1_a, y1_b1);
+            __m512 xx2_1 = _mm512_min_ps(x2_a, x2_b1);
+            __m512 yy2_1 = _mm512_min_ps(y2_a, y2_b1);
+
+            __m512 w0 = _mm512_sub_ps(xx2_0, xx1_0);
+            __m512 h0 = _mm512_sub_ps(yy2_0, yy1_0);
+            __m512 w1 = _mm512_sub_ps(xx2_1, xx1_1);
+            __m512 h1 = _mm512_sub_ps(yy2_1, yy1_1);
+
+            w0 = _mm512_max_ps(w0, zero);
+            h0 = _mm512_max_ps(h0, zero);
+            w1 = _mm512_max_ps(w1, zero);
+            h1 = _mm512_max_ps(h1, zero);
+
+            __m512 interS_0 = _mm512_mul_ps(w0, h0);
+            __m512 interS_1 = _mm512_mul_ps(w1, h1);
+
+            __m512 Sb_w0 = _mm512_sub_ps(x2_b0, x1_b0);
+            __m512 Sb_h0 = _mm512_sub_ps(y2_b0, y1_b0);
+            __m512 Sb_w1 = _mm512_sub_ps(x2_b1, x1_b1);
+            __m512 Sb_h1 = _mm512_sub_ps(y2_b1, y1_b1);
+
+            __m512 ovr0 = _mm512_fmadd_ps(Sb_w0, Sb_h0, Sa);
+            __m512 ovr1 = _mm512_fmadd_ps(Sb_w1, Sb_h1, Sa);
+
+            ovr0 = _mm512_sub_ps(ovr0, interS_0);
+            ovr1 = _mm512_sub_ps(ovr1, interS_1);
+
+            ovr0 = _mm512_mul_ps(ovr0, thresh);
+            ovr1 = _mm512_mul_ps(ovr1, thresh);
+
+            __mmask16 gt0 = _mm512_cmp_ps_mask(interS_0, ovr0, _CMP_GT_OS);
+            __mmask16 gt1 = _mm512_cmp_ps_mask(interS_1, ovr1, _CMP_GT_OS);
+
+            uint64_t mask = (gt0) | ((uint64_t)gt1 << 16);
+
+            mask_tbl[j/64] |= (mask) << (j % 64);
+
+            j += 32;
+        }
+        //#pragma omp parallel for
+        for (; (j + 64) <= boxes_num; j += 64) {
+
+            __m512 x1_b0 = _mm512_load_ps(x1 + j);
+            __m512 y1_b0 = _mm512_load_ps(y1 + j);
+            __m512 x2_b0 = _mm512_load_ps(x2 + j);
+            __m512 y2_b0 = _mm512_load_ps(y2 + j);
+
+            __m512 x1_b1 = _mm512_load_ps(x1 + j + 16);
+            __m512 y1_b1 = _mm512_load_ps(y1 + j + 16);
+            __m512 x2_b1 = _mm512_load_ps(x2 + j + 16);
+            __m512 y2_b1 = _mm512_load_ps(y2 + j + 16);
+
+            __m512 x1_b2 = _mm512_load_ps(x1 + j + 32);
+            __m512 y1_b2 = _mm512_load_ps(y1 + j + 32);
+            __m512 x2_b2 = _mm512_load_ps(x2 + j + 32);
+            __m512 y2_b2 = _mm512_load_ps(y2 + j + 32);
+
+            __m512 x1_b3 = _mm512_load_ps(x1 + j + 48);
+            __m512 y1_b3 = _mm512_load_ps(y1 + j + 48);
+            __m512 x2_b3 = _mm512_load_ps(x2 + j + 48);
+            __m512 y2_b3 = _mm512_load_ps(y2 + j + 48);
+
+            __m512 xx1_0 = _mm512_max_ps(x1_a, x1_b0);
+            __m512 yy1_0 = _mm512_max_ps(y1_a, y1_b0);
+            __m512 xx2_0 = _mm512_min_ps(x2_a, x2_b0);
+            __m512 yy2_0 = _mm512_min_ps(y2_a, y2_b0);
+
+            __m512 xx1_1 = _mm512_max_ps(x1_a, x1_b1);
+            __m512 yy1_1 = _mm512_max_ps(y1_a, y1_b1);
+            __m512 xx2_1 = _mm512_min_ps(x2_a, x2_b1);
+            __m512 yy2_1 = _mm512_min_ps(y2_a, y2_b1);
+
+            __m512 Sb_w0 = _mm512_sub_ps(x2_b0, x1_b0);
+            __m512 Sb_h0 = _mm512_sub_ps(y2_b0, y1_b0);
+            __m512 Sb_w1 = _mm512_sub_ps(x2_b1, x1_b1);
+            __m512 Sb_h1 = _mm512_sub_ps(y2_b1, y1_b1);
+            __m512 Sb_w2 = _mm512_sub_ps(x2_b2, x1_b2);
+            __m512 Sb_h2 = _mm512_sub_ps(y2_b2, y1_b2);
+            __m512 Sb_w3 = _mm512_sub_ps(x2_b3, x1_b3);
+            __m512 Sb_h3 = _mm512_sub_ps(y2_b3, y1_b3);
+
+            __m512 xx1_2 = _mm512_max_ps(x1_a, x1_b2);
+            __m512 yy1_2 = _mm512_max_ps(y1_a, y1_b2);
+            __m512 xx2_2 = _mm512_min_ps(x2_a, x2_b2);
+            __m512 yy2_2 = _mm512_min_ps(y2_a, y2_b2);
+
+            __m512 xx1_3 = _mm512_max_ps(x1_a, x1_b3);
+            __m512 yy1_3 = _mm512_max_ps(y1_a, y1_b3);
+            __m512 xx2_3 = _mm512_min_ps(x2_a, x2_b3);
+            __m512 yy2_3 = _mm512_min_ps(y2_a, y2_b3);
+
+            __m512 w0 = _mm512_sub_ps(xx2_0, xx1_0);
+            __m512 h0 = _mm512_sub_ps(yy2_0, yy1_0);
+            __m512 w1 = _mm512_sub_ps(xx2_1, xx1_1);
+            __m512 h1 = _mm512_sub_ps(yy2_1, yy1_1);
+            __m512 w2 = _mm512_sub_ps(xx2_2, xx1_2);
+            __m512 h2 = _mm512_sub_ps(yy2_2, yy1_2);
+            __m512 w3 = _mm512_sub_ps(xx2_3, xx1_3);
+            __m512 h3 = _mm512_sub_ps(yy2_3, yy1_3);
+
+            w0 = _mm512_max_ps(w0, zero);
+            h0 = _mm512_max_ps(h0, zero);
+            w1 = _mm512_max_ps(w1, zero);
+            h1 = _mm512_max_ps(h1, zero);
+            w2 = _mm512_max_ps(w2, zero);
+            h2 = _mm512_max_ps(h2, zero);
+            w3 = _mm512_max_ps(w3, zero);
+            h3 = _mm512_max_ps(h3, zero);
+
+            __m512 interS_0 = _mm512_mul_ps(w0, h0);
+            __m512 interS_1 = _mm512_mul_ps(w1, h1);
+            __m512 interS_2 = _mm512_mul_ps(w2, h2);
+            __m512 interS_3 = _mm512_mul_ps(w3, h3);
+
+            __m512 ovr0 = _mm512_fmadd_ps(Sb_w0, Sb_h0, Sa);
+            __m512 ovr1 = _mm512_fmadd_ps(Sb_w1, Sb_h1, Sa);
+            __m512 ovr2 = _mm512_fmadd_ps(Sb_w2, Sb_h2, Sa);
+            __m512 ovr3 = _mm512_fmadd_ps(Sb_w3, Sb_h3, Sa);
+
+            ovr0 = _mm512_sub_ps(ovr0, interS_0);
+            ovr1 = _mm512_sub_ps(ovr1, interS_1);
+            ovr2 = _mm512_sub_ps(ovr2, interS_2);
+            ovr3 = _mm512_sub_ps(ovr3, interS_3);
+
+            ovr0 = _mm512_mul_ps(ovr0, thresh);
+            ovr1 = _mm512_mul_ps(ovr1, thresh);
+            ovr2 = _mm512_mul_ps(ovr2, thresh);
+            ovr3 = _mm512_mul_ps(ovr3, thresh);
+
+            __mmask16 gt0 = _mm512_cmp_ps_mask(interS_0, ovr0, _CMP_GT_OS);
+            __mmask16 gt1 = _mm512_cmp_ps_mask(interS_1, ovr1, _CMP_GT_OS);
+            __mmask16 gt2 = _mm512_cmp_ps_mask(interS_2, ovr2, _CMP_GT_OS);
+            __mmask16 gt3 = _mm512_cmp_ps_mask(interS_3, ovr3, _CMP_GT_OS);
+
+            uint64_t mask = ((uint64_t)(gt0)) | (((uint64_t)gt1) << 16) | (((uint64_t)gt2) << 32) | (((uint64_t)gt3) << 48);
+
+            mask_tbl[j / 64] |= mask;
+        }
+
+        if ((j + 32) <= boxes_num) {
+
+            __m512 x1_b0 = _mm512_load_ps(x1 + j);
+            __m512 y1_b0 = _mm512_load_ps(y1 + j);
+            __m512 x2_b0 = _mm512_load_ps(x2 + j);
+            __m512 y2_b0 = _mm512_load_ps(y2 + j);
+
+            __m512 x1_b1 = _mm512_load_ps(x1 + j + 16);
+            __m512 y1_b1 = _mm512_load_ps(y1 + j + 16);
+            __m512 x2_b1 = _mm512_load_ps(x2 + j + 16);
+            __m512 y2_b1 = _mm512_load_ps(y2 + j + 16);
+
+            __m512 xx1_0 = _mm512_max_ps(x1_a, x1_b0);
+            __m512 yy1_0 = _mm512_max_ps(y1_a, y1_b0);
+            __m512 xx2_0 = _mm512_min_ps(x2_a, x2_b0);
+            __m512 yy2_0 = _mm512_min_ps(y2_a, y2_b0);
+
+            __m512 xx1_1 = _mm512_max_ps(x1_a, x1_b1);
+            __m512 yy1_1 = _mm512_max_ps(y1_a, y1_b1);
+            __m512 xx2_1 = _mm512_min_ps(x2_a, x2_b1);
+            __m512 yy2_1 = _mm512_min_ps(y2_a, y2_b1);
+
+            __m512 w0 = _mm512_sub_ps(xx2_0, xx1_0);
+            __m512 h0 = _mm512_sub_ps(yy2_0, yy1_0);
+            __m512 w1 = _mm512_sub_ps(xx2_1, xx1_1);
+            __m512 h1 = _mm512_sub_ps(yy2_1, yy1_1);
+
+            w0 = _mm512_max_ps(w0, zero);
+            h0 = _mm512_max_ps(h0, zero);
+            w1 = _mm512_max_ps(w1, zero);
+            h1 = _mm512_max_ps(h1, zero);
+
+            __m512 interS_0 = _mm512_mul_ps(w0, h0);
+            __m512 interS_1 = _mm512_mul_ps(w1, h1);
+
+            __m512 Sb_w0 = _mm512_sub_ps(x2_b0, x1_b0);
+            __m512 Sb_h0 = _mm512_sub_ps(y2_b0, y1_b0);
+            __m512 Sb_w1 = _mm512_sub_ps(x2_b1, x1_b1);
+            __m512 Sb_h1 = _mm512_sub_ps(y2_b1, y1_b1);
+
+            __m512 Sb0 = _mm512_mul_ps(Sb_w0, Sb_h0);
+            __m512 Sb1 = _mm512_mul_ps(Sb_w1, Sb_h1);
+
+            __m512 ovr0 = _mm512_add_ps(Sa, Sb0);
+            __m512 ovr1 = _mm512_add_ps(Sa, Sb1);
+
+            ovr0 = _mm512_sub_ps(ovr0, interS_0);
+            ovr1 = _mm512_sub_ps(ovr1, interS_1);
+
+            ovr0 = _mm512_mul_ps(ovr0, thresh);
+            ovr1 = _mm512_mul_ps(ovr1, thresh);
+
+            __mmask16 gt0 = _mm512_cmp_ps_mask(interS_0, ovr0, _CMP_GT_OS);
+            __mmask16 gt1 = _mm512_cmp_ps_mask(interS_1, ovr1, _CMP_GT_OS);
+
+            uint64_t mask = (gt0) | ((uint64_t)gt1 << 16);
+
+            mask_tbl[(j +  0) / 64] |= (mask) << (j % 64);
+            mask_tbl[(j + 32) / 64] |= (mask) >> (64-(j % 64));
+
+            j += 32;
+        }
+
+        if ((j + 16) <= boxes_num) {
+
+            __m512 x1_b = _mm512_load_ps(x1 + j);
+            __m512 y1_b = _mm512_load_ps(y1 + j);
+            __m512 x2_b = _mm512_load_ps(x2 + j);
+            __m512 y2_b = _mm512_load_ps(y2 + j);
+
+            __m512 xx1 = _mm512_max_ps(x1_a, x1_b);
+            __m512 yy1 = _mm512_max_ps(y1_a, y1_b);
+            __m512 xx2 = _mm512_min_ps(x2_a, x2_b);
+            __m512 yy2 = _mm512_min_ps(y2_a, y2_b);
+
+            __m512 w = _mm512_sub_ps(xx2, xx1);
+            __m512 h = _mm512_sub_ps(yy2, yy1);
+
+            w = _mm512_max_ps(w, zero);
+            h = _mm512_max_ps(h, zero);
+
+            __m512 interS = _mm512_mul_ps(w, h);
+
+            __m512 Sb_w = _mm512_sub_ps(x2_b, x1_b);
+            __m512 Sb_h = _mm512_sub_ps(y2_b, y1_b);
+
+            __m512 Sb = _mm512_mul_ps(Sb_w, Sb_h);
+
+            __m512 ovr = _mm512_add_ps(Sa, Sb);
+            ovr = _mm512_sub_ps(ovr, interS);
+            ovr = _mm512_mul_ps(ovr, thresh);
+
+            __mmask16 gt = _mm512_cmp_ps_mask(interS, ovr, _CMP_GT_OS);
+
+            uint64_t mask = gt;
+
+            mask_tbl[(j +  0) / 64] |= (mask) << (j % 64);
+            mask_tbl[(j + 16) / 64] |= (mask) >> (64-(j % 64));
+
+            j += 16;
+        }
+
+        for (; j < boxes_num; j ++) {
+
+            if (mask_tbl[j/64] & (1ull << (j % 64))) {
+                continue;
+            }
+
+            float xx1 = max(x1[i], x1[j]);
+            float yy1 = max(y1[i], y1[j]);
+            float xx2 = min(x2[i], x2[j]);
+            float yy2 = min(y2[i], y2[j]);
+
+            float w = max(0.0f, xx2 - xx1 );
+            float h = max(0.0f, yy2 - yy1 );
+
+            float interS = w * h;
+            float Sa = (x2[i] - x1[i] ) * (y2[i] - y1[i] );
+            float Sb = (x2[j] - x1[j] ) * (y2[j] - y1[j] );
+
+            if (interS > thresh_f * (Sa + Sb - interS)) {
+                mask_tbl[j/64] |= 1ull << (j % 64);
+            }
+        }
+    }
+
+    free(mask_tbl);
+
+    *num_out = num_to_keep;
+}
+
+void cpu_nms_avx512_caffe(int* __restrict keep_out, int* __restrict num_out,
+                          const vector<NormalizedBBox>& bboxes,
+                          vector<pair<float, int> >& score_index_vec,
+                          float thresh) {
+  uint64_t boxes_num = score_index_vec.size();
+  float* x1 = (float*)aligned_alloc(64, boxes_num * sizeof(float));
+  float* y1 = (float*)aligned_alloc(64, boxes_num * sizeof(float));
+  float* x2 = (float*)aligned_alloc(64, boxes_num * sizeof(float));
+  float* y2 = (float*)aligned_alloc(64, boxes_num * sizeof(float));
+
+  uint64_t i = 0;
+
+#pragma omp parallel for
+  for (i = 0; i < boxes_num; ++i) {
+    x1[i] = bboxes[score_index_vec[i].second].xmin();
+    y1[i] = bboxes[score_index_vec[i].second].ymin();
+    x2[i] = bboxes[score_index_vec[i].second].xmax();
+    y2[i] = bboxes[score_index_vec[i].second].ymax();
+  }
+
+  cpu_nms_avx512_parallize_inner(keep_out, num_out, x1, y1, x2, y2, boxes_num,
+                                   thresh);
+#pragma omp parallel for
+  for (int i = 0; i < *num_out; i++) {
+    keep_out[i] = score_index_vec[keep_out[i]].second;
+  }
+  free(x1);
+  free(x2);
+  free(y1);
+  free(y2);
+}
+#endif
 
 NormalizedBBox UnitBBox() {
   NormalizedBBox unit_bbox;
@@ -566,25 +1000,33 @@ void DecodeBBox(
   }
 }
 
-void DecodeBBoxes(
-    const vector<NormalizedBBox>& prior_bboxes,
-    const vector<vector<float> >& prior_variances,
-    const CodeType code_type, const bool variance_encoded_in_target,
-    const bool clip_bbox, const vector<NormalizedBBox>& bboxes,
-    vector<NormalizedBBox>* decode_bboxes) {
+void DecodeBBoxes(const vector<NormalizedBBox>& prior_bboxes,
+                  const vector<vector<float> >& prior_variances,
+                  const CodeType code_type,
+                  const bool variance_encoded_in_target, const bool clip_bbox,
+                  const vector<NormalizedBBox>& bboxes,
+                  vector<NormalizedBBox>* decode_bboxes) {
   CHECK_EQ(prior_bboxes.size(), prior_variances.size());
   CHECK_EQ(prior_bboxes.size(), bboxes.size());
   int num_bboxes = prior_bboxes.size();
   if (num_bboxes >= 1) {
     CHECK_EQ(prior_variances[0].size(), 4);
   }
-  decode_bboxes->clear();
+  // decode_bboxes->clear();
+  decode_bboxes->reserve(num_bboxes);
+
+  NormalizedBBox* result = new NormalizedBBox[num_bboxes];
+#ifdef _OPENMP
+  #pragma omp parallel for
+#endif
   for (int i = 0; i < num_bboxes; ++i) {
-    NormalizedBBox decode_bbox;
+
     DecodeBBox(prior_bboxes[i], prior_variances[i], code_type,
-               variance_encoded_in_target, clip_bbox, bboxes[i], &decode_bbox);
-    decode_bboxes->push_back(decode_bbox);
+               variance_encoded_in_target, clip_bbox, bboxes[i], &result[i]);
   }
+
+  decode_bboxes->assign(&result[0], &result[num_bboxes]);
+  delete[] result;
 }
 
 void DecodeBBoxesAll(const vector<LabelBBox>& all_loc_preds,
@@ -597,9 +1039,10 @@ void DecodeBBoxesAll(const vector<LabelBBox>& all_loc_preds,
   CHECK_EQ(all_loc_preds.size(), num);
   all_decode_bboxes->clear();
   all_decode_bboxes->resize(num);
+#ifdef _OPENMP
+  #pragma omp parallel for
+#endif
   for (int i = 0; i < num; ++i) {
-    // Decode predictions into bboxes.
-    LabelBBox& decode_bboxes = (*all_decode_bboxes)[i];
     for (int c = 0; c < num_loc_classes; ++c) {
       int label = share_location ? -1 : c;
       if (label == background_label_id) {
@@ -614,7 +1057,7 @@ void DecodeBBoxesAll(const vector<LabelBBox>& all_loc_preds,
           all_loc_preds[i].find(label)->second;
       DecodeBBoxes(prior_bboxes, prior_variances,
                    code_type, variance_encoded_in_target, clip,
-                   label_loc_preds, &(decode_bboxes[label]));
+                   label_loc_preds, &((*all_decode_bboxes)[i][label]));
     }
   }
 }
@@ -1177,22 +1620,32 @@ void GetLocPredictions(const Dtype* loc_data, const int num,
     CHECK_EQ(num_loc_classes, 1);
   }
   loc_preds->resize(num);
+#ifdef _OPENMP
+  #pragma omp parallel for
+#endif
   for (int i = 0; i < num; ++i) {
-    LabelBBox& label_bbox = (*loc_preds)[i];
-    for (int p = 0; p < num_preds_per_class; ++p) {
-      int start_idx = p * num_loc_classes * 4;
-      for (int c = 0; c < num_loc_classes; ++c) {
-        int label = share_location ? -1 : c;
-        if (label_bbox.find(label) == label_bbox.end()) {
-          label_bbox[label].resize(num_preds_per_class);
-        }
-        label_bbox[label][p].set_xmin(loc_data[start_idx + c * 4]);
-        label_bbox[label][p].set_ymin(loc_data[start_idx + c * 4 + 1]);
-        label_bbox[label][p].set_xmax(loc_data[start_idx + c * 4 + 2]);
-        label_bbox[label][p].set_ymax(loc_data[start_idx + c * 4 + 3]);
+    for (int c = 0; c < num_loc_classes; ++c) {
+      int label = share_location ? -1 : c;
+      if ((*loc_preds)[i].find(label) == (*loc_preds)[i].end()) {
+        (*loc_preds)[i][label].resize(num_preds_per_class);
+      } else {
+        break;
       }
     }
-    loc_data += num_preds_per_class * num_loc_classes * 4;
+  }
+#ifdef _OPENMP
+  #pragma omp parallel for collapse(3)
+#endif
+    for (int i = 0; i < num; ++i) {
+      for (int p = 0; p < num_preds_per_class; ++p) {
+        for (int c = 0; c < num_loc_classes; ++c) {
+          int label = share_location ? -1 : c;
+          (*loc_preds)[i][label][p].set_xmin(loc_data[ i* num_preds_per_class * num_loc_classes * 4 + p * num_loc_classes * 4 + c * 4]);
+          (*loc_preds)[i][label][p].set_ymin(loc_data[ i* num_preds_per_class * num_loc_classes * 4 + p * num_loc_classes * 4 + c * 4 + 1]);
+          (*loc_preds)[i][label][p].set_xmax(loc_data[ i* num_preds_per_class * num_loc_classes * 4 + p * num_loc_classes * 4 + c * 4 + 2]);
+          (*loc_preds)[i][label][p].set_ymax(loc_data[ i* num_preds_per_class * num_loc_classes * 4 + p * num_loc_classes * 4 + c * 4 + 3]);
+      }
+    }
   }
 }
 
@@ -1373,20 +1826,42 @@ template void ComputeLocLoss(const Blob<double>& loc_pred,
 
 template <typename Dtype>
 void GetConfidenceScores(const Dtype* conf_data, const int num,
-      const int num_preds_per_class, const int num_classes,
-      vector<map<int, vector<float> > >* conf_preds) {
+                         const int num_preds_per_class, const int num_classes,
+                         vector<map<int, vector<float> > >* conf_preds) {
   conf_preds->clear();
   conf_preds->resize(num);
+  Dtype* buffer = new Dtype[num * num_preds_per_class * num_classes];
+#ifdef _OPENMP
+  #pragma omp parallel for collapse(3)
+#endif
   for (int i = 0; i < num; ++i) {
-    map<int, vector<float> >& label_scores = (*conf_preds)[i];
-    for (int p = 0; p < num_preds_per_class; ++p) {
-      int start_idx = p * num_classes;
-      for (int c = 0; c < num_classes; ++c) {
-        label_scores[c].push_back(conf_data[start_idx + c]);
+    for (int c = 0; c < num_classes; ++c) {
+      for (int p = 0; p < num_preds_per_class; ++p) {
+        buffer[i * num_classes * num_preds_per_class + c * num_preds_per_class +
+               p] = conf_data[i * num_classes * num_preds_per_class +
+                              p * num_classes + c];
       }
     }
-    conf_data += num_preds_per_class * num_classes;
   }
+#ifdef _OPENMP
+  #pragma omp parallel for 
+#endif
+  for (int i = 0; i < num; i++) {
+    // #pragma omp parallel
+    // map<int, vector<float> >& label_scores = (*conf_preds)[i];
+    for (int c = 0; c < num_classes; ++c) {
+      // label_scores[c].reserve(num_preds_per_class);
+      (*conf_preds)[i][c].reserve(num_preds_per_class);
+
+      (*conf_preds)[i][c].assign(
+          &buffer[i * num_classes * num_preds_per_class +
+                  c * num_preds_per_class],
+          &buffer[i * num_classes * num_preds_per_class +
+                  c * num_preds_per_class + num_preds_per_class]);
+    }
+  }
+
+  delete[] buffer;
 }
 
 // Explicit initialization.
@@ -1694,27 +2169,28 @@ template <typename Dtype>
 void GetPriorBBoxes(const Dtype* prior_data, const int num_priors,
       vector<NormalizedBBox>* prior_bboxes,
       vector<vector<float> >* prior_variances) {
-  prior_bboxes->clear();
-  prior_variances->clear();
+#ifdef _OPENMP
+  #pragma omp parallel for
+#endif
   for (int i = 0; i < num_priors; ++i) {
-    int start_idx = i * 4;
     NormalizedBBox bbox;
-    bbox.set_xmin(prior_data[start_idx]);
-    bbox.set_ymin(prior_data[start_idx + 1]);
-    bbox.set_xmax(prior_data[start_idx + 2]);
-    bbox.set_ymax(prior_data[start_idx + 3]);
-    float bbox_size = BBoxSize(bbox);
-    bbox.set_size(bbox_size);
-    prior_bboxes->push_back(bbox);
+    bbox.set_xmin(prior_data[i*4]);
+    bbox.set_ymin(prior_data[i*4 + 1]);
+    bbox.set_xmax(prior_data[i*4 + 2]);
+    bbox.set_ymax(prior_data[i*4 + 3]);
+
+    bbox.set_size(BBoxSize(bbox));
+
+    prior_bboxes->at(i) = bbox;
   }
 
+  vector<float> var(4, 0);
+  
   for (int i = 0; i < num_priors; ++i) {
-    int start_idx = (num_priors + i) * 4;
-    vector<float> var;
     for (int j = 0; j < 4; ++j) {
-      var.push_back(prior_data[start_idx + j]);
+      var.at(j) = (prior_data[(num_priors + i) * 4 + j]);
     }
-    prior_variances->push_back(var);
+    prior_variances->at(i) = var;
   }
 }
 
@@ -1782,9 +2258,12 @@ void GetTopKScoreIndex(const vector<float>& scores, const vector<int>& indices,
 void GetMaxScoreIndex(const vector<float>& scores, const float threshold,
       const int top_k, vector<pair<float, int> >* score_index_vec) {
   // Generate index score pairs.
+#ifdef _OPENMP
+  #pragma omp parallel for
+#endif
   for (int i = 0; i < scores.size(); ++i) {
     if (scores[i] > threshold) {
-      score_index_vec->push_back(std::make_pair(scores[i], i));
+      score_index_vec->at(i) = std::make_pair(scores[i], i);
     }
   }
 
@@ -1938,40 +2417,52 @@ inline int clamp(const int v, const int a, const int b) {
 }
 
 void ApplyNMSFast(const vector<NormalizedBBox>& bboxes,
-      const vector<float>& scores, const float score_threshold,
-      const float nms_threshold, const float eta, const int top_k,
-      vector<int>* indices) {
+                  const vector<float>& scores, const float score_threshold,
+                  const float nms_threshold, const float eta, const int top_k,
+                  vector<int>* indices) {
   // Sanity check.
   CHECK_EQ(bboxes.size(), scores.size())
       << "bboxes and scores have different size.";
-
   // Get top_k scores (with corresponding indices).
-  vector<pair<float, int> > score_index_vec;
+  vector<pair<float, int> > score_index_vec(scores.size());
   GetMaxScoreIndex(scores, score_threshold, top_k, &score_index_vec);
-
   // Do nms.
   float adaptive_threshold = nms_threshold;
   indices->clear();
-  while (score_index_vec.size() != 0) {
-    const int idx = score_index_vec.front().second;
-    bool keep = true;
-    for (int k = 0; k < indices->size(); ++k) {
+#ifdef ENABLE_NMS_OPTIMIZATION
+  if (_may_i_use_cpu_feature(_FEATURE_AVX512CD | _FEATURE_AVX512F)) {
+    if (score_index_vec.size() == 0) return;
+    indices->resize(score_index_vec.size());
+    int* p = (int*)malloc(sizeof(int) * score_index_vec.size());
+    int num_out = 0;
+    cpu_nms_avx512_caffe(p, &num_out, bboxes, score_index_vec, nms_threshold);
+    indices->assign(p, p + num_out);
+    free(p);
+  } else {
+#endif
+    while (score_index_vec.size() != 0) {
+      const int idx = score_index_vec.front().second;
+      bool keep = true;
+      for (int k = 0; k < indices->size(); ++k) {
+        if (keep) {
+          const int kept_idx = (*indices)[k];
+          float overlap = JaccardOverlap(bboxes[idx], bboxes[kept_idx]);
+          keep = overlap <= adaptive_threshold;
+        } else {
+          break;
+        }
+      }
       if (keep) {
-        const int kept_idx = (*indices)[k];
-        float overlap = JaccardOverlap(bboxes[idx], bboxes[kept_idx]);
-        keep = overlap <= adaptive_threshold;
-      } else {
-        break;
+        indices->push_back(idx);
+      }
+      score_index_vec.erase(score_index_vec.begin());
+      if (keep && eta < 1 && adaptive_threshold > 0.5) {
+        adaptive_threshold *= eta;
       }
     }
-    if (keep) {
-      indices->push_back(idx);
-    }
-    score_index_vec.erase(score_index_vec.begin());
-    if (keep && eta < 1 && adaptive_threshold > 0.5) {
-      adaptive_threshold *= eta;
-    }
+#ifdef ENABLE_NMS_OPTIMIZATION
   }
+#endif
 }
 
 template <typename Dtype>

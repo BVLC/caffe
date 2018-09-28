@@ -1,0 +1,18 @@
+net: "models/intel_optimized_models/benchmark/vgg16/train_val_dummydata.prototxt"
+test_iter: 1000
+test_interval: 1000
+momentum: 0.9
+weight_decay: 0.0005
+power: 2
+base_lr: 7
+warmup_start_lr: 1
+warmup_iter: 3127 # 5 epochs
+local_lr_auto: true
+local_gw_ratio: 0.001
+
+lr_policy: "poly"
+gamma: 0.1
+max_iter: 40000
+display: 20
+snapshot: 5000
+solver_mode: CPU

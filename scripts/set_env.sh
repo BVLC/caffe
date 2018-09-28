@@ -32,15 +32,17 @@ msg_priority_threshold=""
 
 mpi_iallreduce_algo=""
 
+ppn=1
+
 function init_mpi_envs
 {
-    if [ ${numnodes} -eq 1 ]; then
+    if [ ${numnodes} -eq 1 ] && [ $ppn -eq 1 ]; then
         return
     fi
 
     # IMPI configuration
     if [ "$network" == "opa" ]; then
-        export I_MPI_FABRICS=tmi
+        export I_MPI_FABRICS=shm:tmi
         export I_MPI_TMI_PROVIDER=psm2
         if [ "$cpu_model" == "knl" ] || [ "$cpu_model" == "knm" ];  then
             # PSM2 configuration
@@ -48,11 +50,11 @@ function init_mpi_envs
             export HFI_NO_CPUAFFINITY=1
             export I_MPI_DYNAMIC_CONNECTION=0
             export I_MPI_SCALABLE_OPTIMIZATION=0
-            export I_MPI_PIN_MODE=lib 
+            export I_MPI_PIN_MODE=lib
             export I_MPI_PIN_DOMAIN=node
         fi
     elif [ "$network" == "tcp" ]; then
-        export I_MPI_FABRICS=tcp
+        export I_MPI_FABRICS=shm:tcp
         export I_MPI_TCP_NETMASK=$tcp_netmask
     else
         echo "Invalid network: $network"
@@ -64,6 +66,40 @@ function init_mpi_envs
 
     if [ "${mpi_iallreduce_algo}" != "" ]; then
         export I_MPI_ADJUST_IALLREDUCE=${mpi_iallreduce_algo}
+    fi
+    if [ ${ppn} -gt 1 ]; then
+        maxcores=64
+        domain_str="["
+        for ((ppn_index=0; ppn_index<ppn; ppn_index++))
+        do
+            # limit of cpu masks: 10 (640 cores in maximum)
+            declare -a masks=($(for i in {1..10}; do echo 0; done))
+
+            start=$((ppn_index*cores_per_proc))
+            end=$(((ppn_index+1)*cores_per_proc))
+
+            mask_str="0x"
+            for((cpu_index=start;cpu_index<end;cpu_index++))
+            do
+                echo $listep | grep -w $cpu_index >/dev/null
+                if [ $? -ne 0 ]; then
+                  index=$((cpu_index/maxcores))
+                  offset=$((cpu_index%maxcores))
+                  masks[$index]=$((masks[$index]+(1<<offset)))
+                fi
+            done
+            for ((mask_index=${#masks[@]}-1; mask_index>=0; mask_index--))
+            do
+                mask_str+=`printf "%x" "${masks[$mask_index]}"`
+            done
+            domain_str+="$mask_str"
+            if [ $ppn_index -ne $((ppn-1)) ]; then
+                domain_str+=","
+            fi
+        done
+        domain_str+="]"
+        echo "I_MPI_PIN_DOMAIN=$domain_str"
+        export I_MPI_PIN_DOMAIN=$domain_str
     fi
 }
 
@@ -116,7 +152,7 @@ function clear_envs
 
 function set_mlsl_vars
 {
-    if [ ${numnodes} -eq 1 ]; then
+    if [ ${numnodes} -eq 1 ] && [ $ppn -eq 1 ]; then
         return
     fi
 
@@ -142,10 +178,20 @@ function set_mlsl_vars
     export MLSL_NUM_SERVERS=${numservers}
 
     if [ ${numservers} -gt 0 ]; then
-        listep="6"
-        for ((i=7; i<${numservers}+6; i++))
+        # first cpu reserved for EP server
+        first_cpu=6
+        for ((ppn_index=0; ppn_index<${ppn}; ppn_index++))
         do
-            listep+=",$i"
+            # first cpu for current process
+            first_cpu_proc=$((first_cpu+ppn_index*cores_per_proc))
+            for ((srv_index=0; srv_index<${numservers}; srv_index++))
+            do
+                cpu_no=$((first_cpu_proc+srv_index))
+                listep+="$cpu_no"
+                if [ $ppn_index -ne $((ppn-1)) ] || [ $srv_index -ne $((numservers-1)) ]; then
+                    listep+=","
+                fi
+            done
         done
 
         export MLSL_SERVER_AFFINITY="${listep}"
@@ -172,24 +218,28 @@ function set_mlsl_vars
 
 function set_openmp_envs
 {
-    ppncpu=1
     threadspercore=1
 
-    cpus=`lscpu | grep "^CPU(s):" | awk '{print $2}'`
-    cores=`lscpu | grep "Core(s) per socket:" | awk '{print $4}'`
-    sockets=`lscpu | grep "Socket(s)" | awk  '{print $2}'`
-    maxcores=$((cores*sockets))
-
     if [ "$internal_thread_pin" == "on" ]; then
-        export INTERNAL_THREADS_PIN=$((cpus-2)),$((cpus-1))
+        internal_thread_str=""
+        for ((ppn_index=0; ppn_index<ppn;ppn_index++))
+        do
+            last_thread_proc=$((total_cores*(num_ht-1)+total_cores*(ppn_index+1)/ppn-1))
+            internal_thread_str+="$((last_thread_proc-1)),$last_thread_proc"
+            if [ $ppn_index -ne $((ppn-1)) ]; then
+                internal_thread_str+=","
+            fi
+        done
+
+        export INTERNAL_THREADS_PIN=$internal_thread_str
         echo "Pin internal threads to: $INTERNAL_THREADS_PIN"
     fi
-    numthreads=$(((maxcores-numservers)*threadspercore))
-    numthreads_per_proc=$((numthreads/ppncpu))
+
+    numthreads_per_proc=$(((total_cores/ppn-numservers)*threadspercore))
 
     # OMP configuration
     # For multinodes 
-    if [ ${numnodes} -gt 1 ]; then
+    if [ ${numnodes} -gt 1 ] || [ $num_omp_threads -ne 0 ] || [ $ppn -gt 1 ]; then
         reserved_cores=0
         if [ ${num_omp_threads} -ne 0 ]; then
             if [ $numthreads_per_proc -lt $num_omp_threads ]; then
@@ -204,7 +254,11 @@ function set_openmp_envs
 
         export OMP_NUM_THREADS=${numthreads_per_proc}
         export KMP_HW_SUBSET=1t
-        affinitystr="proclist=[0-5,$((5+numservers+reserved_cores+1))-$((maxcores-1))],granularity=thread,explicit"
+        if [ $ppn -gt 1 ]; then
+            affinitystr="granularity=fine,compact,1,0"
+        else
+            affinitystr="proclist=[0-5,$((5+numservers+reserved_cores+1))-$((total_cores-1))],granularity=thread,explicit"
+        fi
         export KMP_AFFINITY=$affinitystr
     else
         # For single node only set for KNM
@@ -277,6 +331,10 @@ do
             mpi_iallreduce_algo=$2
             shift
             ;;
+        --ppn)
+            ppn=$2
+            shift
+            ;;
         *)
             echo "Unknown option: $key"
             usage
@@ -285,6 +343,16 @@ do
     esac
     shift
 done
+
+
+num_cpus=`lscpu | grep "^CPU(s):" | awk '{print $2}'`
+cores_per_socket=`lscpu | grep "Core(s) per socket:" | awk '{print $4}'`
+sockets=`lscpu | grep "Socket(s)" | awk  '{print $2}'`
+total_cores=$((cores_per_socket*sockets))
+# number of hyper threading
+num_ht=$((num_cpus/total_cores))
+cores_per_proc=$((total_cores/ppn))
+
 
 # Names to configfile, binary (executable) files #
 # Add check for host_file's existence to support single node

@@ -10,35 +10,49 @@
         "engine" : "MKLDNN"
     },
     "perf_batch_size_table" : {
-    "resnet_50": {
-			"knl": "512",
-			"bdw": "512",
-			"knm": "512",
-			"skx": "512"
-		},
-		"googlenet_v2": {
-			"knl": "192",
-			"bdw": "192",
-			"knm": "192",
-			"skx": "192"
-		},
-		"alexnet": {
-			"knl": "512",
-			"bdw": "512",
-			"knm": "1024",
-			"skx": "1024"
-		},
-		"googlenet": {
-			"knl": "144",
-			"bdw": "96",
-			"knm": "144",
-			"skx": "144"
-		}
+        "alexnet" : {
+            "bdw" : "1024",
+            "skx" : "1024",
+            "knl" : "512",
+            "knm" : "1024"
+        },
+        "googlenet" : {
+            "bdw" : "128",
+            "skx" : "144",
+            "knl" : "144",
+            "knm" : "144"
+        },
+        "googlenet_v2" : {
+            "bdw" : "128",
+            "skx" : "192",
+            "knl" : "192",
+            "knm" : "128"
+        },
+        "googlenet_v3" : {
+            "bdw" : "128",
+            "skx" : "512",
+            "knl" : "128",
+            "knm" : "64"
+        },
+        "vgg16" : {
+            "bdw" : "128",
+            "skx" : "128",
+            "knl" : "64",
+            "knm" : "96"
+        },
+        "resnet_50" : {
+            "bdw" : "32",
+            "skx" : "96",
+            "knl" : "64",
+            "knm" : "64"
+        }
     },
     "scal_batch_size_table" : {
         "alexnet" : "256",
         "googlenet" : "64",
         "googlenet_v2" : "64",
-        "resnet_50" : "128"
+        "googlenet_v3" : "64",
+        "vgg16" : "64",
+        "resnet_50" : "64"
     }
 } 

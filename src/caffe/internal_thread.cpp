@@ -42,6 +42,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/util/cpu_info.hpp"
 #include "caffe/util/math_functions.hpp"
 
+#ifdef USE_MLSL
+#include "caffe/multinode/mlsl.hpp"
+#endif
+
 namespace caffe {
 
 InternalThread::~InternalThread() {
@@ -67,17 +71,28 @@ void InternalThread::StartInternalThread() {
   int rand_seed = caffe_rng_rand();
   int solver_count = Caffe::solver_count();
   bool root_solver = Caffe::root_solver();
-
+#ifdef USE_MLSL
+  int ppn = mn::get_ppn();
+  int rank = mn::get_node_rank();
+#endif
   try {
     thread_.reset(new boost::thread(&InternalThread::entry, this, device, mode,
-          rand_seed, solver_count, root_solver));
+          rand_seed, solver_count, root_solver
+#ifdef USE_MLSL
+          , ppn, rank
+#endif
+    ));
   } catch (std::exception& e) {
     LOG(FATAL) << "Thread exception: " << e.what();
   }
 }
 
 void InternalThread::entry(int device, Caffe::Brew mode, int rand_seed,
-    int solver_count, bool root_solver) {
+  int solver_count, bool root_solver
+#ifdef USE_MLSL
+  , int ppn, int rank
+#endif
+  ) {
 #ifndef CPU_ONLY
   CUDA_CHECK(cudaSetDevice(device));
 #endif
@@ -90,12 +105,20 @@ void InternalThread::entry(int device, Caffe::Brew mode, int rand_seed,
   caffe::cpu::OpenMpManager::bindCurrentThreadToNonPrimaryCoreIfPossible();
 #endif
 
-  SetThreadAffinity();
+  SetThreadAffinity(
+#ifdef USE_MLSL
+  ppn, rank
+#endif
+  );
   
   InternalThreadEntry();
 }
 
-void InternalThread::SetThreadAffinity() {
+void InternalThread::SetThreadAffinity(
+#ifdef USE_MLSL
+  int ppn, int rank
+#endif
+  ) {
 #define MAX_CORES 64
 
   static int count = 0;
@@ -117,6 +140,18 @@ void InternalThread::SetThreadAffinity() {
           break;
         }
       }
+
+#ifdef USE_MLSL
+      // assign affinity cores for each rank if ppn > 1 and ncores is multiply of ppn
+      if ((ppn > 1) && (ncores / ppn > 0)) {
+        ncores /= ppn;
+        int offset = rank % ppn;
+        if (offset != 0) {
+          // overwrite the affinity cores according to rank
+          memcpy(affinity_cores, affinity_cores + offset * ncores, sizeof(int));
+        }
+      }
+#endif
     }
   }
 

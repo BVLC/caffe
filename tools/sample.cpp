@@ -127,7 +127,7 @@ int quantize(){
   CHECK_GT(FLAGS_trimming_mode.size(), 0) << "Need trimming mode.";
   Quantization* q = new Quantization(FLAGS_model, FLAGS_weights,
       FLAGS_model_quantized, FLAGS_iterations, FLAGS_trimming_mode,
-      FLAGS_error_margin, FLAGS_score_number, FLAGS_scaling, FLAGS_detection, FLAGS_power);
+      FLAGS_error_margin, FLAGS_score_number, FLAGS_scaling, FLAGS_detection);
   q->QuantizeNet();
   delete q;
   return 0;
@@ -146,6 +146,9 @@ int main(int argc, char** argv) {
       "  quantize        Trim 32bit floating point net\n");
   // Run tool or show usage.
   caffe::GlobalInit(&argc, &argv);
+#ifdef USE_MLSL
+  caffe::mn::init(&argc, &argv);
+#endif
   if (argc == 2) {
       return GetBrewFunction(caffe::string(argv[1]))();
   } else {

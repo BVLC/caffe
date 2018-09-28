@@ -147,31 +147,58 @@ void MKLDNNEltwiseLayer<Dtype>::InitEltwiseFwd(const vector<Blob<Dtype>*>& botto
     memory::format mfmt_nchw = memory::format::nchw;
 
     // ---- Initialize memory descriptors -------------
+    std::vector<memory::data_type> prv_dt(num_bottoms_, memory::data_type::f32);
+    for (auto i = 0; i < num_bottoms_; i++)
+    {
+        bool bottom_data_is_prv = (const_cast<Dtype*>(bottom[i]->prv_data()) != NULL);
+        if (bottom_data_is_prv)
+        {
+            shared_ptr<MKLDNNMemoryDescriptor<Dtype, false> > mem_descr
+                = get_mkldnn_prv_descriptor<Dtype, false>(bottom[i]);
+            prv_dt[i] = static_cast<memory::data_type>(mem_descr->prv_memory_pd()->desc().data.data_type);
+        }
+    }
+
+    memory::data_type first_prv_dt = prv_dt[0];
+    bool different_input_dt = false;
+    for (auto i = 0; i < prv_dt.size(); i++)
+    {
+        if (prv_dt[i] != first_prv_dt)
+        {
+            different_input_dt = true;
+        }
+    }
+    
     std::vector<memory::primitive_desc> bottom_data_mpd;
     fwd_bottom_data.clear();
     fwd_bottom_data_primitives_.clear();
     fwd_bottom_data_primitives_at_.clear();
+    memory::data_type bottom_data_dt = memory::data_type::f32;
     for (auto i = 0; i < num_bottoms_; i++) 
     {
         fwd_bottom_data.push_back(boost::shared_ptr<MKLDNNData<Dtype> >());
         memory::format bottom_data_mfmt = mfmt_nchw;
         shared_ptr<memory::primitive_desc> prv_bottom_data_mpd;
         shared_ptr<memory::primitive_desc> usr_bottom_data_mpd(
-            new memory::primitive_desc({{n, ic, ih, iw}, mpcsn, bottom_data_mfmt}, cpu_engine));
+            new memory::primitive_desc({{n, ic, ih, iw}, mpcsn, mfmt_nchw}, cpu_engine));
 
         bool bottom_data_is_prv = (const_cast<Dtype*>(bottom[i]->prv_data()) != NULL);
         if (bottom_data_is_prv)
         {
             shared_ptr<MKLDNNMemoryDescriptor<Dtype, false> > mem_descr
                 = get_mkldnn_prv_descriptor<Dtype, false>(bottom[i]);
-            bottom_data_mfmt = static_cast<memory::format>(
-                mem_descr->prv_memory_pd()->desc().data.format);
+            if(!different_input_dt){
+                bottom_data_mfmt = static_cast<memory::format>(
+                    mem_descr->prv_memory_pd()->desc().data.format);
+                bottom_data_dt = static_cast<memory::data_type>(
+                    mem_descr->prv_memory_pd()->desc().data.data_type);
+            }
             prv_bottom_data_mpd.reset(new memory::primitive_desc(
-                {{n, ic, ih, iw}, mpcsn, bottom_data_mfmt}, cpu_engine));
+              {{n, ic, ih, iw}, bottom_data_dt, bottom_data_mfmt}, cpu_engine));
         }
 
         bottom_data_mpd.push_back(memory::primitive_desc(
-            {{n, ic, ih, iw}, mpcsn, bottom_data_mfmt}, cpu_engine));
+            {{n, ic, ih, iw}, bottom_data_dt, bottom_data_mfmt}, cpu_engine));
 
         fwd_bottom_data[i].reset(new MKLDNNData<Dtype>(
             usr_bottom_data_mpd, prv_bottom_data_mpd, bottom[i], this));        
@@ -185,9 +212,9 @@ void MKLDNNEltwiseLayer<Dtype>::InitEltwiseFwd(const vector<Blob<Dtype>*>& botto
     
     // ---- Determining engine to use -----------------------
     std::string subengines = this->layer_param_.engine();
-    if (subengines == "" || subengines == "MKLDNN")
+    if (subengines.find("MKLDNN") == std::string::npos || subengines == "MKLDNN")
         subengines = "MKLDNN:CPU";
-    eltwiseFwd_pd.reset(new sum::primitive_desc({{n, ic, ih, iw}, mpcsn, memory::format::any}, scale, bottom_data_mpd));
+    eltwiseFwd_pd.reset(new sum::primitive_desc({{n, ic, ih, iw}, bottom_data_dt, memory::format::any}, scale, bottom_data_mpd));
     CHECK(eltwiseFwd_pd);
 
     shared_ptr<memory::primitive_desc> prv_top_data_mpd(new memory::primitive_desc(eltwiseFwd_pd->dst_primitive_desc()));

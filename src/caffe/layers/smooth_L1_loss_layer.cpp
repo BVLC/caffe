@@ -115,7 +115,16 @@ void SmoothL1LossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom, c
     }
 
     Dtype loss = caffe_cpu_dot(count, ones_.cpu_data(), errors_.cpu_data());
-    top[0]->mutable_cpu_data()[0] = loss / bottom[0]->num();
+    Dtype normalizer = Dtype(bottom[0]->num());
+    if (this->layer_param_.loss_param().normalization() == LossParameter_NormalizationMode_NONE)
+      normalizer = 1.f;
+#ifdef USE_MLSL
+    else {
+      // We assume local bs is same across all nodes
+      normalizer *= mn::get_group_size();
+    }
+#endif
+    top[0]->mutable_cpu_data()[0] = loss / normalizer;
 }
 
 
@@ -125,6 +134,15 @@ void SmoothL1LossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top, con
     // after forwards, diff_ holds w_in * (b0 - b1)
     int count = diff_.count();
     
+    Dtype normalizer = Dtype(bottom[0]->num());
+    if (this->layer_param_.loss_param().normalization() == LossParameter_NormalizationMode_NONE)
+      normalizer = 1.f;
+#ifdef USE_MLSL
+    else {
+      // We assume local bs is same across all nodes
+      normalizer *= mn::get_group_size();
+    }
+#endif
     for (int i = 0; i < count; i++) {
         // f'(x) = sigma * sigma * x         if |x| < 1 / sigma / sigma
         //       = sign(x)                   otherwise
@@ -141,7 +159,7 @@ void SmoothL1LossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top, con
     for (int i = 0; i < 2; ++i) {
         if (propagate_down[i])  {
             const Dtype sign = (i == 0) ? 1 : -1;
-            const Dtype alpha = sign * top[0]->cpu_diff()[0] / bottom[i]->num();
+            const Dtype alpha = sign * top[0]->cpu_diff()[0] / normalizer;
             caffe_cpu_axpby(
               count,                           // count
               alpha,                           // alpha

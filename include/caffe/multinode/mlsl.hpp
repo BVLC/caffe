@@ -49,7 +49,13 @@ namespace caffe {
 
 #define MLSL_DEFAULT_COLOR -1
 
+    extern MLSL::Distribution *global_distrib;
+
     void init(int* argc, char** argv[]);
+
+    inline void barrier() {
+      global_distrib->Barrier(MLSL::GT_DATA);
+    }
 
     inline void free(void *addr) {
       return MLSL::Environment::GetEnv().Free(addr);
@@ -85,15 +91,29 @@ namespace caffe {
     }
 
     inline int get_world_size() {
-      int size = 0;
-      MPI_Comm_size(MPI_COMM_WORLD, &size);
-      return size;
+      return global_distrib->GetProcessCount(MLSL::GT_DATA);
     }
 
     inline int get_node_rank() {
-      int rank = -1;
+      return global_distrib->GetProcessIdx(MLSL::GT_DATA);
+    }
+
+    inline int get_ppn() {
+      int is_mpi_inited = 0;
+      MPI_Initialized(&is_mpi_inited);
+      assert(is_mpi_inited);
+
+      int ppn = 1;
+      int rank;
       MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-      return rank;
+      MPI_Comm node_comm;
+      MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, rank, MPI_INFO_NULL, &node_comm);
+      MPI_Comm_size(node_comm, &ppn);
+      MPI_Comm_free(&node_comm);
+
+      DLOG(INFO) << "ppn " << ppn;
+
+      return ppn;
     }
 
     inline bool is_multinode() {

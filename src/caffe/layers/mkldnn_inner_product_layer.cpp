@@ -195,7 +195,7 @@ void MKLDNNInnerProductLayer<Dtype>::InitInnerProductFwd(const vector<Blob<Dtype
 
     // ---- Determining engine to use -----------------------
     std::string subengines = this->layer_param_.engine();
-    if (subengines == "" || subengines == "MKLDNN")
+    if (subengines.find("MKLDNN") == std::string::npos || subengines == "MKLDNN")
       subengines = "MKLDNN:CPU";
     EngineParser ep(subengines);
     unsigned subEngineIndex = 0;
@@ -355,18 +355,20 @@ void MKLDNNInnerProductLayer<Dtype>::InitInnerProductBwd(const vector<Blob<Dtype
     // Initialize inner_product primitive descriptor
     shared_ptr<inner_product_backward_data::desc> ipBwdData_desc;
     shared_ptr<inner_product_backward_weights::desc> ipBwdWeights_desc;
- if (this->bias_term_)
-    ipBwdWeights_desc.reset(new inner_product_backward_weights::desc(init_bottom_md, init_weights_md
+    if (this->bias_term_) {
+      ipBwdWeights_desc.reset(new inner_product_backward_weights::desc(init_bottom_md, init_weights_md
                         , init_bias_md, init_top_md));
- else
-    ipBwdWeights_desc.reset(new inner_product_backward_weights::desc(init_bottom_md, init_weights_md
+    }
+    else {
+      ipBwdWeights_desc.reset(new inner_product_backward_weights::desc(init_bottom_md, init_weights_md
                         , init_top_md));
+    }
 
     ipBwdData_desc.reset(new inner_product_backward_data::desc(init_bottom_md, init_weights_md, init_top_md));
 
     // ---- Determining engine to use -----------------------
     std::string subengines = this->layer_param_.engine();
-    if (subengines == "" || subengines == "MKLDNN")
+    if (subengines.find("MKLDNN") == std::string::npos || subengines == "MKLDNN")
       subengines = "MKLDNN:CPU";
     EngineParser ep(subengines);
     unsigned subEngineIndex = 0;

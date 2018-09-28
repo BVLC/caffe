@@ -3558,6 +3558,8 @@ TEST_F(CompileNetTest, TestCompileNetConvEltReluFusionMKLDNN) {
       "  type: 'Convolution' "
       "  convolution_param { "
       "   engine: MKLDNN "
+      "   relu: true "
+      "   fusion_type: SUM_FUSION "
       "  } "
       "} "
       "layer { "

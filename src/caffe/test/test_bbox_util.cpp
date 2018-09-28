@@ -1232,8 +1232,8 @@ TEST_F(CPUBBoxUtilTest, TestGetPriorBBoxes) {
     }
   }
 
-  vector<NormalizedBBox> prior_bboxes;
-  vector<vector<float> > prior_variances;
+  vector<NormalizedBBox> prior_bboxes(num_priors);
+  vector<vector<float> > prior_variances(num_priors);
   GetPriorBBoxes(prior_data, num_priors, &prior_bboxes, &prior_variances);
 
   EXPECT_EQ(prior_bboxes.size(), num_priors);

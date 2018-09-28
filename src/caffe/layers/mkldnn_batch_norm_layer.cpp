@@ -229,7 +229,7 @@ void MKLDNNBatchNormLayer<Dtype>::InitBatchNorm(const vector<Blob<Dtype>*>& bott
     batch_normalization_forward::desc BatchNormFwd_desc(propagation, *input_stats_md, eps_, flags);
     // ---- Determining engine to use -----------------------
     std::string subengines = this->layer_param_.engine();
-    if (subengines == "" || subengines == "MKLDNN")
+    if (subengines.find("MKLDNN") == std::string::npos || subengines == "MKLDNN")
       subengines = "MKLDNN:CPU";
     EngineParser ep(subengines);
     unsigned subEngineIndex = 0;
@@ -493,7 +493,7 @@ void MKLDNNBatchNormLayer<Dtype>::InitBatchNormBwd(
             flags);
     // ---- Determining engine to use -----------------------
     std::string subengines = this->layer_param_.engine();
-    if (subengines == "" || subengines == "MKLDNN")
+    if (subengines.find("MKLDNN") == std::string::npos || subengines == "MKLDNN")
       subengines = "MKLDNN:CPU";
     EngineParser ep(subengines);
     unsigned subEngineIndex = 0;

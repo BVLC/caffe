@@ -102,7 +102,7 @@ LIB_BUILD_DIR := $(BUILD_DIR)/lib
 STATIC_NAME := $(LIB_BUILD_DIR)/lib$(LIBRARY_NAME).a
 DYNAMIC_VERSION_MAJOR 		:= 1
 DYNAMIC_VERSION_MINOR 		:= 1
-DYNAMIC_VERSION_REVISION 	:= 0
+DYNAMIC_VERSION_REVISION 	:= 2
 DYNAMIC_NAME_SHORT := lib$(LIBRARY_NAME).so
 #DYNAMIC_SONAME_SHORT := $(DYNAMIC_NAME_SHORT).$(DYNAMIC_VERSION_MAJOR)
 DYNAMIC_VERSIONED_NAME_SHORT := $(DYNAMIC_NAME_SHORT).$(DYNAMIC_VERSION_MAJOR).$(DYNAMIC_VERSION_MINOR).$(DYNAMIC_VERSION_REVISION)
@@ -389,7 +389,11 @@ endif
 ifneq (,$(findstring icpc,$(CXX)))
 	CXX_HARDENING_FLAGS += -fstack-protector -wd2196
 	#Enable SGD FUSION if use intel compiler
-	COMMON_FLAGS += -DENABLE_SGD_FUSION
+	COMMON_FLAGS += -DENABLE_SGD_FUSION -DENABLE_NMS_OPTIMIZATION
+	#Intel compiler static build flag
+	ifeq ($(ICC_STATIC_BUILD), 1)
+		LDFLAGS += -static-intel
+	endif
 
 else ifneq (,$(findstring clang++,$(CXX)))
 	CXX_HARDENING_FLAGS += -fPIE -fstack-protector
@@ -447,7 +451,7 @@ ifeq ($(DEBUG), 1)
 	COMMON_FLAGS += -DDEBUG -g -O0
 	NVCCFLAGS += -G
 else ifneq (,$(findstring icpc,$(CXX)))
-	COMMON_FLAGS += -DNDEBUG -O3 -xCORE-AVX2 -no-prec-div -fp-model fast=2
+	COMMON_FLAGS += -DNDEBUG -O3 -xHost -no-prec-div -fp-model fast=2
 else
 	COMMON_FLAGS += -DNDEBUG -O3
 endif

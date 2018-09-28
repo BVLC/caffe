@@ -169,7 +169,6 @@ def _Net_forward(self, blobs=None, start=None, end=None, **kwargs):
     # Unpack blobs to extract
     return {out: self.blobs[out].data for out in outputs}
 
-
 def _Net_backward(self, diffs=None, start=None, end=None, **kwargs):
     """
     Backward pass: prepare diffs and run the net backward.

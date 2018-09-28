@@ -1,40 +1,3 @@
-/*
-All modification made by Intel Corporation: © 2016 Intel Corporation
-
-All contributions by the University of California:
-Copyright (c) 2014, 2015, The Regents of the University of California (Regents)
-All rights reserved.
-
-All other contributions:
-Copyright (c) 2014, 2015, the respective contributors
-All rights reserved.
-For the list of contributors go to https://github.com/BVLC/caffe/blob/master/CONTRIBUTORS.md
-
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-    * Redistributions of source code must retain the above copyright notice,
-      this list of conditions and the following disclaimer.
-    * Redistributions in binary form must reproduce the above copyright
-      notice, this list of conditions and the following disclaimer in the
-      documentation and/or other materials provided with the distribution.
-    * Neither the name of Intel Corporation nor the names of its contributors
-      may be used to endorse or promote products derived from this software
-      without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE
-FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
-
 #ifndef CAFFE_INFOGAIN_LOSS_LAYER_HPP_
 #define CAFFE_INFOGAIN_LOSS_LAYER_HPP_
 
@@ -45,24 +8,26 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/proto/caffe.pb.h"
 
 #include "caffe/layers/loss_layer.hpp"
+#include "caffe/layers/softmax_layer.hpp"
 
 namespace caffe {
 
 /**
- * @brief A generalization of MultinomialLogisticLossLayer that takes an
+ * @brief A generalization of SoftmaxWithLossLayer that takes an
  *        "information gain" (infogain) matrix specifying the "value" of all label
  *        pairs.
  *
- * Equivalent to the MultinomialLogisticLossLayer if the infogain matrix is the
+ * Equivalent to the SoftmaxWithLossLayer if the infogain matrix is the
  * identity.
  *
  * @param bottom input Blob vector (length 2-3)
  *   -# @f$ (N \times C \times H \times W) @f$
- *      the predictions @f$ \hat{p} @f$, a Blob with values in
- *      @f$ [0, 1] @f$ indicating the predicted probability of each of the
- *      @f$ K = CHW @f$ classes.  Each prediction vector @f$ \hat{p}_n @f$
- *      should sum to 1 as in a probability distribution: @f$
- *      \forall n \sum\limits_{k=1}^K \hat{p}_{nk} = 1 @f$.
+ *      the predictions @f$ x @f$, a Blob with values in
+ *      @f$ [-\infty, +\infty] @f$ indicating the predicted score for each of
+ *      the @f$ K = CHW @f$ classes. This layer maps these scores to a
+ *      probability distribution over classes using the softmax function
+ *      @f$ \hat{p}_{nk} = \exp(x_{nk}) /
+ *      \left[\sum_{k'} \exp(x_{nk'})\right] @f$ (see SoftmaxLayer).
  *   -# @f$ (N \times 1 \times 1 \times 1) @f$
  *      the labels @f$ l @f$, an integer-valued Blob with values
  *      @f$ l_n \in [0, 1, 2, ..., K - 1] @f$
@@ -71,7 +36,7 @@ namespace caffe {
  *      (\b optional) the infogain matrix @f$ H @f$.  This must be provided as
  *      the third bottom blob input if not provided as the infogain_mat in the
  *      InfogainLossParameter. If @f$ H = I @f$, this layer is equivalent to the
- *      MultinomialLogisticLossLayer.
+ *      SoftmaxWithLossLayer.
  * @param top output Blob vector (length 1)
  *   -# @f$ (1 \times 1 \times 1 \times 1) @f$
  *      the computed infogain multinomial logistic loss: @f$ E =
@@ -96,6 +61,12 @@ class InfogainLossLayer : public LossLayer<Dtype> {
   virtual inline int ExactNumBottomBlobs() const { return -1; }
   virtual inline int MinBottomBlobs() const { return 2; }
   virtual inline int MaxBottomBlobs() const { return 3; }
+
+  // InfogainLossLayer computes softmax prob internally.
+  // optional second "top" outputs the softmax prob
+  virtual inline int ExactNumTopBlobs() const { return -1; }
+  virtual inline int MinTopBlobs() const { return 1; }
+  virtual inline int MaxTopBlobs() const { return 2; }
 
   virtual inline const char* type() const { return "InfogainLoss"; }
 
@@ -128,8 +99,8 @@ class InfogainLossLayer : public LossLayer<Dtype> {
    *      infogain matrix, if provided as bottom[2])
    * @param bottom input Blob vector (length 2-3)
    *   -# @f$ (N \times C \times H \times W) @f$
-   *      the predictions @f$ \hat{p} @f$; Backward computes diff
-   *      @f$ \frac{\partial E}{\partial \hat{p}} @f$
+   *      the predictions @f$ x @f$; Backward computes diff
+   *      @f$ \frac{\partial E}{\partial x} @f$
    *   -# @f$ (N \times 1 \times 1 \times 1) @f$
    *      the labels -- ignored as we can't compute their error gradients
    *   -# @f$ (1 \times 1 \times K \times K) @f$
@@ -139,7 +110,35 @@ class InfogainLossLayer : public LossLayer<Dtype> {
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
+  /// Read the normalization mode parameter and compute the normalizer based
+  /// on the blob size.  If normalization_mode is VALID, the count of valid
+  /// outputs will be read from valid_count, unless it is -1 in which case
+  /// all outputs are assumed to be valid.
+  virtual Dtype get_normalizer(
+      LossParameter_NormalizationMode normalization_mode, int valid_count);
+  /// fill sum_rows_H_ according to matrix H
+  virtual void sum_rows_of_H(const Blob<Dtype>* H);
+
+  /// The internal SoftmaxLayer used to map predictions to a distribution.
+  shared_ptr<Layer<Dtype> > softmax_layer_;
+  /// prob stores the output probability predictions from the SoftmaxLayer.
+  Blob<Dtype> prob_;
+  /// bottom vector holder used in call to the underlying SoftmaxLayer::Forward
+  vector<Blob<Dtype>*> softmax_bottom_vec_;
+  /// top vector holder used in call to the underlying SoftmaxLayer::Forward
+  vector<Blob<Dtype>*> softmax_top_vec_;
+
   Blob<Dtype> infogain_;
+  Blob<Dtype> sum_rows_H_;  // cache the row sums of H.
+
+  /// Whether to ignore instances with a certain label.
+  bool has_ignore_label_;
+  /// The label indicating that an instance should be ignored.
+  int ignore_label_;
+  /// How to normalize the output loss.
+  LossParameter_NormalizationMode normalization_;
+
+  int infogain_axis_, outer_num_, inner_num_, num_labels_;
 };
 
 }  // namespace caffe

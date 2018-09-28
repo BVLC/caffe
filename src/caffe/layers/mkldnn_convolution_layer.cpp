@@ -63,8 +63,8 @@ MKLDNNConvolutionLayer<Dtype>::MKLDNNConvolutionLayer(const LayerParameter& para
             , fwd_bottom_data_primitive(NULL), fwd_weights_data_primitive(NULL), fwd_bias_data_primitive(NULL)
             , bwdd_top_diff_primitive(NULL), bwdd_weights_data_primitive(NULL)
             , bwdw_top_diff_primitive(NULL), bwdw_bottom_data_primitive(NULL)
-            , width_(0), height_(0), width_out_(0), height_out_(0), kernel_w_(0), kernel_h_(0)
-            , stride_w_(0), stride_h_(0), pad_w_(0), pad_h_(0),
+            , width_(0), height_(0), depth_(0), width_out_(0), height_out_(0), depth_out_(0), kernel_w_(0), kernel_h_(0), kernel_d_(0)
+            , stride_w_(0), stride_h_(0), stride_d_(0), pad_w_(0), pad_h_(0), pad_d_(0),
             bwdw_weights_diff_iter(NULL),
             bwdw_bias_diff_iter(NULL),
             bwdw_weights_diff_memory_iter(NULL),
@@ -79,24 +79,57 @@ template <typename Dtype>
 void MKLDNNConvolutionLayer<Dtype>::compute_output_shape()
 {
     ConvolutionLayer<Dtype>::compute_output_shape();
-    this->height_out_ = this->output_shape_[0];
-    this->width_out_ = this->output_shape_[1];
+    CHECK_GT(this->output_shape_.size(), 1) << "MKLDNN Convolution layer expects at least 2D spatial output dimension!";
+    CHECK_LT(this->output_shape_.size(), 4) << "MKLDNN Convolution layer expects at most 3D spatial output dimension!";
+    if (this->output_shape_.size() == 2) {
+      this->height_out_ = this->output_shape_[0];
+      this->width_out_ = this->output_shape_[1];
+    } else {
+      this->depth_out_ = this->output_shape_[0];
+      this->height_out_ = this->output_shape_[1];
+      this->width_out_ = this->output_shape_[2];
+    }
 }
 
 template <typename Dtype>
 void MKLDNNConvolutionLayer<Dtype>::init_properties(const vector<Blob<Dtype>*>& bottom
                                                 , const vector<Blob<Dtype>*>& top)
 {
-    this->stride_w_ = this->stride_.cpu_data()[1];
-    this->stride_h_ = this->stride_.cpu_data()[0];
-    this->width_ = bottom[0]->width();
-    this->height_ = bottom[0]->height();
-    this->channels_ = bottom[0]->channels();
-    this->num_ = bottom[0]->num();
-    this->pad_w_ = this->pad_.cpu_data()[1];
-    this->pad_h_ = this->pad_.cpu_data()[0];
-    this->kernel_w_ = this->kernel_shape_.cpu_data()[1];
-    this->kernel_h_  = this->kernel_shape_.cpu_data()[0];
+    CHECK_GT(this->num_spatial_axes_, 1) << "MKLDNN Convolution layer expects at least 2D spatial input dimension!";
+    CHECK_LT(this->num_spatial_axes_, 4) << "MKLDNN Convolution layer expects at most 3D spatial input dimension!";
+
+    this->num_ = bottom[0]->shape(0);
+    this->channels_ = bottom[0]->shape(1);
+
+    if (this->num_spatial_axes_ == 2) {
+      this->height_ = bottom[0]->shape(2);
+      this->width_ = bottom[0]->shape(3);
+
+      this->stride_h_ = this->stride_.cpu_data()[0];
+      this->stride_w_ = this->stride_.cpu_data()[1];
+
+      this->pad_h_ = this->pad_.cpu_data()[0];
+      this->pad_w_ = this->pad_.cpu_data()[1];
+
+      this->kernel_h_  = this->kernel_shape_.cpu_data()[0];
+      this->kernel_w_ = this->kernel_shape_.cpu_data()[1];
+    } else {
+      this->depth_ = bottom[0]->shape(2);
+      this->height_ = bottom[0]->shape(3);
+      this->width_ = bottom[0]->shape(4);
+
+      this->stride_d_ = this->stride_.cpu_data()[0];
+      this->stride_h_ = this->stride_.cpu_data()[1];
+      this->stride_w_ = this->stride_.cpu_data()[2];
+
+      this->pad_d_ = this->pad_.cpu_data()[0];
+      this->pad_h_ = this->pad_.cpu_data()[1];
+      this->pad_w_ = this->pad_.cpu_data()[2];
+
+      this->kernel_d_ = this->kernel_shape_.cpu_data()[0];
+      this->kernel_h_  = this->kernel_shape_.cpu_data()[1];
+      this->kernel_w_ = this->kernel_shape_.cpu_data()[2];
+    }
 
     string _conv_algorithm = this->layer_param_.convolution_param().conv_algorithm();
     if(_conv_algorithm == "direct")
@@ -140,17 +173,26 @@ void MKLDNNConvolutionLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom
                                             , const vector<Blob<Dtype>*>& top)
 {
     VLOG(1) << " MKLDNNConvolutionLayer<Dtype>::Reshape: " << this->layer_param_.name();
-    this->reshape = (this->width_ == bottom[0]->width() &&
-                     this->height_ == bottom[0]->height() &&
-                     this->channels_ == bottom[0]->channels() &&
-                     this->num_ == bottom[0]->num()) ? false : true;
+    if (this->num_spatial_axes_ == 2) {
+      this->reshape = (this->width_ == bottom[0]->shape(3) &&
+                       this->height_ == bottom[0]->shape(2) &&
+                       this->channels_ == bottom[0]->shape(1) &&
+                       this->num_ == bottom[0]->shape(0)) ? false : true;
+    } else {
+      this->reshape = (this->depth_ == bottom[0]->shape(2) &&
+                       this->width_ == bottom[0]->shape(4) &&
+                       this->height_ == bottom[0]->shape(3) &&
+                       this->channels_ == bottom[0]->shape(1) &&
+                       this->num_ == bottom[0]->shape(0)) ? false : true;
+    }
     init_properties(bottom, top);
     BaseConvolutionLayer<Dtype>::ReshapeForMKL(bottom, top);
-#ifndef DISABLE_CONV_SUM_FUSION
-    if (bottom.size() > 1) {
-        top[0]->ShareData(*bottom[1]);
+    // if (bottom.size() > 1) {
+    if (this->layer_param_.convolution_param().fusion_type() ==
+            ConvolutionParameter::SUM_FUSION &&
+        bottom.size() > 1) {
+      top[0]->ShareData(*bottom[1]);
     }
-#endif
 }
 
 template <typename Dtype>
@@ -163,7 +205,6 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
     Dtype negative_slope = 0;
     if(relu)
     {
-        propagation = prop_kind::forward_inference;
         negative_slope = this->layer_param_.relu_param().negative_slope();
     }
 
@@ -172,21 +213,27 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
     int32_t iw = this->width_;
     int32_t ih = this->height_;
     int32_t ic = this->channels_;
+    int32_t id = this->depth_;
 
     int32_t ow = this->width_out_;
     int32_t oh = this->height_out_;
     int32_t oc = this->num_output_;
+    int32_t od = this->depth_out_;
 
     int32_t kw = this->kernel_w_;
     int32_t kh = this->kernel_h_;
+    int32_t kd = this->kernel_d_;
 
     int32_t sw = this->stride_w_;
     int32_t sh = this->stride_h_;
+    int32_t sd = this->stride_d_;
 
     int32_t pw = this->pad_w_;
     int32_t ph = this->pad_h_;
-    memory::dims convolutionStrides {sh, sw};
-    memory::dims padding {ph, pw};
+    int32_t pd = this->pad_d_;
+
+    memory::dims convolutionStrides;
+    memory::dims padding;
     memory::dims padding_r;
     memory::dims dilation;
     bool dilated_conv = false;
@@ -195,8 +242,19 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
       dilation.push_back(dilation_data[i] - 1);
       if (dilation_data[i] != 1) dilated_conv = true;
     }
-    padding_r.push_back((oh - 1) * sh - ih + ((kh - 1) * (dilation_data[0]) + 1) - ph);
-    padding_r.push_back((ow - 1) * sw - iw + ((kw - 1) * (dilation_data[1]) + 1) - pw);
+
+    if (this->num_spatial_axes_ == 2) {
+      convolutionStrides = {sh, sw};
+      padding = {ph, pw};
+      padding_r.push_back((oh - 1) * sh - ih + ((kh - 1) * (dilation_data[0]) + 1) - ph);
+      padding_r.push_back((ow - 1) * sw - iw + ((kw - 1) * (dilation_data[1]) + 1) - pw);
+    } else {
+      convolutionStrides = {sd, sh, sw};
+      padding = {pd, ph, pw};
+      padding_r.push_back((od - 1) * sd - id + ((kd - 1) * (dilation_data[0]) + 1) - pd);
+      padding_r.push_back((oh - 1) * sh - ih + ((kh - 1) * (dilation_data[1]) + 1) - ph);
+      padding_r.push_back((ow - 1) * sw - iw + ((kw - 1) * (dilation_data[2]) + 1) - pw);
+    }
 
     // ---- Initialize memory descriptors (fromat = any) to create convolution descriptor -------------
     memory::data_type mpcsn = memory::data_type::f32;
@@ -213,12 +271,13 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
         }
       }
       else {
-        top_dt = memory::data_type::s32;
+        top_dt = memory::data_type::f32;
       }
     }
-
-    bool is_sum;
-    if (bottom.size() > 1) {
+    bool is_sum = false;
+    if (this->layer_param_.convolution_param().fusion_type() ==
+            ConvolutionParameter::SUM_FUSION &&
+        bottom.size() > 1) {
       is_sum = true;
 
       memory::data_type bottom_1_dt = memory::data_type::f32;
@@ -231,6 +290,11 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
 
       if (top_dt != bottom_1_dt) {
         top_dt = bottom_1_dt;
+        // FIXME: to simplify the calibration tool to handle different data types of conv sum in residual block
+        if(top_dt ==  memory::data_type::f32){
+          this->need_quantize_ = false;
+          bottom_dt = memory::data_type::f32;
+        }
       }
     }
 
@@ -238,10 +302,21 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
     memory::data_type bias_dt = this->need_quantize_ ? memory::data_type::s32 : memory::data_type::f32;
     memory::format mfmt_any = memory::format::any;
 
-    memory::dims bottom_tz = {n, ic, ih, iw};
-    memory::dims bias_tz = {oc};
-    memory::dims top_tz = {n, oc, oh, ow};
-    memory::dims weights_tz = (g!= 1) ? memory::dims{g, oc/g, ic/g, kh, kw} : memory::dims{oc, ic, kh, kw};
+    memory::dims bottom_tz;
+    memory::dims bias_tz;
+    memory::dims top_tz;
+    memory::dims weights_tz;
+    if (this->num_spatial_axes_ == 2) {
+      bottom_tz = {n, ic, ih, iw};
+      bias_tz = {oc};
+      top_tz = {n, oc, oh, ow};
+      weights_tz = (g!= 1) ? memory::dims{g, oc/g, ic/g, kh, kw} : memory::dims{oc, ic, kh, kw};
+    } else {
+      bottom_tz = {n, ic, id, ih, iw};
+      bias_tz = {oc};
+      top_tz = {n, oc, od, oh, ow};
+      weights_tz = (g!= 1) ? memory::dims{g, oc/g, ic/g, kd, kh, kw} : memory::dims{oc, ic, kd, kh, kw};
+    }
 
     // ---- Memory descriptors for initializing of convolution primitive descriptor -------------
     memory::desc init_bottom_md({bottom_tz}, bottom_dt, mfmt_any);
@@ -249,9 +324,17 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
     memory::desc init_top_md({top_tz}, top_dt, mfmt_any);
     memory::desc init_weights_md({weights_tz}, weights_dt, mfmt_any);
 
+    size_t coeff_size = this->layer_param_.convolution_param().coeff_size();
+    float coeff0 = 1;
+    float coeff1 = 1;
+    if (coeff_size == 2) 
+    {
+      coeff0 = this->layer_param_.convolution_param().coeff(0);
+      coeff1 = this->layer_param_.convolution_param().coeff(1);
+    }
+
     primitive_attr attr;
     if (this->need_quantize_) {
-      if(this->scale_in_.size() > 0) this->is_float_ = true;
       int mask = 0;
       int count = 1; //single channel
       if(this->fl_params_.size() > 1 || this->scale_params_.size() > 1){
@@ -261,20 +344,13 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
       }
       std::vector<float> scales(count);
       float scale;
-      if(this->is_float_){
-        #pragma omp parallel for if (count > 1)
-        for(int i=0; i<count; i++){
-          scale = this->scale_out_[0] / (this->scale_in_[0] * this->scale_params_[i]);
-          scales[i] = scale;
-        }
-      } else {
-        int output_shift;
-        #pragma omp parallel for if (count > 1)
-        for(int i=0; i<count; i++){
-          output_shift = this->fl_layer_out_[0] - this->fl_layer_in_[0] - this->fl_params_[i];
-          scale = pow(2. ,output_shift);
-          scales[i] = scale;
-        }
+      #pragma omp parallel for if (count > 1)
+      for(int i=0; i<count; i++){
+        if (this->scale_params_[i] == 0.0)
+            scale = this->scale_out_[0] * coeff1;
+        else
+            scale = this->scale_out_[0] / (this->scale_in_[0] * this->scale_params_[i]) * coeff1;
+        scales[i] = scale;
       }
       attr.set_output_scales(mask, scales);
       attr.set_int_output_round_mode(round_nearest);
@@ -282,44 +358,33 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
     
     // ---- Determining engine to use -----------------------
     std::string subengines = this->layer_param_.engine();
-    if (subengines == "" || subengines == "MKLDNN")
+    if (subengines.find("MKLDNN") == std::string::npos || subengines == "MKLDNN")
       subengines = "MKLDNN:CPU";
     EngineParser ep(subengines);
     unsigned subEngineIndex = 0;
     mkldnn::algorithm eligibleAlgorithms[2] = {conv_algorithm, algorithm::convolution_direct};
     convFwd_pd = NULL;
     mkldnn::post_ops ops;
+    float scale = 1.0f;
+    Dtype alpha = negative_slope;  // negative slope for mkldnn_eltwise_relu.
+    float beta = 1.0f;             // ignored for mkldnn_eltwise_relu.
 
-#ifndef DISABLE_CONV_SUM_FUSION
-    if(relu || bottom.size() > 1) {
-#else
-    if(relu) {
-#endif
-        float scale = 1.0f;
-        Dtype alpha = negative_slope;  // negative slope for mkldnn_eltwise_relu.
-        float beta = 1.0f;  //ignored for mkldnn_eltwise_relu.
-#ifndef DISABLE_CONV_SUM_FUSION
-        if (bottom.size() > 1) {
-          if (this->need_quantize_) {
-            float sum_scale;
-            if(this->is_float_){
-                sum_scale = this->scale_out_[0] /
-                      get_mkldnn_prv_descriptor<Dtype, false>(bottom[1])->get_scale(0);
-            } else{
-                int sum_shift =
-                    this->fl_layer_out_[0] -
-                    get_mkldnn_prv_descriptor<Dtype, false>(bottom[1])->get_fl(0);          
-                sum_scale = pow(2., sum_shift);
-            } 
-            ops.append_sum(sum_scale);
-          } else {
-            ops.append_sum(1.0f);
-          }
-        }
-#endif
-        ops.append_eltwise(scale, eltwise_relu, alpha, beta);
-        attr.set_post_ops(ops);
+    if (this->layer_param_.convolution_param().fusion_type() ==
+            ConvolutionParameter::SUM_FUSION &&
+        bottom.size() > 1) {
+      if (this->need_quantize_) {
+        float sum_scale;
+        sum_scale =
+            this->scale_out_[0] /
+            get_mkldnn_prv_descriptor<Dtype, false>(bottom[1])->get_scale(0) * coeff0;
+        ops.append_sum(sum_scale);
+      } else {
+        ops.append_sum(1.0f);
+      }
     }
+
+    if (relu) ops.append_eltwise(scale, eltwise_relu, alpha, beta);
+    attr.set_post_ops(ops);
 
     for (auto& convAlgorithm : eligibleAlgorithms) {
       // ---- Initialize convolution primitive descriptor -------------
@@ -351,12 +416,11 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
       for (subEngineIndex = 0; subEngineIndex < ep.getNumberOfSubEngines();
            subEngineIndex++) {
         try {
-#ifndef DISABLE_CONV_SUM_FUSION
-            if(this->need_quantize_ || relu || bottom.size() > 1) {
-#else
-            if(relu) {
-#endif
-                convFwd_pd.reset(new convolution_forward::primitive_desc(
+          if (this->need_quantize_ || relu ||
+              (this->layer_param_.convolution_param().fusion_type() ==
+                   ConvolutionParameter::SUM_FUSION &&
+               bottom.size() > 1)) {
+            convFwd_pd.reset(new convolution_forward::primitive_desc(
                 *convFwd_desc, attr, ep.getMKLDNNSubEngine(subEngineIndex)));
           } else {
             convFwd_pd.reset(new convolution_forward::primitive_desc(
@@ -387,86 +451,61 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
     info_mem_pd<Dtype>(prv_fwd_top_data_memory_pd, "conv_dst:" + this->layer_param_.name());
     
     // ---- Create usr memory primitive descriptors -------------
-    memory::format mfmt_nchw = memory::format::nchw;
-    memory::format weights_mfmt = (g!= 1) ? memory::format::goihw : memory::format::oihw;
+    memory::format data_mfmt;
+    memory::format weights_mfmt;
+    if (this->num_spatial_axes_ == 2) {
+      data_mfmt = memory::format::nchw;
+      weights_mfmt = (g!= 1) ? memory::format::goihw : memory::format::oihw;
+    } else {
+      data_mfmt = memory::format::ncdhw;
+      weights_mfmt = (g!= 1) ? memory::format::goidhw : memory::format::oidhw;
+    } 
 
     // TODO: There should not be a problem to use this for Backward as well
     
-    shared_ptr<MemPD> usr_bottom_data_memory_pd(new MemPD({{bottom_tz}, mpcsn, mfmt_nchw}, cpu_engine));
+    shared_ptr<MemPD> usr_bottom_data_memory_pd(new MemPD({{bottom_tz}, mpcsn, data_mfmt}, cpu_engine));
     shared_ptr<MemPD> usr_bias_data_memory_pd(new MemPD({{bias_tz}, mpcsn, memory::format::x}, cpu_engine));
-    shared_ptr<MemPD> usr_top_data_memory_pd(new MemPD({{top_tz}, mpcsn, mfmt_nchw}, cpu_engine));
+    shared_ptr<MemPD> usr_top_data_memory_pd(new MemPD({{top_tz}, mpcsn, data_mfmt}, cpu_engine));
     shared_ptr<MemPD> usr_weights_data_memory_pd(new MemPD({{weights_tz}, mpcsn, weights_mfmt}, cpu_engine));
 
     // ---  init primitive and prv_memory descriptors ----------------------
-    bool bottom_is_float = false;
-    if (const_cast<Dtype*>(bottom[0]->prv_data()) != NULL) {
-        shared_ptr<MKLDNNMemoryDescriptor<Dtype, false> > blob_prv_mkldnn_mem_descr = get_mkldnn_prv_descriptor<Dtype, false>(bottom[0]);
-        bottom_is_float = blob_prv_mkldnn_mem_descr->get_float();
-    }
     if (this->need_quantize_){
-      if(this->is_float_ || bottom_is_float){
-        std::vector<float> scale_bottom;
-        scale_bottom.push_back(this->scale_in_[0]);
-        fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_bottom_data_memory_pd, prv_fwd_bottom_data_memory_pd, bottom[0], this, true, scale_bottom));
-      } else{
-        std::vector<int> fl_bottom;
-        fl_bottom.push_back(this->fl_layer_in_[0]);
-        fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_bottom_data_memory_pd, prv_fwd_bottom_data_memory_pd, bottom[0], this, fl_bottom));
-      }       
-    } else if(bottom_is_float){
-      fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_bottom_data_memory_pd, prv_fwd_bottom_data_memory_pd, bottom[0], this, false));
-    } else{
+      std::vector<float> scale_bottom;
+      scale_bottom.push_back(this->scale_in_[0]);
+      fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_bottom_data_memory_pd, prv_fwd_bottom_data_memory_pd, bottom[0], this, scale_bottom));
+    } else {
       fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_bottom_data_memory_pd, prv_fwd_bottom_data_memory_pd, bottom[0], this));
     }
     fwd_bottom_data->name = "fwd_bottom_data   @ " + this->layer_param_.name();
     fwd_bottom_data_primitive = fwd_bottom_data->create_input(false);
 
     if (this->need_quantize_){
-      if(this->is_float_ || bottom_is_float){
-        std::vector<float> scale_top;
-        scale_top.push_back(this->scale_out_[0]);
-        fwd_top_data.reset(new MKLDNNData<Dtype>(usr_top_data_memory_pd, prv_fwd_top_data_memory_pd, top[0], this, true, scale_top, is_sum));
-      } else{
-        std::vector<int> fl_top;
-        fl_top.push_back(this->fl_layer_out_[0]);
-        fwd_top_data.reset(new MKLDNNData<Dtype>(usr_top_data_memory_pd, prv_fwd_top_data_memory_pd, top[0], this, fl_top, is_sum));
-      }
-    } else if(bottom_is_float){ 
-      fwd_top_data.reset(new MKLDNNData<Dtype>(usr_top_data_memory_pd, prv_fwd_top_data_memory_pd, top[0], this, false));
+      std::vector<float> scale_top;
+      scale_top.push_back(this->scale_out_[0]);
+      fwd_top_data.reset(new MKLDNNData<Dtype>(usr_top_data_memory_pd, prv_fwd_top_data_memory_pd, top[0], this, scale_top, 0, is_sum));
     } else{
       fwd_top_data.reset(new MKLDNNData<Dtype>(usr_top_data_memory_pd, prv_fwd_top_data_memory_pd, top[0], this));
     }
     fwd_top_data->name = "fwd_top_data      @ " + this->layer_param_.name();
     fwd_top_data_memory = fwd_top_data->create_output_memory();
 
+    bool is_wino = conv_algorithm == algorithm::convolution_winograd ? true : false; 
     if (fwd_weights_data == NULL) {
       if (this->need_quantize_){
         int count = 1; //single channel
-        if(this->is_float_ || bottom_is_float){
-          if(this->scale_params_.size() > 1){
-              count = oc;  //multi channel
-          }
-          std::vector<float> scale_weight(count);
-          #pragma omp parallel for if (count > 1)
-          for(int i=0; i<count; i++){
-            scale_weight[i] = this->scale_params_[i];
-          }
-          fwd_weights_data.reset(new MKLDNNData<Dtype>(usr_weights_data_memory_pd, prv_fwd_weights_data_memory_pd, this->blobs_[0].get(), this, true, scale_weight));
-        } else{
-          if(this->fl_params_.size() > 1){
-              count = oc;  //multi channel
-          }
-          std::vector<int> fl_weight(count);
-          #pragma omp parallel for if (count > 1)
-          for(int i=0; i<count; i++){
-            fl_weight[i] = this->fl_params_[i];
-          }
-          fwd_weights_data.reset(new MKLDNNData<Dtype>(usr_weights_data_memory_pd, prv_fwd_weights_data_memory_pd, this->blobs_[0].get(), this, fl_weight));
+        int reorder_mask = 0;
+        if(this->scale_params_.size() > 1){
+            count = oc;  //multi channel
+            reorder_mask = (g!= 1) ? (1<<1)+(1<<0) : 1<<0;
         }
-      } else if(bottom_is_float){
-        fwd_weights_data.reset(new MKLDNNData<Dtype>(usr_weights_data_memory_pd, prv_fwd_weights_data_memory_pd, this->blobs_[0].get(), this, false));
+        std::vector<float> scale_weight(count);
+        #pragma omp parallel for if (count > 1)
+        for(int i=0; i<count; i++){
+          scale_weight[i] = this->scale_params_[i];
+        }
+        fwd_weights_data.reset(new MKLDNNData<Dtype>(usr_weights_data_memory_pd, prv_fwd_weights_data_memory_pd, this->blobs_[0].get(), this, scale_weight, reorder_mask));
       } else{
-        fwd_weights_data.reset(new MKLDNNData<Dtype>(usr_weights_data_memory_pd, prv_fwd_weights_data_memory_pd, this->blobs_[0].get(), this));
+        fwd_weights_data.reset(new MKLDNNData<Dtype>(usr_weights_data_memory_pd, prv_fwd_weights_data_memory_pd, this->blobs_[0].get(), this, {1.}, 0,  is_sum, is_wino));
       }
       fwd_weights_data->name = "fwd_weights_data  @ " + this->layer_param_.name();
       fwd_weights_data_primitive = fwd_weights_data->create_input(true);
@@ -476,30 +515,21 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
         if (fwd_bias_data == NULL) {
           shared_ptr<MemPD> prv_fwd_bias_data_memory_pd(new MemPD(convFwd_pd->bias_primitive_desc()));
           if (this->need_quantize_){
-            int count = 1;  //single channel
-            if(this->is_float_ || bottom_is_float){
-              if(this->scale_params_.size() > 1){
-                  count = oc;  //multi channel
-              }
-              std::vector<float> scale_bias(count);
-              #pragma omp parallel for if (count > 1)
-              for(int i=0; i<count; i++){
-                scale_bias[i] = this->scale_in_[0] * this->scale_params_[i];
-              }
-              fwd_bias_data.reset(new MKLDNNData<Dtype>(usr_bias_data_memory_pd, prv_fwd_bias_data_memory_pd, this->blobs_[1].get(), this, true, scale_bias));
-            } else{
-              if(this->fl_params_.size() > 1){
-                  count = oc;  //multi channel
-              }
-              std::vector<int> fl_bias(count);
-              #pragma omp parallel for if (count > 1)
-              for(int i=0; i<count; i++){
-                fl_bias[i] = this->fl_layer_in_[0] + this->fl_params_[i];
-              }
-              fwd_bias_data.reset(new MKLDNNData<Dtype>(usr_bias_data_memory_pd, prv_fwd_bias_data_memory_pd, this->blobs_[1].get(), this, fl_bias));
+          int count = 1;  //single channel
+          int reorder_mask = 0;
+            if(this->scale_params_.size() > 1){
+                count = oc;  //multi channel
+                reorder_mask = 1<<0;
             }
-          } else if(bottom_is_float){
-            fwd_bias_data.reset(new MKLDNNData<Dtype>(usr_bias_data_memory_pd, prv_fwd_bias_data_memory_pd, this->blobs_[1].get(), this, false));
+            std::vector<float> scale_bias(count);
+            #pragma omp parallel for if (count > 1)
+            for(int i=0; i<count; i++){
+              if (this->scale_params_[i] == 0.0)
+                  scale_bias[i] = 1.0;
+              else
+                  scale_bias[i] = this->scale_in_[0] * this->scale_params_[i];
+            }
+            fwd_bias_data.reset(new MKLDNNData<Dtype>(usr_bias_data_memory_pd, prv_fwd_bias_data_memory_pd, this->blobs_[1].get(), this, scale_bias, reorder_mask));
           } else{
             fwd_bias_data.reset(new MKLDNNData<Dtype>(usr_bias_data_memory_pd, prv_fwd_bias_data_memory_pd, this->blobs_[1].get(), this));
           }
@@ -540,8 +570,8 @@ void MKLDNNConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bott
 
     if( convFwd_pd == NULL || this->reshape)
         InitConvolutionFwd(bottom, top);
-    // making reorders if needed.
-    fwd_bottom_data->sync_before_read();
+
+    fwd_bottom_data->sync_before_read(); 
     fwd_weights_data->sync_before_read();
     if (this->bias_term_)
         fwd_bias_data->sync_before_read();
@@ -567,21 +597,27 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionBwd(const vector<Blob<Dtype>*
     int32_t iw = this->width_;
     int32_t ih = this->height_;
     int32_t ic = this->channels_;
+    int32_t id = this->depth_;
 
     int32_t ow = this->width_out_;
     int32_t oh = this->height_out_;
+    int32_t od = this->depth_out_;
     int32_t oc = this->num_output_;
 
     int32_t kw = this->kernel_w_;
     int32_t kh = this->kernel_h_;
+    int32_t kd = this->kernel_d_;
 
     int32_t sw = this->stride_w_;
     int32_t sh = this->stride_h_;
+    int32_t sd = this->stride_d_;
 
     int32_t pw = this->pad_w_;
     int32_t ph = this->pad_h_;
-    memory::dims convolutionStrides {sh, sw};
-    memory::dims padding {ph, pw};
+    int32_t pd = this->pad_d_;
+
+    memory::dims convolutionStrides;
+    memory::dims padding;
     memory::dims padding_r;
     memory::dims dilation;
     bool dilated_conv = false;
@@ -590,17 +626,38 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionBwd(const vector<Blob<Dtype>*
       dilation.push_back(dilation_data[i] - 1);
       if (dilation_data[i] != 1) dilated_conv = true;
     }
-    padding_r.push_back((oh - 1) * sh - ih + ((kh - 1) * (dilation_data[0]) + 1) - ph);
-    padding_r.push_back((ow - 1) * sw - iw + ((kw - 1) * (dilation_data[1]) + 1) - pw);
+    if (this->num_spatial_axes_ == 2) {
+      convolutionStrides = {sh, sw};
+      padding = {ph, pw};
+      padding_r.push_back((oh - 1) * sh - ih + ((kh - 1) * (dilation_data[0]) + 1) - ph);
+      padding_r.push_back((ow - 1) * sw - iw + ((kw - 1) * (dilation_data[1]) + 1) - pw);
+    } else {
+      convolutionStrides = {sd, sh, sw};
+      padding = {pd, ph, pw};
+      padding_r.push_back((od - 1) * sd - id + ((kd - 1) * (dilation_data[0]) + 1) - pd);
+      padding_r.push_back((oh - 1) * sh - ih + ((kh - 1) * (dilation_data[1]) + 1) - ph);
+      padding_r.push_back((ow - 1) * sw - iw + ((kw - 1) * (dilation_data[2]) + 1) - pw);
+    }
 
     // ---- Initialize memory descriptors (fromat = any) to create convolution descriptor -------------
     memory::data_type mpcsn = memory::data_type::f32;
     memory::format mfmt_any = memory::format::any;
 
-    memory::dims bottom_tz = {n, ic, ih, iw};
-    memory::dims bias_tz = {oc};
-    memory::dims top_tz = {n, oc, oh, ow};
-    memory::dims weights_tz = ( g!= 1) ? memory::dims{g, oc/g, ic/g, kh, kw} : memory::dims{oc, ic, kh, kw};
+    memory::dims bottom_tz;
+    memory::dims bias_tz;
+    memory::dims top_tz;
+    memory::dims weights_tz;
+    if (this->num_spatial_axes_ == 2) {
+      bottom_tz = {n, ic, ih, iw};
+      bias_tz = {oc};
+      top_tz = {n, oc, oh, ow};
+      weights_tz = ( g!= 1) ? memory::dims{g, oc/g, ic/g, kh, kw} : memory::dims{oc, ic, kh, kw};
+    } else {
+      bottom_tz = {n, ic, id, ih, iw};
+      bias_tz = {oc};
+      top_tz = {n, oc, od, oh, ow};
+      weights_tz = ( g!= 1) ? memory::dims{g, oc/g, ic/g, kd, kh, kw} : memory::dims{oc, ic, kd, kh, kw};
+    } 
 
     // ---- Memory descriptors for initializing of convolution primitive descriptor -------------
     memory::desc init_bottom_md({bottom_tz}, mpcsn, mfmt_any);
@@ -610,7 +667,7 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionBwd(const vector<Blob<Dtype>*
 
     // ---- Determining engine to use -----------------------
     std::string subengines = this->layer_param_.engine();
-    if (subengines == "" || subengines == "MKLDNN")
+    if (subengines.find("MKLDNN") == std::string::npos || subengines == "MKLDNN")
       subengines = "MKLDNN:CPU";
     EngineParser ep(subengines);
     unsigned subEngineIndex = 0;
@@ -684,13 +741,19 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionBwd(const vector<Blob<Dtype>*
     shared_ptr<MemPD> prv_bwdw_weights_diff_memory_pd(new MemPD(convBwdWeights_pd->diff_weights_primitive_desc()));
 
     // ---- Create usr memory primitive descriptors -------------
-    memory::format mfmt_nchw = memory::format::nchw;
-    memory::format weights_mfmt = ( g!= 1) ? memory::format::goihw : memory::format::oihw;
-
+    memory::format data_mfmt;
+    memory::format weights_mfmt;
+    if (this->num_spatial_axes_ == 2) {
+      data_mfmt = memory::format::nchw;
+      weights_mfmt = ( g!= 1) ? memory::format::goihw : memory::format::oihw;
+    } else {
+      data_mfmt = memory::format::ncdhw;
+      weights_mfmt = ( g!= 1) ? memory::format::goidhw : memory::format::oidhw;
+    }
     // ???!!! can we use usr memory primitive descrittors for backward??
-    shared_ptr<MemPD> usr_bottom_data_memory_pd(new MemPD({{bottom_tz}, mpcsn, mfmt_nchw}, cpu_engine));
+    shared_ptr<MemPD> usr_bottom_data_memory_pd(new MemPD({{bottom_tz}, mpcsn, data_mfmt}, cpu_engine));
     shared_ptr<MemPD> usr_bias_data_memory_pd(new MemPD({{bias_tz}, mpcsn, memory::format::x}, cpu_engine));
-    shared_ptr<MemPD> usr_top_data_memory_pd(new MemPD({{top_tz}, mpcsn, mfmt_nchw}, cpu_engine));
+    shared_ptr<MemPD> usr_top_data_memory_pd(new MemPD({{top_tz}, mpcsn, data_mfmt}, cpu_engine));
     shared_ptr<MemPD> usr_weights_data_memory_pd(new MemPD({{weights_tz}, mpcsn, weights_mfmt}, cpu_engine));
 
 

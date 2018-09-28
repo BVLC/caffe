@@ -1,0 +1,22 @@
+net: "models/intel_optimized_models/benchmark/googlenet_v3/train_val_dummydata.prototxt"
+
+warmup_iter: 3125
+warmup_start_lr: 0.05
+
+test_iter: 1000
+test_interval: 6250
+test_initialization: false
+
+display: 100
+
+max_iter: 62500        # 100 epochs
+base_lr: 0.6
+
+lr_policy: "poly"
+power: 2
+momentum: 0.9
+weight_decay: 0.0002
+
+random_seed: 1
+
+solver_mode: CPU

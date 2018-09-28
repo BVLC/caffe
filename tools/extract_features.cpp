@@ -60,6 +60,9 @@ template<typename Dtype>
 int feature_extraction_pipeline(int argc, char** argv);
 
 int main(int argc, char** argv) {
+#ifdef USE_MLSL
+  caffe::mn::init(&argc, &argv);
+#endif
   return feature_extraction_pipeline<float>(argc, argv);
 //  return feature_extraction_pipeline<double>(argc, argv);
 }

@@ -59,18 +59,18 @@ void MKLDNNPoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom
     PoolingParameter pool_param = this->layer_param_.pooling_param();
 
     if (pool_param.global_pooling()) {
-        CHECK(!(pool_param.kernel_size_size() || pool_param.has_kernel_h() || pool_param.has_kernel_w()))
+        CHECK(!(pool_param.has_kernel_size() || pool_param.has_kernel_h() || pool_param.has_kernel_w()))
             << "With Global_pooling: true Filter size cannot specified";
     } else {
-        CHECK(!pool_param.kernel_size_size() != !(pool_param.has_kernel_h() && pool_param.has_kernel_w()))
+        CHECK(!pool_param.has_kernel_size() != !(pool_param.has_kernel_h() && pool_param.has_kernel_w()))
             << "Filter size is kernel_size OR kernel_h and kernel_w; not both";
-        CHECK(pool_param.kernel_size_size() ||(pool_param.has_kernel_h() && pool_param.has_kernel_w()))
+        CHECK(pool_param.has_kernel_size() ||(pool_param.has_kernel_h() && pool_param.has_kernel_w()))
             << "For non-square filters both kernel_h and kernel_w are required.";
     }
-    CHECK((!pool_param.pad_size() && pool_param.has_pad_h() && pool_param.has_pad_w())
+    CHECK((!pool_param.has_pad() && pool_param.has_pad_h() && pool_param.has_pad_w())
             || (!pool_param.has_pad_h() && !pool_param.has_pad_w()))
         << "pad is pad OR pad_h and pad_w are required.";
-    CHECK((!pool_param.stride_size() && pool_param.has_stride_h() && pool_param.has_stride_w())
+    CHECK((!pool_param.has_stride() && pool_param.has_stride_h() && pool_param.has_stride_w())
             || (!pool_param.has_stride_h() && !pool_param.has_stride_w()))
         << "Stride is stride OR stride_h and stride_w are required.";
 
@@ -79,15 +79,8 @@ void MKLDNNPoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom
         kernel_h_ = bottom[0]->height();
         kernel_w_ = bottom[0]->width();
     } else {
-        if (pool_param.kernel_size_size()) {
-            CHECK(pool_param.kernel_size_size() == 1 || pool_param.kernel_size_size() == 2)
-              << "kernel_size must be specified once, or 2 values for Height and Width";
-            if (pool_param.kernel_size_size() == 1) {
-                kernel_h_ = kernel_w_ = pool_param.kernel_size(0);
-            } else {
-                kernel_h_ = pool_param.kernel_size(0);
-                kernel_w_ = pool_param.kernel_size(1);
-            }
+        if (pool_param.has_kernel_size()) {
+          kernel_h_ = kernel_w_ = pool_param.kernel_size();
         } else {
           kernel_h_ = pool_param.kernel_h();
           kernel_w_ = pool_param.kernel_w();
@@ -98,32 +91,14 @@ void MKLDNNPoolingLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom
     CHECK_GT(kernel_w_, 0) << "Filter dimensions cannot be zero.";
 
     if (!pool_param.has_pad_h()) {
-        CHECK(pool_param.pad_size() < 3)
-          << "pad must be specified no more than 3 dimensions";
-        if (pool_param.pad_size() == 0) {
-          pad_t_ = pad_b_ = pad_l_ = pad_r_ = 0;
-        } else if (pool_param.pad_size() == 1) {
-          pad_t_ = pad_b_ = pad_l_ = pad_r_ = pool_param.pad(0);
-        } else {
-          pad_t_ = pad_b_ = pool_param.pad(0);
-          pad_l_ = pad_r_ = pool_param.pad(1);
-        }
+        pad_t_ = pad_b_ = pad_l_ = pad_r_ = pool_param.pad();
     } else {
         pad_t_ = pad_b_ = pool_param.pad_h();
         pad_l_ = pad_r_ = pool_param.pad_w();
     }
 
     if (!pool_param.has_stride_h()) {
-        CHECK(pool_param.stride_size() < 3)
-          << "stride must be specified no more than 3 dimensions";
-        if (pool_param.stride_size() == 0) {
-          stride_h_ = stride_w_ = 1;
-        } else if (pool_param.stride_size() == 1) {
-          stride_h_ = stride_w_ = pool_param.stride(0);
-        } else {
-          stride_h_ = pool_param.stride(0);
-          stride_w_ = pool_param.stride(1);
-        }
+        stride_h_ = stride_w_ = pool_param.stride();
     } else {
         stride_h_ = pool_param.stride_h();
         stride_w_ = pool_param.stride_w();
@@ -262,6 +237,7 @@ void MKLDNNPoolingLayer<Dtype>::InitPoolingFwd(const vector<Blob<Dtype>*>& botto
     int32_t pr = this->pad_r_;
 
     bool bottom_data_is_prv = (const_cast<Dtype*>(bottom[0]->prv_data()) != NULL);
+    bool top_data_is_prv = (const_cast<Dtype*>(top[0]->prv_data()) != NULL);
 
     engine cpu_engine = CpuEngine::Instance().get_engine();
     memory::data_type mpcsn = memory::data_type::f32;
@@ -276,17 +252,15 @@ void MKLDNNPoolingLayer<Dtype>::InitPoolingFwd(const vector<Blob<Dtype>*>& botto
     shared_ptr<MemPD> usr_bottom_data_mpd(new MemPD({{bottom_tz}, mpcsn, mfmt_nchw}, cpu_engine));
     shared_ptr<MemPD> usr_top_data_mpd(new MemPD({{top_tz}, mpcsn, mfmt_nchw}, cpu_engine));
 
-    std::vector<int> fl;
     std::vector<float> scale;
-    bool bottom_is_float = false;
-    if (bottom_data_is_prv) {
+    if (bottom_data_is_prv || top_data_is_prv) {
         shared_ptr<MKLDNNMemoryDescriptor<Dtype, false> > mem_descr
             = get_mkldnn_prv_descriptor<Dtype, false>(bottom[0]);
-        bottom_is_float = mem_descr->get_float();
         cmfmt = static_cast<memory::format>(mem_descr->prv_memory_pd()->desc().data.format);
         mpcsn = static_cast<memory::data_type>(mem_descr->prv_memory_pd()->desc().data.data_type);
-        fl.push_back(mem_descr->get_fl(0));
         scale.push_back(mem_descr->get_scale(0));
+    } else{
+        scale.push_back(1.);
     }
 
     shared_ptr<memory::desc> init_fwd_bottom_md(new memory::desc({bottom_tz}, mpcsn, cmfmt));
@@ -297,7 +271,7 @@ void MKLDNNPoolingLayer<Dtype>::InitPoolingFwd(const vector<Blob<Dtype>*>& botto
                                         , {sh, sw}, {kh, kw}, {pt, pl}, {pb, pr}, padding_kind::zero);
     // ---- Determining engine to use -----------------------
     std::string subengines = this->layer_param_.engine();
-    if (subengines == "" || subengines == "MKLDNN")
+    if (subengines.find("MKLDNN") == std::string::npos || subengines == "MKLDNN")
       subengines = "MKLDNN:CPU";
     EngineParser ep(subengines);
     unsigned subEngineIndex = 0;
@@ -319,7 +293,7 @@ void MKLDNNPoolingLayer<Dtype>::InitPoolingFwd(const vector<Blob<Dtype>*>& botto
     // ---- Initialize remaining memory descriptors -------------
     shared_ptr<MemPD> prv_fwd_bottom_data_mpd;
     shared_ptr<MemPD> prv_fwd_top_data_mpd;
-    if (bottom_data_is_prv) {
+    if (bottom_data_is_prv || top_data_is_prv) {
         prv_fwd_bottom_data_mpd.reset(new MemPD(*init_fwd_bottom_md, engine));
         prv_fwd_top_data_mpd.reset(new MemPD(*init_fwd_top_md, engine));
         // ---- Log prv memory primitive descriptors -------------
@@ -337,18 +311,10 @@ void MKLDNNPoolingLayer<Dtype>::InitPoolingFwd(const vector<Blob<Dtype>*>& botto
             : max_idx_.mutable_cpu_data();
 
     // ---  init primitive and prv_memory descriptors ----------------------
-    if(bottom_is_float){
-        fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_bottom_data_mpd, prv_fwd_bottom_data_mpd, bottom[0], this, true, scale));
-    } else {
-        fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_bottom_data_mpd, prv_fwd_bottom_data_mpd, bottom[0], this, fl));
-    }
+    fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_bottom_data_mpd, prv_fwd_bottom_data_mpd, bottom[0], this, scale));
     fwd_bottom_data_primitive = fwd_bottom_data->create_input(false);
 
-    if(bottom_is_float){
-        fwd_top_data.reset(new MKLDNNData<Dtype>(usr_top_data_mpd, prv_fwd_top_data_mpd, top[0], this, true, scale));
-    } else{
-        fwd_top_data.reset(new MKLDNNData<Dtype>(usr_top_data_mpd, prv_fwd_top_data_mpd, top[0], this, fl));
-    }
+    fwd_top_data.reset(new MKLDNNData<Dtype>(usr_top_data_mpd, prv_fwd_top_data_mpd, top[0], this, scale));
     fwd_top_data_memory = fwd_top_data->create_output_memory();
 
     if (propagation == prop_kind::forward_training &&
@@ -479,7 +445,7 @@ void MKLDNNPoolingLayer<Dtype>::InitPoolingBwd(const vector<Blob<Dtype>*>& top
                                         , {sh, sw}, {kh, kw}, {pt, pl}, {pb, pr}, padding_kind::zero);
     // ---- Determining engine to use -----------------------
     std::string subengines = this->layer_param_.engine();
-    if (subengines == "" || subengines == "MKLDNN")
+    if (subengines.find("MKLDNN") == std::string::npos || subengines == "MKLDNN")
       subengines = "MKLDNN:CPU";
     EngineParser ep(subengines);
     unsigned subEngineIndex = 0;
