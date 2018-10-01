@@ -156,7 +156,8 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
                                        NormalizedBBox* crop_bbox,
                                        bool* do_mirror,
 				       const bool preserve_pixel_vals,
-				       const bool preserve_annotations) {
+                                       const bool preserve_annotations,
+                                       const bool use_previous_mirror_value) {
   // If datum is encoded, decoded and transform the cv::image.
   if (datum.encoded()) {
 #ifdef USE_OPENCV
@@ -171,7 +172,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
     }
     // Transform the cv::image into blob.
     return Transform(cv_img, transformed_blob, crop_bbox, do_mirror,
-		     preserve_pixel_vals, preserve_annotations);
+                     preserve_pixel_vals, preserve_annotations, use_previous_mirror_value);
 #else
     LOG(ERROR) << "Encoded datum requires OpenCV; compile with USE_OPENCV.";
     LOG(FATAL) << "fatal error";
@@ -702,7 +703,8 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
                                        NormalizedBBox* crop_bbox,
                                        bool* do_mirror,
                                        bool preserve_pixel_vals,
-				       bool preserve_annotations) {
+                                       bool preserve_annotations,
+                                       bool use_previous_mirror_value) {
   // Check dimensions.
   const int img_channels = cv_img.channels();
   const int channels = transformed_blob->channels();
@@ -717,7 +719,8 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
 
   const int crop_size = param_.crop_size();
   const Dtype scale = param_.scale();
-  *do_mirror = param_.mirror() && Rand(2);
+  if (!use_previous_mirror_value)
+    *do_mirror = param_.mirror() && Rand(2);
   const bool has_mean_file = param_.has_mean_file();
   const bool has_mean_values = mean_values_.size() > 0;
 
