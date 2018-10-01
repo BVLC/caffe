@@ -694,6 +694,61 @@ cv::Mat DecodeDatumToCVMat(const Datum& datum, bool is_color) {
   return cv_img;
 }
 
+  template <typename Dtype>
+  void DumpBlobAsImgs(std::string prefix,const Blob<Dtype>& blob, float scale)
+{
+  std::vector<cv::Mat> imgs = DecodeBlobToCVMats(blob, scale);
+  for (int i=0; i<imgs.size(); ++i)
+    {
+      std::string fname = prefix + "_" +std::to_string(i)+".png";
+      cv::imwrite(fname, imgs[i]);
+    }
+}
+
+  template void DumpBlobAsImgs<float>(std::string prefix,const Blob<float>& blob, float scale);
+  template void DumpBlobAsImgs<double>(std::string prefix,const Blob<double>& blob, float scale);
+
+template <typename Dtype>
+std::vector<cv::Mat> DecodeBlobToCVMats(const Blob<Dtype>& blob, float scale)
+{
+  int cv_type;
+  if (std::is_same<Dtype,float>::value)
+    {
+      cv_type = CV_32FC3;
+    }
+  else //Dtype is double
+    {
+      cv_type = CV_64FC3;
+    }
+  std::vector<cv::Mat> imgs;
+  for (int n = 0; n< blob.num(); ++n)
+    {
+      cv::Mat img(blob.height(),blob.width(),cv_type);
+      for(int y=0;y<blob.height();y++)
+        {
+          for(int x=0;x<blob.width();x++)
+            {
+              cv::Vec<Dtype,3> color;
+              if (blob.channels() == 1)
+                for (int c= 0; c<3; ++c)
+                  {
+                    color[c] = blob.data_at(n,0,y,x) * scale;
+                    img.at<cv::Vec<Dtype,3>>(cv::Point(x,y)) = color;
+                  }
+              else
+
+                for (int c= 0; c<blob.channels(); ++c)
+                  {
+                    color[c] = blob.data_at(n,c,y,x) * scale;
+                    img.at<cv::Vec<Dtype,3>>(cv::Point(x,y)) = color;
+                  }
+            }
+        }
+      imgs.push_back(img);
+    }
+  return imgs;
+}
+
 // If Datum is encoded will decoded using DecodeDatumToCVMat and CVMatToDatum
 // If Datum is not encoded will do nothing
 bool DecodeDatumNative(Datum* datum) {
@@ -859,6 +914,8 @@ void CVMatToDatum(const cv::Mat& cv_img, Datum* datum) {
   LOG(INFO) << "Read " << line_num - 1 << " images with " <<
     num_labels << " labels";
 }
+
+
 
 #endif  // USE_OPENCV
 }  // namespace caffe
