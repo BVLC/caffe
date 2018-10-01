@@ -190,9 +190,9 @@ void DataLayer<Dtype>::load_batch_and_untransformed_batch(Batch<Dtype>* batch, B
     //    this->data_transformer_->Transform(datum, &(this->transformed_data_));
     NormalizedBBox crop_bbox;
     bool do_mirror;
-
     this->data_transformer_->Transform(datum, &(this->transformed_data_),&crop_bbox, &do_mirror,
                                        false, false);
+
     if (this->untransformed_top_)
       {
         this->untransformed_data_.set_cpu_data(untransformed_top_data + offset);
