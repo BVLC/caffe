@@ -12,6 +12,7 @@
 #include "caffe/common.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/format.hpp"
+#include "caffe/blob.hpp"
 
 #ifndef CAFFE_TMP_DIR_RETRIES
 #define CAFFE_TMP_DIR_RETRIES 100
@@ -289,14 +290,19 @@ void EncodeCVMatToDatum(const cv::Mat& cv_img, const string& encoding,
 
 void CVMatToDatum(const cv::Mat& cv_img, Datum* datum);
 
-  long int NumberOfImages(const string* source);
+long int NumberOfImages(const string* source);
 
-  void ReadImagesListBatch(const string* source, long int start_index, long int n_to_read,
+void ReadImagesListBatch(const string* source, long int start_index, long int n_to_read,
 			   std::vector<std::pair<std::string, std::vector<float> > >&images_vec,
 			   std::ifstream &infile, const bool &fpeek=false, const int &skip=0);
-  void ReadImagesList(const string& source,
+void ReadImagesList(const string& source,
                            std::vector<std::pair<std::string, std::vector<float> > >*images_vec);
 
+template <typename Dtype>
+void DumpBlobAsImgs(std::string prefix,const Blob<Dtype>& blob, float scale);
+
+template <typename Dtype>
+std::vector<cv::Mat> DecodeBlobToCVMats(const Blob<Dtype>& blob, float scale);
 
 #endif  // USE_OPENCV
 
