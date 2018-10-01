@@ -188,7 +188,8 @@ class DataTransformer {
    */
   void Transform(const cv::Mat& cv_img, Blob<Dtype>* transformed_blob,
                  NormalizedBBox* crop_bbox, bool* do_mirror,
-		 bool preserve_pixel_vals = false, bool preserve_annotations = false);
+                 bool preserve_pixel_vals = false, bool preserve_annotations = false,
+                 bool use_previous_mirror_value = false);
   void Transform(const cv::Mat& cv_img, Blob<Dtype>* transformed_blob,
 		 bool preserve_pixel_vals = false, bool preserve_annotations = false);
 
@@ -258,6 +259,17 @@ class DataTransformer {
    */
   vector<int> InferBlobShape(const cv::Mat& cv_img);
 
+  /**
+   * @brief Applies the transformation defined in the data layer's
+   * transform_param block to the data and return transform information.
+   */
+  void Transform(const Datum& datum, Blob<Dtype>* transformed_blob,
+                 NormalizedBBox* crop_bbox, bool* do_mirror,
+                 const bool preserve_pixel_vals = false,
+                 const bool preserve_annotations = false,
+                 const bool use_previous_mirror_value = false);
+
+
  protected:
    /**
    * @brief Generates a random integer from Uniform({0, 1, ..., n-1}).
@@ -273,16 +285,6 @@ class DataTransformer {
   void Transform(const Datum& datum, Dtype* transformed_data,
                  NormalizedBBox* crop_bbox, bool* do_mirror);
   void Transform(const Datum& datum, Dtype* transformed_data);
-
-  /**
-   * @brief Applies the transformation defined in the data layer's
-   * transform_param block to the data and return transform information.
-   */
-  void Transform(const Datum& datum, Blob<Dtype>* transformed_blob,
-                 NormalizedBBox* crop_bbox, bool* do_mirror,
-		 const bool preserve_pixel_vals = false,
-		 const bool preserve_annotations = false);
-
 
 
   // Tranformation parameters

@@ -303,6 +303,21 @@ The `BNLL` (binomial normal log likelihood) layer computes the output as log(1 +
 
 Data enters Caffe through data layers: they lie at the bottom of nets. Data can come from efficient databases (LevelDB or LMDB), directly from memory, or, when efficiency is not critical, from files on disk in HDF5 or common image formats.
 
+* [ReLU / Rectified-Linear and Leaky-ReLU](layers/relu.html) - ReLU and Leaky-ReLU rectification.
+* [PReLU](layers/prelu.html) - parametric ReLU.
+* [ELU](layers/elu.html) - exponential linear rectification.
+* [Sigmoid](layers/sigmoid.html)
+* [TanH](layers/tanh.html)
+* [Absolute Value](layers/absval.html)
+* [Power](layers/power.html) - f(x) = (shift + scale * x) ^ power.
+* [Exp](layers/exp.html) - f(x) = base ^ (shift + scale * x).
+* [Log](layers/log.html) - f(x) = log(x).
+* [BNLL](layers/bnll.html) - f(x) = log(1 + exp(x)).
+* [Threshold](layers/threshold.html) - performs step function at user defined threshold.
+* [Clip](layers/clip.html) - clips a blob between a fixed minimum and maximum value.
+* [Bias](layers/bias.html) - adds a bias to a blob that can either be learned or fixed.
+* [Scale](layers/scale.html) - scales a blob by an amount that can either be learned or fixed.
+
 Common input preprocessing (mean subtraction, scaling, random cropping, and mirroring) is available by specifying `TransformationParameter`s.
 
 #### Database

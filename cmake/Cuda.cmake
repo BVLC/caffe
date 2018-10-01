@@ -109,6 +109,12 @@ function(caffe_select_nvcc_arch_flags out_variable)
   set(__nvcc_flags "")
   set(__nvcc_archs_readable "")
 
+  string(COMPARE GREATER_EQUAL "${CUDA_VERSION}" "9.0" iscudanewerthan90)
+  if(iscudanewerthan90)
+    string(REPLACE "21(20)" "" __cuda_arch_bin "${__cuda_arch_bin}")
+    string(REPLACE "20" "" __cuda_arch_bin "${__cuda_arch_bin}")
+  endif()
+
   # Tell NVCC to add binaries for the specified GPUs
   foreach(__arch ${__cuda_arch_bin})
     if(__arch MATCHES "([0-9]+)\\(([0-9]+)\\)")

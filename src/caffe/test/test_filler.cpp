@@ -257,16 +257,16 @@ TYPED_TEST(GaussianFillerTest, TestFill) {
 }
 
 TYPED_TEST(GaussianFillerTest, TestFill1D) {
-  vector<int> blob_shape(1, 25);
-  const TypeParam tolerance = TypeParam(5);
+  vector<int> blob_shape(1, 125);
+  const TypeParam tolerance = TypeParam(3);
   this->test_params(blob_shape, tolerance);
 }
 
 TYPED_TEST(GaussianFillerTest, TestFill2D) {
   vector<int> blob_shape;
   blob_shape.push_back(8);
-  blob_shape.push_back(3);
-  const TypeParam tolerance = TypeParam(5);
+  blob_shape.push_back(15);
+  const TypeParam tolerance = TypeParam(3);
   this->test_params(blob_shape, tolerance);
 }
 

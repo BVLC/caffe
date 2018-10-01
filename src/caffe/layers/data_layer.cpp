@@ -187,12 +187,17 @@ void DataLayer<Dtype>::load_batch_and_untransformed_batch(Batch<Dtype>* batch, B
     // Apply data transformations (mirror, scale, crop...)
     int offset = batch->data_.offset(item_id);
     this->transformed_data_.set_cpu_data(top_data + offset);
-    this->data_transformer_->Transform(datum, &(this->transformed_data_));
+    //    this->data_transformer_->Transform(datum, &(this->transformed_data_));
+    NormalizedBBox crop_bbox;
+    bool do_mirror;
+    this->data_transformer_->Transform(datum, &(this->transformed_data_),&crop_bbox, &do_mirror,
+                                       false, false);
+
     if (this->untransformed_top_)
       {
         this->untransformed_data_.set_cpu_data(untransformed_top_data + offset);
         // apply mirror bu not noise neither distort neither rotate
-        this->data_transformer_->Transform(datum, &(this->untransformed_data_),true, false);
+        this->data_transformer_->Transform(datum, &(this->untransformed_data_),&crop_bbox, &do_mirror, true, false, true);
       }
     // Copy label.
     if (this->output_labels_) {
