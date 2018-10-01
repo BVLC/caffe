@@ -35,6 +35,16 @@ class DenseImageDataLayer : public BasePrefetchingDataLayer<Dtype> {
   virtual void ShuffleImages();
   virtual void load_batch(Batch<Dtype>* batch);
 
+  void rotate(cv::Mat& cv_img, cv::Mat& cv_lab);
+  int rotate(cv::Mat& cv_img);
+  void rotate(cv::Mat& cv_img, int r);
+
+  void mirror(cv::Mat& cv_img, cv::Mat& cv_lab);
+  bool mirror(cv::Mat& cv_img);
+  void mirror(cv::Mat& cv_img, bool do_mirror);
+
+
+
   vector<std::pair<std::string, std::string> > lines_;
   int lines_id_;
   Blob<Dtype> transformed_label_;

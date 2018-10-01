@@ -218,6 +218,17 @@ void DenseImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
         cv_lab = ReadImageToCVMat(root_folder + lines_[lines_id_].second,
                                   new_height, new_width, false, true);
         CHECK(cv_lab.data) << "Could not load " << lines_[lines_id_].second;
+        read_time += timer.MicroSeconds();
+        timer.Start();
+        // Apply random horizontal mirror of images
+        if (this->layer_param_.dense_image_data_param().mirror()) {
+          mirror(cv_img, cv_lab);
+        }
+        // Apply random rotation of images
+        if (this->layer_param_.dense_image_data_param().rotate()) {
+          CHECK(new_height == new_width) << "If random rotation is enabled, the image must be square";
+          rotate(cv_img, cv_lab);
+        }
       }
     else
       {
@@ -227,58 +238,33 @@ void DenseImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
         cv_lab = cv::Mat(cv_lab_orig.rows,cv_lab_orig.cols,
                          CV_MAKETYPE(cv_lab_orig.depth(),(one_hot_nclasses_)));
 				cv::Mat cv_chan;
+        read_time += timer.MicroSeconds();
+        timer.Start();
         int from_to[] = {0, 0};
+        // Apply random horizontal mirror of images
+        bool do_mirror = false;
+        if (this->layer_param_.dense_image_data_param().mirror()) {
+          do_mirror = mirror(cv_img);
+        }
+        // Apply random rotation of images
+        int do_rotate = 0;
+        if (this->layer_param_.dense_image_data_param().rotate()) {
+          CHECK(new_height == new_width) << "If random rotation is enabled, the image must be square";
+          do_rotate = rotate(cv_img);
+        }
+
         for (int i=0; i<one_hot_nclasses_; ++i)
           {
             cv_chan = cv_lab_orig == i;
             from_to[1]= i; // where to put newly computed channel
-						cv::threshold(cv_chan, cv_chan, 0.5, 1., cv::THRESH_BINARY);
+            cv::threshold(cv_chan, cv_chan, 0.5, 1., cv::THRESH_BINARY);
+            mirror(cv_chan, do_mirror);
+            CHECK(new_height == new_width) << "If random rotation is enabled, the image must be square";
+            rotate(cv_chan, do_rotate);
             cv::mixChannels(&cv_chan,1,&cv_lab, 1, from_to, 1);
           }
       }
 
-    read_time += timer.MicroSeconds();
-    timer.Start();
-    // Apply random horizontal mirror of images
-    if (this->layer_param_.dense_image_data_param().mirror()) {
-      const bool do_mirror = caffe_rng_rand() % 2;
-      if (do_mirror) {
-        cv::flip(cv_img,cv_img,1);
-        cv::flip(cv_lab,cv_lab,1);
-      }
-    }
-    // Apply random rotation of images
-    if (this->layer_param_.dense_image_data_param().rotate()) {
-      int r = rd_(rg_);
-      if (r > 0)
-	{
-	  CHECK(new_height == new_width) << "If random rotation is enabled, the image must be square";
-	  if (r != 2)
-	    {
-	      cv::Mat cv_timg, cv_tlab;
-	      transpose(cv_img,cv_timg);
-	      transpose(cv_lab,cv_tlab);
-	      if (r == 1) // 90
-		{
-		  flip(cv_timg,cv_img,1);
-		  flip(cv_tlab,cv_lab,1);
-		}
-	      else if (r == 3) // 270
-		{
-		  flip(cv_timg,cv_img,0);
-		  flip(cv_tlab,cv_lab,0);
-		}
-	    }
-	  else // 180
-	    {
-	      cv::Mat cv_imgr,cv_labr;
-	      flip(cv_img,cv_imgr,-1);
-	      flip(cv_lab,cv_labr,-1);
-	      cv_img = cv_imgr;
-	      cv_lab = cv_labr;
-	    }
-	}
-    }
     // Apply crop
     int height = cv_img.rows;
     int width = cv_img.cols;
@@ -327,6 +313,124 @@ void DenseImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 		DLOG(INFO) << "     Read (+ one_hot_encoding of labels) time: " << read_time / 1000 << " ms.";
   DLOG(INFO) << "Transform time: " << trans_time / 1000 << " ms.";
 }
+
+
+template <typename Dtype>
+void DenseImageDataLayer<Dtype>::mirror(cv::Mat& cv_img, cv::Mat& cv_lab) {
+  const bool do_mirror = caffe_rng_rand() % 2;
+  if (do_mirror) {
+    cv::flip(cv_img,cv_img,1);
+    cv::flip(cv_lab,cv_lab,1);
+  }
+}
+
+template <typename Dtype>
+bool DenseImageDataLayer<Dtype>::mirror(cv::Mat& cv_img) {
+  const bool do_mirror = caffe_rng_rand() % 2;
+  if (do_mirror) {
+    cv::flip(cv_img,cv_img,1);
+  }
+  return do_mirror;
+}
+
+
+template <typename Dtype>
+void DenseImageDataLayer<Dtype>::mirror(cv::Mat& cv_img, bool do_mirror) {
+  if (do_mirror) {
+    cv::flip(cv_img,cv_img,1);
+  }
+}
+
+
+
+template <typename Dtype>
+void DenseImageDataLayer<Dtype>::rotate(cv::Mat& cv_img, cv::Mat& cv_lab) {
+  int r = rd_(rg_);
+  if (r > 0)
+    {
+      if (r != 2)
+        {
+          cv::Mat cv_timg, cv_tlab;
+          transpose(cv_img,cv_timg);
+          transpose(cv_lab,cv_tlab);
+          if (r == 1) // 90
+            {
+              flip(cv_timg,cv_img,1);
+              flip(cv_tlab,cv_lab,1);
+            }
+          else if (r == 3) // 270
+            {
+              flip(cv_timg,cv_img,0);
+              flip(cv_tlab,cv_lab,0);
+            }
+        }
+      else // 180
+        {
+          cv::Mat cv_imgr,cv_labr;
+          flip(cv_img,cv_imgr,-1);
+          flip(cv_lab,cv_labr,-1);
+          cv_img = cv_imgr;
+          cv_lab = cv_labr;
+        }
+    }
+}
+
+
+template <typename Dtype>
+void DenseImageDataLayer<Dtype>::rotate(cv::Mat& cv_img, int r) {
+  if (r > 0)
+    {
+      if (r != 2)
+        {
+          cv::Mat cv_timg;
+          transpose(cv_img,cv_timg);
+          if (r == 1) // 90
+            {
+              flip(cv_timg,cv_img,1);
+            }
+          else if (r == 3) // 270
+            {
+              flip(cv_timg,cv_img,0);
+            }
+        }
+      else // 180
+        {
+          cv::Mat cv_imgr;
+          flip(cv_img,cv_imgr,-1);
+          cv_img = cv_imgr;
+        }
+    }
+}
+
+template <typename Dtype>
+int DenseImageDataLayer<Dtype>::rotate(cv::Mat& cv_img) {
+  int r = rd_(rg_);
+  if (r > 0)
+    {
+      if (r != 2)
+        {
+          cv::Mat cv_timg;
+          transpose(cv_img,cv_timg);
+          if (r == 1) // 90
+            {
+              flip(cv_timg,cv_img,1);
+            }
+          else if (r == 3) // 270
+              {
+                flip(cv_timg,cv_img,0);
+              }
+        }
+      else // 180
+        {
+            cv::Mat cv_imgr;
+            flip(cv_img,cv_imgr,-1);
+            cv_img = cv_imgr;
+        }
+    }
+  return r;
+}
+
+
 
 INSTANTIATE_CLASS(DenseImageDataLayer);
 REGISTER_LAYER_CLASS(DenseImageData);
