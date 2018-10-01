@@ -171,6 +171,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
       cv_img = DecodeDatumToCVMatNative(datum);
     }
     // Transform the cv::image into blob.
+
     return Transform(cv_img, transformed_blob, crop_bbox, do_mirror,
                      preserve_pixel_vals, preserve_annotations, use_previous_mirror_value);
 #else
@@ -712,6 +713,8 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
   const int width = transformed_blob->width();
   const int num = transformed_blob->num();
 
+  cv::imwrite("/tmp/before_transforms.png",cv_img);
+
   CHECK_GT(img_channels, 0);
   CHECK(cv_img.depth() == CV_8U) << "Image data type must be unsigned byte";
   CHECK_EQ(channels, img_channels);
@@ -746,6 +749,7 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
     crop_h = crop_size;
     crop_w = crop_size;
   }
+
 
   cv::Mat cv_resized_image, cv_distort_image, cv_noised_image, cv_cropped_image;
   if (param_.has_resize_param()) {
@@ -804,7 +808,9 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
     int r = 0;
     RotateImage(cv_cropped_image,r);
   }
-  
+
+  cv::imwrite("/tmp/after_transforms.png", cv_cropped_image);
+
   Dtype* transformed_data = transformed_blob->mutable_cpu_data();
   int top_index;
   for (int h = 0; h < height; ++h) {
@@ -837,6 +843,7 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
       }
     }
   }
+  DumpBlobAsImgs("/tmp/after_blobbing", *transformed_blob,1.0/scale);
 }
 
 template<typename Dtype>

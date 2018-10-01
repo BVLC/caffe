@@ -4,10 +4,15 @@
 #include <stdint.h>
 
 #include <vector>
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/highgui/highgui_c.h>
+#include <opencv2/imgproc/imgproc.hpp>
 
 #include "caffe/data_transformer.hpp"
 #include "caffe/layers/data_layer.hpp"
 #include "caffe/util/benchmark.hpp"
+#include "caffe/util/io.hpp"
 
 #include <iostream>
 
@@ -190,14 +195,21 @@ void DataLayer<Dtype>::load_batch_and_untransformed_batch(Batch<Dtype>* batch, B
     //    this->data_transformer_->Transform(datum, &(this->transformed_data_));
     NormalizedBBox crop_bbox;
     bool do_mirror;
+
+    cv::Mat img = DecodeDatumToCVMat(datum, true);
+    cv::imwrite("/tmp/datum.png", img);
+
     this->data_transformer_->Transform(datum, &(this->transformed_data_),&crop_bbox, &do_mirror,
                                        false, false);
+    DumpBlobAsImgs("/tmp/transformed",this->transformed_data_, 1.0/this->transform_param_.scale());
 
     if (this->untransformed_top_)
       {
         this->untransformed_data_.set_cpu_data(untransformed_top_data + offset);
         // apply mirror bu not noise neither distort neither rotate
         this->data_transformer_->Transform(datum, &(this->untransformed_data_),&crop_bbox, &do_mirror, true, false, true);
+        DumpBlobAsImgs("/tmp/untransformed",this->untransformed_data_, 1.0/this->transform_param_.scale());
+
       }
     // Copy label.
     if (this->output_labels_) {
