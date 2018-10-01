@@ -171,7 +171,6 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
       cv_img = DecodeDatumToCVMatNative(datum);
     }
     // Transform the cv::image into blob.
-
     return Transform(cv_img, transformed_blob, crop_bbox, do_mirror,
                      preserve_pixel_vals, preserve_annotations, use_previous_mirror_value);
 #else
@@ -747,7 +746,6 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
     crop_h = crop_size;
     crop_w = crop_size;
   }
-
 
   cv::Mat cv_resized_image, cv_distort_image, cv_noised_image, cv_cropped_image;
   if (param_.has_resize_param()) {

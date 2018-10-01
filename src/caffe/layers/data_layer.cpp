@@ -4,15 +4,10 @@
 #include <stdint.h>
 
 #include <vector>
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/highgui/highgui_c.h>
-#include <opencv2/imgproc/imgproc.hpp>
 
 #include "caffe/data_transformer.hpp"
 #include "caffe/layers/data_layer.hpp"
 #include "caffe/util/benchmark.hpp"
-#include "caffe/util/io.hpp"
 
 #include <iostream>
 
@@ -195,8 +190,6 @@ void DataLayer<Dtype>::load_batch_and_untransformed_batch(Batch<Dtype>* batch, B
     //    this->data_transformer_->Transform(datum, &(this->transformed_data_));
     NormalizedBBox crop_bbox;
     bool do_mirror;
-
-    cv::Mat img = DecodeDatumToCVMat(datum, true);
 
     this->data_transformer_->Transform(datum, &(this->transformed_data_),&crop_bbox, &do_mirror,
                                        false, false);
