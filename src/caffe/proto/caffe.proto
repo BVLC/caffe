@@ -727,6 +727,7 @@ message NoiseParameter {
 
 // Message that stores parameters used by data transformer for perspective warp policy
 message GeometryParameter {
+
   // Probability of using this distort policy
   optional float prob = 1 [default = 0.0];
   // horizontal perspective change (ie look from right or left)
@@ -743,6 +744,14 @@ message GeometryParameter {
   optional float persp_factor = 7 [default = 0.25];
   // enable all effects
   optional bool all_effects = 8 [default = false];
+  // filling aroud image mirrors / black / repeat border
+  enum Pad_mode {
+    CONSTANT = 1;
+    MIRRORED = 2;
+    REPEAT_NEAREST = 3;
+  }
+  // Padding mode for BE_SMALL_SIZE_AND_PAD mode and object centering
+  optional Pad_mode pad_mode = 9 [default = MIRRORED];
 }
 
 // Message that stores parameters used by data transformer for distortion policy

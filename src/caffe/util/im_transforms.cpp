@@ -732,9 +732,25 @@ cv::Mat ApplyGeometry(const cv::Mat& in_img, const GeometryParameter& param) {
   if (!persp)
     return in_img;
 
+  int pad_mode = cv::BORDER_REFLECT101;
+  switch (param.pad_mode()) {
+  case GeometryParameter_Pad_mode_CONSTANT:
+    pad_mode = cv::BORDER_CONSTANT;
+    break;
+  case GeometryParameter_Pad_mode_MIRRORED:
+    pad_mode = cv::BORDER_REFLECT101;
+    break;
+  case GeometryParameter_Pad_mode_REPEAT_NEAREST:
+    pad_mode = cv::BORDER_REPLICATE;
+    break;
+  default:
+    LOG(ERROR) << "Unknown pad mode.";
+    LOG(FATAL) << "fatal error";
+  }
+
   cv::Mat in_img_enlarged;
   copyMakeBorder(in_img, in_img_enlarged, in_img.rows, in_img.rows, in_img.cols, in_img.cols,
-                 cv::BORDER_REFLECT_101);
+                 pad_mode);
 
   // Input Quadilateral or Image plane coordinates
   cv::Point2f inputQuad[4];
