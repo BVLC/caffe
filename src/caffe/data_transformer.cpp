@@ -810,7 +810,7 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
     int r = 0;
     RotateImage(cv_cropped_image,r);
   }
-  
+
   Dtype* transformed_data = transformed_blob->mutable_cpu_data();
   int top_index;
   for (int h = 0; h < height; ++h) {

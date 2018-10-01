@@ -586,10 +586,13 @@ cv::Mat ApplyNoise(const cv::Mat& in_img, const NoiseParameter& param) {
   if (convert_to_lab)
     convert_to_lab = (roll_weighted_die(binary_probs) == 1);
   if (convert_to_lab && out_img.channels() > 1) {
+    int orig_depth = out_img.type() & CV_MAT_DEPTH_MASK;
     cv::Mat lab_image;
     out_img.convertTo(lab_image, CV_32F);
     lab_image *= 1.0 / 255;
     cv::cvtColor(lab_image, out_img, CV_BGR2Lab);
+    out_img.convertTo(lab_image, orig_depth);
+    out_img = lab_image;
   }
   return  out_img;
 }
