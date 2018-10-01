@@ -713,8 +713,6 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
   const int width = transformed_blob->width();
   const int num = transformed_blob->num();
 
-  cv::imwrite("/tmp/before_transforms.png",cv_img);
-
   CHECK_GT(img_channels, 0);
   CHECK(cv_img.depth() == CV_8U) << "Image data type must be unsigned byte";
   CHECK_EQ(channels, img_channels);
@@ -809,8 +807,6 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
     RotateImage(cv_cropped_image,r);
   }
 
-  cv::imwrite("/tmp/after_transforms.png", cv_cropped_image);
-
   Dtype* transformed_data = transformed_blob->mutable_cpu_data();
   int top_index;
   for (int h = 0; h < height; ++h) {
@@ -843,7 +839,6 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
       }
     }
   }
-  DumpBlobAsImgs("/tmp/after_blobbing", *transformed_blob,1.0/scale);
 }
 
 template<typename Dtype>
