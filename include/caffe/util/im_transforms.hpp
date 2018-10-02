@@ -54,6 +54,7 @@ void constantNoise(const int n, const vector<uchar>& val, cv::Mat* image);
 cv::Mat ApplyResize(const cv::Mat& in_img, const ResizeParameter& param);
 
 cv::Mat ApplyNoise(const cv::Mat& in_img, const NoiseParameter& param);
+cv::Mat ApplyGeometry(const cv::Mat& in_img, const GeometryParameter& param);
 
 
 void RandomBrightness(const cv::Mat& in_img, cv::Mat* out_img,
