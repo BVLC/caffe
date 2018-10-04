@@ -80,7 +80,7 @@ endforeach()
 
 if(NOT MKL_USE_SINGLE_DYNAMIC_LIBRARY)
   if (MKL_USE_STATIC_LIBS)
-    set(__iomp5_libs iomp5 libiomp5mt.lib)
+    set(__iomp5_libs libiomp5.a libiomp5mt.lib)
   else()
     set(__iomp5_libs iomp5 libiomp5md.lib)
   endif()
