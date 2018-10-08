@@ -1,4 +1,4 @@
-# Installation
+#### Installation
 
 See http://caffe.berkeleyvision.org/installation.html for the latest
 installation instructions.
