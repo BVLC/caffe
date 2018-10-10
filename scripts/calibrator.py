@@ -231,16 +231,15 @@ def transform_convolutions(model_path, compiled_model_path, top_blobs_map, botto
         conv_input_u8 = is_convolution_input_u8(l, compiled_net, index_in_compiled_net, ["Convolution"], convs_output_with_relu) # FIXME: extended_convs_output_with_relu
         for si in range(0, len(new_net.layer[index].quantization_param.scale_in)):
             if conv_input_u8:  # u8
-                if first_conv: # FIXME: remove the condition
+                if first_conv:
                     new_net.layer[index].quantization_param.scale_in[si] = s8_max / new_net.layer[index].quantization_param.scale_in[si]
-#                    new_net.layer[index].quantization_param.negative = True
+                    new_net.layer[index].quantization_param.is_negative_input = True
                     first_conv = False
                 else:
                     new_net.layer[index].quantization_param.scale_in[si] = u8_max / new_net.layer[index].quantization_param.scale_in[si]
-                    #new_net.layer[index].quantization_param.ClearField('min_in')
             else:
                 new_net.layer[index].quantization_param.scale_in[si] = s8_max / new_net.layer[index].quantization_param.scale_in[si]
-#                new_net.layer[index].quantization_param.negative = True
+                new_net.layer[index].quantization_param.is_negative_input = True
 
         for si in range(0, len(new_net.layer[index].quantization_param.scale_params)):
             if not isclose(new_net.layer[index].quantization_param.scale_params[si], 0.0):

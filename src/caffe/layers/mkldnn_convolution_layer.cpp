@@ -258,9 +258,15 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
 
     // ---- Initialize memory descriptors (fromat = any) to create convolution descriptor -------------
     memory::data_type mpcsn = memory::data_type::f32;
-    memory::data_type bottom_dt = this->need_quantize_ ? memory::data_type::u8 : memory::data_type::f32;
-    memory::data_type top_dt = memory::data_type::f32;
+    memory::data_type bottom_dt = memory::data_type::f32;
+    if (this->need_quantize_) {
+      if (this->layer_param_.quantization_param().is_negative_input())
+        bottom_dt = memory::data_type::s8;
+      else
+        bottom_dt = memory::data_type::u8;
+    }
 
+    memory::data_type top_dt = memory::data_type::f32;
     if (this->need_quantize_) {
       if (this->bw_layer_out_ == 8) {
         if (relu) {
