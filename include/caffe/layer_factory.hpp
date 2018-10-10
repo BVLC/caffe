@@ -59,8 +59,8 @@ class LayerRegistry {
   typedef std::map<string, Creator> CreatorRegistry;
 
   static CreatorRegistry& Registry() {
-    static CreatorRegistry* g_registry_ = new CreatorRegistry();
-    return *g_registry_;
+    static CreatorRegistry g_registry_;
+    return g_registry_;
   }
 
   // Adds a creator.
