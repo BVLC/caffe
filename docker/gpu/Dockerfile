@@ -1,4 +1,4 @@
-FROM nvidia/cuda:8.0-cudnn6-devel-ubuntu16.04
+FROM ubuntu:16.04
 LABEL maintainer caffe-maint@googlegroups.com
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -32,11 +32,12 @@ WORKDIR $CAFFE_ROOT
 ENV CLONE_TAG=1.0
 
 RUN git clone -b ${CLONE_TAG} --depth 1 https://github.com/BVLC/caffe.git . && \
-    pip install --upgrade pip && \
+    # Following line commented out due to https://github.com/pypa/pip/issues/5599
+    # pip install --upgrade pip && \
     cd python && for req in $(cat requirements.txt) pydot; do pip install $req; done && cd .. && \
-    git clone https://github.com/NVIDIA/nccl.git && cd nccl && make -j install && cd .. && rm -rf nccl && \
+    # OpenCL-specific stuff here
     mkdir build && cd build && \
-    cmake -DUSE_CUDNN=1 -DUSE_NCCL=1 .. && \
+    cmake -DUSE_OPENCL=1 .. && \
     make -j"$(nproc)"
 
 ENV PYCAFFE_ROOT $CAFFE_ROOT/python
