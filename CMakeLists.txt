@@ -85,7 +85,6 @@ if(HAVE_CUDA)
 
   # add definitions to nvcc flags directly
   set(Caffe_ALL_DEFINITIONS ${Caffe_DEFINITIONS})
-  list(REMOVE_ITEM Caffe_ALL_DEFINITIONS PRIVATE PUBLIC)
   list(APPEND CUDA_NVCC_FLAGS ${Caffe_ALL_DEFINITIONS})
 endif()
 
