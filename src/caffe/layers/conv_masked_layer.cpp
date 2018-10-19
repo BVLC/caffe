@@ -214,7 +214,6 @@ void ConvolutionMaskedLayer<Dtype>::compute_output_shape() {
   const int* stride_data = this->stride_.cpu_data();
   const int* pad_data = this->pad_.cpu_data();
   const int* dilation_data = this->dilation_.cpu_data();
-  printf("calculating output shape\n");
   this->output_shape_.clear();
   for (int i = 0; i < this->num_spatial_axes_; ++i) {
     // i + 1 to skip channel axis
@@ -224,7 +223,6 @@ void ConvolutionMaskedLayer<Dtype>::compute_output_shape() {
         / stride_data[i] + 1;
     this->output_shape_.push_back(output_dim);
   }
-  printf("output shape: %d\n", this->output_shape_[0]);
 }
 
 template <typename Dtype>
