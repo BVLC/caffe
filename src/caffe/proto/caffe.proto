@@ -382,6 +382,7 @@ message LayerParameter {
   optional ConcatParameter concat_param = 104;
   optional ContrastiveLossParameter contrastive_loss_param = 105;
   optional ConvolutionParameter convolution_param = 106;
+  optional ConvolutionMaskedParameter convolution_masked_param = 149;
   optional CropParameter crop_param = 144;
   optional DataParameter data_param = 107;
   optional DropoutParameter dropout_param = 108;
@@ -641,6 +642,15 @@ message ConvolutionParameter {
   // ignored and the ND implementation will be used.)
   optional bool force_nd_im2col = 17 [default = false];
 }
+
+message ConvolutionMaskedParameter {
+
+  optional int32 axis = 1 [default = 0];
+  optional int32 num_axes = 2 [default = 3];
+  optional FillerParameter mask_filler = 3; // The filler for the weight
+
+}
+
 
 message CropParameter {
   // To crop, elements of the first bottom are selected to fit the dimensions
@@ -1267,6 +1277,7 @@ message V1LayerParameter {
     CONCAT = 3;
     CONTRASTIVE_LOSS = 37;
     CONVOLUTION = 4;
+    CONVOLUTIONMASKED = 40;
     DATA = 5;
     DECONVOLUTION = 39;
     DROPOUT = 6;
@@ -1316,6 +1327,7 @@ message V1LayerParameter {
   optional ConcatParameter concat_param = 9;
   optional ContrastiveLossParameter contrastive_loss_param = 40;
   optional ConvolutionParameter convolution_param = 10;
+  optional ConvolutionMaskedParameter convolution_masked_param = 50;
   optional DataParameter data_param = 11;
   optional DropoutParameter dropout_param = 12;
   optional DummyDataParameter dummy_data_param = 26;
