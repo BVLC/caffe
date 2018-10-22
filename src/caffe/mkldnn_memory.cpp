@@ -153,7 +153,13 @@ template <typename Dtype, bool is_diff>
 #ifdef DEBUG
             LOG(INFO) << "Formats of blob-prv-memory-pd and this-prv-memory-pd are not equal !";
 #endif
-            this->set_extprv_memory_pd(blob_prv_mkldnn_mem_descr->prv_memory_pd(), scale, blob_prv_mkldnn_mem_descr->get_scale(), blob_prv_mkldnn_mem_descr->get_sum());
+            if (!is_wino)
+              this->set_extprv_memory_pd(blob_prv_mkldnn_mem_descr->prv_memory_pd(), scale, blob_prv_mkldnn_mem_descr->get_scale(), blob_prv_mkldnn_mem_descr->get_sum());
+            else
+              // If the blob's prv is using wino_fmt, it is only able to accept nchw to wino reorder due to mkldnn implementation. Other input formats, such as nchw16i16o
+              // to wino reorder, are not supported by mkldnn.
+              // Therefore we have to force the blob state from prv to cpu to get nchw input format at first.
+              if (is_diff) blob->mutable_cpu_diff(); else blob->mutable_cpu_data();
         }
     }
 }

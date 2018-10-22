@@ -495,7 +495,7 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
     fwd_top_data->name = "fwd_top_data      @ " + this->layer_param_.name();
     fwd_top_data_memory = fwd_top_data->create_output_memory();
 
-    bool is_wino = conv_algorithm == algorithm::convolution_winograd ? true : false; 
+    bool is_wino = (prv_fwd_weights_data_memory_pd->desc().data.format == memory::format::wino_fmt); 
     if (fwd_weights_data == NULL) {
       if (this->need_quantize_){
         int count = 1; //single channel
