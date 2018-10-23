@@ -180,11 +180,11 @@ void ConvolutionMaskedLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& botto
       bias_filler->Fill(this->blobs_[1].get());
     }
     // If necessary, initialize and fill the mask.
-    if (this->mask_term) {
+    if (this->mask_term_) {
       this->blobs_[2].reset(new Blob<Dtype>(weight_shape));
-      shared_ptr<Filler<Dtype> > weight_filler(GetFiller<Dtype>(
-          this->layer_param_.convolution_masked_param().weight_filler()));
-      weight_filler->Fill(this->blobs_[2].get());
+      shared_ptr<Filler<Dtype> > mask_filler(GetFiller<Dtype>(
+          this->layer_param_.convolution_masked_param().mask_filler()));
+      mask_filler->Fill(this->blobs_[2].get());
     }
   }
   this->kernel_dim_ = this->blobs_[0]->count(1);
@@ -224,7 +224,7 @@ void ConvolutionMaskedLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bott
     //caffe_mul(count, mask, weight, &masked_weight);
 
     for (int n = 0; n < this->num_; ++n) {
-      this->forward_cpu_gemm(bottom_data + n * this->bottom_dim_, masked_weight,
+      this->forward_cpu_gemm(bottom_data + n * this->bottom_dim_, weight,
           top_data + n * this->top_dim_);
       if (this->bias_term_) {
         const Dtype* bias = this->blobs_[1]->cpu_data();
