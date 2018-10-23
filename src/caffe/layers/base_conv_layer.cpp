@@ -182,7 +182,7 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       this->blobs_[2].reset(new Blob<Dtype>(weight_shape));
       shared_ptr<Filler<Dtype> > mask_filler(GetFiller<Dtype>(
           this->layer_param_.convolution_masked_param().mask_filler()));
-      bias_filler->Fill(this->blobs_[2].get());
+      mask_filler->Fill(this->blobs_[2].get());
     }
   }
   kernel_dim_ = this->blobs_[0]->count(1);
