@@ -282,7 +282,7 @@ void Solver<Dtype>::Step(int iters) {
   smoothed_loss_ = 0;
 
   while (iter_ < stop_iter) {
-    if (param_.test_interval() && iter_ % param_.test_interval() == 0
+    if (param_.test_interval() && (iter_ - param_.test_offset()) % param_.test_interval() == 0
         && (iter_ > 0 || param_.test_initialization())
         && Caffe::root_solver()) {
       TestAll();
@@ -437,7 +437,7 @@ void Solver<Dtype>::Solve(const char* resume_file) {
   }
 
   // in multinode last test must be done after weights update
-  if (param_.test_interval() && iter_ % param_.test_interval() == 0)
+  if (param_.test_interval() && (iter_ - param_.test_offset()) % param_.test_interval() == 0)
     TestAll();
 
   LOG(INFO) << "Optimization Done.";
