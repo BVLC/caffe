@@ -6,11 +6,11 @@
 namespace caffe {
 
 template <typename Dtype>
-void ConvolutionMaskedLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) 
+void ConvolutionMaskedLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top)
 {
   // Configure the kernel size, padding, stride, and inputs.
   ConvolutionParameter conv_param = this->layer_param_.convolution_param();
-  const ConvolutionMaskedParameter& conv_masked_param = this->layer_param_.convolution_masked_param();
+  ConvolutionMaskedParameter conv_masked_param = this->layer_param_.convolution_masked_param();
   this->force_nd_im2col_ = conv_param.force_nd_im2col();
   this->channel_axis_ = bottom[0]->CanonicalAxisIndex(conv_param.axis());
   const int first_spatial_axis = this->channel_axis_ + 1;
@@ -129,6 +129,7 @@ void ConvolutionMaskedLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& botto
   // Handle the parameters: weights and biases.
   // - blobs_[0] holds the filter weights
   // - blobs_[1] holds the biases (optional)
+  // - blobs_[2] holds the masks (optional)
   vector<int> weight_shape(2);
   weight_shape[0] = this->conv_out_channels_;
   weight_shape[1] = this->conv_in_channels_ / this->group_;
@@ -178,29 +179,13 @@ void ConvolutionMaskedLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& botto
           this->layer_param_.convolution_param().bias_filler()));
       bias_filler->Fill(this->blobs_[1].get());
     }
-    // Initialize and fill the mask:
-    // same size as output
-    const int axis = bottom[0]->CanonicalAxisIndex(conv_masked_param.axis());
-    const int num_axes = conv_masked_param.num_axes();
-    CHECK_GE(num_axes, -1) << "num_axes must be non-negative, "
-                           << "or -1 to extend to the end of bottom[0]";
-    if (num_axes >= 0) {
-      CHECK_GE(bottom[0]->num_axes(), axis + num_axes)
-          << "bias blob's shape extends past bottom[0]'s shape when applied "
-          << "starting with bottom[0] axis = " << axis;
+    // If necessary, initialize and fill the mask.
+    if (this->mask_term) {
+      this->blobs_[2].reset(new Blob<Dtype>(weight_shape));
+      shared_ptr<Filler<Dtype> > weight_filler(GetFiller<Dtype>(
+          this->layer_param_.convolution_masked_param().weight_filler()));
+      weight_filler->Fill(this->blobs_[2].get());
     }
-    this->blobs_.resize(3);
-    const vector<int>::const_iterator& shape_start =
-        bottom[0]->shape().begin() + axis;
-    const vector<int>::const_iterator& shape_end =
-        (num_axes == -1) ? bottom[0]->shape().end() : (shape_start + num_axes);
-    vector<int> mask_shape(shape_start, shape_end);
-    this->blobs_[2].reset(new Blob<Dtype>(mask_shape));
-    shared_ptr<Filler<Dtype> > filler(GetFiller<Dtype>(conv_masked_param.mask_filler()));
-    this->blobs_[2].reset(new Blob<Dtype>(mask_shape));
-    shared_ptr<Filler<Dtype> > mask_filler(GetFiller<Dtype>(
-        this->layer_param_.convolution_masked_param().mask_filler()));
-    mask_filler->Fill(this->blobs_[2].get());
   }
   this->kernel_dim_ = this->blobs_[0]->count(1);
   this->weight_offset_ = this->conv_out_channels_ * this->kernel_dim_ / this->group_;
@@ -230,21 +215,22 @@ void ConvolutionMaskedLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bott
       const vector<Blob<Dtype>*>& top) {
   const Dtype* weight = this->blobs_[0]->cpu_data();
   // get mask
-//  const Dtype* mask = this->blobs_[2]->cpu_data();
-//  const int count = top[0]->count();
+  const Dtype* mask = this->blobs_[2]->cpu_data();
+  const int count = this->blobs_[2]->count();
   for (int i = 0; i < bottom.size(); ++i) {
     const Dtype* bottom_data = bottom[i]->cpu_data();
     Dtype* top_data = top[i]->mutable_cpu_data();
+    //Blob<Dtype> masked_weight(weight_shape);
+    //caffe_mul(count, mask, weight, &masked_weight);
+
     for (int n = 0; n < this->num_; ++n) {
-      this->forward_cpu_gemm(bottom_data + n * this->bottom_dim_, weight,
+      this->forward_cpu_gemm(bottom_data + n * this->bottom_dim_, masked_weight,
           top_data + n * this->top_dim_);
       if (this->bias_term_) {
         const Dtype* bias = this->blobs_[1]->cpu_data();
         this->forward_cpu_bias(top_data + n * this->top_dim_, bias);
       }
     }
-    // do an  elementwise multiplication to filter some channels
-//    caffe_mul(count, top_data, mask, top_data);
   }
 }
 
@@ -253,11 +239,9 @@ void ConvolutionMaskedLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   const Dtype* weight = this->blobs_[0]->cpu_data();
   Dtype* weight_diff = this->blobs_[0]->mutable_cpu_diff();
-//  const Dtype* mask = this->blobs_[2]->cpu_data();
   for (int i = 0; i < top.size(); ++i) {
     const Dtype* top_diff = top[i]->cpu_diff();
     const Dtype* bottom_data = bottom[i]->cpu_data();
-//    const int count = top[0]->count();
     Dtype* bottom_diff = bottom[i]->mutable_cpu_diff();
     // Bias gradient, if necessary.
     if (this->bias_term_ && this->param_propagate_down_[1]) {
@@ -277,9 +261,8 @@ void ConvolutionMaskedLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top
         if (propagate_down[i]) {
           this->backward_cpu_gemm(top_diff + n * this->top_dim_, weight,
               bottom_diff + n * this->bottom_dim_);
-	}
+        }
       }
-//      caffe_mul(count, bottom_diff, mask, bottom_diff);
     }
   }
 }
