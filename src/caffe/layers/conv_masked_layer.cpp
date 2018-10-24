@@ -220,11 +220,11 @@ void ConvolutionMaskedLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bott
   for (int i = 0; i < bottom.size(); ++i) {
     const Dtype* bottom_data = bottom[i]->cpu_data();
     Dtype* top_data = top[i]->mutable_cpu_data();
-    //Blob<Dtype> masked_weight(weight_shape);
-    //caffe_mul(count, mask, weight, &masked_weight);
+    Blob<Dtype> masked_weight(weight_shape);
+    caffe_mul(count, mask, weight, &masked_weight);
 
     for (int n = 0; n < this->num_; ++n) {
-      this->forward_cpu_gemm(bottom_data + n * this->bottom_dim_, weight,
+      this->forward_cpu_gemm(bottom_data + n * this->bottom_dim_, masked_weight,
           top_data + n * this->top_dim_);
       if (this->bias_term_) {
         const Dtype* bias = this->blobs_[1]->cpu_data();
