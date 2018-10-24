@@ -29,6 +29,9 @@ namespace caffe {
  */
 template <typename Dtype>
 class ConvolutionMaskedLayer : public BaseConvolutionLayer<Dtype> {
+ private:
+ Dtype *masked_weights;
+
  public:
   /**
    * @param param provides ConvolutionParameter convolution_param,
@@ -62,7 +65,9 @@ class ConvolutionMaskedLayer : public BaseConvolutionLayer<Dtype> {
    *    kernels + stream parallelism) engines.
    */
   explicit ConvolutionMaskedLayer(const LayerParameter& param)
-      : BaseConvolutionLayer<Dtype>(param) {}
+      : BaseConvolutionLayer<Dtype>(param) {
+    masked_weights = new Dtype[];
+  }
 
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
