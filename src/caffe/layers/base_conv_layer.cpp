@@ -140,6 +140,10 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   bias_term_ = this->layer_param_.convolution_param().bias_term();
   mask_term_ = this->layer_param_.convolution_masked_param().mask_term();
   vector<int> bias_shape(bias_term_, num_output_);
+  vector<int> mask_shape(weight_shape.size());
+  for (int i = 0; i < weight_shape.size(); ++i) {
+    mask_shape.push_back(weight_shape[i]);
+  }
   if (this->blobs_.size() > 0) {
     CHECK_EQ(1 + bias_term_, this->blobs_.size())
         << "Incorrect number of weight blobs.";
@@ -154,6 +158,12 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       LOG(FATAL) << "Incorrect bias shape: expected shape "
           << bias_shaped_blob.shape_string() << "; instead, shape was "
           << this->blobs_[1]->shape_string();
+    }
+    if (mask_term_ && mask_shape != this->blobs_[2]->shape()) {
+      Blob<Dtype> mask_shaped_blob(mask_shape);
+      LOG(FATAL) << "Incorrect mask shape: expected shape "
+          << mask_shaped_blob.shape_string() << "; instead, shape was "
+          << this->blobs_[2]->shape_string();
     }
     LOG(INFO) << "Skipping parameter initialization";
   } else {
@@ -178,8 +188,8 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       bias_filler->Fill(this->blobs_[1].get());
     }
     // If necessary, initialize and fill the masks.
-    if (bias_term_) {
-      this->blobs_[2].reset(new Blob<Dtype>(weight_shape));
+    if (mask_term_) {
+      this->blobs_[2].reset(new Blob<Dtype>(mask_shape));
       shared_ptr<Filler<Dtype> > mask_filler(GetFiller<Dtype>(
           this->layer_param_.convolution_masked_param().mask_filler()));
       mask_filler->Fill(this->blobs_[2].get());
