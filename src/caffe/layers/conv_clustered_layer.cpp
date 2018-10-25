@@ -43,7 +43,8 @@ void ConvolutionClusteredLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& b
   for (int i = 0; i < bottom.size(); ++i) {
     const Dtype* bottom_data = bottom[i]->cpu_data();
     Dtype* top_data = top[i]->mutable_cpu_data();
-    caffe_mod(this->layer_param_.convolution_clustered_param().means(), weight, weight_clustered);
+    //TODO: add clustering here!
+    //caffe_mul(this->layer_param_.convolution_clustered_param().means(), weight, weight_clustered);
 
     for (int n = 0; n < this->num_; ++n) {
       this->forward_cpu_gemm(bottom_data + n * this->bottom_dim_, weight_clustered,
