@@ -228,7 +228,7 @@ void ConvolutionMaskedLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bott
       const vector<Blob<Dtype>*>& top) {
   const Dtype* weight = this->blobs_[0]->cpu_data();
   const Dtype* mask = this->blobs_[2]->cpu_data();
-  const Dtype* weight_masked = this->weights_masked_->cpu_data();
+  const Dtype* weight_masked = this->weights_masked_.mutable_cpu_data();
   const int count = this->blobs_[2]->count();
   for (int i = 0; i < bottom.size(); ++i) {
     const Dtype* bottom_data = bottom[i]->cpu_data();
