@@ -62,11 +62,11 @@ class ConvolutionMaskedLayer : public BaseConvolutionLayer<Dtype> {
    *    kernels + stream parallelism) engines.
    */
   explicit ConvolutionMaskedLayer(const LayerParameter& param)
-      : BaseConvolutionLayer<Dtype>(param) {
-    masked_weights = new Dtype[];
-  }
+      : BaseConvolutionLayer<Dtype>(param) {}
 
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top);
+  virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual inline const char* type() const { return "ConvolutionMasked"; }
 
