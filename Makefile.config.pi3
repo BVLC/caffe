@@ -4,6 +4,7 @@
 USE_OPENCV := 1
 USE_LMDB := 1
 USE_RASPI3 := 1
+USE_HDF5 := 0
 
 # CPU-only switch (uncomment to build without GPU support).
 CPU_ONLY := 1
