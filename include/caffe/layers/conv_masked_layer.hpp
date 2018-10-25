@@ -29,9 +29,6 @@ namespace caffe {
  */
 template <typename Dtype>
 class ConvolutionMaskedLayer : public BaseConvolutionLayer<Dtype> {
- private:
- Dtype *masked_weights;
-
  public:
   /**
    * @param param provides ConvolutionParameter convolution_param,
@@ -74,6 +71,9 @@ class ConvolutionMaskedLayer : public BaseConvolutionLayer<Dtype> {
   virtual inline const char* type() const { return "ConvolutionMasked"; }
 
  protected:
+  /// @brief The spatial dimensions of the weights_masked_.
+  vector<int> weights_masked_shape_;
+
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
@@ -84,6 +84,9 @@ class ConvolutionMaskedLayer : public BaseConvolutionLayer<Dtype> {
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
   virtual inline bool reverse_dimensions() { return false; }
   virtual void compute_output_shape();
+
+ private:
+  Blob<Dtype> weights_masked_;
 };
 
 }  // namespace caffe

@@ -161,10 +161,12 @@ void ConvolutionMaskedLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& botto
           << this->blobs_[2]->shape_string();
     }
   } else {
-    if (this->bias_term_) {
+    if (this->bias_term_ && this->mask_term_) {
       this->blobs_.resize(3);
-    } else {
+    } else if (this->bias_term_ || this->mask_term_) {
       this->blobs_.resize(2);
+    } else {
+      this->blobs_.resize(1);
     }
     // Initialize and fill the weights:
     // output channels x input channels per-group x kernel height x kernel width
@@ -211,19 +213,30 @@ void ConvolutionMaskedLayer<Dtype>::compute_output_shape() {
 }
 
 template <typename Dtype>
+void ConvolutionMaskedLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  if (this->mask_term_) {
+    weights_masked_shape_.clear();
+    weights_masked_shape_.push_back(this->blobs_[2]->count());
+    weights_masked_.Reshape(weights_masked_shape_);
+  }
+  BaseConvolutionLayer<Dtype>::Reshape(bottom, top);
+}
+
+template <typename Dtype>
 void ConvolutionMaskedLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   const Dtype* weight = this->blobs_[0]->cpu_data();
-  // get mask
   const Dtype* mask = this->blobs_[2]->cpu_data();
+  const Dtype* weight_masked = this->weights_masked_->cpu_data();
   const int count = this->blobs_[2]->count();
   for (int i = 0; i < bottom.size(); ++i) {
     const Dtype* bottom_data = bottom[i]->cpu_data();
     Dtype* top_data = top[i]->mutable_cpu_data();
-    caffe_mul(count, mask, weight, this->masked_weights);
+    caffe_mul(count, mask, weight, weight_masked);
 
     for (int n = 0; n < this->num_; ++n) {
-      this->forward_cpu_gemm(bottom_data + n * this->bottom_dim_, this->masked_weights,
+      this->forward_cpu_gemm(bottom_data + n * this->bottom_dim_, weight_masked,
           top_data + n * this->top_dim_);
       if (this->bias_term_) {
         const Dtype* bias = this->blobs_[1]->cpu_data();
