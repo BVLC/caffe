@@ -141,6 +141,7 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   }
   this->bias_term_ = this->layer_param_.convolution_param().bias_term();
   vector<int> bias_shape(this->bias_term_, this->num_output_);
+  this->mask_term_ = this->layer_param_.convolution_masked_param().mask_term();
   if (this->blobs_.size() > 0) {
     CHECK_EQ(1 + this->bias_term_, this->blobs_.size())
         << "Incorrect number of weight blobs.";
