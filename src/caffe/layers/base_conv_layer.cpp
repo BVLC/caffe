@@ -13,18 +13,19 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   // Configure the kernel size, padding, stride, and inputs.
   ConvolutionParameter conv_param = this->layer_param_.convolution_param();
-  force_nd_im2col_ = conv_param.force_nd_im2col();
-  channel_axis_ = bottom[0]->CanonicalAxisIndex(conv_param.axis());
-  const int first_spatial_axis = channel_axis_ + 1;
+  ConvolutionMaskedParameter conv_masked_param = this->layer_param_.convolution_masked_param();
+  this->force_nd_im2col_ = conv_param.force_nd_im2col();
+  this->channel_axis_ = bottom[0]->CanonicalAxisIndex(conv_param.axis());
+  const int first_spatial_axis = this->channel_axis_ + 1;
   const int num_axes = bottom[0]->num_axes();
-  num_spatial_axes_ = num_axes - first_spatial_axis;
-  CHECK_GE(num_spatial_axes_, 0);
-  vector<int> spatial_dim_blob_shape(1, std::max(num_spatial_axes_, 1));
+  this->num_spatial_axes_ = num_axes - first_spatial_axis;
+  CHECK_GE(this->num_spatial_axes_, 0);
+  vector<int> spatial_dim_blob_shape(1, std::max(this->num_spatial_axes_, 1));
   // Setup filter kernel dimensions (kernel_shape_).
-  kernel_shape_.Reshape(spatial_dim_blob_shape);
-  int* kernel_shape_data = kernel_shape_.mutable_cpu_data();
+  this->kernel_shape_.Reshape(spatial_dim_blob_shape);
+  int* kernel_shape_data = this->kernel_shape_.mutable_cpu_data();
   if (conv_param.has_kernel_h() || conv_param.has_kernel_w()) {
-    CHECK_EQ(num_spatial_axes_, 2)
+    CHECK_EQ(this->num_spatial_axes_, 2)
         << "kernel_h & kernel_w can only be used for 2D convolution.";
     CHECK_EQ(0, conv_param.kernel_size_size())
         << "Either kernel_size or kernel_h/w should be specified; not both.";
@@ -32,23 +33,23 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     kernel_shape_data[1] = conv_param.kernel_w();
   } else {
     const int num_kernel_dims = conv_param.kernel_size_size();
-    CHECK(num_kernel_dims == 1 || num_kernel_dims == num_spatial_axes_)
+    CHECK(num_kernel_dims == 1 || num_kernel_dims == this->num_spatial_axes_)
         << "kernel_size must be specified once, or once per spatial dimension "
         << "(kernel_size specified " << num_kernel_dims << " times; "
-        << num_spatial_axes_ << " spatial dims).";
-      for (int i = 0; i < num_spatial_axes_; ++i) {
+        << this->num_spatial_axes_ << " spatial dims).";
+      for (int i = 0; i < this->num_spatial_axes_; ++i) {
         kernel_shape_data[i] =
             conv_param.kernel_size((num_kernel_dims == 1) ? 0 : i);
       }
   }
-  for (int i = 0; i < num_spatial_axes_; ++i) {
+  for (int i = 0; i < this->num_spatial_axes_; ++i) {
     CHECK_GT(kernel_shape_data[i], 0) << "Filter dimensions must be nonzero.";
   }
   // Setup stride dimensions (stride_).
-  stride_.Reshape(spatial_dim_blob_shape);
-  int* stride_data = stride_.mutable_cpu_data();
+  this->stride_.Reshape(spatial_dim_blob_shape);
+  int* stride_data = this->stride_.mutable_cpu_data();
   if (conv_param.has_stride_h() || conv_param.has_stride_w()) {
-    CHECK_EQ(num_spatial_axes_, 2)
+    CHECK_EQ(this->num_spatial_axes_, 2)
         << "stride_h & stride_w can only be used for 2D convolution.";
     CHECK_EQ(0, conv_param.stride_size())
         << "Either stride or stride_h/w should be specified; not both.";
@@ -57,22 +58,22 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   } else {
     const int num_stride_dims = conv_param.stride_size();
     CHECK(num_stride_dims == 0 || num_stride_dims == 1 ||
-          num_stride_dims == num_spatial_axes_)
+          num_stride_dims == this->num_spatial_axes_)
         << "stride must be specified once, or once per spatial dimension "
         << "(stride specified " << num_stride_dims << " times; "
-        << num_spatial_axes_ << " spatial dims).";
+        << this->num_spatial_axes_ << " spatial dims).";
     const int kDefaultStride = 1;
-    for (int i = 0; i < num_spatial_axes_; ++i) {
+    for (int i = 0; i < this->num_spatial_axes_; ++i) {
       stride_data[i] = (num_stride_dims == 0) ? kDefaultStride :
           conv_param.stride((num_stride_dims == 1) ? 0 : i);
       CHECK_GT(stride_data[i], 0) << "Stride dimensions must be nonzero.";
     }
   }
   // Setup pad dimensions (pad_).
-  pad_.Reshape(spatial_dim_blob_shape);
-  int* pad_data = pad_.mutable_cpu_data();
+  this->pad_.Reshape(spatial_dim_blob_shape);
+  int* pad_data = this->pad_.mutable_cpu_data();
   if (conv_param.has_pad_h() || conv_param.has_pad_w()) {
-    CHECK_EQ(num_spatial_axes_, 2)
+    CHECK_EQ(this->num_spatial_axes_, 2)
         << "pad_h & pad_w can only be used for 2D convolution.";
     CHECK_EQ(0, conv_param.pad_size())
         << "Either pad or pad_h/w should be specified; not both.";
@@ -81,71 +82,67 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   } else {
     const int num_pad_dims = conv_param.pad_size();
     CHECK(num_pad_dims == 0 || num_pad_dims == 1 ||
-          num_pad_dims == num_spatial_axes_)
+          num_pad_dims == this->num_spatial_axes_)
         << "pad must be specified once, or once per spatial dimension "
         << "(pad specified " << num_pad_dims << " times; "
-        << num_spatial_axes_ << " spatial dims).";
+        << this->num_spatial_axes_ << " spatial dims).";
     const int kDefaultPad = 0;
-    for (int i = 0; i < num_spatial_axes_; ++i) {
+    for (int i = 0; i < this->num_spatial_axes_; ++i) {
       pad_data[i] = (num_pad_dims == 0) ? kDefaultPad :
           conv_param.pad((num_pad_dims == 1) ? 0 : i);
     }
   }
   // Setup dilation dimensions (dilation_).
-  dilation_.Reshape(spatial_dim_blob_shape);
-  int* dilation_data = dilation_.mutable_cpu_data();
+  this->dilation_.Reshape(spatial_dim_blob_shape);
+  int* dilation_data = this->dilation_.mutable_cpu_data();
   const int num_dilation_dims = conv_param.dilation_size();
   CHECK(num_dilation_dims == 0 || num_dilation_dims == 1 ||
-        num_dilation_dims == num_spatial_axes_)
+        num_dilation_dims == this->num_spatial_axes_)
       << "dilation must be specified once, or once per spatial dimension "
       << "(dilation specified " << num_dilation_dims << " times; "
-      << num_spatial_axes_ << " spatial dims).";
+      << this->num_spatial_axes_ << " spatial dims).";
   const int kDefaultDilation = 1;
-  for (int i = 0; i < num_spatial_axes_; ++i) {
+  for (int i = 0; i < this->num_spatial_axes_; ++i) {
     dilation_data[i] = (num_dilation_dims == 0) ? kDefaultDilation :
                        conv_param.dilation((num_dilation_dims == 1) ? 0 : i);
   }
   // Special case: im2col is the identity for 1x1 convolution with stride 1
   // and no padding, so flag for skipping the buffer and transformation.
-  is_1x1_ = true;
-  for (int i = 0; i < num_spatial_axes_; ++i) {
-    is_1x1_ &=
+  this->is_1x1_ = true;
+  for (int i = 0; i < this->num_spatial_axes_; ++i) {
+    this->is_1x1_ &=
         kernel_shape_data[i] == 1 && stride_data[i] == 1 && pad_data[i] == 0;
-    if (!is_1x1_) { break; }
+    if (!this->is_1x1_) { break; }
   }
   // Configure output channels and groups.
-  channels_ = bottom[0]->shape(channel_axis_);
-  num_output_ = this->layer_param_.convolution_param().num_output();
-  CHECK_GT(num_output_, 0);
-  group_ = this->layer_param_.convolution_param().group();
-  CHECK_EQ(channels_ % group_, 0);
-  CHECK_EQ(num_output_ % group_, 0)
+  this->channels_ = bottom[0]->shape(this->channel_axis_);
+  this->num_output_ = this->layer_param_.convolution_param().num_output();
+  CHECK_GT(this->num_output_, 0);
+  this->group_ = this->layer_param_.convolution_param().group();
+  CHECK_EQ(this->channels_ % this->group_, 0);
+  CHECK_EQ(this->num_output_ % this->group_, 0)
       << "Number of output should be multiples of group.";
   if (reverse_dimensions()) {
-    conv_out_channels_ = channels_;
-    conv_in_channels_ = num_output_;
+    this->conv_out_channels_ = this->channels_;
+    this->conv_in_channels_ = this->num_output_;
   } else {
-    conv_out_channels_ = num_output_;
-    conv_in_channels_ = channels_;
+    this->conv_out_channels_ = this->num_output_;
+    this->conv_in_channels_ = this->channels_;
   }
   // Handle the parameters: weights and biases.
   // - blobs_[0] holds the filter weights
   // - blobs_[1] holds the biases (optional)
+  // - blobs_[2] holds the masks (optional)
   vector<int> weight_shape(2);
-  weight_shape[0] = conv_out_channels_;
-  weight_shape[1] = conv_in_channels_ / group_;
-  for (int i = 0; i < num_spatial_axes_; ++i) {
+  weight_shape[0] = this->conv_out_channels_;
+  weight_shape[1] = this->conv_in_channels_ / this->group_;
+  for (int i = 0; i < this->num_spatial_axes_; ++i) {
     weight_shape.push_back(kernel_shape_data[i]);
   }
-  bias_term_ = this->layer_param_.convolution_param().bias_term();
-  mask_term_ = this->layer_param_.convolution_masked_param().mask_term();
-  vector<int> bias_shape(bias_term_, num_output_);
-  vector<int> mask_shape(weight_shape.size());
-  for (int i = 0; i < weight_shape.size(); ++i) {
-    mask_shape.push_back(weight_shape[i]);
-  }
+  this->bias_term_ = this->layer_param_.convolution_param().bias_term();
+  vector<int> bias_shape(this->bias_term_, this->num_output_);
   if (this->blobs_.size() > 0) {
-    CHECK_EQ(1 + bias_term_, this->blobs_.size())
+    CHECK_EQ(1 + this->bias_term_, this->blobs_.size())
         << "Incorrect number of weight blobs.";
     if (weight_shape != this->blobs_[0]->shape()) {
       Blob<Dtype> weight_shaped_blob(weight_shape);
@@ -153,23 +150,23 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
           << weight_shaped_blob.shape_string() << "; instead, shape was "
           << this->blobs_[0]->shape_string();
     }
-    if (bias_term_ && bias_shape != this->blobs_[1]->shape()) {
+    if (this->bias_term_ && bias_shape != this->blobs_[1]->shape()) {
       Blob<Dtype> bias_shaped_blob(bias_shape);
       LOG(FATAL) << "Incorrect bias shape: expected shape "
           << bias_shaped_blob.shape_string() << "; instead, shape was "
           << this->blobs_[1]->shape_string();
     }
-    if (mask_term_ && mask_shape != this->blobs_[2]->shape()) {
-      Blob<Dtype> mask_shaped_blob(mask_shape);
+    LOG(INFO) << "Skipping parameter initialization";
+    if (this->output_shape_ != this->blobs_[2]->shape()) {
+      Blob<Dtype> output_shaped_blob(this->output_shape_);
       LOG(FATAL) << "Incorrect mask shape: expected shape "
-          << mask_shaped_blob.shape_string() << "; instead, shape was "
+          << output_shaped_blob.shape_string() << "; instead, shape was "
           << this->blobs_[2]->shape_string();
     }
-    LOG(INFO) << "Skipping parameter initialization";
   } else {
-    if (bias_term_ && mask_term_) {
+    if (this->bias_term_ && this->mask_term_) {
       this->blobs_.resize(3);
-    } else if (bias_term_ || mask_term_) {
+    } else if (this->bias_term_ || this->mask_term_) {
       this->blobs_.resize(2);
     } else {
       this->blobs_.resize(1);
@@ -181,22 +178,22 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
         this->layer_param_.convolution_param().weight_filler()));
     weight_filler->Fill(this->blobs_[0].get());
     // If necessary, initialize and fill the biases.
-    if (bias_term_) {
+    if (this->bias_term_) {
       this->blobs_[1].reset(new Blob<Dtype>(bias_shape));
       shared_ptr<Filler<Dtype> > bias_filler(GetFiller<Dtype>(
           this->layer_param_.convolution_param().bias_filler()));
       bias_filler->Fill(this->blobs_[1].get());
     }
-    // If necessary, initialize and fill the masks.
-    if (mask_term_) {
-      this->blobs_[2].reset(new Blob<Dtype>(mask_shape));
+    // If necessary, initialize and fill the mask.
+    if (this->mask_term_) {
+      this->blobs_[2].reset(new Blob<Dtype>(weight_shape));
       shared_ptr<Filler<Dtype> > mask_filler(GetFiller<Dtype>(
           this->layer_param_.convolution_masked_param().mask_filler()));
       mask_filler->Fill(this->blobs_[2].get());
     }
   }
-  kernel_dim_ = this->blobs_[0]->count(1);
-  weight_offset_ = conv_out_channels_ * kernel_dim_ / group_;
+  this->kernel_dim_ = this->blobs_[0]->count(1);
+  this->weight_offset_ = this->conv_out_channels_ * this->kernel_dim_ / this->group_;
   // Propagate gradients to the parameters (as directed by backward pass).
   this->param_propagate_down_.resize(this->blobs_.size(), true);
 }
