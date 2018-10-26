@@ -1834,6 +1834,8 @@ message SmoothL1LossParameter {
   //   0.5 * (sigma * x) ** 2    -- if x < 1.0 / sigma / sigma
   //   |x| - 0.5 / sigma / sigma -- otherwise
   optional float sigma = 1 [default = 1];
+  // for timeseries case, we use this loss as default
+  //default is set to 100, giving almost L1 loss (until |diff|<100*100)
 }
 
 // Message that stores parameters used by SoftmaxLayer, SoftmaxWithLossLayer
