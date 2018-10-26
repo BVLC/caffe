@@ -7,6 +7,7 @@ namespace caffe {
 template <typename Dtype>
 void SmoothL1LossLayer<Dtype>::LayerSetUp(
   const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
+  LossLayer<Dtype>::LayerSetUp(bottom, top);
   SmoothL1LossParameter loss_param = this->layer_param_.smooth_l1_loss_param();
   sigma2_ = loss_param.sigma() * loss_param.sigma();
   has_weights_ = (bottom.size() >= 3);
@@ -66,7 +67,7 @@ void SmoothL1LossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   for (int i = 0; i < count; ++i) {
     Dtype val = diff_data[i];
     Dtype abs_val = fabs(val);
-    if (abs_val < 1.) {
+    if (abs_val < 1. / sigma2_) {
       error_data[i] = 0.5 * val * val * sigma2_;
     } else {
       error_data[i] = abs_val - 0.5 / sigma2_;
