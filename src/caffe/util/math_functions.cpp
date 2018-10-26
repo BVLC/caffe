@@ -1,4 +1,5 @@
 #include <boost/math/special_functions/next.hpp>
+#include <boost/math/special_functions/round.hpp>
 #include <boost/random.hpp>
 
 #include <limits>
@@ -184,6 +185,13 @@ template <>
 void caffe_powx<double>(const int n, const double* a, const double b,
     double* y) {
   vdPowx(n, a, b, y);
+}
+
+template <typename Dtype>
+void caffe_round<Dtype>(const int n, const Dtype* a, Dtype* y) {
+  for (int i = 0; i < n; i++) {
+    y[i] = boost::math::lround<Dtype>(a[i]);
+  }
 }
 
 template <>

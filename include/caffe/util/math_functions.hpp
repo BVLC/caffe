@@ -70,6 +70,9 @@ void caffe_div(const int N, const Dtype* a, const Dtype* b, Dtype* y);
 template <typename Dtype>
 void caffe_powx(const int n, const Dtype* a, const Dtype b, Dtype* y);
 
+template <typename Dtype>
+void caffe_round(const int n, const Dtype* a, Dtype* y);
+
 unsigned int caffe_rng_rand();
 
 template <typename Dtype>
@@ -216,6 +219,9 @@ void caffe_gpu_log(const int n, const Dtype* a, Dtype* y);
 
 template <typename Dtype>
 void caffe_gpu_powx(const int n, const Dtype* a, const Dtype b, Dtype* y);
+
+template <typename Dtype>
+void caffe_gpu_round(const int n, const Dtype* a, Dtype* y);
 
 template <typename Dtype>
 void caffe_gpu_sqrt(const int n, const Dtype* a, Dtype* y);
