@@ -187,10 +187,17 @@ void caffe_powx<double>(const int n, const double* a, const double b,
   vdPowx(n, a, b, y);
 }
 
-template <typename Dtype>
-void caffe_round<Dtype>(const int n, const Dtype* a, Dtype* y) {
+template <>
+void caffe_round<float>(const int n, const float* a, float* y) {
   for (int i = 0; i < n; i++) {
-    y[i] = boost::math::lround<Dtype>(a[i]);
+    y[i] = boost::math::lround(a[i]);
+  }
+}
+
+template <>
+void caffe_round<double>(const int n, const double* a, double* y) {
+  for (int i = 0; i < n; i++) {
+    y[i] = boost::math::lround(a[i]);
   }
 }
 
