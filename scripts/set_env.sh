@@ -90,7 +90,7 @@ function init_mpi_envs
             done
             for ((mask_index=${#masks[@]}-1; mask_index>=0; mask_index--))
             do
-                mask_str+=`printf "%x" "${masks[$mask_index]}"`
+                mask_str+=`printf "%016x" "${masks[$mask_index]}"`
             done
             domain_str+="$mask_str"
             if [ $ppn_index -ne $((ppn-1)) ]; then
