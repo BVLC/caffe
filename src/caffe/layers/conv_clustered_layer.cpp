@@ -94,6 +94,6 @@ STUB_GPU(ConvolutionClusteredLayer);
 #endif
 
 INSTANTIATE_CLASS(ConvolutionClusteredLayer);
-REGISTER_LAYER_CLASS(ConvolutionClustered);
+//REGISTER_LAYER_CLASS(ConvolutionClustered);
 
 }  // namespace caffe
