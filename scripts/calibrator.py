@@ -580,7 +580,7 @@ if __name__ == '__main__':
     if params.calibration_algos != 'DIRECT' and params.calibration_algos != "KL" and params.calibration_algos != "MAXP":
         user_calibration_algos = 'DIRECT'
     else:
-        user_calibration_alogs = params.calibration_algos
+        user_calibration_algos = params.calibration_algos
 
     if params.conv_algo != False and params.conv_algo != True:
         user_conv_algo = False
@@ -630,7 +630,7 @@ if __name__ == '__main__':
 
     quantized_prototxt = model.rsplit('.')[0] + '_quantized.prototxt'
     print 'Sampling...'
-    (top_blobs_map, bottom_blobs_map) = generate_sample(model, user_input_weights, quantized_prototxt, user_scaling_mode, user_calibration_alogs, user_conv_algo, user_sampling_iteration, user_enable_1st_conv)
+    (top_blobs_map, bottom_blobs_map) = generate_sample(model, user_input_weights, quantized_prototxt, user_scaling_mode, user_calibration_algos, user_conv_algo, user_sampling_iteration, user_enable_1st_conv)
     print 'Sampling done'
     top_1 = None
     if not params.quantize_model:
