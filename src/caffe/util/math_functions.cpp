@@ -218,7 +218,7 @@ void caffe_and<double>(const int n, const std::bitset<8*sizeof(double)> m,
   double temp;
   for (int i = 0; i < n; i++) {
     temp = a[i];
-    *((unsigned*)&temp) = m.to_ullong() & *((unsigned*)&temp);
+    *((unsigned long long*)&temp) = m.to_ullong() & *((unsigned long long*)&temp);
     y[i] = temp;
   }
 }
