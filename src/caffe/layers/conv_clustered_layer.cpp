@@ -44,10 +44,10 @@ void ConvolutionClusteredLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& b
     Dtype* top_data = top[i]->mutable_cpu_data();
     // TODO: this->layer_param_.convolution_clustered_param().means(),
     //caffe_round(count, weight, weight_clustered);
-    std::bitset<8*sizeof(Dtype)> mask();
-    mask.flip();
-    mask <<= 8; //flyte24 or flyte56, depending on Dtype
-    caffe_and(count, mask, weight, weight_clustered); 
+    std::bitset<8*sizeof(Dtype)> mantissa_mask;
+    mantissa_mask.flip();
+    mantissa_mask <<= 8; //flyte24 or flyte56, depending on Dtype
+    caffe_and(count, mantissa_mask, weight, weight_clustered); 
 
     for (int n = 0; n < this->num_; ++n) {
       this->forward_cpu_gemm(bottom_data + n * this->bottom_dim_, weight_clustered,
