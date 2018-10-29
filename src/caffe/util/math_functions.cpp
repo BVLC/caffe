@@ -202,6 +202,28 @@ void caffe_round<double>(const int n, const double* a, double* y) {
 }
 
 template <>
+void caffe_and<float>(const int n, const std::bitset<8*sizeof(float)> m, 
+  const float* a, float* y) {
+  float temp;
+  for (int i = 0; i < n; i++) {
+    temp = a[i];
+    *((unsigned*)&temp) = m.to_ulong() & *((unsigned*)&temp);
+    y[i] = temp;
+  }
+}
+
+template <>
+void caffe_and<double>(const int n, const std::bitset<8*sizeof(double)> m, 
+  const double* a, double* y) {
+  double temp;
+  for (int i = 0; i < n; i++) {
+    temp = a[i];
+    *((unsigned*)&temp) = m.to_ullong() & *((unsigned*)&temp);
+    y[i] = temp;
+  }
+}
+
+template <>
 void caffe_sqr<float>(const int n, const float* a, float* y) {
   vsSqr(n, a, y);
 }
