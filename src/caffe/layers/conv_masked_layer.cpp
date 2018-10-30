@@ -61,6 +61,8 @@ void ConvolutionMaskedLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   const Dtype* weight = this->blobs_[0]->cpu_data();
   Dtype* weight_diff = this->blobs_[0]->mutable_cpu_diff();
+  const Dtype* mask = this->blobs_[2]->cpu_data();
+  const int count = this->blobs_[2]->count();
   for (int i = 0; i < top.size(); ++i) {
     const Dtype* top_diff = top[i]->cpu_diff();
     const Dtype* bottom_data = bottom[i]->cpu_data();
@@ -78,6 +80,8 @@ void ConvolutionMaskedLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top
         if (this->param_propagate_down_[0]) {
           this->weight_cpu_gemm(bottom_data + n * this->bottom_dim_,
               top_diff + n * this->top_dim_, weight_diff);
+          // Don't update weights that are masked off
+          caffe_mul(count, mask, weight_diff, weight_diff);
         }
         // gradient w.r.t. bottom data, if necessary.
         if (propagate_down[i]) {
