@@ -15271,6 +15271,27 @@ layer {
   }
 }
 layer {
+  name: "conv11_mbox_loc_perm"
+  type: "Permute"
+  bottom: "conv11_mbox_loc"
+  top: "conv11_mbox_loc_perm"
+  permute_param {
+    order: 0
+    order: 2
+    order: 3
+    order: 1
+  }
+}
+layer {
+  name: "conv11_mbox_loc_flat"
+  type: "Flatten"
+  bottom: "conv11_mbox_loc_perm"
+  top: "conv11_mbox_loc_flat"
+  flatten_param {
+    axis: 1
+  }
+}
+layer {
   name: "conv11_mbox_conf"
   type: "Convolution"
   bottom: "conv11"
@@ -15366,6 +15387,27 @@ layer {
   }
 }
 layer {
+  name: "conv11_mbox_conf_perm"
+  type: "Permute"
+  bottom: "conv11_mbox_conf"
+  top: "conv11_mbox_conf_perm"
+  permute_param {
+    order: 0
+    order: 2
+    order: 3
+    order: 1
+  }
+}
+layer {
+  name: "conv11_mbox_conf_flat"
+  type: "Flatten"
+  bottom: "conv11_mbox_conf_perm"
+  top: "conv11_mbox_conf_flat"
+  flatten_param {
+    axis: 1
+  }
+}
+layer {
   name: "conv11_mbox_priorbox"
   type: "PriorBox"
   bottom: "conv11"
@@ -15437,6 +15479,27 @@ layer {
     scale_params: 184.842636108
     scale_params: 183.485977173
     scale_params: 250.648345947
+  }
+}
+layer {
+  name: "conv13_mbox_loc_perm"
+  type: "Permute"
+  bottom: "conv13_mbox_loc"
+  top: "conv13_mbox_loc_perm"
+  permute_param {
+    order: 0
+    order: 2
+    order: 3
+    order: 1
+  }
+}
+layer {
+  name: "conv13_mbox_loc_flat"
+  type: "Flatten"
+  bottom: "conv13_mbox_loc_perm"
+  top: "conv13_mbox_loc_flat"
+  flatten_param {
+    axis: 1
   }
 }
 layer {
@@ -15598,6 +15661,27 @@ layer {
   }
 }
 layer {
+  name: "conv13_mbox_conf_perm"
+  type: "Permute"
+  bottom: "conv13_mbox_conf"
+  top: "conv13_mbox_conf_perm"
+  permute_param {
+    order: 0
+    order: 2
+    order: 3
+    order: 1
+  }
+}
+layer {
+  name: "conv13_mbox_conf_flat"
+  type: "Flatten"
+  bottom: "conv13_mbox_conf_perm"
+  top: "conv13_mbox_conf_flat"
+  flatten_param {
+    axis: 1
+  }
+}
+layer {
   name: "conv13_mbox_priorbox"
   type: "PriorBox"
   bottom: "conv13"
@@ -15671,6 +15755,27 @@ layer {
     scale_params: 194.040115356
     scale_params: 243.896697998
     scale_params: 226.610321045
+  }
+}
+layer {
+  name: "conv14_2_mbox_loc_perm"
+  type: "Permute"
+  bottom: "conv14_2_mbox_loc"
+  top: "conv14_2_mbox_loc_perm"
+  permute_param {
+    order: 0
+    order: 2
+    order: 3
+    order: 1
+  }
+}
+layer {
+  name: "conv14_2_mbox_loc_flat"
+  type: "Flatten"
+  bottom: "conv14_2_mbox_loc_perm"
+  top: "conv14_2_mbox_loc_flat"
+  flatten_param {
+    axis: 1
   }
 }
 layer {
@@ -15832,6 +15937,27 @@ layer {
   }
 }
 layer {
+  name: "conv14_2_mbox_conf_perm"
+  type: "Permute"
+  bottom: "conv14_2_mbox_conf"
+  top: "conv14_2_mbox_conf_perm"
+  permute_param {
+    order: 0
+    order: 2
+    order: 3
+    order: 1
+  }
+}
+layer {
+  name: "conv14_2_mbox_conf_flat"
+  type: "Flatten"
+  bottom: "conv14_2_mbox_conf_perm"
+  top: "conv14_2_mbox_conf_flat"
+  flatten_param {
+    axis: 1
+  }
+}
+layer {
   name: "conv14_2_mbox_priorbox"
   type: "PriorBox"
   bottom: "conv14_2"
@@ -15905,6 +16031,27 @@ layer {
     scale_params: 181.035140991
     scale_params: 272.855194092
     scale_params: 227.242248535
+  }
+}
+layer {
+  name: "conv15_2_mbox_loc_perm"
+  type: "Permute"
+  bottom: "conv15_2_mbox_loc"
+  top: "conv15_2_mbox_loc_perm"
+  permute_param {
+    order: 0
+    order: 2
+    order: 3
+    order: 1
+  }
+}
+layer {
+  name: "conv15_2_mbox_loc_flat"
+  type: "Flatten"
+  bottom: "conv15_2_mbox_loc_perm"
+  top: "conv15_2_mbox_loc_flat"
+  flatten_param {
+    axis: 1
   }
 }
 layer {
@@ -16066,6 +16213,27 @@ layer {
   }
 }
 layer {
+  name: "conv15_2_mbox_conf_perm"
+  type: "Permute"
+  bottom: "conv15_2_mbox_conf"
+  top: "conv15_2_mbox_conf_perm"
+  permute_param {
+    order: 0
+    order: 2
+    order: 3
+    order: 1
+  }
+}
+layer {
+  name: "conv15_2_mbox_conf_flat"
+  type: "Flatten"
+  bottom: "conv15_2_mbox_conf_perm"
+  top: "conv15_2_mbox_conf_flat"
+  flatten_param {
+    axis: 1
+  }
+}
+layer {
   name: "conv15_2_mbox_priorbox"
   type: "PriorBox"
   bottom: "conv15_2"
@@ -16139,6 +16307,27 @@ layer {
     scale_params: 163.664550781
     scale_params: 291.348114014
     scale_params: 372.020050049
+  }
+}
+layer {
+  name: "conv16_2_mbox_loc_perm"
+  type: "Permute"
+  bottom: "conv16_2_mbox_loc"
+  top: "conv16_2_mbox_loc_perm"
+  permute_param {
+    order: 0
+    order: 2
+    order: 3
+    order: 1
+  }
+}
+layer {
+  name: "conv16_2_mbox_loc_flat"
+  type: "Flatten"
+  bottom: "conv16_2_mbox_loc_perm"
+  top: "conv16_2_mbox_loc_flat"
+  flatten_param {
+    axis: 1
   }
 }
 layer {
@@ -16300,6 +16489,27 @@ layer {
   }
 }
 layer {
+  name: "conv16_2_mbox_conf_perm"
+  type: "Permute"
+  bottom: "conv16_2_mbox_conf"
+  top: "conv16_2_mbox_conf_perm"
+  permute_param {
+    order: 0
+    order: 2
+    order: 3
+    order: 1
+  }
+}
+layer {
+  name: "conv16_2_mbox_conf_flat"
+  type: "Flatten"
+  bottom: "conv16_2_mbox_conf_perm"
+  top: "conv16_2_mbox_conf_flat"
+  flatten_param {
+    axis: 1
+  }
+}
+layer {
   name: "conv16_2_mbox_priorbox"
   type: "PriorBox"
   bottom: "conv16_2"
@@ -16373,6 +16583,27 @@ layer {
     scale_params: 1037.5859375
     scale_params: 673.520874023
     scale_params: 717.409729004
+  }
+}
+layer {
+  name: "conv17_2_mbox_loc_perm"
+  type: "Permute"
+  bottom: "conv17_2_mbox_loc"
+  top: "conv17_2_mbox_loc_perm"
+  permute_param {
+    order: 0
+    order: 2
+    order: 3
+    order: 1
+  }
+}
+layer {
+  name: "conv17_2_mbox_loc_flat"
+  type: "Flatten"
+  bottom: "conv17_2_mbox_loc_perm"
+  top: "conv17_2_mbox_loc_flat"
+  flatten_param {
+    axis: 1
   }
 }
 layer {
@@ -16534,6 +16765,27 @@ layer {
   }
 }
 layer {
+  name: "conv17_2_mbox_conf_perm"
+  type: "Permute"
+  bottom: "conv17_2_mbox_conf"
+  top: "conv17_2_mbox_conf_perm"
+  permute_param {
+    order: 0
+    order: 2
+    order: 3
+    order: 1
+  }
+}
+layer {
+  name: "conv17_2_mbox_conf_flat"
+  type: "Flatten"
+  bottom: "conv17_2_mbox_conf_perm"
+  top: "conv17_2_mbox_conf_flat"
+  flatten_param {
+    axis: 1
+  }
+}
+layer {
   name: "conv17_2_mbox_priorbox"
   type: "PriorBox"
   bottom: "conv17_2"
@@ -16556,31 +16808,29 @@ layer {
 layer {
   name: "mbox_loc"
   type: "Concat"
-  bottom: "conv11_mbox_loc"
-  bottom: "conv13_mbox_loc"
-  bottom: "conv14_2_mbox_loc"
-  bottom: "conv15_2_mbox_loc"
-  bottom: "conv16_2_mbox_loc"
-  bottom: "conv17_2_mbox_loc"
+  bottom: "conv11_mbox_loc_flat"
+  bottom: "conv13_mbox_loc_flat"
+  bottom: "conv14_2_mbox_loc_flat"
+  bottom: "conv15_2_mbox_loc_flat"
+  bottom: "conv16_2_mbox_loc_flat"
+  bottom: "conv17_2_mbox_loc_flat"
   top: "mbox_loc"
   concat_param {
     axis: 1
-    per_fla_fuse : true
   }
 }
 layer {
   name: "mbox_conf"
   type: "Concat"
-  bottom: "conv11_mbox_conf"
-  bottom: "conv13_mbox_conf"
-  bottom: "conv14_2_mbox_conf"
-  bottom: "conv15_2_mbox_conf"
-  bottom: "conv16_2_mbox_conf"
-  bottom: "conv17_2_mbox_conf"
+  bottom: "conv11_mbox_conf_flat"
+  bottom: "conv13_mbox_conf_flat"
+  bottom: "conv14_2_mbox_conf_flat"
+  bottom: "conv15_2_mbox_conf_flat"
+  bottom: "conv16_2_mbox_conf_flat"
+  bottom: "conv17_2_mbox_conf_flat"
   top: "mbox_conf"
   concat_param {
     axis: 1
-    per_fla_fuse : true
   }
 }
 layer {
@@ -16649,5 +16899,21 @@ layer {
     code_type: CENTER_SIZE
     keep_top_k: 200
     confidence_threshold: 0.00999999977648
+  }
+}
+layer {
+  name: "detection_eval"
+  type: "DetectionEvaluate"
+  bottom: "detection_out"
+  bottom: "label"
+  top: "detection_eval"
+  include {
+    phase: TEST
+  }
+  detection_evaluate_param {
+    num_classes: 21
+    background_label_id: 0
+    overlap_threshold: 0.5
+    evaluate_difficult_gt: false
   }
 }
