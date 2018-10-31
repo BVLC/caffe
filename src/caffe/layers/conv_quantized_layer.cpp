@@ -43,13 +43,13 @@ void ConvolutionQuantizedLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& b
     const Dtype* bottom_data = bottom[i]->cpu_data();
     Dtype* top_data = top[i]->mutable_cpu_data();
     switch (this->layer_param_.convolution_quantized_param().method()) {
-      case (KMEANS): {
+      case (0): {
         unsigned no_means = this->layer_param_.convolution_quantized_param().means();
         //TODO: call kmeans here! results in weight_quantized, and delete the line below
         caffe_copy(count, weight, weight_quantized);
       } break;
 
-      case(TRUNCATE): {
+      case(1): {
         std::bitset<8*sizeof(Dtype)> mantissa_mask;
         mantissa_mask.flip();
         mantissa_mask <<= this->layer_param_.convolution_quantized_param().truncate_bits();
