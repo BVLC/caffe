@@ -893,8 +893,8 @@ const char* UpgradeV1LayerType(const V1LayerParameter_LayerType type) {
     return "Convolution";
   case V1LayerParameter_LayerType_CONVOLUTIONMASKED:
     return "ConvolutionMasked";
-  case V1LayerParameter_LayerType_CONVOLUTIONCLUSTERED:
-    return "ConvolutionClustered";
+  case V1LayerParameter_LayerType_CONVOLUTIONQUANTIZED:
+    return "ConvolutionQuantized";
   case V1LayerParameter_LayerType_DECONVOLUTION:
     return "Deconvolution";
   case V1LayerParameter_LayerType_DATA:
