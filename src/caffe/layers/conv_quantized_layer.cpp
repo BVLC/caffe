@@ -47,7 +47,6 @@ void ConvolutionQuantizedLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& b
       case (0): {
         unsigned no_means = this->layer_param_.convolution_quantized_param().means();
         //TODO: call kmeans here! results in weight_quantized, and delete the line below
-        Dtype means = new Dtype[no_means];
         caffe_copy(count, weight, weight_quantized);
       } break;
 
@@ -109,9 +108,7 @@ void ConvolutionQuantizedLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& 
     for (int i = 0; i < this->output_shape_.size(); i++) {
       outputs *= this->output_shape_[i];
     }
-
     const Dtype* saliency_data = this>output_saliencies_.mutable_cpu_data();
-
     caffe_mul(outputs, bottom_data, bottom_diff, saliency_data);
     caffe_powx(outputs, output_saliencies_, (Dtype)2, saliency_data);
     // If we're doing clustering, we should use this info here!
