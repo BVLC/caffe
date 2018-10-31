@@ -10,7 +10,7 @@
 #include "caffe/layers/clip_layer.hpp"
 #include "caffe/layers/conv_layer.hpp"
 #include "caffe/layers/conv_masked_layer.hpp"
-#include "caffe/layers/conv_clustered_layer.hpp"
+#include "caffe/layers/conv_quantized_layer.hpp"
 #include "caffe/layers/deconv_layer.hpp"
 #include "caffe/layers/lrn_layer.hpp"
 #include "caffe/layers/pooling_layer.hpp"
@@ -118,11 +118,11 @@ shared_ptr<Layer<Dtype> > GetConvolutionMaskedLayer(const LayerParameter& param)
 
 REGISTER_LAYER_CREATOR(ConvolutionMasked, GetConvolutionMaskedLayer);
 
-// Get clustered convolution layer according to engine.
+// Get quantized convolution layer according to engine.
 template <typename Dtype>
-shared_ptr<Layer<Dtype> > GetConvolutionClusteredLayer(const LayerParameter& param) {
+shared_ptr<Layer<Dtype> > GetConvolutionQuantizedLayer(const LayerParameter& param) {
   ConvolutionParameter conv_param = param.convolution_param();
-  ConvolutionClusteredParameter conv_clustered_param = param.convolution_clustered_param();
+  ConvolutionQuantizedParameter conv_clustered_param = param.convolution_quantized_param();
   ConvolutionParameter_Engine engine = conv_param.engine();
 #ifdef USE_CUDNN
   bool use_dilation = false;
@@ -141,14 +141,14 @@ shared_ptr<Layer<Dtype> > GetConvolutionClusteredLayer(const LayerParameter& par
 #endif
   }
   if (engine == ConvolutionParameter_Engine_CAFFE) {
-    return shared_ptr<Layer<Dtype> >(new ConvolutionClusteredLayer<Dtype>(param));
+    return shared_ptr<Layer<Dtype> >(new ConvolutionQuantizedLayer<Dtype>(param));
 #ifdef USE_CUDNN
   } else if (engine == ConvolutionParameter_Engine_CUDNN) {
     if (use_dilation) {
       LOG(FATAL) << "CuDNN doesn't support the dilated convolution at Layer "
                  << param.name();
     }
-    return shared_ptr<Layer<Dtype> >(new CuDNNConvolutionClusteredLayer<Dtype>(param));
+    return shared_ptr<Layer<Dtype> >(new CuDNNConvolutionQuantizedLayer<Dtype>(param));
 #endif
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
@@ -156,7 +156,7 @@ shared_ptr<Layer<Dtype> > GetConvolutionClusteredLayer(const LayerParameter& par
   }
 }
 
-REGISTER_LAYER_CREATOR(ConvolutionClustered, GetConvolutionClusteredLayer);
+REGISTER_LAYER_CREATOR(ConvolutionQuantized, GetConvolutionQuantizedLayer);
 
 // Get deconvolution layer according to engine.
 template <typename Dtype>
