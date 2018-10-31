@@ -45,6 +45,7 @@ import caffe
 from caffe.proto import caffe_pb2
 import google.protobuf.text_format as txtf
 import sampling
+import numpy as np
 
 int8_layers = ["Convolution", "ReLU", "Split", "Concat", "Pooling", "Eltwise"]
 
@@ -243,7 +244,10 @@ def transform_convolutions(model_path, compiled_model_path, top_blobs_map, botto
 
         for si in range(0, len(new_net.layer[index].quantization_param.scale_params)):
             if not isclose(new_net.layer[index].quantization_param.scale_params[si], 0.0):
-                new_net.layer[index].quantization_param.scale_params[si] = s8_max / new_net.layer[index].quantization_param.scale_params[si]
+                new_scale_param = s8_max / new_net.layer[index].quantization_param.scale_params[si]
+                if np.isinf(new_scale_param):
+                    new_scale_param = 0.0
+                new_net.layer[index].quantization_param.scale_params[si] = new_scale_param
             else:
                 new_net.layer[index].quantization_param.scale_params[si] = 0.0
 
