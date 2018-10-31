@@ -655,14 +655,14 @@ message ConvolutionMaskedParameter {
 
 message ConvolutionQuantizedParameter {
   enum METHOD {
-    KMEANS = 1;
-    TRUNCATE = 2;
+    KMEANS = 0;
+    TRUNCATE = 1;
   }
   required METHOD method = 1;
   // how many means to use, for method == KMEANS
   optional uint32 means = 2 [default = 16];
   // by how many bits should the mantissa be truncated, for method == TRUNCATE
-  optional uint32 truncate_bits = 3; [default = 8];
+  optional uint32 truncate_bits = 3 [default = 8];
 
 }
 
