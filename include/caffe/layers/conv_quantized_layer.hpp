@@ -86,6 +86,7 @@ class ConvolutionQuantizedLayer : public BaseConvolutionLayer<Dtype> {
  private:
   Blob<Dtype> weights_quantized_;
   Blob<Dtype> output_saliencies_;
+  Blob<Dtype> centroids_;
 };
 
 }  // namespace caffe

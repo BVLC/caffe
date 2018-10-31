@@ -30,6 +30,9 @@ void ConvolutionQuantizedLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& botto
     weights_quantized_shape_.push_back(this->blobs_[2]->count());
     weights_quantized_.Reshape(weights_quantized_shape_);
     output_saliencies_.Reshape(this->output_shape_);
+    vector<int> centroids_shape_();
+    centroids_shape_.push_back(this->layer_param_.convolution_quantized_param().centroids());
+    centroids_.Reshape(centroids_shape_);
   }
   BaseConvolutionLayer<Dtype>::Reshape(bottom, top);
 }
@@ -45,7 +48,8 @@ void ConvolutionQuantizedLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& b
     Dtype* top_data = top[i]->mutable_cpu_data();
     switch (this->layer_param_.convolution_quantized_param().method()) {
       case (0): {
-        unsigned no_means = this->layer_param_.convolution_quantized_param().means();
+        unsigned no_centroids = this->layer_param_.convolution_quantized_param().centroids();
+        const Dtype* centroids = this->centroids_.cpu_data();
         //TODO: call kmeans here! results in weight_quantized, and delete the line below
         caffe_copy(count, weight, weight_quantized);
       } break;
@@ -111,7 +115,9 @@ void ConvolutionQuantizedLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& 
     Dtype* saliency_data = this->output_saliencies_.mutable_cpu_data();
     caffe_mul(outputs, bottom_data, bottom_diff, saliency_data);
     caffe_powx(outputs, saliency_data, (Dtype)2, saliency_data);
-    // If we're doing clustering, we should use this info here!
+
+    Dtype* centroids = this->centroids_.mutable_cpu_data();
+    // TODO: update the centroids here with the saliency data
   }
 }
 
