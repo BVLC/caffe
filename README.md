@@ -19,7 +19,8 @@ limit execution of OpenMP threads to specified cores only.
 
 ## Best performance solution
 Please read [our Wiki](https://github.com/intel/caffe/wiki/Recommendations-to-achieve-best-performance) for our recommendations and configuration to achieve best performance on Intel CPUs. 
-Please find the performance and convergence test result at https://github.com/intel/caffe/wiki/INTEL%C2%AE-OPTIMIZED-CAFFE-PERFORMANCE-AND-CONVERGENCE
+Please find the performance and convergence test result at https://github.com/intel/caffe/wiki/INTEL%C2%AE-OPTIMIZED-CAFFE-PERFORMANCE-AND-CONVERGENCE.
+Please find the scaling test result on AWS at https://github.com/intel/caffe/wiki/Intel%C2%AE-Optimization-for-Caffe-AWS-EC2-C5-(SKX)-Multi-node-Scaling.
 
 ## Multinode Training
 Intel® Distribution of Caffe* multi-node allows you to execute deep neural network training on multiple machines.
