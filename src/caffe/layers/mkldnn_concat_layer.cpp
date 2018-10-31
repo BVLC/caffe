@@ -73,96 +73,33 @@ void MKLDNNConcatLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     concat_dimension = bottom[0]->CanonicalAxisIndex(concat_param.axis());
   }
 
+  vector<int> bottom_0_shape = bottom[0]->shape();
+  bottom_0_shape[concat_dimension] = 0;
   for (auto i = 1; i < num_concats_; ++i) {
-    if (concat_dimension == 0)
-    {
-      CHECK_EQ(bottom[0]->channels(), bottom[i]->channels());
-      CHECK_EQ(bottom[0]->height(), bottom[i]->height());
-      CHECK_EQ(bottom[0]->width(), bottom[i]->width());
-      break;
+    vector<int> bottom_i_shape = bottom[i]->shape();
+    bottom_i_shape[concat_dimension] = 0;
+    if (concat_dimension == 1 && concat_param.per_fla_fuse()) {
+      for(int i = 0; i < concat_dimension + 1; i++) CHECK_EQ(bottom_i_shape[i] == bottom_0_shape[i], true);
+      continue;
     }
-    else if (concat_dimension == 1)
-    {
-      CHECK_EQ(bottom[0]->num(), bottom[i]->num());
-      if (!concat_param.per_fla_fuse()){
-        CHECK_EQ(bottom[0]->height(), bottom[i]->height());
-        CHECK_EQ(bottom[0]->width(), bottom[i]->width());
-      }
-      break;
-    }
-    else if (concat_dimension == 2)
-    {
-      CHECK_EQ(bottom[0]->num(), bottom[i]->num());
-      CHECK_EQ(bottom[0]->channels(), bottom[i]->channels());
-      CHECK_EQ(bottom[0]->width(), bottom[i]->width());
-      break;
-    }
-    else if (concat_dimension == 3)
-    {
-      CHECK_EQ(bottom[0]->num(), bottom[i]->num());
-      CHECK_EQ(bottom[0]->channels(), bottom[i]->channels());
-      CHECK_EQ(bottom[0]->height(), bottom[i]->height());
-      break;
-    }
+    CHECK_EQ(bottom_0_shape == bottom_i_shape, true);
   }
 
   split_dims.reserve(num_concats_);
-  if (concat_dimension == 0)
-  {
-    num_ = 0;
-    channels_ = bottom[0]->channels();
-    height_ = bottom[0]->height();
-    width_ = bottom[0]->width();
+  shape_ = bottom[0]->shape();
+  shape_[concat_dimension] = 0;
+  if (concat_dimension == 1 && concat_param.per_fla_fuse()) {
+    for(int i= concat_dimension + 1; i < shape_.size(); i++) shape_[i] = 1;
     for (auto i = 0; i < num_concats_; ++i) {
       CHECK_EQ(dim_src, bottom[i]->shape().size());
-      split_dims[i] = bottom[i]->num();
-      num_ += split_dims[i];
+      split_dims[i] = bottom[i]->count(concat_dimension);
+      shape_[concat_dimension] += split_dims[i];
     }
-  }
-  else if (concat_dimension == 1)
-  {
-    num_ = bottom[0]->num();
-    channels_ = 0;
-    height_ = bottom[0]->height();
-    width_ = bottom[0]->width();
-    if (concat_param.per_fla_fuse()){
-      height_ = 1;
-      width_ = 1;
-      for (auto i = 0; i < num_concats_; ++i) {
-        CHECK_EQ(dim_src, bottom[i]->shape().size());
-        split_dims[i] = bottom[i]->channels()*bottom[i]->height()*bottom[i]->width();
-        channels_ += split_dims[i];
-      }
-    } else{
-      for (auto i = 0; i < num_concats_; ++i) {
-        CHECK_EQ(dim_src, bottom[i]->shape().size());
-        split_dims[i] = bottom[i]->channels();
-        channels_ += split_dims[i];
-      }
-    }
-  }
-  else if (concat_dimension == 2)
-  {
-    num_ = bottom[0]->num();
-    channels_ = bottom[0]->channels();
-    height_ = 0;
-    width_ = bottom[0]->width();
+  } else {
     for (auto i = 0; i < num_concats_; ++i) {
       CHECK_EQ(dim_src, bottom[i]->shape().size());
-      split_dims[i] = bottom[i]->height();
-      height_ += split_dims[i];
-    }
-  }
-  else if (concat_dimension == 3)
-  {
-    num_ = bottom[0]->num();
-    channels_ = bottom[0]->channels();
-    height_ = bottom[0]->height();
-    width_ = 0;
-    for (auto i = 0; i < num_concats_; ++i) {
-      CHECK_EQ(dim_src, bottom[i]->shape().size());
-      split_dims[i] = bottom[i]->width();
-      width_ += split_dims[i];
+      split_dims[i] = bottom[i]->shape(concat_dimension);
+      shape_[concat_dimension] += split_dims[i];
     }
   }
 }
@@ -172,100 +109,31 @@ void MKLDNNConcatLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   VLOG(1) << "MKLDNNConcatLayer<Dtype>::Reshape: "  << this->layer_param_.name();
   const ConcatParameter& concat_param = this->layer_param_.concat_param();
-  if (concat_dimension == 0)
-  {
-    //Need to re-calculate the shape duo to the change of batch size
-    num_ = 0;
-    channels_ = bottom[0]->channels();
-    height_ = bottom[0]->height();
-    width_ = bottom[0]->width();
-    //Also need to reshape the concat dim, in case the concat dim is just be reshaped by batch size
+
+  vector<int> dim = bottom[0]->shape();
+  int dim_src = bottom[0]->shape().size();
+
+  split_dims.clear();
+  dim[concat_dimension] = 0;
+  if (concat_dimension == 1 && concat_param.per_fla_fuse()) {
+    for(int i= concat_dimension + 1; i < shape_.size(); i++) dim[i] = 1;
     for (auto i = 0; i < num_concats_; ++i) {
-        split_dims[i] = bottom[i]->num();
-        num_ += split_dims[i];
+      CHECK_EQ(dim_src, bottom[i]->shape().size());
+      split_dims[i] = bottom[i]->count(concat_dimension);
+      dim[concat_dimension] += split_dims[i];
     }
-
-    if (this->channels_ == bottom[0]->channels() &&
-        this->height_ == bottom[0]->height() &&
-        this->width_ == bottom[0]->width()) {
-      this->reshape = false;
-    } else {
-      this->reshape = true;
-    }
-  }
-  else if (concat_dimension == 1)
-  {
-    num_ = bottom[0]->num();
-    channels_ = 0;
-    height_ = bottom[0]->height();
-    width_ = bottom[0]->width();
-    if (concat_param.per_fla_fuse()){
-      height_ = 1;
-      width_ = 1;
-      for (auto i = 0; i < num_concats_; ++i) {
-          split_dims[i] = bottom[i]->channels()*bottom[i]->height()*bottom[i]->width();
-          channels_ += split_dims[i];
-      }
-      if (this->num_ == bottom[0]->num()) { 
-        this->reshape = false;
-      } else {
-        this->reshape = true;
-      }
-
-    } else{
-      for (auto i = 0; i < num_concats_; ++i) {
-        split_dims[i] = bottom[i]->channels();
-        channels_ += split_dims[i];
-      }
-      if (this->num_ == bottom[0]->num() &&
-          this->height_ == bottom[0]->height() &&
-          this->width_ == bottom[0]->width()) {
-        this->reshape = false;
-      } else {
-        this->reshape = true;
-      }
-    }
-  }
-  else if (concat_dimension == 2)
-  {
-    num_ = bottom[0]->num();
-    channels_ = bottom[0]->channels();
-    height_ = 0;
-    width_ = bottom[0]->width();
+  } else {
     for (auto i = 0; i < num_concats_; ++i) {
-        split_dims[i] = bottom[i]->height();
-        height_ += split_dims[i];
+      CHECK_EQ(dim_src, bottom[i]->shape().size());
+      split_dims[i] = bottom[i]->shape(concat_dimension);
+      dim[concat_dimension] += split_dims[i];
     }
+  } 
 
-    if (this->num_ == bottom[0]->num() &&
-        this->channels_ == bottom[0]->channels() &&
-        this->width_ == bottom[0]->width()) {
-      this->reshape = false;
-    } else {
-      this->reshape = true;
-    }
-  }
-  else if (concat_dimension == 3)
-  {
-    num_ = bottom[0]->num();
-    channels_ = bottom[0]->channels();
-    height_ = bottom[0]->height();
-    width_ = 0;
-    for (auto i = 0; i < num_concats_; ++i) {
-        split_dims[i] = bottom[i]->width();
-        width_ += split_dims[i];
-    }
+  this->reshape = (dim != shape_);
+  shape_ = dim;
 
-    if (this->num_ == bottom[0]->num() &&
-        this->channels_ == bottom[0]->channels() &&
-        this->height_ == bottom[0]->height()) {
-      this->reshape = false;
-    } else {
-      this->reshape = true;
-    }
-  }
-
-  top[0]->Reshape(num_, channels_, height_, width_);
+  top[0]->Reshape(shape_);
 }
 
 template <typename Dtype>
@@ -273,37 +141,20 @@ void MKLDNNConcatLayer<Dtype>::InitConcatFwd(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   if (std::is_same<Dtype, double>::value)  NOT_IMPLEMENTED;
 
-  //Fix: MKLDNN concat layer should use 4D blob as input! Reshape the 2D input blob into 4D for calculation!
-  bool has_spatial = (bottom[0]->shape().size() != 2);
-#ifdef DEBUG
-  LOG(INFO) << "has_spatial flag value: " << has_spatial;
-#endif
-  if (has_spatial == false)
-  {
-#ifdef DEBUG
-      LOG(INFO) << "size of bottom blob: " << bottom[0]->shape().size();
-      LOG(INFO) << "size of top blob: " << top[0]->shape().size();
-      LOG(INFO) << "MKLDNN concat layer only support 4D blob as input! Reshape the 2D input blob into 4D for calculation!";
-#endif
-      for (auto i = 0; i < num_concats_; i++)
-      {
-          vector<int> bottom_4D_shape;
-          int bottom_4D_height = 1;
-          int bottom_4D_width = 1;
-          bottom_4D_shape.push_back(bottom[i]->num());
-          bottom_4D_shape.push_back(bottom[i]->channels());
-          bottom_4D_shape.push_back(bottom_4D_height);
-          bottom_4D_shape.push_back(bottom_4D_width);
-          bottom[i]->Reshape(bottom_4D_shape, false);
-      }      
-  }
   engine cpu_engine = CpuEngine::Instance().get_engine();
   memory::data_type usr_dt = memory::data_type::f32;
   memory::data_type prv_dt = usr_dt;
   // memory::format mfmt_any = memory::format::any;
-  memory::format mfmt_nchw = memory::format::nchw;
+  memory::format mfmt_out;
+  if(this->shape_.size() == 5) {
+    mfmt_out = memory::format::ncdhw;
+  } else {
+    CHECK_LE(this->shape_.size(), 4) << "mkldnn concat layer doesn't support this dim size!";
+    mfmt_out = memory::format::nchw;
+  }
 
-  memory::dims output_tz = {num_, channels_, height_, width_};
+  memory::dims output_tz = this->shape_;
+  if(output_tz.size() < 4) output_tz.resize(4, 1); // resize to nchw with dim 1
   std::vector<memory::primitive_desc> srcs_mpd;
   std::vector<primitive::at> srcs;
   fwd_bottom_data.clear();
@@ -345,28 +196,14 @@ void MKLDNNConcatLayer<Dtype>::InitConcatFwd(const vector<Blob<Dtype>*>& bottom,
     fwd_bottom_data.push_back(boost::shared_ptr<MKLDNNData<Dtype> >());
     mem_descr.push_back(boost::shared_ptr<MKLDNNMemoryDescriptor<Dtype, false>>());
 
-    memory::dims input_tz = {0, 0, 0, 0};
-    if (concat_dimension == 0)
-    {
-      input_tz = {split_dims[i], channels_, height_, width_};
-    }
-    else if (concat_dimension == 1)
-    {
-      input_tz = {num_, split_dims[i], height_, width_};
-    }
-    else if (concat_dimension == 2)
-    {
-      input_tz = {num_, channels_, split_dims[i], width_};
-    }
-    else if (concat_dimension == 3)
-    {
-      input_tz = {num_, channels_, height_, split_dims[i]};
-    }
+    memory::dims input_tz = this->shape_;
+    if(input_tz.size() < 4) input_tz.resize(4, 1); // resize to nchw with dim 1
+    input_tz[concat_dimension] = split_dims[i];
 
-    memory::format src_mfmt = mfmt_nchw;
+    memory::format src_mfmt = mfmt_out;
     shared_ptr<memory::primitive_desc> prv_src_mpd;
     shared_ptr<memory::primitive_desc> usr_src_mpd(
-        new memory::primitive_desc({input_tz, usr_dt, mfmt_nchw}, cpu_engine));
+        new memory::primitive_desc({input_tz, usr_dt, mfmt_out}, cpu_engine));
  
     if (const_cast<Dtype*>(bottom[i]->prv_data()) != NULL) {
       scale = 1.;
@@ -396,7 +233,7 @@ void MKLDNNConcatLayer<Dtype>::InitConcatFwd(const vector<Blob<Dtype>*>& bottom,
   }
 
   shared_ptr<memory::primitive_desc> usr_dst_mpd(new memory::primitive_desc(
-        {output_tz, usr_dt, mfmt_nchw}, cpu_engine));
+        {output_tz, usr_dt, mfmt_out}, cpu_engine));
 
   concatFwd_pd.reset(new concat::primitive_desc(concat_dimension, srcs_mpd));
 
@@ -414,7 +251,7 @@ void MKLDNNConcatLayer<Dtype>::InitConcatFwd(const vector<Blob<Dtype>*>& bottom,
  
   fwd_output_memory = fwd_top_data->create_output_memory();
 
-  memory::format base_mfmt = mfmt_nchw;
+  memory::format base_mfmt = mfmt_out;
   float base_scale = 1.;
   this->in_place_ = true;
 
@@ -423,7 +260,7 @@ void MKLDNNConcatLayer<Dtype>::InitConcatFwd(const vector<Blob<Dtype>*>& bottom,
       base_mfmt = src_mfmts[i];
       base_scale = bottom_scales[i];
     }
-    else if((concat_dimension != 0 && bottom[i]->shape()[concat_dimension - 1] != 1) || base_mfmt != src_mfmts[i] || fabs(base_scale-bottom_scales[i]) > FLT_MIN || different_input_dt) {
+    else if((concat_dimension != 0 && bottom[i]->shape()[concat_dimension - 1] != 1) || base_mfmt != src_mfmts[i] || fabs(base_scale-bottom_scales[i]) > FLT_MIN || different_input_dt || bottom[i]->prv_data() == NULL) {
       this->in_place_ = false;
       break;
     }
@@ -468,15 +305,24 @@ void MKLDNNConcatLayer<Dtype>::InitConcatBwd(const vector<Blob<Dtype>*>& top,
   engine cpu_engine = CpuEngine::Instance().get_engine();
   memory::data_type data_type = memory::data_type::f32;
   // memory::format mfmt_any = memory::format::any;
-  memory::format mfmt_nchw = memory::format::nchw;
-  memory::format diff_dst_mfmt = mfmt_nchw;
+  memory::format mfmt_out;
+  memory::dims offsets;
+  if(this->shape_.size() == 5) {
+    mfmt_out =  memory::format::ncdhw;
+    offsets = {0, 0, 0, 0, 0};
+  } else {
+    mfmt_out =  memory::format::nchw;
+    offsets = {0, 0, 0, 0};
+  }
 
-  memory::dims input_tz = {num_, channels_, height_, width_};
-  memory::dims offsets = {0, 0, 0, 0};
+  memory::format diff_dst_mfmt = mfmt_out;
+
+  memory::dims input_tz = this->shape_;
+  if (input_tz.size() < 4) input_tz.resize(4, 1);
 
   shared_ptr<memory::primitive_desc> prv_diff_dst_mpd;
   shared_ptr<memory::primitive_desc> usr_diff_dst_mpd(
-    new memory::primitive_desc({input_tz, data_type, mfmt_nchw},
+    new memory::primitive_desc({input_tz, data_type, mfmt_out},
         cpu_engine));
 
   bool top_diff_is_prv = (const_cast<Dtype*>(top[0]->prv_diff()) != NULL);
@@ -502,26 +348,12 @@ void MKLDNNConcatLayer<Dtype>::InitConcatBwd(const vector<Blob<Dtype>*>& top,
     bwd_bottom_diff.push_back(boost::shared_ptr<MKLDNNDiff<Dtype> >());
     reorders.push_back(MKLDNNPrimitive<Dtype>());
 
-    memory::dims dims = {0, 0, 0, 0};
-    if (concat_dimension == 0)
-    {
-      dims = {split_dims[i], channels_, height_, width_};
-    }
-    else if (concat_dimension == 1)
-    {
-      dims = {num_, split_dims[i], height_, width_};
-    }
-    else if (concat_dimension == 2)
-    {
-      dims = {num_, channels_, split_dims[i], width_};
-    }
-    else if (concat_dimension == 3)
-    {
-      dims = {num_, channels_, height_, split_dims[i]};
-    }
+    memory::dims dims = this->shape_;
+    if (dims.size() < 4) dims.resize(4, 1);
+    dims[concat_dimension] = split_dims[i];
 
     shared_ptr<memory::primitive_desc> usr_diff_src_mpd(
-      new memory::primitive_desc({dims, data_type, mfmt_nchw},
+      new memory::primitive_desc({dims, data_type, mfmt_out},
           cpu_engine));
     shared_ptr<memory::primitive_desc> prv_diff_src_mpd(
       new memory::primitive_desc({dims, data_type, diff_dst_mfmt},
@@ -587,8 +419,24 @@ void MKLDNNConcatLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top
   LOG(INFO) << "MKLDNNConcatLayer<Dtype>::Backward_cpu: " << this->layer_param_.name();
 #endif
 
-  if ((reorders.size() == 0) || (true == this->reshape))
+  if ((reorders.size() == 0) || (true == this->reshape)) {
+    bool concat_axis = true;
+    for (auto i = 0; i < num_concats_; i++) {
+      if (bottom[i]->shape()[concat_dimension] % 16 != 0) {
+        concat_axis = false;
+        break;
+      }
+    }
+    // mkldnn view primitive creation has restriction if viewed area (offset or size) is not
+    // aligned on block size (would assert if such case happens).
+    // This case usually would be triggered when the bottom blob's dim along concat axis is
+    // not 16-dividable and the top blob's block size becomes 16 due to the following mkldnn
+    // layer's reorder.
+    // To avoid such assertion, we have to explicitly convert the top blob state from prv to cpu state.
+    if (top[0]->prv_diff() != NULL && !concat_axis)
+      top[0]->mutable_cpu_diff();
     InitConcatBwd(top, propagate_down, bottom);
+  }
   bwd_top_diff->sync_before_read();
   for (auto i = 0; i < num_concats_; ++i) {
     bwd_bottom_diff[i]->sync_before_write();

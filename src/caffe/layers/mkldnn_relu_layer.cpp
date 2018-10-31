@@ -60,14 +60,12 @@ void MKLDNNReLULayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom
 
     NeuronLayer<Dtype>::Reshape(bottom, top);
 
-    this->reshape = (this->width_ == bottom[0]->width() &&
-                     this->height_ == bottom[0]->height() &&
-                     this->channels_ == bottom[0]->channels() &&
-                     this->num_ == bottom[0]->num()) ? false : true;
-    this->width_ = bottom[0]->width();
-    this->height_ = bottom[0]->height();
-    this->num_ = bottom[0]->num();
-    this->channels_ = bottom[0]->channels();
+    this->reshape = (this->shape_ == bottom[0]->shape()) ? false : true;
+
+    this->shape_ = bottom[0]->shape();
+
+    CHECK_LE(this->shape_.size(), 5)
+      << "Tensor dimension must be less than 6.";
 
 }
 
@@ -76,10 +74,6 @@ void MKLDNNReLULayer<Dtype>::InitReLUFwd(const vector<Blob<Dtype>*>& bottom, con
 {
     if (std::is_same<Dtype, double>::value) NOT_IMPLEMENTED;
     auto propagation = this->phase_ == TEST ? prop_kind::forward_scoring : prop_kind::forward_training;
-    int32_t n  = this->num_;
-    int32_t iw = this->width_;
-    int32_t ih = this->height_;
-    int32_t ic = this->channels_;
 
     Dtype negative_slope = this->layer_param_.relu_param().negative_slope();
     bool bottom_data_is_prv = (const_cast<Dtype*>(bottom[0]->prv_data()) != NULL);
@@ -92,7 +86,18 @@ void MKLDNNReLULayer<Dtype>::InitReLUFwd(const vector<Blob<Dtype>*>& bottom, con
     shared_ptr<memory::primitive_desc> usr_data_mpd(NULL), prv_data_mpd(NULL), top_data_mpd(NULL);
     memory::data_type src_dt = memory::data_type::f32;
     memory::data_type top_dt = memory::data_type::f32;
-    memory::format src_mfmt = memory::format::nchw;
+
+    memory::format src_mfmt;
+    auto tensor_size = this->shape_.size();
+    memory::dims dim = this->shape_;
+    if(tensor_size == 5) {
+        src_mfmt = memory::format::ncdhw;
+    } else {
+        CHECK_LE(tensor_size, 4) << "The mkldnn relu layer only supports dim size <= 5!";
+        if (tensor_size < 4) dim.resize(4, 1); // extend to nchw with dim 1 to match mkldnn format
+        src_mfmt = memory::format::nchw;
+    }
+
     //bottom_data_is_prv = false;
     std::vector<float> scale;
     if (bottom_data_is_prv) {
@@ -105,13 +110,13 @@ void MKLDNNReLULayer<Dtype>::InitReLUFwd(const vector<Blob<Dtype>*>& bottom, con
         src_dt = static_cast<memory::data_type>(mem_descr->prv_memory_pd()->desc().data.data_type);
         src_mfmt = static_cast<memory::format>(mem_descr->prv_memory_pd()->desc().data.format);
     } else {
-        bottom_data_md.reset(new memory::desc({{n, ic, ih, iw}}, mpcsn, memory::format::nchw));
+        bottom_data_md.reset(new memory::desc({dim}, mpcsn, src_mfmt));
         usr_data_mpd.reset(new memory::primitive_desc(*bottom_data_md, cpu_engine));
         prv_data_mpd.reset(new memory::primitive_desc(*bottom_data_md, cpu_engine));
         scale.push_back(1.);
     }
     top_dt = src_dt;
-    top_data_mpd.reset(new memory::primitive_desc({{n,ic,ih,iw}, top_dt, src_mfmt}, cpu_engine));
+    top_data_mpd.reset(new memory::primitive_desc({dim, top_dt, src_mfmt}, cpu_engine));
 
     // ---- Initialize relu primitive descriptor -------------
     //relu_forward::desc reluFwd_desc(propagation, *bottom_data_md, negative_slope);
@@ -195,11 +200,6 @@ void MKLDNNReLULayer<Dtype>::InitReLUBwd(const vector<Blob<Dtype>*>& top
 {
     if (std::is_same<Dtype, double>::value) NOT_IMPLEMENTED;
 
-    int32_t n  = this->num_;
-    int32_t iw = this->width_;
-    int32_t ih = this->height_;
-    int32_t ic = this->channels_;
-
     Dtype negative_slope = this->layer_param_.relu_param().negative_slope();
     bool top_diff_is_prv = top[0]->prv_diff() != NULL;
     bool inplace = (bottom[0] == top[0]);
@@ -220,13 +220,24 @@ void MKLDNNReLULayer<Dtype>::InitReLUBwd(const vector<Blob<Dtype>*>& top
     // ---- Initialize memory descriptors -------------
     shared_ptr<memory::desc> bottom_data_md;
     shared_ptr<memory::primitive_desc> usr_data_mpd(NULL), prv_data_mpd(NULL);
+
+    memory::format mfmt;
+    auto tensor_size = this->shape_.size();
+    memory::dims dim = this->shape_;
+    if(tensor_size == 5) {
+        mfmt = memory::format::ncdhw;
+    } else {
+        CHECK_LE(tensor_size, 4) << "The mkldnn relu layer only supports dim size <= 5!";
+        if (tensor_size < 4) dim.resize(4, 1); // extend to nchw with dim 1 to match mkldnn format
+        mfmt = memory::format::nchw;
+    }
     if (bottom_data_is_prv) {
         shared_ptr<MKLDNNMemoryDescriptor<Dtype, false> > mem_descr
             = get_mkldnn_prv_descriptor<Dtype, false>(bottom[0]);
         usr_data_mpd = mem_descr->usr_memory_pd();
         prv_data_mpd = mem_descr->prv_memory_pd();
     } else {
-        bottom_data_md.reset(new memory::desc({{n, ic, ih, iw}}, mpcsn, memory::format::nchw));
+        bottom_data_md.reset(new memory::desc(dim, mpcsn, mfmt));
         usr_data_mpd.reset(new memory::primitive_desc(*bottom_data_md, cpu_engine));
     }
 
@@ -276,7 +287,7 @@ void MKLDNNReLULayer<Dtype>::InitReLUBwd(const vector<Blob<Dtype>*>& top
           top[0]->set_prv_diff_descriptor(NULL);
       }
 
-      top_diff_md.reset(new memory::desc({{n, ic, ih, iw}}, mpcsn, memory::format::nchw));
+      top_diff_md.reset(new memory::desc(dim, mpcsn, mfmt));
       usr_diff_mpd.reset(new memory::primitive_desc(*top_diff_md, cpu_engine));
     }
     
