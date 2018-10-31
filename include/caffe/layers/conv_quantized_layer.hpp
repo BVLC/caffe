@@ -1,5 +1,5 @@
-#ifndef CAFFE_CONV_CLUSTERED_LAYER_HPP_
-#define CAFFE_CONV_CLUSTERED_LAYER_HPP_
+#ifndef CAFFE_CONV_QUANTIZED_LAYER_HPP_
+#define CAFFE_CONV_QUANTIZED_LAYER_HPP_
 
 #include <vector>
 
@@ -28,7 +28,7 @@ namespace caffe {
  *   the output channel N' columns of the output matrix.
  */
 template <typename Dtype>
-class ConvolutionClusteredLayer : public BaseConvolutionLayer<Dtype> {
+class ConvolutionQuantizedLayer : public BaseConvolutionLayer<Dtype> {
  public:
   /**
    * @param param provides ConvolutionParameter convolution_param,
@@ -61,16 +61,16 @@ class ConvolutionClusteredLayer : public BaseConvolutionLayer<Dtype> {
    *  - engine: convolution has CAFFE (matrix multiplication) and CUDNN (library
    *    kernels + stream parallelism) engines.
    */
-  explicit ConvolutionClusteredLayer(const LayerParameter& param)
+  explicit ConvolutionQuantizedLayer(const LayerParameter& param)
       : BaseConvolutionLayer<Dtype>(param) {}
 
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
-  virtual inline const char* type() const { return "ConvolutionMasked"; }
+  virtual inline const char* type() const { return "ConvolutionQuantized"; }
 
  protected:
   /// @brief The spatial dimensions of the weights_masked_.
-  vector<int> weights_clustered_shape_;
+  vector<int> weights_quantized_shape_;
 
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
@@ -84,9 +84,9 @@ class ConvolutionClusteredLayer : public BaseConvolutionLayer<Dtype> {
   virtual void compute_output_shape();
 
  private:
-  Blob<Dtype> weights_clustered_;
+  Blob<Dtype> weights_quantized_;
 };
 
 }  // namespace caffe
 
-#endif  // CAFFE_CONV_CLUSTERED_LAYER_HPP_
+#endif  // CAFFE_CONV_QUANTIZED_LAYER_HPP_

@@ -1,12 +1,12 @@
 #include <vector>
 
 #include "caffe/filler.hpp"
-#include "caffe/layers/conv_clustered_layer.hpp"
+#include "caffe/layers/conv_quantized_layer.hpp"
 
 namespace caffe {
 
 template <typename Dtype>
-void ConvolutionClusteredLayer<Dtype>::compute_output_shape() {
+void ConvolutionQuantizedLayer<Dtype>::compute_output_shape() {
   const int* kernel_shape_data = this->kernel_shape_.cpu_data();
   const int* stride_data = this->stride_.cpu_data();
   const int* pad_data = this->pad_.cpu_data();
@@ -23,34 +23,46 @@ void ConvolutionClusteredLayer<Dtype>::compute_output_shape() {
 }
 
 template <typename Dtype>
-void ConvolutionClusteredLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
+void ConvolutionQuantizedLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   if (this->mask_term_) {
-    weights_clustered_shape_.clear();
-    weights_clustered_shape_.push_back(this->blobs_[2]->count());
-    weights_clustered_.Reshape(weights_clustered_shape_);
+    weights_quantized_shape_.clear();
+    weights_quantized_shape_.push_back(this->blobs_[2]->count());
+    weights_quantized_.Reshape(weights_quantized_shape_);
   }
   BaseConvolutionLayer<Dtype>::Reshape(bottom, top);
 }
 
 template <typename Dtype>
-void ConvolutionClusteredLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+void ConvolutionQuantizedLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   const Dtype* weight = this->blobs_[0]->cpu_data();
-  Dtype* weight_clustered = this->weights_clustered_.mutable_cpu_data();
+  Dtype* weight_quantized = this->weights_quantized_.mutable_cpu_data();
   const int count = this->blobs_[0]->count();
   for (int i = 0; i < bottom.size(); ++i) {
     const Dtype* bottom_data = bottom[i]->cpu_data();
     Dtype* top_data = top[i]->mutable_cpu_data();
-    // TODO: this->layer_param_.convolution_clustered_param().means(),
-    //caffe_round(count, weight, weight_clustered);
-    std::bitset<8*sizeof(Dtype)> mantissa_mask;
-    mantissa_mask.flip();
-    mantissa_mask <<= 8; //flyte24 or flyte56, depending on Dtype
-    caffe_and(count, mantissa_mask, weight, weight_clustered); 
+    switch (this->layer_param_.convolution_quantized_param().method()) {
+      case (this->layer_param_.convolution_quantized_param().KMEANS): {
+        unsigned no_means = this->layer_param_.convolution_quantized_param().means();
+        //TODO: call kmeans here! results in weight_quantized, and delete the line below
+        caffe_copy(count, weight, weight_quantized);
+      } break;
+
+      case(this->layer_param_.convolution_quantized_param().TRUNCATE) {
+        std::bitset<8*sizeof(Dtype)> mantissa_mask;
+        mantissa_mask.flip();
+        mantissa_mask <<= this->layer_param_.convolution_quantized_param().truncate_bits();
+        caffe_and(count, mantissa_mask, weight, weight_quantized);
+      } break;
+
+      default: {
+        caffe_copy(count, weight, weight_quantized);
+      } break;
+    }
 
     for (int n = 0; n < this->num_; ++n) {
-      this->forward_cpu_gemm(bottom_data + n * this->bottom_dim_, weight_clustered,
+      this->forward_cpu_gemm(bottom_data + n * this->bottom_dim_, weight_quantized,
           top_data + n * this->top_dim_);
       if (this->bias_term_) {
         const Dtype* bias = this->blobs_[1]->cpu_data();
@@ -61,7 +73,7 @@ void ConvolutionClusteredLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& b
 }
 
 template <typename Dtype>
-void ConvolutionClusteredLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+void ConvolutionQuantizedLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   const Dtype* weight = this->blobs_[0]->cpu_data();
   Dtype* weight_diff = this->blobs_[0]->mutable_cpu_diff();
@@ -94,10 +106,10 @@ void ConvolutionClusteredLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& 
 }
 
 #ifdef CPU_ONLY
-STUB_GPU(ConvolutionClusteredLayer);
+STUB_GPU(ConvolutionQuantizedLayer);
 #endif
 
-INSTANTIATE_CLASS(ConvolutionClusteredLayer);
-//REGISTER_LAYER_CLASS(ConvolutionClustered);
+INSTANTIATE_CLASS(ConvolutionQuantizedLayer);
+//REGISTER_LAYER_CLASS(ConvolutionQuantized);
 
 }  // namespace caffe
