@@ -21,6 +21,7 @@ limit execution of OpenMP threads to specified cores only.
 Please read [our Wiki](https://github.com/intel/caffe/wiki/Recommendations-to-achieve-best-performance) for our recommendations and configuration to achieve best performance on Intel CPUs. 
 
 Results:
+
 Performance and convergence test result: https://github.com/intel/caffe/wiki/INTEL%C2%AE-OPTIMIZED-CAFFE-PERFORMANCE-AND-CONVERGENCE.
 
 Scaling test result on AWS: https://github.com/intel/caffe/wiki/Intel%C2%AE-Optimization-for-Caffe-AWS-EC2-C5-(SKX)-Multi-node-Scaling.
