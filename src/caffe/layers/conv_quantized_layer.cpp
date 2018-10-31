@@ -110,7 +110,7 @@ void ConvolutionQuantizedLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& 
     }
     const Dtype* saliency_data = this>output_saliencies_.mutable_cpu_data();
     caffe_mul(outputs, bottom_data, bottom_diff, saliency_data);
-    caffe_powx(outputs, output_saliencies_, (Dtype)2, saliency_data);
+    caffe_powx(outputs, saliency_data, (Dtype)2, saliency_data);
     // If we're doing clustering, we should use this info here!
   }
 }
