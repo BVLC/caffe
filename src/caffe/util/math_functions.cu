@@ -416,6 +416,9 @@ void caffe_gpu_round<double>(const int N, const double* a, double* y) {
       //N, a, y);
 }
 
+template <typename Dtype, typename Mtype>
+__global__ void and_kernel(const int n, const Mtype m, const Dtype* a, Dtype* y);
+
 template <>
 __global__ void and_kernel<float, unsigned long>(const int n, const unsigned m, const float* a, float* y) {
   CUDA_KERNEL_LOOP(index, n) {
