@@ -227,8 +227,8 @@ void caffe_gpu_powx(const int n, const Dtype* a, const Dtype b, Dtype* y);
 template <typename Dtype>
 void caffe_gpu_round(const int n, const Dtype* a, Dtype* y);
 
-template <typename Dtype, typename Mtype>
-void caffe_gpu_and(const int n, const Mtype m, const Dtype* a, Dtype* y);
+template <typename Dtype>
+void caffe_gpu_and(const int n, const std::bitset<8*sizeof(Dtype)> m, const Dtype* a, Dtype* y);
 
 template <typename Dtype>
 void caffe_gpu_sqrt(const int n, const Dtype* a, Dtype* y);
