@@ -98,6 +98,5 @@ STUB_GPU(ConvolutionMaskedLayer);
 #endif
 
 INSTANTIATE_CLASS(ConvolutionMaskedLayer);
-//REGISTER_LAYER_CLASS(ConvolutionMasked);
 
 }  // namespace caffe

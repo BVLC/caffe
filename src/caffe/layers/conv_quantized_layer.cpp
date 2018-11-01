@@ -65,7 +65,6 @@ void ConvolutionQuantizedLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& b
         caffe_copy(count, weight, weight_quantized);
       } break;
     }
-
     for (int n = 0; n < this->num_; ++n) {
       this->forward_cpu_gemm(bottom_data + n * this->bottom_dim_, weight_quantized,
           top_data + n * this->top_dim_);
@@ -155,6 +154,5 @@ STUB_GPU(ConvolutionQuantizedLayer);
 #endif
 
 INSTANTIATE_CLASS(ConvolutionQuantizedLayer);
-//REGISTER_LAYER_CLASS(ConvolutionQuantized);
 
 }  // namespace caffe
