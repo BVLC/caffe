@@ -429,14 +429,14 @@ __global__ void and_kernel(const int n, const unsigned long long m, const double
   }
 }
 
-template <>
+template <typename Dtype>
 void caffe_gpu_and<float>(const int N, const std::bitset<8*sizeof(float)> m,
   const float* a, float* y) {
   // NOLINT_NEXT_LINE(whitespace/operators)
   and_kernel<float><<<CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS>>>(N, m.to_ulong(), a, y);
 }
 
-template <>
+template <typename Dtype>
 void caffe_gpu_and<double>(const int N, const std::bitset<8*sizeof(double)> m,
   const double* a, double* y) {
   // NOLINT_NEXT_LINE(whitespace/operators)
