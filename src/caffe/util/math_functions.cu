@@ -387,6 +387,7 @@ void caffe_gpu_powx<double>(const int N, const double* a,
       N, a, alpha, y);
 }
 
+/*
 template <>
 __global__ void round_kernel<float>(const int n, const float* a, float* y) {
   CUDA_KERNEL_LOOP(index, n) {
@@ -442,6 +443,7 @@ void caffe_gpu_and<double, unsigned long long>(const int N, const std::bitset<8*
   // NOLINT_NEXT_LINE(whitespace/operators)
   and_kernel<double, unsigned long long><<<CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS>>>(N, m.to_ullong(), a, y);
 }
+*/
 
 template <typename Dtype>
 __global__ void sqrt_kernel(const int n, const Dtype* a, Dtype* y) {
