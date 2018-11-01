@@ -126,16 +126,25 @@ void ConvolutionQuantizedLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& 
       case (1): { // Taylor Series
         Dtype* saliency_data = this->output_saliencies_.mutable_cpu_data();
         caffe_copy(outputs, bottom_data, saliency_data);
+
+        Dtype* centroids = this->centroids_.mutable_cpu_data();
+        // TODO: update the centroids here with the saliency data
       } break;
 
       case (2): { // Magnitude
         Dtype* saliency_data = this->output_saliencies_.mutable_cpu_data();
         caffe_copy(outputs, bottom_data, saliency_data);
+
+        Dtype* centroids = this->centroids_.mutable_cpu_data();
+        // TODO: update the centroids here with the saliency data
       } break;
 
       default: {
         Dtype* saliency_data = this->output_saliencies_.mutable_cpu_data();
         caffe_copy(outputs, bottom_data, saliency_data);
+
+        Dtype* centroids = this->centroids_.mutable_cpu_data();
+        // TODO: update the centroids here with the saliency data
       } break;
   }
 }
