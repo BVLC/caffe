@@ -108,7 +108,7 @@ shared_ptr<Layer<Dtype> > GetConvolutionMaskedLayer(const LayerParameter& param)
       LOG(FATAL) << "CuDNN doesn't support the dilated convolution at Layer "
                  << param.name();
     }
-    return shared_ptr<Layer<Dtype> >(new CuDNNConvolutionMaskedLayer<Dtype>(param));
+    return shared_ptr<Layer<Dtype> >(new CuDNNConvolutionLayer<Dtype>(param));
 #endif
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
@@ -148,7 +148,7 @@ shared_ptr<Layer<Dtype> > GetConvolutionQuantizedLayer(const LayerParameter& par
       LOG(FATAL) << "CuDNN doesn't support the dilated convolution at Layer "
                  << param.name();
     }
-    return shared_ptr<Layer<Dtype> >(new CuDNNConvolutionQuantizedLayer<Dtype>(param));
+    return shared_ptr<Layer<Dtype> >(new CuDNNConvolutionLayer<Dtype>(param));
 #endif
   } else {
     LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
