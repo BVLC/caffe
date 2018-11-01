@@ -420,7 +420,7 @@ template <typename Dtype, typename Mtype>
 __global__ void and_kernel(const int n, const Mtype m, const Dtype* a, Dtype* y);
 
 template <>
-__global__ void and_kernel<float, unsigned long>(const int n, const unsigned m, const float* a, float* y) {
+__global__ void and_kernel<float, unsigned long>(const int n, const unsigned long m, const float* a, float* y) {
   CUDA_KERNEL_LOOP(index, n) {
     y[index] = __int_as_float(m & __float_as_int(a[index]));
   }
