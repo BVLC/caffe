@@ -146,6 +146,7 @@ void ConvolutionQuantizedLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& 
         Dtype* centroids = this->centroids_.mutable_cpu_data();
         // TODO: update the centroids here with the saliency data
       } break;
+    }
   }
 }
 
