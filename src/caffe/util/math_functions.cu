@@ -387,14 +387,14 @@ void caffe_gpu_powx<double>(const int N, const double* a,
       N, a, alpha, y);
 }
 
-template <>
+template <typename Dtype>
 __global__ void round_kernel(const int n, const float* a, float* y) {
   CUDA_KERNEL_LOOP(index, n) {
     y[index] = (Dtype) __float2int_rn(a[index]);
   }
 }
 
-template <>
+template <typename Dtype>
 __global__ void round_kernel(const int n, const double* a, double* y) {
   CUDA_KERNEL_LOOP(index, n) {
     y[index] = (Dtype) __double2ll_rn(a[index]);
@@ -415,14 +415,14 @@ void caffe_gpu_round<double>(const int N, const double* a, double* y) {
       N, a, y);
 }
 
-template <>
+template <typename Dtype>
 __global__ void and_kernel(const int n, const unsigned m, const float* a, float* y) {
   CUDA_KERNEL_LOOP(index, n) {
     y[index] = __int_as_float(m & __float_as_int(a[index]));
   }
 }
 
-template <>
+template <typename Dtype>
 __global__ void and_kernel(const int n, const unsigned long long m, const double* a, double* y) {
   CUDA_KERNEL_LOOP(index, n) {
     y[index] = __longlong_as_double(m & __double_as_longlong(a[index]));
