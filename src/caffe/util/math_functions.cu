@@ -416,14 +416,14 @@ void caffe_gpu_round<double>(const int N, const double* a, double* y) {
 }
 
 template <>
-__global__ void and_kernel(const int n, const unsigned m, const T* a, T* y) {
+__global__ void and_kernel(const int n, const unsigned m, const float* a, float* y) {
   CUDA_KERNEL_LOOP(index, n) {
     y[index] = __int_as_float(m & __float_as_int(a[index]));
   }
 }
 
 template <>
-__global__ void and_kernel(const int n, const unsigned long long m, const T* a, T* y) {
+__global__ void and_kernel(const int n, const unsigned long long m, const double* a, double* y) {
   CUDA_KERNEL_LOOP(index, n) {
     y[index] = __longlong_as_double(m & __double_as_longlong(a[index]));
   }
