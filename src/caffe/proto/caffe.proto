@@ -658,11 +658,20 @@ message ConvolutionQuantizedParameter {
     KMEANS = 0;
     TRUNCATE = 1;
   }
+
+  // Output activation saliency
+  enum SALIENCY {
+    FISHER = 0;
+    TAYLOR = 1;
+    MAGNITUDE = 2;
+  }
   required METHOD method = 1;
+  // what saliency measure to use for the activations
+  optional SALIENCY saliency = 2 [default = MAGNITUDE];
   // how many centroids to use, for method == KMEANS
-  optional uint32 centroids = 2 [default = 16];
+  optional uint32 centroids = 3 [default = 16];
   // by how many bits should the mantissa be truncated, for method == TRUNCATE
-  optional uint32 truncate_bits = 3 [default = 8];
+  optional uint32 truncate_bits = 4 [default = 8];
 
 }
 
