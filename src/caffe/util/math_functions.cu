@@ -416,7 +416,6 @@ void caffe_gpu_round<double>(const int N, const double* a, double* y) {
       //N, a, y);
 }
 
-/*
 template <>
 __global__ void and_kernel<float, unsigned long>(const int n, const unsigned m, const float* a, float* y) {
   CUDA_KERNEL_LOOP(index, n) {
@@ -430,19 +429,19 @@ __global__ void and_kernel<double, unsigned long long>(const int n, const unsign
     y[index] = __longlong_as_double(m & __double_as_longlong(a[index]));
   }
 }
-*/
+
 template <>
 void caffe_gpu_and<float>(const int N, const std::bitset<8*sizeof(float)> m,
   const float* a, float* y) {
   // NOLINT_NEXT_LINE(whitespace/operators)
-  //and_kernel<float, unsigned long><<<CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS>>>(N, m.to_ulong(), a, y);
+  and_kernel<float, unsigned long><<<CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS>>>(N, m.to_ulong(), a, y);
 }
 
 template <>
 void caffe_gpu_and<double>(const int N, const std::bitset<8*sizeof(double)> m,
   const double* a, double* y) {
   // NOLINT_NEXT_LINE(whitespace/operators)
-  //and_kernel<double, unsigned long long><<<CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS>>>(N, m.to_ullong(), a, y);
+  and_kernel<double, unsigned long long><<<CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS>>>(N, m.to_ullong(), a, y);
 }
 
 template <typename Dtype>
