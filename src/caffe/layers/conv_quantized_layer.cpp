@@ -30,6 +30,7 @@ void ConvolutionQuantizedLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& botto
     weights_quantized_shape_.push_back(this->blobs_[2]->count());
     weights_quantized_.Reshape(weights_quantized_shape_);
     output_saliencies_.Reshape(this->output_shape_);
+    output_saliencies_channel_.Reshape(this->output_shape_[0]);
     centroids_shape_.clear();
     centroids_shape_.push_back(this->layer_param_.convolution_quantized_param().centroids());
     centroids_.Reshape(centroids_shape_);
@@ -124,7 +125,8 @@ void ConvolutionQuantizedLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& 
 
       case (1): { // Taylor Series
         Dtype* saliency_data = this->output_saliencies_.mutable_cpu_data();
-        caffe_copy(outputs, bottom_data, saliency_data);
+        caffe_mul(outputs, bottom_data, bottom_diff, saliency_data);
+        caffe_abs(outputs, saliency_data, saliency_data);
 
         Dtype* centroids = this->centroids_.mutable_cpu_data();
         // TODO: update the centroids here with the saliency data
