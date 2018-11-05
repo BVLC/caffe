@@ -202,7 +202,7 @@ void caffe_round<double>(const int n, const double* a, double* y) {
 }
 
 template <>
-void caffe_and<float>(const int n, const std::bitset<8*sizeof(float)> m, 
+void caffe_and<float>(const int n, const std::bitset<8*sizeof(float)> m,
   const float* a, float* y) {
   float temp;
   for (int i = 0; i < n; i++) {
@@ -213,7 +213,7 @@ void caffe_and<float>(const int n, const std::bitset<8*sizeof(float)> m,
 }
 
 template <>
-void caffe_and<double>(const int n, const std::bitset<8*sizeof(double)> m, 
+void caffe_and<double>(const int n, const std::bitset<8*sizeof(double)> m,
   const double* a, double* y) {
   double temp;
   for (int i = 0; i < n; i++) {
@@ -241,6 +241,20 @@ void caffe_sqrt<float>(const int n, const float* a, float* y) {
 template <>
 void caffe_sqrt<double>(const int n, const double* a, double* y) {
   vdSqrt(n, a, y);
+}
+
+template <>
+void caffe_sum<float>(const int n, const float* a, float* y) {
+  for (int i = 0; i < n; i++) {
+    y[0] += a[i];
+  }
+}
+
+template <>
+void caffe_sum<double>(const int n, const double* a, double* y) {
+  for (int i = 0; i < n; i++) {
+    y[0] += a[i];
+  }
 }
 
 template <>
