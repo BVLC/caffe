@@ -18,8 +18,7 @@ void SoftmaxLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   caffe_set(sum_multiplier_.count(), Dtype(1), multiplier_data);
   outer_num_ = bottom[0]->count(0, softmax_axis_);
   inner_num_ = bottom[0]->count(softmax_axis_ + 1);
-  vector<int> scale_dims = bottom[0]->shape();
-  scale_dims[softmax_axis_] = 1;
+  vector<int> scale_dims(1, inner_num_);
   scale_.Reshape(scale_dims);
 }
 
