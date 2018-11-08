@@ -1,0 +1,20 @@
+net: "models/intel_optimized_models/mlperf_2018/resnet50_4nodes_4s/train_val.prototxt"
+test_iter: 1000
+test_interval: 1251
+test_initialization: false
+display: 60
+base_lr: 0.4
+lr_policy: "multistep"
+stepvalue:37530 # 30 epochs
+stepvalue:75060 # 60 epochs
+stepvalue:100080 # 80 epochs
+gamma: 0.1
+max_iter: 81315 # 65 epochs
+warmup_iter: 5004 # 1281167 / 1024 * 4 epochs
+warmup_start_lr: 0.1
+momentum: 0.9
+weight_decay: 0.0001
+snapshot: 1251 # 1 epoch
+snapshot_prefix: "resnet50_4nodes_4s_run1"
+solver_mode: CPU
+test_offset: 0
