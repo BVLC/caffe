@@ -120,6 +120,10 @@ void SGDSolver<Dtype>::ApplyUpdate() {
     ComputeUpdateValue(param_id, rate);
   }
   this->net_->Update();
+
+  // Increment the internal iter_ counter -- its value should always indicate
+  // the number of times the weights have been updated.
+  ++this->iter_;
 }
 
 template <typename Dtype>
@@ -285,6 +289,8 @@ void SGDSolver<Dtype>::SnapshotSolverStateToBinaryProto(
 template <typename Dtype>
 void SGDSolver<Dtype>::SnapshotSolverStateToHDF5(
     const string& model_filename) {
+// This code is taken from https://github.com/sh1r0/caffe-android-lib
+#ifdef USE_HDF5
   string snapshot_filename =
       Solver<Dtype>::SnapshotFilename(".solverstate.h5");
   LOG(INFO) << "Snapshotting solver state to HDF5 file " << snapshot_filename;
@@ -306,6 +312,11 @@ void SGDSolver<Dtype>::SnapshotSolverStateToHDF5(
   }
   H5Gclose(history_hid);
   H5Fclose(file_hid);
+// This code is taken from https://github.com/sh1r0/caffe-android-lib
+#else
+  LOG(FATAL) << "SnapshotSolverStateToHDF5 requires hdf5;"
+             << " compile with USE_HDF5.";
+#endif  // USE_HDF5
 }
 
 template <typename Dtype>
@@ -330,6 +341,7 @@ void SGDSolver<Dtype>::RestoreSolverStateFromBinaryProto(
 
 template <typename Dtype>
 void SGDSolver<Dtype>::RestoreSolverStateFromHDF5(const string& state_file) {
+#ifdef USE_HDF5
   hid_t file_hid = H5Fopen(state_file.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
   CHECK_GE(file_hid, 0) << "Couldn't open solver state file " << state_file;
   this->iter_ = hdf5_load_int(file_hid, "iter");
@@ -351,6 +363,10 @@ void SGDSolver<Dtype>::RestoreSolverStateFromHDF5(const string& state_file) {
   }
   H5Gclose(history_hid);
   H5Fclose(file_hid);
+#else
+  LOG(FATAL) << "RestoreSolverStateFromHDF5 requires hdf5;"
+             << " compile with USE_HDF5.";
+#endif  // USE_HDF5
 }
 
 INSTANTIATE_CLASS(SGDSolver);
