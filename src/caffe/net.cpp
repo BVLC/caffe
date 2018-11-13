@@ -19,6 +19,7 @@
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/upgrade_proto.hpp"
 // TODO(chenxi)
+// just add some unusefull message here
 namespace caffe {
 
 template <typename Dtype>
