@@ -15,17 +15,17 @@ env:
     #   WITH_IO: true
     #   WITH_CUDA: false
     #   WITH_CUDNN: false
-    - BUILD_NAME="default-make"
+    # - BUILD_NAME="default-make"
 #   - BUILD_NAME="python3-make" WITH_PYTHON3=true
     - BUILD_NAME="no-io-make" WITH_IO=false
-    - BUILD_NAME="cuda-make" WITH_CUDA=true
-    - BUILD_NAME="cudnn-make" WITH_CUDA=true WITH_CUDNN=true
+    # - BUILD_NAME="cuda-make" WITH_CUDA=true
+    # - BUILD_NAME="cudnn-make" WITH_CUDA=true WITH_CUDNN=true
 
     - BUILD_NAME="default-cmake" WITH_CMAKE=true
     - BUILD_NAME="python3-cmake" WITH_CMAKE=true WITH_PYTHON3=true
     - BUILD_NAME="no-io-cmake" WITH_CMAKE=true WITH_IO=false
-    - BUILD_NAME="cuda-cmake" WITH_CMAKE=true WITH_CUDA=true
-    - BUILD_NAME="cudnn-cmake" WITH_CMAKE=true WITH_CUDA=true WITH_CUDNN=true
+    # - BUILD_NAME="cuda-cmake" WITH_CMAKE=true WITH_CUDA=true
+    # - BUILD_NAME="cudnn-cmake" WITH_CMAKE=true WITH_CUDA=true WITH_CUDNN=true
 
 cache:
   apt: true
@@ -38,7 +38,7 @@ before_install:
 install:
   - sudo -E ./scripts/travis/install-deps.sh
   - ./scripts/travis/setup-venv.sh ~/venv
-  - source ~/venv/bin/activate
+  - --no-install-recommendssource ~/venv/bin/activate
   - ./scripts/travis/install-python-deps.sh
 
 before_script:
@@ -64,4 +64,4 @@ notifications:
 #     channels:
 #       - "chat.freenode.net#caffe"
 #     template:
-#       - "%{repository}/%{branch} (%{commit} - %{author}): %{message}"
+#       - "%{repository}/%{:qwbranch} (%{commit} - %{author}): %{message}"
