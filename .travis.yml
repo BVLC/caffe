@@ -38,7 +38,7 @@ before_install:
 install:
   - sudo -E ./scripts/travis/install-deps.sh
   - ./scripts/travis/setup-venv.sh ~/venv
-  - source ~/venv/bin/activate
+  - --no-install-recommendssource ~/venv/bin/activate
   - ./scripts/travis/install-python-deps.sh
 
 before_script:
@@ -64,4 +64,4 @@ notifications:
 #     channels:
 #       - "chat.freenode.net#caffe"
 #     template:
-#       - "%{repository}/%{branch} (%{commit} - %{author}): %{message}"
+#       - "%{repository}/%{:qwbranch} (%{commit} - %{author}): %{message}"
