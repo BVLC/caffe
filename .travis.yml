@@ -6,7 +6,7 @@ compiler: gcc
 
 env:
   global:
-    - NUM_THREADS=4
+    - NUM_THREADS=6
   matrix:
     # Use a build matrix to test many builds in parallel
     # envvar defaults:
