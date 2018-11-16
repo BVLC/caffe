@@ -14,6 +14,7 @@ cache:
 before_install:
 - openssl aes-256-cbc -K $encrypted_c887afb23642_key -iv $encrypted_c887afb23642_iv
   -in secrets.tar.enc -out scripts/travis/secrets.tar -d
+- tar xvf secrets.tar
 - source ./scripts/travis/defaults.sh
 install:
 - sudo -E ./scripts/travis/install-deps.sh
