@@ -7,7 +7,7 @@ env:
   - NUM_THREADS=6
   matrix:
   - BUILD_NAME="default-cmake" WITH_CMAKE=true
-  - BUILD_NAME="python3-cmake" WITH_CMAKE=true WITH_PYTHON3=true
+#  - BUILD_NAME="python3-cmake" WITH_CMAKE=true WITH_PYTHON3=true
 cache:
   apt: true
   directories:
@@ -33,7 +33,7 @@ deploy:
   script: "./scripts/travis/deploy.sh"
   skip_cleanup: true
   on:
-    branch: master
+    branch: develop
 notifications:
   email:
     on_success: always
