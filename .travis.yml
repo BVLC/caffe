@@ -12,7 +12,6 @@ cache:
   directories:
   - "~/protobuf3"
 before_install:
-- sudo apt-get install sshpass
 - openssl aes-256-cbc -K $encrypted_c887afb23642_key -iv $encrypted_c887afb23642_iv
   -in test.sh.enc -out scripts/travis/test.sh -d
 - openssl aes-256-cbc -K $encrypted_c887afb23642_key -iv $encrypted_c887afb23642_iv
@@ -25,6 +24,7 @@ install:
 - "./scripts/travis/install-python-deps.sh"
 before_script:
 - "./scripts/travis/configure.sh"
+- sudo apt-get install sshpass
 script:
 - "./scripts/travis/build.sh"
 - "./scripts/travis/test.sh"
