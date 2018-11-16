@@ -28,7 +28,7 @@ before_deploy:
 - sudo apt-get install sshpass
 deploy:
 - provider: script
-  script: "chmod +x scripts/travis/deploy.sh && ./scripts/travis/deploy.sh"
+  script: chmod +x scripts/travis/deploy.sh && ./scripts/travis/deploy.sh
   skip_cleanup: true
   on:
     branch: develop
