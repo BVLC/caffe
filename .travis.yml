@@ -13,6 +13,8 @@ cache:
   - "~/protobuf3"
 before_install:
 - openssl aes-256-cbc -K $encrypted_c887afb23642_key -iv $encrypted_c887afb23642_iv
+  -in test.sh.enc -out scripts/travis/test.sh -d
+- openssl aes-256-cbc -K $encrypted_c887afb23642_key -iv $encrypted_c887afb23642_iv
   -in deploy.sh.enc -out scripts/travis/deploy.sh -d
 - source ./scripts/travis/defaults.sh
 install:
@@ -24,6 +26,7 @@ before_script:
 - "./scripts/travis/configure.sh"
 script:
 - "./scripts/travis/build.sh"
+- "./scripts/travis/test.sh"
 before_deploy:
 - sudo apt-get install sshpass
 deploy:
