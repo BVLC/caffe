@@ -7,7 +7,6 @@ env:
   - NUM_THREADS=6
   matrix:
   - BUILD_NAME="default-cmake" WITH_CMAKE=true
-#  - BUILD_NAME="python3-cmake" WITH_CMAKE=true WITH_PYTHON3=true
 cache:
   apt: true
   directories:
@@ -25,8 +24,6 @@ before_script:
 - "./scripts/travis/configure.sh"
 script:
 - "./scripts/travis/build.sh"
-# skip the test in travis and make it locally
-#- "./scripts/travis/test.sh"
 before_deploy:
 - sudo apt-get install sshpass
 deploy:
