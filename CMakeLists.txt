@@ -94,7 +94,7 @@ endif()
 add_subdirectory(src/caffe)
 #add_subdirectory(tools)
 #add_subdirectory(examples)
-#add_subdirectory(python)
+add_subdirectory(python)
 #add_subdirectory(matlab)
 #add_subdirectory(docs)
 
