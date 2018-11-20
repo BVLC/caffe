@@ -123,8 +123,8 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    scale_in: 18.1995803433
-    scale_out: 11.1108459641
+    scale_in: 16.3629863631
+    scale_out: 11.0183343057
     scale_params: 42.0692211633
     scale_params: 0.0
     scale_params: 0.0
@@ -227,8 +227,8 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    scale_in: 11.1108459641
-    scale_out: 2.99188791222
+    scale_in: 11.0183343057
+    scale_out: 2.81492000139
     scale_params: 62.2967965152
     scale_params: 340.009203057
     scale_params: 244.764655479
@@ -366,8 +366,8 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    scale_in: 2.99188791222
-    scale_out: 18.8665239088
+    scale_in: 2.81492000139
+    scale_out: 20.3329952882
     scale_params: 439.582352019
     scale_params: 60.1903245822
     scale_params: 83.5455955173
@@ -502,8 +502,8 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    scale_in: 18.8665239088
-    scale_out: 7.3125210462
+    scale_in: 20.3329952882
+    scale_out: 8.11085874067
     scale_params: 96.4670113878
     scale_params: 105.040459312
     scale_params: 145.78903343
@@ -704,8 +704,8 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    scale_in: 7.3125210462
-    scale_out: 9.48529430215
+    scale_in: 8.11085874067
+    scale_out: 8.87112080922
     scale_params: 90.7487428862
     scale_params: 158.827164186
     scale_params: 184.419026599
@@ -904,8 +904,8 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    scale_in: 9.48529430215
-    scale_out: 6.94529293891
+    scale_in: 8.87112080922
+    scale_out: 6.64312457387
     scale_params: 452.390858833
     scale_params: 405.671893974
     scale_params: 362.732861681
@@ -1107,8 +1107,8 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    scale_in: 6.94529293891
-    scale_out: 31.1033959569
+    scale_in: 6.64312457387
+    scale_out: 30.4137944462
     scale_params: 124.404236002
     scale_params: 153.723402458
     scale_params: 361.835854519
@@ -1307,8 +1307,8 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    scale_in: 31.1033959569
-    scale_out: 20.3665262471
+    scale_in: 30.4137944462
+    scale_out: 18.5620589902
     scale_params: 380.739712827
     scale_params: 473.192102044
     scale_params: 514.319143394
@@ -1637,8 +1637,8 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    scale_in: 20.3665262471
-    scale_out: 19.2426682474
+    scale_in: 18.5620589902
+    scale_out: 21.6248082011
     scale_params: 150.735510383
     scale_params: 99.049285552
     scale_params: 122.309771883
@@ -1965,8 +1965,8 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    scale_in: 19.2426682474
-    scale_out: 24.3586756171
+    scale_in: 21.6248082011
+    scale_out: 22.0816237647
     scale_params: 117.769234681
     scale_params: 248.940592792
     scale_params: 498.781943385
@@ -2296,8 +2296,8 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    scale_in: 24.3586756171
-    scale_out: 21.4319907586
+    scale_in: 22.0816237647
+    scale_out: 22.6878830616
     scale_params: 591.711436085
     scale_params: 452.804450038
     scale_params: 218.752813147
@@ -2624,8 +2624,8 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    scale_in: 21.4319907586
-    scale_out: 20.2237444349
+    scale_in: 22.6878830616
+    scale_out: 20.3544176256
     scale_params: 363.853652618
     scale_params: 180.594099311
     scale_params: 488.041045073
@@ -3210,8 +3210,8 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    scale_in: 20.2237444349
-    scale_out: 24.2006882985
+    scale_in: 20.3544176256
+    scale_out: 27.1497306299
     scale_params: 120.819441738
     scale_params: 283.288593717
     scale_params: 136.337804477
@@ -3794,8 +3794,8 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    scale_in: 24.2006882985
-    scale_out: 26.443396234
+    scale_in: 27.1497306299
+    scale_out: 25.6277540528
     scale_params: 396.036971642
     scale_params: 577.528519602
     scale_params: 714.287451475
@@ -4380,8 +4380,8 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    scale_in: 26.443396234
-    scale_out: 20.900680869
+    scale_in: 25.6277540528
+    scale_out: 19.4719487108
     scale_params: 458.376227929
     scale_params: 306.768493285
     scale_params: 300.723286508
@@ -4964,8 +4964,8 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    scale_in: 20.900680869
-    scale_out: 19.2998822199
+    scale_in: 19.4719487108
+    scale_out: 28.6338511023
     scale_params: 97.4303572814
     scale_params: 718.388589164
     scale_params: 439.239541293
@@ -5550,8 +5550,8 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    scale_in: 19.2998822199
-    scale_out: 31.3888673433
+    scale_in: 28.6338511023
+    scale_out: 31.8839781818
     scale_params: 222.692495588
     scale_params: 156.284762344
     scale_params: 158.938009962
@@ -6134,8 +6134,8 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    scale_in: 31.3888673433
-    scale_out: 12.3728072204
+    scale_in: 31.8839781818
+    scale_out: 14.715356973
     scale_params: 221.635065397
     scale_params: 1048.27214553
     scale_params: 434.104941553
@@ -6720,8 +6720,8 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    scale_in: 12.3728072204
-    scale_out: 29.8407049159
+    scale_in: 14.715356973
+    scale_out: 26.9842217461
     scale_params: 83.630270149
     scale_params: 222.000294235
     scale_params: 305.299631692
@@ -7304,8 +7304,8 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    scale_in: 29.8407049159
-    scale_out: 20.9318143514
+    scale_in: 26.9842217461
+    scale_out: 21.5972212606
     scale_params: 580.58155311
     scale_params: 213.486643273
     scale_params: 354.166094371
@@ -7890,8 +7890,8 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    scale_in: 20.9318143514
-    scale_out: 22.2470898642
+    scale_in: 21.5972212606
+    scale_out: 22.0371267076
     scale_params: 316.137978595
     scale_params: 497.317925169
     scale_params: 350.254714645
@@ -8474,8 +8474,8 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    scale_in: 22.2470898642
-    scale_out: 43.5443062043
+    scale_in: 22.0371267076
+    scale_out: 34.3504724372
     scale_params: 877.021417543
     scale_params: 2297.00871442
     scale_params: 404.76338444
@@ -9061,8 +9061,8 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    scale_in: 43.5443062043
-    scale_out: 23.476256768
+    scale_in: 34.3504724372
+    scale_out: 24.2417450691
     scale_params: 98.0879843847
     scale_params: 48.9490028603
     scale_params: 107.771918143
@@ -9645,8 +9645,8 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    scale_in: 23.476256768
-    scale_out: 31.786998084
+    scale_in: 24.2417450691
+    scale_out: 35.2398209635
     scale_params: 537.708009053
     scale_params: 666.963757998
     scale_params: 378.308927093
@@ -10743,8 +10743,8 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    scale_in: 31.786998084
-    scale_out: 14.710661434
+    scale_in: 35.2398209635
+    scale_out: 14.7019739536
     scale_params: 239.088170047
     scale_params: 290.498184681
     scale_params: 296.310479377
@@ -11839,8 +11839,8 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    scale_in: 14.710661434
-    scale_out: 10.004126865
+    scale_in: 14.7019739536
+    scale_out: 11.0559801648
     scale_params: 406.604586582
     scale_params: 492.239615802
     scale_params: 896.658092112
@@ -12935,8 +12935,8 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    scale_in: 10.004126865
-    scale_out: 46.1180604226
+    scale_in: 11.0559801648
+    scale_out: 52.2254057353
     scale_params: 858.395550877
     scale_params: 1030.42060506
     scale_params: 626.699329132
@@ -13265,8 +13265,8 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    scale_in: 46.1180604226
-    scale_out: 75.4528201809
+    scale_in: 52.2254057353
+    scale_out: 76.1881268169
     scale_params: 788.734180964
     scale_params: 1976.90908317
     scale_params: 1398.87500576
@@ -13849,8 +13849,8 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    scale_in: 75.4528201809
-    scale_out: 108.401902203
+    scale_in: 76.1881268169
+    scale_out: 90.8427433396
     scale_params: 909.051473761
     scale_params: 630.321714557
     scale_params: 1244.30241182
@@ -14051,8 +14051,8 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    scale_in: 108.401902203
-    scale_out: 79.6549028385
+    scale_in: 90.8427433396
+    scale_out: 65.7778143021
     scale_params: 573.440716537
     scale_params: 514.081074589
     scale_params: 674.295419112
@@ -14379,8 +14379,8 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    scale_in: 79.6549028385
-    scale_out: 118.865796029
+    scale_in: 65.7778143021
+    scale_out: 122.277858874
     scale_params: 2003.33843161
     scale_params: 1453.31353958
     scale_params: 778.296749809
@@ -14581,8 +14581,8 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    scale_in: 118.865796029
-    scale_out: 81.2545526295
+    scale_in: 122.277858874
+    scale_out: 78.8967340238
     scale_params: 566.496332852
     scale_params: 816.078866064
     scale_params: 763.692214005
@@ -14909,8 +14909,8 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    scale_in: 81.2545526295
-    scale_out: 122.925564448
+    scale_in: 78.8967340238
+    scale_out: 71.8783177979
     scale_params: 1218.4545423
     scale_params: 1160.65851361
     scale_params: 1511.43382868
@@ -15047,8 +15047,8 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 8
     bw_params: 8
-    scale_in: 122.925564448
-    scale_out: 61.6728323871
+    scale_in: 71.8783177979
+    scale_out: 37.2974508202
     scale_params: 182.802937192
     scale_params: 424.943159162
     scale_params: 455.110576456
@@ -15254,7 +15254,7 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 32
     bw_params: 8
-    scale_in: 43.5443062043
+    scale_in: 34.3504724372
     scale_out: 1.0
     scale_params: 208.038950726
     scale_params: 132.439600185
@@ -15319,7 +15319,7 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 32
     bw_params: 8
-    scale_in: 43.5443062043
+    scale_in: 34.3504724372
     scale_out: 1.0
     scale_params: 170.42409308
     scale_params: 36.6293474677
@@ -15453,7 +15453,7 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 32
     bw_params: 8
-    scale_in: 10.004126865
+    scale_in: 11.0559801648
     scale_out: 1.0
     scale_params: 203.896971813
     scale_params: 186.637345296
@@ -15530,7 +15530,7 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 32
     bw_params: 8
-    scale_in: 10.004126865
+    scale_in: 11.0559801648
     scale_out: 1.0
     scale_params: 182.71914736
     scale_params: 28.1624516652
@@ -15729,7 +15729,7 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 32
     bw_params: 8
-    scale_in: 75.4528201809
+    scale_in: 76.1881268169
     scale_out: 1.0
     scale_params: 277.951771789
     scale_params: 150.5504775
@@ -15806,7 +15806,7 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 32
     bw_params: 8
-    scale_in: 75.4528201809
+    scale_in: 76.1881268169
     scale_out: 1.0
     scale_params: 208.421917386
     scale_params: 37.625236051
@@ -16005,7 +16005,7 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 32
     bw_params: 8
-    scale_in: 79.6549028385
+    scale_in: 65.7778143021
     scale_out: 1.0
     scale_params: 396.499978878
     scale_params: 284.448993644
@@ -16082,7 +16082,7 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 32
     bw_params: 8
-    scale_in: 79.6549028385
+    scale_in: 65.7778143021
     scale_out: 1.0
     scale_params: 195.801013398
     scale_params: 34.8167821514
@@ -16281,7 +16281,7 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 32
     bw_params: 8
-    scale_in: 81.2545526295
+    scale_in: 78.8967340238
     scale_out: 1.0
     scale_params: 232.427685722
     scale_params: 228.63315322
@@ -16358,7 +16358,7 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 32
     bw_params: 8
-    scale_in: 81.2545526295
+    scale_in: 78.8967340238
     scale_out: 1.0
     scale_params: 237.135009066
     scale_params: 29.3873323395
@@ -16557,7 +16557,7 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 32
     bw_params: 8
-    scale_in: 61.6728323871
+    scale_in: 37.2974508202
     scale_out: 1.0
     scale_params: 262.461097438
     scale_params: 304.732962155
@@ -16634,7 +16634,7 @@ layer {
     bw_layer_in: 8
     bw_layer_out: 32
     bw_params: 8
-    scale_in: 61.6728323871
+    scale_in: 37.2974508202
     scale_out: 1.0
     scale_params: 92.4733600971
     scale_params: 70.2865788964
