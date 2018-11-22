@@ -50,14 +50,15 @@ MKLDNNMemoryDescriptorBase<Dtype>::MKLDNNMemoryDescriptorBase(shared_ptr<memory:
                                                             , std::vector<float> scale
                                                             , int mask
                                                             , bool is_sum
-                                                            , bool is_wino)
+                                                            , bool is_wino
+                                                            , bool is_weight)
                                     : name("MKLDNNMemoryDescriptorBase")
                                     , _reorder_usr2prv_pd(), _reorder_prv2usr_pd(), _reorder_extprv2prv_pd()
                                     ,_prv_memory(), _internal_ptr(NULL), _usr_memory(), _cpu_ptr(NULL)
                                     , _mkldnn_layer(NULL)
 {
     set_usr_memory_pd(usr_memory_pd, scale);
-    set_prv_memory_pd(prv_memory_pd, scale, mask, is_wino);
+    set_prv_memory_pd(prv_memory_pd, scale, mask, is_wino, is_weight);
     set_mkldnn_layer(mkldnn_layer);
     this->set_scale(scale);
     this->set_sum(is_sum);
@@ -80,7 +81,7 @@ void MKLDNNMemoryDescriptorBase<Dtype>::check_usr_with_prv_descriptors()
 }
 
 template <typename Dtype>
-void MKLDNNMemoryDescriptorBase<Dtype>::create_reorder_descriptors(std::vector<float> scale, int mask, std::vector<float> scale_ext, bool is_sum, bool is_wino)
+void MKLDNNMemoryDescriptorBase<Dtype>::create_reorder_descriptors(std::vector<float> scale, int mask, std::vector<float> scale_ext, bool is_sum, bool is_wino, bool is_weight)
 {
     CHECK(_usr_memory_pd);
     CHECK(_prv_memory_pd);
@@ -105,9 +106,10 @@ void MKLDNNMemoryDescriptorBase<Dtype>::create_reorder_descriptors(std::vector<f
         }
         attri.set_output_scales(mask, scales_p2u); 
         attri.set_int_output_round_mode(round_nearest);
-        if(!is_wino)
+        if(!is_wino && !is_weight){
             _reorder_prv2usr_pd = shared_ptr<reorder::primitive_desc>(
                     new reorder::primitive_desc(*_prv_memory_pd, *_usr_memory_pd, attri));
+        }
     }
     if ( _extprv_memory_pd && (*_prv_memory_pd != *_extprv_memory_pd || scale != scale_ext)) {
         if(is_sum == true && scale == scale_ext && _extprv_memory_pd->desc().data.data_type == memory::data_type::s8 && _prv_memory_pd->desc().data.data_type == memory::data_type::u8){
@@ -138,8 +140,9 @@ template <typename Dtype, bool is_diff>
                         , std::vector<float> scale
                         , int mask
                         , bool is_sum
-                        , bool is_wino)
-        : MKLDNNMemoryDescriptorBase<Dtype>(usr_memory_pd, prv_memory_pd, blob, mkldnn_layer, scale, mask, is_sum, is_wino)
+                        , bool is_wino
+                        , bool is_weight)
+        : MKLDNNMemoryDescriptorBase<Dtype>(usr_memory_pd, prv_memory_pd, blob, mkldnn_layer, scale, mask, is_sum, is_wino, is_weight)
 {
     const Dtype* prv_ptr = is_diff ?  blob->prv_diff() : blob->prv_data();
 
