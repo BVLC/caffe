@@ -10,7 +10,7 @@ void ConvolutionSaliencyLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bo
       const vector<Blob<Dtype>*>& top) {
   const Dtype* weight = this->blobs_[0]->gpu_data();
   for (int i = 0; i < bottom.size(); ++i) {
-    const Dtype* bottom_data = bottom[i]->cgpu_data();
+    const Dtype* bottom_data = bottom[i]->gpu_data();
     Dtype* top_data = top[i]->mutable_gpu_data();
     for (int n = 0; n < this->num_; ++n) {
       this->forward_gpu_gemm(bottom_data + n * this->bottom_dim_, weight,
@@ -78,7 +78,7 @@ void ConvolutionSaliencyLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& t
         filter_saliency_data = output_saliencies_filter_.mutable_gpu_data();    
         caffe_powx(filters, filter_saliency_data, (Dtype)2, filter_saliency_data);
         for (int i = 0; i < this->output_shape_[1]; ++i ) { 
-          *channel_saliency_data = caffe_gpu_asum(this->output_shape_[0], filter_saliency_data, this->output_shape_[1]); // functionally it does not matter if we use sum or asum; sum across batches
+          caffe_gpu_asum(this->output_shape_[0], filter_saliency_data, channel_saliency_data, this->output_shape_[1]); // functionally it does not matter if we use sum or asum; sum across batches
           filter_saliency_data += 1;
           ++channel_saliency_data;
         }
