@@ -472,6 +472,7 @@ void caffe_gpu_sqrt<double>(const int N, const double* a, double* y) {
 
 template <typename Dtype>
 __global__ void sum_kernel(const int n, const Dtype* a, Dtype* y) {
+  y[0] = (Dtype)0.0; 
   CUDA_KERNEL_LOOP(index, n) {
     y[0] += a[index];
   }
@@ -489,6 +490,28 @@ void caffe_gpu_sum<double>(const int N, const double* a, double* y) {
   // NOLINT_NEXT_LINE(whitespace/operators)
   sum_kernel<double><<<CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS>>>(
       N, a, y);
+}
+
+template <typename Dtype>
+__global__ void sum_kernel(const int n, const Dtype* a, Dtype* y, const int inc) {
+  y[0] = (Dtype)0.0; 
+  CUDA_KERNEL_LOOP(index, n) {
+    y[0] += *(a + (inc*index));
+  }
+}
+
+template <>
+void caffe_gpu_sum<float>(const int N, const float* a, float* y, const int inc) {
+  // NOLINT_NEXT_LINE(whitespace/operators)
+  sum_kernel<float><<<CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS>>>(
+      N, a, y, inc);
+}
+
+template <>
+void caffe_gpu_sum<double>(const int N, const double* a, double* y, const int inc) {
+  // NOLINT_NEXT_LINE(whitespace/operators)
+  sum_kernel<double><<<CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS>>>(
+      N, a, y, inc);
 }
 
 DEFINE_AND_INSTANTIATE_GPU_UNARY_FUNC(sign, y[index] = (Dtype(0) < x[index])
