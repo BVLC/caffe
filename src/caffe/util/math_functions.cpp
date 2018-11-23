@@ -258,6 +258,20 @@ void caffe_sum<double>(const int n, const double* a, double* y) {
 }
 
 template <>
+void caffe_sum<float>(const int n, const float* a, float* y, const int inc) {
+  for (int i = 0; i < n; i++) {
+    y[0] += *(a+(inc*i));
+  }
+}
+
+template <>
+void caffe_sum<double>(const int n, const double* a, double* y, const int inc) {
+  for (int i = 0; i < n; i++) {
+    y[0] += *(a+(inc*i));
+  }
+}
+
+template <>
 void caffe_exp<float>(const int n, const float* a, float* y) {
   vsExp(n, a, y);
 }
@@ -417,6 +431,16 @@ float caffe_cpu_asum<float>(const int n, const float* x) {
 template <>
 double caffe_cpu_asum<double>(const int n, const double* x) {
   return cblas_dasum(n, x, 1);
+}
+
+template <>
+float caffe_cpu_asum<float>(const int n, const float* x, const int inc) {
+  return cblas_sasum(n, x, inc);
+}
+
+template <>
+double caffe_cpu_asum<double>(const int n, const double* x, const int inc) {
+  return cblas_dasum(n, x, inc);
 }
 
 template <>

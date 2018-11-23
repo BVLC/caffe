@@ -58,6 +58,8 @@ void caffe_sqrt(const int N, const Dtype* a, Dtype* y);
 
 template <typename Dtype>
 void caffe_sum(const int N, const Dtype* a, Dtype* y);
+template <typename Dtype>
+void caffe_sum(const int N, const Dtype* a, Dtype* y, const int inc);
 
 template <typename Dtype>
 void caffe_add(const int N, const Dtype* a, const Dtype* b, Dtype* y);
@@ -117,6 +119,8 @@ Dtype caffe_cpu_strided_dot(const int n, const Dtype* x, const int incx,
 // Returns the sum of the absolute values of the elements of vector x
 template <typename Dtype>
 Dtype caffe_cpu_asum(const int n, const Dtype* x);
+template <typename Dtype>
+Dtype caffe_cpu_asum(const int n, const Dtype* x, const int inc);
 
 // the branchless, type-safe version from
 // http://stackoverflow.com/questions/1903954/is-there-a-standard-sign-function-signum-sgn-in-c-c
@@ -239,6 +243,9 @@ void caffe_gpu_sqrt(const int n, const Dtype* a, Dtype* y);
 template <typename Dtype>
 void caffe_gpu_sum(const int N, const Dtype* a, Dtype* y);
 
+template <typename Dtype>
+void caffe_gpu_sum(const int N, const Dtype* a, Dtype* y, const int inc);
+
 // caffe_gpu_rng_uniform with two arguments generates integers in the range
 // [0, UINT_MAX].
 void caffe_gpu_rng_uniform(const int n, unsigned int* r);
@@ -263,6 +270,8 @@ void caffe_gpu_dot(const int n, const Dtype* x, const Dtype* y, Dtype* out);
 
 template <typename Dtype>
 void caffe_gpu_asum(const int n, const Dtype* x, Dtype* y);
+template <typename Dtype>
+void caffe_gpu_asum(const int n, const Dtype* x, Dtype* y, const int inc);
 
 template<typename Dtype>
 void caffe_gpu_sign(const int n, const Dtype* x, Dtype* y);

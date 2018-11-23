@@ -11,6 +11,7 @@
 #include "caffe/layers/conv_layer.hpp"
 #include "caffe/layers/conv_masked_layer.hpp"
 #include "caffe/layers/conv_quantized_layer.hpp"
+#include "caffe/layers/conv_saliency_layer.hpp"
 #include "caffe/layers/deconv_layer.hpp"
 #include "caffe/layers/lrn_layer.hpp"
 #include "caffe/layers/pooling_layer.hpp"
@@ -157,6 +158,46 @@ shared_ptr<Layer<Dtype> > GetConvolutionQuantizedLayer(const LayerParameter& par
 }
 
 REGISTER_LAYER_CREATOR(ConvolutionQuantized, GetConvolutionQuantizedLayer);
+
+//Get convolution with saliencies layer according to engine.
+template <typename Dtype>
+shared_ptr<Layer<Dtype> > GetConvolutionSaliencyLayer(const LayerParameter& param) {
+  ConvolutionParameter conv_param = param.convolution_param();
+  ConvolutionSaliencyParameter conv_clustered_param = param.convolution_saliency_param();
+  ConvolutionParameter_Engine engine = conv_param.engine();
+#ifdef USE_CUDNN
+  bool use_dilation = false;
+  for (int i = 0; i < conv_param.dilation_size(); ++i) {
+    if (conv_param.dilation(i) > 1) {
+      use_dilation = true;
+    }
+  }
+#endif
+  if (engine == ConvolutionParameter_Engine_DEFAULT) {
+    engine = ConvolutionParameter_Engine_CAFFE;
+#ifdef USE_CUDNN
+    if (!use_dilation) {
+      engine = ConvolutionParameter_Engine_CUDNN;
+    }
+#endif
+  }
+  if (engine == ConvolutionParameter_Engine_CAFFE) {
+    return shared_ptr<Layer<Dtype> >(new ConvolutionSaliencyLayer<Dtype>(param));
+#ifdef USE_CUDNN
+  } else if (engine == ConvolutionParameter_Engine_CUDNN) {
+    if (use_dilation) {
+      LOG(FATAL) << "CuDNN doesn't support the dilated convolution at Layer "
+                 << param.name();
+    }
+    return shared_ptr<Layer<Dtype> >(new CuDNNConvolutionLayer<Dtype>(param));
+#endif
+  } else {
+    LOG(FATAL) << "Layer " << param.name() << " has unknown engine.";
+    throw;  // Avoids missing return warning
+  }
+}
+
+REGISTER_LAYER_CREATOR(ConvolutionSaliency, GetConvolutionSaliencyLayer);
 
 // Get deconvolution layer according to engine.
 template <typename Dtype>
