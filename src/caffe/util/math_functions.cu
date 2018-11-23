@@ -147,6 +147,16 @@ void caffe_gpu_asum<double>(const int n, const double* x, double* y) {
 }
 
 template <>
+void caffe_gpu_asum<float>(const int n, const float* x, float* y, const int inc) {
+  CUBLAS_CHECK(cublasSasum(Caffe::cublas_handle(), n, x, inc, y));
+}
+
+template <>
+void caffe_gpu_asum<double>(const int n, const double* x, double* y, const int inc) {
+  CUBLAS_CHECK(cublasDasum(Caffe::cublas_handle(), n, x, inc, y));
+}
+
+template <>
 void caffe_gpu_scale<float>(const int n, const float alpha, const float *x,
                             float* y) {
   CUBLAS_CHECK(cublasScopy(Caffe::cublas_handle(), n, x, 1, y, 1));
