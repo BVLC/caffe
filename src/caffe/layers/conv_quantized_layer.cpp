@@ -30,7 +30,7 @@ void ConvolutionQuantizedLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& botto
     weights_quantized_shape_.push_back(this->blobs_[2]->count());
     weights_quantized_.Reshape(weights_quantized_shape_);
     output_saliencies_.Reshape(this->output_shape_);
-    output_saliencies_channel_.Reshape(this->output_shape_[0]);
+    output_saliencies_channel_.Reshape({this->output_shape_[0]});
     centroids_shape_.clear();
     centroids_shape_.push_back(this->layer_param_.convolution_quantized_param().centroids());
     centroids_.Reshape(centroids_shape_);
