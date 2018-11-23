@@ -472,10 +472,11 @@ void caffe_gpu_sqrt<double>(const int N, const double* a, double* y) {
 
 template <typename Dtype>
 __global__ void sum_kernel(const int n, const Dtype* a, Dtype* y) {
-  y[0] = (Dtype)0.0; 
+  Dtype accum = y[0]; 
   CUDA_KERNEL_LOOP(index, n) {
-    y[0] += a[index];
+    accum += a[index];
   }
+  y[0] = accum;
 }
 
 template <>
@@ -494,10 +495,11 @@ void caffe_gpu_sum<double>(const int N, const double* a, double* y) {
 
 template <typename Dtype>
 __global__ void sum_kernel(const int n, const Dtype* a, Dtype* y, const int inc) {
-  y[0] = (Dtype)0.0; 
+  Dtype accum = y[0]; 
   CUDA_KERNEL_LOOP(index, n) {
-    y[0] += *(a + (inc*index));
+    accum += *(a + (inc*index));
   }
+  y[0] = accum;
 }
 
 template <>
