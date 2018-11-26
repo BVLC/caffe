@@ -47,6 +47,11 @@
 # PyCharm files
 .idea
 
+# Visual Studio files
+Prebuild.tlog
+Prebuild.log
+Prebuild.Build.CppClean.log
+
 # Visual Studio Code files
 .vscode
 

@@ -16,6 +16,8 @@
 #include <utility>  // pair
 #include <vector>
 
+#include "compat/compat.h"
+
 #include "caffe/util/device_alternate.hpp"
 
 // Convert macro to string

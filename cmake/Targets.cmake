@@ -61,6 +61,10 @@ function(caffe_pickup_caffe_sources root)
   caffe_source_group("Source\\Cuda"   GLOB "${root}/src/caffe/layers/*.cu")
   caffe_source_group("Source\\Cuda"   GLOB "${root}/src/caffe/util/*.cu")
   caffe_source_group("Source\\Proto"  GLOB "${root}/src/caffe/proto/*.proto")
+  
+  # source groups for cross compatibility
+  caffe_source_group("Compat"         GLOB "${root}/include/compat/*.h*")
+  caffe_source_group("Compat"         GLOB "${root}/src/compat/*.cpp")
 
   # source groups for test target
   caffe_source_group("Include"      GLOB "${root}/include/caffe/test/test_*.h*")
@@ -74,6 +78,12 @@ function(caffe_pickup_caffe_sources root)
   file(GLOB_RECURSE srcs ${root}/src/caffe/*.cpp)
   list(REMOVE_ITEM  hdrs ${test_hdrs})
   list(REMOVE_ITEM  srcs ${test_srcs})
+  
+  # compat files
+  file(GLOB_RECURSE compat_hdrs ${root}/include/compat/*.h*)
+  file(GLOB_RECURSE compat_srcs ${root}/src/compat/*.cpp)
+  list(APPEND hdrs ${compat_hdrs})
+  list(APPEND srcs ${compat_srcs})
 
   # adding headers to make the visible in some IDEs (Qt, VS, Xcode)
   list(APPEND srcs ${hdrs} ${PROJECT_BINARY_DIR}/caffe_config.h)
