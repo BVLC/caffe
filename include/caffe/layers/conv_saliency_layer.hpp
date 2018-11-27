@@ -85,6 +85,11 @@ class ConvolutionSaliencyLayer : public BaseConvolutionLayer<Dtype> {
   // Helpers for channel saliency if all is selected 
   Blob<Dtype> output_saliencies_points_;
   Blob<Dtype> output_saliencies_filter_;
+  
+  void compute_fisher_cpu(const Dtype * act_data, const Dtype * act_diff, Dtype * fisher_info);
+  void compute_fisher_gpu(const Dtype * act_data, const Dtype * act_diff, Dtype * fisher_info);
+  void compute_taylor_cpu(const Dtype * act_data, const Dtype * act_diff, Dtype * taylor);
+  void compute_taylor_gpu(const Dtype * act_data, const Dtype * act_diff, Dtype * taylor);
 };
 
 }  // namespace caffe
