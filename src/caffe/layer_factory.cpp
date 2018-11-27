@@ -163,7 +163,7 @@ REGISTER_LAYER_CREATOR(ConvolutionQuantized, GetConvolutionQuantizedLayer);
 template <typename Dtype>
 shared_ptr<Layer<Dtype> > GetConvolutionSaliencyLayer(const LayerParameter& param) {
   ConvolutionParameter conv_param = param.convolution_param();
-  ConvolutionSaliencyParameter conv_clustered_param = param.convolution_saliency_param();
+  ConvolutionSaliencyParameter conv_saliency_param = param.convolution_saliency_param();
   ConvolutionParameter_Engine engine = conv_param.engine();
 #ifdef USE_CUDNN
   bool use_dilation = false;
