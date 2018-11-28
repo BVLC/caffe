@@ -76,6 +76,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
   CHECK(datum.encoded()) << "For box data, datum must be encoded";
   CHECK(!(param_.force_color() && param_.force_gray()))
     << "cannot set both force_color and force_gray";
+#ifdef USE_OPENCV
   cv::Mat cv_img;
   if (param_.force_color() || param_.force_gray()) {
   // If force_color then decode in color otherwise decode in gray.
@@ -150,6 +151,9 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
   cv::resize(cv_rand_img, cv_rand_img, cv::Size(img_width, img_height));
   // Transform the cv::image into blob.
   Transform(cv_rand_img, transformed_blob);
+#else
+  LOG(FATAL) << "Image transformer requires OpenCV; compile with USE_OPENCV.";
+#endif
   return;
 }
 
