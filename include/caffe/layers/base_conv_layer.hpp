@@ -221,12 +221,12 @@ class BaseConvolutionLayer : public Layer<Dtype> {
   }
 #endif
 
-  int num_kernels_im2col_;
-  int num_kernels_col2im_;
-  int conv_out_channels_;
-  int conv_in_channels_;
-  int conv_out_spatial_dim_;
-  int kernel_dim_;
+  size_t num_kernels_im2col_;
+  size_t num_kernels_col2im_;
+  size_t conv_out_channels_;
+  size_t conv_in_channels_;
+  size_t conv_out_spatial_dim_;
+  size_t kernel_dim_;
   size_t col_offset_;
   size_t output_offset_;
 
