@@ -350,7 +350,9 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
       }
       std::vector<float> scales(count);
       float scale;
+      #ifdef _OPENMP
       #pragma omp parallel for if (count > 1)
+      #endif
       for(int i=0; i<count; i++){
         if (this->scale_params_[i] == 0.0)
             scale = this->scale_out_[0] * coeff1;
@@ -505,7 +507,9 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
             reorder_mask = (g!= 1) ? (1<<1)+(1<<0) : 1<<0;
         }
         std::vector<float> scale_weight(count);
+        #ifdef _OPENMP
         #pragma omp parallel for if (count > 1)
+        #endif
         for(int i=0; i<count; i++){
           scale_weight[i] = this->scale_params_[i];
         }
@@ -528,7 +532,9 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
                 reorder_mask = 1<<0;
             }
             std::vector<float> scale_bias(count);
+            #ifdef _OPENMP
             #pragma omp parallel for if (count > 1)
+            #endif
             for(int i=0; i<count; i++){
               if (this->scale_params_[i] == 0.0)
                   scale_bias[i] = 1.0;

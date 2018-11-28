@@ -90,7 +90,9 @@ void MKLDNNMemoryDescriptorBase<Dtype>::create_reorder_descriptors(std::vector<f
     int count = scale.size();
     if ( *_usr_memory_pd != *_prv_memory_pd) {
         std::vector<float> scales_u2p(count);
+        #ifdef _OPENMP
         #pragma omp parallel for if (count > 1)
+        #endif
         for(int i=0; i < count; i++){
             scales_u2p[i] = scale[i];
         }
@@ -100,7 +102,9 @@ void MKLDNNMemoryDescriptorBase<Dtype>::create_reorder_descriptors(std::vector<f
                 new reorder::primitive_desc(*_usr_memory_pd, *_prv_memory_pd, attri));
 
         std::vector<float> scales_p2u(count);
+        #ifdef _OPENMP
         #pragma omp parallel for if (count > 1)
+        #endif
         for(int i=0; i < count; i++){
             scales_p2u[i] = (1. / scale[i]);
         }
@@ -120,7 +124,9 @@ void MKLDNNMemoryDescriptorBase<Dtype>::create_reorder_descriptors(std::vector<f
         }else{
             std::vector<float> scales_e2p(count);
             float shift_scale;
+            #ifdef _OPENMP
             #pragma omp parallel for if (count > 1)
+            #endif
             for(int i=0; i < count; i++){
                 shift_scale = scale[i] / scale_ext[i]; //fp32->int8 blob_prv_mkldnn_mem_descr->get_scale() will always be 0 ?
                 scales_e2p[i] = shift_scale;

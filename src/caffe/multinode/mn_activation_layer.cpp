@@ -206,7 +206,9 @@ void MnActivationLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 template <typename Dtype>
 void MnActivationLayer<Dtype>::Unpack(const Dtype *src, int N, int C, int HW, int numC, Dtype *dst) {
   int dstC = numC * C;
+#ifdef _OPENMP
 #pragma omp parallel for collapse (2)
+#endif
   for (int iN = 0; iN < N; iN++) {
     for (int iC = 0; iC < dstC; iC++) {
       int iSrc =  iC / C;
@@ -223,7 +225,9 @@ template <typename Dtype>
 void MnActivationLayer<Dtype>::Pack(const Dtype *src, Dtype *dst, int N, int C, int HW, int numC) {
   int srcC = numC * C;
   for (int iDst = 0; iDst < numC; iDst++) {
+#ifdef _OPENMP
 #pragma omp parallel for collapse (2)
+#endif
     for (int iN = 0; iN < N; iN++) {
       for (int iC = 0; iC < C; iC++) {
         int iSrcC = iDst * C + iC;
