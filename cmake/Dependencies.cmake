@@ -30,14 +30,18 @@ if(USE_OPENMP)
 endif()
 
 # ---[ Google-glog
-include("cmake/External/glog.cmake")
-list(APPEND Caffe_INCLUDE_DIRS PUBLIC ${GLOG_INCLUDE_DIRS})
-list(APPEND Caffe_LINKER_LIBS PUBLIC ${GLOG_LIBRARIES})
+if (USE_EXTERNAL_GLOG)
+  include("cmake/External/glog.cmake")
+  list(APPEND Caffe_INCLUDE_DIRS PUBLIC ${GLOG_INCLUDE_DIRS})
+  list(APPEND Caffe_LINKER_LIBS PUBLIC ${GLOG_LIBRARIES})
+endif()
 
 # ---[ Google-gflags
-include("cmake/External/gflags.cmake")
-list(APPEND Caffe_INCLUDE_DIRS PUBLIC ${GFLAGS_INCLUDE_DIRS})
-list(APPEND Caffe_LINKER_LIBS PUBLIC ${GFLAGS_LIBRARIES})
+if (USE_EXTERNAL_GFLAGS)
+  include("cmake/External/gflags.cmake")
+  list(APPEND Caffe_INCLUDE_DIRS PUBLIC ${GFLAGS_INCLUDE_DIRS})
+  list(APPEND Caffe_LINKER_LIBS PUBLIC ${GFLAGS_LIBRARIES})
+endif()
 
 # ---[ Google-protobuf
 include(cmake/ProtoBuf.cmake)

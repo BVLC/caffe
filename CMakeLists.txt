@@ -41,6 +41,8 @@ caffe_option(USE_LEVELDB "Build with levelDB" ON)
 caffe_option(USE_LMDB "Build with lmdb" ON)
 caffe_option(ALLOW_LMDB_NOLOCK "Allow MDB_NOLOCK when reading LMDB files (only if necessary)" OFF)
 caffe_option(USE_OPENMP "Link with OpenMP (when your BLAS wants OpenMP and you get linker errors)" OFF)
+caffe_option(USE_EXTERNAL_GLOG "Import glog from /cmake/External (may cause trouble in some configurations)" ON)
+caffe_option(USE_EXTERNAL_GFLAGS "Import gflags from /cmake/External (may cause trouble in some configurations)" ON)
 
 # This code is taken from https://github.com/sh1r0/caffe-android-lib
 caffe_option(USE_HDF5 "Build with hdf5" ON)
