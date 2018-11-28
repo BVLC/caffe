@@ -25,6 +25,8 @@ void ConvolutionSaliencyLayer<Dtype>::compute_output_shape() {
 template <typename Dtype>
 void ConvolutionSaliencyLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
+  BaseConvolutionLayer<Dtype>::Reshape(bottom, top);
+  this->compute_output_shape();
   if (this->mask_term_) {
     if (this->layer_param_.convolution_saliency_param().saliency()==2) {
         output_saliencies_channel_.Reshape({this->max_saliency, this->output_shape_[1]});
@@ -35,7 +37,6 @@ void ConvolutionSaliencyLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom
     output_saliencies_points_.Reshape(this->output_shape_); //shape nchw
     output_saliencies_filter_.Reshape({this->output_shape_[0], this->output_shape_[1]}); //shape nc
   }
-  BaseConvolutionLayer<Dtype>::Reshape(bottom, top);
 }
 
 template <typename Dtype>
