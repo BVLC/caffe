@@ -25,22 +25,24 @@ void ConvolutionSaliencyLayer<Dtype>::compute_output_shape() {
 template <typename Dtype>
 void ConvolutionSaliencyLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
+  BaseConvolutionLayer<Dtype>::Reshape(bottom, top);
+  this->compute_output_shape();
   if (this->mask_term_) {
     if (this->layer_param_.convolution_saliency_param().saliency()==2) {
-        output_saliencies_channel_.Reshape({this->max_saliency, this->output_shape_[1]});
+        output_saliencies_channel_.Reshape({this->max_saliency, top[0]->shape()[1]});
     }
     else {
-        output_saliencies_channel_.Reshape({1, this->output_shape_[1]});
+        output_saliencies_channel_.Reshape({1, top[0]->shape()[1]});
     }
-    output_saliencies_points_.Reshape(this->output_shape_); //shape nchw
-    output_saliencies_filter_.Reshape({this->output_shape_[0], this->output_shape_[1]}); //shape nc
+    output_saliencies_points_.Reshape(top[0]->shape()); //shape nchw
+    output_saliencies_filter_.Reshape({top[0]->shape()[0], top[0]->shape()[1]}); //shape nc
   }
-  BaseConvolutionLayer<Dtype>::Reshape(bottom, top);
 }
 
 template <typename Dtype>
 void ConvolutionSaliencyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
+  
   const Dtype* weight = this->blobs_[0]->cpu_data();
   for (int i = 0; i < bottom.size(); ++i) {
     const Dtype* bottom_data = bottom[i]->cpu_data();
@@ -118,7 +120,7 @@ void ConvolutionSaliencyLayer<Dtype>::compute_fisher_cpu(const Dtype *  act_data
   
   for (int i = 0; i < this->output_saliencies_points_.count(0, 1); ++i) {
     caffe_sum(output_saliencies_points_.count(2,3), output_saliency_data, filter_saliency_data);
-    output_saliency_data += output_saliencies_channel_.count(2,3);
+    output_saliency_data += output_saliencies_points_.count(2,3);
     ++filter_saliency_data;
   }
   filter_saliency_data = output_saliencies_filter_.mutable_cpu_data();    
@@ -134,7 +136,6 @@ void ConvolutionSaliencyLayer<Dtype>::compute_fisher_cpu(const Dtype *  act_data
   fisher_info = original_channel;
   
   caffe_scal(this->output_shape_[1], 1/(Dtype)(this->output_shape_[0]*2), fisher_info);
-  
 }
 
 template <typename Dtype>
@@ -147,7 +148,7 @@ void ConvolutionSaliencyLayer<Dtype>::compute_taylor_cpu(const Dtype *  act_data
   
   for (int i = 0; i < this->output_saliencies_points_.count(0, 1); ++i) {
     *filter_saliency_data = caffe_cpu_asum(output_saliencies_points_.count(2,3), output_saliency_data);
-    output_saliency_data += output_saliencies_channel_.count(2,3);
+    output_saliency_data += output_saliencies_points_.count(2,3);
     ++filter_saliency_data;
   }
   filter_saliency_data = output_saliencies_filter_.mutable_cpu_data();    
