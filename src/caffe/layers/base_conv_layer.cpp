@@ -14,6 +14,7 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   // Configure the kernel size, padding, stride, and inputs.
   ConvolutionParameter conv_param = this->layer_param_.convolution_param();
   ConvolutionMaskedParameter conv_masked_param = this->layer_param_.convolution_masked_param();
+  ConvolutionSaliencyParameter conv_saliency_param = this->layer_param_.convolution_saliency_param();
   this->force_nd_im2col_ = conv_param.force_nd_im2col();
   this->channel_axis_ = bottom[0]->CanonicalAxisIndex(conv_param.axis());
   const int first_spatial_axis = this->channel_axis_ + 1;
@@ -133,6 +134,7 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   // - blobs_[0] holds the filter weights
   // - blobs_[1] holds the biases (optional)
   // - blobs_[2] holds the masks (optional)
+  // - blobs_[3] holds the saliencies (optional)
   vector<int> weight_shape(2);
   weight_shape[0] = this->conv_out_channels_;
   weight_shape[1] = this->conv_in_channels_ / this->group_;
@@ -142,6 +144,32 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   this->bias_term_ = this->layer_param_.convolution_param().bias_term();
   vector<int> bias_shape(this->bias_term_, this->num_output_);
   this->mask_term_ = this->layer_param_.convolution_masked_param().mask_term();
+  this->saliency_term_ = this->layer_param_.convolution_saliency_param().saliency_term();
+  int saliency_shape_0_ = 0;
+  if (this->saliency_term_) {
+    if ( this->layer_param_.convolution_saliency_param().saliency() == caffe::ConvolutionSaliencyParameter::ALL  ){
+      saliency_shape_0_ = 2;
+    }
+    else {
+      saliency_shape_0_ = 1;
+    }
+  }
+  vector<int> saliency_shape = {saliency_shape_0_, this->conv_out_channels_};
+  int total_blobs = 1;
+  this->mask_pos_ = 1;
+  this->saliency_pos_ = 1;
+  if (this->bias_term_) {
+    total_blobs++;
+    this->mask_pos_++;
+    this->saliency_pos_++;
+  }
+  if (this->mask_term_) {
+    total_blobs++;
+    this->saliency_pos_++;
+  }
+  if (this->saliency_term_) {
+    total_blobs++;
+  }
   if (this->blobs_.size() > 0) {
     CHECK_EQ(1 + this->bias_term_, this->blobs_.size())
         << "Incorrect number of weight blobs.";
@@ -158,19 +186,21 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
           << this->blobs_[1]->shape_string();
     }
     LOG(INFO) << "Skipping parameter initialization";
-    if (this->output_shape_ != this->blobs_[2]->shape()) {
-      Blob<Dtype> output_shaped_blob(this->output_shape_);
+    if (this->mask_term_ && weight_shape != this->blobs_[this->mask_pos_]->shape()) {
+      Blob<Dtype> mask_shaped_blob(weight_shape);
       LOG(FATAL) << "Incorrect mask shape: expected shape "
-          << output_shaped_blob.shape_string() << "; instead, shape was "
-          << this->blobs_[2]->shape_string();
+          << mask_shaped_blob.shape_string() << "; instead, shape was "
+          << this->blobs_[this->mask_pos_]->shape_string();
+    }
+    LOG(INFO) << "Skipping parameter initialization";
+    if (this->saliency_term_ && saliency_shape != this->blobs_[this->saliency_pos_]->shape()) {
+      Blob<Dtype> saliency_shaped_blob(saliency_shape);
+      LOG(FATAL) << "Incorrect saliency shape: expected shape "
+          << saliency_shaped_blob.shape_string() << "; instead, shape was "
+          << this->blobs_[this->saliency_pos_]->shape_string();
     }
   } else {
-    if (this->bias_term_ && this->mask_term_) {
-      this->blobs_.resize(3);
-    } else if (this->bias_term_ || this->mask_term_) {
-      this->blobs_.resize(2);
-    } else {
-      this->blobs_.resize(1);
+      this->blobs_.resize(total_blobs);
     }
     // Initialize and fill the weights:
     // output channels x input channels per-group x kernel height x kernel width
@@ -187,11 +217,17 @@ void BaseConvolutionLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     }
     // If necessary, initialize and fill the mask.
     if (this->mask_term_) {
-      this->blobs_[2].reset(new Blob<Dtype>(weight_shape));
+      this->blobs_[this->mask_pos_].reset(new Blob<Dtype>(weight_shape));
       shared_ptr<Filler<Dtype> > mask_filler(GetFiller<Dtype>(
           this->layer_param_.convolution_masked_param().mask_filler()));
-      mask_filler->Fill(this->blobs_[2].get());
+      mask_filler->Fill(this->blobs_[this->mask_pos_].get());
     }
+    if (this->saliency_term_) {
+      this->blobs_[this->saliency_pos_].reset(new Blob<Dtype>(saliency_shape));
+      Blob<Dtype> * saliency_blob = this->blobs_[this->saliency_pos_].get();
+      for (int i=0; i<saliency_blob->count(); ++i) {
+        saliency_blob->mutable_cpu_data()[i] = (Dtype)0.0;
+      }
   }
   this->kernel_dim_ = this->blobs_[0]->count(1);
   this->weight_offset_ = this->conv_out_channels_ * this->kernel_dim_ / this->group_;
