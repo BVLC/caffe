@@ -133,7 +133,7 @@ void ConvolutionSaliencyLayer<Dtype>::compute_fisher_cpu(const Dtype *  act_data
   }
   fisher_info = original_channel;
   
-  caffe_scal(this->num_output_, 1/(Dtype)(this->num_output_*2), fisher_info);
+  caffe_scal(this->num_output_, 1/(Dtype)(this->num_*2), fisher_info);
 }
 
 template <typename Dtype>

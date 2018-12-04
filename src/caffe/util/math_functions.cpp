@@ -245,6 +245,7 @@ void caffe_sqrt<double>(const int n, const double* a, double* y) {
 
 template <>
 void caffe_sum<float>(const int n, const float* a, float* y) {
+  y[0] = (float) 0;
   for (int i = 0; i < n; i++) {
     y[0] += a[i];
   }
@@ -252,6 +253,7 @@ void caffe_sum<float>(const int n, const float* a, float* y) {
 
 template <>
 void caffe_sum<double>(const int n, const double* a, double* y) {
+  y[0] = (double) 0;
   for (int i = 0; i < n; i++) {
     y[0] += a[i];
   }
@@ -259,6 +261,7 @@ void caffe_sum<double>(const int n, const double* a, double* y) {
 
 template <>
 void caffe_sum<float>(const int n, const float* a, float* y, const int inc) {
+  y[0] = (float) 0;
   for (int i = 0; i < n; i++) {
     y[0] += *(a+(inc*i));
   }
@@ -266,6 +269,7 @@ void caffe_sum<float>(const int n, const float* a, float* y, const int inc) {
 
 template <>
 void caffe_sum<double>(const int n, const double* a, double* y, const int inc) {
+  y[0] = (double) 0;
   for (int i = 0; i < n; i++) {
     y[0] += *(a+(inc*i));
   }
