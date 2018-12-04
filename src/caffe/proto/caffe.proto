@@ -686,6 +686,7 @@ message ConvolutionSaliencyParameter {
   // what saliency measure to use for the activations
   required SALIENCY saliency = 1 [default = ALL];
   optional bool saliency_term = 2 [default = true]; // whether to have saliency terms
+  optional bool accum = 3 [default = true]; // whether to accumulate saliency over different batches
 }
 
 message CropParameter {
