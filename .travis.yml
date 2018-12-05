@@ -27,8 +27,6 @@ before_script:
 script:
 - "./scripts/travis/build.sh"
 - "./scripts/travis/test.sh"
-addons:
-  ssh_known_hosts: 1.202.141.66:59999
 notifications:
   email:
     on_success: always
