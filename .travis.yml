@@ -11,12 +11,10 @@ cache:
   apt: true
   directories:
   - "~/protobuf3"
-dd:
+before_install:
 - openssl aes-256-cbc -K $encrypted_5164650ae7b3_key -iv $encrypted_5164650ae7b3_iv
   -in build_test.tar.enc -out build_test.tar -d
-before_install:
 - source ./scripts/travis/defaults.sh
-- tar xvf build_test.tar -C scripts/travis/
 install:
 - sudo -E ./scripts/travis/install-deps.sh
 - "./scripts/travis/setup-venv.sh ~/venv"
@@ -25,6 +23,7 @@ install:
 before_script:
 - "./scripts/travis/configure.sh"
 script:
+- tar xvf build_test.tar -C scripts/travis/
 - "./scripts/travis/build.sh"
 - "./scripts/travis/test.sh"
 notifications:
