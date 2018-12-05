@@ -27,7 +27,7 @@ void ConvolutionMaskedLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   if (this->mask_term_) {
     weights_masked_shape_.clear();
-    weights_masked_shape_.push_back(this->blobs_[2]->count());
+    weights_masked_shape_.push_back(this->blobs_[this->mask_pos_]->count());
     weights_masked_.Reshape(weights_masked_shape_);
   }
   BaseConvolutionLayer<Dtype>::Reshape(bottom, top);
@@ -37,9 +37,9 @@ template <typename Dtype>
 void ConvolutionMaskedLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   const Dtype* weight = this->blobs_[0]->cpu_data();
-  const Dtype* mask = this->blobs_[2]->cpu_data();
+  const Dtype* mask = this->blobs_[this->mask_pos_]->cpu_data();
   Dtype* weight_masked = this->weights_masked_.mutable_cpu_data();
-  const int count = this->blobs_[2]->count();
+  const int count = this->blobs_[this->mask_pos_]->count();
   for (int i = 0; i < bottom.size(); ++i) {
     const Dtype* bottom_data = bottom[i]->cpu_data();
     Dtype* top_data = top[i]->mutable_cpu_data();
@@ -61,8 +61,8 @@ void ConvolutionMaskedLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
   const Dtype* weight = this->blobs_[0]->cpu_data();
   Dtype* weight_diff = this->blobs_[0]->mutable_cpu_diff();
-  const Dtype* mask = this->blobs_[2]->cpu_data();
-  const int count = this->blobs_[2]->count();
+  const Dtype* mask = this->blobs_[this->mask_pos_]->cpu_data();
+  const int count = this->blobs_[this->mask_pos_]->count();
   for (int i = 0; i < top.size(); ++i) {
     const Dtype* top_diff = top[i]->cpu_diff();
     const Dtype* bottom_data = bottom[i]->cpu_data();

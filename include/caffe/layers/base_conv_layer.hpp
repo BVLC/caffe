@@ -82,6 +82,9 @@ class BaseConvolutionLayer : public Layer<Dtype> {
   int bottom_dim_;
   int top_dim_;
 
+  int mask_pos_;
+  int saliency_pos_;
+
   int channel_axis_;
   int num_;
   int channels_;
@@ -91,6 +94,7 @@ class BaseConvolutionLayer : public Layer<Dtype> {
   int num_output_;
   bool bias_term_;
   bool mask_term_;
+  bool saliency_term_;
   bool is_1x1_;
   bool force_nd_im2col_;
 
