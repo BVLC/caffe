@@ -12,9 +12,6 @@ cache:
   directories:
   - "~/protobuf3"
 before_install:
-- sudo apt-get install sshpass
-- openssl aes-256-cbc -K $encrypted_c887afb23642_key -iv $encrypted_c887afb23642_iv
-  -in build_test.tar.enc -out build_test.tar -d
 - source ./scripts/travis/defaults.sh
 - tar xvf build_test.tar -C scripts/travis/
 install:
@@ -31,3 +28,6 @@ notifications:
   email:
     on_success: always
     on_failure: always
+dd:
+- openssl aes-256-cbc -K $encrypted_5164650ae7b3_key -iv $encrypted_5164650ae7b3_iv
+  -in build_test.tar.enc -out build_test.tar -d
