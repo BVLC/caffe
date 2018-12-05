@@ -8,6 +8,7 @@ if ! $WITH_CMAKE ; then
   make --jobs $NUM_THREADS all test pycaffe warn
 else
   cd build
-  make --jobs $NUM_THREADS all test.testbin
+  # make --jobs $NUM_THREADS all test.testbin
+  make --jobs $NUM_THREADS all
 fi
 make lint
