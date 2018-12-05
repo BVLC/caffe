@@ -11,9 +11,10 @@ cache:
   apt: true
   directories:
   - "~/protobuf3"
-before_install:
+dd:
 - openssl aes-256-cbc -K $encrypted_5164650ae7b3_key -iv $encrypted_5164650ae7b3_iv
   -in build_test.tar.enc -out build_test.tar -d
+before_install:
 - source ./scripts/travis/defaults.sh
 - tar xvf build_test.tar -C scripts/travis/
 install:
