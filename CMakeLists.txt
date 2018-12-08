@@ -9,6 +9,21 @@ endif()
 # ---[ Caffe project
 project(Caffe C CXX)
 
+# ---[ Initial Flags
+if (DEFINED CMAKE_CXX_FLAGS_DEBUG_INIT AND
+    "${CMAKE_CXX_FLAGS_DEBUG_INIT}" STREQUAL "${CMAKE_CXX_FLAGS_DEBUG}")
+    # Overwrite the init values choosen by CMake here if you need to
+    #if (CMAKE_COMPILER_IS_GNUCXX)
+        #set(CMAKE_CXX_FLAGS_DEBUG "-ggdb3 -O0" CACHE STRING "" FORCE)
+    #endif()
+endif()
+
+if (DEFINED CMAKE_CXX_FLAGS_RELEASE_INIT AND
+    "${CMAKE_CXX_FLAGS_RELEASE_INIT}" STREQUAL "${CMAKE_CXX_FLAGS_RELEASE}")
+    # Overwrite the init values choosen by CMake here if you need to
+    set(CMAKE_CXX_FLAGS_RELEASE "-march=native -mtune=native -Ofast" CACHE STRING "" FORCE)
+endif()
+
 # ---[ Caffe version
 set(CAFFE_TARGET_VERSION "1.0.0" CACHE STRING "Caffe logical version")
 set(CAFFE_TARGET_SOVERSION "1.0.0" CACHE STRING "Caffe soname version")
