@@ -13,7 +13,11 @@ project(Caffe C CXX)
 set(CMAKE_CXX_FLAGS_RELEASE "-march=native -mtune=native -Ofast" CACHE STRING "" FORCE)
 
 # ---[ install target
-set(CMAKE_INSTALL_DEFAULT_COMPONENT_NAME caffe pycaffe CACHE STRING "" FORCE)
+if(BUILD_python)
+  set(CMAKE_INSTALL_DEFAULT_COMPONENT_NAME caffe pycaffe CACHE STRING "" FORCE)
+else()
+  set(CMAKE_INSTALL_DEFAULT_COMPONENT_NAME caffe CACHE STRING "" FORCE)
+endif()
 
 # ---[ Caffe version
 set(CAFFE_TARGET_VERSION "1.0.0" CACHE STRING "Caffe logical version")
