@@ -118,7 +118,7 @@ void ConvolutionQuantizedLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& 
         caffe_mul(outputs, bottom_data, bottom_diff, saliency_data);
         caffe_powx(outputs, saliency_data, (Dtype)2, saliency_data);
 
-        Dtype* centroids = this->centroids_.mutable_cpu_data();
+        //Dtype* centroids = this->centroids_.mutable_cpu_data();
         // TODO: update the centroids here with the saliency data
       } break;
 
@@ -127,7 +127,7 @@ void ConvolutionQuantizedLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& 
         caffe_mul(outputs, bottom_data, bottom_diff, saliency_data);
         caffe_abs(outputs, saliency_data, saliency_data);
 
-        Dtype* centroids = this->centroids_.mutable_cpu_data();
+        //Dtype* centroids = this->centroids_.mutable_cpu_data();
         // TODO: update the centroids here with the saliency data
       } break;
 
@@ -135,7 +135,7 @@ void ConvolutionQuantizedLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& 
         Dtype* saliency_data = this->output_saliencies_.mutable_cpu_data();
         caffe_copy(outputs, bottom_data, saliency_data);
 
-        Dtype* centroids = this->centroids_.mutable_cpu_data();
+        //Dtype* centroids = this->centroids_.mutable_cpu_data();
         // TODO: update the centroids here with the saliency data
       } break;
 
@@ -143,7 +143,7 @@ void ConvolutionQuantizedLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& 
         Dtype* saliency_data = this->output_saliencies_.mutable_cpu_data();
         caffe_copy(outputs, bottom_data, saliency_data);
 
-        Dtype* centroids = this->centroids_.mutable_cpu_data();
+        //Dtype* centroids = this->centroids_.mutable_cpu_data();
         // TODO: update the centroids here with the saliency data
       } break;
     }
