@@ -421,6 +421,7 @@ shared_ptr<Layer<Dtype> > GetPythonLayer(const LayerParameter& param) {
   } catch (...) {
     PyErr_Print();
     boost::python::handle_exception();
+    return shared_ptr<PythonLayer<Dtype> >();
   }
 }
 
