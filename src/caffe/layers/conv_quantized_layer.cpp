@@ -48,8 +48,8 @@ void ConvolutionQuantizedLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& b
     Dtype* top_data = top[i]->mutable_cpu_data();
     switch (this->layer_param_.convolution_quantized_param().method()) {
       case (0): {
-        unsigned no_centroids = this->layer_param_.convolution_quantized_param().centroids();
-        const Dtype* centroids = this->centroids_.cpu_data();
+        //unsigned no_centroids = this->layer_param_.convolution_quantized_param().centroids();
+        //const Dtype* centroids = this->centroids_.cpu_data();
         //TODO: call kmeans here! results in weight_quantized, and delete the line below
         caffe_copy(count, weight, weight_quantized);
       } break;
