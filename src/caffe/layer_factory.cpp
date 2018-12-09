@@ -419,6 +419,7 @@ shared_ptr<Layer<Dtype> > GetPythonLayer(const LayerParameter& param) {
     bp::object layer = module.attr(param.python_param().layer().c_str())(param);
     return bp::extract<shared_ptr<PythonLayer<Dtype> > >(layer)();
   } catch (...) {
+    PyErr_Print();
     boost::python::handle_exception();
   }
 }
