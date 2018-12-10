@@ -1,0 +1,50 @@
+
+
+SET(CBLAS_INCLUDE_SEARCH_PATHS
+  /usr/include
+  /usr/local/include
+)
+
+SET(CBLAS_LIB_SEARCH_PATHS
+  /lib/
+  /lib64/
+  /usr/lib
+  /usr/lib64
+  /usr/local/lib
+  /usr/local/lib64
+)
+
+FIND_PATH(CBLAS_INCLUDE_DIR NAMES cblas.h PATHS ${CBLAS_INCLUDE_SEARCH_PATHS})
+FIND_LIBRARY(CBLAS_LIB NAMES cblas PATHS ${CBLAS_LIB_SEARCH_PATHS})
+
+SET(CBLAS_FOUND ON)
+
+#    Check include files
+IF(NOT CBLAS_INCLUDE_DIR)
+    SET(CBLAS_FOUND OFF)
+    MESSAGE(STATUS "Could not find CBLAS include. Turning CBLAS_FOUND off")
+ENDIF()
+
+#    Check libraries
+IF(NOT CBLAS_LIB)
+    SET(CBLAS_FOUND OFF)
+    MESSAGE(STATUS "Could not find CBLAS lib. Turning CBLAS_FOUND off")
+ENDIF()
+
+IF (CBLAS_FOUND)
+  IF (NOT CBLAS_FIND_QUIETLY)
+    MESSAGE(STATUS "Found CBLAS libraries: ${CBLAS_LIB}")
+    MESSAGE(STATUS "Found CBLAS include: ${CBLAS_INCLUDE_DIR}")
+  ENDIF (NOT CBLAS_FIND_QUIETLY)
+ELSE (CBLAS_FOUND)
+  IF (CBLAS_FIND_REQUIRED)
+    MESSAGE(FATAL_ERROR "Could not find CBLAS")
+  ENDIF (CBLAS_FIND_REQUIRED)
+ENDIF (CBLAS_FOUND)
+
+MARK_AS_ADVANCED(
+    CBLAS_INCLUDE_DIR
+    CBLAS_LIB
+    CBLAS
+)
+
