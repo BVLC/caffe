@@ -10,21 +10,34 @@ foreach(source ${srcs})
     set(name ${name}.bin)
   endif()
 
-  # target
-  add_executable(${name} ${source})
-  target_link_libraries(${name} ${Caffe_LINK})
-  caffe_default_properties(${name})
-
-  # set back RUNTIME_OUTPUT_DIRECTORY
-  caffe_set_runtime_directory(${name} "${PROJECT_BINARY_DIR}/tools")
-  caffe_set_solution_folder(${name} tools)
-
-  # restore output name without suffix
   if(name MATCHES "caffe.bin")
+    # target
+    add_executable(${name} ${source})
+    target_link_libraries(${name} ${Caffe_LINK})
+    caffe_default_properties(${name})
+
+    # set back RUNTIME_OUTPUT_DIRECTORY
+    caffe_set_runtime_directory(${name} "${PROJECT_BINARY_DIR}/tools")
+    caffe_set_solution_folder(${name} tools)
+
+    # restore output name without suffix
     set_target_properties(${name} PROPERTIES OUTPUT_NAME caffe)
+
+    # Install
+    install(TARGETS ${name} DESTINATION ${CMAKE_INSTALL_BINDIR})
+  else()
+    if(BUILD_tools)
+      # target
+      add_executable(${name} ${source})
+      target_link_libraries(${name} ${Caffe_LINK})
+      caffe_default_properties(${name})
+
+      # set back RUNTIME_OUTPUT_DIRECTORY
+      caffe_set_runtime_directory(${name} "${PROJECT_BINARY_DIR}/tools")
+      caffe_set_solution_folder(${name} tools)
+
+      # Install
+      install(TARGETS ${name} DESTINATION ${CMAKE_INSTALL_BINDIR})
+    endif()
   endif()
-
-  # Install
-  install(TARGETS ${name} DESTINATION ${CMAKE_INSTALL_BINDIR})
-
 endforeach(source)

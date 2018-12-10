@@ -204,22 +204,32 @@ void caffe_round<double>(const int n, const double* a, double* y) {
 template <>
 void caffe_and<float>(const int n, const std::bitset<8*sizeof(float)> m,
   const float* a, float* y) {
-  float temp;
+  union float_bits {
+    float f;
+    unsigned long u;
+  };
+  float_bits temp;
+
   for (int i = 0; i < n; i++) {
-    temp = a[i];
-    *((unsigned*)&temp) = m.to_ulong() & *((unsigned*)&temp);
-    y[i] = temp;
+    temp.f = a[i];
+    temp.u = m.to_ulong() & temp.u;
+    y[i] = temp.f;
   }
 }
 
 template <>
 void caffe_and<double>(const int n, const std::bitset<8*sizeof(double)> m,
   const double* a, double* y) {
-  double temp;
+  union double_bits {
+    double f;
+    unsigned long long u;
+  };
+  double_bits temp;
+
   for (int i = 0; i < n; i++) {
-    temp = a[i];
-    *((unsigned long long*)&temp) = m.to_ullong() & *((unsigned long long*)&temp);
-    y[i] = temp;
+    temp.f = a[i];
+    temp.u = m.to_ullong() & temp.u;
+    y[i] = temp.f;
   }
 }
 
