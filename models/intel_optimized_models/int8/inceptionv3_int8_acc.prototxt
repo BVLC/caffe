@@ -1,23 +1,33 @@
 name: "InceptionV3"
-
 layer {
   name: "data"
-  type: "DummyData"
+  type: "Data"
   top: "data"
-  dummy_data_param {
-    data_filler {
-      type: "constant"
-      value: 0.01
-    }
-    shape {
-      dim: 64
-      dim: 3
-      dim: 299
-      dim: 299
+  top: "label"
+  include {
+    phase: TEST
+  }
+  transform_param {
+    mirror: false
+    crop_size: 299
+    mean_value: 104.0
+    mean_value: 117.0
+    mean_value: 123.0
+    random_resize_param {
+      min_size: 320
+      max_size: 320
+      resize_param {
+        interp_mode: CUBIC
+      }
     }
   }
+  data_param {
+    source: "/lustre/dataset/lmdb/imagenet/lmdb_raw_compressed/ilsvrc12_val_lmdb"
+    batch_size: 50
+    backend: LMDB
+    shuffle: false
+  }
 }
-
 layer {
   name: "conv_conv2d"
   type: "Convolution"
@@ -21552,5 +21562,28 @@ layer {
       type: "constant"
       value: 0.0
     }
+  }
+}
+layer {
+  name: "acc/top-1"
+  type: "Accuracy"
+  bottom: "fc1"
+  bottom: "label"
+  top: "acc/top-1"
+  include {
+    phase: TEST
+  }
+}
+layer {
+  name: "acc/top-5"
+  type: "Accuracy"
+  bottom: "fc1"
+  bottom: "label"
+  top: "acc/top-5"
+  include {
+    phase: TEST
+  }
+  accuracy_param {
+    top_k: 5
   }
 }

@@ -45,6 +45,7 @@ import caffe
 from caffe.proto import caffe_pb2
 import google.protobuf.text_format as txtf
 import sampling
+import numpy as np
 
 int8_layers = ["Convolution", "ReLU", "Split", "Concat", "Pooling", "Eltwise"]
 
@@ -88,7 +89,7 @@ def get_input_layers(l, net, end):
     return top_layers
 
 
-def get_input_convolutions(l, net, end, interesting_layers):
+def get_input_convolutions(l, net, end, interesting_layers, uninteresting_layers=[]):
     all_input_layers = []
     input_layers = get_input_layers(l, net, end)
     while True:
@@ -106,9 +107,12 @@ def get_input_convolutions(l, net, end, interesting_layers):
                     all_input_layers.append(lp)
                 continue
 
-            new_input_layers = get_input_layers(net.layer[lp[0]], net, lp[0])
-            input_layers.remove(lp)
-            input_layers.extend(new_input_layers)
+            if lp[2] not in uninteresting_layers:
+                new_input_layers = get_input_layers(net.layer[lp[0]], net, lp[0])
+                input_layers.remove(lp)
+                input_layers.extend(new_input_layers)
+            else:
+                input_layers.remove(lp)
 
     return all_input_layers
 
@@ -228,20 +232,22 @@ def transform_convolutions(model_path, compiled_model_path, top_blobs_map, botto
         conv_input_u8 = is_convolution_input_u8(l, compiled_net, index_in_compiled_net, ["Convolution"], convs_output_with_relu) # FIXME: extended_convs_output_with_relu
         for si in range(0, len(new_net.layer[index].quantization_param.scale_in)):
             if conv_input_u8:  # u8
-                if first_conv: # FIXME: remove the condition
+                if first_conv:
                     new_net.layer[index].quantization_param.scale_in[si] = s8_max / new_net.layer[index].quantization_param.scale_in[si]
-#                    new_net.layer[index].quantization_param.negative = True
+                    new_net.layer[index].quantization_param.is_negative_input = True
                     first_conv = False
                 else:
                     new_net.layer[index].quantization_param.scale_in[si] = u8_max / new_net.layer[index].quantization_param.scale_in[si]
-                    #new_net.layer[index].quantization_param.ClearField('min_in')
             else:
                 new_net.layer[index].quantization_param.scale_in[si] = s8_max / new_net.layer[index].quantization_param.scale_in[si]
-#                new_net.layer[index].quantization_param.negative = True
+                new_net.layer[index].quantization_param.is_negative_input = True
 
         for si in range(0, len(new_net.layer[index].quantization_param.scale_params)):
             if not isclose(new_net.layer[index].quantization_param.scale_params[si], 0.0):
-                new_net.layer[index].quantization_param.scale_params[si] = s8_max / new_net.layer[index].quantization_param.scale_params[si]
+                new_scale_param = s8_max / new_net.layer[index].quantization_param.scale_params[si]
+                if np.isinf(new_scale_param):
+                    new_scale_param = 0.0
+                new_net.layer[index].quantization_param.scale_params[si] = new_scale_param
             else:
                 new_net.layer[index].quantization_param.scale_params[si] = 0.0
 
@@ -259,7 +265,8 @@ def transform_convolutions(model_path, compiled_model_path, top_blobs_map, botto
             for (l, index) in concat_layers:
                 index_in_compiled_net = find_index_by_name(l.name, compiled_concat_layers)
                 assert(index_in_compiled_net >= 0)
-                conv_inputs = get_input_convolutions(l, compiled_net, index_in_compiled_net, ["Convolution"])
+                conv_inputs = get_input_convolutions(l, compiled_net, index_in_compiled_net, ["Convolution"], ["Concat"])
+                # TODO: support resonable cross-levels concat scale unify
                 min_concat_scale = sys.float_info.max
                 concat_input_indexes = []
                 for conv_input in conv_inputs:
@@ -577,7 +584,7 @@ if __name__ == '__main__':
     if params.calibration_algos != 'DIRECT' and params.calibration_algos != "KL" and params.calibration_algos != "MAXP":
         user_calibration_algos = 'DIRECT'
     else:
-        user_calibration_alogs = params.calibration_algos
+        user_calibration_algos = params.calibration_algos
 
     if params.conv_algo != False and params.conv_algo != True:
         user_conv_algo = False
@@ -627,7 +634,7 @@ if __name__ == '__main__':
 
     quantized_prototxt = model.rsplit('.')[0] + '_quantized.prototxt'
     print 'Sampling...'
-    (top_blobs_map, bottom_blobs_map) = generate_sample(model, user_input_weights, quantized_prototxt, user_scaling_mode, user_calibration_alogs, user_conv_algo, user_sampling_iteration, user_enable_1st_conv)
+    (top_blobs_map, bottom_blobs_map) = generate_sample(model, user_input_weights, quantized_prototxt, user_scaling_mode, user_calibration_algos, user_conv_algo, user_sampling_iteration, user_enable_1st_conv)
     print 'Sampling done'
     top_1 = None
     if not params.quantize_model:

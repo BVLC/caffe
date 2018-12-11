@@ -1,5 +1,7 @@
 import os
 import sys
+sys.path.insert(0,"python")
+import caffe
 from caffe.proto import caffe_pb2
 import google.protobuf.text_format as txtf
 

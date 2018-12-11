@@ -258,9 +258,15 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
 
     // ---- Initialize memory descriptors (fromat = any) to create convolution descriptor -------------
     memory::data_type mpcsn = memory::data_type::f32;
-    memory::data_type bottom_dt = this->need_quantize_ ? memory::data_type::u8 : memory::data_type::f32;
-    memory::data_type top_dt = memory::data_type::f32;
+    memory::data_type bottom_dt = memory::data_type::f32;
+    if (this->need_quantize_) {
+      if (this->layer_param_.quantization_param().is_negative_input())
+        bottom_dt = memory::data_type::s8;
+      else
+        bottom_dt = memory::data_type::u8;
+    }
 
+    memory::data_type top_dt = memory::data_type::f32;
     if (this->need_quantize_) {
       if (this->bw_layer_out_ == 8) {
         if (relu) {
@@ -344,7 +350,9 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
       }
       std::vector<float> scales(count);
       float scale;
+      #ifdef _OPENMP
       #pragma omp parallel for if (count > 1)
+      #endif
       for(int i=0; i<count; i++){
         if (this->scale_params_[i] == 0.0)
             scale = this->scale_out_[0] * coeff1;
@@ -489,7 +497,7 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
     fwd_top_data->name = "fwd_top_data      @ " + this->layer_param_.name();
     fwd_top_data_memory = fwd_top_data->create_output_memory();
 
-    bool is_wino = conv_algorithm == algorithm::convolution_winograd ? true : false; 
+    bool is_wino = (prv_fwd_weights_data_memory_pd->desc().data.format == memory::format::wino_fmt); 
     if (fwd_weights_data == NULL) {
       if (this->need_quantize_){
         int count = 1; //single channel
@@ -499,11 +507,13 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
             reorder_mask = (g!= 1) ? (1<<1)+(1<<0) : 1<<0;
         }
         std::vector<float> scale_weight(count);
+        #ifdef _OPENMP
         #pragma omp parallel for if (count > 1)
+        #endif
         for(int i=0; i<count; i++){
           scale_weight[i] = this->scale_params_[i];
         }
-        fwd_weights_data.reset(new MKLDNNData<Dtype>(usr_weights_data_memory_pd, prv_fwd_weights_data_memory_pd, this->blobs_[0].get(), this, scale_weight, reorder_mask));
+        fwd_weights_data.reset(new MKLDNNData<Dtype>(usr_weights_data_memory_pd, prv_fwd_weights_data_memory_pd, this->blobs_[0].get(), this, scale_weight, reorder_mask, false, false, true));
       } else{
         fwd_weights_data.reset(new MKLDNNData<Dtype>(usr_weights_data_memory_pd, prv_fwd_weights_data_memory_pd, this->blobs_[0].get(), this, {1.}, 0,  is_sum, is_wino));
       }
@@ -522,7 +532,9 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
                 reorder_mask = 1<<0;
             }
             std::vector<float> scale_bias(count);
+            #ifdef _OPENMP
             #pragma omp parallel for if (count > 1)
+            #endif
             for(int i=0; i<count; i++){
               if (this->scale_params_[i] == 0.0)
                   scale_bias[i] = 1.0;

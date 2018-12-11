@@ -76,6 +76,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
   CHECK(datum.encoded()) << "For box data, datum must be encoded";
   CHECK(!(param_.force_color() && param_.force_gray()))
     << "cannot set both force_color and force_gray";
+#ifdef USE_OPENCV
   cv::Mat cv_img;
   if (param_.force_color() || param_.force_gray()) {
   // If force_color then decode in color otherwise decode in gray.
@@ -150,6 +151,9 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
   cv::resize(cv_rand_img, cv_rand_img, cv::Size(img_width, img_height));
   // Transform the cv::image into blob.
   Transform(cv_rand_img, transformed_blob);
+#else
+  LOG(FATAL) << "Image transformer requires OpenCV; compile with USE_OPENCV.";
+#endif
   return;
 }
 
@@ -213,7 +217,9 @@ void DataTransformer<Dtype>::Transform(const Datum& datum, Dtype* transformed_da
     mean = data_mean_.mutable_cpu_data();
   }
   if (has_mean_values) {
+   #ifdef _OPENMP
    #pragma omp critical
+   #endif
     {
       CHECK(mean_values_.size() == 1 || mean_values_.size() == datum_channels) <<
        "Specify either 1 mean_value or as many as channels: " << datum_channels;
@@ -413,7 +419,9 @@ void DataTransformer<Dtype>::Transform(const Datum& datum_in,
     mean = data_mean_.mutable_cpu_data();
   }
   if (has_mean_values) {
+   #ifdef _OPENMP
    #pragma omp critical
+   #endif
     {
       CHECK(mean_values_.size() == 1 || mean_values_.size() == datum_channels) <<
        "Specify either 1 mean_value or as many as channels: " << datum_channels;
@@ -1019,7 +1027,9 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img_in,
     mean = data_mean_.mutable_cpu_data();
   }
   if (has_mean_values) {
+   #ifdef _OPENMP
    #pragma omp critical
+   #endif
     {
       CHECK(mean_values_.size() == 1 || mean_values_.size() == img_channels) <<
           "Specify either 1 mean_value or as many as channels: " << img_channels;
@@ -1122,7 +1132,9 @@ void DataTransformer<Dtype>::TransformInv(const Dtype* data, cv::Mat* cv_img,
     mean = data_mean_.mutable_cpu_data();
   }
   if (has_mean_values) {
+   #ifdef _OPENMP
    #pragma omp critical
+   #endif
     {
       CHECK(mean_values_.size() == 1 || mean_values_.size() == channels) <<
           "Specify either 1 mean_value or as many as channels: " << channels;
@@ -1257,7 +1269,9 @@ void DataTransformer<Dtype>::ExpandImage(const cv::Mat& img,
     }
   }
   if (has_mean_values) {
+   #ifdef _OPENMP
    #pragma omp critical
+   #endif
     {
       CHECK(mean_values_.size() == 1 || mean_values_.size() == img_channels) <<
           "Specify either 1 mean_value or as many as channels: " << img_channels;

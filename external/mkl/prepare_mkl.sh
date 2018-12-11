@@ -34,8 +34,8 @@
 # SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.  
+# 
 FindLibrary()
 {
 # Find all the instances of the MKL libraries present in Caffe
@@ -74,11 +74,11 @@ echo $VERSION_LINE  # Return Version Line
 # MKL
 DST=`dirname $0`
 OMP=0 
-VERSION_MATCH=20180710
-ARCHIVE_BASENAME=mklml_lnx_2019.0.20180710.tgz
+VERSION_MATCH=20180928
+ARCHIVE_BASENAME=mklml_lnx_2019.0.1.20180928.tgz
 MKL_CONTENT_DIR=`echo $ARCHIVE_BASENAME | rev | cut -d "." -f 2- | rev`
 
-MKLURL="https://github.com/intel/mkl-dnn/releases/download/v0.16/$ARCHIVE_BASENAME"
+MKLURL="https://github.com/intel/mkl-dnn/releases/download/v0.17-rc/$ARCHIVE_BASENAME"
 # there are diffrent MKL lib to be used for GCC and for ICC
 reg='^[0-9]+$'
 VERSION_LINE=`GetVersionName $MKLROOT`

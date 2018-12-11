@@ -707,6 +707,7 @@ message QuantizationParameter{
   repeated float scale_in = 20;
   repeated float scale_out = 21;
   repeated float scale_params = 22;
+  optional bool is_negative_input = 23 [default = false];
 }
 
 message MnParamGradCompressParameter {

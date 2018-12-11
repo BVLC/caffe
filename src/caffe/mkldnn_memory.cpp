@@ -50,14 +50,15 @@ MKLDNNMemoryDescriptorBase<Dtype>::MKLDNNMemoryDescriptorBase(shared_ptr<memory:
                                                             , std::vector<float> scale
                                                             , int mask
                                                             , bool is_sum
-                                                            , bool is_wino)
+                                                            , bool is_wino
+                                                            , bool is_weight)
                                     : name("MKLDNNMemoryDescriptorBase")
                                     , _reorder_usr2prv_pd(), _reorder_prv2usr_pd(), _reorder_extprv2prv_pd()
                                     ,_prv_memory(), _internal_ptr(NULL), _usr_memory(), _cpu_ptr(NULL)
                                     , _mkldnn_layer(NULL)
 {
     set_usr_memory_pd(usr_memory_pd, scale);
-    set_prv_memory_pd(prv_memory_pd, scale, mask, is_wino);
+    set_prv_memory_pd(prv_memory_pd, scale, mask, is_wino, is_weight);
     set_mkldnn_layer(mkldnn_layer);
     this->set_scale(scale);
     this->set_sum(is_sum);
@@ -80,7 +81,7 @@ void MKLDNNMemoryDescriptorBase<Dtype>::check_usr_with_prv_descriptors()
 }
 
 template <typename Dtype>
-void MKLDNNMemoryDescriptorBase<Dtype>::create_reorder_descriptors(std::vector<float> scale, int mask, std::vector<float> scale_ext, bool is_sum, bool is_wino)
+void MKLDNNMemoryDescriptorBase<Dtype>::create_reorder_descriptors(std::vector<float> scale, int mask, std::vector<float> scale_ext, bool is_sum, bool is_wino, bool is_weight)
 {
     CHECK(_usr_memory_pd);
     CHECK(_prv_memory_pd);
@@ -89,7 +90,9 @@ void MKLDNNMemoryDescriptorBase<Dtype>::create_reorder_descriptors(std::vector<f
     int count = scale.size();
     if ( *_usr_memory_pd != *_prv_memory_pd) {
         std::vector<float> scales_u2p(count);
+        #ifdef _OPENMP
         #pragma omp parallel for if (count > 1)
+        #endif
         for(int i=0; i < count; i++){
             scales_u2p[i] = scale[i];
         }
@@ -99,15 +102,18 @@ void MKLDNNMemoryDescriptorBase<Dtype>::create_reorder_descriptors(std::vector<f
                 new reorder::primitive_desc(*_usr_memory_pd, *_prv_memory_pd, attri));
 
         std::vector<float> scales_p2u(count);
+        #ifdef _OPENMP
         #pragma omp parallel for if (count > 1)
+        #endif
         for(int i=0; i < count; i++){
             scales_p2u[i] = (1. / scale[i]);
         }
         attri.set_output_scales(mask, scales_p2u); 
         attri.set_int_output_round_mode(round_nearest);
-        if(!is_wino)
+        if(!is_wino && !is_weight){
             _reorder_prv2usr_pd = shared_ptr<reorder::primitive_desc>(
                     new reorder::primitive_desc(*_prv_memory_pd, *_usr_memory_pd, attri));
+        }
     }
     if ( _extprv_memory_pd && (*_prv_memory_pd != *_extprv_memory_pd || scale != scale_ext)) {
         if(is_sum == true && scale == scale_ext && _extprv_memory_pd->desc().data.data_type == memory::data_type::s8 && _prv_memory_pd->desc().data.data_type == memory::data_type::u8){
@@ -118,7 +124,9 @@ void MKLDNNMemoryDescriptorBase<Dtype>::create_reorder_descriptors(std::vector<f
         }else{
             std::vector<float> scales_e2p(count);
             float shift_scale;
+            #ifdef _OPENMP
             #pragma omp parallel for if (count > 1)
+            #endif
             for(int i=0; i < count; i++){
                 shift_scale = scale[i] / scale_ext[i]; //fp32->int8 blob_prv_mkldnn_mem_descr->get_scale() will always be 0 ?
                 scales_e2p[i] = shift_scale;
@@ -138,8 +146,9 @@ template <typename Dtype, bool is_diff>
                         , std::vector<float> scale
                         , int mask
                         , bool is_sum
-                        , bool is_wino)
-        : MKLDNNMemoryDescriptorBase<Dtype>(usr_memory_pd, prv_memory_pd, blob, mkldnn_layer, scale, mask, is_sum, is_wino)
+                        , bool is_wino
+                        , bool is_weight)
+        : MKLDNNMemoryDescriptorBase<Dtype>(usr_memory_pd, prv_memory_pd, blob, mkldnn_layer, scale, mask, is_sum, is_wino, is_weight)
 {
     const Dtype* prv_ptr = is_diff ?  blob->prv_diff() : blob->prv_data();
 
@@ -153,7 +162,13 @@ template <typename Dtype, bool is_diff>
 #ifdef DEBUG
             LOG(INFO) << "Formats of blob-prv-memory-pd and this-prv-memory-pd are not equal !";
 #endif
-            this->set_extprv_memory_pd(blob_prv_mkldnn_mem_descr->prv_memory_pd(), scale, blob_prv_mkldnn_mem_descr->get_scale(), blob_prv_mkldnn_mem_descr->get_sum());
+            if (!is_wino)
+              this->set_extprv_memory_pd(blob_prv_mkldnn_mem_descr->prv_memory_pd(), scale, blob_prv_mkldnn_mem_descr->get_scale(), blob_prv_mkldnn_mem_descr->get_sum());
+            else
+              // If the blob's prv is using wino_fmt, it is only able to accept nchw to wino reorder due to mkldnn implementation. Other input formats, such as nchw16i16o
+              // to wino reorder, are not supported by mkldnn.
+              // Therefore we have to force the blob state from prv to cpu to get nchw input format at first.
+              if (is_diff) blob->mutable_cpu_diff(); else blob->mutable_cpu_data();
         }
     }
 }
