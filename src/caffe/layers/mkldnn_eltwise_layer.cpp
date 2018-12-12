@@ -78,15 +78,10 @@ template <typename Dtype>
 void MKLDNNEltwiseLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top)
 {
     VLOG(1) << "MKLDNNEltwiseLayer<Dtype>::Reshape: " << this->layer_param_.name();
-    this->reshape = (this->width_ == bottom[0]->width() &&
-                     this->height_ == bottom[0]->height() &&
-                     this->channels_ == bottom[0]->channels() &&
-                     this->num_ == bottom[0]->num()) ? false : true;
-
-    this->width_ = bottom[0]->width();
-    this->height_ = bottom[0]->height();
-    this->num_ = bottom[0]->num();
-    this->channels_ = bottom[0]->channels();
+    this->reshape = (this->shape_ == bottom[0]->shape()) ? false : true;
+    this->shape_ = bottom[0]->shape();
+    CHECK_LE(this->shape_.size(), 5)
+      << "Tensor dimension must be less than 6";
 
     switch (op_)
     {
@@ -129,11 +124,6 @@ void MKLDNNEltwiseLayer<Dtype>::InitEltwiseFwd(const vector<Blob<Dtype>*>& botto
 {
     if (std::is_same<Dtype, double>::value) NOT_IMPLEMENTED;
     
-    int32_t n  = this->num_;
-    int32_t iw = this->width_;
-    int32_t ih = this->height_;
-    int32_t ic = this->channels_;
-
     // If we just do simple adding, scale is 1.0 for all inputs we have
     std::vector<float> scale(num_bottoms_, 1.0);
     //Eltwise layer is supporting multiplication coefficient and this scale value can be used for that.
@@ -144,7 +134,17 @@ void MKLDNNEltwiseLayer<Dtype>::InitEltwiseFwd(const vector<Blob<Dtype>*>& botto
 
     engine cpu_engine = CpuEngine::Instance().get_engine();
     memory::data_type mpcsn = memory::data_type::f32;
-    memory::format mfmt_nchw = memory::format::nchw;
+
+    memory::format src_mfmt;
+    auto tensor_size = this->shape_.size();
+    memory::dims dim = this->shape_;
+    if(tensor_size == 5) {
+        src_mfmt = memory::format::ncdhw;
+    } else {
+        CHECK_LE(tensor_size, 4) << "The mkldnn eltwise layer only supports dim size <= 5!";
+        if (tensor_size < 4) dim.resize(4, 1);
+        src_mfmt = memory::format::nchw;
+    }
 
     // ---- Initialize memory descriptors -------------
     std::vector<memory::data_type> prv_dt(num_bottoms_, memory::data_type::f32);
@@ -177,10 +177,10 @@ void MKLDNNEltwiseLayer<Dtype>::InitEltwiseFwd(const vector<Blob<Dtype>*>& botto
     for (auto i = 0; i < num_bottoms_; i++) 
     {
         fwd_bottom_data.push_back(boost::shared_ptr<MKLDNNData<Dtype> >());
-        memory::format bottom_data_mfmt = mfmt_nchw;
+        memory::format bottom_data_mfmt = src_mfmt;
         shared_ptr<memory::primitive_desc> prv_bottom_data_mpd;
         shared_ptr<memory::primitive_desc> usr_bottom_data_mpd(
-            new memory::primitive_desc({{n, ic, ih, iw}, mpcsn, mfmt_nchw}, cpu_engine));
+            new memory::primitive_desc({dim, mpcsn, src_mfmt}, cpu_engine));
 
         bool bottom_data_is_prv = (const_cast<Dtype*>(bottom[i]->prv_data()) != NULL);
         if (bottom_data_is_prv)
@@ -194,11 +194,11 @@ void MKLDNNEltwiseLayer<Dtype>::InitEltwiseFwd(const vector<Blob<Dtype>*>& botto
                     mem_descr->prv_memory_pd()->desc().data.data_type);
             }
             prv_bottom_data_mpd.reset(new memory::primitive_desc(
-              {{n, ic, ih, iw}, bottom_data_dt, bottom_data_mfmt}, cpu_engine));
+              {dim, bottom_data_dt, bottom_data_mfmt}, cpu_engine));
         }
 
         bottom_data_mpd.push_back(memory::primitive_desc(
-            {{n, ic, ih, iw}, bottom_data_dt, bottom_data_mfmt}, cpu_engine));
+            {dim, bottom_data_dt, bottom_data_mfmt}, cpu_engine));
 
         fwd_bottom_data[i].reset(new MKLDNNData<Dtype>(
             usr_bottom_data_mpd, prv_bottom_data_mpd, bottom[i], this));        
@@ -208,13 +208,13 @@ void MKLDNNEltwiseLayer<Dtype>::InitEltwiseFwd(const vector<Blob<Dtype>*>& botto
     }
 
     shared_ptr<memory::primitive_desc> usr_top_data_mpd(new memory::primitive_desc(
-        {{n, ic, ih, iw}, mpcsn, mfmt_nchw}, cpu_engine));
+        {dim, mpcsn, src_mfmt}, cpu_engine));
     
     // ---- Determining engine to use -----------------------
     std::string subengines = this->layer_param_.engine();
     if (subengines.find("MKLDNN") == std::string::npos || subengines == "MKLDNN")
         subengines = "MKLDNN:CPU";
-    eltwiseFwd_pd.reset(new sum::primitive_desc({{n, ic, ih, iw}, bottom_data_dt, memory::format::any}, scale, bottom_data_mpd));
+    eltwiseFwd_pd.reset(new sum::primitive_desc({dim, bottom_data_dt, memory::format::any}, scale, bottom_data_mpd));
     CHECK(eltwiseFwd_pd);
 
     shared_ptr<memory::primitive_desc> prv_top_data_mpd(new memory::primitive_desc(eltwiseFwd_pd->dst_primitive_desc()));

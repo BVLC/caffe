@@ -203,9 +203,9 @@ inline void im2col_nd_core_cpu(const Dtype* data_input, const bool im2col,
     const int* kernel_shape, const int* pad, const int* stride,
     const int* dilation, Dtype* data_output) {
   if (!im2col) {
-    int im_size = im_shape[0];
+    size_t im_size = im_shape[0];
     for (int i = 0; i < num_spatial_axes; ++i) {
-      im_size *= im_shape[1 + i];
+      im_size *= (size_t)im_shape[1 + i];
     }
     caffe_set(im_size, Dtype(0), data_output);
   }
@@ -333,7 +333,7 @@ void col2im_cpu(const Dtype* data_col, const int channels,
   int width_col = (width + 2 * pad_w - dil_patch_w) / stride_w + 1;
   long chunk_len = kernel_h * kernel_w;
 
-  caffe_set(height * width * channels, Dtype(0), data_im);
+  caffe_set((size_t)height * (size_t)width * (size_t)channels, Dtype(0), data_im);
 
   #ifdef _OPENMP
   #pragma omp parallel for if (channels > 1)
@@ -378,7 +378,7 @@ void col2im3d_cpu(const Dtype* data_col, const int channels,
   long height_col = (height + 2 * pad_h - dil_patch_h) / stride_h + 1;
   long width_col = (width + 2 * pad_w - dil_patch_w) / stride_w + 1;
   long depth_col = (depth + 2 * pad_d - dil_patch_d) / stride_d + 1;
-  long num_kernels = channels * height * width * depth;
+  long num_kernels = (size_t)channels * (size_t)height * (size_t)width * (size_t)depth;
   long chunk_len = kernel_h * kernel_w * kernel_d;
 
   caffe_set(num_kernels, Dtype(0), data_im);

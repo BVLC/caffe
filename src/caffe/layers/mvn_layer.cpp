@@ -45,19 +45,21 @@ namespace caffe {
 template <typename Dtype>
 void MVNLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  top[0]->Reshape(bottom[0]->num(), bottom[0]->channels(),
-      bottom[0]->height(), bottom[0]->width());
-  mean_.Reshape(bottom[0]->num(), bottom[0]->channels(),
-      1, 1);
-  variance_.Reshape(bottom[0]->num(), bottom[0]->channels(),
-      1, 1);
-  temp_.Reshape(bottom[0]->num(), bottom[0]->channels(),
-      bottom[0]->height(), bottom[0]->width());
+  top[0]->Reshape(bottom[0]->shape());
+  vector<int> temp_shape = bottom[0]->shape();
+  for (int i = 2; i < temp_shape.size(); i++)
+    temp_shape[i] = 1;
+  mean_.Reshape(temp_shape);
+  variance_.Reshape(temp_shape);
+  temp_.Reshape(bottom[0]->shape());
+
+  vector<int> shape = bottom[0]->shape();
+  shape[0] = 1;
   if ( this->layer_param_.mvn_param().across_channels() ) {
-    sum_multiplier_.Reshape(1, bottom[0]->channels(), bottom[0]->height(),
-                            bottom[0]->width());
+    sum_multiplier_.Reshape(shape);
   } else {
-    sum_multiplier_.Reshape(1, 1, bottom[0]->height(), bottom[0]->width());
+    shape[1] = 1;
+    sum_multiplier_.Reshape(shape);
   }
   Dtype* multiplier_data = sum_multiplier_.mutable_cpu_data();
   caffe_set(sum_multiplier_.count(), Dtype(1), multiplier_data);
@@ -71,9 +73,9 @@ void MVNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   Dtype* top_data = top[0]->mutable_cpu_data();
   int num;
   if (this->layer_param_.mvn_param().across_channels())
-    num = bottom[0]->num();
+    num = bottom[0]->shape(0);
   else
-    num = bottom[0]->num() * bottom[0]->channels();
+    num = bottom[0]->shape(0) * bottom[0]->shape(1);
 
   int dim = bottom[0]->count() / num;
 
@@ -118,9 +120,9 @@ void MVNLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 
   int num;
   if (this->layer_param_.mvn_param().across_channels())
-    num = bottom[0]->num();
+    num = bottom[0]->shape(0);
   else
-    num = bottom[0]->num() * bottom[0]->channels();
+    num = bottom[0]->shape(0) * bottom[0]->shape(1);
 
   int dim = bottom[0]->count() / num;
 

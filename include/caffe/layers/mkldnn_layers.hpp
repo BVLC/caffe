@@ -141,7 +141,7 @@ private:
 
     shared_ptr<primitive> input_primitive, bwd_top_diff_primitive;
 
-    int32_t num_, width_, height_, channels_;
+    vector<int> shape_;
     Dtype eps_, moving_average_fraction_;
     bool use_weight_bias_, bias_term_, use_global_stats_;
     int num_stats_batches_;
@@ -402,7 +402,7 @@ public:
     , reluFwd_pd(), reluBwd_pd()
     , fwd_top_data_memory(), bwd_bottom_diff_memory()
     , fwd_bottom_data_primitive(), bwd_top_diff_primitive()
-    , num_(0), width_(0), height_(0), channels_(0)
+    , shape_(0)
   {
     PERFORMANCE_EVENT_ID_RESET(perf_id_fw_);
     PERFORMANCE_EVENT_ID_RESET(perf_id_bw_);
@@ -431,7 +431,7 @@ private:
     MKLDNNPrimitive<Dtype> reluFwd, reluBwd;
     shared_ptr<memory> fwd_top_data_memory, bwd_bottom_diff_memory;
     shared_ptr<primitive> fwd_bottom_data_primitive, bwd_top_diff_primitive, bwd_bottom_data_primitive;
-    int32_t num_, width_, height_, channels_;
+    vector<int> shape_;
 
     PERFORMANCE_EVENT_ID_DECL(perf_id_fw_);
     PERFORMANCE_EVENT_ID_DECL(perf_id_bw_);
@@ -480,7 +480,8 @@ private:
     vector<int> split_dims;
     bool in_place_;
 
-    int32_t num_, width_, height_, channels_, num_concats_;
+    int32_t num_concats_;
+    vector<int> shape_;
     int concat_dimension;
 
     PERFORMANCE_EVENT_ID_DECL(perf_id_fw_);
@@ -537,7 +538,7 @@ public:
     , eltwiseFwd_pd()
     , fwd_top_data_memory()
     , fwd_bottom_data_primitives_()
-    , num_(0), width_(0), height_(0), channels_(0)
+    , shape_(0)
     , num_bottoms_(0)
   {
     PERFORMANCE_EVENT_ID_RESET(perf_id_fw_);
@@ -573,7 +574,7 @@ private:
     EltwiseParameter_EltwiseOp op_;
     vector<Dtype> coeffs_;
     Blob<int> max_idx_;
-    int32_t num_, width_, height_, channels_;
+    vector<int> shape_;
     int32_t num_bottoms_;
     bool stable_prod_grad_;
 
