@@ -469,10 +469,9 @@ void SGDSolver<Dtype>::SGDFusion(int param_id, Dtype rate) {
       // add weight decay
       if (net_params[param_id]->prv_data() && net_params[param_id]->prv_diff()
         && (net_params[param_id]->prv_data_count()
-        == net_params[param_id]->count())) {
-          CHECK_EQ(true,
+        == net_params[param_id]->count()) &&
             net_params[param_id]->get_prv_data_descriptor()->layout_compare(
-            net_params[param_id]->get_prv_diff_descriptor()));
+            net_params[param_id]->get_prv_diff_descriptor())) {
           if (prv_diff_condition_flag) {
             axpy_axpby_copy_axpy(net_params[param_id]->prv_data_count(), local_decay,
                                 net_params[param_id]->mutable_prv_data(), net_params[param_id]->mutable_prv_diff(),
@@ -603,10 +602,9 @@ void SGDSolver<Dtype>::Regularize(int param_id) {
         // add weight decay
         if (net_params[param_id]->prv_data() && net_params[param_id]->prv_diff()
              && (net_params[param_id]->prv_data_count()
-                 == net_params[param_id]->count())) {
-          CHECK_EQ(true,
+                 == net_params[param_id]->count()) &&
             net_params[param_id]->get_prv_data_descriptor()->layout_compare(
-            net_params[param_id]->get_prv_diff_descriptor()));
+            net_params[param_id]->get_prv_diff_descriptor())) {
 
           caffe_axpy(net_params[param_id]->prv_data_count(),
                      local_decay,
