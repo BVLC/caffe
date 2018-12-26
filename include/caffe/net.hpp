@@ -111,9 +111,9 @@ class Net {
    *        another Net.
    */
   void CopyTrainedLayersFrom(const NetParameter& param);
-  void CopyTrainedLayersFrom(const string trained_filename);
-  void CopyTrainedLayersFromBinaryProto(const string trained_filename);
-  void CopyTrainedLayersFromHDF5(const string trained_filename);
+  void CopyTrainedLayersFrom(const string& trained_filename);
+  void CopyTrainedLayersFromBinaryProto(const string& trained_filename);
+  void CopyTrainedLayersFromHDF5(const string& trained_filename);
   /// @brief Writes the net to a proto.
   void ToProto(NetParameter* param, bool write_diff = false) const;
   /// @brief Writes the net to an HDF5 file.

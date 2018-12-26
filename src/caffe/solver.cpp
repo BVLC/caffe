@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 
+#include "boost/algorithm/string.hpp"
 #include "caffe/solver.hpp"
 #include "caffe/util/format.hpp"
 #include "caffe/util/hdf5.hpp"
@@ -59,11 +60,25 @@ void Solver<Dtype>::Init(const SolverParameter& param) {
   current_step_ = 0;
 }
 
+// Load weights from the caffemodel(s) specified in "weights" solver parameter
+// into the train and test nets.
+template <typename Dtype>
+void LoadNetWeights(shared_ptr<Net<Dtype> > net,
+    const std::string& model_list) {
+  std::vector<std::string> model_names;
+  boost::split(model_names, model_list, boost::is_any_of(","));
+  for (int i = 0; i < model_names.size(); ++i) {
+    boost::trim(model_names[i]);
+    LOG(INFO) << "Finetuning from " << model_names[i];
+    net->CopyTrainedLayersFrom(model_names[i]);
+  }
+}
+
 template <typename Dtype>
 void Solver<Dtype>::InitTrainNet() {
   const int num_train_nets = param_.has_net() + param_.has_net_param() +
       param_.has_train_net() + param_.has_train_net_param();
-  const string& field_names = "net, net_param, train_net, train_net_param";
+  const string field_names = "net, net_param, train_net, train_net_param";
   CHECK_GE(num_train_nets, 1) << "SolverParameter must specify a train net "
       << "using one of these fields: " << field_names;
   CHECK_LE(num_train_nets, 1) << "SolverParameter must not contain more than "
@@ -98,6 +113,9 @@ void Solver<Dtype>::InitTrainNet() {
   net_state.MergeFrom(param_.train_state());
   net_param.mutable_state()->CopyFrom(net_state);
   net_.reset(new Net<Dtype>(net_param));
+  for (int w_idx = 0; w_idx < param_.weights_size(); ++w_idx) {
+    LoadNetWeights(net_, param_.weights(w_idx));
+  }
 }
 
 template <typename Dtype>
@@ -173,6 +191,9 @@ void Solver<Dtype>::InitTestNets() {
         << "Creating test net (#" << i << ") specified by " << sources[i];
     test_nets_[i].reset(new Net<Dtype>(net_params[i]));
     test_nets_[i]->set_debug_info(param_.debug_info());
+    for (int w_idx = 0; w_idx < param_.weights_size(); ++w_idx) {
+      LoadNetWeights(test_nets_[i], param_.weights(w_idx));
+    }
   }
 }
 
@@ -244,10 +265,6 @@ void Solver<Dtype>::Step(int iters) {
       callbacks_[i]->on_gradients_ready();
     }
     ApplyUpdate();
-
-    // Increment the internal iter_ counter -- its value should always indicate
-    // the number of times the weights have been updated.
-    ++iter_;
 
     SolverAction::Enum request = GetRequestedAction();
 
@@ -430,13 +447,13 @@ void Solver<Dtype>::CheckSnapshotWritePermissions() {
     } else {
       LOG(FATAL) << "Cannot write to snapshot prefix '"
           << param_.snapshot_prefix() << "'.  Make sure "
-          << "that the directory exists and is writeable.";
+          << "that the directory exists and is writable.";
     }
   }
 }
 
 template <typename Dtype>
-string Solver<Dtype>::SnapshotFilename(const string extension) {
+string Solver<Dtype>::SnapshotFilename(const string& extension) {
   return param_.snapshot_prefix() + "_iter_" + caffe::format_int(iter_)
     + extension;
 }

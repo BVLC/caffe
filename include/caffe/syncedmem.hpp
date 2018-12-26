@@ -66,8 +66,8 @@ class SyncedMemory {
   void* mutable_cpu_data();
   void* mutable_gpu_data();
   enum SyncedHead { UNINITIALIZED, HEAD_AT_CPU, HEAD_AT_GPU, SYNCED };
-  SyncedHead head() { return head_; }
-  size_t size() { return size_; }
+  SyncedHead head() const { return head_; }
+  size_t size() const { return size_; }
 
 #ifndef CPU_ONLY
   void async_gpu_push(const cudaStream_t& stream);

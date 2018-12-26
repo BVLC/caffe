@@ -10,6 +10,7 @@
 
 #include "caffe/layers/absval_layer.hpp"
 #include "caffe/layers/bnll_layer.hpp"
+#include "caffe/layers/clip_layer.hpp"
 #include "caffe/layers/dropout_layer.hpp"
 #include "caffe/layers/elu_layer.hpp"
 #include "caffe/layers/exp_layer.hpp"
@@ -19,6 +20,7 @@
 #include "caffe/layers/prelu_layer.hpp"
 #include "caffe/layers/relu_layer.hpp"
 #include "caffe/layers/sigmoid_layer.hpp"
+#include "caffe/layers/swish_layer.hpp"
 #include "caffe/layers/tanh_layer.hpp"
 #include "caffe/layers/threshold_layer.hpp"
 
@@ -205,6 +207,66 @@ TYPED_TEST(NeuronLayerTest, TestAbsGradient) {
       this->blob_top_vec_);
 }
 
+TYPED_TEST(NeuronLayerTest, TestClip) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  CHECK(google::protobuf::TextFormat::ParseFromString(
+      "clip_param { min: -1, max: 2 }", &layer_param));
+  ClipLayer<Dtype> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  // Now, check values
+  const Dtype* bottom_data = this->blob_bottom_->cpu_data();
+  const Dtype* top_data = this->blob_top_->cpu_data();
+  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+    EXPECT_GE(top_data[i], -1);
+    EXPECT_LE(top_data[i], 2);
+    EXPECT_TRUE(bottom_data[i] > -1 || top_data[i] == -1);
+    EXPECT_TRUE(bottom_data[i] < 2 || top_data[i] == 2);
+    EXPECT_TRUE(!(bottom_data[i] >= -1 && bottom_data[i] <= 2)
+            || top_data[i] == bottom_data[i]);
+  }
+}
+
+TYPED_TEST(NeuronLayerTest, TestClipGradient) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  CHECK(google::protobuf::TextFormat::ParseFromString(
+      "clip_param { min: -1, max: 2 }", &layer_param));
+  ClipLayer<Dtype> layer(layer_param);
+  // Unfortunately, it might happen that an input value lands exactly within
+  // the discontinuity region of the Clip function. In this case the numeric
+  // gradient is likely to differ significantly (i.e. by a value larger than
+  // checker tolerance) from the computed gradient. To handle such cases, we
+  // eliminate such values from the input blob before the gradient check.
+  const Dtype epsilon = 1e-2;
+  const Dtype min_range_start = layer_param.clip_param().min() - epsilon;
+  const Dtype min_range_end   = layer_param.clip_param().min() + epsilon;
+  const Dtype max_range_start = layer_param.clip_param().max() - epsilon;
+  const Dtype max_range_end   = layer_param.clip_param().max() + epsilon;
+  // The input blob is owned by the NeuronLayerTest object, so we begin with
+  // creating a temporary blob and copying the input data there.
+  Blob<Dtype> temp_bottom;
+  temp_bottom.ReshapeLike(*this->blob_bottom_);
+  const Dtype* bottom_data = this->blob_bottom_->cpu_data();
+  Dtype* temp_data_mutable = temp_bottom.mutable_cpu_data();
+  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+    if (bottom_data[i] >= min_range_start &&
+        bottom_data[i] <= min_range_end) {
+      temp_data_mutable[i] = bottom_data[i] - epsilon;
+    } else if (bottom_data[i] >= max_range_start &&
+               bottom_data[i] <= max_range_end) {
+      temp_data_mutable[i] = bottom_data[i] + epsilon;
+    } else {
+      temp_data_mutable[i] = bottom_data[i];
+    }
+  }
+  vector<Blob<Dtype>*> temp_bottom_vec;
+  temp_bottom_vec.push_back(&temp_bottom);
+  GradientChecker<Dtype> checker(epsilon, 1e-3);
+  checker.CheckGradientEltwise(&layer, temp_bottom_vec, this->blob_top_vec_);
+}
+
 TYPED_TEST(NeuronLayerTest, TestReLU) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
@@ -339,6 +401,84 @@ TYPED_TEST(NeuronLayerTest, TestSigmoidGradient) {
   typedef typename TypeParam::Dtype Dtype;
   LayerParameter layer_param;
   SigmoidLayer<Dtype> layer(layer_param);
+  GradientChecker<Dtype> checker(1e-2, 1e-3, 1701, 0., 0.01);
+  checker.CheckGradientEltwise(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_);
+}
+
+TYPED_TEST(NeuronLayerTest, TestSwish) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  SwishLayer<Dtype> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  // Now, check values
+  const Dtype* bottom_data = this->blob_bottom_->cpu_data();
+  const Dtype* top_data = this->blob_top_->cpu_data();
+  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+    EXPECT_FLOAT_EQ(top_data[i], bottom_data[i] / (1. + exp(-bottom_data[i])));
+  }
+}
+
+TYPED_TEST(NeuronLayerTest, TestSwishWithBeta) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  CHECK(google::protobuf::TextFormat::ParseFromString(
+      "swish_param { beta: 1.5 }", &layer_param));
+  SwishLayer<Dtype> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  // Now, check values
+  const Dtype* bottom_data = this->blob_bottom_->cpu_data();
+  const Dtype* top_data = this->blob_top_->cpu_data();
+  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+    EXPECT_FLOAT_EQ(top_data[i], bottom_data[i] / (1. + exp(-1.5 *
+        bottom_data[i])));
+  }
+}
+
+TYPED_TEST(NeuronLayerTest, TestSwishAsLinear) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  CHECK(google::protobuf::TextFormat::ParseFromString(
+      "swish_param { beta: 0.0 }", &layer_param));
+  SwishLayer<Dtype> layer(layer_param);
+  layer.SetUp(this->blob_bottom_vec_, this->blob_top_vec_);
+  layer.Forward(this->blob_bottom_vec_, this->blob_top_vec_);
+  // Now, check values
+  const Dtype* bottom_data = this->blob_bottom_->cpu_data();
+  const Dtype* top_data = this->blob_top_->cpu_data();
+  for (int i = 0; i < this->blob_bottom_->count(); ++i) {
+    EXPECT_FLOAT_EQ(top_data[i], bottom_data[i] / 2.0);
+  }
+}
+
+TYPED_TEST(NeuronLayerTest, TestSwishGradient) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  SwishLayer<Dtype> layer(layer_param);
+  GradientChecker<Dtype> checker(1e-2, 1e-3, 1701, 0., 0.01);
+  checker.CheckGradientEltwise(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_);
+}
+
+TYPED_TEST(NeuronLayerTest, TestSwishWithBetaGradient) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  CHECK(google::protobuf::TextFormat::ParseFromString(
+      "swish_param { beta: 1.5 }", &layer_param));
+  SwishLayer<Dtype> layer(layer_param);
+  GradientChecker<Dtype> checker(1e-2, 1e-3, 1701, 0., 0.01);
+  checker.CheckGradientEltwise(&layer, this->blob_bottom_vec_,
+      this->blob_top_vec_);
+}
+
+TYPED_TEST(NeuronLayerTest, TestSwishAsLinearGradient) {
+  typedef typename TypeParam::Dtype Dtype;
+  LayerParameter layer_param;
+  CHECK(google::protobuf::TextFormat::ParseFromString(
+      "swish_param { beta: 0.0 }", &layer_param));
+  SwishLayer<Dtype> layer(layer_param);
   GradientChecker<Dtype> checker(1e-2, 1e-3, 1701, 0., 0.01);
   checker.CheckGradientEltwise(&layer, this->blob_bottom_vec_,
       this->blob_top_vec_);

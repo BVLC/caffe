@@ -11,6 +11,8 @@
 # USE_OPENCV := 0
 # USE_LEVELDB := 0
 # USE_LMDB := 0
+# This code is taken from https://github.com/sh1r0/caffe-android-lib
+# USE_HDF5 := 0
 
 # uncomment to allow MDB_NOLOCK when reading LMDB files (only if necessary)
 #	You should not set this flag if you will be reading LMDBs with any
@@ -33,6 +35,7 @@ CUDA_DIR := /usr/local/cuda
 # CUDA architecture setting: going with all of them.
 # For CUDA < 6.0, comment the *_50 through *_61 lines for compatibility.
 # For CUDA < 8.0, comment the *_60 and *_61 lines for compatibility.
+# For CUDA >= 9.0, comment the *_20 and *_21 lines for compatibility.
 CUDA_ARCH := -gencode arch=compute_20,code=sm_20 \
 		-gencode arch=compute_20,code=sm_21 \
 		-gencode arch=compute_30,code=sm_30 \
