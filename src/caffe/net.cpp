@@ -937,7 +937,27 @@ void Net<Dtype>::CompilationRuleConvSumFusion(const NetParameter& param,
             switch_flag = false;
           }
           param_compiled->add_layer()->CopyFrom(*layer_param);
-          need_to_convert_layer = layer_param;
+
+          std::vector<const LayerParameter*> another_eltwise_input_layers_params;
+          if (switch_flag) {
+            Net<Dtype>::GetBlobProducers(another_eltwise_input_layers_params,
+                                        child_layers_params[0]->bottom(1), param,
+                                        i + 1 < param.layer_size() ? i + 1 : i);
+          } else {
+            Net<Dtype>::GetBlobProducers(another_eltwise_input_layers_params,
+                                        child_layers_params[0]->bottom(0), param,
+                                        i + 1 < param.layer_size() ? i + 1 : i);
+          }
+
+          const LayerParameter& another_eltwise_layer_param =
+              another_eltwise_input_layers_params.size() > 0
+                  ? *(another_eltwise_input_layers_params[0])
+                  : *layer_param;
+
+          if (another_eltwise_layer_param.type().compare("Convolution") == 0 ) {
+            need_to_convert_layer = layer_param;
+
+          } 
           continue;
 
         } else {
@@ -1279,6 +1299,29 @@ void Net<Dtype>::GetBlobConsumers(
     for (int j = 0; j < param.layer(i).bottom_size(); ++j) {
       if (param.layer(i).bottom(j).compare(blob_name_to_find) == 0) {
         consumer_blobs.push_back(&param.layer(i));
+      }
+    }
+  }
+}
+
+template <typename Dtype>
+void Net<Dtype>::GetBlobProducers(
+                  std::vector<const LayerParameter*>& producers_blobs,
+                  const string& blob_name_to_find,
+                  const NetParameter& param,
+                  int layer_id_to_start_traversing_from) {
+  producers_blobs.clear();
+
+  // Validate values of ids of layers are <1..num_layers-1>
+  CHECK_GE(layer_id_to_start_traversing_from, 1);
+  CHECK_LT(layer_id_to_start_traversing_from, param.layer_size());
+
+  // Traverse through layers to search the layer that consumes blob_name_to_find
+  for (int i = layer_id_to_start_traversing_from; i < param.layer_size(); ++i) {
+    // check bottom blobs if any of them is consuming given blob
+    for (int j = 0; j < param.layer(i).top_size(); ++j) {
+      if (param.layer(i).top(j).compare(blob_name_to_find) == 0) {
+        producers_blobs.push_back(&param.layer(i));
       }
     }
   }
