@@ -173,7 +173,8 @@ void GANSolver<Dtype>::Step(int iters) {
          && iter_ % d_solver->param_.snapshot() == 0
          && Caffe::root_solver()) ||
          (request == SolverAction::SNAPSHOT)) {
-      Snapshot();
+      d_solver->Snapshot();
+      g_solver->Snapshot();
     }
     if (SolverAction::STOP == request) {
       requested_early_exit_ = true;

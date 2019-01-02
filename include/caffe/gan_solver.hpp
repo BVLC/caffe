@@ -12,22 +12,6 @@ namespace caffe {
 
 template <typename Dtype> class Solver;
 
-/**
-  * @brief Enumeration of actions that a client of the Solver may request by
-  * implementing the Solver's action request function, which a
-  * client may optionally provide in order to request early termination
-  * or saving a snapshot without exiting. In the executable caffe, this
-  * mechanism is used to allow the snapshot to be saved when stopping
-  * execution with a SIGINT (Ctrl-C).
-  */
-  namespace SolverAction {
-    enum Enum {
-      NONE = 0,  // Take no special action.
-      STOP = 1,  // Stop training. snapshot_after_train controls whether a
-                 // snapshot is created.
-      SNAPSHOT = 2  // Take a snapshot, and keep training.
-    };
-  }
 
 /**
  * @brief Type of a function that returns a Solver Action enumeration.
