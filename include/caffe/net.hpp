@@ -338,6 +338,16 @@ class Net {
                                                 const NetParameter& param,
                                                 int layer_id);
 
+   /**
+   * @brief If find "Conv--BN--Scale" in current network, merge BN and Scale layer into Convolution
+   * layers, this optimization only works in caffe TEST phase now.
+   */
+
+  static void GetBlobProducers(std::vector<const LayerParameter*> &producer_blobs,
+                                                const string& blob_name_to_find,
+                                                const NetParameter& param,
+                                                int layer_id);
+
   static void GetNeedToCancelInplaceLayers(
       vector<vector<const LayerParameter*>>& layer_pairs,    
       std::map<string, int>& specified_layer_blob_name_to_index,      
