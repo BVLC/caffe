@@ -116,8 +116,19 @@ void GANSolver<Dtype>::Step(int iters) {
     for (int i = 0; i < d_solver->param_.iter_size(); ++i) {
       // Train D :D(G(z)), Backward D, Update D
       auto x_fake = g_solver->net_->Forward(); // G(z)
-      d_solver->net_->Forward(&d_loss); // D(real)
+
+      LOG_IF(INFO, Caffe::root_solver()) << "Generated:";
+      for (i = 0; i < x_fake.size(); i++)
+        LOG_IF(INFO, Caffe::root_solver()) << x_fake[i]->shape_string();
+
+      auto res = d_solver->net_->Forward(&d_loss); // D(real)
+
+      LOG_IF(INFO, Caffe::root_solver()) << "Disc real:";
+      for (i = 0; i < res.size(); i++)
+        LOG_IF(INFO, Caffe::root_solver()) << res[i]->shape_string();
+
       d_solver->net_->Backward(); // accumulate gradient for D(real)
+
       d_solver->net_->ForwardFromTo(x_fake, 1, d_solver->net_->layers().size() - 1); // D(G(z))
       d_solver->net_->Backward(); // accumulate gradient for D(G(z))
       d_solver->ApplyUpdate();

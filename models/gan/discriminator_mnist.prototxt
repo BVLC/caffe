@@ -17,11 +17,6 @@ layer {
     backend: LMDB
   }
 }
-input: "disc_label"
-input_shape {
-  dim: 64
-  dim: 1
-}
 layer {
   name: "conv1"
   type: "Convolution"
@@ -113,6 +108,11 @@ layer {
     }
   }
   # for 28x28, here is 1x1
+}
+input: "disc_label"
+input_shape {
+  dim: 64
+  dim: 1
 }
 layer {
   name: "discr_loss"
