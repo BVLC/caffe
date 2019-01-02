@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 
+#include "caffe/solver.hpp"
 #include "caffe/net.hpp"
 #include "caffe/solver_factory.hpp"
 #include "caffe/util/benchmark.hpp"

@@ -21,14 +21,14 @@ template <typename Dtype> class GANSolver;
   * mechanism is used to allow the snapshot to be saved when stopping
   * execution with a SIGINT (Ctrl-C).
   */
-  namespace SolverAction {
-    enum Enum {
-      NONE = 0,  // Take no special action.
-      STOP = 1,  // Stop training. snapshot_after_train controls whether a
-                 // snapshot is created.
-      SNAPSHOT = 2  // Take a snapshot, and keep training.
-    };
-  }
+namespace SolverAction {
+  enum Enum {
+    NONE = 0,  // Take no special action.
+    STOP = 1,  // Stop training. snapshot_after_train controls whether a
+                // snapshot is created.
+    SNAPSHOT = 2  // Take a snapshot, and keep training.
+  };
+}
 
 /**
  * @brief Type of a function that returns a Solver Action enumeration.
