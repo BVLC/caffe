@@ -51,6 +51,7 @@ class Net {
    * the middle may be incorrect if all of the layers of a fan-in are not
    * included.
    */
+  Dtype ForwardFromTo(const vector<Blob<Dtype>* > & bottom, int start, int end);
   Dtype ForwardFromTo(int start, int end);
   Dtype ForwardFrom(int start);
   Dtype ForwardTo(int end);

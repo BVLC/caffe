@@ -162,9 +162,14 @@ class GANSolver {
     // TODO
   }
 
-  void Step(int iters) {
+  void TestAll() {
     // TODO
+    LOG_IF(INFO, Caffe::root_solver()) << "GAN Test is not implemented.";
   }
+
+  SolverAction::Enum GetRequestedAction();
+  
+  void Step(int iters);
 
   virtual void Solve(const char* resume_file = NULL);
 

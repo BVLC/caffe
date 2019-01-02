@@ -553,6 +553,123 @@ void GANSolver<Dtype>::Solve(const char* resume_file) {
   LOG(INFO) << "Optimization Done.";
 }
 
+template <typename Dtype>
+void GANSolver<Dtype>::Step(int iters) {
+  const int start_iter = iter_;
+  const int stop_iter = iter_ + iters;
+  int d_average_loss = d_solver->param_.average_loss();
+  int g_average_loss = g_solver->param_.average_loss();
+  d_solver->losses_.clear();
+  g_solver->losses_.clear();
+  d_smoothed_loss_ = 0;
+  g_smoothed_loss_ = 0;
+
+  iteration_timer_.Start();
+
+  // zero-init the params
+  d_solver->net_->ClearParamDiffs();
+  g_solver->net_->ClearParamDiffs();
+
+  while (iter_ < stop_iter) {
+    if (d_solver->param_.test_interval() && iter_ % d_solver->param_.test_interval() == 0
+        && (iter_ > 0 || d_solver->param_.test_initialization())) {
+      if (Caffe::root_solver()) {
+        // TestAll();
+      }
+      if (requested_early_exit_) {
+        // Break out of the while loop because stop was requested while testing.
+        break;
+      }
+    }
+
+    for (int i = 0; i < d_solver->callbacks_.size(); ++i)
+      d_solver->callbacks_[i]->on_start();
+    for (int i = 0; i < g_solver->callbacks_.size(); ++i)
+      g_solver->callbacks_[i]->on_start();
+
+    const bool d_display = d_solver->param_.display() && iter_ % d_solver->param_.display() == 0;
+    const bool g_display = g_solver->param_.display() && iter_ % g_solver->param_.display() == 0;
+    d_solver->net_->set_debug_info(d_display && d_solver->param_.debug_info());
+    g_solver->net_->set_debug_info(g_display && g_solver->param_.debug_info());
+
+    // accumulate the loss and gradient
+    Dtype d_loss = 0, g_loss = 0;
+    for (int i = 0; i < d_param_.iter_size(); ++i) {
+      // Train D :D(G(z)), Backward D, Update D
+      auto x_fake = g_solver->net_->Forward(); // G(z)
+      d_solver->net_->Forward(&d_loss); // D(real)
+      d_solver->net_->Backward(); // accumulate gradient for D(real)
+      d_solver->net_->ForwardFromTo(x_fake, 1, d_solver->net_->layers_.size() - 1); // D(G(z))
+      d_solver->net_->Backward(); // accumulate gradient for D(G(z))
+      d_solver->ApplyUpdate();
+      d_solver->net_->ClearParamDiffs();
+    }
+    
+    loss /= param_.iter_size();
+    // average the loss across iterations for smoothed reporting
+    UpdateSmoothedLoss(loss, start_iter, average_loss);
+    if (display) {
+      float lapse = iteration_timer_.Seconds();
+      float per_s = (iter_ - iterations_last_) / (lapse ? lapse : 1);
+      LOG_IF(INFO, Caffe::root_solver()) << "Iteration " << iter_
+          << " (" << per_s << " iter/s, " << lapse << "s/"
+          << param_.display() << " iters), loss = " << smoothed_loss_;
+      iteration_timer_.Start();
+      iterations_last_ = iter_;
+      const vector<Blob<Dtype>*>& result = net_->output_blobs();
+      int score_index = 0;
+      for (int j = 0; j < result.size(); ++j) {
+        const Dtype* result_vec = result[j]->cpu_data();
+        const string& output_name =
+            net_->blob_names()[net_->output_blob_indices()[j]];
+        const Dtype loss_weight =
+            net_->blob_loss_weights()[net_->output_blob_indices()[j]];
+        for (int k = 0; k < result[j]->count(); ++k) {
+          ostringstream loss_msg_stream;
+          if (loss_weight) {
+            loss_msg_stream << " (* " << loss_weight
+                            << " = " << loss_weight * result_vec[k] << " loss)";
+          }
+          LOG_IF(INFO, Caffe::root_solver()) << "    Train net output #"
+              << score_index++ << ": " << output_name << " = "
+              << result_vec[k] << loss_msg_stream.str();
+        }
+      }
+    }
+    // Do not support gradients ready call back
+    /*
+    for (int i = 0; i < callbacks_.size(); ++i) {
+      callbacks_[i]->on_gradients_ready();
+    }
+    */
+
+    SolverAction::Enum request = GetRequestedAction();
+
+    // Save a snapshot if needed.
+    if ((d_solver->param_.snapshot()
+         && iter_ % d_solver->param_.snapshot() == 0
+         && Caffe::root_solver()) ||
+         (request == SolverAction::SNAPSHOT)) {
+      Snapshot();
+    }
+    if (SolverAction::STOP == request) {
+      requested_early_exit_ = true;
+      // Break out of training loop.
+      break;
+    }
+  }
+}
+
+template<typename Dtype>
+SolverAction::Enum GANSolver<Dtype>::GetRequestedAction() {
+  if (action_request_function_) {
+    // If the external request function has been set, call it.
+    // Only call on discriminator
+    return d_solver->action_request_function_();
+  }
+  return SolverAction::NONE;
+}
+
 INSTANTIATE_CLASS(Solver);
 INSTANTIATE_CLASS(GANSolver);
 

@@ -1,10 +1,21 @@
 name: "SimpleDiscriminator"
-input: "image"
-input_shape {
-  dim: 64
-  dim: 3
-  dim: 28
-  dim: 28
+layer {
+  name: "mnist"
+  type: "Data"
+  top: "data"
+  top: "label"
+  include {
+    phase: TRAIN
+  }
+  transform_param {
+    scale: 0.00784313
+    mean_value: 1
+  }
+  data_param {
+    source: "examples/mnist/mnist_train_lmdb"
+    batch_size: 64
+    backend: LMDB
+  }
 }
 input: "label"
 input_shape {
