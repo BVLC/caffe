@@ -1,0 +1,1 @@
+git add . && git stash && git pull && make all

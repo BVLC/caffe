@@ -3,7 +3,7 @@ layer {
   name: "data"
   type: "Data"
   top: "data"
-  top: "label"
+  top: "cls_label"
   include {
     phase: TRAIN
   }
@@ -118,7 +118,7 @@ layer {
   name: "discr_loss"
   type: "SigmoidCrossEntropyLoss"
   bottom: "conv4"
-  bottom: "label"
+  bottom: "disc_label"
   top: "discr_loss"
 }
 
