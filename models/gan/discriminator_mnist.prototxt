@@ -17,7 +17,7 @@ layer {
     backend: LMDB
   }
 }
-input: "label"
+input: "disc_label"
 input_shape {
   dim: 64
   dim: 1
