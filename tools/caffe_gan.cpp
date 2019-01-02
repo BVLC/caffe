@@ -13,6 +13,7 @@ namespace bp = boost::python;
 
 #include "boost/algorithm/string.hpp"
 #include "caffe/caffe.hpp"
+#include "caffe/gan_solver.hpp"
 #include "caffe/util/signal_handler.h"
 
 using caffe::Blob;

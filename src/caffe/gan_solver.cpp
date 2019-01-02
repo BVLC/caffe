@@ -198,7 +198,6 @@ SolverAction::Enum GANSolver<Dtype>::GetRequestedAction() {
   return SolverAction::NONE;
 }
 
-INSTANTIATE_CLASS(Solver);
 INSTANTIATE_CLASS(GANSolver);
 
 }  // namespace caffe
