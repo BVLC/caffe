@@ -1,4 +1,4 @@
-net: "generator.prototxt"
+net: "discriminator_mnist.prototxt"
 display: 0
 # time_per_iter: 1
 base_lr: 0.0002

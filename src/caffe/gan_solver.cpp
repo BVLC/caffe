@@ -191,7 +191,7 @@ void GANSolver<Dtype>::SetActionFunction(ActionCallback func) {
 
 template<typename Dtype>
 SolverAction::Enum GANSolver<Dtype>::GetRequestedAction() {
-  if (action_request_function_) {
+  if (d_solver->action_request_function_) {
     // If the external request function has been set, call it.
     // Only call on discriminator
     return d_solver->action_request_function_();
