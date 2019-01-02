@@ -1,12 +1,9 @@
 name: "SimpleDiscriminator"
 layer {
-  name: "disc_label",
-  type: "Input",
-  top: "disc_label",
-  input_shape {
-    dim: 64
-    dim: 1
-  }
+  name: "disc_label"
+  type: "Input"
+  top: "disc_label"
+  input_param { shape: { dim: 64 dim: 1} }
 }
 layer {
   name: "data"

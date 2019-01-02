@@ -21,6 +21,7 @@ GANSolver<Dtype>::GANSolver(const SolverParameter& g_param, const SolverParamete
 template <typename Dtype>
 void GANSolver<Dtype>::Solve(const char* resume_file) {
   CHECK(Caffe::root_solver());
+  CHECK_EQ(d_solver->net_->num_inputs(), 1);
   LOG(INFO) << "Solve\t\tGenerator\t\tDiscriminator";
   LOG(INFO) << "\t\t\t" << g_solver->net_->name() << "\t\t\t" << d_solver->net_->name();
   LOG(INFO) << "LR Policy\t\t" << g_solver->param_.lr_policy() << "\t\t" << d_solver->param_.lr_policy();
@@ -87,6 +88,18 @@ void GANSolver<Dtype>::Step(int iters) {
   d_solver->net_->ClearParamDiffs();
   g_solver->net_->ClearParamDiffs();
 
+  // label placeholder
+  Blob<Dtype>* disc_label = d_solver->net_->input_blobs()[0];
+  // ones, zeros
+  Blob<Dtype> ones, zeros;
+  ones.ReshapeLike(*disc_label);
+  zeros.ReshapeLike(*disc_label);
+  auto ones_data = ones.mutable_cpu_data(), zeros_data = zeros.mutable_cpu_data();
+  for(int i = 0; i < disc_label->shape()[0]; i++) {
+    ones_data[i] = 1.0;
+    zeros_data[i] = 0.0;
+  }
+
   while (iter_ < stop_iter) {
     if (d_solver->param_.test_interval() && iter_ % d_solver->param_.test_interval() == 0
         && (iter_ > 0 || d_solver->param_.test_initialization())) {
@@ -116,11 +129,7 @@ void GANSolver<Dtype>::Step(int iters) {
     for (int i = 0; i < d_solver->param_.iter_size(); ++i) {
       // Train D :D(G(z)), Backward D, Update D
       auto x_fake = g_solver->net_->Forward(); // G(z)
-
-      LOG_IF(INFO, Caffe::root_solver()) << "Generated:";
-      for (i = 0; i < x_fake.size(); i++)
-        LOG_IF(INFO, Caffe::root_solver()) << x_fake[i]->shape_string();
-
+      disc_label->CopyFrom(ones);
       auto res = d_solver->net_->Forward(&d_loss); // D(real)
 
       LOG_IF(INFO, Caffe::root_solver()) << "Disc real:";
@@ -128,12 +137,22 @@ void GANSolver<Dtype>::Step(int iters) {
         LOG_IF(INFO, Caffe::root_solver()) << res[i]->shape_string();
 
       d_solver->net_->Backward(); // accumulate gradient for D(real)
-      d_solver->net_->ForwardFromTo(x_fake,
-        d_solver->net_->base_layer_index(),
-        d_solver->net_->layers().size() - 1); // D(G(z))
+      disc_label.CopyFrom(zeros);
+      d_solver->net_->ForwardFromTo(x_fake, d_solver->net_->base_layer_index(), d_solver->net_->layers().size() - 1); // D(G(z))
       d_solver->net_->Backward(); // accumulate gradient for D(G(z))
       d_solver->ApplyUpdate();
       d_solver->net_->ClearParamDiffs();
+
+      x_fake = g_solver->net_->Forward(); // G(z)
+      disc_label.CopyFrom(ones);
+      d_solver->net_->ForwardFromTo(x_fake, d_solver->net_->base_layer_index(), d_solver->net_->layers().size() - 1); // D(G(z))
+      d_solver->net_->Backward(); // calculate gradient
+      // TODO: do not caculate gradient for weights
+      g_solver->net->Backward(d_solver->net_->input_blobs, true, g_solver->input_blobs);
+      g_solver->ApplyUpdate();
+
+      d_solver->net_->ClearParamDiffs();
+      g_solver->net_->ClearParamDiffs();
     }
     
     /*

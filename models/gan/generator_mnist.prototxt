@@ -1,9 +1,10 @@
 force_backward: true
 name: "SimpleGenerator"
-input: "noise"
-input_shape {
-  dim: 64
-  dim: 128
+layer {
+  name: "noise"
+  type: "Input"
+  top: "noise"
+  input_param { shape: { dim: 64 dim: 128} }
 }
 layer {
   name: "reshape"
