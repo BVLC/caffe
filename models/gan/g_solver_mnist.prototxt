@@ -1,4 +1,4 @@
-net: "generator_mnist.prototxt"
+net: "models/gan/generator_mnist.prototxt"
 display: 0
 # time_per_iter: 1
 base_lr: 0.0002
@@ -12,5 +12,6 @@ stepvalue: 20000
 stepvalue: 50000
 stepvalue: 100000
 max_iter: 200000
-solver_mode: CPU
+snapshot_prefix: "log/gan/mnist"
+solver_mode: GPU
 solver_type: ADAM
