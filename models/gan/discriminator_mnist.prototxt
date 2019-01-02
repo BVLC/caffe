@@ -1,6 +1,6 @@
 name: "SimpleDiscriminator"
 layer {
-  name: "mnist"
+  name: "data"
   type: "Data"
   top: "data"
   top: "label"
@@ -25,7 +25,7 @@ input_shape {
 layer {
   name: "conv1"
   type: "Convolution"
-  bottom: "image"
+  bottom: "data"
   top: "conv1"
   convolution_param {
     num_output: 64

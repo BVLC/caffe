@@ -8,7 +8,7 @@ input_shape {
 layer {
   name: "reshape"
   type: "Reshape"
-  bottom: "feat"
+  bottom: "noise"
   top: "reshape_defc3"
   reshape_param {
     shape {
