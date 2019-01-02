@@ -241,7 +241,7 @@ int train() {
   if (FLAGS_snapshot.size()) {
     d_solver_param.clear_weights();
     g_solver_param.clear_weights();
-  } else if (FLAGS_weights.size()) {
+  } else if (FLAGS_d_weights.size() && FLAGS_g_weights.size()) {
     d_solver_param.clear_weights();
     g_solver_param.clear_weights();
     d_solver_param.add_weights(FLAGS_d_weights);
