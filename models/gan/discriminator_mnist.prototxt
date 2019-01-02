@@ -1,5 +1,14 @@
 name: "SimpleDiscriminator"
 layer {
+  name: "disc_label",
+  type: "Input",
+  top: "disc_label",
+  input_shape {
+    dim: 64
+    dim: 1
+  }
+}
+layer {
   name: "data"
   type: "Data"
   top: "data"
@@ -108,11 +117,6 @@ layer {
     }
   }
   # for 28x28, here is 1x1
-}
-input: "disc_label"
-input_shape {
-  dim: 64
-  dim: 1
 }
 layer {
   name: "disc_loss"
