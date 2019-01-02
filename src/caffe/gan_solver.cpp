@@ -22,7 +22,7 @@ template <typename Dtype>
 void GANSolver<Dtype>::Solve(const char* resume_file) {
   CHECK(Caffe::root_solver());
   LOG(INFO) << "Solve\t\tGenerator\t\tDiscriminator";
-  LOG(INFO) << "\t\t\t\t" << g_solver->net_->name() << "\t\t\t" << d_solver->net_->name();
+  LOG(INFO) << "\t\t\t" << g_solver->net_->name() << "\t\t\t" << d_solver->net_->name();
   LOG(INFO) << "LR Policy\t\t" << g_solver->param_.lr_policy() << "\t\t" << d_solver->param_.lr_policy();
 
   // Initialize to false every time we start solving.
