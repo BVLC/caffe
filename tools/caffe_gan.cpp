@@ -239,11 +239,18 @@ int train() {
   solver->SetActionFunction(signal_handler.GetActionFunction());
 
   if (FLAGS_snapshot.size()) {
+    d_solver_param.clear_weights();
+    g_solver_param.clear_weights();
+  } else if (FLAGS_weights.size()) {
+    d_solver_param.clear_weights();
+    g_solver_param.clear_weights();
+    d_solver_param.add_weights(FLAGS_d_weights);
+    g_solver_param.add_weights(FLAGS_g_weights);
+  }
+
+  if (FLAGS_snapshot.size()) {
     LOG(INFO) << "Resuming from " << FLAGS_snapshot;
     solver->Restore(FLAGS_snapshot.c_str());
-  } else if (FLAGS_d_weights.size()) {
-    CopyLayers(solver->getGeneratorSolver().get(), FLAGS_g_weights);
-    CopyLayers(solver->getDiscriminatorSolver().get(), FLAGS_d_weights);
   }
 
   LOG(INFO) << "Starting Optimization";
