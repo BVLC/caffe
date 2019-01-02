@@ -13,5 +13,5 @@ stepvalue: 50000
 stepvalue: 100000
 max_iter: 200000
 snapshot_prefix: "log/gan/mnist"
-solver_mode: GPU
+solver_mode: CPU
 solver_type: ADAM

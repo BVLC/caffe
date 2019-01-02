@@ -540,6 +540,7 @@ $(MAT$(PROJECT)_SO): $(MAT$(PROJECT)_SRC) $(STATIC_NAME)
 
 runtest: $(TEST_ALL_BIN)
 	$(TOOL_BUILD_DIR)/caffe
+	$(TOOL_BUILD_DIR)/caffe_gan  
 	$(TEST_ALL_BIN) $(TEST_GPUID) --gtest_shuffle $(TEST_FILTER)
 
 pytest: py
