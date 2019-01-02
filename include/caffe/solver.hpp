@@ -43,6 +43,7 @@ typedef boost::function<SolverAction::Enum()> ActionCallback;
  */
 template <typename Dtype>
 class Solver {
+ friend class GANSolver<Dtype>;
  public:
   explicit Solver(const SolverParameter& param);
   explicit Solver(const string& param_file);
