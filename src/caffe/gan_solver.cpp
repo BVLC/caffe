@@ -129,7 +129,12 @@ void GANSolver<Dtype>::Step(int iters) {
 
       d_solver->net_->Backward(); // accumulate gradient for D(real)
 
-      d_solver->net_->ForwardFromTo(x_fake, 1, d_solver->net_->layers().size() - 1); // D(G(z))
+      for(auto name : d_solver->net_->layer_names())
+        LOG_IF(INFO, Caffe::root_solver()) << name;
+
+      d_solver->net_->ForwardFromTo(x_fake,
+        d_solver->net_->base_layer_index(),
+        d_solver->net_->layers().size() - 1); // D(G(z))
       d_solver->net_->Backward(); // accumulate gradient for D(G(z))
       d_solver->ApplyUpdate();
       d_solver->net_->ClearParamDiffs();

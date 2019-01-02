@@ -214,6 +214,13 @@ class Net {
   const shared_ptr<Blob<Dtype> > blob_by_name(const string& blob_name) const;
   bool has_layer(const string& layer_name) const;
   const shared_ptr<Layer<Dtype> > layer_by_name(const string& layer_name) const;
+  // Get the index of the first computational layer (e.g. conv1)
+  int base_layer_index() const {
+    for(int i = 0; i < layers_.size(); i ++)
+      if (layers_[i]->layer_param().type() != "Input" && layers_[i]->layer_param_.type() != "Data")
+        return i;
+    return 0;
+  }
 
   void set_debug_info(const bool value) { debug_info_ = value; }
 
