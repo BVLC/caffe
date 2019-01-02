@@ -1,0 +1,1193 @@
+input: "data"
+input_shape{dim: 1 dim: 1 dim: 128 dim: 128 dim: 64}
+
+layer {
+  name: "conv_in128_chan16"
+  type: "Convolution"
+  bottom: "data"
+  top: "conv_in128_chan16"
+  param {
+    lr_mult: 1.0
+    decay_mult: 1.0
+  }
+  param {
+    lr_mult: 2.0
+    decay_mult: 0.0
+  }
+  convolution_param {
+    num_output: 16
+    kernel_size: 5
+    pad: 2
+    stride: 1
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.0
+    }
+  }
+}
+
+
+layer {
+  name: "split1_1"
+  type: "Split"
+  bottom: "data"
+  top: "t1_1"
+  top: "t1_2"
+  top: "t1_3"
+  top: "t1_4"
+  top: "t1_5"
+  top: "t1_6"
+  top: "t1_7"
+  top: "t1_8"
+  top: "t1_9"
+  top: "t1_10"
+  top: "t1_11"
+  top: "t1_12"
+  top: "t1_13"
+  top: "t1_14"
+  top: "t1_15"
+  top: "t1_16"
+}
+
+layer {
+  name: "concat1_1"
+  bottom: "t1_1"
+  bottom: "t1_2"
+  bottom: "t1_3"
+  bottom: "t1_4"
+  bottom: "t1_5"
+  bottom: "t1_6"
+  bottom: "t1_7"
+  bottom: "t1_8"
+  bottom: "t1_9"
+  bottom: "t1_10"
+  bottom: "t1_11"
+  bottom: "t1_12"
+  bottom: "t1_13"
+  bottom: "t1_14"
+  bottom: "t1_15"
+  bottom: "t1_16"
+  top: "tiled1_1"
+  type: "Concat"
+  concat_param {
+    axis: 1
+  }
+}
+
+layer {
+  name: "addLayer1_1"
+  type: "Eltwise"
+  bottom: "conv_in128_chan16"
+  bottom: "tiled1_1"
+  top: "outBlock1_1"
+  eltwise_param {
+    operation: SUM
+  }
+}
+
+layer {
+  name: "outBlock1_1_RELU"
+  type: "PReLU"
+  bottom: "outBlock1_1"
+  top: "outBlock1_1"
+}
+
+#------------- FIRST BLOCK -----------------
+
+layer {
+  name: "down_pooling_128_to_64"
+  type: "Convolution"
+  bottom: "outBlock1_1"
+  top: "down_pooling_128_to_64"
+  param {
+    lr_mult: 1.0
+    decay_mult: 1.0
+  }
+  param {
+    lr_mult: 2.0
+    decay_mult: 0.0
+  }
+  convolution_param {
+    num_output: 32
+    kernel_size: 2
+    pad: 0
+    stride: 2
+    weight_filler {
+        type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.0
+    }
+  }
+}
+
+layer {
+  name: "relu_down_pooling_128_to_64"
+  type: "PReLU"
+  bottom: "down_pooling_128_to_64"
+  top: "down_pooling_128_to_64"
+}
+
+#-------------- FIRST POOLING ------------------
+
+layer {
+  name: "conv_in64_chan32"
+  type: "Convolution"
+  bottom: "down_pooling_128_to_64"
+  top: "conv_in64_chan32"
+  param {
+    lr_mult: 1.0
+    decay_mult: 1.0
+  }
+  param {
+    lr_mult: 2.0
+    decay_mult: 0.0
+  }
+  convolution_param {
+    num_output: 32
+    kernel_size: 5
+    pad: 2
+    stride: 1
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.0
+    }
+  }
+}
+
+layer {
+  name: "addLayer1_2"
+  type: "Eltwise"
+  bottom: "conv_in64_chan32"
+  bottom: "down_pooling_128_to_64"
+  top: "outBlock1_2"
+  eltwise_param {
+    operation: SUM
+  }
+}
+
+layer {
+  name: "outBlock1_2_RELU"
+  type: "PReLU"
+  bottom: "outBlock1_2"
+  top: "outBlock1_2"
+}
+
+#------------- SECOND BLOCK -----------------
+
+layer {
+  name: "down_pooling_64_to_32"
+  type: "Convolution"
+  bottom: "outBlock1_2"
+  top: "down_pooling_64_to_32"
+  param {
+    lr_mult: 1.0
+    decay_mult: 1.0
+  }
+  param {
+    lr_mult: 2.0
+    decay_mult: 0.0
+  }
+  convolution_param {
+    num_output: 64
+    kernel_size: 2
+    pad: 0
+    stride: 2
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.0
+    }
+  }
+}
+
+layer {
+  name: "relu_down_pooling_64_to_32"
+  type: "PReLU"
+  bottom: "down_pooling_64_to_32"
+  top: "down_pooling_64_to_32"
+}
+
+#-------------- SECOND POOLING ------------------
+
+layer {
+  name: "conv_in32_chan64"
+  type: "Convolution"
+  bottom: "down_pooling_64_to_32"
+  top: "conv_in32_chan64"
+  param {
+    lr_mult: 1.0
+    decay_mult: 1.0
+  }
+  param {
+    lr_mult: 2.0
+    decay_mult: 0.0
+  }
+  convolution_param {
+    num_output: 64
+    kernel_size: 5
+    pad: 2
+    stride: 1
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.0
+    }
+  }
+}
+
+layer {
+  name: "relu_conv_in32_chan64"
+  type: "PReLU"
+  bottom: "conv_in32_chan64"
+  top: "conv_in32_chan64"
+}
+
+layer {
+  name: "conv_in32_chan64_2"
+  type: "Convolution"
+  bottom: "conv_in32_chan64"
+  top: "conv_in32_chan64_2"
+  param {
+    lr_mult: 1.0
+    decay_mult: 1.0
+  }
+  param {
+    lr_mult: 2.0
+    decay_mult: 0.0
+  }
+  convolution_param {
+    num_output: 64
+    kernel_size: 5
+    pad: 2
+    stride: 1
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.0
+    }
+  }
+}
+
+layer {
+  name: "addLayer1_3"
+  type: "Eltwise"
+  bottom: "conv_in32_chan64_2"
+  bottom: "down_pooling_64_to_32"
+  top: "outBlock1_3"
+  eltwise_param {
+    operation: SUM
+  }
+}
+
+layer {
+  name: "outBlock1_3_RELU"
+  type: "PReLU"
+  bottom: "outBlock1_3"
+  top: "outBlock1_3"
+}
+
+#------------- THIRD BLOCK -----------------
+
+layer {
+  name: "down_pooling_32_to_16"
+  type: "Convolution"
+  bottom: "outBlock1_3"
+  top: "down_pooling_32_to_16"
+  param {
+    lr_mult: 1.0
+    decay_mult: 1.0
+  }
+  param {
+    lr_mult: 2.0
+    decay_mult: 0.0
+  }
+  convolution_param {
+    num_output: 128
+    kernel_size: 2
+    pad: 0
+    stride: 2
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.0
+    }
+  }
+}
+
+layer {
+  name: "relu_down_pooling_32_to_16"
+  type: "PReLU"
+  bottom: "down_pooling_32_to_16"
+  top: "down_pooling_32_to_16"
+}
+
+#-------------- THIRD POOLING ------------------
+
+layer {
+  name: "conv_in16_chan128"
+  type: "Convolution"
+  bottom: "down_pooling_32_to_16"
+  top: "conv_in16_chan128"
+  param {
+    lr_mult: 1.0
+    decay_mult: 1.0
+  }
+  param {
+    lr_mult: 2.0
+    decay_mult: 0.0
+  }
+  convolution_param {
+    num_output: 128
+    kernel_size: 5
+    pad: 2
+    stride: 1
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.0
+    }
+  }
+}
+layer {
+  name: "relu_conv_in16_chan128"
+  type: "PReLU"
+  bottom: "conv_in16_chan128"
+  top: "conv_in16_chan128"
+}
+
+layer {
+  name: "conv_in16_chan128_2"
+  type: "Convolution"
+  bottom: "conv_in16_chan128"
+  top: "conv_in16_chan128_2"
+  param {
+    lr_mult: 1.0
+    decay_mult: 1.0
+  }
+  param {
+    lr_mult: 2.0
+    decay_mult: 0.0
+  }
+  convolution_param {
+    num_output: 128
+    kernel_size: 5
+    pad: 2
+    stride: 1
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.0
+    }
+  }
+}
+
+layer {
+  name: "relu_conv_in16_chan128_2"
+  type: "PReLU"
+  bottom: "conv_in16_chan128_2"
+  top: "conv_in16_chan128_2"
+}
+
+layer {
+  name: "conv_in16_chan128_3"
+  type: "Convolution"
+  bottom: "conv_in16_chan128_2"
+  top: "conv_in16_chan128_3"
+  param {
+    lr_mult: 1.0
+    decay_mult: 1.0
+  }
+  param {
+    lr_mult: 2.0
+    decay_mult: 0.0
+  }
+  convolution_param {
+    num_output: 128
+    kernel_size: 5
+    pad: 2
+    stride: 1
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.0
+    }
+  }
+}
+
+layer {
+  name: "addLayer1_4"
+  type: "Eltwise"
+  bottom: "conv_in16_chan128_3"
+  bottom: "down_pooling_32_to_16"
+  top: "outBlock1_4"
+  eltwise_param {
+    operation: SUM
+  }
+}
+
+layer {
+  name: "outBlock1_4_RELU"
+  type: "PReLU"
+  bottom: "outBlock1_4"
+  top: "outBlock1_4"
+}
+
+#------------- FOURTH BLOCK -----------------
+
+
+layer {
+  name: "down_pooling_16_to_8"
+  type: "Convolution"
+  bottom: "outBlock1_4"
+  top: "down_pooling_16_to_8"
+  param {
+    lr_mult: 1.0
+    decay_mult: 1.0
+  }
+  param {
+    lr_mult: 2.0
+    decay_mult: 0.0
+  }
+  convolution_param {
+    num_output: 256
+    kernel_size: 2
+    pad: 0
+    stride: 2
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.0
+    }
+  }
+}
+
+layer {
+  name: "relu_down_pooling_16_to_8"
+  type: "PReLU"
+  bottom: "down_pooling_16_to_8"
+  top: "down_pooling_16_to_8"
+}
+
+#-------------- FOURTH POOLING ------------------
+
+layer {
+  name: "conv_in8_chan256"
+  type: "Convolution"
+  bottom: "down_pooling_16_to_8"
+  top: "conv_in8_chan256"
+  param {
+    lr_mult: 1.0
+    decay_mult: 1.0
+  }
+  param {
+    lr_mult: 2.0
+    decay_mult: 0.0
+  }
+  convolution_param {
+    num_output: 256
+    kernel_size: 5
+    pad: 2
+    stride: 1
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.0
+    }
+  }
+}
+layer {
+  name: "relu_conv_in8_chan256"
+  type: "PReLU"
+  bottom: "conv_in8_chan256"
+  top: "conv_in8_chan256"
+}
+
+layer {
+  name: "conv_in8_chan256_2"
+  type: "Convolution"
+  bottom: "conv_in8_chan256"
+  top: "conv_in8_chan256_2"
+  param {
+    lr_mult: 1.0
+    decay_mult: 1.0
+  }
+  param {
+    lr_mult: 2.0
+    decay_mult: 0.0
+  }
+  convolution_param {
+    num_output: 256
+    kernel_size: 5
+    pad: 2
+    stride: 1
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.0
+    }
+  }
+}
+layer {
+  name: "relu_conv_in8_chan256_2"
+  type: "PReLU"
+  bottom: "conv_in8_chan256_2"
+  top: "conv_in8_chan256_2"
+}
+
+layer {
+  name: "conv_in8_chan256_3"
+  type: "Convolution"
+  bottom: "conv_in8_chan256_2"
+  top: "conv_in8_chan256_3"
+  param {
+    lr_mult: 1.0
+    decay_mult: 1.0
+  }
+  param {
+    lr_mult: 2.0
+    decay_mult: 0.0
+  }
+  convolution_param {
+    num_output: 256
+    kernel_size: 5
+    pad: 2
+    stride: 1
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.0
+    }
+  }
+}
+
+layer {
+  name: "addLayer1_5"
+  type: "Eltwise"
+  bottom: "conv_in8_chan256_3"
+  bottom: "down_pooling_16_to_8"
+  top: "outBlock1_5"
+  eltwise_param {
+    operation: SUM
+  }
+}
+
+layer {
+  name: "outBlock1_5_RELU"
+  type: "PReLU"
+  bottom: "outBlock1_5"
+  top: "outBlock1_5"
+}
+
+#------------- FIFTH BLOCK -----------------
+
+
+layer {
+  name: "deconv_in8_chan128"
+  type: "Deconvolution"
+  bottom: "outBlock1_5"
+  top: "deconv_in8_chan128"
+  param {
+    lr_mult: 1.0
+    decay_mult: 1.0
+  }
+  param {
+    lr_mult: 2.0
+    decay_mult: 0.0
+  }
+  convolution_param {
+    num_output: 128
+    kernel_size: 2
+    stride: 2
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.0
+    }
+  }
+}
+
+layer {
+  name: "relu_deconv_in8_chan128"
+  type: "PReLU"
+  bottom: "deconv_in8_chan128"
+  top: "deconv_in8_chan128"
+}
+
+layer {
+  type: "Concat"
+  name: "concat_in16_concat"
+  top: "concat_in16_concat"
+  bottom: "deconv_in8_chan128"
+  bottom: "outBlock1_4"
+}
+
+#------------- FIRST DEPOOL -----------------
+
+layer {
+  name: "conv_in16_chan128_right"
+  type: "Convolution"
+  bottom: "concat_in16_concat"
+  top: "conv_in16_chan128_right"
+  param {
+    lr_mult: 1.0
+    decay_mult: 1.0
+  }
+  param {
+    lr_mult: 2.0
+    decay_mult: 0.0
+  }
+  convolution_param {
+    num_output: 256
+    kernel_size: 5
+    pad: 2
+    stride: 1
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.0
+    }
+  }
+}
+
+layer {
+  name: "relu_conv_in16_chan128_right"
+  type: "PReLU"
+  bottom: "conv_in16_chan128_right"
+  top: "conv_in16_chan128_right"
+}
+
+layer {
+  name: "conv_in16_chan128_right_2"
+  type: "Convolution"
+  bottom: "conv_in16_chan128_right"
+  top: "conv_in16_chan128_right_2"
+  param {
+    lr_mult: 1.0
+    decay_mult: 1.0
+  }
+  param {
+    lr_mult: 2.0
+    decay_mult: 0.0
+  }
+  convolution_param {
+    num_output: 256
+    kernel_size: 5
+    pad: 2
+    stride: 1
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.0
+    }
+  }
+}
+
+layer {
+  name: "relu_conv_in16_chan128_right_2"
+  type: "PReLU"
+  bottom: "conv_in16_chan128_right_2"
+  top: "conv_in16_chan128_right_2"
+}
+
+layer {
+  name: "conv_in16_chan128_right_3"
+  type: "Convolution"
+  bottom: "conv_in16_chan128_right_2"
+  top: "conv_in16_chan128_right_3"
+  param {
+    lr_mult: 1.0
+    decay_mult: 1.0
+  }
+  param {
+    lr_mult: 2.0
+    decay_mult: 0.0
+  }
+  convolution_param {
+    num_output: 256
+    kernel_size: 5
+    pad: 2
+    stride: 1
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.0
+    }
+  }
+}
+
+layer {
+  name: "addLayer2_4"
+  type: "Eltwise"
+  bottom: "conv_in16_chan128_right_3"
+  bottom: "concat_in16_concat"
+  top: "outBlock2_4"
+  eltwise_param {
+    operation: SUM
+  }
+}
+
+layer {
+  name: "outBlock2_4_RELU"
+  type: "PReLU"
+  bottom: "outBlock2_4"
+  top: "outBlock2_4"
+}
+
+#------------- SIXTH BLOCK -----------------
+
+layer {
+  name: "deconv_in16_chan64"
+  type: "Deconvolution"
+  bottom: "outBlock2_4"
+  top: "deconv_in16_chan64"
+  param {
+    lr_mult: 1.0
+    decay_mult: 1.0
+  }
+  param {
+    lr_mult: 2.0
+    decay_mult: 0.0
+  }
+  convolution_param {
+    num_output: 64
+    kernel_size: 2
+    stride: 2
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.0
+    }
+  }
+}
+
+layer {
+  name: "relu_deconv_in16_chan64"
+  type: "PReLU"
+  bottom: "deconv_in16_chan64"
+  top: "deconv_in16_chan64"
+}
+
+layer {
+  type: "Concat"
+  name: "concat_in32_concat"
+  top: "concat_in32_concat"
+  bottom: "deconv_in16_chan64"
+  bottom: "outBlock1_3"
+}
+
+#------------- SECOND DEPOOL -----------------
+
+
+layer {
+  name: "conv_in32_chan64_right"
+  type: "Convolution"
+  bottom: "concat_in32_concat"
+  top: "conv_in32_chan64_right"
+  param {
+    lr_mult: 1.0
+    decay_mult: 1.0
+  }
+  param {
+    lr_mult: 2.0
+    decay_mult: 0.0
+  }
+  convolution_param {
+    num_output: 128
+    kernel_size: 5
+    pad: 2
+    stride: 1
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.0
+    }
+  }
+}
+
+layer {
+  name: "relu_conv_in32_chan64_right"
+  type: "PReLU"
+  bottom: "conv_in32_chan64_right"
+  top: "conv_in32_chan64_right"
+}
+
+layer {
+  name: "conv_in32_chan64_right_2"
+  type: "Convolution"
+  bottom: "conv_in32_chan64_right"
+  top: "conv_in32_chan64_right_2"
+  param {
+    lr_mult: 1.0
+    decay_mult: 1.0
+  }
+  param {
+    lr_mult: 2.0
+    decay_mult: 0.0
+  }
+  convolution_param {
+    num_output: 128
+    kernel_size: 5
+    pad: 2
+    stride: 1
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.0
+    }
+  }
+}
+
+layer {
+  name: "addLayer2_3"
+  type: "Eltwise"
+  bottom: "conv_in32_chan64_right_2"
+  bottom: "concat_in32_concat"
+  top: "outBlock2_3"
+  eltwise_param {
+    operation: SUM
+  }
+}
+
+layer {
+  name: "outBlock2_3_RELU"
+  type: "PReLU"
+  bottom: "outBlock2_3"
+  top: "outBlock2_3"
+}
+
+#------------- SEVENTH BLOCK -----------------
+
+layer {
+  name: "deconv_in32_chan32"
+  type: "Deconvolution"
+  bottom: "outBlock2_3"
+  top: "deconv_in32_chan32"
+  param {
+    lr_mult: 1.0
+    decay_mult: 1.0
+  }
+  param {
+    lr_mult: 2.0
+    decay_mult: 0.0
+  }
+  convolution_param {
+    num_output: 32
+    kernel_size: 2
+    stride: 2
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.0
+    }
+  }
+}
+
+layer {
+  name: "relu_deconv_in32_chan32"
+  type: "PReLU"
+  bottom: "deconv_in32_chan32"
+  top: "deconv_in32_chan32"
+}
+
+layer {
+  type: "Concat"
+  name: "concat_in64_concat"
+  top: "concat_in64_concat"
+  bottom: "deconv_in32_chan32"
+  bottom: "outBlock1_2"
+}
+
+#------------- THIRD DEPOOL -----------------
+
+
+layer {
+  name: "conv_in64_chan32_right"
+  type: "Convolution"
+  bottom: "concat_in64_concat"
+  top: "conv_in64_chan32_right"
+  param {
+    lr_mult: 1.0
+    decay_mult: 1.0
+  }
+  param {
+    lr_mult: 2.0
+    decay_mult: 0.0
+  }
+  convolution_param {
+    num_output: 64
+    kernel_size: 5
+    pad: 2
+    stride: 1
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.0
+    }
+  }
+}
+
+layer {
+  name: "addLayer2_2"
+  type: "Eltwise"
+  bottom: "conv_in64_chan32_right"
+  bottom: "concat_in64_concat"
+  top: "outBlock2_2"
+  eltwise_param {
+    operation: SUM
+  }
+}
+
+layer {
+  name: "outBlock2_2_RELU"
+  type: "PReLU"
+  bottom: "outBlock2_2"
+  top: "outBlock2_2"
+}
+
+
+#------------- EIGHTH BLOCK -----------------
+
+layer {
+  name: "deconv_in64_chan16"
+  type: "Deconvolution"
+  bottom: "outBlock2_2"
+  top: "deconv_in64_chan16"
+  param {
+    lr_mult: 1.0
+    decay_mult: 1.0
+  }
+  param {
+    lr_mult: 2.0
+    decay_mult: 0.0
+  }
+  convolution_param {
+    num_output: 16
+    kernel_size: 2
+    stride: 2
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.0
+    }
+  }
+}
+
+layer {
+  name: "relu_deconv_in64_chan16"
+  type: "PReLU"
+  bottom: "deconv_in64_chan16"
+  top: "deconv_in64_chan16"
+}
+
+layer {
+  type: "Concat"
+  name: "concat_in128_concat"
+  top: "concat_in128_concat"
+  bottom: "deconv_in64_chan16"
+  bottom: "outBlock1_1"
+}
+
+#------------- FOURTH DEPOOL -----------------
+
+layer {
+  name: "conv_in128_chan16_right"
+  type: "Convolution"
+  bottom: "concat_in128_concat"
+  top: "conv_in128_chan16_right"
+  param {
+    lr_mult: 1.0
+    decay_mult: 1.0
+  }
+  param {
+    lr_mult: 2.0
+    decay_mult: 0.0
+  }
+  convolution_param {
+    num_output: 32
+    kernel_size: 5
+    pad: 2
+    stride: 1
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.0
+    }
+  }
+}
+
+layer {
+  name: "addLayer2_1"
+  type: "Eltwise"
+  bottom: "conv_in128_chan16_right"
+  bottom: "concat_in128_concat"
+  top: "outBlock2_1"
+  eltwise_param {
+    operation: SUM
+  }
+}
+
+layer {
+  name: "outBlock2_1_RELU"
+  type: "PReLU"
+  bottom: "outBlock2_1"
+  top: "outBlock2_1"
+}
+
+#------------- NINETH BLOCK -----------------
+
+
+layer {
+  name: "conv_in128_chan2_right"
+  type: "Convolution"
+  bottom: "outBlock2_1"
+  top: "conv_in128_chan2_right"
+  param {
+    lr_mult: 1.0
+    decay_mult: 1.0
+  }
+  param {
+    lr_mult: 2.0
+    decay_mult: 0.0
+  }
+  convolution_param {
+    num_output: 2
+    kernel_size: 5
+    stride: 1
+    pad: 2
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.0
+    }
+  }
+}
+
+layer {
+  name: "relu_conv_in128_chan2_right"
+  type: "PReLU"
+  bottom: "conv_in128_chan2_right"
+  top: "conv_in128_chan2_right"
+}
+
+layer {
+  name: "conv_in128_chan2_2_right"
+  type: "Convolution"
+  bottom: "conv_in128_chan2_right"
+  top: "conv_in128_chan2_2_right"
+  param {
+    lr_mult: 1.0
+    decay_mult: 1.0
+  }
+  param {
+    lr_mult: 2.0
+    decay_mult: 0.0
+  }
+  convolution_param {
+    num_output: 2
+    kernel_size: 1
+    stride: 1
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0.0
+    }
+  }
+}
+
+
+  layer {
+    name: "reshaperes"
+    type: "Reshape"
+    bottom: "conv_in128_chan2_2_right"
+    top: "conv_in128_chan2_right_flat"
+    reshape_param {
+      shape {
+        dim: 1  # copy the dimension from below
+        dim: 2
+        dim: 1048576
+      }
+    }
+  }
+
+
+layer {
+    name: "labelmapsf"
+    type: "Softmax"
+    bottom: "conv_in128_chan2_right_flat"
+    top: "labelmapsf"
+    loss_param {
+      ignore_label:2
+    }
+  }
+
+  layer {
+    name: "labelmap"
+    type: "Reshape"
+    bottom: "labelmapsf"
+    top: "labelmap"
+    reshape_param {
+      shape {
+        dim: 1  # copy the dimension from below
+        dim: 2
+        dim: 128
+        dim: 128
+        dim: 64
+      }
+    }
+  }
