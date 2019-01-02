@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "boost/algorithm/string.hpp"
-#include "caffe/solver.hpp"
+#include "caffe/gan_solver.hpp"
 #include "caffe/util/format.hpp"
 #include "caffe/util/hdf5.hpp"
 #include "caffe/util/io.hpp"
