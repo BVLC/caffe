@@ -115,7 +115,7 @@ input_shape {
   dim: 1
 }
 layer {
-  name: "discr_loss"
+  name: "disc_loss"
   type: "SigmoidCrossEntropyLoss"
   bottom: "conv4"
   bottom: "disc_label"

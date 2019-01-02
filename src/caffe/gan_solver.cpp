@@ -128,10 +128,6 @@ void GANSolver<Dtype>::Step(int iters) {
         LOG_IF(INFO, Caffe::root_solver()) << res[i]->shape_string();
 
       d_solver->net_->Backward(); // accumulate gradient for D(real)
-
-      for(auto name : d_solver->net_->layer_names())
-        LOG_IF(INFO, Caffe::root_solver()) << name;
-
       d_solver->net_->ForwardFromTo(x_fake,
         d_solver->net_->base_layer_index(),
         d_solver->net_->layers().size() - 1); // D(G(z))
