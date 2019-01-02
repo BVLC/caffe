@@ -179,8 +179,8 @@ class GANSolver {
   int iter_;
   int current_step_;
 
-  vector<Dtype> losses_;
-  Dtype smoothed_loss_;
+  vector<Dtype> d_losses_, g_losses_;
+  Dtype d_smoothed_loss_, g_smoothed_loss_;
 
   // True iff a request to stop early was received.
   bool requested_early_exit_;

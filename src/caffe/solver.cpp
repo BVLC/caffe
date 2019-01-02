@@ -582,10 +582,12 @@ void GANSolver<Dtype>::Step(int iters) {
       }
     }
 
+    /*
     for (int i = 0; i < d_solver->callbacks_.size(); ++i)
       d_solver->callbacks_[i]->on_start();
     for (int i = 0; i < g_solver->callbacks_.size(); ++i)
       g_solver->callbacks_[i]->on_start();
+    */
 
     const bool d_display = d_solver->param_.display() && iter_ % d_solver->param_.display() == 0;
     const bool g_display = g_solver->param_.display() && iter_ % g_solver->param_.display() == 0;
@@ -594,7 +596,7 @@ void GANSolver<Dtype>::Step(int iters) {
 
     // accumulate the loss and gradient
     Dtype d_loss = 0, g_loss = 0;
-    for (int i = 0; i < d_param_.iter_size(); ++i) {
+    for (int i = 0; i < d_solver->param_.iter_size(); ++i) {
       // Train D :D(G(z)), Backward D, Update D
       auto x_fake = g_solver->net_->Forward(); // G(z)
       d_solver->net_->Forward(&d_loss); // D(real)
@@ -605,6 +607,7 @@ void GANSolver<Dtype>::Step(int iters) {
       d_solver->net_->ClearParamDiffs();
     }
     
+    /*
     loss /= param_.iter_size();
     // average the loss across iterations for smoothed reporting
     UpdateSmoothedLoss(loss, start_iter, average_loss);
@@ -636,6 +639,8 @@ void GANSolver<Dtype>::Step(int iters) {
         }
       }
     }
+    */
+   
     // Do not support gradients ready call back
     /*
     for (int i = 0; i < callbacks_.size(); ++i) {
