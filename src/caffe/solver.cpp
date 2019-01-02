@@ -501,6 +501,59 @@ void Solver<Dtype>::UpdateSmoothedLoss(Dtype loss, int start_iter,
   }
 }
 
+template <typename Dtype>
+void GANSolver<Dtype>::Solve(const char* resume_file) {
+  CHECK(Caffe::root_solver());
+  LOG(INFO) << "Solve\t\tGenerator\t\tDiscriminator";
+  LOG(INFO) << "\t\t\t\t" << g_solver->net_->name() << "\t\t\t" << d_solver->net_->name();
+  LOG(INFO) << "LR Policy\t\t" << g_solver->param_.lr_policy() << "\t\t" << d_solver->param_.lr_policy();
+
+  // Initialize to false every time we start solving.
+  requested_early_exit_ = false;
+
+  if (resume_file) {
+    LOG(INFO) << "Restoring previous solver status from " << resume_file;
+    Restore(resume_file);
+  }
+
+  // For a network that is trained by the solver, no bottom or top vecs
+  // should be given, and we will just provide dummy vecs.
+  int start_iter = iter_;
+  // use d_solver as standard
+  Step(d_solver->param_.max_iter() - iter_);
+  // If we haven't already, save a snapshot after optimization, unless
+  // overridden by setting snapshot_after_train := false
+  if (d_solver->param_.snapshot_after_train()
+      && (!d_solver->param_.snapshot() || iter_ % d_solver->param_.snapshot() != 0)) {
+    d_solver->Snapshot();
+    g_solver->Snapshot();
+  }
+  if (requested_early_exit_) {
+    LOG(INFO) << "Optimization stopped early.";
+    return;
+  }
+  // After the optimization is done, run an additional train and test pass to
+  // display the train and test loss/outputs if appropriate (based on the
+  // display and test_interval settings, respectively).  Unlike in the rest of
+  // training, for the train net we only run a forward pass as we've already
+  // updated the parameters "max_iter" times -- this final pass is only done to
+  // display the loss, which is computed in the forward pass.
+  if (d_solver->param_.display() && iter_ % d_solver->param_.display() == 0) {
+    // int average_loss = d_solver->param_.average_loss();
+    // Dtype loss;
+    // d_solver->net_->Forward(&loss);
+
+    // UpdateSmoothedLoss(loss, start_iter, average_loss);
+
+    // LOG(INFO) << "Iteration " << iter_ << ", loss = " << smoothed_loss_;
+  }
+  if (d_solver->param_.test_interval() && iter_ % d_solver->param_.test_interval() == 0) {
+    // d_solver->TestAll();
+  }
+  LOG(INFO) << "Optimization Done.";
+}
+
 INSTANTIATE_CLASS(Solver);
+INSTANTIATE_CLASS(GANSolver);
 
 }  // namespace caffe

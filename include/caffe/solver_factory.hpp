@@ -49,6 +49,8 @@ namespace caffe {
 
 template <typename Dtype>
 class Solver;
+template <typename Dtype>
+class GANSolver;
 
 template <typename Dtype>
 class SolverRegistry {
@@ -76,6 +78,15 @@ class SolverRegistry {
     CHECK_EQ(registry.count(type), 1) << "Unknown solver type: " << type
         << " (known types: " << SolverTypeListString() << ")";
     return registry[type](param);
+  }
+  
+  // GANSolver require two parameter, quite dirty here
+  static GANSolver<Dtype>* CreateGANSolver(const SolverParameter& g_param, const SolverParameter& d_param) {
+    //const string& type = d_param.type();
+    //CreatorRegistry& registry = Registry();
+    //CHECK_EQ(registry.count(type), 1) << "Unknown solver type: " << type
+    //    << " (known types: " << SolverTypeListString() << ")";
+    return new GANSolver<Dtype>(g_param, d_param);
   }
 
   static vector<string> SolverTypeList() {
