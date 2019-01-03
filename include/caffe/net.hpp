@@ -150,6 +150,12 @@ class Net {
   inline const vector<vector<Blob<Dtype>*> >& top_vecs() const {
     return top_vecs_;
   }
+  /**
+   * @brief returns the top vecs for each layer to modify gradient
+   */
+  inline const vector<vector<Blob<Dtype>*> >& mutable_top_vecs() {
+    return top_vecs_;
+  }
   /// @brief returns the ids of the top blobs of layer i
   inline const vector<int> & top_ids(int i) const {
     CHECK_GE(i, 0) << "Invalid layer id";

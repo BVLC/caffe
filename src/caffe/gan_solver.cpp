@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "boost/algorithm/string.hpp"
+#include "caffe/util/math_functions.hpp"
 #include "caffe/gan_solver.hpp"
 #include "caffe/util/format.hpp"
 #include "caffe/util/hdf5.hpp"
@@ -150,13 +151,24 @@ void GANSolver<Dtype>::Step(int iters) {
 
       disc_label->CopyFrom(ones); CHECK_EQ((int)disc_label->cpu_data()[0], 1);
       d_solver->net_->ForwardFromTo(x_fake, d_solver->net_->base_layer_index(), d_solver->net_->layers().size() - 1); // D(G(z))
+
       d_solver->net_->Backward(); // calculate gradient
+      auto d_bottom = d_solver->bottom_vecs_[d_solver->net_->base_layer_index()][0];
+      LOG_IF(INFO, Caffe::root_solver()) << "d diff " << d_bottom->shape_string();
+
       // TODO: do not caculate gradient for weights
-      g_solver->net_->Backward(d_solver->net_->bottom_vecs()[0], true, g_solver->net_->bottom_vecs()[0]);
+      auto g_top = g_solver->net_->mutable_top_vecs()[0][0];
+      LOG_IF(INFO, Caffe::root_solver()) << "g top  " << g_top->shape_string();
+
+      caffe_copy(g_top->count(), d_bottom->cpu_diff(), static_cast<Dtype*>(g_top->mutable_cpu_diff()));
+      CHECK_EQ(g_top->cpu_diff()[0], d_bottom->cpu_diff()[0]);
+
+      g_solver->net_->Backward();
+      
       g_solver->ApplyUpdate();
 
-      d_solver->net_->ClearParamDiffs();
       g_solver->net_->ClearParamDiffs();
+      d_solver->net_->ClearParamDiffs();
     }
     
     /*

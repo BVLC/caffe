@@ -290,7 +290,14 @@ class Layer {
     }
     param_propagate_down_[param_id] = value;
   }
-
+  /**
+   * @brief Sets whether the layer should compute gradients w.r.t. a
+   *        parameter at a particular index given by param_id.
+   */
+  inline void set_param_propagate_down(const bool value) {
+    for (int i = 0; i < param_propagate_down_.size(); i++)
+      param_propagate_down_[i] = value;
+  }
 
  protected:
   /** The protobuf that stores the layer parameters */
