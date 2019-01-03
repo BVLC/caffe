@@ -152,7 +152,7 @@ void GANSolver<Dtype>::Step(int iters) {
       d_solver->net_->ForwardFromTo(x_fake, d_solver->net_->base_layer_index(), d_solver->net_->layers().size() - 1); // D(G(z))
       d_solver->net_->Backward(); // calculate gradient
       // TODO: do not caculate gradient for weights
-      g_solver->net->Backward(d_solver->net_->bottom_vecs(), true, g_solver->net_->bottom_vecs());
+      g_solver->net->Backward(d_solver->net_->bottom_vecs()[0], true, g_solver->net_->bottom_vecs()[0]);
       g_solver->ApplyUpdate();
 
       d_solver->net_->ClearParamDiffs();
