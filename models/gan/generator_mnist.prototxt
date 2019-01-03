@@ -1,10 +1,22 @@
 force_backward: true
 name: "SimpleGenerator"
+#layer {
+#  name: "noise"
+#  type: "Input"
+#  top: "noise"
+#  input_param { shape: { dim: 64 dim: 128} }
+#}
 layer {
   name: "noise"
-  type: "Input"
+  type: "RandVec"
   top: "noise"
-  input_param { shape: { dim: 64 dim: 128} }
+  rand_vec_param {
+    batch_size: 64
+    dim: 128
+    lower: -1.0
+    upper: 1.0
+    repeat: 3
+  }
 }
 layer {
   name: "reshape"

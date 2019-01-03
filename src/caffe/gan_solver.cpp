@@ -124,31 +124,35 @@ void GANSolver<Dtype>::Step(int iters) {
     d_solver->net_->set_debug_info(d_display && d_solver->param_.debug_info());
     g_solver->net_->set_debug_info(g_display && g_solver->param_.debug_info());
 
+    disc_label->CopyFrom(ones); CHECK_EQ((int)disc_label->cpu_data()[0], 1);
+
     // accumulate the loss and gradient
     Dtype d_loss = 0, g_loss = 0;
     for (int i = 0; i < d_solver->param_.iter_size(); ++i) {
-      // Train D :D(G(z)), Backward D, Update D
+      /// Train D
       auto x_fake = g_solver->net_->Forward(); // G(z)
-      disc_label->CopyFrom(ones);
+
       auto res = d_solver->net_->Forward(&d_loss); // D(real)
+      d_solver->net_->Backward(); // accumulate gradient for D(real)
 
       LOG_IF(INFO, Caffe::root_solver()) << "Disc real:";
       for (i = 0; i < res.size(); i++)
         LOG_IF(INFO, Caffe::root_solver()) << res[i]->shape_string();
 
-      d_solver->net_->Backward(); // accumulate gradient for D(real)
-      disc_label.CopyFrom(zeros);
+      disc_label->CopyFrom(zeros); CHECK_EQ((int)disc_label->cpu_data()[0], 0);
       d_solver->net_->ForwardFromTo(x_fake, d_solver->net_->base_layer_index(), d_solver->net_->layers().size() - 1); // D(G(z))
       d_solver->net_->Backward(); // accumulate gradient for D(G(z))
       d_solver->ApplyUpdate();
       d_solver->net_->ClearParamDiffs();
 
+      /// Train G
       x_fake = g_solver->net_->Forward(); // G(z)
-      disc_label.CopyFrom(ones);
+
+      disc_label->CopyFrom(ones); CHECK_EQ((int)disc_label->cpu_data()[0], 1);
       d_solver->net_->ForwardFromTo(x_fake, d_solver->net_->base_layer_index(), d_solver->net_->layers().size() - 1); // D(G(z))
       d_solver->net_->Backward(); // calculate gradient
       // TODO: do not caculate gradient for weights
-      g_solver->net->Backward(d_solver->net_->input_blobs, true, g_solver->input_blobs);
+      g_solver->net->Backward(d_solver->net_->bottom_vecs(), true, g_solver->net_->bottom_vecs());
       g_solver->ApplyUpdate();
 
       d_solver->net_->ClearParamDiffs();
