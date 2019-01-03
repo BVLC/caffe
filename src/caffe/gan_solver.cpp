@@ -136,9 +136,11 @@ void GANSolver<Dtype>::Step(int iters) {
       auto res = d_solver->net_->Forward(&d_loss); // D(real)
       d_solver->net_->Backward(); // accumulate gradient for D(real)
 
+      /*
       LOG_IF(INFO, Caffe::root_solver()) << "Disc real:";
       for (i = 0; i < res.size(); i++)
         LOG_IF(INFO, Caffe::root_solver()) << res[i]->shape_string();
+      */
 
       disc_label->CopyFrom(zeros); CHECK_EQ((int)disc_label->cpu_data()[0], 0);
       d_solver->net_->ForwardFromTo(x_fake, d_solver->net_->base_layer_index(), d_solver->net_->layers().size() - 1); // D(G(z))
@@ -154,17 +156,21 @@ void GANSolver<Dtype>::Step(int iters) {
 
       d_solver->net_->Backward(); // calculate gradient
       auto d_bottom = d_solver->net_->bottom_vecs()[d_solver->net_->base_layer_index()][0];
-      LOG_IF(INFO, Caffe::root_solver()) << "d bottom " << d_bottom->shape_string();
+      // LOG_IF(INFO, Caffe::root_solver()) << "d bottom " << d_bottom->shape_string();
 
       // TODO: do not caculate gradient for weights
+      /*
       auto g_tops = g_solver->net_->mutable_top_vecs();
       for (int i = 0; i < g_tops.size(); i ++) {
         for (int j = 0; j < g_tops[i].size(); j ++) {
           LOG_IF(INFO, Caffe::root_solver()) << i << " " << j << " " << g_tops[i][j]->shape_string();
         }
       }
-      auto g_top = g_solver->net_->mutable_top_vecs()[1][0];
-      LOG_IF(INFO, Caffe::root_solver()) << "g top    " << g_top->shape_string();
+      */
+
+      int g_last_layer = g_solver->net_->layers().size() - 1;
+      auto g_top = g_solver->net_->mutable_top_vecs()[g_last_layer][0];
+      //LOG_IF(INFO, Caffe::root_solver()) << "g top    " << g_top->shape_string();
 
       caffe_copy(g_top->count(), d_bottom->cpu_diff(), static_cast<Dtype*>(g_top->mutable_cpu_diff()));
       CHECK_EQ(g_top->cpu_diff()[0], d_bottom->cpu_diff()[0]);
