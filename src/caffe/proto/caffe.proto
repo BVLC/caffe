@@ -322,7 +322,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 149 (last added: clip_param)
+// LayerParameter next available layer-specific ID: 150 (last added: rand_vec)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -421,6 +421,16 @@ message LayerParameter {
   optional ThresholdParameter threshold_param = 128;
   optional TileParameter tile_param = 138;
   optional WindowDataParameter window_data_param = 129;
+  optional RandVecParameter randvec_param = 150;
+}
+
+message RandVecParameter {
+  optional uint32 batch_size = 1 [default = 1];
+  optional uint32 dim = 2 [default = 128];
+  optional uint32 height = 6[default = 1];
+  optional uint32 width = 7[default = 1];
+  optional float lower = 3 [default = -1];
+  optional float upper = 4 [default = 1];
 }
 
 // Message that stores parameters used to apply transformation

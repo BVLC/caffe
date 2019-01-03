@@ -1,7 +1,7 @@
 #include <vector>
 
 #include "caffe/layer.hpp"
-#include "caffe/layers/rand_vec_layer.hpp"
+#include "caffe/layers/randvec_layer.hpp"
 
 #define MAX_RANDOM 10000
 
