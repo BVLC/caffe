@@ -26,6 +26,7 @@ template <typename Dtype>
 void GANSolver<Dtype>::Solve(const char* resume_file) {
   CHECK(Caffe::root_solver());
   CHECK_EQ(d_solver->net_->num_inputs(), 1);
+  LOG(INFO) << "Total iter: " << d_solver->param_.max_iter() - iter_;
   LOG(INFO) << "Solve\t\tGenerator\t\tDiscriminator";
   LOG(INFO) << "\t\t\t" << g_solver->net_->name() << "\t\t\t" << d_solver->net_->name();
   LOG(INFO) << "LR Policy\t\t" << g_solver->param_.lr_policy() << "\t\t" << d_solver->param_.lr_policy();
@@ -104,7 +105,7 @@ void GANSolver<Dtype>::Step(int iters) {
     zeros_data[i] = 0.0;
   }
 
-  while (iter_ < stop_iter) {
+  while (++iter_ < stop_iter) {
     if (d_solver->param_.test_interval() && iter_ % d_solver->param_.test_interval() == 0
         && (iter_ > 0 || d_solver->param_.test_initialization())) {
       if (Caffe::root_solver()) {
@@ -132,61 +133,60 @@ void GANSolver<Dtype>::Step(int iters) {
 
     // accumulate the loss and gradient
     Dtype d_loss = 0, g_loss = 0;
-    for (int i = 0; i < d_solver->param_.iter_size(); ++i) {
-      /// Train D
-      auto x_fake = g_solver->net_->Forward(); // G(z)
 
-      auto res = d_solver->net_->Forward(&d_loss); // D(real)
-      d_solver->net_->Backward(); // accumulate gradient for D(real)
+    /// Train D
+    auto x_fake = g_solver->net_->Forward(); // G(z)
 
-      /*
-      LOG_IF(INFO, Caffe::root_solver()) << "Disc real:";
-      for (i = 0; i < res.size(); i++)
-        LOG_IF(INFO, Caffe::root_solver()) << res[i]->shape_string();
-      */
+    auto res = d_solver->net_->Forward(&d_loss); // D(real)
+    d_solver->net_->Backward(); // accumulate gradient for D(real)
 
-      disc_label->CopyFrom(zeros); CHECK_EQ((int)disc_label->cpu_data()[0], 0);
-      d_solver->net_->ForwardFromTo(x_fake, d_solver->net_->base_layer_index(), d_solver->net_->layers().size() - 1); // D(G(z))
-      d_solver->net_->Backward(); // accumulate gradient for D(G(z))
-      d_solver->ApplyUpdate();
-      d_solver->net_->ClearParamDiffs();
+    /*
+    LOG_IF(INFO, Caffe::root_solver()) << "Disc real:";
+    for (i = 0; i < res.size(); i++)
+      LOG_IF(INFO, Caffe::root_solver()) << res[i]->shape_string();
+    */
 
-      /// Train G
-      x_fake = g_solver->net_->Forward(); // G(z)
+    disc_label->CopyFrom(zeros); CHECK_EQ((int)disc_label->cpu_data()[0], 0);
+    d_solver->net_->ForwardFromTo(x_fake, d_solver->net_->base_layer_index(), d_solver->net_->layers().size() - 1); // D(G(z))
+    d_solver->net_->Backward(); // accumulate gradient for D(G(z))
+    d_solver->ApplyUpdate();
+    d_solver->net_->ClearParamDiffs();
 
-      disc_label->CopyFrom(ones); CHECK_EQ((int)disc_label->cpu_data()[0], 1);
-      d_solver->net_->ForwardFromTo(x_fake, d_solver->net_->base_layer_index(), d_solver->net_->layers().size() - 1); // D(G(z))
+    /// Train G
+    x_fake = g_solver->net_->Forward(); // G(z)
 
-      d_solver->net_->Backward(); // calculate gradient
-      auto d_bottom = d_solver->net_->bottom_vecs()[d_solver->net_->base_layer_index()][0];
-      // LOG_IF(INFO, Caffe::root_solver()) << "d bottom " << d_bottom->shape_string();
+    disc_label->CopyFrom(ones); CHECK_EQ((int)disc_label->cpu_data()[0], 1);
+    d_solver->net_->ForwardFromTo(x_fake, d_solver->net_->base_layer_index(), d_solver->net_->layers().size() - 1); // D(G(z))
 
-      // TODO: do not caculate gradient for weights
-      /*
-      auto g_tops = g_solver->net_->mutable_top_vecs();
-      for (int i = 0; i < g_tops.size(); i ++) {
-        for (int j = 0; j < g_tops[i].size(); j ++) {
-          LOG_IF(INFO, Caffe::root_solver()) << i << " " << j << " " << g_tops[i][j]->shape_string();
-        }
+    d_solver->net_->Backward(); // calculate gradient
+    auto d_bottom = d_solver->net_->bottom_vecs()[d_solver->net_->base_layer_index()][0];
+    // LOG_IF(INFO, Caffe::root_solver()) << "d bottom " << d_bottom->shape_string();
+
+    // TODO: do not caculate gradient for weights
+    /*
+    auto g_tops = g_solver->net_->mutable_top_vecs();
+    for (int i = 0; i < g_tops.size(); i ++) {
+      for (int j = 0; j < g_tops[i].size(); j ++) {
+        LOG_IF(INFO, Caffe::root_solver()) << i << " " << j << " " << g_tops[i][j]->shape_string();
       }
-      */
-
-      int g_last_layer = g_solver->net_->layers().size() - 1;
-      auto g_top = g_solver->net_->mutable_top_vecs()[g_last_layer][0];
-      //LOG_IF(INFO, Caffe::root_solver()) << "g top    " << g_top->shape_string();
-
-      caffe_copy(g_top->count(), d_bottom->cpu_diff(), static_cast<Dtype*>(g_top->mutable_cpu_diff()));
-      // CHECK_EQ(g_top->cpu_diff()[0], d_bottom->cpu_diff()[0]);
-
-      g_solver->net_->Backward();
-
-      g_solver->ApplyUpdate();
-
-      g_solver->net_->ClearParamDiffs();
-      d_solver->net_->ClearParamDiffs();
-
-      if(i % 100 == 0) TestAll();
     }
+    */
+
+    int g_last_layer = g_solver->net_->layers().size() - 1;
+    auto g_top = g_solver->net_->mutable_top_vecs()[g_last_layer][0];
+    //LOG_IF(INFO, Caffe::root_solver()) << "g top    " << g_top->shape_string();
+
+    caffe_copy(g_top->count(), d_bottom->cpu_diff(), static_cast<Dtype*>(g_top->mutable_cpu_diff()));
+    // CHECK_EQ(g_top->cpu_diff()[0], d_bottom->cpu_diff()[0]);
+
+    g_solver->net_->Backward();
+
+    g_solver->ApplyUpdate();
+
+    g_solver->net_->ClearParamDiffs();
+    d_solver->net_->ClearParamDiffs();
+
+    if(iter_ % 100 == 0) TestAll();
     
     /*
     loss /= param_.iter_size();
