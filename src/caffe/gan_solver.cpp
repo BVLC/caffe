@@ -153,12 +153,12 @@ void GANSolver<Dtype>::Step(int iters) {
       d_solver->net_->ForwardFromTo(x_fake, d_solver->net_->base_layer_index(), d_solver->net_->layers().size() - 1); // D(G(z))
 
       d_solver->net_->Backward(); // calculate gradient
-      auto d_bottom = d_solver->bottom_vecs_[d_solver->net_->base_layer_index()][0];
-      LOG_IF(INFO, Caffe::root_solver()) << "d diff " << d_bottom->shape_string();
+      auto d_bottom = d_solver->net_->bottom_vecs()[d_solver->net_->base_layer_index()][0];
+      LOG_IF(INFO, Caffe::root_solver()) << "d bottom " << d_bottom->shape_string();
 
       // TODO: do not caculate gradient for weights
       auto g_top = g_solver->net_->mutable_top_vecs()[0][0];
-      LOG_IF(INFO, Caffe::root_solver()) << "g top  " << g_top->shape_string();
+      LOG_IF(INFO, Caffe::root_solver()) << "g top    " << g_top->shape_string();
 
       caffe_copy(g_top->count(), d_bottom->cpu_diff(), static_cast<Dtype*>(g_top->mutable_cpu_diff()));
       CHECK_EQ(g_top->cpu_diff()[0], d_bottom->cpu_diff()[0]);
