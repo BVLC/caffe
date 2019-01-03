@@ -88,7 +88,6 @@ layer {
     moving_average_fraction: 0.99
   }
 }
-
 layer {
   name: "relu_deconv3"
   type: "ReLU"

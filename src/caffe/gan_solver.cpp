@@ -2,6 +2,9 @@
 
 #include <string>
 #include <vector>
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 
 #include "boost/algorithm/string.hpp"
 #include "caffe/util/math_functions.hpp"
@@ -173,14 +176,16 @@ void GANSolver<Dtype>::Step(int iters) {
       //LOG_IF(INFO, Caffe::root_solver()) << "g top    " << g_top->shape_string();
 
       caffe_copy(g_top->count(), d_bottom->cpu_diff(), static_cast<Dtype*>(g_top->mutable_cpu_diff()));
-      CHECK_EQ(g_top->cpu_diff()[0], d_bottom->cpu_diff()[0]);
+      // CHECK_EQ(g_top->cpu_diff()[0], d_bottom->cpu_diff()[0]);
 
       g_solver->net_->Backward();
-      
+
       g_solver->ApplyUpdate();
 
       g_solver->net_->ClearParamDiffs();
       d_solver->net_->ClearParamDiffs();
+
+      if(i % 100 == 0) TestAll();
     }
     
     /*

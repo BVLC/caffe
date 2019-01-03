@@ -536,11 +536,6 @@ Dtype Net<Dtype>::ForwardFromTo(int start, int end) {
 template <typename Dtype>
 Dtype Net<Dtype>::ForwardFromTo(const vector<Blob<Dtype>* > & bottom, int start, int end) {
   CHECK_GE(start, 0);
-
-  for (int st = 0; st <= end; st ++)
-    for(int i = 0; i < bottom_vecs_[st].size(); i++)
-      LOG_IF(INFO, Caffe::root_solver()) << layer_names_[st] << " " << bottom_vecs_[st][i]->shape_string();
-
   CHECK_EQ(bottom_vecs_[start].size(), bottom.size());
   CHECK_LT(end, layers_.size());
   Dtype loss = 0;
