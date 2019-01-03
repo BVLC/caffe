@@ -43,11 +43,14 @@ class GANSolver {
     int width = output_layer->width(), height = output_layer->height(), channel = output_layer->channels();
     Dtype* input_data = output_layer->mutable_cpu_data();
 
-    if (channel == 1) 
+    if (channel == 1) {
       cv::Mat image(height, width, CV_32FC1, input_data);
-    else if (channel == 3)
+      cv::imwrite("a.jpg", image);
+    }
+    else if (channel == 3) {
       cv::Mat image(height, width, CV_32FC3, input_data);
-    cv::imwrite("a.jpg", image);
+      cv::imwrite("a.jpg", image);
+    }
   }
 
   SolverAction::Enum GetRequestedAction();
