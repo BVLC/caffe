@@ -160,7 +160,7 @@ void GANSolver<Dtype>::Step(int iters) {
       auto g_tops = g_solver->net_->mutable_top_vecs();
       for (int i = 0; i < g_tops.size(); i ++) {
         for (int j = 0; j < g_tops[i].size(); j ++) {
-          LOG_IF(INFO, Caffe::root_solver()) << i << " " << j << " " << g_top[i][j]->shape_string();
+          LOG_IF(INFO, Caffe::root_solver()) << i << " " << j << " " << g_tops[i][j]->shape_string();
         }
       }
       auto g_top = g_solver->net_->mutable_top_vecs()[1][0];

@@ -23,7 +23,7 @@ layer {
   bottom: "noise"
   top: "fc1"
   inner_product_param {
-    num_output: 12544
+    num_output: 6272
     weight_filler {
       type: "gaussian"
       std: 0.02
@@ -33,7 +33,7 @@ layer {
 layer {
   name: "reshape"
   type: "Reshape"
-  bottom: "noise"
+  bottom: "fc1"
   top: "reshape_fc1"
   reshape_param {
     shape {
@@ -45,29 +45,9 @@ layer {
   }
 }
 layer {
-  name: "deconv3"           
-  type: "Deconvolution"
-  bottom: "noise"
-  top: "deconv3"
-  convolution_param {
-    num_output: 256
-    pad: 0
-    kernel_size: 7
-    stride: 1
-    weight_filler {
-      type: "gaussian"
-      std: 0.02
-    }
-    bias_filler {
-      type: "constant"
-    }
-  }
-}
-
-layer {
   name: "deconv3_BN"
-  type: "BatchNorm" include { phase: TRAIN}
-  bottom: "deconv3"
+  type: "BatchNorm" include {phase: TRAIN}
+  bottom: "reshape_fc1"
   top: "deconv3_BN"
   param {
     lr_mult: 0
@@ -89,7 +69,7 @@ layer {
 layer {
   name: "deconv3_BN"
   type: "BatchNorm" include { phase: TEST}
-  bottom: "deconv5"
+  bottom: "reshape_fc1"
   top: "deconv3_BN"
   param {
     lr_mult: 0
