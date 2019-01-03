@@ -10,7 +10,7 @@ layer {
   name: "noise"
   type: "RandVec"
   top: "noise"
-  rand_vec_param {
+  randvec_param {
     batch_size: 64
     dim: 128
     lower: -1.0

@@ -20,13 +20,13 @@ Dtype RandVecLayer<Dtype>::GetRandom(const Dtype lower, const Dtype upper) {
 template <typename Dtype>
 void RandVecLayer<Dtype>::LayerSetUp(
 const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
-    const RandVecParameter& rand_vec_param = this->layer_param_.rand_vec_param();
-    batch_size_ = rand_vec_param.batch_size();
-    dim_ = rand_vec_param.dim();
-    height_ = rand_vec_param.height();
-    width_ = rand_vec_param.width();
-    lower_ = rand_vec_param.lower();
-    upper_ = rand_vec_param.upper();
+    const RandVecParameter& randvec_param = this->layer_param_.randvec_param();
+    batch_size_ = randvec_param.batch_size();
+    dim_ = randvec_param.dim();
+    height_ = randvec_param.height();
+    width_ = randvec_param.width();
+    lower_ = randvec_param.lower();
+    upper_ = randvec_param.upper();
     iter_idx_ = 1;
     vector<int> top_shape(2);
     top_shape[0] = batch_size_;
