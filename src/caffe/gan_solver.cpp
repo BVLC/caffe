@@ -157,7 +157,13 @@ void GANSolver<Dtype>::Step(int iters) {
       LOG_IF(INFO, Caffe::root_solver()) << "d bottom " << d_bottom->shape_string();
 
       // TODO: do not caculate gradient for weights
-      auto g_top = g_solver->net_->mutable_top_vecs()[0][0];
+      auto g_tops = g_solver->net_->mutable_top_vecs();
+      for (int i = 0; i < g_tops.size(); i ++) {
+        for (int j = 0; j < g_tops[i].size(); j ++) {
+          LOG_IF(INFO, Caffe::root_solver()) << i << " " << j << " " << g_top[i][j]->shape_string();
+        }
+      }
+      auto g_top = g_solver->net_->mutable_top_vecs()[1][0];
       LOG_IF(INFO, Caffe::root_solver()) << "g top    " << g_top->shape_string();
 
       caffe_copy(g_top->count(), d_bottom->cpu_diff(), static_cast<Dtype*>(g_top->mutable_cpu_diff()));
