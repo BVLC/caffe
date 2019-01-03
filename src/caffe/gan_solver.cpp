@@ -20,6 +20,7 @@ template <typename Dtype>
 GANSolver<Dtype>::GANSolver(const SolverParameter& g_param, const SolverParameter& d_param) {
   g_solver.reset(caffe::SolverRegistry<Dtype>::CreateSolver(g_param));
   d_solver.reset(caffe::SolverRegistry<Dtype>::CreateSolver(d_param));
+  iter_ = 0;
 }
 
 template <typename Dtype>

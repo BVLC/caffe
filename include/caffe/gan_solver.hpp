@@ -42,15 +42,9 @@ class GANSolver {
     Blob<Dtype>* output_layer = g_solver->net_->output_blobs()[0];
     int width = output_layer->width(), height = output_layer->height(), channel = output_layer->channels();
     Dtype* input_data = output_layer->mutable_cpu_data();
-
-    if (channel == 1) {
-      cv::Mat image(height, width, CV_32FC1, input_data);
-      cv::imwrite("a.jpg", image);
-    }
-    else if (channel == 3) {
-      cv::Mat image(height, width, CV_32FC3, input_data);
-      cv::imwrite("a.jpg", image);
-    }
+    cv::Mat image(height, width, channel == 1 ? CV_32FC1 : CV_32FC3, input_data);
+    image = (image + 1) * 127.5; 
+    cv::imwrite("x_fake.jpg", image);
   }
 
   SolverAction::Enum GetRequestedAction();
