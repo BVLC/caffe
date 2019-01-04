@@ -77,6 +77,7 @@ void GANSolver<Dtype>::Solve(const char* resume_file) {
   LOG(INFO) << "Optimization Done.";
 }
 
+template <typename Dtype>
 void print_max_diff(Blob<Dtype> *blob) {
   float maxx = -100, minn = 100;
   for (int i = 0; i < 28 * 28; i ++) {
@@ -126,18 +127,6 @@ void GANSolver<Dtype>::Step(int iters) {
         break;
     }
 
-    /*
-    for (int i = 0; i < d_solver->callbacks_.size(); ++i)
-      d_solver->callbacks_[i]->on_start();
-    for (int i = 0; i < g_solver->callbacks_.size(); ++i)
-      g_solver->callbacks_[i]->on_start();
-    */
-
-    //const bool d_display = d_solver->param_.display() && iter_ % d_solver->param_.display() == 0;
-    //const bool g_display = g_solver->param_.display() && iter_ % g_solver->param_.display() == 0;
-    //d_solver->net_->set_debug_info(d_display && d_solver->param_.debug_info());
-    //g_solver->net_->set_debug_info(g_display && g_solver->param_.debug_info());
-
     /// Train D
     auto x_fake = g_solver->net_->Forward(); // G(z)
 
@@ -168,7 +157,6 @@ void GANSolver<Dtype>::Step(int iters) {
       // LOG_IF(INFO, Caffe::root_solver()) << "g top    " << g_top->shape_string();
       g_top->CopyFrom(*d_bottom, true, false);
       print_max_diff(g_top);
-
 
       g_solver->net_->Backward();
       g_solver->ApplyUpdate();
