@@ -96,7 +96,7 @@ void print_max_diff(Blob<Dtype> *blob) {
     if (elem > maxx) maxx = elem;
     if (elem < minn) minn = elem;
   }
-  LOG(INFO) << "Gradient " << maxx << " " << minn;
+  //LOG(INFO) << "Gradient " << maxx << " " << minn;
 }
 
 template <typename Dtype>
