@@ -38,13 +38,46 @@ class GANSolver {
     // TODO
   }
 
+  void tile(const vector<cv::Mat> &src, cv::Mat &dst, int grid_x, int grid_y) {
+    // patch size
+    int width  = dst.cols/grid_x;
+    int height = dst.rows/grid_y;
+    // iterate through grid
+    int k = 0;
+    for(int i = 0; i < grid_y; i++) {
+      for(int j = 0; j < grid_x; j++) {
+        Mat s = src[k++];
+        cv::resize(s,s,cv::Size(width,height));
+        s.copyTo(dst(cv::Rect(j*width,i*height,width,height)));
+      }
+    }
+  }
+
   void TestAll() {
-    Blob<Dtype>* output_layer = g_solver->net_->output_blobs()[0];
-    int width = output_layer->width(), height = output_layer->height(), channel = output_layer->channels();
-    Dtype* input_data = output_layer->mutable_cpu_data();
-    cv::Mat image(height, width, channel == 1 ? CV_32FC1 : CV_32FC3, input_data);
-    image = (image + 1) * 127.5; 
-    cv::imwrite("x_fake.jpg", image);
+    // Must be float
+    Blob<float>* output_layer = g_solver->net_->output_blobs()[0];
+    LOG(INFO) << "Save output size: " << output_layer->shape_string();
+    int width = output_layer->width(), height = output_layer->height(), channels = output_layer->channels();
+    Dtype* input_data = output_layer->cpu_data();
+    vector<cv::Mat> src;
+    for (int i = 0; i < 16; i ++) {
+      cv::Mat image;
+      vector<cv::Mat> color_channel;
+      for(int i = 0; i < channels; i ++) {
+        cv::Mat _ch(height, width, CV_32FC1, input_data);
+        color_channel.push_back(_ch);
+        input_data += height * width;
+      }
+      cv::merge(color_channel, image);
+      src.push_back(image);
+    }
+    cv::Mat grid;
+    tile(src, grid, 4, 4);
+    grid = (grid + 1) * 127.5; 
+    cv::imwrite("x_fake.jpg", grid);
+    double min, max;
+    cv::minMaxLoc(grid, &min, &max);
+    LOG(INFO) << min << " " << max;
   }
 
   SolverAction::Enum GetRequestedAction();
