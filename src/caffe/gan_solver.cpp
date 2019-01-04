@@ -27,7 +27,7 @@ template <typename Dtype>
 void GANSolver<Dtype>::Solve(const char* resume_file) {
   CHECK(Caffe::root_solver());
   CHECK_EQ(d_solver->net_->num_inputs(), 1);
-  LOG(INFO) << "Total iter: " << d_solver->param_.max_iter() - iter_;
+  LOG(INFO) << "Total iter: " << iter_ << " / " << d_solver->param_.max_iter();
   LOG(INFO) << "Solve\t\tGenerator\t\tDiscriminator";
   LOG(INFO) << "\t\t\t" << g_solver->net_->name() << "\t\t\t" << d_solver->net_->name();
   LOG(INFO) << "LR Policy\t\t" << g_solver->param_.lr_policy() << "\t\t" << d_solver->param_.lr_policy();
@@ -132,6 +132,9 @@ void GANSolver<Dtype>::Step(int iters) {
   while (++iter_ < stop_iter) {
     if (d_solver->param_.test_interval() && iter_ % d_solver->param_.test_interval() == 0
         && (iter_ > 0 || d_solver->param_.test_initialization())) {
+      LOG(INFO) << "Iter=" << iter_ << "\tDisc Real\t" << "Disc Fake\t" << "Gen";
+      LOG(INFO) << "\t\t\t" << disc_real_loss / 10 << "\t" << disc_fake_loss / 10 << "\t" << gen_loss / 10;
+      disc_real_loss = disc_fake_loss = gen_loss = 0;
       if (Caffe::root_solver())
         TestAll();
       if (requested_early_exit_)
@@ -154,75 +157,25 @@ void GANSolver<Dtype>::Step(int iters) {
     d_solver->net_->ClearParamDiffs();
     
     /// Train G
-    for (int i = 0; i < 10; i ++) {
-      x_fake = g_solver->net_->Forward(); // G(z)
+    x_fake = g_solver->net_->Forward(); // G(z)
 
-      disc_label->CopyFrom(ones); CHECK_EQ((int)disc_label->cpu_data()[49], 1);
-      gen_loss += d_solver->net_->ForwardFromTo(x_fake, base_ind, end_ind); // D(G(z))
-      d_solver->net_->Backward(); // calculate gradient
-      auto d_bottom = d_solver->net_->bottom_vecs()[base_ind][0];
-      // LOG_IF(INFO, Caffe::root_solver()) << "d bottom " << d_bottom->shape_string();
+    disc_label->CopyFrom(ones); CHECK_EQ((int)disc_label->cpu_data()[49], 1);
+    gen_loss += d_solver->net_->ForwardFromTo(x_fake, base_ind, end_ind); // D(G(z))
+    d_solver->net_->Backward(); // calculate gradient
+    auto d_bottom = d_solver->net_->bottom_vecs()[base_ind][0];
+    // LOG_IF(INFO, Caffe::root_solver()) << "d bottom " << d_bottom->shape_string();
 
-      // TODO: do not caculate gradient for weights
-      auto g_top = g_solver->net_->mutable_top_vecs()[g_last_layer][0];
-      // LOG_IF(INFO, Caffe::root_solver()) << "g top    " << g_top->shape_string();
-      g_top->CopyFrom(*d_bottom, true, false);
-      print_max_diff(g_top);
+    // TODO: do not caculate gradient for weights
+    auto g_top = g_solver->net_->mutable_top_vecs()[g_last_layer][0];
+    // LOG_IF(INFO, Caffe::root_solver()) << "g top    " << g_top->shape_string();
+    g_top->CopyFrom(*d_bottom, true, false);
+    print_max_diff(g_top);
 
-      g_solver->net_->Backward();
-      g_solver->ApplyUpdate();
+    g_solver->net_->Backward();
+    g_solver->ApplyUpdate();
 
-      g_solver->net_->ClearParamDiffs();
-      d_solver->net_->ClearParamDiffs();
-    }
-
-    if(iter_ % 10 == 0) {
-      LOG(INFO) << "Disc Real\t" << "Disc Fake\t" << "Gen";
-      LOG(INFO) << disc_real_loss / 10 << "\t" << disc_fake_loss / 10 << "\t" << gen_loss / 10;
-      disc_real_loss = disc_fake_loss = gen_loss = 0;
-      TestAll();
-    }
-    
-    /*
-    loss /= param_.iter_size();
-    // average the loss across iterations for smoothed reporting
-    UpdateSmoothedLoss(loss, start_iter, average_loss);
-    if (display) {
-      float lapse = iteration_timer_.Seconds();
-      float per_s = (iter_ - iterations_last_) / (lapse ? lapse : 1);
-      LOG_IF(INFO, Caffe::root_solver()) << "Iteration " << iter_
-          << " (" << per_s << " iter/s, " << lapse << "s/"
-          << param_.display() << " iters), loss = " << smoothed_loss_;
-      iteration_timer_.Start();
-      iterations_last_ = iter_;
-      const vector<Blob<Dtype>*>& result = net_->output_blobs();
-      int score_index = 0;
-      for (int j = 0; j < result.size(); ++j) {
-        const Dtype* result_vec = result[j]->cpu_data();
-        const string& output_name =
-            net_->blob_names()[net_->output_blob_indices()[j]];
-        const Dtype loss_weight =
-            net_->blob_loss_weights()[net_->output_blob_indices()[j]];
-        for (int k = 0; k < result[j]->count(); ++k) {
-          ostringstream loss_msg_stream;
-          if (loss_weight) {
-            loss_msg_stream << " (* " << loss_weight
-                            << " = " << loss_weight * result_vec[k] << " loss)";
-          }
-          LOG_IF(INFO, Caffe::root_solver()) << "    Train net output #"
-              << score_index++ << ": " << output_name << " = "
-              << result_vec[k] << loss_msg_stream.str();
-        }
-      }
-    }
-    */
-   
-    // Do not support gradients ready call back
-    /*
-    for (int i = 0; i < callbacks_.size(); ++i) {
-      callbacks_[i]->on_gradients_ready();
-    }
-    */
+    g_solver->net_->ClearParamDiffs();
+    d_solver->net_->ClearParamDiffs();
 
     SolverAction::Enum request = GetRequestedAction();
 
@@ -236,7 +189,6 @@ void GANSolver<Dtype>::Step(int iters) {
     }
     if (SolverAction::STOP == request) {
       requested_early_exit_ = true;
-      // Break out of training loop.
       break;
     }
   }
