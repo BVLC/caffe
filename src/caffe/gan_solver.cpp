@@ -81,12 +81,8 @@ template <typename Dtype>
 void GANSolver<Dtype>::Step(int iters) {
   const int start_iter = iter_;
   const int stop_iter = iter_ + iters;
-  int d_average_loss = d_solver->param_.average_loss();
-  int g_average_loss = g_solver->param_.average_loss();
   d_solver->losses_.clear();
   g_solver->losses_.clear();
-  d_smoothed_loss_ = 0;
-  g_smoothed_loss_ = 0;
 
   iteration_timer_.Start();
 
@@ -105,17 +101,15 @@ void GANSolver<Dtype>::Step(int iters) {
     ones_data[i] = 1.0;
     zeros_data[i] = 0.0;
   }
-
+  
+  Dtype disc_real_loss = 0, disc_fake_loss = 0, gen_loss = 0, _tmp;
   while (++iter_ < stop_iter) {
     if (d_solver->param_.test_interval() && iter_ % d_solver->param_.test_interval() == 0
         && (iter_ > 0 || d_solver->param_.test_initialization())) {
-      if (Caffe::root_solver()) {
-        // TestAll();
-      }
-      if (requested_early_exit_) {
-        // Break out of the while loop because stop was requested while testing.
+      if (Caffe::root_solver())
+        TestAll();
+      if (requested_early_exit_)
         break;
-      }
     }
 
     /*
@@ -130,48 +124,31 @@ void GANSolver<Dtype>::Step(int iters) {
     d_solver->net_->set_debug_info(d_display && d_solver->param_.debug_info());
     g_solver->net_->set_debug_info(g_display && g_solver->param_.debug_info());
 
-    disc_label->CopyFrom(ones); CHECK_EQ((int)disc_label->cpu_data()[0], 1);
-
-    // accumulate the loss and gradient
-    Dtype d_loss = 0, g_loss = 0;
+    disc_label->CopyFrom(ones); //CHECK_EQ((int)disc_label->cpu_data()[0], 1);
 
     /// Train D
     auto x_fake = g_solver->net_->Forward(); // G(z)
 
-    auto res = d_solver->net_->Forward(&d_loss); // D(real)
+    auto res = d_solver->net_->Forward(&disc_real_loss); // D(real)
     d_solver->net_->Backward(); // accumulate gradient for D(real)
 
-    /*
-    LOG_IF(INFO, Caffe::root_solver()) << "Disc real:";
-    for (i = 0; i < res.size(); i++)
-      LOG_IF(INFO, Caffe::root_solver()) << res[i]->shape_string();
-    */
+    disc_label->CopyFrom(zeros); //CHECK_EQ((int)disc_label->cpu_data()[0], 0);
+    disc_fake_loss = d_solver->net_->ForwardFromTo(x_fake, d_solver->net_->base_layer_index(), d_solver->net_->layers().size() - 1); // D(G(z))
 
-    disc_label->CopyFrom(zeros); CHECK_EQ((int)disc_label->cpu_data()[0], 0);
-    d_solver->net_->ForwardFromTo(x_fake, d_solver->net_->base_layer_index(), d_solver->net_->layers().size() - 1); // D(G(z))
     d_solver->net_->Backward(); // accumulate gradient for D(G(z))
     d_solver->ApplyUpdate();
     d_solver->net_->ClearParamDiffs();
-
+    
     /// Train G
     x_fake = g_solver->net_->Forward(); // G(z)
 
     disc_label->CopyFrom(ones); CHECK_EQ((int)disc_label->cpu_data()[0], 1);
-    d_solver->net_->ForwardFromTo(x_fake, d_solver->net_->base_layer_index(), d_solver->net_->layers().size() - 1); // D(G(z))
-
+    gen_loss = d_solver->net_->ForwardFromTo(x_fake, d_solver->net_->base_layer_index(), d_solver->net_->layers().size() - 1); // D(G(z))
     d_solver->net_->Backward(); // calculate gradient
     auto d_bottom = d_solver->net_->bottom_vecs()[d_solver->net_->base_layer_index()][0];
     // LOG_IF(INFO, Caffe::root_solver()) << "d bottom " << d_bottom->shape_string();
 
     // TODO: do not caculate gradient for weights
-    /*
-    auto g_tops = g_solver->net_->mutable_top_vecs();
-    for (int i = 0; i < g_tops.size(); i ++) {
-      for (int j = 0; j < g_tops[i].size(); j ++) {
-        LOG_IF(INFO, Caffe::root_solver()) << i << " " << j << " " << g_tops[i][j]->shape_string();
-      }
-    }
-    */
 
     int g_last_layer = g_solver->net_->layers().size() - 1;
     auto g_top = g_solver->net_->mutable_top_vecs()[g_last_layer][0];
@@ -187,7 +164,11 @@ void GANSolver<Dtype>::Step(int iters) {
     g_solver->net_->ClearParamDiffs();
     d_solver->net_->ClearParamDiffs();
 
-    if(iter_ % 10 == 0) TestAll();
+    if(iter_ % 10 == 0) {
+      LOG(INFO) << "Disc Real\t" << "Disc Fake\t" << "Gen";
+      LOG(INFO) << disc_real_loss / 10 << "\t" << disc_fake_loss / 10 << "\t" << gen_loss / 10;
+      TestAll();
+    }
     
     /*
     loss /= param_.iter_size();

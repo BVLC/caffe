@@ -252,12 +252,12 @@ layer {
     }
   }
 }
-#layer {
-#  name: "deconv3_relu"
-#  type: "TanH"
-#  bottom: "deconv3"
-#  top: "deconv3_relu"
-#}
+layer {
+  name: "conv1_tanh"
+  type: "TanH"
+  bottom: "conv1"
+  top: "conv1_tanh"
+}
 
 #layer {
 #  name: "deconv0_crop"
