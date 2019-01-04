@@ -132,11 +132,12 @@ void GANSolver<Dtype>::Step(int iters) {
     auto x_fake = g_solver->net_->Forward(); // G(z)
 
     disc_label->CopyFrom(ones); //CHECK_EQ((int)disc_label->cpu_data()[0], 1);
-    d_solver->net_->Forward(&disc_real_loss); // D(real)
+    d_solver->net_->Forward(&_tmp); // D(real)
+    disc_real_loss += _tmp;
     d_solver->net_->Backward(); // accumulate gradient for D(real)
 
     disc_label->CopyFrom(zeros); //CHECK_EQ((int)disc_label->cpu_data()[0], 0);
-    disc_fake_loss = d_solver->net_->ForwardFromTo(x_fake, base_ind, end_ind); // D(G(z))
+    disc_fake_loss += d_solver->net_->ForwardFromTo(x_fake, base_ind, end_ind); // D(G(z))
 
     d_solver->net_->Backward(); // accumulate gradient for D(G(z))
     d_solver->ApplyUpdate();
@@ -146,7 +147,7 @@ void GANSolver<Dtype>::Step(int iters) {
     x_fake = g_solver->net_->Forward(); // G(z)
 
     disc_label->CopyFrom(ones); CHECK_EQ((int)disc_label->cpu_data()[0], 1);
-    gen_loss = d_solver->net_->ForwardFromTo(x_fake, base_ind, end_ind); // D(G(z))
+    gen_loss += d_solver->net_->ForwardFromTo(x_fake, base_ind, end_ind); // D(G(z))
     d_solver->net_->Backward(); // calculate gradient
     auto d_bottom = d_solver->net_->bottom_vecs()[base_ind][0];
     LOG_IF(INFO, Caffe::root_solver()) << "d bottom " << d_bottom->shape_string();
@@ -155,7 +156,7 @@ void GANSolver<Dtype>::Step(int iters) {
 
     auto g_top = g_solver->net_->mutable_top_vecs()[g_last_layer][0];
     LOG_IF(INFO, Caffe::root_solver()) << "g top    " << g_top->shape_string();
-    g_top->CopyFrom(d_bottom, true, false);
+    g_top->CopyFrom(*d_bottom, true, false);
     CHECK_EQ(g_top->cpu_diff()[137], d_bottom->cpu_diff()[137]);
 
     g_solver->net_->Backward();
@@ -168,6 +169,7 @@ void GANSolver<Dtype>::Step(int iters) {
     if(iter_ % 10 == 0) {
       LOG(INFO) << "Disc Real\t" << "Disc Fake\t" << "Gen";
       LOG(INFO) << disc_real_loss / 10 << "\t" << disc_fake_loss / 10 << "\t" << gen_loss / 10;
+      disc_real_loss = disc_fake_loss = gen_loss;
       TestAll();
     }
     
