@@ -187,7 +187,7 @@ void GANSolver<Dtype>::Step(int iters) {
     g_solver->net_->ClearParamDiffs();
     d_solver->net_->ClearParamDiffs();
 
-    if(iter_ % 100 == 0) TestAll();
+    if(iter_ % 10 == 0) TestAll();
     
     /*
     loss /= param_.iter_size();
