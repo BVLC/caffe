@@ -55,10 +55,10 @@ class GANSolver {
 
   void TestAll() {
     // Must be float
-    Blob<float>* output_layer = g_solver->net_->output_blobs()[0];
+    Blob<Dtype>* output_layer = g_solver->net_->output_blobs()[0];
     LOG(INFO) << "Save output size: " << output_layer->shape_string();
     int width = output_layer->width(), height = output_layer->height(), channels = output_layer->channels();
-    Dtype* input_data = output_layer->cpu_data();
+    Dtype* input_data = output_layer->mutable_cpu_data();
     vector<cv::Mat> src;
     for (int i = 0; i < 16; i ++) {
       cv::Mat image;
@@ -71,7 +71,7 @@ class GANSolver {
       cv::merge(color_channel, image);
       src.push_back(image);
     }
-    cv::Mat grid;
+    cv::Mat grid(height * 4, width * 4, CV_32FC1);
     tile(src, grid, 4, 4);
     grid = (grid + 1) * 127.5; 
     cv::imwrite("x_fake.jpg", grid);
