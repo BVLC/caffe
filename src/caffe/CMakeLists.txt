@@ -27,7 +27,9 @@ target_include_directories(caffe ${Caffe_INCLUDE_DIRS}
                                  PUBLIC
                                  $<BUILD_INTERFACE:${Caffe_INCLUDE_DIR}>
                                  $<INSTALL_INTERFACE:include>)
-target_compile_definitions(caffe ${Caffe_DEFINITIONS})
+if(Caffe_DEFINITIONS)
+  target_compile_definitions(caffe ${Caffe_DEFINITIONS})
+endif()
 if(Caffe_COMPILE_OPTIONS)
   target_compile_options(caffe ${Caffe_COMPILE_OPTIONS})
 endif()
