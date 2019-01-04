@@ -74,7 +74,7 @@ class GANSolver {
     tile(src, grid, 4, 4);
 
     double min, max;
-    cv::minMaxLoc(x_fake_grid, &min, &max);
+    cv::minMaxLoc(grid, &min, &max);
     LOG(INFO) << "Min " <<  min << " Max " << max;
 
     grid = (grid + 1) * 127.5; 
@@ -88,7 +88,15 @@ class GANSolver {
 
     d_solver->net_->Forward();
     int ind = d_solver->net_->base_layer_index();
-    cv::Mat x_real_grid = blob2cvgrid(d_solver->net_->bottom_vecs()[ind][0]);
+    
+    auto vecs = d_solver->net_->bottom_vecs();
+    for (int i = 0; i < vecs.size(); i ++) {
+      for (int j = 0; j < vecs[i].size(); j ++) {
+        LOG(INFO) << i << " " << j << " " << vecs[i][j]->shape_string();
+      }
+    }
+
+    cv::Mat x_real_grid = blob2cvgrid(vecs[ind][0]);
     cv::imwrite("x_real.jpg", x_real_grid);
   }
 
