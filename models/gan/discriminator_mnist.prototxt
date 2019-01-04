@@ -15,7 +15,7 @@ layer {
   }
   transform_param {
     scale: 0.00784313
-    mean_value: 1
+    mean_value: 127.5
   }
   data_param {
     source: "examples/mnist/mnist_train_lmdb"

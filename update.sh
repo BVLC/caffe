@@ -1,1 +1,1 @@
-git add . && git stash && git pull && make all | grep error && bash models/gan/run.sh
+git add . && git stash && git pull && (make all | grep error) && bash models/gan/run.sh
