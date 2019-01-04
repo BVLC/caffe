@@ -40,12 +40,16 @@ void GANSolver<Dtype>::Solve(const char* resume_file) {
     Restore(resume_file);
   }
 
+  /*
   auto vecs = d_solver->net_->bottom_need_backward(), vec_names = d_solver->net_->layer_names();
   for (int i = 0; i < vecs.size(); i ++) {
     for (int j = 0; j < vecs[i].size(); j ++) {
       LOG(INFO) << vec_names[i] << " " << i << " " << j << " " << vecs[i][j];
     }
   }
+  */
+ int ind = d_solver->net_->base_layer_index();
+ d_solver->net_->set_bottom_need_backward(ind, true);
 
   // For a network that is trained by the solver, no bottom or top vecs
   // should be given, and we will just provide dummy vecs.

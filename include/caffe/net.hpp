@@ -171,6 +171,10 @@ class Net {
   inline const vector<vector<bool> >& bottom_need_backward() const {
     return bottom_need_backward_;
   }
+  inline void set_bottom_need_backward(int ind, bool val) {
+    for(int i = 0; i < bottom_need_backward_[ind].size(); i++)
+      bottom_need_backward_[ind][i] = val;
+  }
   inline const vector<Dtype>& blob_loss_weights() const {
     return blob_loss_weights_;
   }
