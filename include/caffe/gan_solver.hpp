@@ -46,7 +46,7 @@ class GANSolver {
     int k = 0;
     for(int i = 0; i < grid_y; i++) {
       for(int j = 0; j < grid_x; j++) {
-        Mat s = src[k++];
+        cv::Mat s = src[k++];
         cv::resize(s,s,cv::Size(width,height));
         s.copyTo(dst(cv::Rect(j*width,i*height,width,height)));
       }
