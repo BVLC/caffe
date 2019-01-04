@@ -54,7 +54,7 @@ class GANSolver {
   }
 
   /// Show 3 channel or 1 channel blob; batch size >= 16; scale between (-1, 1)
-  cv::Mat& blob2cvgrid(Blob<Dtype> *blob) {
+  cv::Mat* blob2cvgrid(Blob<Dtype> *blob) {
     LOG(INFO) << "Shape " << blob->shape_string();
     int width = blob->width(), height = blob->height(), channels = blob->channels();
     Dtype* input_data = blob->mutable_cpu_data();
@@ -70,25 +70,26 @@ class GANSolver {
       cv::merge(color_channel, image);
       src.push_back(image);
     }
-    cv::Mat grid(height * 4, width * 4, CV_32FC1);
-    tile(src, grid, 4, 4);
+    cv::Mat *grid = new cv::Mat(height * 4, width * 4, CV_32FC1);
+    tile(src, *grid, 4, 4);
 
     double min, max;
-    cv::minMaxLoc(grid, &min, &max);
+    cv::minMaxLoc(*grid, &min, &max);
     LOG(INFO) << "Min " <<  min << " Max " << max;
 
-    grid = (grid + 1) * 127.5; 
+    *grid = (*grid + 1) * 127.5; 
     return grid;
   }
 
   void TestAll() {
     // Must be float
-    cv::Mat x_fake_grid = blob2cvgrid(g_solver->net_->output_blobs()[0]);
-    cv::imwrite("x_fake.jpg", x_fake_grid);
+    cv::Mat *x_fake_grid = blob2cvgrid(g_solver->net_->output_blobs()[0]);
+    cv::imwrite("x_fake.jpg", *x_fake_grid);
+    delete x_fake_grid;
 
     d_solver->net_->Forward();
     int ind = d_solver->net_->base_layer_index();
-    
+
     auto vecs = d_solver->net_->bottom_vecs();
     for (int i = 0; i < vecs.size(); i ++) {
       for (int j = 0; j < vecs[i].size(); j ++) {
@@ -96,8 +97,9 @@ class GANSolver {
       }
     }
 
-    cv::Mat x_real_grid = blob2cvgrid(vecs[ind][0]);
-    cv::imwrite("x_real.jpg", x_real_grid);
+    cv::Mat *x_real_grid = blob2cvgrid(vecs[ind][0]);
+    cv::imwrite("x_real.jpg", *x_real_grid);
+    delete x_real_grid;
   }
 
   SolverAction::Enum GetRequestedAction();
