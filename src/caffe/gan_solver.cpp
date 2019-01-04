@@ -79,8 +79,12 @@ void GANSolver<Dtype>::Solve(const char* resume_file) {
 
 template <typename Dtype>
 void GANSolver<Dtype>::Step(int iters) {
-  const int start_iter = iter_;
-  const int stop_iter = iter_ + iters;
+  int start_iter = iter_;
+  int stop_iter = iter_ + iters;
+  int base_ind = d_solver->net_->base_layer_index();
+  int end_ind = d_solver->net_->layers().size() - 1;
+  int g_last_layer = g_solver->net_->layers().size() - 1;
+  
   d_solver->losses_.clear();
   g_solver->losses_.clear();
 
@@ -124,15 +128,11 @@ void GANSolver<Dtype>::Step(int iters) {
     //d_solver->net_->set_debug_info(d_display && d_solver->param_.debug_info());
     //g_solver->net_->set_debug_info(g_display && g_solver->param_.debug_info());
 
-    disc_label->CopyFrom(ones); //CHECK_EQ((int)disc_label->cpu_data()[0], 1);
-    int base_ind = d_solver->net_->base_layer_index();
-    int end_ind = d_solver->net_->layers().size() - 1;
-    int g_last_layer = g_solver->net_->layers().size() - 1;
-    
     /// Train D
     auto x_fake = g_solver->net_->Forward(); // G(z)
 
-    auto res = d_solver->net_->Forward(&disc_real_loss); // D(real)
+    disc_label->CopyFrom(ones); //CHECK_EQ((int)disc_label->cpu_data()[0], 1);
+    d_solver->net_->Forward(&disc_real_loss); // D(real)
     d_solver->net_->Backward(); // accumulate gradient for D(real)
 
     disc_label->CopyFrom(zeros); //CHECK_EQ((int)disc_label->cpu_data()[0], 0);
@@ -149,14 +149,14 @@ void GANSolver<Dtype>::Step(int iters) {
     gen_loss = d_solver->net_->ForwardFromTo(x_fake, base_ind, end_ind); // D(G(z))
     d_solver->net_->Backward(); // calculate gradient
     auto d_bottom = d_solver->net_->bottom_vecs()[base_ind][0];
-    // LOG_IF(INFO, Caffe::root_solver()) << "d bottom " << d_bottom->shape_string();
+    LOG_IF(INFO, Caffe::root_solver()) << "d bottom " << d_bottom->shape_string();
 
     // TODO: do not caculate gradient for weights
 
     auto g_top = g_solver->net_->mutable_top_vecs()[g_last_layer][0];
-    //LOG_IF(INFO, Caffe::root_solver()) << "g top    " << g_top->shape_string();
+    LOG_IF(INFO, Caffe::root_solver()) << "g top    " << g_top->shape_string();
     g_top->CopyFrom(d_bottom, true, false);
-    // CHECK_EQ(g_top->cpu_diff()[0], d_bottom->cpu_diff()[0]);
+    CHECK_EQ(g_top->cpu_diff()[137], d_bottom->cpu_diff()[137]);
 
     g_solver->net_->Backward();
 
