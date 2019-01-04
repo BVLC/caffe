@@ -119,13 +119,16 @@ void GANSolver<Dtype>::Step(int iters) {
       g_solver->callbacks_[i]->on_start();
     */
 
-    const bool d_display = d_solver->param_.display() && iter_ % d_solver->param_.display() == 0;
-    const bool g_display = g_solver->param_.display() && iter_ % g_solver->param_.display() == 0;
-    d_solver->net_->set_debug_info(d_display && d_solver->param_.debug_info());
-    g_solver->net_->set_debug_info(g_display && g_solver->param_.debug_info());
+    //const bool d_display = d_solver->param_.display() && iter_ % d_solver->param_.display() == 0;
+    //const bool g_display = g_solver->param_.display() && iter_ % g_solver->param_.display() == 0;
+    //d_solver->net_->set_debug_info(d_display && d_solver->param_.debug_info());
+    //g_solver->net_->set_debug_info(g_display && g_solver->param_.debug_info());
 
     disc_label->CopyFrom(ones); //CHECK_EQ((int)disc_label->cpu_data()[0], 1);
-
+    int base_ind = d_solver->net_->base_layer_index();
+    int end_ind = d_solver->net_->layers().size() - 1;
+    int g_last_layer = g_solver->net_->layers().size() - 1;
+    
     /// Train D
     auto x_fake = g_solver->net_->Forward(); // G(z)
 
@@ -133,7 +136,7 @@ void GANSolver<Dtype>::Step(int iters) {
     d_solver->net_->Backward(); // accumulate gradient for D(real)
 
     disc_label->CopyFrom(zeros); //CHECK_EQ((int)disc_label->cpu_data()[0], 0);
-    disc_fake_loss = d_solver->net_->ForwardFromTo(x_fake, d_solver->net_->base_layer_index(), d_solver->net_->layers().size() - 1); // D(G(z))
+    disc_fake_loss = d_solver->net_->ForwardFromTo(x_fake, base_ind, end_ind); // D(G(z))
 
     d_solver->net_->Backward(); // accumulate gradient for D(G(z))
     d_solver->ApplyUpdate();
@@ -143,18 +146,16 @@ void GANSolver<Dtype>::Step(int iters) {
     x_fake = g_solver->net_->Forward(); // G(z)
 
     disc_label->CopyFrom(ones); CHECK_EQ((int)disc_label->cpu_data()[0], 1);
-    gen_loss = d_solver->net_->ForwardFromTo(x_fake, d_solver->net_->base_layer_index(), d_solver->net_->layers().size() - 1); // D(G(z))
+    gen_loss = d_solver->net_->ForwardFromTo(x_fake, base_ind, end_ind); // D(G(z))
     d_solver->net_->Backward(); // calculate gradient
-    auto d_bottom = d_solver->net_->bottom_vecs()[d_solver->net_->base_layer_index()][0];
+    auto d_bottom = d_solver->net_->bottom_vecs()[base_ind][0];
     // LOG_IF(INFO, Caffe::root_solver()) << "d bottom " << d_bottom->shape_string();
 
     // TODO: do not caculate gradient for weights
 
-    int g_last_layer = g_solver->net_->layers().size() - 1;
     auto g_top = g_solver->net_->mutable_top_vecs()[g_last_layer][0];
     //LOG_IF(INFO, Caffe::root_solver()) << "g top    " << g_top->shape_string();
-
-    caffe_copy(g_top->count(), d_bottom->cpu_diff(), static_cast<Dtype*>(g_top->mutable_cpu_diff()));
+    g_top->CopyFrom(d_bottom, true, false);
     // CHECK_EQ(g_top->cpu_diff()[0], d_bottom->cpu_diff()[0]);
 
     g_solver->net_->Backward();
