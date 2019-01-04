@@ -43,7 +43,7 @@ void GANSolver<Dtype>::Solve(const char* resume_file) {
   auto vecs = d_solver->net_->bottom_need_backward(), vec_names = d_solver->net_->layer_names();
   for (int i = 0; i < vecs.size(); i ++) {
     for (int j = 0; j < vecs[i].size(); j ++) {
-      LOG(INFO) << vec_names[i] << " " << i << " " << j << " " << vecs[i][j]->shape_string();
+      LOG(INFO) << vec_names[i] << " " << i << " " << j << " " << vecs[i][j];
     }
   }
 
