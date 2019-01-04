@@ -96,7 +96,7 @@ void print_max_diff(Blob<Dtype> *blob) {
     if (elem > maxx) maxx = elem;
     if (elem < minn) minn = elem;
   }
-  //LOG(INFO) << "Gradient " << maxx << " " << minn;
+  LOG(INFO) << "Gradient " << maxx << " " << minn;
 }
 
 template <typename Dtype>
@@ -144,12 +144,12 @@ void GANSolver<Dtype>::Step(int iters) {
     /// Train D
     auto x_fake = g_solver->net_->Forward(); // G(z)
 
-    disc_label->CopyFrom(ones); CHECK_EQ((int)disc_label->cpu_data()[23], 1);
+    disc_label->CopyFrom(ones); //CHECK_EQ((int)disc_label->cpu_data()[23], 1);
     d_solver->net_->Forward(&_tmp); // D(real)
     disc_real_loss += _tmp;
     d_solver->net_->Backward(); // accumulate gradient for D(real)
 
-    disc_label->CopyFrom(zeros); CHECK_EQ((int)disc_label->cpu_data()[19], 0);
+    disc_label->CopyFrom(zeros); //CHECK_EQ((int)disc_label->cpu_data()[19], 0);
     disc_fake_loss += d_solver->net_->ForwardFromTo(x_fake, base_ind, end_ind); // D(G(z))
 
     d_solver->net_->Backward(); // accumulate gradient for D(G(z))
@@ -159,7 +159,7 @@ void GANSolver<Dtype>::Step(int iters) {
     /// Train G
     x_fake = g_solver->net_->Forward(); // G(z)
 
-    disc_label->CopyFrom(ones); CHECK_EQ((int)disc_label->cpu_data()[49], 1);
+    disc_label->CopyFrom(ones); //CHECK_EQ((int)disc_label->cpu_data()[49], 1);
     gen_loss += d_solver->net_->ForwardFromTo(x_fake, base_ind, end_ind); // D(G(z))
     d_solver->net_->Backward(); // calculate gradient
     auto d_bottom = d_solver->net_->bottom_vecs()[base_ind][0];
@@ -169,7 +169,7 @@ void GANSolver<Dtype>::Step(int iters) {
     auto g_top = g_solver->net_->mutable_top_vecs()[g_last_layer][0];
     // LOG_IF(INFO, Caffe::root_solver()) << "g top    " << g_top->shape_string();
     g_top->CopyFrom(*d_bottom, true, false);
-    print_max_diff(g_top);
+    //print_max_diff(g_top);
 
     g_solver->net_->Backward();
     g_solver->ApplyUpdate();
