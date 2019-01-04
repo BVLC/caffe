@@ -150,12 +150,12 @@ void GANSolver<Dtype>::Step(int iters) {
     gen_loss += d_solver->net_->ForwardFromTo(x_fake, base_ind, end_ind); // D(G(z))
     d_solver->net_->Backward(); // calculate gradient
     auto d_bottom = d_solver->net_->bottom_vecs()[base_ind][0];
-    LOG_IF(INFO, Caffe::root_solver()) << "d bottom " << d_bottom->shape_string();
+    // LOG_IF(INFO, Caffe::root_solver()) << "d bottom " << d_bottom->shape_string();
 
     // TODO: do not caculate gradient for weights
 
     auto g_top = g_solver->net_->mutable_top_vecs()[g_last_layer][0];
-    LOG_IF(INFO, Caffe::root_solver()) << "g top    " << g_top->shape_string();
+    // LOG_IF(INFO, Caffe::root_solver()) << "g top    " << g_top->shape_string();
     g_top->CopyFrom(*d_bottom, true, false);
     CHECK_EQ(g_top->cpu_diff()[137], d_bottom->cpu_diff()[137]);
 
@@ -169,7 +169,7 @@ void GANSolver<Dtype>::Step(int iters) {
     if(iter_ % 10 == 0) {
       LOG(INFO) << "Disc Real\t" << "Disc Fake\t" << "Gen";
       LOG(INFO) << disc_real_loss / 10 << "\t" << disc_fake_loss / 10 << "\t" << gen_loss / 10;
-      disc_real_loss = disc_fake_loss = gen_loss;
+      disc_real_loss = disc_fake_loss = gen_loss = 0;
       TestAll();
     }
     
