@@ -157,10 +157,17 @@ void GANSolver<Dtype>::Step(int iters) {
       auto g_top = g_solver->net_->mutable_top_vecs()[g_last_layer][0];
       // LOG_IF(INFO, Caffe::root_solver()) << "g top    " << g_top->shape_string();
       g_top->CopyFrom(*d_bottom, true, false);
+      
       CHECK_EQ(g_top->cpu_diff()[137], d_bottom->cpu_diff()[137]);
+      float maxx = -100, minn = 100;
+      for (int i = 0; i < 28; i ++) for (int j = 0; j < 28; j ++) {
+        float elem = g_top->cpu_diff()[i* 28 + j];
+        if (elem > maxx) maxx = elem;
+        if (elem < minn) minn = elem;
+      }
+      LOG(INFO) << "Gradient " << maxx << " " << minn;
 
       g_solver->net_->Backward();
-
       g_solver->ApplyUpdate();
 
       g_solver->net_->ClearParamDiffs();
