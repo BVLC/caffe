@@ -1,0 +1,1 @@
+build/tools/caffe_gan train --g_solver=models/gan/g_solver.protoxt --d_solver=models/gan/d_solver.prototxt

@@ -1,58 +1,48 @@
 force_backward: true
 name: "SimpleGenerator"
-input: "feat"
-input_shape {
-  dim: 64
-  dim: 100
-}
 layer {
-  name: "reshape"
-  type: "Reshape"
-  bottom: "feat"
-  top: "reshape_defc5"
-  reshape_param {
-    shape {
-      dim: 64
-      dim: 100
-      dim: 1
-      dim: 1
-    }
+  name: "noise"
+  type: "RandVec"
+  top: "noise"
+  randvec_param {
+    batch_size: 64
+    dim: 128
+    lower: -1.0
+    upper: 1.0
   }
 }
 layer {
-  name: "deconv5"           
-  type: "Deconvolution"
-  bottom: "reshape_defc5"
-  top: "deconv5"
-  param {
-    lr_mult: 1
-    decay_mult: 0
-  }
-  param {
-    lr_mult: 0
-    decay_mult: 0
-  }
-  convolution_param {
-    num_output: 512
-    pad: 0
-    kernel_size: 4
-    stride: 1
+  name: "fc1"
+  type: "InnerProduct"
+  bottom: "noise"
+  top: "fc1"
+  inner_product_param {
+    num_output: 8192
     weight_filler {
       type: "gaussian"
       std: 0.02
     }
-    bias_filler {
-      type: "constant"
-    }
-#    engine: CUDNN
   }
 }
-
 layer {
-  name: "deconv5_BN"
-  type: "BatchNorm" include { phase: TRAIN}
-  bottom: "deconv5"
-  top: "deconv5_BN"
+  name: "reshape"
+  type: "Reshape"
+  bottom: "fc1"
+  top: "reshape_fc1"
+  reshape_param {
+    shape {
+      dim: 64
+      dim: 512
+      dim: 4
+      dim: 4
+    }
+  }
+}
+layer {
+  name: "fc1_BN"
+  type: "BatchNorm" include {phase: TRAIN}
+  bottom: "reshape_fc1"
+  top: "fc1_BN"
   param {
     lr_mult: 0
     decay_mult: 0
@@ -67,14 +57,14 @@ layer {
   }
   batch_norm_param {
     use_global_stats: false
-    moving_average_fraction: 0.95
+    moving_average_fraction: 0.99
   }
 }
 layer {
-  name: "deconv5_BN"
+  name: "fc1_BN"
   type: "BatchNorm" include { phase: TEST}
-  bottom: "deconv5"
-  top: "deconv5_BN"
+  bottom: "reshape_fc1"
+  top: "fc1_BN"
   param {
     lr_mult: 0
     decay_mult: 0
@@ -89,29 +79,20 @@ layer {
   }
   batch_norm_param {
     use_global_stats: true
-    moving_average_fraction: 0.95
+    moving_average_fraction: 0.99
   }
 }
-
 layer {
-  name: "relu_deconv5"
+  name: "relu_fc1"
   type: "ReLU"
-  bottom: "deconv5_BN"
-  top: "deconv5_BN"
+  bottom: "fc1_BN"
+  top: "fc1_BN"
 }
 layer {
-  name: "conv5_1"           
+  name: "deconv3"           
   type: "Deconvolution"
-  bottom: "deconv5_BN"
-  top: "conv5_1"
-  param {
-    lr_mult: 1
-    decay_mult: 0
-  }
-  param {
-    lr_mult: 0
-    decay_mult: 0
-  }
+  bottom: "fc1_BN"
+  top: "deconv3"
   convolution_param {
     num_output: 256 
     pad: 1
@@ -124,14 +105,13 @@ layer {
     bias_filler {
       type: "constant"
     }
-#    engine: CUDNN
   }
 }
 layer {
-  name: "deconv5_1_BN"
+  name: "deconv3_BN"
   type: "BatchNorm" include { phase: TRAIN}
-  bottom: "conv5_1"
-  top: "deconv5_1_BN"
+  bottom: "deconv3"
+  top: "deconv3_BN"
   param {
     lr_mult: 0
     decay_mult: 0
@@ -146,14 +126,14 @@ layer {
   }
   batch_norm_param {
     use_global_stats: false
-    moving_average_fraction: 0.95
+    moving_average_fraction: 0.99
   }
 }
 layer {
-  name: "deconv5_1_BN"
+  name: "deconv3_BN"
   type: "BatchNorm" include { phase: TEST}
-  bottom: "conv5_1"
-  top: "deconv5_1_BN"
+  bottom: "deconv3"
+  top: "deconv3_BN"
   param {
     lr_mult: 0
     decay_mult: 0
@@ -168,31 +148,22 @@ layer {
   }
   batch_norm_param {
     use_global_stats: true
-    moving_average_fraction: 0.95
+    moving_average_fraction: 0.99
   }
 }
-
 layer {
-  name: "relu_conv5_1"
+  name: "relu_deconv3"
   type: "ReLU"
-  bottom: "deconv5_1_BN"
-  top: "deconv5_1_BN"
+  bottom: "deconv3_BN"
+  top: "deconv3_BN"
 }
 layer {
-  name: "deconv4"           
+  name: "deconv2"           
   type: "Deconvolution"
-  bottom: "deconv5_1_BN"
-  top: "deconv4"
-  param {
-    lr_mult: 1
-    decay_mult: 0
-  }
-  param {
-    lr_mult: 0
-    decay_mult: 0
-  }
+  bottom: "deconv3_BN"
+  top: "deconv2"
   convolution_param {
-    num_output: 128
+    num_output: 128 
     pad: 1
     kernel_size: 4
     stride: 2
@@ -203,14 +174,13 @@ layer {
     bias_filler {
       type: "constant"
     }
-#    engine: CUDNN
   }
 }
 layer {
-  name: "deconv4_BN"
+  name: "deconv2_BN"
   type: "BatchNorm" include { phase: TRAIN}
-  bottom: "deconv4"
-  top: "deconv4_BN"
+  bottom: "deconv2"
+  top: "deconv2_BN"
   param {
     lr_mult: 0
     decay_mult: 0
@@ -225,14 +195,14 @@ layer {
   }
   batch_norm_param {
     use_global_stats: false
-    moving_average_fraction: 0.95
+    moving_average_fraction: 0.99
   }
 }
 layer {
-  name: "deconv4_BN"
+  name: "deconv2_BN"
   type: "BatchNorm" include { phase: TEST}
-  bottom: "deconv4"
-  top: "deconv4_BN"
+  bottom: "deconv2"
+  top: "deconv2_BN"
   param {
     lr_mult: 0
     decay_mult: 0
@@ -247,29 +217,20 @@ layer {
   }
   batch_norm_param {
     use_global_stats: true
-    moving_average_fraction: 0.95
+    moving_average_fraction: 0.99
   }
 }
-
 layer {
-  name: "relu_deconv4"
+  name: "relu_deconv2"
   type: "ReLU"
-  bottom: "deconv4_BN"
-  top: "deconv4_BN"
+  bottom: "deconv2_BN"
+  top: "deconv2_BN"
 }
 layer {
-  name: "conv4_1"           
+  name: "deconv1"           
   type: "Deconvolution"
-  bottom: "deconv4_BN"
-  top: "conv4_1"
-  param {
-    lr_mult: 1
-    decay_mult: 0
-  }
-  param {
-    lr_mult: 0
-    decay_mult: 0
-  }
+  bottom: "deconv2_BN"
+  top: "deconv1"
   convolution_param {
     num_output: 64
     pad: 1
@@ -282,15 +243,13 @@ layer {
     bias_filler {
       type: "constant"
     }
-#    engine: CUDNN
   }
 }
-
 layer {
-  name: "deconv4_1_BN"
+  name: "deconv1_BN"
   type: "BatchNorm" include { phase: TRAIN}
-  bottom: "conv4_1"
-  top: "deconv4_1_BN"
+  bottom: "deconv1"
+  top: "deconv1_BN"
   param {
     lr_mult: 0
     decay_mult: 0
@@ -305,14 +264,14 @@ layer {
   }
   batch_norm_param {
     use_global_stats: false
-    moving_average_fraction: 0.95
+    moving_average_fraction: 0.99
   }
 }
 layer {
-  name: "deconv4_1_BN"
+  name: "deconv1_BN"
   type: "BatchNorm" include { phase: TEST}
-  bottom: "conv4_1"
-  top: "deconv4_1_BN"
+  bottom: "deconv1"
+  top: "deconv1_BN"
   param {
     lr_mult: 0
     decay_mult: 0
@@ -327,34 +286,26 @@ layer {
   }
   batch_norm_param {
     use_global_stats: true
-    moving_average_fraction: 0.95
+    moving_average_fraction: 0.99
   }
 }
 
 layer {
-  name: "relu_conv4_1"
+  name: "relu_deconv1"
   type: "ReLU"
-  bottom: "deconv4_1_BN"
-  top: "deconv4_1_BN"
+  bottom: "deconv1_BN"
+  top: "deconv1_BN"
 }
 layer {
-  name: "generated"           
-  type: "Deconvolution"
-  bottom: "deconv4_1_BN"
-  top: "generated"
-  param {
-    lr_mult: 1
-    decay_mult: 0
-  }
-  param {
-    lr_mult: 0
-    decay_mult: 0
-  }
+  name: "conv1"           
+  type: "Convolution"
+  bottom: "deconv1_BN"
+  top: "conv1"
   convolution_param {
-    num_output: 3
+    num_output: 1
     pad: 1
-    kernel_size: 4
-    stride: 2
+    kernel_size: 3
+    stride: 1
     weight_filler {
       type: "gaussian"
       std: 0.02
@@ -362,16 +313,14 @@ layer {
     bias_filler {
       type: "constant"
     }
-#    engine: CUDNN
   }
 }
-
-#layer {
-#  name: "deconv3_relu"
-#  type: "TanH"
-#  bottom: "deconv3"
-#  top: "deconv3_relu"
-#}
+layer {
+  name: "conv1_tanh"
+  type: "TanH"
+  bottom: "conv1"
+  top: "conv1_tanh"
+}
 
 #layer {
 #  name: "deconv0_crop"
