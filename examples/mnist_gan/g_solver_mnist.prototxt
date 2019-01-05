@@ -1,4 +1,4 @@
-net: "models/gan/simple_g_mnist.prototxt"
+net: "examples/mnist_gan/simple_g_mnist.prototxt"
 display: 0
 # time_per_iter: 1
 base_lr: 0.0002
