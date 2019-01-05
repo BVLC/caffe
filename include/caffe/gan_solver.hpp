@@ -89,7 +89,6 @@ class GANSolver {
     string name = d_solver->param_.snapshot_prefix() + "x_fake_" + caffe::format_int(iter_) + ".png";
     cv::imwrite(name.str(), *x_fake_grid);
     delete x_fake_grid;
-    ss.clear();
 
     d_solver->net_->Forward();
     int ind = d_solver->net_->base_layer_index();
