@@ -117,15 +117,9 @@ layer {
   }
 }
 layer {
-  name: "relu_deconv3"
-  type: "ReLU"
-  bottom: "deconv3_BN"
-  top: "deconv3_BN"
-}
-layer {
   name: "deconv2"           
   type: "Deconvolution"
-  bottom: "deconv3_BN"
+  bottom: "fc1_BN"
   top: "deconv2"
   convolution_param {
     num_output: 128 
