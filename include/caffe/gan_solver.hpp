@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "caffe/solver.hpp"
+#include "caffe/util/format.hpp"
 #include "caffe/net.hpp"
 #include "caffe/solver_factory.hpp"
 #include "caffe/util/benchmark.hpp"
@@ -82,13 +83,11 @@ class GANSolver {
   }
 
   void TestAll() {
-    std::stringstream ss;
-
     // Must be float
     cv::Mat *x_fake_grid = blob2cvgrid(g_solver->net_->output_blobs()[0]);
     
-    string name = param_.snapshot_prefix() + "x_fake_" + caffe::format_int(iter_) + ".png";
-    cv::imwrite(name.c_str(), *x_fake_grid);
+    string name = d_solver->param_.snapshot_prefix() + "x_fake_" + caffe::format_int(iter_) + ".png";
+    cv::imwrite(name.str(), *x_fake_grid);
     delete x_fake_grid;
     ss.clear();
 
@@ -99,7 +98,7 @@ class GANSolver {
 
     cv::Mat *x_real_grid = blob2cvgrid(vecs[ind][0]);
     name = param_.snapshot_prefix() + "x_real_" + caffe::format_int(iter_) + ".png";
-    cv::imwrite(ss.c_str(), *x_real_grid);
+    cv::imwrite(name.c_str(), *x_real_grid);
     delete x_real_grid;
   }
 
