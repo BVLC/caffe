@@ -96,7 +96,7 @@ class GANSolver {
     auto vecs = d_solver->net_->bottom_vecs();
 
     cv::Mat *x_real_grid = blob2cvgrid(vecs[ind][0]);
-    name = param_.snapshot_prefix() + "x_real_" + caffe::format_int(iter_) + ".png";
+    name = d_solver->param_.snapshot_prefix() + "x_real_" + caffe::format_int(iter_) + ".png";
     cv::imwrite(name.c_str(), *x_real_grid);
     delete x_real_grid;
   }
