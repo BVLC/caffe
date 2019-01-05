@@ -70,22 +70,27 @@ class GANSolver {
       cv::merge(color_channel, image);
       src.push_back(image);
     }
-    cv::Mat *grid = new cv::Mat(height * 4, width * 4, CV_32FC1);
+    cv::Mat *grid = new cv::Mat(height * 4, width * 4, (channels == 1 ? CV_32FC1: CV_32FC3));
     tile(src, *grid, 4, 4);
 
-    double min, max;
-    cv::minMaxLoc(*grid, &min, &max);
-    LOG(INFO) << "Min " <<  min << " Max " << max;
+    //double min, max;
+    //cv::minMaxLoc(*grid, &min, &max);
+    //LOG(INFO) << "Min " <<  min << " Max " << max;
 
     *grid = (*grid + 1) * 127.5; 
     return grid;
   }
 
   void TestAll() {
+    std::stringstream ss;
+
     // Must be float
     cv::Mat *x_fake_grid = blob2cvgrid(g_solver->net_->output_blobs()[0]);
-    cv::imwrite("x_fake.jpg", *x_fake_grid);
+    
+    string name = param_.snapshot_prefix() + "x_fake_" + caffe::format_int(iter_) + ".png";
+    cv::imwrite(name.c_str(), *x_fake_grid);
     delete x_fake_grid;
+    ss.clear();
 
     d_solver->net_->Forward();
     int ind = d_solver->net_->base_layer_index();
@@ -93,7 +98,8 @@ class GANSolver {
     auto vecs = d_solver->net_->bottom_vecs();
 
     cv::Mat *x_real_grid = blob2cvgrid(vecs[ind][0]);
-    cv::imwrite("x_real.jpg", *x_real_grid);
+    name = param_.snapshot_prefix() + "x_real_" + caffe::format_int(iter_) + ".png";
+    cv::imwrite(ss.c_str(), *x_real_grid);
     delete x_real_grid;
   }
 

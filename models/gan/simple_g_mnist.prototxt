@@ -23,7 +23,7 @@ layer {
   bottom: "noise"
   top: "fc1"
   inner_product_param {
-    num_output: 6272
+    num_output: 12544
     weight_filler {
       type: "gaussian"
       std: 0.02
@@ -38,17 +38,17 @@ layer {
   reshape_param {
     shape {
       dim: 64
-      dim: 128
+      dim: 256
       dim: 7
       dim: 7
     }
   }
 }
 layer {
-  name: "deconv3_BN"
+  name: "fc1_BN"
   type: "BatchNorm" include {phase: TRAIN}
   bottom: "reshape_fc1"
-  top: "deconv3_BN"
+  top: "fc1_BN"
   param {
     lr_mult: 0
     decay_mult: 0
@@ -67,9 +67,37 @@ layer {
   }
 }
 layer {
-  name: "deconv3_BN"
+  name: "fc1_BN"
   type: "BatchNorm" include { phase: TEST}
   bottom: "reshape_fc1"
+  top: "fc1_BN"
+  param {
+    lr_mult: 0
+    decay_mult: 0
+  }
+  param {
+    lr_mult: 0
+    decay_mult: 0
+  }
+  param {
+    lr_mult: 0
+    decay_mult: 0
+  }
+  batch_norm_param {
+    use_global_stats: true
+    moving_average_fraction: 0.99
+  }
+}
+layer {
+  name: "relu_fc1"
+  type: "ReLU"
+  bottom: "fc1_BN"
+  top: "fc1_BN"
+}
+layer {
+  name: "deconv3_BN"
+  type: "BatchNorm" include { phase: TEST}
+  bottom: "fc1_BN"
   top: "deconv3_BN"
   param {
     lr_mult: 0
