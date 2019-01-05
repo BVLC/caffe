@@ -87,7 +87,7 @@ class GANSolver {
     cv::Mat *x_fake_grid = blob2cvgrid(g_solver->net_->output_blobs()[0]);
     
     string name = d_solver->param_.snapshot_prefix() + "x_fake_" + caffe::format_int(iter_) + ".png";
-    cv::imwrite(name.str(), *x_fake_grid);
+    cv::imwrite(name.c_str(), *x_fake_grid);
     delete x_fake_grid;
 
     d_solver->net_->Forward();
