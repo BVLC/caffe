@@ -11,6 +11,6 @@ stepvalue: 20000
 stepvalue: 50000
 stepvalue: 100000
 max_iter: 200000
-snapshot_prefix: "log/mnist_cifar/"
+snapshot_prefix: "log/cifar_gan/"
 solver_mode: GPU
 solver_type: ADAM
