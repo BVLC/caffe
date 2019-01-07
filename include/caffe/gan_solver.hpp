@@ -56,7 +56,7 @@ class GANSolver {
 
   /// Show 3 channel or 1 channel blob; batch size >= 16; scale between (-1, 1)
   cv::Mat* blob2cvgrid(Blob<Dtype> *blob) {
-    LOG(INFO) << "Shape " << blob->shape_string();
+    // LOG(INFO) << "Shape " << blob->shape_string();
     int width = blob->width(), height = blob->height(), channels = blob->channels();
     Dtype* input_data = blob->mutable_cpu_data();
     vector<cv::Mat> src;
