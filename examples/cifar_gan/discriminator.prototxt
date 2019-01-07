@@ -1,0 +1,124 @@
+name: "SimpleDiscriminator"
+layer {
+  name: "disc_label"
+  type: "Input"
+  top: "disc_label"
+  input_param { shape: { dim: 64 dim: 1} }
+}
+layer {
+  name: "data"
+  type: "Data"
+  top: "data"
+  top: "cls_label"
+  include {
+    phase: TRAIN
+  }
+  transform_param {
+    scale: 0.00784313
+    mean_value: 127.5
+  }
+  data_param {
+    source: "examples/cifar10/cifar10_train_lmdb"
+    batch_size: 64
+    backend: LMDB
+  }
+}
+layer {
+  name: "conv1"
+  type: "Convolution"
+  bottom: "data"
+  top: "conv1"
+  convolution_param {
+    num_output: 64
+    kernel_size: 4
+    stride: 2
+    pad: 1
+    weight_filler {
+      type: "gaussian"
+      std: 0.02
+    }
+  }
+}
+layer {
+  name: "lrelu1"
+  type: "ReLU"
+  bottom: "conv1"
+  top: "conv1"
+  relu_param {
+    negative_slope: 0.2
+  }
+}
+layer {
+  name: "conv2"
+  type: "Convolution"
+  bottom: "conv1"
+  top: "conv2"
+  convolution_param {
+    num_output: 128
+    kernel_size: 4
+    stride: 2
+    pad: 1
+    weight_filler {
+      type: "gaussian"
+      std: 0.02
+    }
+  }
+}
+layer {
+  name: "lrelu2"
+  type: "ReLU"
+  bottom: "conv2"
+  top: "conv2"
+  relu_param {
+    negative_slope: 0.2
+  }
+}
+layer {
+  name: "conv3"
+  type: "Convolution"
+  bottom: "conv2"
+  top: "conv3"
+  convolution_param {
+    num_output: 256
+    kernel_size: 4
+    stride: 2
+    pad: 1
+    weight_filler {
+      type: "gaussian"
+      std: 0.02
+    }
+  }
+}
+layer {
+  name: "lrelu3"
+  type: "ReLU"
+  bottom: "conv3"
+  top: "conv3"
+  relu_param {
+    negative_slope: 0.2
+  }
+}
+layer {
+  name: "conv4"
+  type: "Convolution"
+  bottom: "conv3"
+  top: "conv4"
+  convolution_param {
+    num_output: 1
+    kernel_size: 4
+    stride: 1
+    pad: 0
+    weight_filler {
+      type: "gaussian"
+      std: 0.02
+    }
+  }
+  # for 32x32, here is 1x1
+}
+layer {
+  name: "disc_loss"
+  type: "SigmoidCrossEntropyLoss"
+  bottom: "conv4"
+  bottom: "disc_label"
+  top: "discr_loss"
+}

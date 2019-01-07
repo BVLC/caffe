@@ -1,45 +1,53 @@
-# Caffe
+# Caffe (GAN edition)
 
-[![Build Status](https://travis-ci.org/BVLC/caffe.svg?branch=master)](https://travis-ci.org/BVLC/caffe)
-[![License](https://img.shields.io/badge/license-BSD-blue.svg)](LICENSE)
+This is a modified version of caffe to adapt GAN training. 
 
-Caffe is a deep learning framework made with expression, speed, and modularity in mind.
-It is developed by Berkeley AI Research ([BAIR](http://bair.berkeley.edu))/The Berkeley Vision and Learning Center (BVLC) and community contributors.
+# Build
 
-Check out the [project site](http://caffe.berkeleyvision.org) for all the details like
+Currently, only `Makefile` method is supported, and the steps is the same as original caffe. `CMake` or other method is not tested.
 
-- [DIY Deep Learning for Vision with Caffe](https://docs.google.com/presentation/d/1UeKXVgRvvxg9OUdh_UiC5G71UMscNPlvArsWER41PsU/edit#slide=id.p)
-- [Tutorial Documentation](http://caffe.berkeleyvision.org/tutorial/)
-- [BAIR reference models](http://caffe.berkeleyvision.org/model_zoo.html) and the [community model zoo](https://github.com/BVLC/caffe/wiki/Model-Zoo)
-- [Installation instructions](http://caffe.berkeleyvision.org/installation.html)
+# Run
 
-and step-by-step examples.
+Currently, DCGAN on Cifar10 and MNIST is tested. After you have prepared the dataset, run the `run.sh` script at `examples` directory. Both GPU and CPU mode are supported.
 
-## Custom distributions
+On some machines, you should make the log directory in previous, or there may be write permission errors. E.g. the `log/mnist_gan` directory for MNIST GAN experiment.
 
- - [Intel Caffe](https://github.com/BVLC/caffe/tree/intel) (Optimized for CPU and support for multi-node), in particular Xeon processors (HSW, BDW, SKX, Xeon Phi).
-- [OpenCL Caffe](https://github.com/BVLC/caffe/tree/opencl) e.g. for AMD or Intel devices.
-- [Windows Caffe](https://github.com/BVLC/caffe/tree/windows)
 
-## Community
 
-[![Join the chat at https://gitter.im/BVLC/caffe](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/BVLC/caffe?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+# Functionality
 
-Please join the [caffe-users group](https://groups.google.com/forum/#!forum/caffe-users) or [gitter chat](https://gitter.im/BVLC/caffe) to ask questions and talk about methods and models.
-Framework development discussions and thorough bug reports are collected on [Issues](https://github.com/BVLC/caffe/issues).
+- DCGAN training on MNIST, Cifar10, or any custom data.
 
-Happy brewing!
+- Any traditional generator or discriminator architecture: not including new layers like Spectral Normalization.
 
-## License and Citation
+- Minmax loss function for GAN.
 
-Caffe is released under the [BSD 2-Clause license](https://github.com/BVLC/caffe/blob/master/LICENSE).
-The BAIR/BVLC reference models are released for unrestricted use.
+# Future functionality
 
-Please cite Caffe in your publications if it helps your research:
+- Auxiliary Classifier.
 
-    @article{jia2014caffe,
-      Author = {Jia, Yangqing and Shelhamer, Evan and Donahue, Jeff and Karayev, Sergey and Long, Jonathan and Girshick, Ross and Guadarrama, Sergio and Darrell, Trevor},
-      Journal = {arXiv preprint arXiv:1408.5093},
-      Title = {Caffe: Convolutional Architecture for Fast Feature Embedding},
-      Year = {2014}
-    }
+- cycleGAN.
+
+NOTICE:
+
+- Any gradient penalty will not be supported: WGAN-CP, DRAGAN. Because it is too hard to compute the gradient of gradient in Caffe.
+
+# Customization
+
+This GAN edition only conducted minimal modification of GAN. Modified files is listed at follows, if you do care about it:
+
+(`A` for added file, `M` for modified file)
+
+- A: `tools/caffe_gan.cpp`. The training interface of GAN.
+
+- A: `examples/cifar_gan`, `examples/mnist_gan`, `models/gan/`. Some examples of GAN.
+
+- A: `src/caffe/layers/randvec_layer.cpp`, `include/layers/randvec_layer.hpp`. The random noise layer for generator.
+
+- M: `src/caffe/proto/caffe.proto`. Register `RandVecLayer`.
+
+- A: `src/caffe/gan_solver.cpp`, `include/caffe/gan_solver.hpp`. Add a solver for general GAN training.
+
+- M: `src/caffe/net.cpp`, `include/caffe/net.hpp`. Modified the interface of `Net` class to expose more `Forward` and `Backward` functionality.
+
+In summary, no aggressive modification is done.
