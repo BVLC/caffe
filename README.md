@@ -2,11 +2,11 @@
 
 This is a modified version of caffe to adapt GAN training. 
 
-# Build
+## Build
 
-Currently, only `Makefile` method is supported, and the steps is the same as original caffe. `CMake` or other method is not tested.
+Currently, only `Makefile` method is supported, and the steps is the same as original caffe. `CMake` or other method is not tested. Only ubuntu platform is tested, but other platform is supposed to work.
 
-# Run
+## Run
 
 Currently, DCGAN on Cifar10 and MNIST is tested. After you have prepared the dataset, run the `run.sh` script at `examples` directory. Both GPU and CPU mode are supported.
 
@@ -14,7 +14,7 @@ On some machines, you should make the log directory in previous, or there may be
 
 
 
-# Functionality
+## Functionality
 
 - DCGAN training on MNIST, Cifar10, or any custom data.
 
@@ -22,7 +22,7 @@ On some machines, you should make the log directory in previous, or there may be
 
 - Minmax loss function for GAN.
 
-# Future functionality
+## Future functionality
 
 - Auxiliary Classifier.
 
@@ -32,7 +32,7 @@ NOTICE:
 
 - Any gradient penalty will not be supported: WGAN-CP, DRAGAN. Because it is too hard to compute the gradient of gradient in Caffe.
 
-# Customization
+## Customization
 
 This GAN edition only conducted minimal modification of GAN. Modified files is listed at follows, if you do care about it:
 
@@ -51,3 +51,4 @@ This GAN edition only conducted minimal modification of GAN. Modified files is l
 - M: `src/caffe/net.cpp`, `include/caffe/net.hpp`. Modified the interface of `Net` class to expose more `Forward` and `Backward` functionality.
 
 In summary, no aggressive modification is done.
+
