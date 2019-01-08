@@ -37,21 +37,21 @@ Dtype SGDSolver<Dtype>::GetLearningRate() {
         pow(this->param_.gamma(), this->current_step_);
   } else if (lr_policy == "triangular") {
     int itr = this->iter_ - this->param_.start_lr_policy();
-    if(itr > 0){
-      int cycle = itr / (2 ∗ this->param_.stepsize());
-      float x = (float)(itr - (2 ∗ cycle + 1) ∗ this->param_.stepsize());
+    if (itr > 0) {
+      int cycle = itr / (2 * this->param_.stepsize());
+      float x = (float)(itr - (2 * cycle + 1) * this->param_.stepsize());
       x = x / this->param_.stepsize();
-      rate = this->param_.base_lr() + (this->param_.max_lr()-this->param_.base_lr()) ∗ std::max(double(0), (1.0-fabs(x)));
+      rate = this->param_.base_lr() + (this->param_.max_lr()-this->param_.base_lr()) * std::max(double(0), (1.0-fabs(x)));
     } else {
       rate = this->param_.base_lr();
     }
   } else if (lr_policy == "triangular2") {
     int itr = this->iter_ - this->param_.start_lr_policy();
-    if(itr > 0){
-      int cycle = itr / (2 ∗ this->param_.stepsize());
-      float x = (float)(itr - (2 ∗ cycle + 1) ∗ this->param_.stepsize());
+    if (itr > 0) {
+      int cycle = itr / (2 * this->param_.stepsize());
+      float x = (float)(itr - (2 * cycle + 1) * this->param_.stepsize());
       x = x / this->param_.stepsize();
-      rate = this->param_.base_lr() + (this->param_.max_lr()-this->param_.base_lr()) ∗ std::min(double(1), std::max(double(0), (1.0-fabs(x)) / pow(2.0, double(cycle))));
+      rate = this->param_.base_lr() + (this->param_.max_lr()-this->param_.base_lr()) * std::min(double(1), std::max(double(0), (1.0-fabs(x)) / pow(2.0, double(cycle))));
     } else {
       rate = this->param_.base_lr();
     }
