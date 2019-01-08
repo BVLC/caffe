@@ -367,7 +367,7 @@ bp::object NCCL_New_Uid() {
   // force a bytes object to be returned. When this object
   // is passed back to the NCCL constructor boost.python will
   // correctly convert the bytes to std::string automatically
-  PyObject* py_uid = PyBytes_FromString(uid.c_str());
+  PyObject* py_uid = PyBytes_FromStringAndSize(uid.c_str(), uid.length());
   return bp::object(bp::handle<>(py_uid));
 #else
   // automatic conversion is correct for python 2.
