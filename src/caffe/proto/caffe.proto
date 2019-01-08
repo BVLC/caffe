@@ -255,6 +255,9 @@ message SolverParameter {
   // weights parameter separated by ',' (like in a command string) or
   // in repeated weights parameters separately.
   repeated string weights = 42;
+
+  optional float start_lr_policy = 43;
+  optional float max_lr = 44; // The maximum learning rate for CLR policies
 }
 
 // A message that stores the solver snapshots
