@@ -1,15 +1,17 @@
 {
     "params":{
-        "topology" : "your topology like alexnet/googlenet/googlenet_v2/resnet_50/all",
+        "topology" : "your topology like alexnet/googlenet/googlenet_v2/resnet_50/all_train/all_inf",
         "hostfile" : "/your/hostfile",
         "network" : "tcp or opa",
         "netmask" : "your ethernet card name like eth0",
         "dummy_data_use" : true,
-        "scal_test" : false,
+        "test_mode" : "scal_test/train_throughput/inf_throughput/inf_latency",
+        "inf_instances" : "1, The number of instance to run in paralle"
+        "num_omp_threads" : "20, the num of thread per instance"
         "caffe_bin" : "",
         "engine" : "choose CAFFE, MKL2017 or MKLDNN"
     },
-    "perf_batch_size_table" : {
+    "train_perf_batch_size_table" : {
         "alexnet" : {
             "bdw" : "1024",
             "skx" : "1024",
@@ -47,6 +49,74 @@
             "knm" : "64"
         }
     },
+
+    #for test_mode 3 to measure inference throughput
+    "inference_perf_batch_size_table" : {
+        "resnet50_int8" : {
+            "skx" : "1024",
+            "clx" : "1024"
+        },
+        "resnet_50" : {
+            "skx" : "28",
+            "clx" : "28"
+        },
+        "rfcn" : {
+            "skx" : "1",
+            "clx" : "1"
+        },
+        "faster-rcnn" : {
+            "skx" : "1",
+            "clx" : "1"
+        },
+        "faster-rcnn_int8" : {
+            "skx" : "1",
+            "clx" : "1"
+        },
+        "rfcn_int8" : {
+           "skx" : "1",
+           "clx" : "1"
+        },
+        "ssd_mobilenet" : {
+            "skx" : "512",
+            "clx" : "512"
+        },
+        "ssd_mobilenet_int8" : {
+            "skx" : "512",
+            "clx" : "512"
+        },
+        "yolo" : {
+            "skx" : "32",
+            "clx" : "4"
+        },
+        "yolo_int8"  : {
+            "skx" : "32",
+            "clx" : "32"
+        },
+        "googlenet_v3" : {
+            "skx" : "32",
+            "clx" : "32"
+        },
+        "ssd" : {
+            "skx" : "32",
+            "clx" : "252"
+        },
+        "ssd_int8" : {
+            "skx" : "448",
+            "clx" : "448"
+        },
+        "mobilenet_v2" : {
+            "skx" : "32"
+        },
+        "googlenet_v3" : {
+            "skx" : "32",
+            "clx" : "32"
+        },
+        "googlenet_v3_int8" : {
+            "skx" : "448",
+            "clx" : "448"
+        }
+    },
+
     "scal_batch_size_table" : {
         "alexnet" : "256",
         "googlenet" : "64",

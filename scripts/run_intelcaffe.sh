@@ -69,7 +69,7 @@ function usage
     echo "  $script_name [--hostfile host_file] [--solver solver_file]"
     echo "               [--weights weight_file] [--num_omp_threads num_omp_threads]"
     echo "               [--network opa/tcp] [--netmask tcp_netmask] [--debug on/off]"
-    echo "               [--mode train/time/none] [--benchmark all/qperf/mpi/none]"
+    echo "               [--mode train/time/inf_time/none] [--benchmark all/qperf/mpi/none]"
     echo "               [--iteration iter] [--model_file deploy.prototxt]"
     echo "               [--snapshot snapshot.caffemodel]"
     echo "               [--num_mlsl_servers num_mlsl_servers]"
@@ -91,7 +91,7 @@ function usage
     echo "    network: opa(default), tcp"
     echo "    netmask: only used if network is tcp"
     echo "    debug: off(default). MLSL debug information is outputed if it's on"
-    echo "    mode: train(default), time, none(not to run caffe test)"
+    echo "    mode: train(default), time, inf_time, none(not to run caffe test)"
     echo "    benchmark: none(disabled by default). Includes qperf, all-reduce performance"
     echo "      Dependency: user needs to install qperf, Intel MPI library (including IMB-MPI1);"
     echo "                  and add them in system path."
@@ -157,6 +157,8 @@ function detect_cpu
         else
             cpu_model_="unknown"
         fi
+    elif [[ $model_string == *"Genuine"* ]]; then
+        cpu_model_="clx"
     else
         model_num=`echo $model_string | awk '{print $4}'`
         if [[ $model_num =~ ^[8|6|5|4|3]1 ]]; then
@@ -208,8 +210,43 @@ function execute_command
     local xeonbin_=$1
     local result_dir_=$2
 
-    if [ "${cpu_model}" == "skx" ]; then
+    if [ "${cpu_model}" == "skx" ] || [ "${cpu_model}" == "clx" ]; then
         exec_command="numactl -l $xeonbin_"
+        cores_per_socket=$(lscpu |grep "Core(s)" |awk -F' ' '{ print $4 }')
+        sockets=$(lscpu |grep "Socket(s)" |awk -F' ' '{ print $2 }')
+        cores=$((cores_per_socket * sockets))
+         
+        if [[ ( "${mode}" == "inf_time" )  && ( "${num_omp_threads}" != "" )  && ( "${num_omp_threads}" -le "$cores" ) && ( "${ppn}" -ge "1" ) ]];then
+          thread_num=$num_omp_threads
+          start_core_id=0
+          end_core_id=$((start_core_id + thread_num - 1 ))
+          numa_node=0
+          pp=0
+          exec_command=""
+          while [ "$pp" -lt "$ppn" ];do
+          
+              if [ "$end_core_id" -ge $(( ( numa_node + 1 ) * cores_per_socket )) ];then
+                  numa_node=$(( numa_node + 1 ))
+              fi
+
+              if [ "$start_core_id" == "$end_core_id" ];then
+                  inst_command="numactl -C $start_core_id -m $numa_node $xeonbin_" 
+              else
+                  inst_command="numactl -C $start_core_id-$end_core_id -m $numa_node $xeonbin_" 
+              fi
+              start_core_id=$((end_core_id + 1))
+              end_core_id=$((start_core_id + thread_num - 1 ))
+              if [ "$pp" -eq "0" ];then
+                  exec_command="$inst_command"
+              else 
+                  exec_command="$exec_command & $inst_command"
+              fi
+              pp=$(( pp + 1 ))
+          done
+          echo $exec_command >./temp.sh
+          exec_command="bash -x ./temp.sh"
+        fi
+        echo "Command:" $exec_command
     elif [ "${cpu_model}" == "knl" ] || [ "${cpu_model}" == "knm" ]; then
         exec_command="numactl --preferred=$numanode $xeonbin_"
     else
@@ -237,7 +274,7 @@ function execute_command
         $sensors_bin >$sensor_log_file
     fi
 
-    if [ ${numnodes} -eq 1 ] && [ $is_local_run -eq 1 ] && [ $ppn -eq 1 ]; then
+    if [ ${numnodes} -eq 1 ] && [ $is_local_run -eq 1 ] && [[ ( ${mode} == "inf_time" ) || ( "$ppn" -eq "1") ]] ; then
         time GLOG_minloglevel=0 $exec_command 2>&1 | tee ${log_file}
     else
         exec_command="-l -configfile $cfile_"
@@ -367,9 +404,11 @@ function run_benchmark
 function run_caffe
 {
     echo "Run caffe with ${numnodes} nodes..."
-
+    echo "mode: ${mode}"
     if [ ${mode} == "time" ]; then
         xeonbin="$caffe_bin time --iterations $iteration --model $model_file"
+    elif [ ${mode} == "inf_time" ]; then 
+        xeonbin="$caffe_bin time --forward_only --phase TEST --iterations $iteration --model $model_file"
     else
         xeonbin="$caffe_bin train --solver $solver_file"
         if [ "${snapshot}" != "" ]; then
@@ -718,12 +757,15 @@ if [ "${mpi_iallreduce_algo}" != "" ]; then
     env_params+=" --mpi_iallreduce_algo ${mpi_iallreduce_algo}"
 fi
 
+if [ "${mode}" == "inf_time" ];then
+    env_params+=" --mode ${mode}"
+fi
+
 source ${script_dir}/set_env.sh $env_params
 
 if [ "${benchmark_mode}" != "none" ]; then
     run_benchmark
 fi
-
 if [ "${mode}" != "none" ]; then
     if [ "$caffe_bin" == "" ]; then
       caffe_bin="${root_dir}/build/tools/caffe"
