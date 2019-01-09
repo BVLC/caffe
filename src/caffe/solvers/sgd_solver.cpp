@@ -56,7 +56,7 @@ Dtype SGDSolver<Dtype>::GetLearningRate() {
       float x = (float) (itr - (this->param_.stepsize() * (cycle * 2 + 1)));
       x = x / this->param_.stepsize();
       double lr_range = this->param_.max_lr() - this->param_.base_lr();
-      double adjustment = std::min(1.0, std::max(0.0, (1.0 - std::abs(x)) / ((double) cycle * cycle)));
+      double adjustment = std::min(1.0, std::max(0.0, (1.0 - std::abs(x)) / (std::pow(2.0, (double) cycle))));
       rate = this->param_.base_lr() + (adjustment * lr_range);
     } else {
       rate = this->param_.base_lr();
