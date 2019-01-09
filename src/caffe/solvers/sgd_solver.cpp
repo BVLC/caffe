@@ -38,9 +38,7 @@ Dtype SGDSolver<Dtype>::GetLearningRate() {
   } else if (lr_policy == "triangular") {
     int itr = this->iter_ - this->param_.start_lr_policy();
     if (itr > 0) {
-      if (this->param_.stepsize() == 0) {
-        LOG(FATAL) << "Zero stepsize for policy: " << lr_policy;
-      }
+      CHECK_GT(this->param_.stepsize(), 0);
       signed cycle = itr / (this->param_.stepsize() * 2);
       float x = (float) (itr - (this->param_.stepsize() * (cycle * 2 + 1)));
       x = x / this->param_.stepsize();
@@ -53,9 +51,7 @@ Dtype SGDSolver<Dtype>::GetLearningRate() {
   } else if (lr_policy == "triangular2") {
     signed itr = this->iter_ - this->param_.start_lr_policy();
     if (itr > 0) {
-      if (this->param_.stepsize() == 0) {
-        LOG(FATAL) << "Zero stepsize for policy: " << lr_policy;
-      }
+      CHECK_GT(this->param_.stepsize(), 0);
       signed cycle = itr / (this->param_.stepsize() * 2);
       float x = (float) (itr - (this->param_.stepsize() * (cycle * 2 + 1)));
       x = x / this->param_.stepsize();
