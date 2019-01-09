@@ -38,11 +38,14 @@ Dtype SGDSolver<Dtype>::GetLearningRate() {
   } else if (lr_policy == "triangular") {
     int itr = this->iter_ - this->param_.start_lr_policy();
     if (itr > 0) {
+      if (this->param_.stepsize() == 0) {
+        LOG(FATAL) << "Zero stepsize for policy: " << lr_policy;
+      }
       signed cycle = itr / (this->param_.stepsize() * 2);
       float x = (float) (itr - (this->param_.stepsize() * (cycle * 2 + 1)));
       x = x / this->param_.stepsize();
       double lr_range = this->param_.max_lr() - this->param_.base_lr();
-      double adjustment = std::max(0.0, (1.0 - fabs(x)));
+      double adjustment = std::max(0.0, (1.0 - std::abs(x)));
       rate = this->param_.base_lr() + (adjustment * lr_range);
     } else {
       rate = this->param_.base_lr();
@@ -50,11 +53,14 @@ Dtype SGDSolver<Dtype>::GetLearningRate() {
   } else if (lr_policy == "triangular2") {
     signed itr = this->iter_ - this->param_.start_lr_policy();
     if (itr > 0) {
+      if (this->param_.stepsize() == 0) {
+        LOG(FATAL) << "Zero stepsize for policy: " << lr_policy;
+      }
       signed cycle = itr / (this->param_.stepsize() * 2);
       float x = (float) (itr - (this->param_.stepsize() * (cycle * 2 + 1)));
       x = x / this->param_.stepsize();
       double lr_range = this->param_.max_lr() - this->param_.base_lr();
-      double adjustment = std::min(1.0, std::max(0.0, (1.0 - fabs(x)) / pow(2.0, double(cycle))));
+      double adjustment = std::min(1.0, std::max(0.0, (1.0 - std::abs(x)) / ((double) cycle * cycle)));
       rate = this->param_.base_lr() + (adjustment * lr_range);
     } else {
       rate = this->param_.base_lr();
