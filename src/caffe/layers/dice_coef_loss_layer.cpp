@@ -58,6 +58,7 @@ void DiceCoefLossLayer<Dtype>::Reshape(
         switch (this->layer_param_.dice_coef_loss_param().weight_mode())
           {
           case DiceCoefLossParameter_WeightMode_INVERSE_VOLUME: weight_pow_ = -2; break;
+          case DiceCoefLossParameter_WeightMode_EXTRA_SMALL_VOLUMES: weight_pow_ = -3; break;
           case DiceCoefLossParameter_WeightMode_EQUALIZE_CLASSES: weight_pow_ = -1; break;
           }
         ignore_label_ = this->layer_param_.dice_coef_loss_param().ignore_label();

@@ -812,8 +812,9 @@ message DiceCoefLossParameter {
   optional GeneralizationMode generalization = 3 [default = NONE];
 
   enum WeightMode {
-    INVERSE_VOLUME = 0; // weights are computed so that weight is more important for small volume classes
+    INVERSE_VOLUME = 0; //weights * 1/V
     EQUALIZE_CLASSES = 1; // weights are computed so that evey class contivutes equally
+    EXTRA_SMALL_VOLUMES = 2; // weights * 1/V²
   }
   optional WeightMode weight_mode = 5 [default = INVERSE_VOLUME];
 
