@@ -12,12 +12,49 @@ void DiceCoefLossLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   int count = bottom[0]->count();
 
+  const int batchsize = bottom[0]->num();
+  caffe_gpu_set(batchsize, smooth_, result_tmp_.mutable_gpu_data());
+  caffe_gpu_set(batchsize, smooth_, result_.mutable_gpu_data());
+
+
   if (do_weight_)
     {
+      Dtype unit_weight = Dtype(1.);
+      caffe_gpu_set(batchsize*nclasses_, unit_weight, weights_.mutable_gpu_data());
+
       caffe_gpu_gemm(CblasNoTrans, CblasTrans, bottom[1]->num(), bottom[1]->channels(),
-                     bottom[1]->count(1), Dtype(1.), bottom[1]->gpu_data(), mask_.gpu_data(), Dtype(1.),
-                     weights_.mutable_gpu_data());
-      caffe_gpu_powx(bottom[1]->num() * bottom[1]->channels(),weights_.gpu_data(), Dtype(-2.),
+                     bottom[1]->count(1), unit_weight, bottom[1]->gpu_data(), mask_.gpu_data(),
+                     Dtype(1.), weights_.mutable_gpu_data());
+
+      //below normalize over batch
+      if (norm_batch_)
+        {
+          Blob<Dtype> weights_perclass;
+          vector<int> weight_perclass_shape = {nclasses_};
+          weights_perclass.Reshape(weight_perclass_shape);
+          caffe_gpu_gemv(CblasTrans,batchsize,nclasses_,Dtype(1.0),weights_.gpu_data(),
+                         batchsize_multiplier_.gpu_data(),Dtype(0.0),weights_perclass.mutable_gpu_data());
+          caffe_gpu_scal(nclasses_, Dtype(1.0)/Dtype(batchsize), weights_perclass.mutable_gpu_data());
+
+          if (norm_all_)
+            {
+              if (numit_ != 0)
+                {
+                  caffe_gpu_axpby(nclasses_,Dtype(numit_),weights_perclass_mem_.gpu_data(),Dtype(1.0), weights_perclass.mutable_gpu_data());
+                  caffe_gpu_scal(nclasses_, Dtype(1.0)/Dtype(++numit_), weights_perclass.mutable_gpu_data());
+                }
+              else
+                numit_ = 1;
+              caffe_copy(nclasses_,weights_perclass.gpu_data(),weights_perclass_mem_.mutable_gpu_data());
+            }
+
+          caffe_gpu_gemm(CblasNoTrans,CblasNoTrans,batchsize,nclasses_,1,Dtype(1.0),
+                     batchsize_multiplier_.gpu_data(),weights_perclass.gpu_data(),
+                         Dtype(0.0), weights_.mutable_gpu_data());
+          // end of normlization over batch
+        }
+
+      caffe_gpu_powx(bottom[1]->num() * bottom[1]->channels(),weights_.gpu_data(), Dtype(weight_pow_),
                  weights_.mutable_gpu_data());
       caffe_gpu_gemm(CblasTrans, CblasNoTrans,
                      bottom[1]->num(), bottom[1]->count(1), bottom[1]->channels(),
@@ -101,8 +138,7 @@ void DiceCoefLossLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
         }
         if (do_weight_)
           caffe_gpu_mul(bottom[i]->count(), weight_multiplier_.gpu_data(), bottom[i]->gpu_diff(),
-												bottom[i]->mutable_gpu_diff());
-
+                        bottom[i]->mutable_gpu_diff());
         }
 }
 

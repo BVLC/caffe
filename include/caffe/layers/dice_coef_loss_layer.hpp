@@ -41,7 +41,7 @@ template <typename Dtype>
 class DiceCoefLossLayer : public LossLayer<Dtype> {
  public:
   explicit DiceCoefLossLayer(const LayerParameter& param)
-      : LossLayer<Dtype>(param), multiplier_() ,result_() ,result_tmp_() ,tmp_(){}
+    : LossLayer<Dtype>(param), multiplier_() ,result_() ,result_tmp_() ,tmp_(),  norm_batch_(false), norm_all_(false),numit_(0), weight_pow_(-2) {}
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
@@ -103,13 +103,19 @@ class DiceCoefLossLayer : public LossLayer<Dtype> {
   Blob<Dtype> result_;
   Blob<Dtype> result_tmp_;
   Blob<Dtype> tmp_;
-  Dtype smooth;
   int nclasses_;
   bool do_weight_;
+  bool norm_batch_;
+  bool norm_all_;
   int ignore_label_;
   Blob<Dtype> weights_;
   Blob<Dtype> weight_multiplier_;
+  Blob<Dtype> weights_perclass_mem_;
+  Blob<Dtype> batchsize_multiplier_;
   Blob<Dtype> mask_;
+  Dtype smooth_;
+  long int numit_;
+  int weight_pow_;
 };
 
 }  // namespace caffe
