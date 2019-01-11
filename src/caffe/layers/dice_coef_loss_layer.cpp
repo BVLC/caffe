@@ -108,6 +108,14 @@ void DiceCoefLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   caffe_set(batchsize, smooth_, result_tmp_.mutable_cpu_data());
   caffe_set(batchsize, smooth_, result_.mutable_cpu_data());
 
+  for (unsigned int i=0; i< bottom[1]->count(); ++i)
+    {
+      if (bottom[1]->cpu_data()[i] <0.5)
+        bottom[1]->mutable_cpu_data()[i] = 0.0;
+      else
+        bottom[1]->mutable_cpu_data()[i] = 1.0;
+    }
+
   if (do_weight_)
     {
       Dtype unit_weight = Dtype(1.0);
@@ -157,8 +165,8 @@ void DiceCoefLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     }
 
 
-	caffe_mul(bottom[0]->count(), bottom[0]->cpu_data(), bottom[0]->cpu_data(),
-						tmp_.mutable_cpu_data());
+  caffe_mul(bottom[0]->count(), bottom[0]->cpu_data(), bottom[0]->cpu_data(),
+            tmp_.mutable_cpu_data());
   if (do_weight_)
 		caffe_mul(bottom[0]->count(), weight_multiplier_.cpu_data(), tmp_.cpu_data(),
 							tmp_.mutable_cpu_data());

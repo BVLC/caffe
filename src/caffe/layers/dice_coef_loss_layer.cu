@@ -6,6 +6,18 @@
 namespace caffe {
 
 
+template <typename Dtype>
+  __global__ void StickLabels(const int n, const Dtype* b1in,
+                              Dtype* b1out) {
+  CUDA_KERNEL_LOOP(index, n)
+      {
+        if (b1in[index]  < Dtype(0.5))
+          b1out[index] = Dtype(0.0);
+        else
+          b1out[index] = Dtype(1.0);
+      }
+  }
+
 
 template <typename Dtype>
 void DiceCoefLossLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
@@ -16,6 +28,9 @@ void DiceCoefLossLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   caffe_gpu_set(batchsize, smooth_, result_tmp_.mutable_gpu_data());
   caffe_gpu_set(batchsize, smooth_, result_.mutable_gpu_data());
 
+  StickLabels<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
+      count, bottom[1]->gpu_data(), bottom[1]->mutable_gpu_data());
+  CUDA_POST_KERNEL_CHECK;
 
   if (do_weight_)
     {
@@ -26,7 +41,7 @@ void DiceCoefLossLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                      bottom[1]->count(1), unit_weight, bottom[1]->gpu_data(), mask_.gpu_data(),
                      Dtype(1.), weights_.mutable_gpu_data());
 
-      //below normalize over batch
+       //below normalize over batch
       if (norm_batch_)
         {
           Blob<Dtype> weights_perclass;
@@ -35,7 +50,6 @@ void DiceCoefLossLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
           caffe_gpu_gemv(CblasTrans,batchsize,nclasses_,Dtype(1.0),weights_.gpu_data(),
                          batchsize_multiplier_.gpu_data(),Dtype(0.0),weights_perclass.mutable_gpu_data());
           caffe_gpu_scal(nclasses_, Dtype(1.0)/Dtype(batchsize), weights_perclass.mutable_gpu_data());
-
           if (norm_all_)
             {
               if (numit_ != 0)
