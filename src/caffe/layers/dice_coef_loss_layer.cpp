@@ -89,8 +89,6 @@ void DiceCoefLossLayer<Dtype>::Reshape(
       caffe_set(dim*nclasses_, Dtype(0.), mask_.mutable_cpu_data());
       for (unsigned int i = 0; i< nclasses_; ++i)
         caffe_set(imgsize, Dtype(1.), mask_.mutable_cpu_data()+(dim+imgsize)*i);
-      if (ignore_label_ != -1)
-          caffe_set(imgsize, Dtype(0.), mask_.mutable_cpu_data()+(dim+imgsize)*ignore_label_);
       weight_multiplier_.ReshapeLike(*bottom[0]);
     }
   else if (ignore_label_ != -1 && nclasses_ > 1)
@@ -121,7 +119,10 @@ void DiceCoefLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     {
       Dtype unit_weight = Dtype(1.0);
       caffe_set(batchsize*nclasses_, unit_weight, weights_.mutable_cpu_data());
-      // compute weights per label per image
+      for (int i=0; i<batchsize; ++i)
+        caffe_set(1, Dtype(10.0)*Dtype(bottom[1]->count(2)),
+                  weights_.mutable_cpu_data()+i*nclasses_+ignore_label_);
+      //      compute weights per label per image
       caffe_cpu_gemm(CblasNoTrans, CblasTrans, bottom[1]->num(), bottom[1]->channels(),
                      bottom[1]->count(1), unit_weight, bottom[1]->cpu_data(), mask_.cpu_data(),
                      Dtype(1.), weights_.mutable_cpu_data());

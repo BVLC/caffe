@@ -36,6 +36,9 @@ void DiceCoefLossLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     {
       Dtype unit_weight = Dtype(1.);
       caffe_gpu_set(batchsize*nclasses_, unit_weight, weights_.mutable_gpu_data());
+      for (int i=0; i<batchsize; ++i)
+        caffe_gpu_set(1, Dtype(100.0)*Dtype(bottom[1]->count(2)),
+                      weights_.mutable_gpu_data()+i*nclasses_+ignore_label_);
 
       caffe_gpu_gemm(CblasNoTrans, CblasTrans, bottom[1]->num(), bottom[1]->channels(),
                      bottom[1]->count(1), unit_weight, bottom[1]->gpu_data(), mask_.gpu_data(),
@@ -122,14 +125,8 @@ __global__ void DiceCoefLossBackward(const int n, const Dtype* x,
       const int i = index / dim;
 			const int imgsize = dim / nclasses;
 			const int curclass = (index / imgsize ) % nclasses;
-			if (curclass == ignore_label_)
-				{
-          out_diff[index] = Dtype(0.);
-          return;
-        }
 			const Dtype alpha = Dtype(-2.) / denominator[i] * sign;
-			Dtype beta;
-			beta = Dtype(2.) * loss[i] / denominator[i] * sign;
+			Dtype beta = Dtype(2.) * loss[i] / denominator[i] * sign;
 			out_diff[index] = alpha * x[index] + beta * y[index];
    }
 }
@@ -149,11 +146,11 @@ void DiceCoefLossLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
 					sign, result_.gpu_data(), result_tmp_.gpu_data(), bottom[i]->count(1),
 					bottom[i]->channels(), ignore_label_);
           CUDA_POST_KERNEL_CHECK;
-        }
+          }
         if (do_weight_)
           caffe_gpu_mul(bottom[i]->count(), weight_multiplier_.gpu_data(), bottom[i]->gpu_diff(),
                         bottom[i]->mutable_gpu_diff());
-        }
+  }
 }
 
 INSTANTIATE_LAYER_GPU_FUNCS(DiceCoefLossLayer);
