@@ -818,6 +818,8 @@ message DiceCoefLossParameter {
   }
   optional WeightMode weight_mode = 5 [default = INVERSE_VOLUME];
 
+  optional string weights = 6;
+
   optional int32 ignore_label = 4 [default = -1]; // set to zero to ignore label 0, e.g. background
 }
 

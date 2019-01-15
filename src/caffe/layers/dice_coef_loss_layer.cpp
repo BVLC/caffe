@@ -2,8 +2,14 @@
 
 #include "caffe/layers/dice_coef_loss_layer.hpp"
 #include "caffe/util/math_functions.hpp"
+#include "caffe/util/io.hpp"
 
 namespace caffe {
+
+template <typename Dtype>
+void DiceCoefLossLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
+  LossLayer<Dtype>::LayerSetUp(bottom, top);
+}
 
 template <typename Dtype>
 void DiceCoefLossLayer<Dtype>::Reshape(
@@ -89,13 +95,54 @@ void DiceCoefLossLayer<Dtype>::Reshape(
       caffe_set(dim*nclasses_, Dtype(0.), mask_.mutable_cpu_data());
       for (unsigned int i = 0; i< nclasses_; ++i)
         caffe_set(imgsize, Dtype(1.), mask_.mutable_cpu_data()+(dim+imgsize)*i);
-      weight_multiplier_.ReshapeLike(*bottom[0]);
     }
   else if (ignore_label_ != -1 && nclasses_ > 1)
     caffe_set(imgsize, Dtype(0.), multiplier_.mutable_cpu_data()+imgsize*ignore_label_);
 
+
   caffe_set(batchsize, smooth_, result_tmp_.mutable_cpu_data());
   caffe_set(batchsize, smooth_, result_.mutable_cpu_data());
+
+
+  vector<Dtype> weights;
+  if (this->layer_param_.dice_coef_loss_param().has_weights())
+    {
+      BlobProto blob_proto;
+      ReadProtoFromBinaryFile(
+                              this->layer_param_.dice_coef_loss_param().weights(), &blob_proto);
+      Blob<Dtype> external_weights_proto;
+      external_weights_proto.FromProto(blob_proto);
+      CHECK_EQ(external_weights_proto.count(), nclasses_*nclasses_);
+      Dtype sum = 0;
+      for (int ci = 0; ci < nclasses_; ++ci)
+        {
+          Dtype cw = external_weights_proto.cpu_data()[external_weights_proto.offset(0,0,ci,ci)];
+          if (cw < Dtype(1E-9))
+            cw = Dtype(1E-9);
+          sum += cw;
+          weights.push_back(cw);
+        }
+      for (int ci = 0; ci < nclasses_; ++ci)
+        weights[ci] /= sum;
+      has_external_weights_ = true;
+    }
+
+
+  if (do_weight_ || has_external_weights_)
+    {
+      weight_multiplier_.ReshapeLike(*bottom[0]);
+      caffe_set(weight_multiplier_.count(), Dtype(1.0), weight_multiplier_.mutable_cpu_data());
+    }
+
+  if (has_external_weights_)
+    {
+      external_weights_.ReshapeLike(weight_multiplier_);
+      // compute external_weights_ in good shape (same as weight_multiplier_)
+      caffe_set(external_weights_.count(), Dtype(1.0), external_weights_.mutable_cpu_data());
+      for (int bi = 0; bi < batchsize; ++bi)
+        for (int ci = 0; ci < nclasses_; ++ci)
+          caffe_set(imgsize, weights[ci], external_weights_.mutable_cpu_data()+external_weights_.offset(bi,ci,0,0));
+    }
 }
 
 
@@ -166,10 +213,16 @@ void DiceCoefLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
                      weight_multiplier_.mutable_cpu_data());
     }
 
+  if (has_external_weights_)
+    {
+      caffe_mul(weight_multiplier_.count(), external_weights_.cpu_data(), weight_multiplier_.cpu_data(), weight_multiplier_.mutable_cpu_data());
+    }
+
+
 
   caffe_mul(bottom[0]->count(), bottom[0]->cpu_data(), bottom[0]->cpu_data(),
             tmp_.mutable_cpu_data());
-  if (do_weight_)
+  if (do_weight_ || has_external_weights_)
 		caffe_mul(bottom[0]->count(), weight_multiplier_.cpu_data(), tmp_.cpu_data(),
 							tmp_.mutable_cpu_data());
   // result_tmp_ <- 1.*tmp_ * multiplier + 1*results_tmp_
@@ -179,7 +232,7 @@ void DiceCoefLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   // tmp_ <- b1 * b1
 	caffe_mul(bottom[0]->count(), bottom[1]->cpu_data(), bottom[1]->cpu_data(),
 						tmp_.mutable_cpu_data());
-  if (do_weight_)
+  if (do_weight_ || has_external_weights_)
 		caffe_mul(bottom[0]->count(), weight_multiplier_.cpu_data(), tmp_.cpu_data(),
 							tmp_.mutable_cpu_data());
   // result_tmp_ <- 1.*tmp_ * multiplier + 1*results_tmp_
@@ -189,7 +242,7 @@ void DiceCoefLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   caffe_mul(bottom[0]->count(), bottom[0]->cpu_data(), bottom[1]->cpu_data(),
             tmp_.mutable_cpu_data());
 
-  if (do_weight_)
+  if (do_weight_ || has_external_weights_)
 		caffe_mul(bottom[0]->count(), weight_multiplier_.cpu_data(), tmp_.cpu_data(),
 							tmp_.mutable_cpu_data());
   caffe_cpu_gemv(CblasNoTrans, bottom[1]->num(), bottom[1]->count(1), Dtype(2.), tmp_.cpu_data(),
@@ -222,7 +275,7 @@ void DiceCoefLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
                         bottom[i]->mutable_cpu_diff()+j*bottom[i]->count(1)
                         );  // b
       }
-      if (do_weight_)
+      if (do_weight_ || has_external_weights_)
         caffe_mul(bottom[i]->count(), weight_multiplier_.cpu_data(), bottom[i]->cpu_diff(),
                   bottom[i]->mutable_cpu_diff());
     }
