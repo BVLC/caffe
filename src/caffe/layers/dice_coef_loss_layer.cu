@@ -37,7 +37,7 @@ void DiceCoefLossLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       Dtype unit_weight = Dtype(1.);
       caffe_gpu_set(batchsize*nclasses_, unit_weight, weights_.mutable_gpu_data());
       for (int i=0; i<batchsize; ++i)
-        caffe_gpu_set(1, Dtype(100.0)*Dtype(bottom[1]->count(2)),
+        caffe_gpu_set(1, Dtype(1E6)*Dtype(bottom[1]->count(2)),
                       weights_.mutable_gpu_data()+i*nclasses_+ignore_label_);
 
       caffe_gpu_gemm(CblasNoTrans, CblasTrans, bottom[1]->num(), bottom[1]->channels(),

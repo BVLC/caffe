@@ -67,7 +67,6 @@ void DiceCoefLossLayer<Dtype>::Reshape(
           case DiceCoefLossParameter_WeightMode_EXTRA_SMALL_VOLUMES: weight_pow_ = -3; break;
           case DiceCoefLossParameter_WeightMode_EQUALIZE_CLASSES: weight_pow_ = -1; break;
           }
-        ignore_label_ = this->layer_param_.dice_coef_loss_param().ignore_label();
       }
     smooth_ = Dtype(0.0);
     break;
@@ -167,7 +166,7 @@ void DiceCoefLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       Dtype unit_weight = Dtype(1.0);
       caffe_set(batchsize*nclasses_, unit_weight, weights_.mutable_cpu_data());
       for (int i=0; i<batchsize; ++i)
-        caffe_set(1, Dtype(10.0)*Dtype(bottom[1]->count(2)),
+        caffe_set(1, Dtype(1E6)*Dtype(bottom[1]->count(2)),
                   weights_.mutable_cpu_data()+i*nclasses_+ignore_label_);
       //      compute weights per label per image
       caffe_cpu_gemm(CblasNoTrans, CblasTrans, bottom[1]->num(), bottom[1]->channels(),
