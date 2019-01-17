@@ -806,8 +806,19 @@ message DiceCoefLossParameter {
     NONE = 0; // binary, ignore label 0
     MULTICLASS = 1; // loss on all labels, number of labels =  input channel size
     MULTICLASS_WEIGHTED = 2; // generalized + weigthed, weight = 1/|target|^2
+    MULTICLASS_WEIGHTED_BATCH = 3; // generalized + weigthed, weight = 1/|target|^2
+    MULTICLASS_WEIGHTED_ALL = 4; // generalized + weigthed, weight = 1/|target|^2
   }
   optional GeneralizationMode generalization = 3 [default = NONE];
+
+  enum WeightMode {
+    INVERSE_VOLUME = 0; //weights * 1/V
+    EQUALIZE_CLASSES = 1; // weights are computed so that evey class contivutes equally
+    EXTRA_SMALL_VOLUMES = 2; // weights * 1/V²
+  }
+  optional WeightMode weight_mode = 5 [default = INVERSE_VOLUME];
+
+  optional string weights = 6;
 
   optional int32 ignore_label = 4 [default = -1]; // set to zero to ignore label 0, e.g. background
 }
