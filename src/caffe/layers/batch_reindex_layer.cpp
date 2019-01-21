@@ -10,6 +10,7 @@ void BatchReindexLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
                                        const vector<Blob<Dtype>*>& top) {
   CHECK_EQ(1, bottom[1]->num_axes());
   vector<int> newshape;
+  newshape.reserve(bottom[0]->shape().size() + 1);
   newshape.push_back(bottom[1]->shape(0));
   for (int i = 1; i < bottom[0]->shape().size(); ++i) {
     newshape.push_back(bottom[0]->shape()[i]);
