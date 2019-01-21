@@ -3,12 +3,68 @@
 #include "caffe/layers/dice_coef_loss_layer.hpp"
 #include "caffe/util/math_functions.hpp"
 #include "caffe/util/io.hpp"
+#include "caffe/util/im2col.hpp"
 
 namespace caffe {
 
 template <typename Dtype>
 void DiceCoefLossLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   LossLayer<Dtype>::LayerSetUp(bottom, top);
+  int weightType = -1;
+  if (this->layer_param_.dice_coef_loss_param().has_contour_weights())
+    {
+      switch (this->layer_param_.dice_coef_loss_param().contour_weights())
+        {
+        case DiceCoefLossParameter_ContourWeights_NO: break;
+        case DiceCoefLossParameter_ContourWeights_SIMPLE: weightType = 0; break;
+        case DiceCoefLossParameter_ContourWeights_SHARP: weightType = 1; break;
+        }
+    }
+
+  if (weightType != -1)
+    {
+      do_contour_weights_ = true;
+      int csize = 3;
+      if (this->layer_param_.dice_coef_loss_param().has_contour_size())
+        csize = this->layer_param_.dice_coef_loss_param().contour_size();
+      if (csize < 3)
+        csize = 3;
+      csize = (csize % 2 == 0? csize+1:csize);
+      vector<int> cwShape{1,1,csize,csize};
+      contour_weights_kernel_.Reshape(cwShape);
+
+
+
+
+      switch (weightType)
+        {
+        case 1:
+          {
+            double sum = 0.0;
+            for (int i=0; i<csize; ++i)
+              for (int j=0; j<csize; ++j)
+                {
+                  int ti = i-csize/2;
+                  int tj = j-csize/2;
+                  if (ti==0 && tj ==0)
+                    continue;
+                  double val = -1.0/((double)(abs(ti)+abs(tj) * 4));
+                  sum += val;
+                  caffe_set(1, Dtype(val),
+                            contour_weights_kernel_.mutable_cpu_data()+contour_weights_kernel_.offset(0,0,i,j));
+                }
+            caffe_set(1, Dtype(-sum),
+                      contour_weights_kernel_.mutable_cpu_data()+contour_weights_kernel_.offset(0,0,csize/2+1,csize/2+1));
+            break;
+          }
+        default:
+          caffe_set(contour_weights_kernel_.count(), Dtype(-1.0/((double)csize*csize-1)),
+                    contour_weights_kernel_.mutable_cpu_data());
+          caffe_set(1, Dtype(1.0),
+                    contour_weights_kernel_.mutable_cpu_data()+contour_weights_kernel_.offset(0,0,csize/2,csize/2));
+        }
+
+    }
 }
 
 template <typename Dtype>
@@ -21,7 +77,8 @@ void DiceCoefLossLayer<Dtype>::Reshape(
   const int dim = bottom[0]->count(1);
   nclasses_ = bottom[1]->channels();
   const int imgsize = bottom[1]->count(2);
-
+  height_ = bottom[1]->height();
+  width_ = bottom[1]->width();
 
   vector<int> multiplier_shape(1, dim);
   vector<int> result_shape(1, batchsize);
@@ -71,6 +128,14 @@ void DiceCoefLossLayer<Dtype>::Reshape(
     smooth_ = Dtype(0.0);
     break;
   }
+  if (do_contour_weights_)
+    {
+      vector<int> sum_contour_shape = {batchsize, nclasses_};
+      sum_contour_.Reshape(sum_contour_shape);
+      vector<int> mi_shape = {height_,width_};
+      mask_inverter_.Reshape(mi_shape);
+      caffe_set(height_*width_, Dtype(1.0), mask_inverter_.mutable_cpu_data());
+    }
   if (do_weight_)
     {
       vector<int> weight_shape = {batchsize, nclasses_};
@@ -127,7 +192,7 @@ void DiceCoefLossLayer<Dtype>::Reshape(
     }
 
 
-  if (do_weight_ || has_external_weights_)
+  if (do_weight_ || has_external_weights_ || do_contour_weights_)
     {
       weight_multiplier_.ReshapeLike(*bottom[0]);
       caffe_set(weight_multiplier_.count(), Dtype(1.0), weight_multiplier_.mutable_cpu_data());
@@ -141,6 +206,17 @@ void DiceCoefLossLayer<Dtype>::Reshape(
       for (int bi = 0; bi < batchsize; ++bi)
         for (int ci = 0; ci < nclasses_; ++ci)
           caffe_set(imgsize, weights[ci], external_weights_.mutable_cpu_data()+external_weights_.offset(bi,ci,0,0));
+    }
+
+  if (do_contour_weights_)
+    {
+      contour_weights_.ReshapeLike(*bottom[0]);
+      std::vector<int> col_buffer_shape;
+      col_buffer_shape.push_back(contour_weights_kernel_.count(1));
+      for (int i = 0; i < 2; ++i) {
+        col_buffer_shape.push_back(contour_weights_.shape(i));
+      }
+      col_buffer_.Reshape(col_buffer_shape);
     }
 }
 
@@ -216,7 +292,46 @@ void DiceCoefLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     {
       caffe_mul(weight_multiplier_.count(), external_weights_.cpu_data(), weight_multiplier_.cpu_data(), weight_multiplier_.mutable_cpu_data());
     }
-
+  if (do_contour_weights_)
+    {
+      for (int n =0; n<batchsize; ++n)
+        {
+          // first reshape bottom[1] in order to be B C 1 H W (convolutions over 1 not, over channels)
+          std::vector<int> old_shape(bottom[1]->shape());
+          std::vector<int> new_shape(bottom[1]->shape());
+          new_shape.insert(new_shape.begin()+2, 1);
+          bottom[1]->Reshape(new_shape);
+          contour_weights_.Reshape(new_shape);
+          caffe_gpu_axpby(height_*width_, Dtype(1.0), mask_inverter_.gpu_data(), Dtype(-1.0),
+                            bottom[1]->mutable_gpu_data()+bottom[1]->offset({n,0,0,0,0}));
+          compute_contour_weights_cpu(bottom[1]->cpu_data()+bottom[1]->offset({n,0,0,0,0}),
+                                      contour_weights_kernel_.cpu_data(),
+                                      contour_weights_.mutable_cpu_data()
+                                      +contour_weights_.offset({n,0,0,0,0}));
+          caffe_gpu_axpby(height_*width_, Dtype(1.0), mask_inverter_.gpu_data(), Dtype(-1.0),
+                            bottom[1]->mutable_gpu_data()+bottom[1]->offset({n,0,0,0,0}));
+          for (int c =1; c<nclasses_; ++c)
+            compute_contour_weights_cpu(bottom[1]->cpu_data()+bottom[1]->offset({n,c,0,0,0}),
+                                        contour_weights_kernel_.cpu_data(),
+                                        contour_weights_.mutable_cpu_data()
+                                        +contour_weights_.offset({n,c,0,0,0}));
+          bottom[1]->Reshape(old_shape);
+          contour_weights_.Reshape(old_shape);
+          caffe_cpu_gemv(CblasNoTrans,nclasses_,height_*width_,Dtype(1.0),
+                         contour_weights_.cpu_data()+contour_weights_.offset(n,0,0,0),
+                         multiplier_.cpu_data(), Dtype(0.0),
+                         sum_contour_.mutable_cpu_data()+sum_contour_.offset(n));
+          for (int c =0; c<nclasses_; ++c)
+            {
+              Dtype sum = Dtype(sum_contour_.cpu_data()[sum_contour_.offset({n,c})]);
+              caffe_scal(height_*width_,
+                         Dtype(height_*width_)/sum,
+                         contour_weights_.mutable_cpu_data()+contour_weights_.offset(n,c));
+            }
+        }
+      caffe_mul(weight_multiplier_.count(), contour_weights_.cpu_data(),
+                weight_multiplier_.cpu_data(), weight_multiplier_.mutable_cpu_data());
+    }
 
 
   caffe_mul(bottom[0]->count(), bottom[0]->cpu_data(), bottom[0]->cpu_data(),
@@ -231,7 +346,7 @@ void DiceCoefLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   // tmp_ <- b1 * b1
 	caffe_mul(bottom[0]->count(), bottom[1]->cpu_data(), bottom[1]->cpu_data(),
 						tmp_.mutable_cpu_data());
-  if (do_weight_ || has_external_weights_)
+  if (do_weight_ || has_external_weights_ || do_contour_weights_)
 		caffe_mul(bottom[0]->count(), weight_multiplier_.cpu_data(), tmp_.cpu_data(),
 							tmp_.mutable_cpu_data());
   // result_tmp_ <- 1.*tmp_ * multiplier + 1*results_tmp_
@@ -241,7 +356,7 @@ void DiceCoefLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   caffe_mul(bottom[0]->count(), bottom[0]->cpu_data(), bottom[1]->cpu_data(),
             tmp_.mutable_cpu_data());
 
-  if (do_weight_ || has_external_weights_)
+  if (do_weight_ || has_external_weights_ || do_contour_weights_)
 		caffe_mul(bottom[0]->count(), weight_multiplier_.cpu_data(), tmp_.cpu_data(),
 							tmp_.mutable_cpu_data());
   caffe_cpu_gemv(CblasNoTrans, bottom[1]->num(), bottom[1]->count(1), Dtype(2.), tmp_.cpu_data(),
@@ -274,11 +389,44 @@ void DiceCoefLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
                         bottom[i]->mutable_cpu_diff()+j*bottom[i]->count(1)
                         );  // b
       }
-      if (do_weight_ || has_external_weights_)
+      if (do_weight_ || has_external_weights_ || do_contour_weights_)
         caffe_mul(bottom[i]->count(), weight_multiplier_.cpu_data(), bottom[i]->cpu_diff(),
                   bottom[i]->mutable_cpu_diff());
     }
   }
+}
+
+template <typename Dtype>
+void DiceCoefLossLayer<Dtype>::conv_im2col_cpu(const Dtype* data, Dtype* col_buff)
+{
+  int kh = contour_weights_kernel_.height();
+  im2col_cpu(data, 1,
+             height_,
+             width_,
+             kh,
+             kh,
+             (kh-1)/2, (kh-1)/2,
+             1, 1,
+             1, 1,
+             col_buff);
+}
+
+
+
+template <typename Dtype>
+void DiceCoefLossLayer<Dtype>::compute_contour_weights_cpu(const Dtype*input, const Dtype*weights,
+                                                           Dtype *output)
+{
+  conv_im2col_cpu(input, col_buffer_.mutable_cpu_data());
+  const Dtype *col_buff = col_buffer_.cpu_data();
+  caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans,
+                        1,
+                        contour_weights_.count(3),
+                        contour_weights_kernel_.count(2),
+                        (Dtype)1., weights, col_buff,
+                        (Dtype)0., output) ;
+  caffe_abs(width_*height_, output, output);
+  caffe_add_scalar(width_*height_, Dtype(1.0), output);
 }
 
 #ifdef CPU_ONLY
