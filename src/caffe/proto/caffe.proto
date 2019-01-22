@@ -828,7 +828,7 @@ message DiceCoefLossParameter {
 
   optional ContourWeights contour_weights = 7 [default = NO];
 
-  optional int32 contour_size = 8 [default = 3]; // size of conv kernel for contour weights
+  optional int32 contour_size = 8 [default = 7]; // size of conv kernel for contour weights
 
   optional int32 ignore_label = 4 [default = -1]; // set to zero to ignore label 0, e.g. background
 }
