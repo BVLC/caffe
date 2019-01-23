@@ -56,15 +56,6 @@ void DiceCoefLossLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
                          batchsize_multiplier_.gpu_data(),Dtype(0.0),weights_perclass.mutable_gpu_data());
           caffe_gpu_scal(nclasses_, Dtype(1.0)/Dtype(batchsize), weights_perclass.mutable_gpu_data());
 
-          for (int c=0; c< nclasses_; ++c)
-            {
-              std::cout <<"c: "<< c << std::endl;
-              std::cout <<weights_perclass.cpu_data()[weights_perclass.offset({c})]<<" ";
-              std::cout << std::endl;
-            }
-
-
-
           if (norm_all_)
             {
               if (numit_ != 0)
