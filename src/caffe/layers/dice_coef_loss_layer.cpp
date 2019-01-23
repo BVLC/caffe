@@ -241,8 +241,9 @@ void DiceCoefLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     {
       Dtype unit_weight = Dtype(1.0);
       caffe_set(batchsize*nclasses_, unit_weight, weights_.mutable_cpu_data());
-      for (int i=0; i<batchsize; ++i)
-        caffe_set(1, Dtype(1E6)*Dtype(bottom[1]->count(2)),
+      if (ignore_label_ != -1)
+        for (int i=0; i<batchsize; ++i)
+          caffe_set(1, Dtype(1E6)*Dtype(bottom[1]->count(2)),
                   weights_.mutable_cpu_data()+i*nclasses_+ignore_label_);
       //      compute weights per label per image
       caffe_cpu_gemm(CblasNoTrans, CblasTrans, bottom[1]->num(), bottom[1]->channels(),
@@ -282,7 +283,7 @@ void DiceCoefLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
                      weights_.mutable_cpu_data());
 
       //  put them into our multiplexed multiplier
-      caffe_cpu_gemm(CblasTrans, CblasNoTrans,
+      caffe_cpu_gemm(CblasNoTrans, CblasNoTrans,
                      bottom[1]->num(), bottom[1]->count(1), bottom[1]->channels(),
                      Dtype(1.), weights_.cpu_data(), mask_.cpu_data(), Dtype(0.),
                      weight_multiplier_.mutable_cpu_data());
