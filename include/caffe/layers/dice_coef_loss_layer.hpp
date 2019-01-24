@@ -45,7 +45,7 @@ class DiceCoefLossLayer : public LossLayer<Dtype> {
     norm_batch_(false), norm_all_(false),
     numit_(0), weight_pow_(-2), external_weights_(),
     has_external_weights_(false), do_contour_weights_(false), contour_weights_kernel_(),
-    height_(0), width_(0), mask_inverter_(){}
+    height_(0), width_(0), mask_inverter_(), contour_amplitude_(5.0){}
     //    contour_weights_() {}
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
@@ -145,6 +145,7 @@ protected:
   int height_;
   int width_;
   Blob<Dtype> mask_inverter_;
+  Dtype contour_amplitude_;
 };
 
 }  // namespace caffe

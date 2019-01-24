@@ -11,15 +11,19 @@ template <typename Dtype>
 void DiceCoefLossLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   LossLayer<Dtype>::LayerSetUp(bottom, top);
   int weightType = -1;
-  if (this->layer_param_.dice_coef_loss_param().has_contour_weights())
+  if (this->layer_param_.dice_coef_loss_param().has_contour_shape())
     {
-      switch (this->layer_param_.dice_coef_loss_param().contour_weights())
+      switch (this->layer_param_.dice_coef_loss_param().contour_shape())
         {
-        case DiceCoefLossParameter_ContourWeights_NO: break;
-        case DiceCoefLossParameter_ContourWeights_SIMPLE: weightType = 0; break;
-        case DiceCoefLossParameter_ContourWeights_SHARP: weightType = 1; break;
+        case DiceCoefLossParameter_ContourShape_NO: break;
+        case DiceCoefLossParameter_ContourShape_SIMPLE: weightType = 0; break;
+        case DiceCoefLossParameter_ContourShape_SHARP: weightType = 1; break;
         }
     }
+
+  if (this->layer_param_.dice_coef_loss_param().has_contour_amplitude())
+    contour_amplitude_ = this->layer_param_.dice_coef_loss_param().contour_amplitude();
+
 
   if (weightType != -1)
     {
@@ -427,7 +431,11 @@ void DiceCoefLossLayer<Dtype>::compute_contour_weights_cpu(const Dtype*input, co
                         (Dtype)1., weights, col_buff,
                         (Dtype)0., output) ;
   caffe_abs(width_*height_, output, output);
+  //output is between 0 and 1
+  caffe_scal(width_*height_, Dtype(contour_amplitude_ - 1.0), output);
+  // now between 0 and amplitude_ -1
   caffe_add_scalar(width_*height_, Dtype(1.0), output);
+  // now between 1 and amplitude
 }
 
 #ifdef CPU_ONLY

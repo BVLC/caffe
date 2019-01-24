@@ -231,6 +231,7 @@ void DiceCoefLossLayer<Dtype>::compute_contour_weights_gpu(const Dtype*input, co
                           (Dtype)1., weights, col_buff,
                           (Dtype)0., output) ;
     caffe_gpu_abs(width_*height_, output, output);
+    caffe_gpu_scal(width_*height_, Dtype(contour_amplitude_ - 1.0), output);
     caffe_gpu_add_scalar(width_*height_, Dtype(1.0), output);
   }
 
