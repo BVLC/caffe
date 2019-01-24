@@ -820,6 +820,17 @@ message DiceCoefLossParameter {
 
   optional string weights = 6;
 
+  enum ContourShape {
+    NO = 0; // do not apply contour weights
+    SIMPLE = 1; // apply simple laplacian mask with -1 everywhere but in center 
+    SHARP = 2;  // apply sharper weights than laplacan to more weight close to boundary in case of complex frontier shape 
+  }
+
+  optional ContourShape contour_shape = 7 [default = NO];
+
+  optional int32 contour_size = 8 [default = 7]; // size of conv kernel for contour weights
+  optional float contour_amplitude = 9 [default = 5.0]; // important points are 5 times heavier than common ones
+
   optional int32 ignore_label = 4 [default = -1]; // set to zero to ignore label 0, e.g. background
 }
 

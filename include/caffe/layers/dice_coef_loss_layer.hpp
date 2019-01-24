@@ -41,7 +41,12 @@ template <typename Dtype>
 class DiceCoefLossLayer : public LossLayer<Dtype> {
  public:
   explicit DiceCoefLossLayer(const LayerParameter& param)
-    : LossLayer<Dtype>(param), multiplier_() ,result_() ,result_tmp_() ,tmp_(),  norm_batch_(false), norm_all_(false),numit_(0), weight_pow_(-2), external_weights_(), has_external_weights_(false) {}
+    : LossLayer<Dtype>(param), multiplier_() ,result_() ,result_tmp_() ,tmp_(),
+    norm_batch_(false), norm_all_(false),
+    numit_(0), weight_pow_(-2), external_weights_(),
+    has_external_weights_(false), do_contour_weights_(false), contour_weights_kernel_(),
+    height_(0), width_(0), mask_inverter_(), contour_amplitude_(5.0){}
+    //    contour_weights_() {}
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
@@ -102,6 +107,17 @@ class DiceCoefLossLayer : public LossLayer<Dtype> {
   virtual void Backward_gpu(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
 
+protected:
+  void compute_contour_weights_cpu(const Dtype*input, const Dtype*weights,
+                                           Dtype *output);
+
+  void conv_im2col_cpu(const Dtype* data, Dtype* col_buff);
+#ifndef CPU_ONLY
+  void compute_contour_weights_gpu(const Dtype*input, const Dtype*weights,
+                                           Dtype *output);
+  void conv_im2col_gpu(const Dtype* data, Dtype* col_buff);
+#endif
+
   Blob<Dtype> multiplier_;
   Blob<Dtype> result_;
   Blob<Dtype> result_tmp_;
@@ -114,6 +130,7 @@ class DiceCoefLossLayer : public LossLayer<Dtype> {
   Blob<Dtype> weights_;
   Blob<Dtype> weight_multiplier_;
   Blob<Dtype> weights_perclass_mem_;
+  Blob<Dtype> sum_contour_;
   Blob<Dtype> batchsize_multiplier_;
   Blob<Dtype> mask_;
   Dtype smooth_;
@@ -121,6 +138,14 @@ class DiceCoefLossLayer : public LossLayer<Dtype> {
   int weight_pow_;
   Blob<Dtype> external_weights_;
   bool has_external_weights_;
+  bool do_contour_weights_;
+  Blob<Dtype> contour_weights_kernel_;
+  Blob<Dtype> contour_weights_;
+  Blob<Dtype> col_buffer_;
+  int height_;
+  int width_;
+  Blob<Dtype> mask_inverter_;
+  Dtype contour_amplitude_;
 };
 
 }  // namespace caffe
