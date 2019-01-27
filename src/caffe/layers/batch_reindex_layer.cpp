@@ -9,12 +9,17 @@ template<typename Dtype>
 void BatchReindexLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
                                        const vector<Blob<Dtype>*>& top) {
   CHECK_EQ(1, bottom[1]->num_axes());
+
+  const auto& shape0 = bottom[0]->shape();
+  
   vector<int> newshape;
-  newshape.reserve(bottom[0]->shape().size() + 1);
+  newshape.reserve(shape0.size());
+  
   newshape.push_back(bottom[1]->shape(0));
-  for (int i = 1; i < bottom[0]->shape().size(); ++i) {
-    newshape.push_back(bottom[0]->shape()[i]);
+  for (int i = 1; i < shape0.size(); ++i) {
+    newshape.push_back(shape0[i]);
   }
+  
   top[0]->Reshape(newshape);
 }
 
