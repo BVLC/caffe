@@ -4,7 +4,7 @@ pipeline {
     stage('Build GPU') {
       steps {
         sh '''ln -s Makefile.config.gpu.cudnn Makefile.config
-make -j12'''
+make -j24'''
       }
     }
     stage('Build CPU') {
