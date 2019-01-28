@@ -307,14 +307,14 @@ void DiceCoefLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
           new_shape.insert(new_shape.begin()+2, 1);
           bottom[1]->Reshape(new_shape);
           contour_weights_.Reshape(new_shape);
-          caffe_gpu_axpby(height_*width_, Dtype(1.0), mask_inverter_.gpu_data(), Dtype(-1.0),
-                            bottom[1]->mutable_gpu_data()+bottom[1]->offset({n,0,0,0,0}));
+          caffe_cpu_axpby(height_*width_, Dtype(1.0), mask_inverter_.cpu_data(), Dtype(-1.0),
+                            bottom[1]->mutable_cpu_data()+bottom[1]->offset({n,0,0,0,0}));
           compute_contour_weights_cpu(bottom[1]->cpu_data()+bottom[1]->offset({n,0,0,0,0}),
                                       contour_weights_kernel_.cpu_data(),
                                       contour_weights_.mutable_cpu_data()
                                       +contour_weights_.offset({n,0,0,0,0}));
-          caffe_gpu_axpby(height_*width_, Dtype(1.0), mask_inverter_.gpu_data(), Dtype(-1.0),
-                            bottom[1]->mutable_gpu_data()+bottom[1]->offset({n,0,0,0,0}));
+          caffe_cpu_axpby(height_*width_, Dtype(1.0), mask_inverter_.cpu_data(), Dtype(-1.0),
+                            bottom[1]->mutable_cpu_data()+bottom[1]->offset({n,0,0,0,0}));
           for (int c =1; c<nclasses_; ++c)
             compute_contour_weights_cpu(bottom[1]->cpu_data()+bottom[1]->offset({n,c,0,0,0}),
                                         contour_weights_kernel_.cpu_data(),
