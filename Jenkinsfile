@@ -7,5 +7,13 @@ pipeline {
 make -j12'''
       }
     }
+    stage('Build CPU') {
+      steps {
+        sh '''make clean
+rm Makefile.config
+ln -s Makefile.config.cpu Makefile.config
+make -j24'''
+      }
+    }
   }
 }
