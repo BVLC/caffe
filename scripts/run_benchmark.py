@@ -85,7 +85,6 @@ class CaffeBenchmark(object):
         knm_pattern = re.compile(".*72.*")
         skx_pattern = re.compile(".*[86543]1.*")
         bdw_pattern = re.compile(".*(E5-[421]6|E7-[84]8|E3-12|D-?15).*")
-        clx_pattern = re.compile(".*Genuine.*")
         if re.match(knl_pattern, model_string):
             self.cpu_model = "knl"
         elif re.match(knm_pattern, model_string):
@@ -94,8 +93,6 @@ class CaffeBenchmark(object):
             self.cpu_model = "skx"
         elif re.match(bdw_pattern, model_string):
             self.cpu_model = "bdw"
-        elif re.match(clx_pattern, model_string):
-            self.cpu_model = "clx"
         else:
             self.unknown_cpu = True
             logging.info("Can't detect which cpu model currently using, will use default settings, which may not be the optimal one.")
