@@ -12,7 +12,6 @@ RUN rpm -iUvh https://dl.fedoraproject.org/pub/epel/7/x86_64/Packages/e/epel-rel
         redhat-rpm-config \
         tar \
         findutils \
-        make \
         gcc-c++ \
         cmake \
         git \
@@ -26,30 +25,12 @@ RUN rpm -iUvh https://dl.fedoraproject.org/pub/epel/7/x86_64/Packages/e/epel-rel
         net-tools \
         ufw \
         iptables \
-        atlas-devel \
-        boost-devel \
-        gflags-devel \
-        glog-devel \
-        hdf5-devel \
-        leveldb-devel \
-        lmdb-devel \
-        opencv-devel \
-        protobuf-devel \
-        snappy-devel \
-        protobuf-compiler \
-        freetype-devel \
-        libpng-devel \
-        python-devel \
-        python-numpy \
-        python-pip \
-        python-scipy \
-        gcc-gfortran \
-        libjpeg-turbo-devel && \
+        gcc-gfortran && \
     yum clean all
 
 # Install conda and Intel Caffe conda package
 WORKDIR /root/
-RUN wget -c https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh && \ 
+RUN wget --no-check-certificate -c https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh && \ 
     bash Miniconda2-latest-Linux-x86_64.sh -b && \ 
     ./miniconda2/bin/conda config --add channels intel && \ 
     ./miniconda2/bin/conda install -c intel caffe && \ 
