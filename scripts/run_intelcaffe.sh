@@ -157,8 +157,6 @@ function detect_cpu
         else
             cpu_model_="unknown"
         fi
-    elif [[ $model_string == *"Genuine"* ]]; then
-        cpu_model_="clx"
     else
         model_num=`echo $model_string | awk '{print $4}'`
         if [[ $model_num =~ ^[8|6|5|4|3]1 ]]; then

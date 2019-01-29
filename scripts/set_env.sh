@@ -113,15 +113,21 @@ function clear_shm
     min_shm_size=40
     shm_unit="G"
 
+    localhost=$(hostname)
+
     for node in "${nodenames[@]}"
     do
         if [ "${node}" == "" ]; then
             echo "Warning: empty node name."
             continue
         fi
-
-        ssh ${node} "$clear_command"
-        shm_line=`ssh ${node} "$check_shm_command"`
+        if [ $localhost == $node ];then
+            `$clear_command`
+            shm_line=$(eval $check_shm_command)
+        else
+            ssh ${node} "$clear_command"
+            shm_line=`ssh ${node} "$check_shm_command"`
+        fi
         shm_string=`echo $shm_line | awk -F ' ' '{print $(NF-2)}'`
         unit="${shm_string:(-1)}"
         shm_size=${shm_string::-1}
@@ -140,7 +146,11 @@ function kill_zombie_processes
     kill_command="for process in ep_server caffe mpiexec.hydra; do for i in \$(ps -e | grep -w \$process | awk -F ' ' '{print \$1}'); do kill -9 \$i; echo \"\$process \$i killed.\"; done done"
     for node in "${nodenames[@]}"
     do
-        ssh ${node} "$kill_command"
+        if [ $localhost == $node ];then
+           eval "$kill_command"
+        else
+           ssh ${node} "$kill_command"
+        fi
     done
 }
 
