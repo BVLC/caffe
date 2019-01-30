@@ -1,5 +1,3 @@
-OpenCV4 Supporting Added.
-
 # Caffe
 
 [![Build Status](https://travis-ci.org/BVLC/caffe.svg?branch=master)](https://travis-ci.org/BVLC/caffe)
