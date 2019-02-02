@@ -1,15 +1,17 @@
 {
     "params":{
-        "topology" : "alexnet",
+        "topology" : "all_inf",
         "hostfile" : "",
         "network" : "",
         "netmask" : "",
         "dummy_data_use" : true,
-        "scal_test" : false,
+        "test_mode" : "inf_latency", 
+        "inf_instances" : "1",
+        "num_omp_threads" : "28",
         "caffe_bin" : "",
-        "engine" : "MKLDNN"
+        "engine" : ""
     },
-    "perf_batch_size_table" : {
+    "train_perf_batch_size_table" : {
         "alexnet" : {
             "bdw" : "1024",
             "skx" : "1024",
@@ -46,7 +48,74 @@
             "knl" : "64",
             "knm" : "64"
         }
+        
     },
+    "inference_perf_batch_size_table" : {
+        "resnet50_int8" : {
+            "skx" : "1024",
+            "clx" : "1024"
+        },
+        "resnet_50" : {
+            "skx" : "28",
+            "clx" : "28"
+        },
+        "rfcn" : {
+            "skx" : "1",
+            "clx" : "1"
+        },
+        "faster-rcnn" : {
+            "skx" : "1",
+            "clx" : "1"
+        },
+        "faster-rcnn_int8" : {
+            "skx" : "1",
+            "clx" : "1"
+        },
+        "rfcn_int8" : {
+           "skx" : "1",
+           "clx" : "1"
+        },
+        "ssd_mobilenet" : {
+            "skx" : "512",
+            "clx" : "512"
+        },
+        "ssd_mobilenet_int8" : {
+            "skx" : "512",
+            "clx" : "512"
+        },
+        "yolo" : {
+            "skx" : "32",
+            "clx" : "4"
+        },
+        "yolov2_int8"  : {
+            "skx" : "32",
+            "clx" : "32"
+        },
+        "googlenet_v3" : {
+            "skx" : "32",
+            "clx" : "32"
+        },
+        "ssd" : {
+            "skx" : "32",
+            "clx" : "252"
+        },
+        "ssd_int8" : {
+            "skx" : "448",
+            "clx" : "448"
+        },
+        "mobilenet_v2" : {
+            "skx" : "32"
+        },
+        "googlenet_v3" : {
+            "skx" : "32",
+            "clx" : "32"
+        },
+        "googlenet_v3_int8" : {
+            "skx" : "448",
+            "clx" : "448"
+        }
+    },
+
     "scal_batch_size_table" : {
         "alexnet" : "256",
         "googlenet" : "64",

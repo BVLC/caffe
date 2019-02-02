@@ -113,15 +113,21 @@ function clear_shm
     min_shm_size=40
     shm_unit="G"
 
+    localhost=$(hostname)
+
     for node in "${nodenames[@]}"
     do
         if [ "${node}" == "" ]; then
             echo "Warning: empty node name."
             continue
         fi
-
-        ssh ${node} "$clear_command"
-        shm_line=`ssh ${node} "$check_shm_command"`
+        if [ $localhost == $node ];then
+            `$clear_command`
+            shm_line=$(eval $check_shm_command)
+        else
+            ssh ${node} "$clear_command"
+            shm_line=`ssh ${node} "$check_shm_command"`
+        fi
         shm_string=`echo $shm_line | awk -F ' ' '{print $(NF-2)}'`
         unit="${shm_string:(-1)}"
         shm_size=${shm_string::-1}
@@ -140,7 +146,11 @@ function kill_zombie_processes
     kill_command="for process in ep_server caffe mpiexec.hydra; do for i in \$(ps -e | grep -w \$process | awk -F ' ' '{print \$1}'); do kill -9 \$i; echo \"\$process \$i killed.\"; done done"
     for node in "${nodenames[@]}"
     do
-        ssh ${node} "$kill_command"
+        if [ $localhost == $node ];then
+           eval "$kill_command"
+        else
+           ssh ${node} "$kill_command"
+        fi
     done
 }
 
@@ -218,6 +228,12 @@ function set_mlsl_vars
 
 function set_openmp_envs
 {
+    forward=$1
+    if [ "$forward" == "true" ];then
+       numservers=0
+       internal_thread_pin="off"
+    fi
+
     threadspercore=1
 
     if [ "$internal_thread_pin" == "on" ]; then
@@ -254,7 +270,7 @@ function set_openmp_envs
 
         export OMP_NUM_THREADS=${numthreads_per_proc}
         export KMP_HW_SUBSET=1t
-        if [ $ppn -gt 1 ]; then
+        if [ $ppn -gt 1 ] || [ "$forward" == "true" ]; then
             affinitystr="granularity=fine,compact,1,0"
         else
             affinitystr="proclist=[0-5,$((5+numservers+reserved_cores+1))-$((total_cores-1))],granularity=thread,explicit"
@@ -276,11 +292,15 @@ function set_openmp_envs
 
 function set_env_vars
 {
-    set_mlsl_vars
-    init_mpi_envs
+    if [ $mode == "inf_time" ];then
+       set_openmp_envs true 
+    else
+       set_mlsl_vars
+       init_mpi_envs
 
-    # depend on numservers set in set_mlsl_vars function
-    set_openmp_envs
+        # depend on numservers set in set_mlsl_vars function
+       set_openmp_envs
+    fi
 }
 
 while [[ $# -ge 1 ]]
@@ -333,6 +353,10 @@ do
             ;;
         --ppn)
             ppn=$2
+            shift
+            ;;
+        --mode)
+            mode=$2
             shift
             ;;
         *)

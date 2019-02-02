@@ -289,9 +289,9 @@ void Blob<Dtype>::Update() {
     if (((diff_->head() == SyncedMemory::SYNCED_PRV) ||
          (diff_->head() == SyncedMemory::HEAD_AT_PRV)) &&
         diff_->prv_data() &&
-        data_->prv_data()) {
-      CHECK_EQ(true, get_prv_data_descriptor()->layout_compare(
-                get_prv_diff_descriptor()));
+        data_->prv_data() &&
+        get_prv_data_descriptor()->layout_compare(
+                get_prv_diff_descriptor())) {
       caffe_axpy<Dtype>(prv_diff_count(), Dtype(-1),
           static_cast<const Dtype*>(diff_->prv_data()),
           static_cast<Dtype*>(data_->mutable_prv_data()));

@@ -82,6 +82,8 @@ def parse_args():
 
     parser.add_argument('-wi', '--conv_algo', dest='conv_algo', action="store_true", default=False,
                         help='to choose the convolution algorithm')
+    parser.add_argument('-1st', '--enable_1st_conv_layer', dest='enable_1st_conv_layer', action="store_true", default=False,
+                        help='enable 1st conv layer')
     if len(sys.argv) == 1:
         parser.print_help()
         sys.exit(1)
@@ -124,14 +126,14 @@ if __name__ == '__main__':
     if args.quantized_prototxt == None:
 	test_net(net, imdb, max_per_image=args.max_per_image, vis=args.vis)
     else:
-        (blobs, params, top_blobs_map, bottom_blobs_map, conv_top_blob_layer_map, conv_bottom_blob_layer_map, winograd_bottoms, winograd_convolutions) = sample_net(args.prototxt, net, imdb, args.sample_iters, args.quant_mode)
+        (blobs, params, top_blobs_map, bottom_blobs_map, conv_top_blob_layer_map, conv_bottom_blob_layer_map, winograd_bottoms, winograd_convolutions) = sample_net(args.prototxt, net, imdb, args.sample_iters, args.quant_mode, args.enable_1st_conv_layer)
         
         (inputs_max, outputs_max, inputs_min) = sampling.calibrate_activations(blobs, conv_top_blob_layer_map, conv_bottom_blob_layer_map, winograd_bottoms, args.calibration_algos, "SINGLE", args.conv_algo)
         params_max = sampling.calibrate_parameters(params, winograd_convolutions, "DIRECT", args.quant_mode.upper(), args.conv_algo)
-        calibrator.generate_sample_impl(args.prototxt, args.quantized_prototxt, inputs_max, outputs_max, inputs_min, params_max, False)
+        calibrator.generate_sample_impl(args.prototxt, args.quantized_prototxt, inputs_max, outputs_max, inputs_min, params_max, args.enable_1st_conv_layer)
         compiled_net_str = caffe.compile_net(args.prototxt, caffe.TEST, "MKLDNN")
         raw_net_basename = os.path.basename(args.prototxt)
         compile_net_path = "./compiled_" + raw_net_basename
         with open(compile_net_path, "w") as f:
             f.write(compiled_net_str)
-        calibrator.transform_convolutions(args.quantized_prototxt, compile_net_path, top_blobs_map, bottom_blobs_map, args.unsigned_range, args.concat_use_fp32, args.unify_concat_scales, args.conv_algo, False)
+        calibrator.transform_convolutions(args.quantized_prototxt, compile_net_path, top_blobs_map, bottom_blobs_map, args.unsigned_range, args.concat_use_fp32, args.unify_concat_scales, args.conv_algo, args.enable_1st_conv_layer)

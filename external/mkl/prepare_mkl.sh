@@ -90,7 +90,7 @@ if [ -z $MKLROOT ] || [ $VERSION_LINE -lt $VERSION_MATCH ]; then
       #...If it is not then downloaded and unpacked
       wget --no-check-certificate -P $DST $MKLURL -O $DST/$ARCHIVE_BASENAME
       tar -xzf $DST/$ARCHIVE_BASENAME -C $DST
-      ln -sf $MKL_CONTENT_DIR $DST/mklml
+      ln -nsf $MKL_CONTENT_DIR $DST/mklml
     fi
   FindLibrary $DST
   MKLROOT=$PWD/`echo $LOCALMKL | sed -e 's/lib.*$//'`

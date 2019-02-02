@@ -6,7 +6,7 @@ MAINTAINER caffe-maint@googlegroups.com
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-	    cpio \
+	bzip2 \
         build-essential \
         cmake \
         git \
@@ -17,31 +17,13 @@ RUN apt-get update && \
         vim \
         net-tools \
         iputils-ping \
-        screen \
-        libmlx4-1 libmlx5-1 ibutils  rdmacm-utils libibverbs1 ibverbs-utils perftest infiniband-diags \
-        openmpi-bin libopenmpi-dev \
         ufw \
-        iptables \
-        libboost-all-dev \
-        libgflags-dev \
-        libgoogle-glog-dev \
-        libhdf5-serial-dev \
-        libleveldb-dev \
-        liblmdb-dev \
-        libopencv-dev \
-        libprotobuf-dev \
-        libsnappy-dev \
-        protobuf-compiler \
-        python-dev \
-        python-numpy \
-        python-pip \
-        python-setuptools \
-        python-scipy && \
+        iptables && \
     rm -rf /var/lib/apt/lists/*
 
 # Install conda and Intel Caffe conda package
 WORKDIR /root/
-RUN wget -c https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh && \
+RUN wget --no-check-certificate -c https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh && \
     bash Miniconda2-latest-Linux-x86_64.sh -b && \
     ./miniconda2/bin/conda config --add channels intel && \
     ./miniconda2/bin/conda install -c intel caffe && \

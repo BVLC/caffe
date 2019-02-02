@@ -18,28 +18,37 @@ class CaffeBenchmark(object):
         self.dummy_data_use = bench_params.dummy_data_use
         self.engine = bench_params.engine
         self.caffe_bin = bench_params.caffe_bin
-        self.scal_test = bench_params.scal_test
+        self.test_mode = bench_params.test_mode
+        self.inf_instances = bench_params.inf_instances
+        self.num_omp_threads = bench_params.num_omp_threads
         self.num_nodes = 1
         self.cpu_model = 'skx'
         # flag used to mark if we have detected which cpu model we're using
         self.unknown_cpu = False
-        self.iterations = 100
+        self.iterations = 100 
         self.caffe_root = os.path.dirname(os.path.dirname(__file__))
         # model template path
-        self.model_path = os.path.join(self.caffe_root, "models/intel_optimized_models/benchmark")
+        self.model_path = os.path.join(self.caffe_root, "models/intel_optimized_models")
         # specific script used to run intelcaffe 
         self.caffe_run_script = os.path.join(self.caffe_root, "scripts/run_intelcaffe.sh")
-        self.bkm_batch_size = bench_params.bkm_batch_size
-        self.support_topologies = self.bkm_batch_size.keys()
-        self.support_topologies.append('all')
+        self.train_bkm_batch_size = bench_params.train_bkm_batch_size
+        self.inf_bkm_batch_size = bench_params.inf_bkm_batch_size
+        self.support_topologies = self.train_bkm_batch_size.keys()
+        self.support_inf_topologies = self.inf_bkm_batch_size.keys()
+        self.support_topologies.append('all_train')
+        self.support_inf_topologies.append('all_inf')
         self.check_parameters()
         current_time = time.strftime("%Y%m%d%H%M%S")
         logging.basicConfig(filename = 'result-benchmark-{}.log'.format(current_time),level = logging.INFO)
 
     def is_supported_topology(self):
         '''check if input topology is supported'''
-        if self.topology not in self.support_topologies:
-            logging.exception("The topology you specified as {} is not supported. Supported topologies are {}".format(self.topology, self.support_topologies))
+        if self.test_mode == "train_throughput" or self.test_mode == "scal_test" :
+            if self.topology not in self.support_topologies:
+                logging.exception("The topology you specified as {} is not supported. Supported topologies are {}".format(self.topology, self.support_topologies))
+        else:
+            if self.topology not in self.support_inf_topologies:
+                logging.exception("The topology you specified as {} is not supported. Supported topologies are {}".format(self.topology, self.support_inf_topologies))
     
     def calculate_numnodes(self):
         '''calculate current using nodes'''
@@ -64,7 +73,7 @@ class CaffeBenchmark(object):
             if return_code:
                 raise subprocess.CalledProcessError(return_code, cmd)
         for line in _exec_command_and_iter_show(cmd):
-            print line
+            print(line)
         
     def detect_cpu(self):
         '''check which IA platform currently using'''
@@ -90,28 +99,99 @@ class CaffeBenchmark(object):
     
     def gen_model_file(self, model):
         '''generate model file with new batch size which equal to bkm batch size'''
-        prototxt_file = "train_val_dummydata.prototxt" if self.dummy_data_use else "train_val.prototxt"
-        dst_model_file = os.path.join(self.model_path, model, '-'.join([self.cpu_model, prototxt_file]))
-        if os.path.isfile(dst_model_file):
-            os.remove(dst_model_file)
-        src_model_file = os.path.join(self.model_path, model, prototxt_file)
-        if not os.path.isfile(src_model_file):
-            logging.exception("template model file {} doesn't exist.".format(src_model_file))
-        batch_size_pattern = re.compile(".*shape:.*") if self.dummy_data_use else re.compile("^\s+batch_size:.*")
-        # we only care about train phase batch size for benchmarking
-        batch_size_cnt = 2 if self.dummy_data_use else 1
-        if model not in self.bkm_batch_size or not self.scal_test and self.cpu_model not in self.bkm_batch_size[model]:
-            logging.exception("Can't find batch size of topology {} and cpu model {} within batch size table".format(model, self.cpu_model))
-        new_batch_size = self.bkm_batch_size[model] if self.scal_test else self.bkm_batch_size[model][self.cpu_model]
-        with open(src_model_file, 'r') as src_f, open(dst_model_file, 'w') as dst_f:
-            cnt = 0
-            for line in src_f.readlines():
-                if re.match(batch_size_pattern, line) and cnt < batch_size_cnt:
-                   #change batch size
-                    line = re.sub("[0-9]+", new_batch_size, line, count = 1)
-                    cnt += 1
-                dst_f.write(line) 
-        return dst_model_file
+        if model.find("_int8") != -1: 
+            if not self.test_mode == "inf_throughput" and not self.test_mode == "inf_latency":
+                print("Error: int8 test is only for inference")
+                return ""
+                  
+            prototxt_file=model+".prototxt"
+            if model == "resnet50_int8" :
+                prototxt_file="resnet50_int8_full_conv.prototxt"
+
+            
+            if model == "faster-rcnn_int8":
+                 dst_model_file = self.model_path + "/faster-rcnn/pascal_voc/VGG16/faster_rcnn_end2end/" + self.cpu_model + "_" + "test_int8.prototxt"
+            elif model == "rfcn_int8":
+                 dst_model_file = self.model_path + "/rfcn/pascal_voc/ResNet-101/rfcn_end2end/" + self.cpu_model + "_" + "test_agnostic_int8.prototxt"
+            else:
+                 dst_model_file = os.path.join(self.model_path, './int8/', '-'.join([self.cpu_model, prototxt_file]))    
+
+            if os.path.isfile(dst_model_file):
+                os.remove(dst_model_file)
+
+            if model == "faster-rcnn_int8":
+                 src_model_file = self.model_path + "/faster-rcnn/pascal_voc/VGG16/faster_rcnn_end2end/test_int8.prototxt"
+            elif model == "rfcn_int8":
+                 src_model_file = self.model_path + "/rfcn/pascal_voc/ResNet-101/rfcn_end2end/test_agnostic_int8.prototxt"
+            else: 
+                 src_model_file = os.path.join(self.model_path, './int8/', prototxt_file)
+
+            print("source model "+src_model_file)
+            if not os.path.isfile(src_model_file):
+                logging.exception("template model file {} doesn't exist.".format(src_model_file))
+            print("dest model "+model)
+            if model.find("ssd") == -1 or model.find("yolo") == -1:
+                batch_size_cnt = 1
+            else:
+                batch_size_cnt = 2
+            if model not in self.inf_bkm_batch_size or self.cpu_model not in self.inf_bkm_batch_size[model]:
+                logging.exception("Can't find batch size of topology {} and cpu model {} within batch size table".format(model, self.cpu_model))
+            batch_size_pattern = re.compile(".*dim.*")
+            new_batch_size = self.inf_bkm_batch_size[model][self.cpu_model]
+            if self.test_mode == "inf_latency":
+                new_batch_size="1" 
+            with open(src_model_file, 'r') as src_f, open(dst_model_file, 'w') as dst_f:
+                cnt = 0
+                line2=""
+                for line in src_f.readlines():
+                    if line2 != "" and ( line2.find("shape") != -1 or line.find("input: \"data\"") != -1 ) and re.match(batch_size_pattern, line) and cnt < batch_size_cnt:
+                        #change batch size
+                        line = re.sub("[0-9]+", new_batch_size, line, count = 1)
+                        cnt += 1
+                    dst_f.write(line) 
+                    line2=line
+            return dst_model_file
+        else:
+            if self.test_mode == "inf_throughput" or self.test_mode == "inf_latency":
+                prototxt_file = "deploy.prototxt"
+            else:
+                prototxt_file = "train_val_dummydata.prototxt" if self.dummy_data_use else "train_val.prototxt"
+            dst_model_file = os.path.join(self.model_path, './benchmark/', model, '-'.join([self.cpu_model, prototxt_file]))
+            if os.path.isfile(dst_model_file):
+                os.remove(dst_model_file)
+            src_model_file = os.path.join(self.model_path, './benchmark/', model, './', prototxt_file)
+            if not os.path.isfile(src_model_file):
+                logging.exception("template model file {} doesn't exist.".format(src_model_file))
+
+            if model == "ssd" and ( self.test_mode == "inf_throughput" or self.test_mode == "inf_latency" ):
+                batch_size_pattern = re.compile(".*input_shape {.*") if self.dummy_data_use else re.compile("^\s+batch_size:.*")
+            else: 
+                if model == "mobilenet_v2" and ( self.test_mode == "inf_throughput" or self.test_mode == "inf_latency" ):
+                    batch_size_pattern = re.compile(".*input_dim.*") if self.dummy_data_use else re.compile("^\s+batch_size:.*")
+                else:
+                    batch_size_pattern = re.compile(".*shape:.*") if self.dummy_data_use else re.compile("^\s+batch_size:.*")
+
+            batch_size_cnt = 2
+            if self.test_mode == "train_throughput" or self.test_mode == "scal_test":
+                if model not in self.train_bkm_batch_size or self.test_mode == "train_throughput" and self.cpu_model not in self.train_bkm_batch_size[model]:
+                    logging.exception("Can't find batch size of topology {} and cpu model {} within batch size table".format(model, self.cpu_model))
+                new_batch_size = self.train_bkm_batch_size[model] if self.test_mode == "scal_test" else self.train_bkm_batch_size[model][self.cpu_model]
+            else:
+                if model not in self.inf_bkm_batch_size or self.cpu_model not in self.inf_bkm_batch_size[model]:
+                    logging.exception("Can't find batch size of topology {} and cpu model {} within batch size table".format(model, self.cpu_model))
+                new_batch_size = self.inf_bkm_batch_size[model][self.cpu_model]
+                if self.test_mode == "inf_latency":
+                    new_batch_size="1"
+     
+            with open(src_model_file, 'r') as src_f, open(dst_model_file, 'w') as dst_f:
+                cnt = 0
+                for line in src_f.readlines():
+                    if re.match(batch_size_pattern, line) and cnt < batch_size_cnt:
+                        #change batch size
+                        line = re.sub("[0-9]+", new_batch_size, line, count = 1)
+                        cnt += 1
+                    dst_f.write(line) 
+            return dst_model_file
 
     def gen_solver_file(self, model):
         '''generate suitable solver file for training benchmark'''
@@ -145,7 +225,10 @@ class CaffeBenchmark(object):
         self.calculate_numnodes()
         if self.num_nodes == 1:
             model_file = self.gen_model_file(model)
-            exec_command = ' '.join([self.caffe_run_script, '--model_file', model_file, '--mode time', '--iteration', str(self.iterations), '--benchmark none'])
+            if self.test_mode == "inf_throughput" or self.test_mode == "inf_latency":
+               exec_command = ' '.join([self.caffe_run_script, '--model_file', model_file, '--mode inf_time', '--iteration', str(self.iterations), '--benchmark none', '--ppn', str(self.inf_instances), '--num_omp_threads', str(self.num_omp_threads)]) 
+            else:
+               exec_command = ' '.join([self.caffe_run_script, '--model_file', model_file, '--mode time', '--iteration', str(self.iterations), '--benchmark none'])
         else:
             solver_file = self.gen_solver_file(model)
             exec_command = ' '.join([self.caffe_run_script, '--hostfile', self.host_file, '--solver', solver_file, '--network', self.network, '--benchmark none'])
@@ -162,9 +245,12 @@ class CaffeBenchmark(object):
         else:
             self.result_log_file = "-".join(["result", "unknown", model, current_time + ".log"])
         exec_command += " 2>&1 | tee {}".format(self.result_log_file)
+        print(exec_command)
+        logging.info(exec_command)
         self._exec_command_and_show(exec_command)
         self.intelcaffe_log = self.obtain_intelcaffe_log()
-        self.calculate_fps()
+        print("calculate fps ...")
+        self.calculate_fps(model)
     
     def obtain_intelcaffe_log(self):
         '''obtain the logfile of 'run_intelcaffe' '''
@@ -187,21 +273,35 @@ class CaffeBenchmark(object):
         logging.info('intelcaffe log: %s' % intelcaffe_log)
         return intelcaffe_log
     
-    def obtain_average_fwd_bwd_time(self):
+    def obtain_average_time(self):
         '''obtain average iteration time of training'''
         result_file = self.intelcaffe_log
         if not os.path.isfile(result_file):
             logging.exception("Error: result file {} does not exist...".format(result_file))
         if self.num_nodes == 1:
             average_time = ""
+            total_average_time = 0 
+            num = 0 
+            #Need update for ppn >1
             with open(result_file, 'r') as f:
-                average_fwd_bwd_time_pattern = re.compile(".*Average Forward-Backward:.*")
+                if self.test_mode == "inf_throughput" or self.test_mode == "inf_latency":
+                    pattern = re.compile(".*Average Forward pass:.*")
+                else:
+                    pattern = re.compile(".*Average Forward-Backward:.*")
+                inst = 0
                 for line in f.readlines():
-                    if re.match(average_fwd_bwd_time_pattern, line):
+                    if re.match(pattern, line):
                         average_time = line.split()[-2]
-            if average_time == "": 
-                logging.exception("Error: can't find average forward-backward time within logs, please check logs under: {}".format(result_file))
-            average_time = float(average_time)
+                        if average_time != "":    
+                            total_average_time = total_average_time + float(average_time) 
+                            inst = inst + 1
+            if total_average_time == 0: 
+                logging.exception("Error: can't find average forward-backward time or average forward time within logs, please check logs under: {}".format(result_file))
+            logging.info("The total average_time of " + str(inst) + " instances is " + str(total_average_time))
+            average_time = total_average_time/inst
+            logging.info("The average_time is " + str(average_time))
+            return average_time
+
         else:
             start_iteration = 100
             iteration_num = 100
@@ -239,13 +339,15 @@ class CaffeBenchmark(object):
         logging.info("global batch size: {}".format(str(batch_size)))
         return float(batch_size)
     
-    def calculate_fps(self):
+    def calculate_fps(self, model):
         '''calculate fps here'''
         self.batch_size = self.obtain_batch_size()
-        self.average_time = self.obtain_average_fwd_bwd_time()
+        self.average_time = self.obtain_average_time()
         speed = self.batch_size * 1000.0 / self.average_time
-        self.speed = int(speed)
-        logging.info("benchmark speed: {} images/sec".format(str(self.speed)))
+        self.speed = float(speed)
+        total_speed = self.speed * int(self.inf_instances)
+        logging.info(model + " benchmark average speed: {} images/sec".format(str(self.speed)))
+        logging.info(model + " benchmark total speed: {} images/sec".format(str(total_speed)))
         return speed
     
     def get_local_ip_lists(self):
@@ -317,20 +419,26 @@ class CaffeBenchmark(object):
         '''run intelcaffe training benchmark'''
         self.detect_cpu()
         logging.info("Cpu model: {}".format(self.model_string))
-        if self.topology == 'all':
+        if self.topology == 'all_train':
             for model in self.support_topologies:
-                if model == 'all':
+                if model == 'all_train':
                     continue
                 logging.info("--{}".format(model))
-                if self.scal_test:
+                if self.test_mode == "scal_test":
                     self.run_scal_test(model)
                 else:
                     self.run_specific_model(model)
+        elif self.topology == 'all_inf':
+            for model in self.support_inf_topologies:
+                print("run " + model)
+                if model == 'all_inf':
+                    continue
+                logging.info("")
+                logging.info("--{}".format(model))
+                print("--{}".format(model))
+                self.run_specific_model(model)
         else:
-            if self.scal_test:
-                self.run_scal_test(self.topology)
-            else:
-                self.run_specific_model(self.topology)
+            self.run_specific_model(self.topology)
 
     def check_parameters(self):
         '''check program parameters'''
@@ -358,9 +466,12 @@ class BenchmarkParams(object):
             self.tcp_netmask = config['params']['netmask']
             self.engine = config['params']["engine"]
             self.dummy_data_use = config['params']['dummy_data_use']
-            self.scal_test = config['params']['scal_test']
+            self.test_mode = config['params']['test_mode']
+            self.inf_instances = config['params']['inf_instances']
+            self.num_omp_threads = config['params']['num_omp_threads']
             self.caffe_bin = config['params']['caffe_bin']
-            self.bkm_batch_size = config['scal_batch_size_table'] if self.scal_test else config['perf_batch_size_table']
+            self.train_bkm_batch_size = config['scal_batch_size_table'] if self.test_mode == "scal_test" else config['train_perf_batch_size_table']
+            self.inf_bkm_batch_size = config['scal_batch_size_table'] if self.test_mode == "scal_test" else config['inference_perf_batch_size_table']
         
 def parse_args():
     '''parse arguments'''

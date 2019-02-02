@@ -154,7 +154,17 @@ void PReLULayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   // keep top_diff unchanged.
   if (this->param_propagate_down_[0]) {
     Dtype* slope_diff = this->blobs_[0]->mutable_cpu_diff();
-    for (long i = 0; i < count; ++i) {
+    long i;
+  // openmp array reduction is supported from openmp 4.5. GCC 6.1 and later
+  // fully support this feature. ICC less than 19.01 has bug on openmp array
+  // reduction support, that's why we have ICC version check here.
+#if !defined(__INTEL_COMPILER) || __INTEL_COMPILER >= 1900
+#if defined(_OPENMP) && _OPENMP >= 201511
+    long reduce = channel_shared_ ? 1 : channels;
+#pragma omp parallel for private(i) reduction(+: slope_diff[:reduce])
+#endif
+#endif
+    for (i = 0; i < count; ++i) {
       long c = (i / dim) % channels / div_factor;
       slope_diff[c] += top_diff[i] * bottom_data[i] * (bottom_data[i] <= 0);
     }
