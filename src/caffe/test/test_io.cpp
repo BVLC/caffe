@@ -2,10 +2,10 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/highgui/highgui_c.h>
-#include <opencv2/imgproc/imgproc.hpp>
 #if CV_MAJOR_VERSION >= 4
 #include <opencv2/imgcodecs/legacy/constants_c.h>
-#endif 
+#endif
+#include <opencv2/imgproc/imgproc.hpp>
 
 #include <string>
 
