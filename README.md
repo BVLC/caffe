@@ -17,6 +17,14 @@ If some system tool like numactl is used to control CPU affinity, by default caf
 to use more than one thread per core. When less than required cores are specified, caffe will
 limit execution of OpenMP threads to specified cores only.
 
+To collect performance on full INT8 model of ResNet-50 v1.0, please update the variables NUM_CORE, the batch size range s_BS and e_BS, and INSTANCES according to your test requirements, then run: 
+
+    . run.sh
+
+To verify the accuracy, please run
+
+    . run_accuracy.sh
+
 ## Best performance solution
 Please read [our Wiki](https://github.com/intel/caffe/wiki/Recommendations-to-achieve-best-performance) for our recommendations and configuration to achieve best performance on Intel CPUs. 
 
