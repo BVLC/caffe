@@ -252,17 +252,16 @@ void MKLDNNPoolingLayer<Dtype>::InitPoolingFwd(const vector<Blob<Dtype>*>& botto
     shared_ptr<MemPD> usr_bottom_data_mpd(new MemPD({{bottom_tz}, mpcsn, mfmt_nchw}, cpu_engine));
     shared_ptr<MemPD> usr_top_data_mpd(new MemPD({{top_tz}, mpcsn, mfmt_nchw}, cpu_engine));
 
-    std::vector<float> scale;
+    std::vector<float> scale(1, 1.);
     if (bottom_data_is_prv || top_data_is_prv) {
         shared_ptr<MKLDNNMemoryDescriptor<Dtype, false> > mem_descr
             = get_mkldnn_prv_descriptor<Dtype, false>(bottom[0]);
         cmfmt = static_cast<memory::format>(mem_descr->prv_memory_pd()->desc().data.format);
         mpcsn = static_cast<memory::data_type>(mem_descr->prv_memory_pd()->desc().data.data_type);
-        scale.push_back(mem_descr->get_scale(0));
-    } else{
-        scale.push_back(1.);
+        scale[0] = mem_descr->get_scale(0);
+        mpcsn = (mpcsn==memory::data_type::s8) && mem_descr->get_sum() ? memory::data_type::u8 : mpcsn;
     }
-
+    
     shared_ptr<memory::desc> init_fwd_bottom_md(new memory::desc({bottom_tz}, mpcsn, cmfmt));
     shared_ptr<memory::desc> init_fwd_top_md(new memory::desc({top_tz}, mpcsn, cmfmt));
 
@@ -345,9 +344,11 @@ void MKLDNNPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom
 #ifdef DEBUG
     LOG(INFO) << "MKLDNNPoolingLayer<Dtype>::Forward_cpu: " << this->layer_param_.name();
 #endif
-
-    if (NULL == poolingFwd_pd || this->reshape)
+    bool _mkldnn_primitive = false;
+    if (NULL == poolingFwd_pd || this->reshape) {
         InitPoolingFwd(bottom, top);
+        _mkldnn_primitive = true;
+    }
     // making reorders if needed.
     fwd_bottom_data->sync_before_read();
     // update top that head at prv
@@ -356,6 +357,9 @@ void MKLDNNPoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom
     PERFORMANCE_EVENT_ID_INIT(perf_id_fw_, PERFORMANCE_MKLDNN_NAME("FW"));
     PERFORMANCE_MEASUREMENT_BEGIN();
     poolingFwd.submit();
+    if (_mkldnn_primitive) {
+      CircleBuf::Instance()->DecRefCnt(bottom[0]->prv_data());
+    }
     PERFORMANCE_MEASUREMENT_END_ID(perf_id_fw_);
 }
 

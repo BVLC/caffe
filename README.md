@@ -1,5 +1,5 @@
 # Intel® Distribution of Caffe*
-This fork Caffe is dedicated to improving Caffe performance when running on CPU, in particular Intel® Xeon processors (HSW, BDW, Xeon Phi)
+This fork is dedicated to improving Caffe performance when running on CPU, in particular Intel® Xeon processors.
 
 ## Building
 Build procedure is the same as on bvlc-caffe-master branch, see section "Caffe". Both Make and CMake can be used.

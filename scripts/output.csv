@@ -1,0 +1,525 @@
+# if defined(SSD_VGG16_CONV1_1_3X3)
+    # define NUM_IFMs 3
+    # define NUM_OFMs 64
+    # define KERNEL_H 3
+    # define KERNEL_W 3
+    # define IFM_H_NOPAD 300
+    # define IFM_W_NOPAD 300
+    # define PAD_H 1
+    # define PAD_W 1
+    # define STRIDE_H 1
+    # define STRIDE_W 1
+    # define RELU 1
+    # define RESIDUAL 0
+#endif
+
+# if defined(SSD_VGG16_CONV1_2_3X3)
+    # define NUM_IFMs 64
+    # define NUM_OFMs 64
+    # define KERNEL_H 3
+    # define KERNEL_W 3
+    # define IFM_H_NOPAD 300
+    # define IFM_W_NOPAD 300
+    # define PAD_H 1
+    # define PAD_W 1
+    # define STRIDE_H 1
+    # define STRIDE_W 1
+    # define RELU 1
+    # define RESIDUAL 0
+#endif
+
+# if defined(SSD_VGG16_CONV2_1_3X3)
+    # define NUM_IFMs 64
+    # define NUM_OFMs 128
+    # define KERNEL_H 3
+    # define KERNEL_W 3
+    # define IFM_H_NOPAD 150
+    # define IFM_W_NOPAD 150
+    # define PAD_H 1
+    # define PAD_W 1
+    # define STRIDE_H 1
+    # define STRIDE_W 1
+    # define RELU 1
+    # define RESIDUAL 0
+#endif
+
+# if defined(SSD_VGG16_CONV2_2_3X3)
+    # define NUM_IFMs 128
+    # define NUM_OFMs 128
+    # define KERNEL_H 3
+    # define KERNEL_W 3
+    # define IFM_H_NOPAD 150
+    # define IFM_W_NOPAD 150
+    # define PAD_H 1
+    # define PAD_W 1
+    # define STRIDE_H 1
+    # define STRIDE_W 1
+    # define RELU 1
+    # define RESIDUAL 0
+#endif
+
+# if defined(SSD_VGG16_CONV3_1_3X3)
+    # define NUM_IFMs 128
+    # define NUM_OFMs 256
+    # define KERNEL_H 3
+    # define KERNEL_W 3
+    # define IFM_H_NOPAD 75
+    # define IFM_W_NOPAD 75
+    # define PAD_H 1
+    # define PAD_W 1
+    # define STRIDE_H 1
+    # define STRIDE_W 1
+    # define RELU 1
+    # define RESIDUAL 0
+#endif
+
+# if defined(SSD_VGG16_CONV3_2_3X3)
+    # define NUM_IFMs 256
+    # define NUM_OFMs 256
+    # define KERNEL_H 3
+    # define KERNEL_W 3
+    # define IFM_H_NOPAD 75
+    # define IFM_W_NOPAD 75
+    # define PAD_H 1
+    # define PAD_W 1
+    # define STRIDE_H 1
+    # define STRIDE_W 1
+    # define RELU 1
+    # define RESIDUAL 0
+#endif
+
+# if defined(SSD_VGG16_CONV3_3_3X3)
+    # define NUM_IFMs 256
+    # define NUM_OFMs 256
+    # define KERNEL_H 3
+    # define KERNEL_W 3
+    # define IFM_H_NOPAD 75
+    # define IFM_W_NOPAD 75
+    # define PAD_H 1
+    # define PAD_W 1
+    # define STRIDE_H 1
+    # define STRIDE_W 1
+    # define RELU 1
+    # define RESIDUAL 0
+#endif
+
+# if defined(SSD_VGG16_CONV4_1_3X3)
+    # define NUM_IFMs 256
+    # define NUM_OFMs 512
+    # define KERNEL_H 3
+    # define KERNEL_W 3
+    # define IFM_H_NOPAD 38
+    # define IFM_W_NOPAD 38
+    # define PAD_H 1
+    # define PAD_W 1
+    # define STRIDE_H 1
+    # define STRIDE_W 1
+    # define RELU 1
+    # define RESIDUAL 0
+#endif
+
+# if defined(SSD_VGG16_CONV4_2_3X3)
+    # define NUM_IFMs 512
+    # define NUM_OFMs 512
+    # define KERNEL_H 3
+    # define KERNEL_W 3
+    # define IFM_H_NOPAD 38
+    # define IFM_W_NOPAD 38
+    # define PAD_H 1
+    # define PAD_W 1
+    # define STRIDE_H 1
+    # define STRIDE_W 1
+    # define RELU 1
+    # define RESIDUAL 0
+#endif
+
+# if defined(SSD_VGG16_CONV4_3_3X3)
+    # define NUM_IFMs 512
+    # define NUM_OFMs 512
+    # define KERNEL_H 3
+    # define KERNEL_W 3
+    # define IFM_H_NOPAD 38
+    # define IFM_W_NOPAD 38
+    # define PAD_H 1
+    # define PAD_W 1
+    # define STRIDE_H 1
+    # define STRIDE_W 1
+    # define RELU 1
+    # define RESIDUAL 0
+#endif
+
+# if defined(SSD_VGG16_CONV5_1_3X3)
+    # define NUM_IFMs 512
+    # define NUM_OFMs 512
+    # define KERNEL_H 3
+    # define KERNEL_W 3
+    # define IFM_H_NOPAD 19
+    # define IFM_W_NOPAD 19
+    # define PAD_H 1
+    # define PAD_W 1
+    # define STRIDE_H 1
+    # define STRIDE_W 1
+    # define RELU 1
+    # define RESIDUAL 0
+#endif
+
+# if defined(SSD_VGG16_CONV5_2_3X3)
+    # define NUM_IFMs 512
+    # define NUM_OFMs 512
+    # define KERNEL_H 3
+    # define KERNEL_W 3
+    # define IFM_H_NOPAD 19
+    # define IFM_W_NOPAD 19
+    # define PAD_H 1
+    # define PAD_W 1
+    # define STRIDE_H 1
+    # define STRIDE_W 1
+    # define RELU 1
+    # define RESIDUAL 0
+#endif
+
+# if defined(SSD_VGG16_CONV5_3_3X3)
+    # define NUM_IFMs 512
+    # define NUM_OFMs 512
+    # define KERNEL_H 3
+    # define KERNEL_W 3
+    # define IFM_H_NOPAD 19
+    # define IFM_W_NOPAD 19
+    # define PAD_H 1
+    # define PAD_W 1
+    # define STRIDE_H 1
+    # define STRIDE_W 1
+    # define RELU 1
+    # define RESIDUAL 0
+#endif
+
+# if defined(SSD_VGG16_FC6_3X3)
+    # define NUM_IFMs 512
+    # define NUM_OFMs 1024
+    # define KERNEL_H 3
+    # define KERNEL_W 3
+    # define IFM_H_NOPAD 19
+    # define IFM_W_NOPAD 19
+    # define PAD_H 6
+    # define PAD_W 6
+    # define STRIDE_H 1
+    # define STRIDE_W 1
+    # define RELU 1
+    # define RESIDUAL 0
+#endif
+
+# if defined(SSD_VGG16_FC7_1X1)
+    # define NUM_IFMs 1024
+    # define NUM_OFMs 1024
+    # define KERNEL_H 1
+    # define KERNEL_W 1
+    # define IFM_H_NOPAD 19
+    # define IFM_W_NOPAD 19
+    # define PAD_H 1
+    # define PAD_W 1
+    # define STRIDE_H 1
+    # define STRIDE_W 1
+    # define RELU 1
+    # define RESIDUAL 0
+#endif
+
+# if defined(SSD_VGG16_CONV6_1_1X1)
+    # define NUM_IFMs 1024
+    # define NUM_OFMs 256
+    # define KERNEL_H 1
+    # define KERNEL_W 1
+    # define IFM_H_NOPAD 19
+    # define IFM_W_NOPAD 19
+    # define PAD_H 0
+    # define PAD_W 0
+    # define STRIDE_H 1
+    # define STRIDE_W 1
+    # define RELU 1
+    # define RESIDUAL 0
+#endif
+
+# if defined(SSD_VGG16_CONV6_2_3X3)
+    # define NUM_IFMs 256
+    # define NUM_OFMs 512
+    # define KERNEL_H 3
+    # define KERNEL_W 3
+    # define IFM_H_NOPAD 19
+    # define IFM_W_NOPAD 19
+    # define PAD_H 1
+    # define PAD_W 1
+    # define STRIDE_H 2
+    # define STRIDE_W 2
+    # define RELU 1
+    # define RESIDUAL 0
+#endif
+
+# if defined(SSD_VGG16_CONV7_1_1X1)
+    # define NUM_IFMs 512
+    # define NUM_OFMs 128
+    # define KERNEL_H 1
+    # define KERNEL_W 1
+    # define IFM_H_NOPAD 10
+    # define IFM_W_NOPAD 10
+    # define PAD_H 0
+    # define PAD_W 0
+    # define STRIDE_H 1
+    # define STRIDE_W 1
+    # define RELU 1
+    # define RESIDUAL 0
+#endif
+
+# if defined(SSD_VGG16_CONV7_2_3X3)
+    # define NUM_IFMs 128
+    # define NUM_OFMs 256
+    # define KERNEL_H 3
+    # define KERNEL_W 3
+    # define IFM_H_NOPAD 10
+    # define IFM_W_NOPAD 10
+    # define PAD_H 1
+    # define PAD_W 1
+    # define STRIDE_H 2
+    # define STRIDE_W 2
+    # define RELU 1
+    # define RESIDUAL 0
+#endif
+
+# if defined(SSD_VGG16_CONV8_1_1X1)
+    # define NUM_IFMs 256
+    # define NUM_OFMs 128
+    # define KERNEL_H 1
+    # define KERNEL_W 1
+    # define IFM_H_NOPAD 5
+    # define IFM_W_NOPAD 5
+    # define PAD_H 0
+    # define PAD_W 0
+    # define STRIDE_H 1
+    # define STRIDE_W 1
+    # define RELU 1
+    # define RESIDUAL 0
+#endif
+
+# if defined(SSD_VGG16_CONV8_2_3X3)
+    # define NUM_IFMs 128
+    # define NUM_OFMs 256
+    # define KERNEL_H 3
+    # define KERNEL_W 3
+    # define IFM_H_NOPAD 5
+    # define IFM_W_NOPAD 5
+    # define PAD_H 0
+    # define PAD_W 0
+    # define STRIDE_H 1
+    # define STRIDE_W 1
+    # define RELU 1
+    # define RESIDUAL 0
+#endif
+
+# if defined(SSD_VGG16_CONV9_1_1X1)
+    # define NUM_IFMs 256
+    # define NUM_OFMs 128
+    # define KERNEL_H 1
+    # define KERNEL_W 1
+    # define IFM_H_NOPAD 3
+    # define IFM_W_NOPAD 3
+    # define PAD_H 0
+    # define PAD_W 0
+    # define STRIDE_H 1
+    # define STRIDE_W 1
+    # define RELU 1
+    # define RESIDUAL 0
+#endif
+
+# if defined(SSD_VGG16_CONV9_2_3X3)
+    # define NUM_IFMs 128
+    # define NUM_OFMs 256
+    # define KERNEL_H 3
+    # define KERNEL_W 3
+    # define IFM_H_NOPAD 3
+    # define IFM_W_NOPAD 3
+    # define PAD_H 0
+    # define PAD_W 0
+    # define STRIDE_H 1
+    # define STRIDE_W 1
+    # define RELU 1
+    # define RESIDUAL 0
+#endif
+
+# if defined(SSD_VGG16_CONV4_3_NORM_MBOX_LOC_3X3)
+    # define NUM_IFMs 512
+    # define NUM_OFMs 16
+    # define KERNEL_H 3
+    # define KERNEL_W 3
+    # define IFM_H_NOPAD 38
+    # define IFM_W_NOPAD 38
+    # define PAD_H 1
+    # define PAD_W 1
+    # define STRIDE_H 1
+    # define STRIDE_W 1
+    # define RELU 1
+    # define RESIDUAL 0
+#endif
+
+# if defined(SSD_VGG16_CONV4_3_NORM_MBOX_CONF_3X3)
+    # define NUM_IFMs 512
+    # define NUM_OFMs 84
+    # define KERNEL_H 3
+    # define KERNEL_W 3
+    # define IFM_H_NOPAD 38
+    # define IFM_W_NOPAD 38
+    # define PAD_H 1
+    # define PAD_W 1
+    # define STRIDE_H 1
+    # define STRIDE_W 1
+    # define RELU 1
+    # define RESIDUAL 0
+#endif
+
+# if defined(SSD_VGG16_FC7_MBOX_LOC_3X3)
+    # define NUM_IFMs 1024
+    # define NUM_OFMs 24
+    # define KERNEL_H 3
+    # define KERNEL_W 3
+    # define IFM_H_NOPAD 19
+    # define IFM_W_NOPAD 19
+    # define PAD_H 1
+    # define PAD_W 1
+    # define STRIDE_H 1
+    # define STRIDE_W 1
+    # define RELU 1
+    # define RESIDUAL 0
+#endif
+
+# if defined(SSD_VGG16_FC7_MBOX_CONF_3X3)
+    # define NUM_IFMs 1024
+    # define NUM_OFMs 126
+    # define KERNEL_H 3
+    # define KERNEL_W 3
+    # define IFM_H_NOPAD 19
+    # define IFM_W_NOPAD 19
+    # define PAD_H 1
+    # define PAD_W 1
+    # define STRIDE_H 1
+    # define STRIDE_W 1
+    # define RELU 1
+    # define RESIDUAL 0
+#endif
+
+# if defined(SSD_VGG16_CONV6_2_MBOX_LOC_3X3)
+    # define NUM_IFMs 512
+    # define NUM_OFMs 24
+    # define KERNEL_H 3
+    # define KERNEL_W 3
+    # define IFM_H_NOPAD 10
+    # define IFM_W_NOPAD 10
+    # define PAD_H 1
+    # define PAD_W 1
+    # define STRIDE_H 1
+    # define STRIDE_W 1
+    # define RELU 1
+    # define RESIDUAL 0
+#endif
+
+# if defined(SSD_VGG16_CONV6_2_MBOX_CONF_3X3)
+    # define NUM_IFMs 512
+    # define NUM_OFMs 126
+    # define KERNEL_H 3
+    # define KERNEL_W 3
+    # define IFM_H_NOPAD 10
+    # define IFM_W_NOPAD 10
+    # define PAD_H 1
+    # define PAD_W 1
+    # define STRIDE_H 1
+    # define STRIDE_W 1
+    # define RELU 1
+    # define RESIDUAL 0
+#endif
+
+# if defined(SSD_VGG16_CONV7_2_MBOX_LOC_3X3)
+    # define NUM_IFMs 256
+    # define NUM_OFMs 24
+    # define KERNEL_H 3
+    # define KERNEL_W 3
+    # define IFM_H_NOPAD 5
+    # define IFM_W_NOPAD 5
+    # define PAD_H 1
+    # define PAD_W 1
+    # define STRIDE_H 1
+    # define STRIDE_W 1
+    # define RELU 1
+    # define RESIDUAL 0
+#endif
+
+# if defined(SSD_VGG16_CONV7_2_MBOX_CONF_3X3)
+    # define NUM_IFMs 256
+    # define NUM_OFMs 126
+    # define KERNEL_H 3
+    # define KERNEL_W 3
+    # define IFM_H_NOPAD 5
+    # define IFM_W_NOPAD 5
+    # define PAD_H 1
+    # define PAD_W 1
+    # define STRIDE_H 1
+    # define STRIDE_W 1
+    # define RELU 1
+    # define RESIDUAL 0
+#endif
+
+# if defined(SSD_VGG16_CONV8_2_MBOX_LOC_3X3)
+    # define NUM_IFMs 256
+    # define NUM_OFMs 16
+    # define KERNEL_H 3
+    # define KERNEL_W 3
+    # define IFM_H_NOPAD 3
+    # define IFM_W_NOPAD 3
+    # define PAD_H 1
+    # define PAD_W 1
+    # define STRIDE_H 1
+    # define STRIDE_W 1
+    # define RELU 1
+    # define RESIDUAL 0
+#endif
+
+# if defined(SSD_VGG16_CONV8_2_MBOX_CONF_3X3)
+    # define NUM_IFMs 256
+    # define NUM_OFMs 84
+    # define KERNEL_H 3
+    # define KERNEL_W 3
+    # define IFM_H_NOPAD 3
+    # define IFM_W_NOPAD 3
+    # define PAD_H 1
+    # define PAD_W 1
+    # define STRIDE_H 1
+    # define STRIDE_W 1
+    # define RELU 1
+    # define RESIDUAL 0
+#endif
+
+# if defined(SSD_VGG16_CONV9_2_MBOX_LOC_3X3)
+    # define NUM_IFMs 256
+    # define NUM_OFMs 16
+    # define KERNEL_H 3
+    # define KERNEL_W 3
+    # define IFM_H_NOPAD 1
+    # define IFM_W_NOPAD 1
+    # define PAD_H 1
+    # define PAD_W 1
+    # define STRIDE_H 1
+    # define STRIDE_W 1
+    # define RELU 1
+    # define RESIDUAL 0
+#endif
+
+# if defined(SSD_VGG16_CONV9_2_MBOX_CONF_3X3)
+    # define NUM_IFMs 256
+    # define NUM_OFMs 84
+    # define KERNEL_H 3
+    # define KERNEL_W 3
+    # define IFM_H_NOPAD 1
+    # define IFM_W_NOPAD 1
+    # define PAD_H 1
+    # define PAD_W 1
+    # define STRIDE_H 1
+    # define STRIDE_W 1
+    # define RELU 1
+    # define RESIDUAL 0
+#endif
+

@@ -11,12 +11,13 @@ import caffe
 
 calibration_algos = ["DIRECT", "KL", "MAXP"]
 scaling_modes = ["SINGLE", "MULTIPLE"]
+sampling_layers = ["Convolution", "InnerProduct"]
 
 def get_blob_map(test_net, enable_first_conv = False):
     layers = list(test_net._layer_names)
     conv_layers = []
     for idx in range(0, len(layers)):
-        if test_net.layers[idx].type == "Convolution":
+        if test_net.layers[idx].type in sampling_layers :
             conv_layers.append(layers[idx])
 
     if not enable_first_conv:
@@ -330,7 +331,7 @@ def calibrate_activations(blobs, conv_top_blob_layer_map, conv_bottom_blob_layer
     conv_blobs_max = {}
     conv_blobs_min = {}
     for k, v in conv_blobs.items():
-        print "Calibrate activation for", k
+        print "Calibrate activation for", k, v[0].shape
         if is_wino_conv:
             if k in winograd_bottoms:
                 v_max = calibrate_max((np_abs(v), calibration_algo, scaling_mode, maxp, 1, True))
@@ -360,7 +361,7 @@ def calibrate_activations(blobs, conv_top_blob_layer_map, conv_bottom_blob_layer
 def calibrate_parameters(params, winograd_convolutions, calibration_algo="DIRECT", scaling_mode="SINGLE", is_wino_conv=False, maxp=0.99995):
     params_max = {}
     for k, v in params.items():
-        print "Calibrate parameters for", k
+        print "Calibrate parameters for", k, v[0].shape
         if is_wino_conv:
             if k in winograd_convolutions:
                 v_max = calibrate_max((v, calibration_algo, scaling_mode, maxp, 0, True))
@@ -416,7 +417,7 @@ if __name__ == '__main__':
         sys.exit(0)
     (blobs, params, top_blobs_map, bottom_blobs_map, conv_top_blob_layer_map, conv_bottom_blob_layer_map, winograd_bottoms, winograd_convolutions) = sample(sys.argv[1], sys.argv[2], False, 2, True)
     (inputs_max, outputs_max, inputs_min) = calibrate_activations(blobs, conv_top_blob_layer_map, conv_bottom_blob_layer_map,winograd_bottoms, "DIRECT", "SINGLE")
-#    params_max = calibrate_parameters(params, winograd_convolutions, "DIRECT", "MULTIPLE", True)
+    params_max = calibrate_parameters(params, winograd_convolutions, "DIRECT", "MULTIPLE", True)
 #    for k, v in inputs_max.items():
 #        print "***", k, v[0], outputs_max[k][0]
 #    for k, v in params_max.items():

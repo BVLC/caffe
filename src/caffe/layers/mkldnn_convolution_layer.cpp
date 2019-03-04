@@ -140,6 +140,10 @@ void MKLDNNConvolutionLayer<Dtype>::init_properties(const vector<Blob<Dtype>*>& 
     {
         conv_algorithm = algorithm::convolution_winograd;
     }
+    //else if(_conv_algorithm == "auto")
+    //{
+    //    conv_algorithm = algorithm::convolution_auto;
+    //}
     else
     {
         LOG(ERROR) << "Unsupported convolution algorithm.";
@@ -205,7 +209,7 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
     Dtype negative_slope = 0;
     if(relu)
     {
-        negative_slope = this->layer_param_.relu_param().negative_slope();
+        negative_slope = this->layer_param_.convolution_param().negative_slope();
     }
 
     int32_t g  = std::max(this->group_, 1);
@@ -269,7 +273,7 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
     memory::data_type top_dt = memory::data_type::f32;
     if (this->need_quantize_) {
       if (this->bw_layer_out_ == 8) {
-        if (relu) {
+        if (relu && negative_slope == 0) {
           top_dt = memory::data_type::u8;
         }
         else {
@@ -284,7 +288,8 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
     if (this->layer_param_.convolution_param().fusion_type() ==
             ConvolutionParameter::SUM_FUSION &&
         bottom.size() > 1) {
-      is_sum = true;
+      if(relu)
+          is_sum = true;
 
       memory::data_type bottom_1_dt = memory::data_type::f32;
       if (const_cast<Dtype*>(bottom[1]->prv_data()) != NULL){
@@ -478,8 +483,7 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
 
     // ---  init primitive and prv_memory descriptors ----------------------
     if (this->need_quantize_){
-      std::vector<float> scale_bottom;
-      scale_bottom.push_back(this->scale_in_[0]);
+      std::vector<float> scale_bottom(1, this->scale_in_[0]);
       fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_bottom_data_memory_pd, prv_fwd_bottom_data_memory_pd, bottom[0], this, scale_bottom));
     } else {
       fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_bottom_data_memory_pd, prv_fwd_bottom_data_memory_pd, bottom[0], this));
@@ -488,8 +492,7 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
     fwd_bottom_data_primitive = fwd_bottom_data->create_input(false);
 
     if (this->need_quantize_){
-      std::vector<float> scale_top;
-      scale_top.push_back(this->scale_out_[0]);
+      std::vector<float> scale_top(1, this->scale_out_[0]);
       fwd_top_data.reset(new MKLDNNData<Dtype>(usr_top_data_memory_pd, prv_fwd_top_data_memory_pd, top[0], this, scale_top, 0, is_sum));
     } else{
       fwd_top_data.reset(new MKLDNNData<Dtype>(usr_top_data_memory_pd, prv_fwd_top_data_memory_pd, top[0], this));
@@ -515,7 +518,7 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
         }
         fwd_weights_data.reset(new MKLDNNData<Dtype>(usr_weights_data_memory_pd, prv_fwd_weights_data_memory_pd, this->blobs_[0].get(), this, scale_weight, reorder_mask, false, false, true));
       } else{
-        fwd_weights_data.reset(new MKLDNNData<Dtype>(usr_weights_data_memory_pd, prv_fwd_weights_data_memory_pd, this->blobs_[0].get(), this, {1.}, 0,  is_sum, is_wino));
+        fwd_weights_data.reset(new MKLDNNData<Dtype>(usr_weights_data_memory_pd, prv_fwd_weights_data_memory_pd, this->blobs_[0].get(), this, {1.}, 0,  is_sum, is_wino, true));
       }
       fwd_weights_data->name = "fwd_weights_data  @ " + this->layer_param_.name();
       fwd_weights_data_primitive = fwd_weights_data->create_input(true);
@@ -541,9 +544,9 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
               else
                   scale_bias[i] = this->scale_in_[0] * this->scale_params_[i];
             }
-            fwd_bias_data.reset(new MKLDNNData<Dtype>(usr_bias_data_memory_pd, prv_fwd_bias_data_memory_pd, this->blobs_[1].get(), this, scale_bias, reorder_mask));
+            fwd_bias_data.reset(new MKLDNNData<Dtype>(usr_bias_data_memory_pd, prv_fwd_bias_data_memory_pd, this->blobs_[1].get(), this, scale_bias, reorder_mask, false, false, true));
           } else{
-            fwd_bias_data.reset(new MKLDNNData<Dtype>(usr_bias_data_memory_pd, prv_fwd_bias_data_memory_pd, this->blobs_[1].get(), this));
+            fwd_bias_data.reset(new MKLDNNData<Dtype>(usr_bias_data_memory_pd, prv_fwd_bias_data_memory_pd, this->blobs_[1].get(), this, {1.}, 0,  false, false, true));
           }
           fwd_bias_data->name = "fwd_bias_data     @ " + this->layer_param_.name();
           fwd_bias_data_primitive = fwd_bias_data->create_input(true);
@@ -580,19 +583,33 @@ void MKLDNNConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bott
 {
     VLOG(1) << "MKLDNNConvolutionLayer<Dtype>::Forward_cpu: " << this->layer_param_.name();
 
-    if( convFwd_pd == NULL || this->reshape)
+    bool _mkldnn_primitive = false;
+    if( convFwd_pd == NULL || this->reshape){
         InitConvolutionFwd(bottom, top);
+        if(this->phase_ == TEST){
+            fwd_weights_data->sync_before_read();
+            if (this->bias_term_)
+                fwd_bias_data->sync_before_read();
+            _mkldnn_primitive = true;
+        }
+    }
 
     fwd_bottom_data->sync_before_read(); 
-    fwd_weights_data->sync_before_read();
-    if (this->bias_term_)
-        fwd_bias_data->sync_before_read();
+    if(this->phase_ != TEST){
+        fwd_weights_data->sync_before_read();
+        if (this->bias_term_)
+            fwd_bias_data->sync_before_read();
+    } 
     // update top that head at prv
     fwd_top_data->sync_before_write();
 
     PERFORMANCE_EVENT_ID_INIT(perf_id_fw_, PERFORMANCE_MKLDNN_NAME("FW"));
     PERFORMANCE_MEASUREMENT_BEGIN();
     convFwd.submit();
+
+    if(_mkldnn_primitive) {
+      CircleBuf::Instance()->DecRefCnt(bottom[0]->prv_data());
+    }
     PERFORMANCE_MEASUREMENT_END_ID(perf_id_fw_);
 }
 

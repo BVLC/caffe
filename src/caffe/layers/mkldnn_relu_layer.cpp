@@ -119,7 +119,7 @@ void MKLDNNReLULayer<Dtype>::InitReLUFwd(const vector<Blob<Dtype>*>& bottom, con
     top_data_mpd.reset(new memory::primitive_desc({dim, top_dt, src_mfmt}, cpu_engine));
 
     // ---- Initialize relu primitive descriptor -------------
-    //relu_forward::desc reluFwd_desc(propagation, *bottom_data_md, negative_slope);
+    //eltwise_forward::desc reluFwd_desc(propagation, *bottom_data_md, negative_slope);
     // MKLDNN is deprecating standalone relu primitive in MKL-DNN.
     // Now MKLDNN has eltwise primitive with eltwise_relu algorithm inside.
     eltwise_forward::desc eltwise_reluFwd_desc(propagation, eltwise_relu, *bottom_data_md, negative_slope);
@@ -133,7 +133,7 @@ void MKLDNNReLULayer<Dtype>::InitReLUFwd(const vector<Blob<Dtype>*>& bottom, con
     reluFwd_pd = NULL;
     for(; subEngineIndex < ep.getNumberOfSubEngines(); subEngineIndex++) {
       try {
-        reluFwd_pd.reset(new relu_forward::primitive_desc(eltwise_reluFwd_desc,
+        reluFwd_pd.reset(new eltwise_forward::primitive_desc(eltwise_reluFwd_desc,
                 ep.getMKLDNNSubEngine(subEngineIndex)));
       }
       catch(...) {
@@ -153,7 +153,7 @@ void MKLDNNReLULayer<Dtype>::InitReLUFwd(const vector<Blob<Dtype>*>& bottom, con
 
     fwd_top_data_memory = fwd_top_data->create_output_memory(inplace);
 
-    reluFwd.reset(new relu_forward(*reluFwd_pd, *fwd_bottom_data_primitive, *fwd_top_data_memory));
+    reluFwd.reset(new eltwise_forward(*reluFwd_pd, *fwd_bottom_data_primitive, *fwd_top_data_memory));
     //fwd_bottom_data->set_mkldnn_primitive(reluFwd);     //Wrong passed primitive! (TODO: Checking!)
     MKLDNNPrimitive<Dtype> fwd_bottom_data_primitive_transfer(fwd_bottom_data_primitive);
     fwd_bottom_data->set_mkldnn_primitive(fwd_bottom_data_primitive_transfer);
@@ -174,8 +174,11 @@ void MKLDNNReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom
 #endif
 
     bool inplace = (bottom[0] == top[0]);
-    if( reluFwd_pd == NULL || this->reshape)
+    bool _mkldnn_primitive = false;
+    if( reluFwd_pd == NULL || this->reshape) {
         InitReLUFwd(bottom, top);
+        _mkldnn_primitive = true;
+    }
 
     if(this->layer_param_.relu_param().fuse()) {
       top[0]->ShareData(*bottom[0]);
@@ -190,6 +193,9 @@ void MKLDNNReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom
     PERFORMANCE_EVENT_ID_INIT(perf_id_fw_, PERFORMANCE_MKLDNN_NAME("FW"));
     PERFORMANCE_MEASUREMENT_BEGIN();
     reluFwd.submit();
+    if(_mkldnn_primitive) {
+      CircleBuf::Instance()->DecRefCnt(bottom[0]->prv_data());
+    }
     PERFORMANCE_MEASUREMENT_END_ID(perf_id_fw_);
 }
 
@@ -295,7 +301,7 @@ void MKLDNNReLULayer<Dtype>::InitReLUBwd(const vector<Blob<Dtype>*>& top
     bottom_diff_md = top_diff_md;
 
     // ---- Initialize relu primitive descriptor -------------
-    //relu_backward::desc reluBwd_desc(*top_diff_md, *top_data_md, negative_slope);
+    //eltwise_backward::desc reluBwd_desc(*top_diff_md, *top_data_md, negative_slope);
     // MKLDNN is deprecating standalone relu primitive in MKL-DNN.
     // Now MKLDNN has eltwise primitive with eltwise_relu algorithm inside.
     eltwise_backward::desc eltwise_reluBwd_desc(eltwise_relu, *top_diff_md, *top_data_md, negative_slope);
@@ -309,7 +315,7 @@ void MKLDNNReLULayer<Dtype>::InitReLUBwd(const vector<Blob<Dtype>*>& top
     reluBwd_pd = NULL;
     for(; subEngineIndex < ep.getNumberOfSubEngines(); subEngineIndex++) {
       try {
-        reluBwd_pd.reset(new relu_backward::primitive_desc(eltwise_reluBwd_desc,
+        reluBwd_pd.reset(new eltwise_backward::primitive_desc(eltwise_reluBwd_desc,
                 ep.getMKLDNNSubEngine(subEngineIndex), *reluFwd_pd));
       }
       catch(...) {
@@ -332,7 +338,7 @@ void MKLDNNReLULayer<Dtype>::InitReLUBwd(const vector<Blob<Dtype>*>& top
     bwd_bottom_diff->name = "bwd_bottom_diff_data   @ " + this->layer_param_.name();
     bwd_bottom_diff_memory = bwd_bottom_diff->create_output_memory(inplace);
 
-    reluBwd.reset(new relu_backward(*reluBwd_pd, *bwd_bottom_data_primitive, *bwd_top_diff_primitive, *bwd_bottom_diff_memory));
+    reluBwd.reset(new eltwise_backward(*reluBwd_pd, *bwd_bottom_data_primitive, *bwd_top_diff_primitive, *bwd_bottom_diff_memory));
     //bwd_top_diff->set_mkldnn_primitive(reluBwd);          //Wrong passed primitive! (TODO: Checking!)
     MKLDNNPrimitive<Dtype> bwd_top_diff_primitive_transfer(bwd_top_diff_primitive);
     bwd_top_diff->set_mkldnn_primitive(bwd_top_diff_primitive_transfer);

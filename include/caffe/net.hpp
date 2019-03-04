@@ -54,6 +54,60 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace caffe {
 
+class CircleBuf {
+  private:
+    /* The first element of pair is the pointer to the buffer. The second one is the reference count of this buffer */
+    vector<pair<void*, int>> circleBuf;
+    /* All circle buffers in the queue use same size. It's calculated by getting largest blob size at Net Init phase
+     * and multiplying 4 as mkldnn winograd conv algorithm may need 4x space of original blob size. */
+    size_t BufSize;
+
+  public:
+    /* Static access method. */
+    static CircleBuf* Instance() {
+      static CircleBuf* instance = new CircleBuf();
+      return instance;
+    }
+
+    /* Get free buffer from the queue, using refcnt to keep track of the state of each buffer.
+     * if not exist free buffer, then allocate a new one. */
+    inline void* GetFreeBuf() {
+      // BufSize being 0 means the circle buf feature is disabled.
+      if (BufSize == 0) return NULL;
+
+      for (auto & p : circleBuf) {
+        if (p.second == 0) {p.second = 1; return p.first;}
+      }
+
+      // not found free buf or queue is empty, allocate a new buf and insert to queue.
+      void* buf = NULL;
+      bool  cuda;
+      CaffeMallocHost(&buf, BufSize * 4, &cuda); 
+      circleBuf.push_back(make_pair(buf, 1));
+      return buf;
+    }
+    /* Increase the reference count of specified buffer */
+    inline void IncRefCnt(const void* buf, size_t refcnt) {
+      for (auto & p : circleBuf) {
+        if (p.first == buf) {p.second += refcnt;}
+      }
+    }
+    /* Decrease the reference count of specified buffer */
+    inline void DecRefCnt(const void* buf) {
+      for (auto & p : circleBuf) {
+        if (p.first == buf) {if (p.second > 0) p.second -= 1;}
+      }
+    }
+
+    inline void   SetBufSize(size_t size) {BufSize = size;}
+    inline size_t GetBufSize() {return BufSize;}
+    inline size_t GetQueueSize() {return circleBuf.size();}
+
+  private:                         
+    /* Private constructor to prevent instancing. */
+    CircleBuf() { BufSize = 0; circleBuf.clear(); }
+};
+
 /**
  * @brief Connects Layer%s together into a directed acyclic graph (DAG)
  *        specified by a NetParameter.
@@ -68,6 +122,9 @@ class Net {
       const int level = 0, const vector<string>* stages = NULL,
       const Net* root_net = NULL, std::string engine = "");
   virtual ~Net() {}
+
+  /// @brief Buffer Queue for reducing cache missing and saving memory footprint of MKLDNN layer.
+  static vector<struct CircleBuf> circleBuf;
 
   /// @brief Initialize a network with a NetParameter.
   void Init(const NetParameter& param);
@@ -523,6 +580,7 @@ class Net {
   vector<bool> has_params_decay_;
   /// The bytes of memory used by this net
   size_t memory_used_;
+  size_t max_blob_count;
   /// Whether to compute and display debug info for the net.
   bool debug_info_;
   /// The root net that actually holds the shared layers in data parallelism
@@ -530,6 +588,7 @@ class Net {
   DISABLE_COPY_AND_ASSIGN(Net);
 };
 
+template<typename Dtype> vector<struct CircleBuf> Net<Dtype>::circleBuf;
 
 }  // namespace caffe
 

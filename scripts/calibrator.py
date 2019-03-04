@@ -47,7 +47,8 @@ import google.protobuf.text_format as txtf
 import sampling
 import numpy as np
 
-int8_layers = ["Convolution", "ReLU", "Split", "Concat", "Pooling", "Eltwise"]
+int8_layers = ["Convolution", "ReLU", "Split", "Concat", "Pooling", "Eltwise", "InnerProduct"]
+quantize_layers = ["Convolution", "InnerProduct"]
 
 def isclose(a, b, rel_tol=1e-09, abs_tol=0.0):
     return abs(a-b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
@@ -120,7 +121,7 @@ def analyze_conv_output_with_relu(compiled_net):
     convs_output_with_relu = []
     for _, layer in enumerate(compiled_net.layer):
         if layer.type == 'Convolution':
-            if layer.convolution_param.relu:
+            if layer.convolution_param.relu and isclose(layer.convolution_param.negative_slope, 0.0):
                 convs_output_with_relu.append(layer.name)
     return convs_output_with_relu
 
@@ -147,7 +148,7 @@ def is_convolution_input_u8(l, net, end, interesting_layers, convs_output_with_r
             break
 
         for input_layer in input_layers:
-            if input_layer[2] == "Convolution" and (input_layer[1] not in convs_output_with_relu):
+            if input_layer[2] in quantize_layers and (input_layer[1] not in convs_output_with_relu):
                 return False
 
         processed_layers = input_layers  # sync inputLayers change
@@ -175,7 +176,7 @@ def analyze_conv_output_with_relu_from_net(convs_output_with_relu, compiled_net,
     if len(compiled_relu_layers) != 0:
         relu_layers = [(value, index) for index, value in enumerate(net.layer) if value.type == 'ReLU']
         for (l, index) in relu_layers:
-            conv_inputs = get_input_convolutions(l, net, index, ["Convolution"])
+            conv_inputs = get_input_convolutions(l, net, index, ["Convolution"]) # FIXME
             new_convs_output_with_relu.append(conv_inputs[0][1])
 
     return new_convs_output_with_relu
@@ -208,8 +209,8 @@ def transform_convolutions(model_path, compiled_model_path, top_blobs_map, botto
     # extended_convs_output_with_relu = analyze_conv_output_with_relu_from_net(convs_output_with_relu, compiled_net, net)
     new_net = copy.deepcopy(net)
 
-    convolution_layers = [(value, index) for index, value in enumerate(net.layer) if value.type == 'Convolution']
-    compiled_convolution_layers = [(value, index) for index, value in enumerate(compiled_net.layer) if value.type == 'Convolution']
+    convolution_layers = [(value, index) for index, value in enumerate(net.layer) if value.type in quantize_layers]
+    compiled_convolution_layers = [(value, index) for index, value in enumerate(compiled_net.layer) if value.type in quantize_layers]
 
     u8_max = 255
     s8_max = 127
@@ -292,7 +293,7 @@ def transform_convolutions(model_path, compiled_model_path, top_blobs_map, botto
 
     non_int8_layers = [(value, index) for index, value in enumerate(net.layer) if value.type not in int8_layers]
     last_conv_indexes = find_last_conv_layers(top_blobs_map, bottom_blobs_map, convolution_layers, non_int8_layers)
-
+    
     # TODO: support last convolution without consumer
     for index in last_conv_indexes:
         new_net.layer[index].quantization_param.bw_layer_out = 32
@@ -331,7 +332,7 @@ def generate_sample_impl(input_model, quantized_model, inputs_max, outputs_max, 
         txtf.Merge(s, net)
 
     new_net = copy.deepcopy(net)
-    convolution_layers = [(value, index) for index, value in enumerate(net.layer) if value.type == 'Convolution']
+    convolution_layers = [(value, index) for index, value in enumerate(net.layer) if value.type in quantize_layers]
     first_conv = False if enable_1st_conv else True
     for (l, index) in convolution_layers:
         if first_conv:
@@ -343,7 +344,6 @@ def generate_sample_impl(input_model, quantized_model, inputs_max, outputs_max, 
         new_net.layer[index].quantization_param.scale_in[:] = inputs_max[l.name]
         new_net.layer[index].quantization_param.scale_out[:] = outputs_max[l.name]
         new_net.layer[index].quantization_param.scale_params[:] = params_max[l.name]
-        #new_net.layer[index].quantization_param.min_in[:] = inputs_min[l.name]
 
     with open(quantized_model, 'w') as f:
         f.write(str(new_net))

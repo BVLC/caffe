@@ -216,8 +216,11 @@ void MKLDNNLRNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom
                                         ,const vector<Blob<Dtype>*>& top)
 {
     VLOG(1) << "MKLDNNLRNLayer<Dtype>::Forward_cpu: " << this->layer_param_.name();
-    if( lrnFwd_pd == NULL || this->reshape)
+    bool _mkldnn_primitive = false;
+    if( lrnFwd_pd == NULL || this->reshape) {
         InitLRNFwd(bottom, top);
+        _mkldnn_primitive = true;
+    }
 
     // making reorders if needed.
     fwd_bottom_data->sync_before_read();
@@ -227,6 +230,10 @@ void MKLDNNLRNLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom
     PERFORMANCE_EVENT_ID_INIT(perf_id_fw_, PERFORMANCE_MKLDNN_NAME("FW"));
     PERFORMANCE_MEASUREMENT_BEGIN();
     lrnFwd.submit();
+
+    if(_mkldnn_primitive) {
+      CircleBuf::Instance()->DecRefCnt(bottom[0]->prv_data());
+    }  
     PERFORMANCE_MEASUREMENT_END_ID(perf_id_fw_);
 }
 

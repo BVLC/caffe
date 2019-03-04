@@ -173,7 +173,6 @@ void MKLDNNConcatLayer<Dtype>::InitConcatFwd(const vector<Blob<Dtype>*>& bottom,
       }
   }
   std::vector<memory::format> src_mfmts;
-  std::vector<float> bottom_scales(num_concats_, 1.);
   std::vector<shared_ptr<MKLDNNMemoryDescriptor<Dtype, false> >> mem_descr;
 
   std::vector<memory::data_type> prv_dt_tmp(num_concats_, memory::data_type::f32);
@@ -213,7 +212,6 @@ void MKLDNNConcatLayer<Dtype>::InitConcatFwd(const vector<Blob<Dtype>*>& bottom,
             mem_descr[i]->prv_memory_pd()->desc().data.format);
         prv_dt = static_cast<memory::data_type>(mem_descr[i]->prv_memory_pd()->desc().data.data_type);
         scale = mem_descr[i]->get_scale(0);
-        bottom_scales[i] = scale;
         if(scale != 1.) scale = scale_min;
       } 
       prv_src_mpd.reset(new memory::primitive_desc(
@@ -252,15 +250,13 @@ void MKLDNNConcatLayer<Dtype>::InitConcatFwd(const vector<Blob<Dtype>*>& bottom,
   fwd_output_memory = fwd_top_data->create_output_memory();
 
   memory::format base_mfmt = mfmt_out;
-  float base_scale = 1.;
   this->in_place_ = true;
 
   for(auto i = 0; i < num_concats_; i++){
     if(i == 0) {
       base_mfmt = src_mfmts[i];
-      base_scale = bottom_scales[i];
     }
-    else if((concat_dimension != 0 && bottom[i]->shape()[concat_dimension - 1] != 1) || base_mfmt != src_mfmts[i] || fabs(base_scale-bottom_scales[i]) > FLT_MIN || different_input_dt || bottom[i]->prv_data() == NULL) {
+    else if((concat_dimension != 0 && bottom[i]->shape()[concat_dimension - 1] != 1) || base_mfmt != src_mfmts[i] || scale_top[0] != 1.|| different_input_dt || bottom[i]->prv_data() == NULL) {
       this->in_place_ = false;
       break;
     }
@@ -270,13 +266,8 @@ void MKLDNNConcatLayer<Dtype>::InitConcatFwd(const vector<Blob<Dtype>*>& bottom,
     size_t offset = 0;     
     for(auto i = 0; i < num_concats_; i++){
       if(bottom[i]->prv_data()){
-        if (scale_top[0] != 1.){
-          memcpy(static_cast<char*>(fwd_output_memory->get_data_handle()) + offset, static_cast<char*>(mem_descr[i]->get_prv_memory()->get_data_handle()), sizeof(char) * bottom[i]->count());
-	  mem_descr[i]->get_prv_memory()->set_data_handle(static_cast<char*>(fwd_output_memory->get_data_handle())+offset);
-        }else{
           caffe_copy(bottom[i]->count(), static_cast<Dtype*>(mem_descr[i]->get_prv_memory()->get_data_handle()), static_cast<Dtype*>(fwd_output_memory->get_data_handle()) + offset);
           mem_descr[i]->get_prv_memory()->set_data_handle(static_cast<Dtype*>(fwd_output_memory->get_data_handle()) + offset);
-        }
       } else{
         caffe_copy(bottom[i]->count(), bottom[i]->cpu_data(), static_cast<Dtype*>(fwd_output_memory->get_data_handle()) + offset);
         bottom[i]->set_cpu_data(static_cast<Dtype*>(fwd_output_memory->get_data_handle()) + offset);
@@ -391,8 +382,11 @@ void MKLDNNConcatLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 #ifdef DEBUG
   LOG(INFO) << "MKLDNNConcatLayer<Dtype>::Forward_cpu: " << this->layer_param_.name();
 #endif
-  if ((NULL == concatFwd_pd) || (true == this->reshape))
+  bool _mkldnn_primitive = false;
+  if ((NULL == concatFwd_pd) || (true == this->reshape)) {
     InitConcatFwd(bottom, top);
+    _mkldnn_primitive = true;
+  }
 
   for (auto i = 0; i < num_concats_; i++) {
     // making reorders if needed.
@@ -406,6 +400,12 @@ void MKLDNNConcatLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     PERFORMANCE_MEASUREMENT_BEGIN();
     concatFwd.submit();
     PERFORMANCE_MEASUREMENT_END_ID(perf_id_fw_);
+
+    if(_mkldnn_primitive) {
+      for (auto i = 0; i < num_concats_; i++) {
+        CircleBuf::Instance()->DecRefCnt(bottom[i]->prv_data());
+      }
+    } 
   }
 }
 

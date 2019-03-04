@@ -1,0 +1,117 @@
+diff --git a/scripts/calibrator.py b/scripts/calibrator.py
+index c79b1fd..9be289e 100644
+--- a/scripts/calibrator.py
++++ b/scripts/calibrator.py
+@@ -109,6 +109,34 @@ def get_input_convolutions(l, net, end, interesting_layers):
+ 
+     return all_input_layers
+ 
++def is_convolution_input_u8(l, net, end, interesting_layers, convs_output_with_relu):
++    all_input_layers = []
++    input_layers = get_input_layers(l, net, end)
++    while True:
++        if len(input_layers) == 0:
++            break
++
++        for input_layer in input_layers:
++            if input_layer[2] == "Convolution" and (input_layer[1] not in convs_output_with_relu):
++                return False
++
++        processed_layers = input_layers  # sync inputLayers change
++        for lp in processed_layers:
++            if lp[2] not in int8_layers:
++                input_layers.remove(lp)
++                continue
++            if lp[2] in interesting_layers:
++                input_layers.remove(lp)
++                if lp not in all_input_layers:
++                    all_input_layers.append(lp)
++                continue
++
++            new_input_layers = get_input_layers(net.layer[lp[0]], net, lp[0])
++            input_layers.remove(lp)
++            input_layers.extend(new_input_layers)
++    
++    return True
++
+ def analyze_conv_output_with_relu(compiled_net):
+     convs_output_with_relu = []
+     for _, layer in enumerate(compiled_net.layer):
+@@ -120,6 +148,7 @@ def analyze_conv_output_with_relu(compiled_net):
+ 
+ def analyze_conv_input_u8(conv_inputs, convs_output_with_relu):
+     for conv_input in conv_inputs:
++        print conv_input
+         if conv_input[1] not in convs_output_with_relu:
+             return False
+     return True
+@@ -152,19 +181,9 @@ def transform_convolutions(model_path, compiled_model_path, use_unsigned_range,
+     u8_max = 255
+     s8_max = 127
+     for (l, index) in convolution_layers:
+-        for si in range(0, len(new_net.layer[index].quantization_param.scale_out)):
+-            if l.name in convs_output_with_relu:  # u8
+-                new_net.layer[index].quantization_param.scale_out[si] = u8_max / new_net.layer[index].quantization_param.scale_out[si]
+-            else:  # s8
+-                if use_unsigned_range:
+-                    new_net.layer[index].quantization_param.scale_out[si] = u8_max / new_net.layer[index].quantization_param.scale_out[si]
+-                else:
+-                    new_net.layer[index].quantization_param.scale_out[si] = s8_max / new_net.layer[index].quantization_param.scale_out[si]
+-
+         index_in_compiled_net = find_index_by_name(l.name, compiled_convolution_layers)
+         assert(index_in_compiled_net >= 0)
+-        conv_inputs = get_input_convolutions(l, compiled_net, index_in_compiled_net, ["Convolution"])
+-        conv_input_u8 = analyze_conv_input_u8(conv_inputs, convs_output_with_relu)
++        conv_input_u8 = is_convolution_input_u8(l, compiled_net, index_in_compiled_net, ["Convolution"], convs_output_with_relu)
+         for si in range(0, len(new_net.layer[index].quantization_param.scale_in)):
+             if conv_input_u8:  # u8
+                 new_net.layer[index].quantization_param.scale_in[si] = u8_max / new_net.layer[index].quantization_param.scale_in[si]
+@@ -185,48 +204,6 @@ def transform_convolutions(model_path, compiled_model_path, use_unsigned_range,
+                 for si in range(0, len(new_net.layer[index_bottom_layer].quantization_param.scale_out)):
+                     new_net.layer[index_bottom_layer].quantization_param.scale_out[si]  = new_net.layer[index].quantization_param.scale_in[si]
+ 
+-    concat_layers = [(value, index) for index, value in enumerate(net.layer) if value.type == 'Concat']
+-    if len(concat_layers) > 0:
+-        compiled_concat_layers = [(value, index) for index, value in enumerate(compiled_net.layer) if value.type == 'Concat']
+-        concat_layers.reverse()
+-        if unify_concat_scales:
+-            for (l, index) in concat_layers:
+-                index_in_compiled_net = find_index_by_name(l.name, compiled_concat_layers)
+-                assert(index_in_compiled_net >= 0)
+-                conv_inputs = get_input_convolutions(l, compiled_net, index_in_compiled_net, ["Convolution"])
+-                min_concat_scale = sys.float_info.max
+-                concat_input_indexes = []
+-                for conv_input in conv_inputs:
+-                    index_in_net = find_index_by_name(conv_input[1], convolution_layers)
+-                    assert(index_in_net >= 0)
+-                    concat_input_indexes.append(index_in_net)
+-                    if new_net.layer[index_in_net].quantization_param.scale_out[0] < min_concat_scale:
+-                        min_concat_scale = new_net.layer[index_in_net].quantization_param.scale_out[0]
+-
+-                for concat_input_index in concat_input_indexes:
+-                    new_net.layer[concat_input_index].quantization_param.scale_out[0] = min_concat_scale
+-        else:
+-            if concat_use_fp32:
+-                for (l, index) in concat_layers:
+-                    index_in_compiled_net = find_index_by_name(l.name, compiled_concat_layers)
+-                    assert(index_in_compiled_net >= 0)
+-                    conv_inputs = get_input_convolutions(l, compiled_net, index_in_compiled_net, ["Convolution"])
+-                    for conv_input in conv_inputs:
+-                        index_in_net = find_index_by_name(conv_input[1], convolution_layers)
+-                        assert(index_in_net >= 0)
+-                        new_net.layer[index_in_net].quantization_param.bw_layer_out = 32
+-                        new_net.layer[index_in_net].quantization_param.scale_out[:] = [1.0]
+-            
+-    # Force FP32 output for convolution acting as FC
+-    fc_layers = [(value, index) for index, value in enumerate(net.layer) if value.type == 'InnerProduct']
+-    if len(fc_layers) == 0 and convolution_layers[-1][0].convolution_param.num_output == 1000:
+-        new_net.layer[convolution_layers[-1][1]].quantization_param.bw_layer_out = 32
+-        new_net.layer[convolution_layers[-1][1]].quantization_param.scale_out[:] = [1.0]
+-
+-    with open(model_path, 'w') as f:
+-        f.write(str(new_net))
+-
+-
+ def generate_sample_bak(sample_path, input_model, weights,
+                     quantized_model, detection, scaling_mode, iterations=1, error_margin=1):
+     cmd = '{0} quantize -model {1} -weights {2} -model_quantized {3} -iterations {4} -error_margin {5} ' \

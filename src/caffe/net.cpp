@@ -64,7 +64,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/util/remove_batch_norm.hpp"
 #include "caffe/util/apply_bn_stats_batch_size.hpp"
 
-
+#include "caffe/syncedmem.hpp"
 PERFORMANCE_CREATE_MONITOR();
 
 namespace caffe {
@@ -222,6 +222,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   param_id_vecs_.resize(param.layer_size());
   top_id_vecs_.resize(param.layer_size());
   bottom_need_backward_.resize(param.layer_size());
+  max_blob_count = 0;
   for (int layer_id = 0; layer_id < param.layer_size(); ++layer_id) {
     // For non-root solvers, whether this layer is shared from root_net_.
     bool share_from_root = !Caffe::root_solver()
@@ -341,9 +342,12 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
             << "    with loss weight " << layer->loss(top_id);
       }
       memory_used_ += top_vecs_[layer_id][top_id]->count();
+      if (max_blob_count < top_vecs_[layer_id][top_id]->count()) max_blob_count = top_vecs_[layer_id][top_id]->count();
     }
     LOG_IF(INFO, Caffe::root_solver())
         << "Memory required for data: " << memory_used_ * sizeof(Dtype);
+    LOG_IF(INFO, Caffe::root_solver())
+        << "Biggest Memory of single blob: " << max_blob_count * sizeof(Dtype);
     const int param_size = layer_param.param_size();
     const int num_param_blobs = layers_[layer_id]->blobs().size();
     CHECK_LE(param_size, num_param_blobs)
@@ -368,6 +372,10 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
       }
     }
   }
+
+  // only enable circle buffer mechanism at TEST phase and "CAFFE_INFERENCE_MEM_OPT" env variable is set.
+  if ((phase_ == TEST) && getenv("CAFFE_INFERENCE_MEM_OPT"))
+    CircleBuf::Instance()->SetBufSize(max_blob_count * sizeof(Dtype));
 
   // Go through the net backwards to determine which blobs contribute to the
   // loss.  We can skip backward computation for blobs that don't contribute
@@ -673,7 +681,6 @@ template <typename Dtype>
 void Net<Dtype>::CompilationRuleConvReluFusion(const NetParameter& param,
                                     NetParameter* param_compiled) {
   std::set<std::string> layers_to_drop;
-  bool use_negative_slope = false;
   for (int i = 0; i < param.layer_size(); ++i) {
     LayerParameter* layer_param =
           (const_cast<NetParameter&>(param)).mutable_layer(i);
@@ -718,10 +725,9 @@ void Net<Dtype>::CompilationRuleConvReluFusion(const NetParameter& param,
 
         float negative_slope1 =
                   consumer_layer_param.relu_param().negative_slope();
-        if (negative_slope1 != 0) {
-            use_negative_slope = true;
-        }
-        if(param.state().phase() == TEST && !negative_slope1) {
+        layer_param->mutable_convolution_param()->set_relu(true);
+        layer_param->mutable_convolution_param()->set_negative_slope(negative_slope1);
+        if(param.state().phase() == TEST) {
           const string& scale_top_blob_name = consumer_layer_param.top(0);
           // Mark Consumer layer (its name) as the one marked for dropping
           layers_to_drop.insert(consumer_layer_param.name());
@@ -732,11 +738,7 @@ void Net<Dtype>::CompilationRuleConvReluFusion(const NetParameter& param,
                                           scale_top_blob_name.size(),
                                           scale_top_blob_name);
         }
-        if(!use_negative_slope) {
-          layer_param->mutable_convolution_param()->set_relu(true);
-          layer_param->mutable_convolution_param()->set_negative_slope(0);
-        }
-        if(param.state().phase() == TRAIN && !use_negative_slope) {
+        if(param.state().phase() == TRAIN) {
           if(i+1 < param.layer_size()) {
             LayerParameter* relu_layer_param =
               (const_cast<NetParameter&>(param)).mutable_layer(i+1);
@@ -746,7 +748,7 @@ void Net<Dtype>::CompilationRuleConvReluFusion(const NetParameter& param,
       }
     }
 
-    if(param.state().phase() == TEST && !use_negative_slope) {
+    if(param.state().phase() == TEST) {
       if (layers_to_drop.find(layer_param->name()) != layers_to_drop.end()) {
         LOG_IF(INFO, Caffe::root_solver()) << "Dropped layer: "
                << layer_param->name() << std::endl;

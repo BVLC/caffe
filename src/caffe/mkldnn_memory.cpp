@@ -55,7 +55,7 @@ MKLDNNMemoryDescriptorBase<Dtype>::MKLDNNMemoryDescriptorBase(shared_ptr<memory:
                                     : name("MKLDNNMemoryDescriptorBase")
                                     , _reorder_usr2prv_pd(), _reorder_prv2usr_pd(), _reorder_extprv2prv_pd()
                                     ,_prv_memory(), _internal_ptr(NULL), _usr_memory(), _cpu_ptr(NULL)
-                                    , _mkldnn_layer(NULL)
+                                    , _mkldnn_layer(NULL), _is_weight(is_weight)
 {
     set_usr_memory_pd(usr_memory_pd, scale);
     set_prv_memory_pd(prv_memory_pd, scale, mask, is_wino, is_weight);
@@ -321,6 +321,11 @@ void MKLDNNMemoryDescriptor<Dtype, is_diff>::convert_from_extprv(shared_ptr<prim
 #endif
     PERFORMANCE_MEASUREMENT_BEGIN();
     this->_reorder_extprv2prv.submit();
+
+    void* prv_mem = this->get_prv_memory()->get_data_handle();
+    if(prv_mem) {
+      CircleBuf::Instance()->DecRefCnt(prv_mem);
+    } 
     PERFORMANCE_MEASUREMENT_END_STATIC("mkldnn_conversion");
 }
 

@@ -599,6 +599,7 @@ int time() {
   std::vector<double> forward_time_per_layer(layers.size(), 0.0);
   std::vector<double> backward_time_per_layer(layers.size(), 0.0);
   double forward_time = 0.0;
+  std::vector<double> forward_time_iteration(FLAGS_iterations, 0.0);
   double backward_time = 0.0;
   for (int j = 0; j < FLAGS_iterations; ++j) {
     Timer iter_timer;
@@ -609,6 +610,7 @@ int time() {
       layers[i]->Forward(bottom_vecs[i], top_vecs[i]);
       forward_time_per_layer[i] += timer.MicroSeconds();
     }
+    forward_time_iteration[j] = forward_timer.MicroSeconds();
     forward_time += forward_timer.MicroSeconds();
     if (!FLAGS_forward_only) {
       backward_timer.Start();
@@ -639,6 +641,8 @@ int time() {
     }
   }
   total_timer.Stop();
+  for (int j = 0; j < FLAGS_iterations; ++j)
+    LOG(INFO) << "###" << j << ":" << forward_time_iteration[j] / 1000 << " ms.";
   LOG(INFO) << "Average Forward pass: " << forward_time / 1000 /
     FLAGS_iterations << " ms.";
   if (!FLAGS_forward_only) {

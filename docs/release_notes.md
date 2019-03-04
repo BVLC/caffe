@@ -56,7 +56,7 @@ All modification made by Intel Corporation: © 2016 Intel Corporation
 
 ## Introduction
 
-This fork is dedicated to improving Caffe performance when running on CPU, in particular Intel® Xeon processors (Haswell, Broadwell, Xenon Phi)
+This fork is dedicated to improving Caffe performance when running on CPU, in particular Intel® Xeon processors.
 
 ## Installation
 

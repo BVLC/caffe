@@ -206,6 +206,7 @@ template <typename Dtype>
 void MKLDNNSplitLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   // TODO: consider doing something
+  this->first = true;
 }
 
 template <typename Dtype>
@@ -214,6 +215,10 @@ void MKLDNNSplitLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   for (int i = 0; i < top.size(); ++i) {
     top[i]->ShareData(*bottom[0]);
   }
+  if ((this->reshape || this->first) && bottom[0]->prv_data()) {
+    CircleBuf::Instance()->IncRefCnt(bottom[0]->prv_data(), top.size() - 1);
+  }
+  this->first = false;
 }
 
 template <typename Dtype>

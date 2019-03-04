@@ -426,8 +426,8 @@ private:
 
     shared_ptr<MKLDNNData<Dtype> > fwd_top_data, fwd_bottom_data, bwd_bottom_data;
     shared_ptr<MKLDNNDiff<Dtype> > bwd_top_diff, bwd_bottom_diff;
-    shared_ptr<relu_forward::primitive_desc> reluFwd_pd;
-    shared_ptr<relu_backward::primitive_desc> reluBwd_pd;
+    shared_ptr<eltwise_forward::primitive_desc> reluFwd_pd;
+    shared_ptr<eltwise_backward::primitive_desc> reluBwd_pd;
     MKLDNNPrimitive<Dtype> reluFwd, reluBwd;
     shared_ptr<memory> fwd_top_data_memory, bwd_bottom_diff_memory;
     shared_ptr<primitive> fwd_bottom_data_primitive, bwd_top_diff_primitive, bwd_bottom_data_primitive;
@@ -524,6 +524,8 @@ private:
     vector<shared_ptr<primitive>> bwd_top_diff_primitives_;
     vector<primitive::at> bwd_top_diffs_primitives_at_;
     vector<shared_ptr<MKLDNNDiff<Dtype> > > bwd_top_diffs_;
+
+    bool first;
 
     PERFORMANCE_EVENT_ID_DECL(perf_id_bw_);
 };

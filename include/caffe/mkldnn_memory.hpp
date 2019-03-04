@@ -47,6 +47,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/util/math_functions.hpp"
 #include "mkldnn.hpp"
 #include "mkldnn_base.hpp"
+#include "caffe/syncedmem.hpp"
+#include "caffe/net.hpp"
 
 using namespace mkldnn;
 
@@ -135,7 +137,19 @@ protected:
               new memory(*_prv_memory_pd, (void*)_mlsl_memory.get()));
           } else {
 #endif
-            _prv_memory = shared_ptr<memory>(new memory(*_prv_memory_pd));
+            // BufSize is the switch of whether enabling circle buffer mechanism to
+            // boost up mkldnn primitive execution on inference path.
+            if (CircleBuf::Instance()->GetBufSize()) {
+              if (!_is_weight) {
+                // find out a free buf in the circleBuf queue
+                _m_memory = CircleBuf::Instance()->GetFreeBuf();
+              } else {
+                bool cuda;
+                CaffeMallocHost(&_m_memory, _prv_memory_pd->get_size(), &cuda);
+              }
+              _prv_memory = shared_ptr<memory>(new memory(*_prv_memory_pd, _m_memory));
+            } else
+              _prv_memory = shared_ptr<memory>(new memory(*_prv_memory_pd));
 #ifdef USE_MLSL
           }
 #endif
@@ -195,6 +209,8 @@ protected:
 #ifdef USE_MLSL
     shared_ptr<char> _mlsl_memory;
 #endif
+    void* _m_memory;
+    bool _is_weight;
 };
 
 template <typename Dtype, bool is_diff>

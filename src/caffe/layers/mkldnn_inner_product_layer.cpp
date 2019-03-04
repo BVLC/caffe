@@ -107,6 +107,7 @@ void MKLDNNInnerProductLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bott
                                             , const vector<Blob<Dtype>*>& top)
 {
     VLOG(1) << "MKLDNNInnerProductLayer<Dtype>::LayerSetUp: " << this->layer_param_.name();
+    if (this->layer_param_.has_quantization_param() && this->phase_ == TEST) this->need_quantize_ = true;
     InnerProductLayer<Dtype>::LayerSetUp(bottom, top);
 
     // support for (iter_size > 1) requires additional buffer for weights diff and bias diff
@@ -177,10 +178,36 @@ void MKLDNNInnerProductLayer<Dtype>::InitInnerProductFwd(const vector<Blob<Dtype
     }
 #endif
 
-    memory::desc init_bottom_md({bottom_tz}, mpcsn, mfmt);
-    memory::desc init_top_md({top_tz}, mpcsn, mfmt);
-    memory::desc init_weights_md({weights_tz}, mpcsn, mfmt);
-    memory::desc init_bias_md({bias_tz}, mpcsn, mfmt);
+    memory::data_type src_dt = memory::data_type::f32;
+    if (this->need_quantize_) {
+      bool bottom_data_is_prv = (const_cast<Dtype*>(bottom[0]->prv_data()) != NULL);
+      bool top_data_is_prv = (const_cast<Dtype*>(top[0]->prv_data()) != NULL);
+      if (bottom_data_is_prv || top_data_is_prv) {
+          shared_ptr<MKLDNNMemoryDescriptor<Dtype, false> > mem_descr
+              = get_mkldnn_prv_descriptor<Dtype, false>(bottom[0]);
+          src_dt = static_cast<memory::data_type>(mem_descr->prv_memory_pd()->desc().data.data_type);
+      }
+    }
+
+    memory::data_type top_dt = memory::data_type::f32;
+    if (this->need_quantize_) {
+      if(this->bw_layer_in_ == 8 && src_dt == mkldnn::memory::data_type::s8)
+          src_dt = memory::data_type::u8; //mkldnn don't surpport s8 input by current version. 
+      if (this->bw_layer_out_ == 8) {
+          top_dt = memory::data_type::s8; //TODO: enable s8 / u8 output after mkldnn implementation
+      }
+      else {
+        top_dt = memory::data_type::f32;
+      }
+    }
+
+    memory::data_type weights_dt = this->need_quantize_ ? memory::data_type::s8 : memory::data_type::f32;
+    memory::data_type bias_dt = this->need_quantize_ ? memory::data_type::s32 : memory::data_type::f32;
+
+    memory::desc init_bottom_md({bottom_tz}, src_dt, mfmt);
+    memory::desc init_top_md({top_tz}, top_dt, mfmt);
+    memory::desc init_weights_md({weights_tz}, weights_dt, mfmt);
+    memory::desc init_bias_md({bias_tz}, bias_dt, mfmt);
 
     // Initialize inner_product primitive descriptor
     shared_ptr<inner_product_forward::desc> ipFwd_desc;
@@ -193,6 +220,31 @@ void MKLDNNInnerProductLayer<Dtype>::InitInnerProductFwd(const vector<Blob<Dtype
                                                 , init_top_md));
     }
 
+    primitive_attr attr;
+    if (this->need_quantize_) {
+      int mask = 0;
+      int count = 1; //single channel
+      if(this->scale_params_.size() > 1){
+          int oc_dim_id = 1;
+          mask = 1 << oc_dim_id;
+          count = oc;  //multi channel
+      }
+      std::vector<float> scales(count);
+      float scale;
+      #ifdef _OPENMP
+      #pragma omp parallel for if (count > 1)
+      #endif
+      for(int i=0; i<count; i++){
+        if (this->scale_params_[i] == 0.0)
+            scale = this->scale_out_[0];
+        else
+            scale = this->scale_out_[0] / (this->scale_in_[0] * this->scale_params_[i]);
+        scales[i] = scale;
+      }
+      attr.set_output_scales(mask, scales);
+      attr.set_int_output_round_mode(round_nearest);
+    }
+
     // ---- Determining engine to use -----------------------
     std::string subengines = this->layer_param_.engine();
     if (subengines.find("MKLDNN") == std::string::npos || subengines == "MKLDNN")
@@ -202,8 +254,13 @@ void MKLDNNInnerProductLayer<Dtype>::InitInnerProductFwd(const vector<Blob<Dtype
     ipFwd_pd = NULL;
     for(; subEngineIndex < ep.getNumberOfSubEngines(); subEngineIndex++) {
       try {
-        ipFwd_pd.reset(new inner_product_forward::primitive_desc(*ipFwd_desc,
-                ep.getMKLDNNSubEngine(subEngineIndex)));
+        if(this->need_quantize_){
+          ipFwd_pd.reset(new inner_product_forward::primitive_desc(*ipFwd_desc, attr,
+                  ep.getMKLDNNSubEngine(subEngineIndex)));
+        } else{
+          ipFwd_pd.reset(new inner_product_forward::primitive_desc(*ipFwd_desc,
+                  ep.getMKLDNNSubEngine(subEngineIndex)));
+        }
       }
       catch(...) {
         continue;
@@ -234,16 +291,41 @@ void MKLDNNInnerProductLayer<Dtype>::InitInnerProductFwd(const vector<Blob<Dtype
 #endif
 
     // ---  init primitive and prv_memory descriptors ----------------------
-    fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_bottom_data_memory_pd, prv_fwd_bottom_data_memory_pd, bottom[0], this));
+    std::vector<float> scale_bottom(1);
+    scale_bottom[0] = 1.0f;
+    if(this->need_quantize_) scale_bottom = this->scale_in_;
+    fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_bottom_data_memory_pd, prv_fwd_bottom_data_memory_pd, bottom[0], this, scale_bottom));
     fwd_bottom_data ->name = "fwd_bottom_data   @ " + this->layer_param_.name();
     fwd_bottom_data_primitive = fwd_bottom_data->create_input(false);
 
+    std::vector<float> scale_top(1);
+    scale_top[0] = 1.0f;
+    if(this->need_quantize_) scale_top = this->scale_out_;
     fwd_top_data.reset(new MKLDNNData<Dtype>(usr_top_data_memory_pd, prv_fwd_top_data_memory_pd, top[0], this));
     fwd_top_data    ->name = "fwd_top_data      @ " + this->layer_param_.name();
     fwd_top_data_memory = fwd_top_data->create_output_memory();
 
     if (fwd_weights_data == NULL) {
-      fwd_weights_data.reset(new MKLDNNData<Dtype>(usr_weights_data_memory_pd, prv_fwd_weights_data_memory_pd, this->blobs_[0].get(), this));
+      std::vector<float> scale_weight(1);
+      int reorder_mask = 0;
+      if (this->need_quantize_){
+        int count = 1; //single channel
+        if(this->scale_params_.size() > 1){
+            count = oc;  //multi channel
+            reorder_mask = 1<<0;
+        }
+        scale_weight.resize(count);
+#ifdef _OPENMP
+#pragma omp parallel for if (count > 1)
+#endif
+        for(int i=0; i<count; i++){
+          scale_weight[i] = this->scale_params_[i];
+        }
+      } else{
+        scale_weight[0] = 1.0f;
+      }
+
+      fwd_weights_data.reset(new MKLDNNData<Dtype>(usr_weights_data_memory_pd, prv_fwd_weights_data_memory_pd, this->blobs_[0].get(), this, scale_weight, reorder_mask, false, false, true));
       fwd_weights_data->name = "fwd_weights_data  @ " + this->layer_param_.name();
       fwd_weights_data_primitive = fwd_weights_data->create_input(true);
     }
@@ -251,7 +333,28 @@ void MKLDNNInnerProductLayer<Dtype>::InitInnerProductFwd(const vector<Blob<Dtype
     if (this->bias_term_) {
         if (fwd_bias_data == NULL) {
           shared_ptr<MemPD> prv_fwd_bias_data_memory_pd(new MemPD(ipFwd_pd->bias_primitive_desc()));
-          fwd_bias_data.reset(new MKLDNNData<Dtype>(usr_bias_data_memory_pd, prv_fwd_bias_data_memory_pd, this->blobs_[1].get(), this));
+          std::vector<float> scale_bias(1);
+          int reorder_mask = 0;
+          if (this->need_quantize_){
+          int count = 1;  //single channel
+            if(this->scale_params_.size() > 1){
+                count = oc;  //multi channel
+                reorder_mask = 1<<0;
+            }
+            scale_bias.resize(count);
+            #ifdef _OPENMP
+            #pragma omp parallel for if (count > 1)
+            #endif
+            for(int i=0; i<count; i++){
+              if (this->scale_params_[i] == 0.0)
+                  scale_bias[i] = 1.0;
+              else
+                  scale_bias[i] = this->scale_in_[0] * this->scale_params_[i];
+            }
+          } else{
+            scale_bias[0] = 1.0f;
+          }
+          fwd_bias_data.reset(new MKLDNNData<Dtype>(usr_bias_data_memory_pd, prv_fwd_bias_data_memory_pd, this->blobs_[1].get(), this, scale_bias, reorder_mask, false, false, true));
           fwd_bias_data   ->name = "fwd_bias_data     @ " + this->layer_param_.name();
           fwd_bias_data_primitive = fwd_bias_data->create_input(true);
         }
@@ -294,19 +397,32 @@ void MKLDNNInnerProductLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bot
     LOG(INFO) << "MKLDNNInnerProductLayer<Dtype>::Forward_cpu: " << this->layer_param_.name();
 #endif
 
-    if( ipFwd_pd == NULL || this->reshape)
+    bool _mkldnn_primitive = false;
+    if( ipFwd_pd == NULL || this->reshape){
         InitInnerProductFwd(bottom, top);
+        if(this->phase_ == TEST){
+            fwd_weights_data->sync_before_read();
+            if (this->bias_term_)
+              fwd_bias_data->sync_before_read();
+            _mkldnn_primitive = true;
+        }
+    }
     // making reorders if needed.
     fwd_bottom_data->sync_before_read();
-    fwd_weights_data->sync_before_read();
-    if (this->bias_term_)
-      fwd_bias_data->sync_before_read();
     // update top that head at prv
+    if(this->phase_ != TEST){
+        fwd_weights_data->sync_before_read();
+        if (this->bias_term_)
+          fwd_bias_data->sync_before_read();
+    }
     fwd_top_data->sync_before_write();
 
     PERFORMANCE_EVENT_ID_INIT(perf_id_fw_, PERFORMANCE_MKLDNN_NAME("FW"));
     PERFORMANCE_MEASUREMENT_BEGIN();
     ipFwd.submit();
+    if(_mkldnn_primitive) {
+      CircleBuf::Instance()->DecRefCnt(bottom[0]->prv_data());
+    }
     PERFORMANCE_MEASUREMENT_END_ID(perf_id_fw_);
 }
 
