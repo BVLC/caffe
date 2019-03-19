@@ -1383,12 +1383,18 @@ message InnerProductParameter {
 }
 
 message InterpParameter {
+  enum Mode {
+    LINEAR = 1;
+    NEAREST = 3;
+  }
   optional int32 height = 1 [default = 0]; // Height of output
   optional int32 width = 2 [default = 0]; // Width of output
   optional int32 zoom_factor = 3 [default = 1]; // zoom factor
   optional int32 shrink_factor = 4 [default = 1]; // shrink factor
   optional int32 pad_beg = 5 [default = 0]; // padding at begin of input
   optional int32 pad_end = 6 [default = 0]; // padding at end of input
+  optional Mode mode = 7 [default = LINEAR]; // interpolation mode:
+  //bilinear of nearest neigbhor
 }
 
 message InputParameter {
