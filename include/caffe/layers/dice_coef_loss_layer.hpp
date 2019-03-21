@@ -118,6 +118,8 @@ protected:
   void conv_im2col_gpu(const Dtype* data, Dtype* col_buff);
 #endif
 
+
+  Blob<Dtype> one_hot_labels_;
   Blob<Dtype> multiplier_;
   Blob<Dtype> result_;
   Blob<Dtype> result_tmp_;

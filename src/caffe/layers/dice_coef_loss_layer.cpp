@@ -11,6 +11,7 @@ template <typename Dtype>
 void DiceCoefLossLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   LossLayer<Dtype>::LayerSetUp(bottom, top);
   int weightType = -1;
+
   if (this->layer_param_.dice_coef_loss_param().has_contour_shape())
     {
       switch (this->layer_param_.dice_coef_loss_param().contour_shape())
@@ -75,14 +76,16 @@ template <typename Dtype>
 void DiceCoefLossLayer<Dtype>::Reshape(
   const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
   LossLayer<Dtype>::Reshape(bottom, top);
-    CHECK_EQ(bottom[0]->count(1), bottom[1]->count(1))
+    CHECK_EQ(bottom[0]->count(2), bottom[1]->count(2))
       << "Inputs must have the same dimension.";
   const int batchsize = bottom[0]->num();
   const int dim = bottom[0]->count(1);
-  nclasses_ = bottom[1]->channels();
-  const int imgsize = bottom[1]->count(2);
-  height_ = bottom[1]->height();
-  width_ = bottom[1]->width();
+  nclasses_ = bottom[0]->channels();
+  const int imgsize = bottom[0]->count(2);
+  height_ = bottom[0]->height();
+  width_ = bottom[0]->width();
+
+  one_hot_labels_.ReshapeLike(*bottom[0]);
 
   vector<int> multiplier_shape(1, dim);
   vector<int> result_shape(1, batchsize);
@@ -94,15 +97,15 @@ void DiceCoefLossLayer<Dtype>::Reshape(
 
   smooth_ = Dtype(1.0/(double)batchsize);
 
+  CHECK_EQ(bottom[1]->channels(), 1) << "channel != 1 for dice coef loss!!";
+
 
   switch (this->layer_param_.dice_coef_loss_param().generalization()) {
   case DiceCoefLossParameter_GeneralizationMode_NONE:
-    CHECK_EQ(nclasses_, 1) << "channel != 1 for single dice";
     do_weight_ = false;
     ignore_label_ = -1;
     break;
   case DiceCoefLossParameter_GeneralizationMode_MULTICLASS:
-    CHECK_NE(nclasses_, 1) << "channel == 1 for multiclass";
     do_weight_ = false;
     if (this->layer_param_.dice_coef_loss_param().has_ignore_label())
       ignore_label_ = this->layer_param_.dice_coef_loss_param().ignore_label();
@@ -114,7 +117,6 @@ void DiceCoefLossLayer<Dtype>::Reshape(
   case DiceCoefLossParameter_GeneralizationMode_MULTICLASS_WEIGHTED_BATCH:
     norm_batch_ = true;
   case DiceCoefLossParameter_GeneralizationMode_MULTICLASS_WEIGHTED:
-    CHECK_NE(nclasses_, 1) << "channel == 1 for multiclass";
     do_weight_ = true;
     if (this->layer_param_.dice_coef_loss_param().has_ignore_label())
       ignore_label_ = this->layer_param_.dice_coef_loss_param().ignore_label();
@@ -232,14 +234,17 @@ void DiceCoefLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   const int batchsize = bottom[0]->num();
   caffe_set(batchsize, smooth_, result_tmp_.mutable_cpu_data());
   caffe_set(batchsize, smooth_, result_.mutable_cpu_data());
+  caffe_set(bottom[0]->count(), Dtype(0.), one_hot_labels_.mutable_cpu_data());
 
-  for (unsigned int i=0; i< bottom[1]->count(); ++i)
-    {
-      if (bottom[1]->cpu_data()[i] <0.5)
-        bottom[1]->mutable_cpu_data()[i] = 0.0;
-      else
-        bottom[1]->mutable_cpu_data()[i] = 1.0;
-    }
+
+  const Dtype * labelsdata = bottom[1]->cpu_data();
+  for (unsigned int bi = 0; bi < bottom[1]->num(); ++bi)
+    for (unsigned int hi = 0; hi < bottom[1]->height(); ++hi)
+      for (unsigned int wi = 0; wi < bottom[1]->width(); ++wi)
+        {
+          int cl = static_cast<int>(round(*labelsdata++));
+          one_hot_labels_.mutable_cpu_data()[one_hot_labels_.offset(bi,cl,hi,wi)] = 1.0;
+        }
 
   if (do_weight_)
     {
@@ -247,11 +252,11 @@ void DiceCoefLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       caffe_set(batchsize*nclasses_, unit_weight, weights_.mutable_cpu_data());
       if (ignore_label_ != -1)
         for (int i=0; i<batchsize; ++i)
-          caffe_set(1, Dtype(1E6)*Dtype(bottom[1]->count(2)),
+          caffe_set(1, Dtype(1E6)*Dtype(one_hot_labels_.count(2)),
                   weights_.mutable_cpu_data()+i*nclasses_+ignore_label_);
       //      compute weights per label per image
-      caffe_cpu_gemm(CblasNoTrans, CblasTrans, bottom[1]->num(), bottom[1]->channels(),
-                     bottom[1]->count(1), unit_weight, bottom[1]->cpu_data(), mask_.cpu_data(),
+      caffe_cpu_gemm(CblasNoTrans, CblasTrans, one_hot_labels_.num(), one_hot_labels_.channels(),
+                     one_hot_labels_.count(1), unit_weight, one_hot_labels_.cpu_data(), mask_.cpu_data(),
                      Dtype(1.), weights_.mutable_cpu_data());
 
       // below normalize over batch
@@ -283,12 +288,12 @@ void DiceCoefLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
         }
 
       // do 1/w^2
-      caffe_powx(bottom[1]->num() * bottom[1]->channels(),weights_.cpu_data(), Dtype(weight_pow_),
+      caffe_powx(one_hot_labels_.num() * one_hot_labels_.channels(),weights_.cpu_data(), Dtype(weight_pow_),
                      weights_.mutable_cpu_data());
 
       //  put them into our multiplexed multiplier
       caffe_cpu_gemm(CblasNoTrans, CblasNoTrans,
-                     bottom[1]->num(), bottom[1]->count(1), bottom[1]->channels(),
+                     one_hot_labels_.num(), one_hot_labels_.count(1), one_hot_labels_.channels(),
                      Dtype(1.), weights_.cpu_data(), mask_.cpu_data(), Dtype(0.),
                      weight_multiplier_.mutable_cpu_data());
     }
@@ -302,25 +307,25 @@ void DiceCoefLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       for (int n =0; n<batchsize; ++n)
         {
           // first reshape bottom[1] in order to be B C 1 H W (convolutions over 1 not, over channels)
-          std::vector<int> old_shape(bottom[1]->shape());
-          std::vector<int> new_shape(bottom[1]->shape());
+          std::vector<int> old_shape(one_hot_labels_.shape());
+          std::vector<int> new_shape(one_hot_labels_.shape());
           new_shape.insert(new_shape.begin()+2, 1);
-          bottom[1]->Reshape(new_shape);
+          one_hot_labels_.Reshape(new_shape);
           contour_weights_.Reshape(new_shape);
           caffe_cpu_axpby(height_*width_, Dtype(1.0), mask_inverter_.cpu_data(), Dtype(-1.0),
-                            bottom[1]->mutable_cpu_data()+bottom[1]->offset({n,0,0,0,0}));
-          compute_contour_weights_cpu(bottom[1]->cpu_data()+bottom[1]->offset({n,0,0,0,0}),
+                            one_hot_labels_.mutable_cpu_data()+one_hot_labels_.offset({n,0,0,0,0}));
+          compute_contour_weights_cpu(one_hot_labels_.cpu_data()+one_hot_labels_.offset({n,0,0,0,0}),
                                       contour_weights_kernel_.cpu_data(),
                                       contour_weights_.mutable_cpu_data()
                                       +contour_weights_.offset({n,0,0,0,0}));
           caffe_cpu_axpby(height_*width_, Dtype(1.0), mask_inverter_.cpu_data(), Dtype(-1.0),
-                            bottom[1]->mutable_cpu_data()+bottom[1]->offset({n,0,0,0,0}));
+                            one_hot_labels_.mutable_cpu_data()+one_hot_labels_.offset({n,0,0,0,0}));
           for (int c =1; c<nclasses_; ++c)
-            compute_contour_weights_cpu(bottom[1]->cpu_data()+bottom[1]->offset({n,c,0,0,0}),
+            compute_contour_weights_cpu(one_hot_labels_.cpu_data()+one_hot_labels_.offset({n,c,0,0,0}),
                                         contour_weights_kernel_.cpu_data(),
                                         contour_weights_.mutable_cpu_data()
                                         +contour_weights_.offset({n,c,0,0,0}));
-          bottom[1]->Reshape(old_shape);
+          one_hot_labels_.Reshape(old_shape);
           contour_weights_.Reshape(old_shape);
           caffe_cpu_gemv(CblasNoTrans,nclasses_,height_*width_,Dtype(1.0),
                          contour_weights_.cpu_data()+contour_weights_.offset(n,0,0,0),
@@ -349,7 +354,7 @@ void DiceCoefLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
                  multiplier_.cpu_data(), Dtype(1.), result_tmp_.mutable_cpu_data());
 
   // tmp_ <- b1 * b1
-	caffe_mul(bottom[0]->count(), bottom[1]->cpu_data(), bottom[1]->cpu_data(),
+	caffe_mul(bottom[0]->count(), one_hot_labels_.cpu_data(), one_hot_labels_.cpu_data(),
 						tmp_.mutable_cpu_data());
   if (do_weight_ || has_external_weights_ || do_contour_weights_)
 		caffe_mul(bottom[0]->count(), weight_multiplier_.cpu_data(), tmp_.cpu_data(),
@@ -358,13 +363,13 @@ void DiceCoefLossLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   caffe_cpu_gemv(CblasNoTrans, bottom[0]->num(), bottom[0]->count(1), Dtype(1.), tmp_.cpu_data(),
                  multiplier_.cpu_data(), Dtype(1.), result_tmp_.mutable_cpu_data());
 
-  caffe_mul(bottom[0]->count(), bottom[0]->cpu_data(), bottom[1]->cpu_data(),
+  caffe_mul(bottom[0]->count(), bottom[0]->cpu_data(), one_hot_labels_.cpu_data(),
             tmp_.mutable_cpu_data());
 
   if (do_weight_ || has_external_weights_ || do_contour_weights_)
 		caffe_mul(bottom[0]->count(), weight_multiplier_.cpu_data(), tmp_.cpu_data(),
 							tmp_.mutable_cpu_data());
-  caffe_cpu_gemv(CblasNoTrans, bottom[1]->num(), bottom[1]->count(1), Dtype(2.), tmp_.cpu_data(),
+  caffe_cpu_gemv(CblasNoTrans, one_hot_labels_.num(), one_hot_labels_.count(1), Dtype(2.), tmp_.cpu_data(),
                  multiplier_.cpu_data(), Dtype(1.), result_.mutable_cpu_data());
   caffe_div(bottom[0]->num(), result_.cpu_data(), result_tmp_.cpu_data(),
             result_.mutable_cpu_data());
@@ -389,7 +394,7 @@ void DiceCoefLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
         caffe_cpu_axpby(
                         bottom[i]->count(1),              // count
                         alpha*Dtype(-2),                  // alpha
-                        bottom[index]->cpu_data()+j*bottom[i]->count(1),        // a
+                        one_hot_labels_.cpu_data()+j*bottom[i]->count(1),        // a
                         alpha*result_.cpu_data()[j]*Dtype(2),                      // beta
                         bottom[i]->mutable_cpu_diff()+j*bottom[i]->count(1)
                         );  // b
