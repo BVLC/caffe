@@ -51,10 +51,24 @@ cv::Mat AspectKeepingResizeBySmall(const cv::Mat& in_img,
 
 void constantNoise(const int n, const vector<uchar>& val, cv::Mat* image);
 
-cv::Mat ApplyResize(const cv::Mat& in_img, const ResizeParameter& param);
+cv::Mat ApplyResize(const cv::Mat& in_img, const ResizeParameter& param, bool is_label = false);
 
 cv::Mat ApplyNoise(const cv::Mat& in_img, const NoiseParameter& param);
-cv::Mat ApplyGeometry(const cv::Mat& in_img, const GeometryParameter& param);
+
+  void getEnlargedImage(const cv::Mat& in_img, const GeometryParameter& param, cv::Mat &in_img_enlarged);
+
+void getQuads(int rows, int cols, const GeometryParameter& param,
+              cv::Point2f (&inputQuad)[4], cv::Point2f (&outQuad)[4]);
+
+cv::Mat ApplyGeometry(const cv::Mat& in_img,  const GeometryParameter& param);
+void ApplyGeometry(const cv::Mat& in_img, cv::Mat& out_img,
+                      const cv::Mat& in_lbl, cv::Mat& out_lbl,
+                      const GeometryParameter& param);
+
+
+void ApplyZoom(const cv::Mat& in_img, cv::Mat& out_img,
+               const cv::Mat& in_lbl, cv::Mat& out_lbl,
+               const ExpansionParameter& param);
 
 
 void RandomBrightness(const cv::Mat& in_img, cv::Mat* out_img,

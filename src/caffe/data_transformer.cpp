@@ -563,33 +563,50 @@ void DataTransformer<Dtype>::ExpandImage(const AnnotatedDatum& anno_datum,
 }
 
 #ifdef USE_OPENCV
+
 template<typename Dtype>
-void DataTransformer<Dtype>::RotateImage(cv::Mat &cv_img,
-					 int &r)
+void DataTransformer<Dtype>::ApplyRotate(cv::Mat &cv_img,
+                                           int r)
 {
-  r = rd_(rg_);
   if (r > 0)
     {
       int height = cv_img.rows;
       int width = cv_img.cols;
       CHECK(height == width) << "If random rotation is enabled, the image must be square";
       if (r != 2)
-	{
-	  cv::Mat cv_timg;
-	  transpose(cv_img,cv_timg);
-	  if (r == 1) // 90
-	    flip(cv_timg,cv_img,1);
-	  else if (r == 3) // 270
-	    flip(cv_timg,cv_img,0);
-	}
+        {
+          cv::Mat cv_timg;
+          transpose(cv_img,cv_timg);
+          if (r == 1) // 90
+            flip(cv_timg,cv_img,1);
+          else if (r == 3) // 270
+            flip(cv_timg,cv_img,0);
+        }
       else // 180
-	{
-	  cv::Mat cv_imgr;
-	  flip(cv_img,cv_imgr,-1);
-	  cv_img = cv_imgr;
-	}
+        {
+          cv::Mat cv_imgr;
+          flip(cv_img,cv_imgr,-1);
+          cv_img = cv_imgr;
+        }
     }
+
 }
+
+template<typename Dtype>
+void DataTransformer<Dtype>::RotateImage(cv::Mat &cv_img, int &r)
+{
+  r = rd_(rg_);
+  ApplyRotate(cv_img, r);
+}
+
+template<typename Dtype>
+void DataTransformer<Dtype>::RotateImage(cv::Mat &cv_img, cv::Mat &cv_lbl)
+{
+  int r = rd_(rg_);
+  ApplyRotate(cv_img, r);
+  ApplyRotate(cv_lbl, r);
+}
+
 #endif
   
 template<typename Dtype>
@@ -844,6 +861,171 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
     }
   }
 }
+
+
+template<typename Dtype>
+void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
+                                       Blob<Dtype>* transformed_img,
+                                       const cv::Mat& cv_lab,
+                                       Blob<Dtype>* transformed_label)
+{
+  // Check dimensions.
+  const int img_channels = cv_img.channels();
+  const int channels = transformed_img->channels();
+  const int height = transformed_img->height();
+  const int width = transformed_img->width();
+  const int num = transformed_img->num();
+
+  CHECK_GT(img_channels, 0);
+  CHECK(cv_img.depth() == CV_8U) << "Image data type must be unsigned byte";
+  CHECK_EQ(channels, img_channels);
+  CHECK_GE(num, 1);
+
+  const int crop_size = param_.crop_size();
+  const Dtype scale = param_.scale();
+  const bool do_mirror = param_.mirror() && Rand(2);
+  const bool has_mean_file = param_.has_mean_file();
+  const bool has_mean_values = mean_values_.size() > 0;
+
+  Dtype* mean = NULL;
+  if (has_mean_file) {
+    CHECK_EQ(img_channels, data_mean_.channels());
+    mean = data_mean_.mutable_cpu_data();
+  }
+  if (has_mean_values) {
+    CHECK(mean_values_.size() == 1 || mean_values_.size() == img_channels) <<
+      "Specify either 1 mean_value or as many as channels: " << img_channels;
+    if (img_channels > 1 && mean_values_.size() == 1) {
+      // Replicate the mean_value for simplicity
+      for (int c = 1; c < img_channels; ++c) {
+        mean_values_.push_back(mean_values_[0]);
+      }
+    }
+  }
+
+  int crop_h = param_.crop_h();
+  int crop_w = param_.crop_w();
+  if (crop_size) {
+    crop_h = crop_size;
+    crop_w = crop_size;
+  }
+
+  cv::Mat cv_resized_image, cv_distort_image, cv_geometry_image, cv_zoom_image, cv_noised_image, cv_cropped_image;
+  cv::Mat cv_resized_label,  cv_geometry_label, cv_cropped_label, cv_zoom_label;
+  if (param_.has_resize_param()) {
+    cv_resized_image = ApplyResize(cv_img, param_.resize_param());
+    cv_resized_label = ApplyResize(cv_lab, param_.resize_param(), true);
+  } else {
+    cv_resized_image = cv_img;
+    cv_resized_label = cv_lab;
+  }
+  if (param_.has_distort_param()) {
+    cv_distort_image = ApplyDistort(cv_resized_image, param_.distort_param());
+  } else {
+    cv_distort_image = cv_resized_image;
+  }
+
+  if (param_.has_noise_param()) {
+    cv_noised_image = ApplyNoise(cv_distort_image, param_.noise_param());
+  } else {
+    cv_noised_image = cv_distort_image;
+  }
+
+  if (param_.has_geometry_param()) {
+    ApplyGeometry(cv_noised_image,  cv_geometry_image,
+                  cv_resized_label, cv_geometry_label, param_.geometry_param());
+  } else {
+    cv_geometry_image = cv_noised_image;
+    cv_geometry_label = cv_resized_label;
+  }
+
+  if (param_.has_expand_param()) {
+    ApplyZoom(cv_geometry_image, cv_zoom_image,
+              cv_geometry_label, cv_zoom_label, param_.expand_param());
+  } else {
+    cv_zoom_label = cv_geometry_label;
+    cv_zoom_image = cv_geometry_image;
+  }
+
+
+  int img_height = cv_zoom_image.rows;
+  int img_width = cv_zoom_image.cols;
+  CHECK_GE(img_height, crop_h);
+  CHECK_GE(img_width, crop_w);
+
+  int h_off = 0;
+  int w_off = 0;
+  if ((crop_h > 0) && (crop_w > 0)) {
+    CHECK_EQ(crop_h, height);
+    CHECK_EQ(crop_w, width);
+    // We only do random crop when we do training.
+    if (phase_ == TRAIN) {
+      h_off = Rand(img_height - crop_h + 1);
+      w_off = Rand(img_width - crop_w + 1);
+    } else {
+      h_off = (img_height - crop_h) / 2;
+      w_off = (img_width - crop_w) / 2;
+    }
+    cv::Rect roi(w_off, h_off, crop_w, crop_h);
+    cv_cropped_image = cv_zoom_image(roi);
+    cv_cropped_label = cv_zoom_label(roi);
+    LOG(INFO)<< "Applying crop to both image and labels";
+  } else {
+    cv_cropped_image = cv_zoom_image;
+    cv_cropped_label = cv_zoom_label;
+  }
+
+  if (has_mean_file) {
+    CHECK_EQ(cv_cropped_image.rows, data_mean_.height());
+    CHECK_EQ(cv_cropped_image.cols, data_mean_.width());
+  }
+  CHECK(cv_cropped_image.data);
+
+  if (param_.rotate()  && phase_ == TRAIN) // deactivated with annotated datum
+  {
+    RotateImage(cv_cropped_image, cv_cropped_label);
+  }
+
+  Dtype* transformed_data = transformed_img->mutable_cpu_data();
+  Dtype* transformed_label_data = transformed_label->mutable_cpu_data();
+  int top_index;
+  for (int h = 0; h < height; ++h) {
+    const uchar* ptr = cv_cropped_image.ptr<uchar>(h);
+    const uchar* lab_ptr = cv_cropped_label.ptr<uchar>(h);
+    int img_index = 0;
+    int lab_index = 0;
+    int h_idx = h;
+    for (int w = 0; w < width; ++w) {
+      int w_idx = w;
+      if (do_mirror) {
+        w_idx = (width - 1 - w);
+      }
+      int h_idx_real = h_idx;
+      int w_idx_real = w_idx;
+      Dtype label = static_cast<Dtype>(lab_ptr[lab_index++]);
+      top_index = (h_idx_real) * width + w_idx_real;
+      transformed_label_data[top_index] =  label;
+      for (int c = 0; c < img_channels; ++c) {
+        Dtype pixel = static_cast<Dtype>(ptr[img_index++]);
+        if (has_mean_file) {
+          int mean_index = (c * img_height + h_off + h_idx_real) * img_width
+              + w_off + w_idx_real;
+          transformed_data[top_index] =
+              (pixel - mean[mean_index]) * scale;
+        } else {
+          if (has_mean_values) {
+            transformed_data[top_index] =
+                (pixel - mean_values_[c]) * scale;
+          } else {
+            transformed_data[top_index] = pixel * scale;
+          }
+        }
+      }
+    }
+  }
+}
+
+
 
 template<typename Dtype>
 void DataTransformer<Dtype>::TransformInv(const Dtype* data, cv::Mat* cv_img,

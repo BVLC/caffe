@@ -141,8 +141,9 @@ class DataTransformer {
   /**
    * @brief Rotate image.
    */
-  void RotateImage(cv::Mat &cv_img,
-		   int &r);
+  void ApplyRotate(cv::Mat &cv_img,  int r);
+  void RotateImage(cv::Mat &cv_img,  int &r);
+  void RotateImage(cv::Mat &cv_img, cv::Mat &cv_lbl);
   
   /**
    * @brief Rotate datum
@@ -193,7 +194,10 @@ class DataTransformer {
   void Transform(const cv::Mat& cv_img, Blob<Dtype>* transformed_blob,
 		 bool preserve_pixel_vals = false, bool preserve_annotations = false);
 
-  /**
+
+  void Transform(const cv::Mat& cv_img, Blob<Dtype>* transformed_img,
+                 const cv::Mat& cv_lab, Blob<Dtype>* transformed_label);
+  /***
    * @brief Crops img according to bbox.
    */
   void CropImage(const cv::Mat& img, const NormalizedBBox& bbox,

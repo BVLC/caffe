@@ -282,16 +282,11 @@ void DenseImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     // Apply transformations (mirror, crop...) to the image
     int offset = batch->data_.offset(item_id);
     this->transformed_data_.set_cpu_data(prefetch_data + offset);
-    this->data_transformer_->Transform(cv_img, &(this->transformed_data_));
-    // transform label the same way
     int label_offset = batch->label_.offset(item_id);
     this->transformed_label_.set_cpu_data(prefetch_label + label_offset);
+    this->data_transformer_->Transform(cv_img, &(this->transformed_data_),
+                                       cv_lab, &(this->transformed_label_));
 
-    this->data_transformer_->Transform(cv_lab, &(this->transformed_label_), true);
-    CHECK(!this->layer_param_.transform_param().mirror() &&
-        this->layer_param_.transform_param().crop_size() == 0)
-        << "FIXME: Any stochastic transformation will break layer due to "
-        << "the need to transform input and label images in the same way";
     trans_time += timer.MicroSeconds();
 
     // go to the next iter
