@@ -219,6 +219,10 @@ class Net {
 
   void set_debug_info(const bool value) { debug_info_ = value; }
 
+  inline size_t memory_used() const {
+    return memory_used_;
+  }
+
   // Helpers for Init.
   /**
    * @brief Remove layers that the user specified should be excluded given the current
