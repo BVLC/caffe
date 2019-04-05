@@ -338,7 +338,7 @@ void constantNoise(const int n, const vector<uchar>& val, cv::Mat* image) {
   }
 }
 
-cv::Mat ApplyResize(const cv::Mat& in_img, const ResizeParameter& param) {
+  cv::Mat ApplyResize(const cv::Mat& in_img, const ResizeParameter& param, bool is_label) {
   cv::Mat out_img;
 
   // Reading parameters
@@ -360,51 +360,58 @@ cv::Mat ApplyResize(const cv::Mat& in_img, const ResizeParameter& param) {
       LOG(FATAL) << "fatal error";
   }
 
-  int interp_mode = cv::INTER_LINEAR;
-  int num_interp_mode = param.interp_mode_size();
-  if (num_interp_mode > 0) {
-    vector<float> probs(num_interp_mode, 1.f / num_interp_mode);
-    int prob_num = roll_weighted_die(probs);
-    switch (param.interp_mode(prob_num)) {
-      case ResizeParameter_Interp_mode_AREA:
-        interp_mode = cv::INTER_AREA;
-        break;
-      case ResizeParameter_Interp_mode_CUBIC:
-        interp_mode = cv::INTER_CUBIC;
-        break;
-      case ResizeParameter_Interp_mode_LINEAR:
-        interp_mode = cv::INTER_LINEAR;
-        break;
-      case ResizeParameter_Interp_mode_NEAREST:
-        interp_mode = cv::INTER_NEAREST;
-        break;
-      case ResizeParameter_Interp_mode_LANCZOS4:
-        interp_mode = cv::INTER_LANCZOS4;
-        break;
-      default:
-        LOG(ERROR) << "Unknown interp mode.";
-	LOG(FATAL) << "fatal error";
-    }
-  }
-
-  cv::Scalar pad_val = cv::Scalar(0, 0, 0);
-  const int img_channels = in_img.channels();
-  if (param.pad_value_size() > 0) {
-    CHECK(param.pad_value_size() == 1 ||
-          param.pad_value_size() == img_channels) <<
-        "Specify either 1 pad_value or as many as channels: " << img_channels;
-    vector<float> pad_values;
-    for (int i = 0; i < param.pad_value_size(); ++i) {
-      pad_values.push_back(param.pad_value(i));
-    }
-    if (img_channels > 1 && param.pad_value_size() == 1) {
-      // Replicate the pad_value for simplicity
-      for (int c = 1; c < img_channels; ++c) {
-        pad_values.push_back(pad_values[0]);
+  int interp_mode = cv::INTER_NEAREST;
+  if (!is_label)
+    {
+      interp_mode = cv::INTER_LINEAR;
+      int num_interp_mode = param.interp_mode_size();
+      if (num_interp_mode > 0) {
+        vector<float> probs(num_interp_mode, 1.f / num_interp_mode);
+        int prob_num = roll_weighted_die(probs);
+        switch (param.interp_mode(prob_num)) {
+        case ResizeParameter_Interp_mode_AREA:
+          interp_mode = cv::INTER_AREA;
+          break;
+        case ResizeParameter_Interp_mode_CUBIC:
+          interp_mode = cv::INTER_CUBIC;
+          break;
+        case ResizeParameter_Interp_mode_LINEAR:
+          interp_mode = cv::INTER_LINEAR;
+          break;
+        case ResizeParameter_Interp_mode_NEAREST:
+          interp_mode = cv::INTER_NEAREST;
+          break;
+        case ResizeParameter_Interp_mode_LANCZOS4:
+          interp_mode = cv::INTER_LANCZOS4;
+          break;
+        default:
+          LOG(ERROR) << "Unknown interp mode.";
+          LOG(FATAL) << "fatal error";
+        }
       }
     }
-    pad_val = cv::Scalar(pad_values[0], pad_values[1], pad_values[2]);
-  }
+
+  cv::Scalar pad_val = cv::Scalar(0, 0, 0);
+  if (!is_label)
+    {
+      const int img_channels = in_img.channels();
+      if (param.pad_value_size() > 0) {
+        CHECK(param.pad_value_size() == 1 ||
+              param.pad_value_size() == img_channels) <<
+          "Specify either 1 pad_value or as many as channels: " << img_channels;
+        vector<float> pad_values;
+        for (int i = 0; i < param.pad_value_size(); ++i) {
+          pad_values.push_back(param.pad_value(i));
+        }
+        if (img_channels > 1 && param.pad_value_size() == 1) {
+          // Replicate the pad_value for simplicity
+          for (int c = 1; c < img_channels; ++c) {
+            pad_values.push_back(pad_values[0]);
+          }
+        }
+        pad_val = cv::Scalar(pad_values[0], pad_values[1], pad_values[2]);
+      }
+    }
 
   switch (param.resize_mode()) {
     case ResizeParameter_Resize_mode_WARP:
@@ -722,19 +729,10 @@ void RandomOrderChannels(const cv::Mat& in_img, cv::Mat* out_img,
   }
 }
 
-cv::Mat ApplyGeometry(const cv::Mat& in_img, const GeometryParameter& param) {
-  cv::Mat out_img;
-  if (param.prob() == 0.0)
-    return in_img;
 
-  vector<float> binary_probs;
-  if (param.prob() > 0.0)
-    binary_probs = {1.f-param.prob(),param.prob()};
 
-  bool persp = (roll_weighted_die(binary_probs) == 1);
-  if (!persp)
-    return in_img;
-
+void getEnlargedImage(const cv::Mat& in_img, const GeometryParameter& param, cv::Mat &in_img_enlarged)
+{
   int pad_mode = cv::BORDER_REFLECT101;
   switch (param.pad_mode()) {
   case GeometryParameter_Pad_mode_CONSTANT:
@@ -751,22 +749,20 @@ cv::Mat ApplyGeometry(const cv::Mat& in_img, const GeometryParameter& param) {
     LOG(FATAL) << "fatal error";
   }
 
-  cv::Mat in_img_enlarged;
   copyMakeBorder(in_img, in_img_enlarged, in_img.rows, in_img.rows, in_img.cols, in_img.cols,
                  pad_mode);
+}
 
-  // Input Quadilateral or Image plane coordinates
-  cv::Point2f inputQuad[4];
-  // Output Quadilateral or World plane coordinates
-  cv::Point2f outputQuad[4];
-
+void getQuads(int rows, int cols, const GeometryParameter& param,
+              cv::Point2f (&inputQuad)[4], cv::Point2f (&outputQuad)[4])
+{
   // The 4 points that select quadilateral on the input , from top-left in clockwise order
   // These four pts are the sides of the rect box used as input
   float x0, x1, y0, y1;
-  x0 = in_img.cols;
-  x1 = 2*in_img.cols-1;
-  y0 = in_img.rows;
-  y1 = 2*in_img.rows -1;
+  x0 = cols;
+  x1 = 2*cols-1;
+  y0 = rows;
+  y1 = 2*rows -1;
   if (param.zoom_out() || param.zoom_in() || param.all_effects())
     {
       bool zoom_in = param.zoom_in() || param.all_effects();
@@ -783,8 +779,8 @@ cv::Mat ApplyGeometry(const cv::Mat& in_img, const GeometryParameter& param) {
       float x0min, x0max, y0min, y0max;
       if (zoom_in)
         {
-          x0max = in_img.cols + in_img.cols * param.zoom_factor();
-          y0max = in_img.rows + in_img.rows * param.zoom_factor();
+          x0max = cols + cols * param.zoom_factor();
+          y0max = rows + rows * param.zoom_factor();
         }
       else
         {
@@ -793,8 +789,8 @@ cv::Mat ApplyGeometry(const cv::Mat& in_img, const GeometryParameter& param) {
         }
       if (zoom_out)
         {
-          x0min = in_img.cols -in_img.cols * param.zoom_factor();
-          y0min = in_img.rows -in_img.rows * param.zoom_factor();
+          x0min = cols -cols * param.zoom_factor();
+          y0min = rows -rows * param.zoom_factor();
         }
       else
         {
@@ -802,11 +798,11 @@ cv::Mat ApplyGeometry(const cv::Mat& in_img, const GeometryParameter& param) {
           y0min = y0;
         }
       caffe_rng_uniform(1, x0min, x0max, &x0);
-      x1 = 3 * in_img.cols - x0;
+      x1 = 3 * cols - x0;
       caffe_rng_uniform(1, y0min, y0max, &y0);
-      y1 = 3 * in_img.rows - y0;
+      y1 = 3 * rows - y0;
     }
-    
+
   inputQuad[0] = cv::Point2f( x0,y0);
   inputQuad[1] = cv::Point2f( x1,y0);
   inputQuad[2] = cv::Point2f( x1,y1);
@@ -814,23 +810,23 @@ cv::Mat ApplyGeometry(const cv::Mat& in_img, const GeometryParameter& param) {
 
   // The 4 points where the mapping is to be done , from top-left in clockwise order
   outputQuad[0] = cv::Point2f( 0,0 );
-  outputQuad[1] = cv::Point2f( in_img.cols-1,0);
-  outputQuad[2] = cv::Point2f( in_img.cols-1,in_img.rows-1);
-  outputQuad[3] = cv::Point2f( 0,in_img.rows-1);
+  outputQuad[1] = cv::Point2f( cols-1,0);
+  outputQuad[2] = cv::Point2f( cols-1,rows-1);
+  outputQuad[3] = cv::Point2f( 0,rows-1);
   if (param.persp_horizontal() || param.all_effects())
     {
       vector<float> binary_probs= {0.5,0.5};
       if (roll_weighted_die(binary_probs) == 1)
         {
           // seen from right
-          caffe_rng_uniform(1, (float) 0.0,(float)in_img.rows * param.persp_factor() ,  &outputQuad[0].y);
-          outputQuad[3].y = in_img.rows - outputQuad[0].y;
+          caffe_rng_uniform(1, (float) 0.0,(float)rows * param.persp_factor() ,  &outputQuad[0].y);
+          outputQuad[3].y = rows - outputQuad[0].y;
         }
       else
         {
           // seen from left
-          caffe_rng_uniform(1, (float)0.0, (float)in_img.rows * param.persp_factor() , &outputQuad[1].y);
-          outputQuad[2].y = in_img.rows - outputQuad[1].y;
+          caffe_rng_uniform(1, (float)0.0, (float)rows * param.persp_factor() , &outputQuad[1].y);
+          outputQuad[2].y = rows - outputQuad[1].y;
         }
     }
   if (param.persp_vertical() || param.all_effects())
@@ -839,16 +835,44 @@ cv::Mat ApplyGeometry(const cv::Mat& in_img, const GeometryParameter& param) {
       if (roll_weighted_die(binary_probs) == 1)
         {
           // seen from above
-          caffe_rng_uniform(1, (float)0.0, (float)in_img.cols * param.persp_factor() , &outputQuad[3].x);
-          outputQuad[2].x = in_img.cols - outputQuad[3].x;
+          caffe_rng_uniform(1, (float)0.0, (float)cols * param.persp_factor() , &outputQuad[3].x);
+          outputQuad[2].x = cols - outputQuad[3].x;
         }
       else
         {
           // seen from below
-          caffe_rng_uniform(1, (float)0.0, (float)in_img.cols * param.persp_factor() , &outputQuad[0].x);
-          outputQuad[1].x = in_img.cols - outputQuad[0].x;
+          caffe_rng_uniform(1, (float)0.0, (float)cols * param.persp_factor() , &outputQuad[0].x);
+          outputQuad[1].x = cols - outputQuad[0].x;
         }
     }
+}
+
+
+cv::Mat ApplyGeometry(const cv::Mat& in_img, const GeometryParameter& param)
+{
+  cv::Mat out_img;
+  if (param.prob() == 0.0)
+    return in_img;
+
+  vector<float> binary_probs;
+  if (param.prob() > 0.0)
+    binary_probs = {1.f-param.prob(),param.prob()};
+
+  bool persp = (roll_weighted_die(binary_probs) == 1);
+  if (!persp)
+    return in_img;
+
+  cv::Mat in_img_enlarged;
+  getEnlargedImage(in_img, param, in_img_enlarged);
+
+  // Input Quadilateral or Image plane coordinates
+  cv::Point2f inputQuad[4];
+  // Output Quadilateral or World plane coordinates
+  cv::Point2f outputQuad[4];
+
+
+  getQuads(in_img.rows, in_img.cols, param, inputQuad, outputQuad);
+
 
   // Get the Perspective Transform Matrix i.e. lambda
   cv::Mat lambda = getPerspectiveTransform( inputQuad, outputQuad );
@@ -857,6 +881,79 @@ cv::Mat ApplyGeometry(const cv::Mat& in_img, const GeometryParameter& param) {
   warpPerspective(in_img_enlarged,out_img,lambda,in_img.size());
 
   return out_img;
+}
+
+
+void ApplyZoom(const cv::Mat& in_img, cv::Mat& out_img,
+                 const cv::Mat& in_lbl, cv::Mat& out_lbl,
+                 const ExpansionParameter& param)
+{
+  if (param.prob() == 0.0)
+    {
+      out_img = in_img;
+      out_lbl = in_lbl;
+      return;
+    }
+
+  float z; // zoom factor
+  caffe_rng_uniform(1,float(1.0), param.max_expand_ratio(), &z);
+  int r = in_img.rows / z;
+  int c = in_img.cols / z;
+  float scf;
+  caffe_rng_uniform(1,float(0.0), (float)(in_img.cols-c), &scf);
+  float srf;
+  caffe_rng_uniform(1,float(0.0), (float)(in_img.rows-r), &srf);
+
+  cv::Rect zone = cv::Rect((int)scf,(int)srf,c,r);
+
+  cv::resize(in_img(zone), out_img, cv::Size(in_img.cols, in_img.rows), 0,0, cv::INTER_LINEAR);
+  cv::resize(in_lbl(zone), out_lbl, cv::Size(in_img.cols, in_img.rows), 0,0, cv::INTER_NEAREST);
+}
+
+
+void ApplyGeometry(const cv::Mat& in_img, cv::Mat& out_img,
+                      const cv::Mat& in_lbl, cv::Mat& out_lbl,
+                      const GeometryParameter& param) {
+
+  if (param.prob() == 0.0)
+    {
+      out_img = in_img;
+      out_lbl = in_lbl;
+      return;
+    }
+
+  vector<float> binary_probs;
+  if (param.prob() > 0.0)
+    binary_probs = {1.f-param.prob(),param.prob()};
+
+  bool persp = (roll_weighted_die(binary_probs) == 1);
+  if (!persp)
+    {
+      out_img = in_img;
+      out_lbl = in_lbl;
+      return;
+    }
+
+  cv::Mat in_img_enlarged;
+  getEnlargedImage(in_img, param, in_img_enlarged);
+  cv::Mat in_lbl_enlarged;
+  getEnlargedImage(in_lbl, param, in_lbl_enlarged);
+
+  // Input Quadilateral or Image plane coordinates
+  cv::Point2f inputQuad[4];
+  // Output Quadilateral or World plane coordinates
+  cv::Point2f outputQuad[4];
+
+
+  getQuads(in_img.rows, in_img.cols, param, inputQuad, outputQuad);
+
+
+  // Get the Perspective Transform Matrix i.e. lambda
+  cv::Mat lambda = getPerspectiveTransform( inputQuad, outputQuad );
+  // Apply the Perspective Transform just found to the src image
+  //  warpPerspective(in_img,out_img,lambda,in_img.size());
+  warpPerspective(in_img_enlarged,out_img,lambda,in_img.size());
+  warpPerspective(in_lbl_enlarged,out_lbl,lambda,in_lbl.size(),cv::INTER_NEAREST);
 }
 
 
