@@ -13,6 +13,10 @@ void InterpLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   InterpParameter interp_param = this->layer_param_.interp_param();
   pad_beg_ = interp_param.pad_beg();
   pad_end_ = interp_param.pad_end();
+  if (interp_param.mode() == InterpParameter_Mode_NEAREST)
+    interp_nn_ = true;
+  else
+    interp_nn_ = false;
   CHECK_LE(pad_beg_, 0) << "Only supports non-pos padding (cropping) for now";
   CHECK_LE(pad_end_, 0) << "Only supports non-pos padding (cropping) for now";
 }
@@ -67,7 +71,7 @@ void InterpLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   caffe_cpu_interp2<Dtype,false>(num_ * channels_,
     bottom[0]->cpu_data(), - pad_beg_, - pad_beg_, height_in_eff_, width_in_eff_, height_in_, width_in_,
-    top[0]->mutable_cpu_data(), 0, 0, height_out_, width_out_, height_out_, width_out_);
+                                 top[0]->mutable_cpu_data(), 0, 0, height_out_, width_out_, height_out_, width_out_, interp_nn_);
 }
 
 template <typename Dtype>
@@ -77,7 +81,7 @@ void InterpLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   caffe_set(bottom[0]->count(), Dtype(0), bottom[0]->mutable_cpu_diff());
   caffe_cpu_interp2_backward<Dtype,false>(num_ * channels_,
     bottom[0]->mutable_cpu_diff(), - pad_beg_, - pad_beg_, height_in_eff_, width_in_eff_, height_in_, width_in_,
-    top[0]->cpu_diff(), 0, 0, height_out_, width_out_, height_out_, width_out_);
+                                          top[0]->cpu_diff(), 0, 0, height_out_, width_out_, height_out_, width_out_, interp_nn_);
 }
 
 #ifndef CPU_ONLY
@@ -86,7 +90,7 @@ void InterpLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   caffe_gpu_interp2<Dtype,false>(num_ * channels_,
     bottom[0]->gpu_data(), - pad_beg_, - pad_beg_, height_in_eff_, width_in_eff_, height_in_, width_in_,
-    top[0]->mutable_gpu_data(), 0, 0, height_out_, width_out_, height_out_, width_out_);
+                                 top[0]->mutable_gpu_data(), 0, 0, height_out_, width_out_, height_out_, width_out_, interp_nn_);
 }
 
 template <typename Dtype>
@@ -96,7 +100,7 @@ void InterpLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   caffe_gpu_set(bottom[0]->count(), Dtype(0), bottom[0]->mutable_gpu_diff());
   caffe_gpu_interp2_backward<Dtype,false>(num_ * channels_,
     bottom[0]->mutable_gpu_diff(), - pad_beg_, - pad_beg_, height_in_eff_, width_in_eff_, height_in_, width_in_,
-    top[0]->gpu_diff(), 0, 0, height_out_, width_out_, height_out_, width_out_);
+                                          top[0]->gpu_diff(), 0, 0, height_out_, width_out_, height_out_, width_out_, interp_nn_);
 }
 #endif
 

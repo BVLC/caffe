@@ -43,6 +43,7 @@ class InterpLayer : public Layer<Dtype> {
   int height_out_, width_out_;
   int pad_beg_, pad_end_;
   int height_in_eff_, width_in_eff_;
+  bool interp_nn_;
 };
 
 }  // namespace caffe
