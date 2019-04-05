@@ -6,16 +6,19 @@
 
 namespace caffe {
 
-
 template <typename Dtype>
-  __global__ void StickLabels(const int n, const Dtype* b1in,
-                              Dtype* b1out) {
+  __global__ void MultiplexLabels(const int n, const Dtype* b1in,
+                                  Dtype* b1out, const int nclasses, const int height,
+                                  const int width) {
+
   CUDA_KERNEL_LOOP(index, n)
       {
-        if (b1in[index]  < Dtype(0.5))
-          b1out[index] = Dtype(0.0);
-        else
-          b1out[index] = Dtype(1.0);
+        int w = index % width;
+        int temp = index / width;
+        int h = temp % height;
+        int num = temp / height;
+        int cl = static_cast<int>(round(b1in[((num) * height + h) * width + w]));
+        b1out[((num * nclasses + cl) * height + h) * width + w] = Dtype(1.0);
       }
   }
 
@@ -28,9 +31,12 @@ void DiceCoefLossLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   const int batchsize = bottom[0]->num();
   caffe_gpu_set(batchsize, smooth_, result_tmp_.mutable_gpu_data());
   caffe_gpu_set(batchsize, smooth_, result_.mutable_gpu_data());
+  caffe_gpu_set(one_hot_labels_.count(), Dtype(0.), one_hot_labels_.mutable_gpu_data());
 
-  StickLabels<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
-      count, bottom[1]->gpu_data(), bottom[1]->mutable_gpu_data());
+  MultiplexLabels<Dtype><<<CAFFE_GET_BLOCKS(bottom[1]->count()),
+    CAFFE_CUDA_NUM_THREADS>>>(bottom[1]->count(), bottom[1]->gpu_data(),
+                              one_hot_labels_.mutable_gpu_data(), bottom[0]->channels(),
+                              bottom[0]->height(),bottom[0]->width());
   CUDA_POST_KERNEL_CHECK;
 
   if (do_weight_)
@@ -39,11 +45,11 @@ void DiceCoefLossLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
       caffe_gpu_set(batchsize*nclasses_, unit_weight, weights_.mutable_gpu_data());
       if (ignore_label_ != -1)
         for (int i=0; i<batchsize; ++i)
-          caffe_gpu_set(1, Dtype(1E6)*Dtype(bottom[1]->count(2)),
+          caffe_gpu_set(1, Dtype(1E6)*Dtype(one_hot_labels_.count(2)),
                         weights_.mutable_gpu_data()+i*nclasses_+ignore_label_);
 
-      caffe_gpu_gemm(CblasNoTrans, CblasTrans, bottom[1]->num(), bottom[1]->channels(),
-                     bottom[1]->count(1), unit_weight, bottom[1]->gpu_data(), mask_.gpu_data(),
+      caffe_gpu_gemm(CblasNoTrans, CblasTrans, one_hot_labels_.num(), one_hot_labels_.channels(),
+                     one_hot_labels_.count(1), unit_weight, one_hot_labels_.gpu_data(), mask_.gpu_data(),
                      Dtype(1.), weights_.mutable_gpu_data());
 
        //below normalize over batch
@@ -74,10 +80,10 @@ void DiceCoefLossLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
           // end of normlization over batch
         }
 
-      caffe_gpu_powx(bottom[1]->num() * bottom[1]->channels(),weights_.gpu_data(), Dtype(weight_pow_),
+      caffe_gpu_powx(one_hot_labels_.num() * one_hot_labels_.channels(),weights_.gpu_data(), Dtype(weight_pow_),
                  weights_.mutable_gpu_data());
       caffe_gpu_gemm(CblasNoTrans, CblasNoTrans,
-                     bottom[1]->num(), bottom[1]->count(1), bottom[1]->channels(),
+                     one_hot_labels_.num(), one_hot_labels_.count(1), one_hot_labels_.channels(),
                      Dtype(1.), weights_.gpu_data(), mask_.gpu_data(), Dtype(0.),
                      weight_multiplier_.mutable_gpu_data());
     }
@@ -91,28 +97,28 @@ void DiceCoefLossLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     {
       for (int n =0; n<batchsize; ++n)
         {
-          std::vector<int> old_shape(bottom[1]->shape());
-          std::vector<int> new_shape(bottom[1]->shape());
+          std::vector<int> old_shape(one_hot_labels_.shape());
+          std::vector<int> new_shape(one_hot_labels_.shape());
           new_shape.insert(new_shape.begin()+2, 1);
-          bottom[1]->Reshape(new_shape);
+          one_hot_labels_.Reshape(new_shape);
           contour_weights_.Reshape(new_shape);
           // for background , ie class 0, one should revert labels in order for zero padding not
           // to give much weight to image border
           caffe_gpu_axpby(height_*width_, Dtype(1.0), mask_inverter_.gpu_data(), Dtype(-1.0),
-                          bottom[1]->mutable_gpu_data()+bottom[1]->offset({n,0,0,0,0}));
-          compute_contour_weights_gpu(bottom[1]->gpu_data()+bottom[1]->offset({n,0,0,0,0}),
+                          one_hot_labels_.mutable_gpu_data()+one_hot_labels_.offset({n,0,0,0,0}));
+          compute_contour_weights_gpu(one_hot_labels_.gpu_data()+one_hot_labels_.offset({n,0,0,0,0}),
                                       contour_weights_kernel_.gpu_data(),
                                       contour_weights_.mutable_gpu_data()
                                       +contour_weights_.offset({n,0,0,0,0}));
           caffe_gpu_axpby(height_*width_, Dtype(1.0), mask_inverter_.gpu_data(), Dtype(-1.0),
-                          bottom[1]->mutable_gpu_data()+bottom[1]->offset({n,0,0,0,0}));
+                          one_hot_labels_.mutable_gpu_data()+one_hot_labels_.offset({n,0,0,0,0}));
 
           for (int c =1; c<nclasses_; ++c)
-              compute_contour_weights_gpu(bottom[1]->gpu_data()+bottom[1]->offset({n,c,0,0,0}),
+              compute_contour_weights_gpu(one_hot_labels_.gpu_data()+one_hot_labels_.offset({n,c,0,0,0}),
                                           contour_weights_kernel_.gpu_data(),
                                           contour_weights_.mutable_gpu_data()
                                           +contour_weights_.offset({n,c,0,0,0}));
-          bottom[1]->Reshape(old_shape);
+          one_hot_labels_.Reshape(old_shape);
           contour_weights_.Reshape(old_shape);
           caffe_gpu_gemv(CblasNoTrans,nclasses_,height_*width_,Dtype(1.0),
                          contour_weights_.gpu_data()+contour_weights_.offset(n,0,0,0),
@@ -141,20 +147,20 @@ void DiceCoefLossLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   caffe_gpu_gemv(CblasNoTrans, bottom[0]->num(), bottom[0]->count(1), Dtype(1.), tmp_.gpu_data(),
                  multiplier_.gpu_data(), Dtype(1.), result_tmp_.mutable_gpu_data());
 
-  caffe_gpu_mul(count, bottom[1]->gpu_data(), bottom[1]->gpu_data(),
+  caffe_gpu_mul(count, one_hot_labels_.gpu_data(), one_hot_labels_.gpu_data(),
                 tmp_.mutable_gpu_data());
   if (do_weight_ || has_external_weights_ || do_contour_weights_)
     caffe_gpu_mul(bottom[0]->count(), weight_multiplier_.gpu_data(), tmp_.gpu_data(),
 									tmp_.mutable_gpu_data());
-  caffe_gpu_gemv(CblasNoTrans, bottom[1]->num(), bottom[1]->count(1), Dtype(1.), tmp_.gpu_data(),
+  caffe_gpu_gemv(CblasNoTrans, one_hot_labels_.num(), one_hot_labels_.count(1), Dtype(1.), tmp_.gpu_data(),
                  multiplier_.gpu_data(), Dtype(1.), result_tmp_.mutable_gpu_data());
 
-	caffe_gpu_mul(count, bottom[0]->gpu_data(), bottom[1]->gpu_data(),
+	caffe_gpu_mul(count, bottom[0]->gpu_data(), one_hot_labels_.gpu_data(),
                 tmp_.mutable_gpu_data());
   if (do_weight_ || has_external_weights_ || do_contour_weights_)
     caffe_gpu_mul(bottom[0]->count(), weight_multiplier_.gpu_data(), tmp_.gpu_data(),
               tmp_.mutable_gpu_data());
-  caffe_gpu_gemv(CblasNoTrans, bottom[1]->num(), bottom[1]->count(1), Dtype(2.), tmp_.gpu_data(),
+  caffe_gpu_gemv(CblasNoTrans, one_hot_labels_.num(), one_hot_labels_.count(1), Dtype(2.), tmp_.gpu_data(),
                  multiplier_.gpu_data(), Dtype(1.), result_.mutable_gpu_data());
   caffe_gpu_div(bottom[0]->num(), result_.gpu_data(), result_tmp_.gpu_data(),
                 result_.mutable_gpu_data());
@@ -191,7 +197,7 @@ void DiceCoefLossLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
           const Dtype sign = Dtype(1.0)*top[0]->cpu_diff()[0];
           const int index = (i == 0) ? 1 : 0;
           DiceCoefLossBackward<Dtype><<<CAFFE_GET_BLOCKS(count), CAFFE_CUDA_NUM_THREADS>>>(
-          count, bottom[index]->gpu_data(), bottom[i]->gpu_data(), bottom[i]->mutable_gpu_diff(),
+          count, one_hot_labels_.gpu_data(), bottom[i]->gpu_data(), bottom[i]->mutable_gpu_diff(),
 					sign, result_.gpu_data(), result_tmp_.gpu_data(), bottom[i]->count(1),
 					bottom[i]->channels());
           CUDA_POST_KERNEL_CHECK;
