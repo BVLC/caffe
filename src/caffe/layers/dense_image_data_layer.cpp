@@ -211,7 +211,12 @@ void DenseImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     CHECK_GT(lines_size, lines_id_);
     cv::Mat cv_img = ReadImageToCVMat(root_folder + lines_[lines_id_].first,
         new_height, new_width, is_color);
-    CHECK(cv_img.data) << "Could not load " << lines_[lines_id_].first;
+    if (!cv_img.data)
+      {
+	LOG(WARNING) << "Could not load " << lines_[lines_id_].first;
+	continue;
+      }
+    //CHECK(cv_img.data) << "Could not load " << lines_[lines_id_].first;
     cv::Mat cv_lab;
     if (one_hot_nclasses_ == 0)
       {
