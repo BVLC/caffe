@@ -1019,6 +1019,8 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img_in,
 
   const Dtype scale = param_.scale();
 
+  const int pad = param_.pad();
+
   CHECK_GT(img_channels, 0);
 
   Dtype* mean = NULL;
@@ -1061,8 +1063,8 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img_in,
   int w_off = 0;
   cv::Mat cv_cropped_img = *cv_img;
   if (crop_size) {
-    CHECK_EQ(crop_size, height);
-    CHECK_EQ(crop_size, width);
+    CHECK_EQ(crop_size + pad * 2, height);
+    CHECK_EQ(crop_size + pad * 2, width);
     // We only do random crop when we do training.
     if (phase_ == TRAIN) {
       h_off = rand_num(img_height - crop_size + 1);
@@ -1077,11 +1079,16 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img_in,
     cv_cropped_img = cv_noised_img;
   }
 
+  // Pad zero to image for first convolution.
+  if(pad != 0) {
+    cv::copyMakeBorder(cv_cropped_img, cv_cropped_img, pad, pad, pad, pad, cv::BORDER_CONSTANT, 0);
+  }
+
   // Return the normalized crop bbox.
   crop_bbox->set_xmin(Dtype(w_off) / img_width);
   crop_bbox->set_ymin(Dtype(h_off) / img_height);
-  crop_bbox->set_xmax(Dtype(w_off + width) / img_width);
-  crop_bbox->set_ymax(Dtype(h_off + height) / img_height);
+  crop_bbox->set_xmax(Dtype(w_off + width - pad * 2) / img_width);
+  crop_bbox->set_ymax(Dtype(h_off + height - pad * 2) / img_height);
 
   CHECK(cv_cropped_img.data);
 
@@ -1099,16 +1106,20 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img_in,
         }
          // int top_index = (c * height + h) * width + w;
         Dtype pixel = static_cast<Dtype>(ptr[img_index++]);
-        if (has_mean_file) {
-          int mean_index = (c * img_height + h_off + h) * img_width + w_off + w;
-          transformed_data[top_index] =
-            (pixel - mean[mean_index]) * scale;
+        if(h < pad || w < pad || h > (height - pad) || w > (width - pad)) {
+          transformed_data[top_index] = pixel;
         } else {
-          if (has_mean_values) {
+          if (has_mean_file) {
+            int mean_index = (c * img_height + h_off + h) * img_width + w_off + w;
             transformed_data[top_index] =
-              (pixel - mean_values_[c]) * scale;
+              (pixel - mean[mean_index]) * scale;
           } else {
-            transformed_data[top_index] = pixel * scale;
+            if (has_mean_values) {
+              transformed_data[top_index] = pad == 0 ?
+                (pixel - mean_values_[c]) * scale : nearbyint((pixel - mean_values_[c]) * scale);
+            } else {
+              transformed_data[top_index] = pixel * scale;
+            }
           }
         }
       }
@@ -1571,6 +1582,7 @@ vector<int> DataTransformer<Dtype>::InferBlobShape(
 template<typename Dtype>
 vector<int> DataTransformer<Dtype>::InferBlobShape(const cv::Mat& cv_img) {
   const int crop_size = param_.crop_size();
+  const int pad = param_.pad();
   const int img_channels = cv_img.channels();
   int img_height = cv_img.rows;
   int img_width = cv_img.cols;
@@ -1593,8 +1605,8 @@ vector<int> DataTransformer<Dtype>::InferBlobShape(const cv::Mat& cv_img) {
   vector<int> shape(4);
   shape[0] = 1;
   shape[1] = img_channels;
-  shape[2] = (crop_size)? crop_size: img_height;
-  shape[3] = (crop_size)? crop_size: img_width;
+  shape[2] = ((crop_size)? crop_size: img_height) + pad * 2;
+  shape[3] = ((crop_size)? crop_size: img_width) + pad * 2;
   return shape;
 }
 

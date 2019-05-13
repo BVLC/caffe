@@ -1634,7 +1634,11 @@ void GetLocPredictions(const Dtype* loc_data, const int num,
     }
   }
 #ifdef _OPENMP
-  #pragma omp parallel for collapse(3)
+  #if defined(_MSC_EXTENSIONS)
+    #pragma omp parallel for
+  #else
+    #pragma omp parallel for collapse(3)
+  #endif
 #endif
     for (int i = 0; i < num; ++i) {
       for (int p = 0; p < num_preds_per_class; ++p) {
@@ -1832,7 +1836,11 @@ void GetConfidenceScores(const Dtype* conf_data, const int num,
   conf_preds->resize(num);
   Dtype* buffer = new Dtype[num * num_preds_per_class * num_classes];
 #ifdef _OPENMP
-  #pragma omp parallel for collapse(3)
+  #if defined(_MSC_EXTENSIONS)
+    #pragma omp parallel for
+  #else
+    #pragma omp parallel for collapse(3)
+  #endif
 #endif
   for (int i = 0; i < num; ++i) {
     for (int c = 0; c < num_classes; ++c) {
@@ -2259,12 +2267,22 @@ void GetMaxScoreIndex(const vector<float>& scores, const float threshold,
       const int top_k, vector<pair<float, int> >* score_index_vec) {
   // Generate index score pairs.
 #ifdef _OPENMP
-  #pragma omp parallel for
+  #pragma omp parallel
 #endif
-  for (int i = 0; i < scores.size(); ++i) {
-    if (scores[i] > threshold) {
-      score_index_vec->at(i) = std::make_pair(scores[i], i);
+  {
+    vector<pair<float, int> > prv;
+#ifdef _OPENMP
+    #pragma omp for nowait
+#endif
+    for (int i = 0; i < scores.size(); ++i) {
+      if (scores[i] > threshold) {
+        prv.push_back(std::make_pair(scores[i], i));
+      }
     }
+#ifdef _OPENMP
+    #pragma omp critical
+#endif
+    score_index_vec->insert(score_index_vec->end(), prv.begin(), prv.end());
   }
 
   // Sort the score pair according to the scores in descending order
@@ -2424,7 +2442,7 @@ void ApplyNMSFast(const vector<NormalizedBBox>& bboxes,
   CHECK_EQ(bboxes.size(), scores.size())
       << "bboxes and scores have different size.";
   // Get top_k scores (with corresponding indices).
-  vector<pair<float, int> > score_index_vec(scores.size());
+  vector<pair<float, int> > score_index_vec;
   GetMaxScoreIndex(scores, score_threshold, top_k, &score_index_vec);
   // Do nms.
   float adaptive_threshold = nms_threshold;

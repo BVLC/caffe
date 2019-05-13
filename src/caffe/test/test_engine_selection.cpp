@@ -429,12 +429,6 @@ TYPED_TEST(TestEngineSelection, TestEngineParserNetMKLDNN) {
           dynamic_cast<MKLDNNReLULayer<Dtype>* >(relu1_layer);
   EXPECT_EQ(null_ptr, relu1_mkldnn);
 
-  // relu2 verification
-  Layer<Dtype>* relu2_layer = net->layer_by_name("relu2").get();
-  MKLDNNReLULayer<Dtype>* relu2_mkldnn =
-          dynamic_cast<MKLDNNReLULayer<Dtype>* >(relu2_layer);
-  EXPECT_NE(null_ptr, relu2_mkldnn);
-
   // pool1 verification
   Layer<Dtype>* pool1_layer = net->layer_by_name("pool1").get();
   MKLDNNPoolingLayer<Dtype>* pool1_mkldnn =

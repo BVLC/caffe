@@ -43,7 +43,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/filler.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/layers/mkldnn_layers.hpp"
-//#include "mkl_service.h"
+#include "caffe/util/cpu_info.hpp"
 
 // TODO: Correct process case if there are no bias
 // TODO: Exception handling - mkl-dnn produces exceptions on errors
@@ -140,10 +140,10 @@ void MKLDNNConvolutionLayer<Dtype>::init_properties(const vector<Blob<Dtype>*>& 
     {
         conv_algorithm = algorithm::convolution_winograd;
     }
-    //else if(_conv_algorithm == "auto")
-    //{
-    //    conv_algorithm = algorithm::convolution_auto;
-    //}
+    else if(_conv_algorithm == "auto")
+    {
+        conv_algorithm = algorithm::convolution_auto;
+    }
     else
     {
         LOG(ERROR) << "Unsupported convolution algorithm.";
@@ -483,7 +483,7 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
 
     // ---  init primitive and prv_memory descriptors ----------------------
     if (this->need_quantize_){
-      std::vector<float> scale_bottom(1, this->scale_in_[0]);
+      std::vector<float> scale_bottom(1, this->layer_param_.quantization_param().force_u8_input()? 1.0f : this->scale_in_[0] );
       fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_bottom_data_memory_pd, prv_fwd_bottom_data_memory_pd, bottom[0], this, scale_bottom));
     } else {
       fwd_bottom_data.reset(new MKLDNNData<Dtype>(usr_bottom_data_memory_pd, prv_fwd_bottom_data_memory_pd, bottom[0], this));
@@ -501,7 +501,13 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
     fwd_top_data_memory = fwd_top_data->create_output_memory();
 
     bool is_wino = (prv_fwd_weights_data_memory_pd->desc().data.format == memory::format::wino_fmt); 
+  #ifdef _OPENMP
+    int node = caffe::cpu::OpenMpManager::getNumaNode();
+  #else
+    int node = 0;
+  #endif
     if (fwd_weights_data == NULL) {
+      std::string name = "numa" + std::to_string(node) + "@fwd_weights_data@" + this->layer_param_.name();
       if (this->need_quantize_){
         int count = 1; //single channel
         int reorder_mask = 0;
@@ -516,17 +522,18 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
         for(int i=0; i<count; i++){
           scale_weight[i] = this->scale_params_[i];
         }
-        fwd_weights_data.reset(new MKLDNNData<Dtype>(usr_weights_data_memory_pd, prv_fwd_weights_data_memory_pd, this->blobs_[0].get(), this, scale_weight, reorder_mask, false, false, true));
+        fwd_weights_data.reset(new MKLDNNData<Dtype>(usr_weights_data_memory_pd, prv_fwd_weights_data_memory_pd, this->blobs_[0].get(), this, scale_weight, reorder_mask, false, false, true, name));
       } else{
-        fwd_weights_data.reset(new MKLDNNData<Dtype>(usr_weights_data_memory_pd, prv_fwd_weights_data_memory_pd, this->blobs_[0].get(), this, {1.}, 0,  is_sum, is_wino, true));
+        fwd_weights_data.reset(new MKLDNNData<Dtype>(usr_weights_data_memory_pd, prv_fwd_weights_data_memory_pd, this->blobs_[0].get(), this, {1.}, 0,  is_sum, is_wino, false, name));
       }
-      fwd_weights_data->name = "fwd_weights_data  @ " + this->layer_param_.name();
+      fwd_weights_data->name.assign(name);
       fwd_weights_data_primitive = fwd_weights_data->create_input(true);
     }
 
     if (this->bias_term_) {
         if (fwd_bias_data == NULL) {
           shared_ptr<MemPD> prv_fwd_bias_data_memory_pd(new MemPD(convFwd_pd->bias_primitive_desc()));
+          std::string name = "numa" + std::to_string(node) + "@fwd_bias_data@" + this->layer_param_.name();
           if (this->need_quantize_){
           int count = 1;  //single channel
           int reorder_mask = 0;
@@ -544,11 +551,11 @@ void MKLDNNConvolutionLayer<Dtype>::InitConvolutionFwd(const vector<Blob<Dtype>*
               else
                   scale_bias[i] = this->scale_in_[0] * this->scale_params_[i];
             }
-            fwd_bias_data.reset(new MKLDNNData<Dtype>(usr_bias_data_memory_pd, prv_fwd_bias_data_memory_pd, this->blobs_[1].get(), this, scale_bias, reorder_mask, false, false, true));
+            fwd_bias_data.reset(new MKLDNNData<Dtype>(usr_bias_data_memory_pd, prv_fwd_bias_data_memory_pd, this->blobs_[1].get(), this, scale_bias, reorder_mask, false, false, false, name));
           } else{
-            fwd_bias_data.reset(new MKLDNNData<Dtype>(usr_bias_data_memory_pd, prv_fwd_bias_data_memory_pd, this->blobs_[1].get(), this, {1.}, 0,  false, false, true));
+            fwd_bias_data.reset(new MKLDNNData<Dtype>(usr_bias_data_memory_pd, prv_fwd_bias_data_memory_pd, this->blobs_[1].get(), this, {1.}, 0,  false, false, false, name));
           }
-          fwd_bias_data->name = "fwd_bias_data     @ " + this->layer_param_.name();
+          fwd_bias_data->name.assign(name);
           fwd_bias_data_primitive = fwd_bias_data->create_input(true);
         }
         convFwd.reset(new convolution_forward(*convFwd_pd
@@ -586,20 +593,19 @@ void MKLDNNConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bott
     bool _mkldnn_primitive = false;
     if( convFwd_pd == NULL || this->reshape){
         InitConvolutionFwd(bottom, top);
-        if(this->phase_ == TEST){
-            fwd_weights_data->sync_before_read();
-            if (this->bias_term_)
-                fwd_bias_data->sync_before_read();
-            _mkldnn_primitive = true;
-        }
+         if(getenv("CAFFE_INFERENCE_MEM_OPT")){
+             fwd_weights_data->sync_before_read();
+             if (this->bias_term_)
+                 fwd_bias_data->sync_before_read();
+             _mkldnn_primitive = true;
+         }
     }
-
     fwd_bottom_data->sync_before_read(); 
-    if(this->phase_ != TEST){
+    if(!getenv("CAFFE_INFERENCE_MEM_OPT")){
         fwd_weights_data->sync_before_read();
         if (this->bias_term_)
             fwd_bias_data->sync_before_read();
-    } 
+     } 
     // update top that head at prv
     fwd_top_data->sync_before_write();
 

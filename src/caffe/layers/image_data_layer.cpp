@@ -227,8 +227,10 @@ void ImageDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     std::string img_file_name = lines_[lines_id_].first;
     PreclcRandomNumbers precalculated_rand_numbers;
     this->data_transformer_->GenerateRandNumbers(precalculated_rand_numbers);
+  #if !defined(_MSC_EXTENSIONS)
     #pragma omp task firstprivate(offset, img_file_name, \
                                                     precalculated_rand_numbers)
+  #endif
     {
         cv::Mat cv_img = ReadImageToCVMat(root_folder + img_file_name,
             new_height, new_width, is_color);

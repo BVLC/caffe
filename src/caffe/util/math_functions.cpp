@@ -126,7 +126,7 @@ void caffe_set(const size_t N, const Dtype alpha, Dtype* Y) {
 
   if (run_parallel) {
     #pragma omp parallel for
-    for (size_t i = 0; i < N; ++i) {
+    for (long long i = 0; i < N; ++i) {
       Y[i] = alpha;
     }
 
@@ -179,7 +179,7 @@ void caffe_cpu_copy(const size_t N, const Dtype* X, Dtype* Y) {
     const int block_mem_size = 256 * 1024;
     const int block_size = block_mem_size / sizeof(Dtype);
     #pragma omp parallel for
-    for (size_t i = 0; i < N; i += block_size)
+    for (long long i = 0; i < N; i += block_size)
       memcpy(Y + i, X + i,
               (i + block_size > N) ? (N - i) * sizeof(Dtype) : block_mem_size);
 

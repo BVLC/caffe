@@ -51,9 +51,9 @@ MKLDNNMemoryDescriptorBase<Dtype>::MKLDNNMemoryDescriptorBase(shared_ptr<memory:
                                                             , int mask
                                                             , bool is_sum
                                                             , bool is_wino
-                                                            , bool is_weight)
-                                    : name("MKLDNNMemoryDescriptorBase")
-                                    , _reorder_usr2prv_pd(), _reorder_prv2usr_pd(), _reorder_extprv2prv_pd()
+                                                            , bool is_weight
+                                                            , std::string _name)
+                                    : _reorder_usr2prv_pd(), _reorder_prv2usr_pd(), _reorder_extprv2prv_pd()
                                     ,_prv_memory(), _internal_ptr(NULL), _usr_memory(), _cpu_ptr(NULL)
                                     , _mkldnn_layer(NULL), _is_weight(is_weight)
 {
@@ -63,6 +63,7 @@ MKLDNNMemoryDescriptorBase<Dtype>::MKLDNNMemoryDescriptorBase(shared_ptr<memory:
     this->set_scale(scale);
     this->set_sum(is_sum);
     this->_blob = blob;
+    this->name.assign(_name);
 }
 
 template <typename Dtype>
@@ -110,6 +111,8 @@ void MKLDNNMemoryDescriptorBase<Dtype>::create_reorder_descriptors(std::vector<f
         }
         attri.set_output_scales(mask, scales_p2u); 
         attri.set_int_output_round_mode(round_nearest);
+        
+        //winograd OR int8 weights can't create the prvtousr reorder due to mkldnn limitation.
         if(!is_wino && !is_weight){
             _reorder_prv2usr_pd = shared_ptr<reorder::primitive_desc>(
                     new reorder::primitive_desc(*_prv_memory_pd, *_usr_memory_pd, attri));
@@ -147,8 +150,9 @@ template <typename Dtype, bool is_diff>
                         , int mask
                         , bool is_sum
                         , bool is_wino
-                        , bool is_weight)
-        : MKLDNNMemoryDescriptorBase<Dtype>(usr_memory_pd, prv_memory_pd, blob, mkldnn_layer, scale, mask, is_sum, is_wino, is_weight)
+                        , bool is_weight
+                        , std::string name)
+        : MKLDNNMemoryDescriptorBase<Dtype>(usr_memory_pd, prv_memory_pd, blob, mkldnn_layer, scale, mask, is_sum, is_wino, is_weight, name)
 {
     const Dtype* prv_ptr = is_diff ?  blob->prv_diff() : blob->prv_data();
 
@@ -462,7 +466,7 @@ void MKLDNNMemoryDescriptor<Dtype, is_diff>::sync_before_read()
 
         if (*blob_prv_mkldnn_mem_descr->prv_memory_pd() !=  *this->prv_memory_pd() || blob_prv_mkldnn_mem_descr->get_scale() != this->get_scale()) {
             // prv in blob and in this descrptor may have different layouts
-#ifdef D
+#ifdef DEBUG
         LOG(INFO) << "Convert from extprv";
 #endif
             this->convert_from_extprv(blob_prv_mkldnn_mem_descr->aprimitive());

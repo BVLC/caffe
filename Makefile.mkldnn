@@ -63,15 +63,15 @@ mkldnn_clean:
 mkldnnroot_set:
 	$(eval CXXFLAGS += -DMKLDNN_SUPPORTED) \
 	$(eval INCLUDE_DIRS += $(MKLDNNROOT)/include)
-	$(eval MKLDNN_LDFLAGS += -lmkldnn -L$(MKLDNNROOT)/lib) \
-	$(eval MKLDNN_LDFLAGS += -Wl,-rpath,$(MKLDNNROOT)/lib) \
+	$(eval MKLDNN_LDFLAGS += -lmkldnn -L$(MKLDNNROOT)/lib64) \
+	$(eval MKLDNN_LDFLAGS += -Wl,-rpath,$(MKLDNNROOT)/lib64) \
 
 
 mkldnnroot_notset: mkldnn_build
 	$(eval CXXFLAGS += -DMKLDNN_SUPPORTED) \
 	$(eval INCLUDE_DIRS += $(MKLDNN_INSTALLDIR)/include) \
 	$(eval MKLDNN_LDFLAGS += -lmkldnn) \
-	$(eval MKLDNN_LDFLAGS += -L$(MKLDNN_INSTALLDIR)/lib -Wl,-rpath,${MKLDNN_INSTALLDIR}/lib)
+	$(eval MKLDNN_LDFLAGS += -L$(MKLDNN_INSTALLDIR)/lib64 -Wl,-rpath,${MKLDNN_INSTALLDIR}/lib64)
 
 
 

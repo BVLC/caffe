@@ -1,12 +1,12 @@
 #!/bin/bash
 
-prototxt="models/intel_optimized_models/resnet50_v1/resnet50_int8_perf.prototxt"
+prototxt="models/intel_optimized_models/int8/resnet50_int8_perf_clx_winograd.prototxt"
 iterations=1200
 skip=200
 NUM_CORE=56
-s_BS=10
-e_BS=10
-INSTANCE=2
+s_BS=11
+e_BS=11
+INSTANCE=14
 
 rm -rf logs
 mkdir logs
@@ -34,7 +34,7 @@ do
     export KMP_AFFINITY=granularity=fine,compact,1,0
     export OMP_NUM_THREADS=$INTERVAL
 
-    sudo sh -c 'echo 3 > /proc/sys/vm/drop_caches'
+    #sudo sh -c 'echo 3 > /proc/sys/vm/drop_caches'
 
     for ((i = 0; i < $NUM_CORE; i += $INTERVAL))
     do

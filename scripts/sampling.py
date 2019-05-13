@@ -9,7 +9,7 @@ pycaffe = os.path.split(os.path.realpath(__file__))[0] + '/../python'
 sys.path.insert(0, pycaffe)
 import caffe
 
-calibration_algos = ["DIRECT", "KL", "MAXP"]
+calibration_algos = ["DIRECT", "KL", "MAXP", "MA"]
 scaling_modes = ["SINGLE", "MULTIPLE"]
 sampling_layers = ["Convolution", "InnerProduct"]
 
@@ -49,7 +49,7 @@ def get_winograd_info(model, conv_bottom_blob_layer_map, winograd_algo = False):
     return (winograd_bottoms, winograd_convolutions)
 
 
-def sample(model, weight, winograd_algo=False, itern=1, enable_first_conv=False):
+def sample(model, weight, winograd_algo=False, itern=1, enable_first_conv=False, sampling_single=False):
     caffe.set_mode_cpu()
     test_net = caffe.Net(model, weight, caffe.TEST)
     (conv_layers, top_blobs_map, bottom_blobs_map, conv_top_blob_layer_map, conv_bottom_blob_layer_map) = get_blob_map(test_net, enable_first_conv)
@@ -58,15 +58,13 @@ def sample(model, weight, winograd_algo=False, itern=1, enable_first_conv=False)
     for iter_index in range(0, itern):
         print "Iteration:", (iter_index + 1)
         test_net.forward()
+        if sampling_single and iter_index < itern - 1:
+            continue
         for k, _ in test_net.blobs.items(): # top blob
-            output = test_net.blobs[k].data
             if k not in blobs.keys():
-                blobs[k] = [output]
+                blobs[k] = [test_net.blobs[k].data.copy()]
             else:
-                new_outputs = blobs[k]
-                new_outputs.append(output)
-                blobs[k] = new_outputs
-
+                blobs[k].append(test_net.blobs[k].data.copy())
     params = {}
     for k, _ in test_net.params.items():
         if k not in conv_layers:
@@ -124,8 +122,10 @@ def get_optimal_scaling_factor(activation_blob, num_quantized_bins = 255):
         hist, hist_edeges = np.histogram(activation_blob, bins=2048, range=(min_val, max_val))
         ending_iter = 2047
         starting_iter = int(ending_iter * 0.7)
+        min_range = min_val
     else:
         th = max(abs(max_val), abs(min_val))
+        min_range = -th
         hist, hist_edeges = np.histogram(activation_blob, bins=2048, range=(-th, th))
         starting_iter = 0
         ending_iter = 2047
@@ -188,7 +188,7 @@ def get_optimal_scaling_factor(activation_blob, num_quantized_bins = 255):
             else:
                 break
         min_kl_index = starting_iter
-    return (min_kl_index+0.5)*bin_width
+    return (min_kl_index+0.5)*bin_width + min_range
 
 # calibrator info: data, algo, scaling_mode, max_p
 INDEX_DATA = 0
@@ -245,9 +245,23 @@ def calibrate_max(calibrator_info):
                         iteration_output_wino = wino_transform_param(iteration_output)
                 else:
                     iteration_output_wino = iteration_output
-                iteration_max = np.max(iteration_output_wino)
+                iteration_max = np.max(np.abs(iteration_output_wino))
                 if iteration_max > layer_max:
                     layer_max = iteration_max
+        elif calibration_algo == "MA":
+            iteration_output_maxs = []
+            for iteration_output in iteration_outputs:
+                if is_wino_conv:
+                    if is_activation:
+                        iteration_output_wino = wino_transform_data(iteration_output)
+                    else:
+                        iteration_output_wino = wino_transform_param(iteration_output)
+                else:
+                    iteration_output_wino = iteration_output
+                iteration_output_maxs.append(np.max(np.abs(iteration_output_wino)))
+            layer_max = iteration_output_maxs[0]
+            for i in range(1, len(iteration_output_maxs)):
+                layer_max = 0.5 * layer_max + 0.5 * iteration_output_maxs[i]
         elif calibration_algo == "MAXP":
             iteration_sum = 0
             for iteration_output in iteration_outputs:
@@ -285,9 +299,25 @@ def calibrate_max(calibrator_info):
                 else:
                     iteration_output_wino = iteration_output
                 for i in range(0, iteration_output_wino.shape[0]):
-                    oc_max = np.max(iteration_output_wino[i])
+                    oc_max = np.max(np.abs(iteration_output_wino[i]))
                     if oc_max > layer_max_oc[i]:
                         layer_max_oc[i] = float(oc_max)
+        elif calibration_algo == "MA":
+            iteration_output_maxs = []
+            for iteration_output in iteration_outputs:
+                if is_wino_conv:
+                    if is_activation:
+                        iteration_output_wino = wino_transform_data(iteration_output)
+                    else:
+                        iteration_output_wino = wino_transform_param(iteration_output)
+                else:
+                    iteration_output_wino = iteration_output
+                oc_max = [np.max(np.abs(output_oc)) for output_oc in iteration_output_wino]
+                iteration_output_maxs.append(oc_max)
+            layer_max_oc = iteration_output_maxs[0]
+            for i in range(len(layer_max_oc)):
+                for j in range(1, len(iteration_output_maxs)):
+                    layer_max_oc[i] = 0.5 * layer_max_oc[i] + 0.5 * iteration_output_maxs[j][i]
         elif calibration_algo == "MAXP":
             for i in range(0, iteration_outputs[0].shape[0]):
                 layer_max_oc.append(0)
@@ -334,15 +364,15 @@ def calibrate_activations(blobs, conv_top_blob_layer_map, conv_bottom_blob_layer
         print "Calibrate activation for", k, v[0].shape
         if is_wino_conv:
             if k in winograd_bottoms:
-                v_max = calibrate_max((np_abs(v), calibration_algo, scaling_mode, maxp, 1, True))
+                v_max = calibrate_max((v, calibration_algo, scaling_mode, maxp, 1, True))
                 conv_blobs_max[k] = v_max
             else:
-                v_max = calibrate_max((np_abs(v), calibration_algo, scaling_mode, maxp, 0, False))
+                v_max = calibrate_max((v, calibration_algo, scaling_mode, maxp, 0, False))
                 conv_blobs_max[k] = v_max
         else:
             print "-----------------"
-            v_max = calibrate_max((np_abs(v), calibration_algo, scaling_mode, maxp, 0, False))
-            v_min = calibrate_min((v, calibration_algo, scaling_mode, maxp, 0, False))
+            v_max = calibrate_max((v, calibration_algo, scaling_mode, maxp, 1, False))
+            v_min = calibrate_min((v, calibration_algo, scaling_mode, maxp, 1, False))
             conv_blobs_max[k] = v_max
             conv_blobs_min[k] = v_min
 

@@ -398,7 +398,11 @@ void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const int num_channels = bottom[0]->channels();
 
 #ifdef _OPENMP
-      #pragma omp parallel for collapse(2)
+  #if defined(_MSC_EXTENSIONS)
+    #pragma omp parallel for
+  #else
+    #pragma omp parallel for collapse(2)
+  #endif
 #endif
       for (int image = 0; image < batch_size; ++image)
         for (int channel = 0; channel < num_channels; ++channel)
@@ -438,7 +442,11 @@ void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
         caffe_set(top_count, Dtype(-FLT_MAX), top_data);
 
 #ifdef _OPENMP
-        #pragma omp parallel for collapse(2)
+  #if defined(_MSC_EXTENSIONS)
+    #pragma omp parallel for
+  #else
+    #pragma omp parallel for collapse(2)
+  #endif
 #endif
         for (int n = 0; n < num_; ++n) {
           for (int c = 0; c < channels_; ++c) {
@@ -492,7 +500,11 @@ void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       case PoolingParameter_PoolMethod_AVE:
         caffe_set(top_count, Dtype(0), top_data);
 #ifdef _OPENMP
-  #pragma omp parallel for collapse(2)
+  #if defined(_MSC_EXTENSIONS)
+    #pragma omp parallel for
+  #else
+    #pragma omp parallel for collapse(2)
+  #endif
 #endif
         for (int n = 0; n < num_; ++n) {
           for (int c = 0; c < channels_; ++c) {
@@ -581,7 +593,11 @@ void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       const int num_channels = bottom[0]->channels();
 
 #ifdef _OPENMP
-      #pragma omp parallel for collapse(2)
+  #if defined(_MSC_EXTENSIONS)
+    #pragma omp parallel for
+  #else
+    #pragma omp parallel for collapse(2)
+  #endif
 #endif
       for (int image = 0; image < batch_size; ++image)
         for (int channel = 0; channel < num_channels; ++channel)
@@ -611,7 +627,11 @@ void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
         switch (this->layer_param_.pooling_param().pool()) {
         case PoolingParameter_PoolMethod_MAX:
 #ifdef _OPENMP
-      #pragma omp parallel for collapse(2)
+  #if defined(_MSC_EXTENSIONS)
+    #pragma omp parallel for
+  #else
+    #pragma omp parallel for collapse(2)
+  #endif
 #endif
           for (int n = 0; n < top_num; ++n) {
             for (int c = 0; c < channels_; ++c) {
@@ -640,7 +660,11 @@ void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
           break;
         case PoolingParameter_PoolMethod_AVE:
 #ifdef _OPENMP
-  #pragma omp parallel for collapse(2)
+  #if defined(_MSC_EXTENSIONS)
+    #pragma omp parallel for
+  #else
+    #pragma omp parallel for collapse(2)
+  #endif
 #endif
           for (int n = 0; n < top_num; ++n) {
             for (int c = 0; c < channels_; ++c) {

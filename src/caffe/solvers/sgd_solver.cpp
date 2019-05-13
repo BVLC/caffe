@@ -300,12 +300,14 @@ void SGDSolver<Dtype>::ApplyUpdate(int param_id) {
   
   LOG_PARAM_BLOB(this->net_->learnable_params()[param_id], diff, param_id, "ApplyUpdate: delwt after Normalize:");
 
-  Regularize(param_id);
-
-  LOG_PARAM_BLOB(this->net_->learnable_params()[param_id], diff, param_id, "ApplyUpdate: delwt after Regularize:");
+  // In original intel-caffe code, only SGD(Not NESTEROV, ADAGRAD, RMSPROP, ADADELTA, ADAM) adapted LARS. So, we change only the flow of SGD.
+  // We execute Regularize process after GetLocalRate(LARS) when solver_type is "SGD". 
+  if (strcmp(this->type(), "SGD")) {
+    Regularize(param_id);
+    LOG_PARAM_BLOB(this->net_->learnable_params()[param_id], diff, param_id, "ApplyUpdate: delwt after Regularize:");
+  }
 
   ComputeUpdateValue(param_id, rate);
-
 
   LOG_PARAM_BLOB(this->net_->learnable_params()[param_id], diff, param_id, "ApplyUpdate: wtinc:");
 
@@ -413,7 +415,6 @@ void SGDSolver<Dtype>::SGDFusion(int param_id, Dtype rate) {
 
   //ComputeUpdateValue  initialization
   Dtype momentum = this->param_.momentum();
-  Dtype local_rate = rate * GetLocalRate(param_id);
 //#pragma endregion
 
 //#pragma region 2. Common condition judgement
@@ -452,6 +453,8 @@ void SGDSolver<Dtype>::SGDFusion(int param_id, Dtype rate) {
     }
   }
 //#pragma endregion
+//execute GetLocalRate after Normalize stage
+  Dtype local_rate = rate * GetLocalRate(param_id);
 
 //For most common topologies from BVLC, all skipped the Normalize stage, and use L2 regularization
 //If prv_diff_condition_flag == true, then prv_data_condition_flag == true    (1)
@@ -672,6 +675,9 @@ void SGDSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
   const vector<Blob<Dtype>*>& net_params = this->net_->learnable_params();
   Dtype momentum = this->param_.momentum();
   Dtype local_rate = rate * GetLocalRate(param_id);
+
+  Regularize(param_id);
+  LOG_PARAM_BLOB(this->net_->learnable_params()[param_id], diff, param_id, "ApplyUpdate: delwt after Regularize:");
 
   if (this->param_.warmup_iter() > 0 &&
       this->iter_ < this->param_.warmup_iter()) {

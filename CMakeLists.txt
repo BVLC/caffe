@@ -1,23 +1,38 @@
-cmake_minimum_required(VERSION 2.8.7)
+if(MSVC)
+  # CMake 3.4 introduced a WINDOWS_EXPORT_ALL_SYMBOLS target property that makes it possible to
+  # build shared libraries without using the usual declspec() decoration.
+  # See: https://blog.kitware.com/create-dlls-on-windows-without-declspec-using-new-cmake-export-all-feature/
+  # and https://cmake.org/cmake/help/v3.5/prop_tgt/WINDOWS_EXPORT_ALL_SYMBOLS.html
+  # for details.
+  cmake_minimum_required(VERSION 3.4)
+else()
+  cmake_minimum_required(VERSION 2.8.7)
+endif()
 if(POLICY CMP0046)
   cmake_policy(SET CMP0046 NEW)
 endif()
 if(POLICY CMP0054)
   cmake_policy(SET CMP0054 NEW)
 endif()
+if(POLICY CMP0074)
+  cmake_policy(SET CMP0074 NEW)
+endif()
 
 # ---[ Caffe project
 project(Caffe C CXX)
 
 # ---[ Caffe version
-set(CAFFE_TARGET_VERSION "1.1.5" CACHE STRING "Caffe logical version")
-set(CAFFE_TARGET_SOVERSION "1.1.5" CACHE STRING "Caffe soname version")
+set(CAFFE_TARGET_VERSION "1.1.6" CACHE STRING "Caffe logical version")
+set(CAFFE_TARGET_SOVERSION "1.1.6" CACHE STRING "Caffe soname version")
 add_definitions(-DCAFFE_VERSION=${CAFFE_TARGET_VERSION})
 
 # ---[ Using cmake scripts and modules
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
 
 include(ExternalProject)
+if(MSVC)
+include(GNUInstallDirs)
+endif()
 
 include(cmake/Utils.cmake)
 include(cmake/Targets.cmake)
@@ -62,8 +77,15 @@ endif()
 #end code coverage
 
 # ---[ Flags
-if(UNIX OR APPLE)
-
+if(MSVC)
+    set(USERCONFIG_PLATFORM "x64")
+    if(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP -D_USE_MATH_DEFINES /DNO_STRICT /wd4800 /wd4996 /wd4068 /wd4305 /wd4244 /wd4551 /wd4267 /wd4661 /wd4146")
+    endif()
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP -D_USE_MATH_DEFINES /DNO_STRICT -Qdiag-disable:15552 -Qdiag-disable:3180")
+    endif()
+elseif(UNIX OR APPLE)
   # Linker flags.
   if( ${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU" OR ${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel") 
     # GCC specific flags. ICC is compatible with them.
@@ -130,12 +152,16 @@ configure_file(cmake/Templates/caffe_config.h.in "${PROJECT_BINARY_DIR}/caffe_co
 # ---[ Includes
 set(Caffe_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
 include_directories(${Caffe_INCLUDE_DIR} ${PROJECT_BINARY_DIR})
-include_directories(BEFORE src/gtest/include src/gmock/include) # This is needed for gtest.
 
+if(NOT MSVC)
+include_directories(BEFORE src/gtest/include src/gmock/include) # This is needed for gtest.
+endif()
 # ---[ Subdirectories
 #add_subdirectory(src/gtest)
 set(BUILD_SHARED_LIBS off)
+if(NOT MSVC)
 add_subdirectory(src/gmock)
+endif()
 set(BUILD_SHARED_LIBS on)
 add_subdirectory(src/caffe)
 add_subdirectory(tools)

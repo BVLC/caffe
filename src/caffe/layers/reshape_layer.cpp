@@ -181,7 +181,11 @@ void ReshapeLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     Dtype* top_data = top[0]->mutable_cpu_data();
 
     #ifdef _OPENMP
-    #pragma omp parallel for collapse(2)
+        #if defined(_MSC_EXTENSIONS)
+            #pragma omp parallel for
+        #else
+            #pragma omp parallel for collapse(2)
+        #endif
     #endif
     for(int n = 0; n < bn; n++) {
       for(int c = 0; c < bc; c++) {
@@ -224,7 +228,11 @@ void ReshapeLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const Dtype* top_diff = top[0]->cpu_diff();
 
     #ifdef _OPENMP
-    #pragma omp parallel for collapse(2)
+        #if defined(_MSC_EXTENSIONS)
+            #pragma omp parallel for
+        #else
+            #pragma omp parallel for collapse(2)
+        #endif
     #endif
     for(int n = 0; n < tn; n++) {
       for(int c = 0; c < tc; c++) {

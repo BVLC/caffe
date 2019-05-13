@@ -96,6 +96,9 @@ DISABLE_CONV_SUM_FUSION := 0
 # Use sparse to boost inference.
 DISABLE_SPARSE := 0
 
+# Use fc/relu fusion to boost inference.
+DISABLE_FC_RELU_FUSION := 0
+
 # Intel(R) Math Kernel Library for Deep Neural Networks (Intel(R) MKL-DNN) 
 # Uncomment to disable MKLDNN download by customized setting
 # DISABLE_MKLDNN_DOWNLOAD := 1

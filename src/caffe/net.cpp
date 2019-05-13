@@ -41,6 +41,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 #include <utility>
 #include <vector>
+#include <numeric>
 
 #include "hdf5.h"
 
@@ -58,7 +59,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/util/performance.hpp"
 #include "caffe/util/upgrade_proto.hpp"
 
-#include "caffe/test/test_caffe_main.hpp"
 #include "caffe/multinode/mlsl.hpp"
 #include "caffe/multinode/apply_mn_param.hpp"
 #include "caffe/util/remove_batch_norm.hpp"
@@ -539,12 +539,13 @@ void Net<Dtype>::CompileNet(const NetParameter& param,
   #define COMPILE_BN_RELU_FUSION_INDEX 3
   #define COMPILE_SPARSE_INDEX 5
   #define COMPILE_CONV_SUM_FUSION_INDEX 6
+  #define COMPILE_FC_RELU_FUSION_INDEX 7
   int i, current = 0;
   NetParameter param_temp[2];
   void (*CompileRules[]) (const NetParameter& param, NetParameter* param_compiled) =
     {RemoveBNScale<Dtype>, CompilationRuleRemoveScale, CompilationRuleConvReluFusion,
     CompilationRuleFuseBnRelu, CompilationRuleBNInplace, CompilationRuleSparse, 
-    CompilationRuleConvSumFusion};
+    CompilationRuleConvSumFusion, CompilationRuleFuseFCRelu};
 
   bool disabled[NUM_OF_RULES] = {false};
 
@@ -563,6 +564,9 @@ void Net<Dtype>::CompileNet(const NetParameter& param,
 #ifdef DISABLE_SPARSE
   disabled[COMPILE_SPARSE_INDEX] = true;
 #endif
+#ifdef DISABLE_FC_RELU_FUSION
+  disabled[COMPILE_FC_RELU_FUSION_INDEX] = true;
+#endif
 
   param_temp[current].CopyFrom(param);
   for (i = 0; i < NUM_OF_RULES; i++)
@@ -579,6 +583,7 @@ void Net<Dtype>::CompileNet(const NetParameter& param,
   #undef COMPILE_BN_RELU_FUSION_INDEX
   #undef COMPILE_SPARSE_INDEX
   #undef COMPILE_CONV_SUM_FUSION_INDEX
+  #undef COMPILE_FC_RELU_FUSION_INDEX
 }
 
 template <typename Dtype>
@@ -1200,7 +1205,7 @@ void Net<Dtype>::CompilationRuleSparse(const NetParameter& param,
 template <typename Dtype>
 void Net<Dtype>::CompilationRuleFuseBnRelu(const NetParameter& param,
                                     NetParameter* param_compiled) {
-  std::set<std::string> layers_to_drop;
+                     std::set<std::string> layers_to_drop;
   for (int i = 0; i < param.layer_size(); ++i) {
     LayerParameter* layer_param =
           (const_cast<NetParameter&>(param)).mutable_layer(i);
@@ -1263,6 +1268,93 @@ void Net<Dtype>::CompilationRuleFuseBnRelu(const NetParameter& param,
               (const_cast<NetParameter&>(param)).mutable_layer(i+1);
             relu_layer_param->mutable_relu_param()->set_fuse(true);
             // LOG(INFO) <<  "Bn + Relu fused." << std::endl;
+          }
+        }
+      }
+    }
+
+    if(param.state().phase() == TEST) {
+      if (layers_to_drop.find(layer_param->name()) != layers_to_drop.end()) {
+        LOG_IF(INFO, Caffe::root_solver()) << "Dropped layer: "
+               << layer_param->name() << std::endl;
+        layer_included = false;
+        // Remove dropped layer from the list of layers to be dropped
+        layers_to_drop.erase(layers_to_drop.find(layer_param->name()));
+      }
+    }
+
+    if (layer_included) {
+      param_compiled->add_layer()->CopyFrom(*layer_param);
+    }
+  }
+}
+
+template <typename Dtype>
+void Net<Dtype>::CompilationRuleFuseFCRelu(const NetParameter& param,
+                                    NetParameter* param_compiled) {
+  std::set<std::string> layers_to_drop;
+  for (int i = 0; i < param.layer_size(); ++i) {
+    LayerParameter* layer_param =
+          (const_cast<NetParameter&>(param)).mutable_layer(i);
+    bool layer_included = true;
+
+    // Optimization rule 2:
+    // - If we are having engine MKLDNN and ReLU layer within a model
+    // and input bottom comes from  InnerProduct of engine MKLDNN
+    // then we can remove ReLU layer
+    // and rename InnerProduct top blob after deleted ReLU's top
+    // Note: Currently merging of InnerProduct and relu layers is feasible
+    // If current layer is InnerProduct of MKLDNN engine..
+    if ((layer_param->type().compare("InnerProduct") == 0) &&
+        ((layer_param->convolution_param().engine() == ConvolutionParameter_Engine_MKLDNN) ||
+         ((layer_param->convolution_param().engine() == ConvolutionParameter_Engine_DEFAULT) &&
+          (layer_param->engine().compare(0, 6, "MKLDNN") == 0) &&
+          (layer_param->engine().find(":DLA", 6) == string::npos)) ||
+         ((layer_param->convolution_param().engine() == ConvolutionParameter_Engine_DEFAULT) &&
+          (layer_param->engine() == "") &&
+          (param.engine().compare(0, 6, "MKLDNN") == 0 &&
+           param.engine().find(":DLA", 6) == string::npos)))) {
+      std::vector<const LayerParameter*> consumer_layer_params;
+      GetBlobConsumers(consumer_layer_params, layer_param->top(0),
+                       param, i+1 < param.layer_size() ? i+1 : i);
+      const LayerParameter& consumer_layer_param =
+                                    consumer_layer_params.size() > 0 ?
+                                    *(consumer_layer_params[0]) : *layer_param;
+
+      // Consumer layer of blob produced by Conv
+      // has to be ReLU layer with one Input Blob
+      if ((consumer_layer_param.type().compare("ReLU") == 0) &&
+          ((consumer_layer_param.relu_param().engine() == ReLUParameter_Engine_MKLDNN) ||
+           ((consumer_layer_param.relu_param().engine() == ReLUParameter_Engine_DEFAULT) &&
+            (consumer_layer_param.engine().compare(0, 6, "MKLDNN") == 0 &&
+             consumer_layer_param.engine().find(":DLA", 6) == string::npos)) ||
+           ((consumer_layer_param.relu_param().engine() == ReLUParameter_Engine_DEFAULT) &&
+            (consumer_layer_param.engine() == "") &&
+            (param.engine().compare(0, 6, "MKLDNN") == 0 &&
+             param.engine().find(":DLA", 6) == string::npos)))) {
+        string& convolution_top_blob_name =
+            const_cast<string&>(layer_param->top(0));
+
+        float negative_slope =
+                  consumer_layer_param.relu_param().negative_slope();
+        layer_param->mutable_inner_product_param()->set_relu(true);
+        layer_param->mutable_inner_product_param()->set_negative_slope(negative_slope);
+        if(param.state().phase() == TEST) {
+          const string& scale_top_blob_name = consumer_layer_param.top(0);
+          // Mark Consumer layer (its name) as the one marked for dropping
+          layers_to_drop.insert(consumer_layer_param.name());
+
+          // Replace Convolution top name with ReLU top name
+          convolution_top_blob_name.resize(scale_top_blob_name.size());
+          convolution_top_blob_name.replace(0,
+                                          scale_top_blob_name.size(),
+                                          scale_top_blob_name);
+        }
+        if(param.state().phase() == TRAIN) {
+          if(i+1 < param.layer_size()) {
+            LayerParameter* relu_layer_param =
+              (const_cast<NetParameter&>(param)).mutable_layer(i+1);
+            relu_layer_param->mutable_relu_param()->set_fuse(true);
           }
         }
       }

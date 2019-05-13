@@ -38,7 +38,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef INCLUDE_CAFFE_UTIL_COMPARETOOLUTILITIES_H_
 #define INCLUDE_CAFFE_UTIL_COMPARETOOLUTILITIES_H_
 
-#include <dirent.h>
 #include <algorithm>
 #include <cmath>
 #include <cstdarg>

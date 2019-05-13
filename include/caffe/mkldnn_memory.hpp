@@ -41,6 +41,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 #include <vector>
 
+#include <boost/interprocess/shared_memory_object.hpp>
+#include <boost/interprocess/mapped_region.hpp>
 #include "boost/enable_shared_from_this.hpp"
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
@@ -51,6 +53,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "caffe/net.hpp"
 
 using namespace mkldnn;
+using namespace boost::interprocess;
 
 namespace caffe {
 
@@ -67,7 +70,8 @@ public:
                                 , int mask=0
                                 , bool is_sum=false
                                 , bool is_wino=false
-                                , bool is_weight=false);
+                                , bool is_weight=false
+                                , std::string _name="");
 
 
     ~MKLDNNMemoryDescriptorBase() {}
@@ -118,6 +122,8 @@ public:
     MKLDNNLayer<Dtype>*  mkldnn_layer() const { return _mkldnn_layer;  }
 
     std::string name;  // for debugging purposes
+    shared_memory_object *shm;
+    mapped_region *region;
 protected:
     void check_usr_with_prv_descriptors();
     void set_prv_memory(shared_ptr<memory> memory)
@@ -144,8 +150,16 @@ protected:
                 // find out a free buf in the circleBuf queue
                 _m_memory = CircleBuf::Instance()->GetFreeBuf();
               } else {
-                bool cuda;
-                CaffeMallocHost(&_m_memory, _prv_memory_pd->get_size(), &cuda);
+                if (getenv("CAFFE_INFERENCE_WEIGHT_SHARING")) {
+                  shm = new shared_memory_object(open_or_create, name.c_str(), read_write);
+                  //Set size
+                  shm->truncate(_prv_memory_pd->get_size());
+                  region = new mapped_region(*shm, read_write);
+                  _m_memory = region->get_address();
+                } else {
+                  bool cuda;
+                  CaffeMallocHost(&_m_memory, _prv_memory_pd->get_size(), &cuda);
+                }
               }
               _prv_memory = shared_ptr<memory>(new memory(*_prv_memory_pd, _m_memory));
             } else
@@ -223,7 +237,8 @@ public:
                         , int mask=0
                         , bool is_sum=false
                         , bool is_wino=false
-                        , bool is_weight=false);
+                        , bool is_weight=false
+                        , std::string name="");
 
     virtual void convert_from_prv(void* cpu_ptr);
     virtual void convert_to_prv(void* cpu_ptr);
@@ -272,8 +287,9 @@ public:
                 , int mask=0
                 , bool is_sum=false
                 , bool is_wino=false
-                , bool is_weight=false)
-        : MKLDNNMemoryDescriptor<Dtype, false>(usr_memory_pd, prv_memory_pd, blob, mkldnn_layer, scale, mask, is_sum, is_wino, is_weight) {}
+                , bool is_weight=false
+                , std::string name="")
+        : MKLDNNMemoryDescriptor<Dtype, false>(usr_memory_pd, prv_memory_pd, blob, mkldnn_layer, scale, mask, is_sum, is_wino, is_weight, name) {}
 };
 
 template <typename Dtype>

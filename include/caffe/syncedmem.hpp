@@ -75,9 +75,12 @@ inline void CaffeMallocHost(void** ptr, size_t size, bool* use_cuda) {
 #ifdef USE_MKL
     *ptr = mkl_malloc(size ? size : 1, 64);
 #else
-   //*ptr = malloc(size);
-   int rc = ::posix_memalign(ptr, 64, size);
-   assert(rc == 0);
+  #if defined(_MSC_EXTENSIONS)
+    *ptr = _aligned_malloc(size, 64);
+  #else
+    int rc = ::posix_memalign(ptr, 64, size);
+    assert(rc == 0);
+  #endif
 #endif
 
 #ifdef USE_MLSL
@@ -105,8 +108,11 @@ inline void CaffeFreeHost(void* ptr, bool use_cuda) {
 #ifdef USE_MKL
     mkl_free(ptr);
 #else
-    //free(ptr);
+  #if defined(_MSC_EXTENSIONS)
+    _aligned_free(ptr);
+  #else
     ::free(ptr);
+  #endif
 #endif
 
 #ifdef USE_MLSL

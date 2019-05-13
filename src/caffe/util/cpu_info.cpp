@@ -14,14 +14,14 @@ For the list of contributors go to https://github.com/BVLC/caffe/blob/master/CON
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
 
-    * Redistributions of source code must retain the above copyright notice,
-      this list of conditions and the following disclaimer.
-    * Redistributions in binary form must reproduce the above copyright
-      notice, this list of conditions and the following disclaimer in the
-      documentation and/or other materials provided with the distribution.
-    * Neither the name of Intel Corporation nor the names of its contributors
-      may be used to endorse or promote products derived from this software
-      without specific prior written permission.
+  * Redistributions of source code must retain the above copyright notice,
+    this list of conditions and the following disclaimer.
+  * Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in the
+    documentation and/or other materials provided with the distribution.
+  * Neither the name of Intel Corporation nor the names of its contributors
+    may be used to endorse or promote products derived from this software
+    without specific prior written permission.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -44,6 +44,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "caffe/util/cpu_info.hpp"
 
+#if defined(_MSC_EXTENSIONS)
+#include <Powrprof.h>
+#pragma comment(lib, "Powrprof.lib")
+#endif
+
 namespace caffe {
 namespace cpu {
 
@@ -54,10 +59,13 @@ Processor::Processor() {
   coreId = 0;
   cpuCores = 0;
   speedMHz = 0;
+  mask = 0;
 }
 
 CpuInfo::CpuInfo() {
+#if !defined(_MSC_EXTENSIONS)
   loadContentFromFile("/proc/cpuinfo");
+#endif
 }
 
 CpuInfo::CpuInfo(const char *content) {
@@ -87,7 +95,9 @@ void CpuInfo::loadContent(std::string &content) {
 }
 
 CpuInfo::~CpuInfo() {
-  delete [] fileContentBegin;
+#if !defined(_MSC_EXTENSIONS)
+  delete[] fileContentBegin;
+#endif
 }
 
 void CpuInfo::parseLines(char *content) {
@@ -119,37 +129,131 @@ const char *CpuInfo::getNextLine() {
   return savedCurrentLine;
 }
 
-Collection::Collection(CpuInfoInterface *cpuInfo) : cpuInfo(*cpuInfo) {
-  totalNumberOfSockets = 0;
-  totalNumberOfCpuCores = 0;
-  currentProcessor = NULL;
+#if defined(_MSC_EXTENSIONS)
+typedef BOOL(WINAPI *LPFN_GLPI)(
+  LOGICAL_PROCESSOR_RELATIONSHIP,
+  PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX,
+  PDWORD);
 
-  processors.reserve(96);
+typedef struct _PROCESSOR_POWER_INFORMATION {
+  ULONG Number;
+  ULONG MaxMhz;
+  ULONG CurrentMhz;
+  ULONG MhzLimit;
+  ULONG MaxIdleState;
+  ULONG CurrentIdleState;
+} PROCESSOR_POWER_INFORMATION, *PPROCESSOR_POWER_INFORMATION;
 
-  parseCpuInfo();
-  collectBasicCpuInformation();
+// Helper function to count set bits in the processor mask.
+DWORD CountSetBits(ULONG_PTR bitMask)
+{
+  DWORD LSHIFT = sizeof(ULONG_PTR) * 8 - 1;
+  DWORD bitSetCount = 0;
+  ULONG_PTR bitTest = (ULONG_PTR)1 << LSHIFT;
+  DWORD i;
+
+  for (i = 0; i <= LSHIFT; ++i) {
+    bitSetCount += ((bitMask & bitTest) ? 1 : 0);
+    bitTest /= 2;
+  }
+
+  return bitSetCount;
 }
 
-unsigned Collection::getProcessorSpeedMHz() {
-  return processors.size() ? processors[0].speedMHz : 0;
-}
+void Collection::parseCpuInfo() {
+  LPFN_GLPI glpi;
+  BOOL done = FALSE;
+  PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX buffer = NULL;
+  PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX ptr = NULL;
+  DWORD returnLength = 0;
+  DWORD logicalProcessorCount = 0;
+  DWORD numaNodeCount = 0;
+  DWORD processorCoreCount = 0;
+  DWORD processorPackageCount = 0;
+  DWORD byteOffset = 0;
 
-unsigned Collection::getTotalNumberOfSockets() {
-  return totalNumberOfSockets;
-}
+  glpi = (LPFN_GLPI)GetProcAddress(GetModuleHandle(TEXT("kernel32")), "GetLogicalProcessorInformationEx");
+  if (NULL == glpi) {
+    _tprintf(TEXT("\nGetLogicalProcessorInformation is not supported.\n"));
+    return;
+  }
 
-unsigned Collection::getTotalNumberOfCpuCores() {
-  return totalNumberOfCpuCores;
-}
+  while (!done) {
+    DWORD rc = glpi(RelationAll, buffer, &returnLength);
+    if (FALSE == rc) {
+      if (GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
+        if (buffer)
+          free(buffer);
+        buffer = (PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX)malloc(returnLength);
+        if (NULL == buffer) {
+          _tprintf(TEXT("\nError: Allocation failure\n"));
+          return;
+        }
+      }
+      else {
+        _tprintf(TEXT("\nError %d\n"), GetLastError());
+        return;
+      }
+    }
+    else {
+      done = TRUE;
+    }
+  }
 
-unsigned Collection::getNumberOfProcessors() {
-  return processors.size();
-}
+  ptr = buffer;
+  while (byteOffset + sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX) <= returnLength) {
+    switch (ptr->Relationship) {
+    case RelationNumaNode:
+      // Non-NUMA systems report a single record of this type.
+      numaNodeCount++;
+      break;
+    case RelationProcessorCore:
+      processorCoreCount++;
+      // A hyperthreaded core supplies more than one logical processor.
+      logicalProcessorCount += CountSetBits(ptr->Processor.GroupMask[0].Mask);
 
-const Processor &Collection::getProcessor(unsigned processorId) {
-  return processors[processorId];
-}
+      for (unsigned size = 0; size < CountSetBits(ptr->Processor.GroupMask[0].Mask); size++) {
+        processors.push_back(Processor());
+        Processor *processor = &processors.back();
+        processor->processor = logicalProcessorCount - CountSetBits(ptr->Processor.GroupMask[0].Mask) + size;
+        processor->physicalId = ptr->Processor.GroupMask[0].Group;
+        processor->cpuCores = processorCoreCount - 1;
+        processor->mask = ptr->Processor.GroupMask[0].Mask;
+      }
+      break;
+    case RelationProcessorPackage:
+      // Logical processors share a physical package.
+      processorPackageCount++;
+      break;
+    default:
+      break;
+    }
+    byteOffset += ptr->Size;
+    ptr = (PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX)((LPBYTE)ptr + ptr->Size);
+  }
+  free(buffer);
 
+  if (getNumberOfProcessors() == 0) {
+    _tprintf(TEXT("\nError: Get Processor Info fails\n"));
+    return;
+  }
+  DWORD dwSize = sizeof(PROCESSOR_POWER_INFORMATION) * getNumberOfProcessors();
+  PPROCESSOR_POWER_INFORMATION powerInfo = NULL;
+
+  powerInfo = (PPROCESSOR_POWER_INFORMATION)malloc(dwSize);
+  if (NULL == powerInfo) {
+    _tprintf(TEXT("\nError: Allocation PowerInfo failure\n"));
+    return;
+  }
+
+  while (!CallNtPowerInformation(ProcessorInformation, NULL, 0, powerInfo, dwSize)) {
+    processors[0].speedMHz = powerInfo->MaxMhz;
+    free(powerInfo);
+    return;
+  }
+  return;
+}
+#else
 void Collection::parseCpuInfo() {
   const char *cpuInfoLine = cpuInfo.getFirstLine();
   for (; cpuInfoLine; cpuInfoLine = cpuInfo.getNextLine()) {
@@ -162,7 +266,8 @@ void Collection::parseCpuInfoLine(const char *cpuInfoLine) {
 
   if (cpuInfoLine[delimiterPosition] == '\0') {
     currentProcessor = NULL;
-  } else {
+  }
+  else {
     parseValue(cpuInfoLine, &cpuInfoLine[delimiterPosition + 2]);
   }
 }
@@ -237,9 +342,29 @@ unsigned Collection::extractSpeedFromModelName(const char *text) const {
 
   if (isGHz || (isGHzPossible && !isMHz)) {
     return 1000 * speed + 0.5;
-  } else {
+  }
+  else {
     return speed + 0.5;
   }
+}
+#endif
+Collection::Collection(CpuInfoInterface *cpuInfo) : cpuInfo(*cpuInfo) {
+  totalNumberOfSockets = 0;
+  totalNumberOfCpuCores = 0;
+  currentProcessor = NULL;
+
+  processors.reserve(96);
+
+  parseCpuInfo();
+  collectBasicCpuInformation();
+}
+
+unsigned Collection::getNumberOfProcessors() {
+  return processors.size();
+}
+
+const Processor &Collection::getProcessor(unsigned processorId) {
+  return processors[processorId];
 }
 
 void Collection::collectBasicCpuInformation() {
@@ -252,15 +377,31 @@ void Collection::collectBasicCpuInformation() {
 }
 
 void Collection::updateCpuInformation(const Processor &processor,
-    unsigned numberOfUniquePhysicalId) {
+  unsigned numberOfUniquePhysicalId) {
+#if !defined(_MSC_EXTENSIONS)
   if (totalNumberOfSockets == numberOfUniquePhysicalId) {
     return;
   }
-
+#endif
   totalNumberOfSockets = numberOfUniquePhysicalId;
+#if !defined(_MSC_EXTENSIONS)
   totalNumberOfCpuCores += processor.cpuCores;
+#else
+  totalNumberOfCpuCores = processor.cpuCores + 1;
+#endif
 }
 
+unsigned Collection::getTotalNumberOfSockets() {
+  return totalNumberOfSockets;
+}
+
+unsigned Collection::getTotalNumberOfCpuCores() {
+  return totalNumberOfCpuCores;
+}
+
+unsigned Collection::getProcessorSpeedMHz() {
+  return processors.size() ? processors[0].speedMHz : 0;
+}
 #ifdef _OPENMP
 
 /* The OpenMpManager class is responsible for determining a set of all of
@@ -272,7 +413,6 @@ void Collection::updateCpuInformation(const Processor &processor,
    be limited by system eg. when numactl was used. */
 
 #include <omp.h>
-#include <sched.h>
 
 static const char *openMpEnvVars[] = {
   "OMP_CANCELLATION", "OMP_DISPLAY_ENV", "OMP_DEFAULT_DEVICE", "OMP_DYNAMIC",
@@ -290,8 +430,8 @@ static const unsigned numberOfOpenMpEnvVars =
   sizeof(openMpEnvVars) / sizeof(openMpEnvVars[0]);
 
 OpenMpManager::OpenMpManager(Collection *collection) :
-                             mainThreadId(boost::this_thread::get_id()),
-                             collection(*collection) {
+  mainThreadId(boost::this_thread::get_id()),
+  collection(*collection) {
   getOpenMpEnvVars();
   getCurrentCpuSet();
   getCurrentCoreSet();
@@ -324,7 +464,15 @@ bool OpenMpManager::isMajorThread(boost::thread::id currentThread) {
 void OpenMpManager::bindCurrentThreadToNonPrimaryCoreIfPossible() {
   OpenMpManager &openMpManager = getInstance();
   if (openMpManager.isThreadsBindAllowed()) {
+#if defined(_MSC_EXTENSIONS)
+    int totalNumberOfAvailableCores = 0;
+    totalNumberOfAvailableCores += CountSetBits(openMpManager.currentCoreSet.Mask[0]);
+    totalNumberOfAvailableCores += CountSetBits(openMpManager.currentCoreSet.Mask[1]);
+    totalNumberOfAvailableCores += CountSetBits(openMpManager.currentCoreSet.Mask[2]);
+    totalNumberOfAvailableCores += CountSetBits(openMpManager.currentCoreSet.Mask[3]);
+#else
     int totalNumberOfAvailableCores = CPU_COUNT(&openMpManager.currentCoreSet);
+#endif
     int logicalCoreToBindTo = totalNumberOfAvailableCores > 1 ? 1 : 0;
     openMpManager.bindCurrentThreadToLogicalCoreCpus(logicalCoreToBindTo);
   }
@@ -337,7 +485,7 @@ void OpenMpManager::bindOpenMpThreads() {
     return;
 
   openMpManager.setOpenMpThreadNumberLimit();
-  #pragma omp parallel
+#pragma omp parallel
   {
     unsigned logicalCoreId = omp_get_thread_num();
     openMpManager.bindCurrentThreadToLogicalCoreCpu(logicalCoreId);
@@ -354,17 +502,32 @@ void OpenMpManager::getOpenMpEnvVars() {
 }
 
 void OpenMpManager::getCurrentCpuSet() {
+#if defined(_MSC_EXTENSIONS)
+  // unlike linux, the thread group affinity of windows is by default only allowed on the
+  // physical cores of one socket.
+  // To get the same behavior of linux, we have to avoid using GetThreadGroupAffinity() here
+  getDefaultCpuSet(&currentCpuSet);
+#else
   if (sched_getaffinity(0, sizeof(currentCpuSet), &currentCpuSet)) {
     getDefaultCpuSet(&currentCpuSet);
   }
+#endif
 }
 
 void OpenMpManager::getDefaultCpuSet(cpu_set_t *defaultCpuSet) {
+#if defined(_MSC_EXTENSIONS)
+  ZeroMemory(defaultCpuSet, sizeof(cpu_set_t));
+  unsigned numberOfProcessors = collection.getNumberOfProcessors();
+  for (unsigned processorId = 0; processorId < numberOfProcessors; processorId++) {
+    defaultCpuSet->Mask[collection.getProcessor(processorId).physicalId] |= collection.getProcessor(processorId).mask;
+  }
+#else
   CPU_ZERO(defaultCpuSet);
   unsigned numberOfProcessors = collection.getNumberOfProcessors();
   for (int processorId = 0; processorId < numberOfProcessors; processorId++) {
     CPU_SET(processorId, defaultCpuSet);
   }
+#endif
 }
 
 /* Function getCurrentCoreSet() fills currentCoreSet variable with a set of
@@ -376,6 +539,25 @@ void OpenMpManager::getCurrentCoreSet() {
   unsigned numberOfProcessors = collection.getNumberOfProcessors();
   unsigned totalNumberOfCpuCores = collection.getTotalNumberOfCpuCores();
 
+#if defined(_MSC_EXTENSIONS)
+  CopyMemory(&currentCoreSet, &currentCpuSet, sizeof(cpu_set_t));
+
+  int percore = numberOfProcessors / totalNumberOfCpuCores;
+  for (int idx = 0; idx < sizeof(cpu_set_t) / sizeof(size_t); idx++) {
+    size_t *mask = &currentCoreSet.Mask[idx];
+    size_t bit_mask = (pow(2, percore) - 1);
+    size_t bit_value = 1;
+
+    for (int bit_idx = 0; bit_idx < sizeof(size_t) * 8 / percore; bit_idx++) {
+      if ((*mask) & bit_mask) {
+        *mask &= ~bit_mask;
+        *mask |= bit_value;
+      }
+      bit_mask <<= percore;
+      bit_value <<= percore;
+    }
+  }
+#else
   cpu_set_t usedCoreSet;
   CPU_ZERO(&usedCoreSet);
   CPU_ZERO(&currentCoreSet);
@@ -389,12 +571,14 @@ void OpenMpManager::getCurrentCoreSet() {
       }
     }
   }
+#endif
 }
 
 void OpenMpManager::selectAllCoreCpus(cpu_set_t *set, unsigned physicalCoreId) {
   unsigned numberOfProcessors = collection.getNumberOfProcessors();
   unsigned totalNumberOfCpuCores = collection.getTotalNumberOfCpuCores();
 
+#if !defined(_MSC_EXTENSIONS)
   int processorId = physicalCoreId % totalNumberOfCpuCores;
   while (processorId < numberOfProcessors) {
     if (CPU_ISSET(processorId, &currentCpuSet)) {
@@ -403,11 +587,29 @@ void OpenMpManager::selectAllCoreCpus(cpu_set_t *set, unsigned physicalCoreId) {
 
     processorId += totalNumberOfCpuCores;
   }
+#endif
 }
 
 unsigned OpenMpManager::getPhysicalCoreId(unsigned logicalCoreId) {
+#if defined(_MSC_EXTENSIONS)
+  size_t mask = 0;
+  int processorId = 0;
+  int persocket = collection.getNumberOfProcessors() / collection.getTotalNumberOfSockets();
+  do {
+    for (int idx = 0; idx < sizeof(cpu_set_t) / sizeof(size_t); idx++) {
+      mask = currentCoreSet.Mask[idx];
+      for (int bit = 0; bit < persocket; bit++) {
+        if ((mask >> bit) & 0x1) {
+          if (!logicalCoreId--) {
+            return processorId;
+          }
+        }
+        processorId++;
+      }
+    }
+  } while (logicalCoreId);
+#else
   unsigned numberOfProcessors = collection.getNumberOfProcessors();
-
   for (int processorId = 0; processorId < numberOfProcessors; processorId++) {
     if (CPU_ISSET(processorId, &currentCoreSet)) {
       if (!logicalCoreId--) {
@@ -415,7 +617,7 @@ unsigned OpenMpManager::getPhysicalCoreId(unsigned logicalCoreId) {
       }
     }
   }
-
+#endif
   LOG(FATAL) << "This should never happen!";
   return 0;
 }
@@ -426,25 +628,56 @@ bool OpenMpManager::isThreadsBindAllowed() {
 
 // Limit of threads to number of logical cores available
 void OpenMpManager::setOpenMpThreadNumberLimit() {
+#if defined(_MSC_EXTENSIONS)
+  unsigned short num = 0;
+  for (int idx = 0; idx < sizeof(cpu_set_t) / sizeof(size_t); idx++) {
+    num += CountSetBits(currentCoreSet.Mask[idx]);
+  }
+  omp_set_num_threads(collection.getTotalNumberOfCpuCores());
+#else
   omp_set_num_threads(CPU_COUNT(&currentCoreSet));
+#endif
 }
 
 void OpenMpManager::bindCurrentThreadToLogicalCoreCpu(unsigned logicalCoreId) {
+#if defined(_MSC_EXTENSIONS)
+  HANDLE handle = GetCurrentThread();
+  GROUP_AFFINITY groupAffinity;
+  ZeroMemory(&groupAffinity, sizeof(GROUP_AFFINITY));
+  unsigned physicalCoreId = getPhysicalCoreId(logicalCoreId);
+  int persocket = collection.getNumberOfProcessors() / collection.getTotalNumberOfSockets();
+  groupAffinity.Mask = 1ull << (physicalCoreId % persocket);
+  groupAffinity.Group = physicalCoreId / persocket;
+#pragma omp critical
+  SetThreadGroupAffinity(handle, &groupAffinity, NULL);
+#else
   unsigned physicalCoreId = getPhysicalCoreId(logicalCoreId);
 
   cpu_set_t set;
   CPU_ZERO(&set);
   CPU_SET(physicalCoreId, &set);
   sched_setaffinity(0, sizeof(set), &set);
+#endif
 }
 
 void OpenMpManager::bindCurrentThreadToLogicalCoreCpus(unsigned logicalCoreId) {
+#if defined(_MSC_EXTENSIONS)
+  HANDLE handle = GetCurrentThread();
+  GROUP_AFFINITY groupAffinity;
+  ZeroMemory(&groupAffinity, sizeof(GROUP_AFFINITY));
   unsigned physicalCoreId = getPhysicalCoreId(logicalCoreId);
-
+  int persocket = collection.getNumberOfProcessors() / collection.getTotalNumberOfSockets();
+  int percore = collection.getNumberOfProcessors() / collection.getTotalNumberOfCpuCores();
+  groupAffinity.Mask = (size_t)(pow(2, percore) - 1) << (physicalCoreId % persocket);
+  groupAffinity.Group = physicalCoreId / persocket;
+  SetThreadGroupAffinity(handle, &groupAffinity, NULL);
+#else
+  unsigned physicalCoreId = getPhysicalCoreId(logicalCoreId);
   cpu_set_t set;
   CPU_ZERO(&set);
   selectAllCoreCpus(&set, physicalCoreId);
   sched_setaffinity(0, sizeof(set), &set);
+#endif  
 }
 
 void OpenMpManager::printVerboseInformation() {
@@ -480,6 +713,22 @@ unsigned OpenMpManager::getProcessorSpeedMHz() {
   return openMpManager.collection.getProcessorSpeedMHz();
 }
 
+unsigned OpenMpManager::getNumaNode() {
+#if defined(_MSC_EXTENSIONS)
+  PROCESSOR_NUMBER num;
+  USHORT node;
+  BOOL   success;
+  GetCurrentProcessorNumberEx(&num);
+  success = GetNumaProcessorNodeEx(&num, &node);
+  assert(success != 0);
+  return node;
+#else
+  OpenMpManager &openMpManager = getInstance();
+  int cpu = sched_getcpu();
+  assert(cpu >= 0);
+  return openMpManager.collection.getProcessor(cpu).physicalId;
+#endif
+}
 #endif  // _OPENMP
 
 }  // namespace cpu

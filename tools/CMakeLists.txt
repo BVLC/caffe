@@ -12,9 +12,11 @@ foreach(source ${srcs})
 
   # target
   add_executable(${name} ${source})
-  target_link_libraries(${name} ${Caffe_LINK})
+  target_link_libraries(${name} PRIVATE ${Caffe_LINK})
   caffe_default_properties(${name})
-
+  if(MSVC)
+    set_target_properties(${name} PROPERTIES LINK_FLAGS "/WHOLEARCHIVE:${Caffe_LINK}")
+  endif()
   # set back RUNTIME_OUTPUT_DIRECTORY
   caffe_set_runtime_directory(${name} "${PROJECT_BINARY_DIR}/tools")
   caffe_set_solution_folder(${name} tools)
@@ -22,6 +24,11 @@ foreach(source ${srcs})
   # restore output name without suffix
   if(name MATCHES "caffe.bin")
     set_target_properties(${name} PROPERTIES OUTPUT_NAME caffe)
+    if(MSVC)
+      # the exectuable will have an import library with the same name as the caffe lib
+      # so change the import library to avoid name clashes
+      set_target_properties(${name} PROPERTIES IMPORT_SUFFIX ".bin.lib")
+    endif()
   endif()
 
   # Install

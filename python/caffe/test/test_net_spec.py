@@ -100,14 +100,14 @@ class TestNetSpec(unittest.TestCase):
                 net_proto.layer[6].top)
         net = self.load_net(net_proto)
         # check that all layers are present
-        self.assertEqual(len(net.layers), 9)
+        self.assertEqual(len(net.layers), 8)
 
         # now the check the version with automatically-generated layer names
         net_proto = anon_lenet(50)
         self.assertEqual(net_proto.layer[6].bottom,
                 net_proto.layer[6].top)
         net = self.load_net(net_proto)
-        self.assertEqual(len(net.layers), 9)
+        self.assertEqual(len(net.layers), 8)
 
     def test_zero_tops(self):
         """Test net construction for top-less layers."""

@@ -708,6 +708,7 @@ message QuantizationParameter{
   repeated float scale_out = 21;
   repeated float scale_params = 22;
   optional bool is_negative_input = 23 [default = false];
+  optional bool force_u8_input = 24 [default = false];
 }
 
 message MnParamGradCompressParameter {
@@ -756,6 +757,8 @@ message TransformationParameter {
   optional bool flow = 17 [default = false];
 
   optional bool bgr2rgb = 18 [ default = false ];
+
+  optional uint32 pad = 19 [default = 0];
 }
 
 message RandomResizeParameter {
@@ -1478,6 +1481,9 @@ message InnerProductParameter {
     MKLDNN = 3;
   }
   optional Engine engine = 7 [default = DEFAULT];
+  optional bool relu = 8 [default = false];
+  optional float negative_slope = 9 [default = 0];
+
 }
 
 message InputParameter {

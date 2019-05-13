@@ -204,7 +204,9 @@ void AnnotatedDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
       string* data = reader_.full().pop("Waiting for data");
       timer.Stop();
       read_time += timer.MicroSeconds();
+#if !defined(_MSC_EXTENSIONS)
 #pragma omp task firstprivate(item_id, data) shared(all_anno, expand_data, sampled_bboxes, have_samples)
+#endif
       {
         std::unique_ptr<AnnotatedDatum> anno_datum(new AnnotatedDatum());
         anno_datum->ParseFromString(*data);
@@ -242,7 +244,9 @@ void AnnotatedDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
         have_samples[item_id] = has_sampled;
       }
     }
+#if !defined(_MSC_EXTENSIONS)
 #pragma omp taskwait
+#endif
     // RNG needs to be reinitialized because in some cases, when transform params are not set
     // RNG is a NULL.
     this->data_transformer_->ReinitRand();
@@ -250,8 +254,9 @@ void AnnotatedDataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
     for (int item_id = 0; item_id < batch_size; ++item_id) {
       PreclcRandomNumbers precalculated_rand_numbers;
       this->data_transformer_->GenerateRandNumbers(precalculated_rand_numbers, /* sample_bboxes */ have_samples[item_id]);
-
+#if !defined(_MSC_EXTENSIONS)
 #pragma omp task firstprivate(precalculated_rand_numbers, item_id) shared(num_bboxes, all_anno, expand_data, sampled_bboxes, have_samples)
+#endif
       {
         boost::shared_ptr<AnnotatedDatum> sampled_datum;
         bool has_sampled = have_samples[item_id];

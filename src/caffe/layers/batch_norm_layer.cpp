@@ -125,10 +125,14 @@ void BatchNormLayer<Dtype>::replicate(Dtype* buffer_to_write,
                                       unsigned int channel_offset_incr,
                                       const Dtype* data_to_be_replicated) {
 #ifdef _OPENMP
-  #pragma omp parallel for collapse(2)
+  #if defined(_MSC_EXTENSIONS)
+    #pragma omp parallel for
+  #else
+    #pragma omp parallel for collapse(2)
+  #endif
 #endif
-  for (unsigned int j = 0; j< channels_; ++j) {
-    for (unsigned int n = 0; n < num_batches; ++n) {
+  for (int j = 0; j< channels_; ++j) {
+    for (int n = 0; n < num_batches; ++n) {
       caffe_set(channel_offset_incr, data_to_be_replicated[j],
         buffer_to_write + j * channel_offset_incr + n * batch_offset_incr);
     }
@@ -144,14 +148,18 @@ void BatchNormLayer<Dtype>::replicate_to_op(Dtype* buffer_to_write,
                                       const Dtype* data_to_be_replicated,
                                       FuncTy op_func) {
 #ifdef _OPENMP
-  #pragma omp parallel for collapse(2)
+  #if defined(_MSC_EXTENSIONS)
+    #pragma omp parallel for
+  #else
+    #pragma omp parallel for collapse(2)
+  #endif
 #endif
-  for (unsigned int j = 0; j< channels_; ++j) {
-    for (unsigned int n = 0; n < num_batches; ++n) {
+  for (int j = 0; j< channels_; ++j) {
+    for (int n = 0; n < num_batches; ++n) {
       Dtype value = data_to_be_replicated[j];
       Dtype* buffer_offsetted =
         buffer_to_write + j * channel_offset_incr + n * batch_offset_incr;
-      for (unsigned int k = 0; k < channel_offset_incr; ++k) {
+      for (int k = 0; k < channel_offset_incr; ++k) {
         buffer_offsetted[k] = op_func(buffer_offsetted[k], value);
       }
     }

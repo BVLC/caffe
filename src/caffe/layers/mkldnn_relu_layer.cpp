@@ -119,7 +119,7 @@ void MKLDNNReLULayer<Dtype>::InitReLUFwd(const vector<Blob<Dtype>*>& bottom, con
     top_data_mpd.reset(new memory::primitive_desc({dim, top_dt, src_mfmt}, cpu_engine));
 
     // ---- Initialize relu primitive descriptor -------------
-    //eltwise_forward::desc reluFwd_desc(propagation, *bottom_data_md, negative_slope);
+    //relu_forward::desc reluFwd_desc(propagation, *bottom_data_md, negative_slope);
     // MKLDNN is deprecating standalone relu primitive in MKL-DNN.
     // Now MKLDNN has eltwise primitive with eltwise_relu algorithm inside.
     eltwise_forward::desc eltwise_reluFwd_desc(propagation, eltwise_relu, *bottom_data_md, negative_slope);
@@ -301,7 +301,7 @@ void MKLDNNReLULayer<Dtype>::InitReLUBwd(const vector<Blob<Dtype>*>& top
     bottom_diff_md = top_diff_md;
 
     // ---- Initialize relu primitive descriptor -------------
-    //eltwise_backward::desc reluBwd_desc(*top_diff_md, *top_data_md, negative_slope);
+    //relu_backward::desc reluBwd_desc(*top_diff_md, *top_data_md, negative_slope);
     // MKLDNN is deprecating standalone relu primitive in MKL-DNN.
     // Now MKLDNN has eltwise primitive with eltwise_relu algorithm inside.
     eltwise_backward::desc eltwise_reluBwd_desc(eltwise_relu, *top_diff_md, *top_data_md, negative_slope);

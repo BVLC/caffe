@@ -1,8 +1,39 @@
+# Caffe
+[![Build Status](https://travis-ci.org/BVLC/caffe.svg?branch=master)](https://travis-ci.org/BVLC/caffe)
+[![License](https://img.shields.io/badge/license-BSD-blue.svg)](LICENSE)
+
+Caffe is a deep learning framework made with expression, speed, and modularity in mind.
+It is developed by the Berkeley Vision and Learning Center ([BVLC](http://bvlc.eecs.berkeley.edu)) and community contributors.
+
+Check out the [project site](http://caffe.berkeleyvision.org) for all the details like
+- [DIY Deep Learning for Vision with Caffe](https://docs.google.com/presentation/d/1UeKXVgRvvxg9OUdh_UiC5G71UMscNPlvArsWER41PsU/edit#slide=id.p)
+- [Tutorial Documentation](http://caffe.berkeleyvision.org/tutorial/)
+- [BVLC reference models](http://caffe.berkeleyvision.org/model_zoo.html) and the [community model zoo](https://github.com/BVLC/caffe/wiki/Model-Zoo)
+- [Installation instructions](https://github.com/intel/caffe/wiki/Installation)
+
+and step-by-step examples.
+
+[![Join the chat at https://gitter.im/BVLC/caffe](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/BVLC/caffe?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
+Please join the [caffe-users group](https://groups.google.com/forum/#!forum/caffe-users) or [gitter chat](https://gitter.im/BVLC/caffe) to ask questions and talk about methods and models.
+Framework development discussions and thorough bug reports are collected on [Issues](https://github.com/BVLC/caffe/issues).
+
+Happy brewing!
+
+
+# SSD: Single Shot MultiBox Detector
+This repository contains merged code issued as pull request to BVLC caffe written by:
+[Wei Liu](http://www.cs.unc.edu/~wliu/), [Dragomir Anguelov](https://www.linkedin.com/in/dragomiranguelov), [Dumitru Erhan](http://research.google.com/pubs/DumitruErhan.html), [Christian Szegedy](http://research.google.com/pubs/ChristianSzegedy.html), [Scott Reed](http://www-personal.umich.edu/~reedscot/), [Cheng-Yang Fu](http://www.cs.unc.edu/~cyfu/), [Alexander C. Berg](http://acberg.com).
+
+Original branch can be found at https://github.com/weiliu89/caffe/tree/ssd.
+
+Read our [wiki page](https://github.com/intel/caffe/wiki/SSD:-Single-Shot-MultiBox-Detector) for more details.
+
 # Intel® Distribution of Caffe*
 This fork is dedicated to improving Caffe performance when running on CPU, in particular Intel® Xeon processors.
 
 ## Building
-Build procedure is the same as on bvlc-caffe-master branch, see section "Caffe". Both Make and CMake can be used.
+Build procedure is the same as on bvlc-caffe-master branch. Both Make and CMake can be used.
 When OpenMP is available will be used automatically.
 
 ## Running
@@ -17,22 +48,8 @@ If some system tool like numactl is used to control CPU affinity, by default caf
 to use more than one thread per core. When less than required cores are specified, caffe will
 limit execution of OpenMP threads to specified cores only.
 
-To collect performance on full INT8 model of ResNet-50 v1.0, please update the variables NUM_CORE, the batch size range s_BS and e_BS, and INSTANCES according to your test requirements, then run: 
-
-    . run.sh
-
-To verify the accuracy, please run
-
-    . run_accuracy.sh
-
 ## Best performance solution
 Please read [our Wiki](https://github.com/intel/caffe/wiki/Recommendations-to-achieve-best-performance) for our recommendations and configuration to achieve best performance on Intel CPUs. 
-
-Results:
-
-Performance and convergence test result: https://github.com/intel/caffe/wiki/INTEL%C2%AE-OPTIMIZED-CAFFE-PERFORMANCE-AND-CONVERGENCE.
-
-Scaling test result on AWS: https://github.com/intel/caffe/wiki/Intel%C2%AE-Optimization-for-Caffe-AWS-EC2-C5-(SKX)-Multi-node-Scaling.
 
 ## Multinode Training
 Intel® Distribution of Caffe* multi-node allows you to execute deep neural network training on multiple machines.
@@ -55,35 +72,5 @@ Please cite Caffe in your publications if it helps your research:
 ***
  *Other names and brands may be claimed as the property of others
 
-
-# SSD: Single Shot MultiBox Detector
-This repository contains merged code issued as pull request to BVLC caffe written by:
-[Wei Liu](http://www.cs.unc.edu/~wliu/), [Dragomir Anguelov](https://www.linkedin.com/in/dragomiranguelov), [Dumitru Erhan](http://research.google.com/pubs/DumitruErhan.html), [Christian Szegedy](http://research.google.com/pubs/ChristianSzegedy.html), [Scott Reed](http://www-personal.umich.edu/~reedscot/), [Cheng-Yang Fu](http://www.cs.unc.edu/~cyfu/), [Alexander C. Berg](http://acberg.com).
-
-Original branch can be found at https://github.com/weiliu89/caffe/tree/ssd.
-
-Read our [wiki page](https://github.com/intel/caffe/wiki/SSD:-Single-Shot-MultiBox-Detector) for more details.
-
-# Caffe
-[![Build Status](https://travis-ci.org/BVLC/caffe.svg?branch=master)](https://travis-ci.org/BVLC/caffe)
-[![License](https://img.shields.io/badge/license-BSD-blue.svg)](LICENSE)
-Caffe is a deep learning framework made with expression, speed, and modularity in mind.
-It is developed by the Berkeley Vision and Learning Center ([BVLC](http://bvlc.eecs.berkeley.edu)) and community contributors.
-
-
-Check out the [project site](http://caffe.berkeleyvision.org) for all the details like
-- [DIY Deep Learning for Vision with Caffe](https://docs.google.com/presentation/d/1UeKXVgRvvxg9OUdh_UiC5G71UMscNPlvArsWER41PsU/edit#slide=id.p)
-- [Tutorial Documentation](http://caffe.berkeleyvision.org/tutorial/)
-- [BVLC reference models](http://caffe.berkeleyvision.org/model_zoo.html) and the [community model zoo](https://github.com/BVLC/caffe/wiki/Model-Zoo)
-- [Installation instructions](https://github.com/intel/caffe/wiki/Installation)
-
-and step-by-step examples.
-
-[![Join the chat at https://gitter.im/BVLC/caffe](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/BVLC/caffe?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-
-Please join the [caffe-users group](https://groups.google.com/forum/#!forum/caffe-users) or [gitter chat](https://gitter.im/BVLC/caffe) to ask questions and talk about methods and models.
-Framework development discussions and thorough bug reports are collected on [Issues](https://github.com/BVLC/caffe/issues).
-
-Happy brewing!
 
 

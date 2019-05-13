@@ -74,11 +74,11 @@ echo $VERSION_LINE  # Return Version Line
 # MKL
 DST=`dirname $0`
 OMP=0 
-VERSION_MATCH=20180928
-ARCHIVE_BASENAME=mklml_lnx_2019.0.1.20180928.tgz
+VERSION_MATCH=20190220
+ARCHIVE_BASENAME=mklml_lnx_2019.0.3.20190220.tgz
 MKL_CONTENT_DIR=`echo $ARCHIVE_BASENAME | rev | cut -d "." -f 2- | rev`
 
-MKLURL="https://github.com/intel/mkl-dnn/releases/download/v0.17-rc/$ARCHIVE_BASENAME"
+MKLURL="https://github.com/intel/mkl-dnn/releases/download/v0.18/$ARCHIVE_BASENAME"
 # there are diffrent MKL lib to be used for GCC and for ICC
 reg='^[0-9]+$'
 VERSION_LINE=`GetVersionName $MKLROOT`

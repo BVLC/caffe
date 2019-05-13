@@ -50,9 +50,15 @@ namespace {
 
   void handle_signal(int signal) {
     switch (signal) {
+#ifdef _MSC_EXTENSIONS
+    case SIGBREAK:  // there is no SIGHUP in windows, take SIGBREAK instead.
+      got_sighup = true;
+      break;
+#else
     case SIGHUP:
       got_sighup = true;
       break;
+#endif
     case SIGINT:
       got_sigint = true;
       break;
@@ -64,7 +70,14 @@ namespace {
       LOG(FATAL) << "Tried to hookup signal handlers more than once.";
     }
     already_hooked_up = true;
-
+#ifdef _MSC_EXTENSIONS
+    if (signal(SIGBREAK, handle_signal) == SIG_ERR) {
+      LOG(FATAL) << "Cannot install SIGBREAK handler.";
+    }
+    if (signal(SIGINT, handle_signal) == SIG_ERR) {
+      LOG(FATAL) << "Cannot install SIGINT handler.";
+    }
+#else
     struct sigaction sa;
     // Setup the handler
     sa.sa_handler = &handle_signal;
@@ -79,11 +92,20 @@ namespace {
     if (sigaction(SIGINT, &sa, NULL) == -1) {
       LOG(FATAL) << "Cannot install SIGINT handler.";
     }
+#endif
   }
 
   // Set the signal handlers to the default.
   void UnhookHandler() {
     if (already_hooked_up) {
+#ifdef _MSC_EXTENSIONS
+      if (signal(SIGBREAK, SIG_DFL) == SIG_ERR) {
+        LOG(FATAL) << "Cannot uninstall SIGBREAK handler.";
+      }
+      if (signal(SIGINT, SIG_DFL) == SIG_ERR) {
+        LOG(FATAL) << "Cannot uninstall SIGINT handler.";
+      }
+#else
       struct sigaction sa;
       // Setup the sighub handler
       sa.sa_handler = SIG_DFL;
@@ -98,7 +120,7 @@ namespace {
       if (sigaction(SIGINT, &sa, NULL) == -1) {
         LOG(FATAL) << "Cannot uninstall SIGINT handler.";
       }
-
+#endif
       already_hooked_up = false;
     }
   }

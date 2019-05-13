@@ -133,9 +133,9 @@ void InitLogLevel(int level) {
   FLAGS_minloglevel = level;
   InitLog();
 }
-void InitLogLevelPipe(int level, bool stderr) {
+void InitLogLevelPipe(int level, bool std_err) {
   FLAGS_minloglevel = level;
-  FLAGS_logtostderr = stderr;
+  FLAGS_logtostderr = std_err;
   InitLog();
 }
 void Log(const string& s) {

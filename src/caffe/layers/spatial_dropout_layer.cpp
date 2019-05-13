@@ -77,7 +77,11 @@ void SpatialDropoutLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     // Create random numbers
     caffe_rng_bernoulli(num * channel, 1. - threshold_, mask);
 #ifdef _OPENMP
+  #if defined(_MSC_EXTENSIONS)
+    #pragma omp parallel for
+  #else
     #pragma omp parallel for collapse(2)
+  #endif
 #endif
     for (int i = 0; i < num; ++i) {
       for (int j = 0; j < channel; j++) {
@@ -107,7 +111,11 @@ void SpatialDropoutLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     if (this->phase_ == TRAIN) {
       const unsigned int* mask = rand_vec_.cpu_data();
 #ifdef _OPENMP
+  #if defined(_MSC_EXTENSIONS)
+    #pragma omp parallel for
+  #else
     #pragma omp parallel for collapse(2)
+  #endif
 #endif
       for (int i = 0; i < num; ++i) {
         for (int j = 0; j < channel; j++) {

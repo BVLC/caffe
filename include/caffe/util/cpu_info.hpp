@@ -39,7 +39,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define CAFFE_UTIL_CPU_INFO_HPP
 
 #include <boost/thread/thread.hpp>
-#include <sched.h>
+#if defined(_MSC_EXTENSIONS)
+  #define NOMINMAX
+  #include <windows.h>
+  #include <malloc.h>    
+  #include <tchar.h>
+#else
+  #include <sched.h>
+#endif
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -57,9 +64,17 @@ struct Processor {
   unsigned coreId;
   unsigned cpuCores;
   unsigned speedMHz;
-
+  size_t mask;
   Processor();
 };
+
+#if defined(_MSC_EXTENSIONS)
+// 2 processor group should be enough for current h/w.
+// But here we reserve 4 processor group for future extension.
+struct cpu_set_t {
+  size_t Mask[4];
+};
+#endif
 
 class CpuInfoInterface {
  public:
@@ -108,6 +123,19 @@ class Collection : public CollectionInterface {
   virtual const Processor &getProcessor(unsigned processorId);
 
  private:
+#if !defined(_MSC_EXTENSIONS)
+  void parseCpuInfoLine(const char *cpuInfoLine);
+  void parseValue(const char *fieldName, const char *valueString);
+  void appendNewProcessor();
+  bool beginsWith(const char *lineBuffer, const char *text) const;
+  unsigned parseInteger(const char *text) const;
+  unsigned extractSpeedFromModelName(const char *text) const;
+#endif
+
+  void collectBasicCpuInformation();
+  void updateCpuInformation(const Processor &processor,
+    unsigned numberOfUniquePhysicalId);
+
   CpuInfoInterface &cpuInfo;
   unsigned totalNumberOfSockets;
   unsigned totalNumberOfCpuCores;
@@ -118,16 +146,6 @@ class Collection : public CollectionInterface {
   Collection &operator =(const Collection &collection);
 
   void parseCpuInfo();
-  void parseCpuInfoLine(const char *cpuInfoLine);
-  void parseValue(const char *fieldName, const char *valueString);
-  void appendNewProcessor();
-  bool beginsWith(const char *lineBuffer, const char *text) const;
-  unsigned parseInteger(const char *text) const;
-  unsigned extractSpeedFromModelName(const char *text) const;
-
-  void collectBasicCpuInformation();
-  void updateCpuInformation(const Processor &processor,
-    unsigned numberOfUniquePhysicalId);
 };
 
 #ifdef _OPENMP
@@ -144,6 +162,7 @@ class OpenMpManager {
 
   static bool isMajorThread(boost::thread::id currentThread);
   static unsigned getProcessorSpeedMHz();
+  static unsigned getNumaNode();
 
  private:
   boost::thread::id mainThreadId;

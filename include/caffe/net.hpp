@@ -124,7 +124,7 @@ class Net {
   virtual ~Net() {}
 
   /// @brief Buffer Queue for reducing cache missing and saving memory footprint of MKLDNN layer.
-  static vector<struct CircleBuf> circleBuf;
+  static vector<CircleBuf> circleBuf;
 
   /// @brief Initialize a network with a NetParameter.
   void Init(const NetParameter& param);
@@ -386,6 +386,14 @@ class Net {
 
  
    /**
+  * @brief This is rule that analyze layer if it is of type MKLDNNReLU and if that is the case
+  *        and previous layer which serves as input layer to MKLDNNReLU Layer is MKLDNNFC
+  *        then MKLDNNReLU layer can be dropped
+  */
+  static void CompilationRuleFuseFCRelu(const NetParameter& param,
+                                 NetParameter* param_compiled);
+  
+   /**
    * @brief If find "Conv--BN--Scale" in current network, merge BN and Scale layer into Convolution
    * layers, this optimization only works in caffe TEST phase now.
    */
@@ -588,7 +596,7 @@ class Net {
   DISABLE_COPY_AND_ASSIGN(Net);
 };
 
-template<typename Dtype> vector<struct CircleBuf> Net<Dtype>::circleBuf;
+template<typename Dtype> vector<CircleBuf> Net<Dtype>::circleBuf;
 
 }  // namespace caffe
 

@@ -157,6 +157,14 @@ void InternalThread::SetThreadAffinity(
 
   if (ncores > 0) {
     int pin_core_id = count % ncores;
+#if defined(_MSC_EXTENSIONS)
+    HANDLE handle = GetCurrentThread();
+    GROUP_AFFINITY groupAffinity;
+    ZeroMemory(&groupAffinity, sizeof(GROUP_AFFINITY));
+    groupAffinity.Mask = 1 << pin_core_id;
+    groupAffinity.Group = count / ncores;
+    SetThreadGroupAffinity(handle, &groupAffinity, NULL);
+#else
     cpu_set_t set;
     CPU_ZERO(&set);
     CPU_SET(affinity_cores[pin_core_id], &set);
@@ -170,6 +178,7 @@ void InternalThread::SetThreadAffinity(
         LOG(INFO) << "Internal thread is affinitized to core " << j;
       }
     }
+#endif
   }
   count++;
 }

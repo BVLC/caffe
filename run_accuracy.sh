@@ -6,7 +6,6 @@
 # loss3/top-1 = 0.75522
 # loss3/top-5 = 0.926621
 
-bs=50
 prototxt="./models/intel_optimized_models/resnet50_v1/resnet50_int8_acc.prototxt"
 sed -i "1,/dim/s/dim.*/dim:$bs/" $prototxt
 

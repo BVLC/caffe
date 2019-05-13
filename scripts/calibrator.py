@@ -46,9 +46,11 @@ from caffe.proto import caffe_pb2
 import google.protobuf.text_format as txtf
 import sampling
 import numpy as np
+import first_conv_force_u8 as fu
 
-int8_layers = ["Convolution", "ReLU", "Split", "Concat", "Pooling", "Eltwise", "InnerProduct"]
-quantize_layers = ["Convolution", "InnerProduct"]
+quantize_layers = ["Convolution"]
+memory_layers = ["ReLU", "Split", "Concat", "Pooling", "Eltwise"]
+int8_layers = quantize_layers + memory_layers
 
 def isclose(a, b, rel_tol=1e-09, abs_tol=0.0):
     return abs(a-b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
@@ -181,17 +183,6 @@ def analyze_conv_output_with_relu_from_net(convs_output_with_relu, compiled_net,
 
     return new_convs_output_with_relu
 
-def find_last_conv_layers(top_blobs_map, bottom_blobs_map, convolution_layers, non_int8_layers):
-    last_conv_indexes = []
-    for (l, index) in convolution_layers:
-        top_blob = top_blobs_map[l.name][0]
-        for k, v in bottom_blobs_map.iteritems():
-            if len(v) == 1 and v[0] == top_blob:
-                output_index = find_index_by_name(k, non_int8_layers)
-                if output_index != -1:
-                    last_conv_indexes.append(index)
-
-    return last_conv_indexes
 
 def transform_convolutions(model_path, compiled_model_path, top_blobs_map, bottom_blobs_map, use_unsigned_range, concat_use_fp32, unify_concat_scales, conv_algo, enable_1st_conv = False):
     net = caffe_pb2.NetParameter()
@@ -291,14 +282,6 @@ def transform_convolutions(model_path, compiled_model_path, top_blobs_map, botto
                         new_net.layer[index_in_net].quantization_param.bw_layer_out = 32
                         new_net.layer[index_in_net].quantization_param.scale_out[:] = [1.0]
 
-    non_int8_layers = [(value, index) for index, value in enumerate(net.layer) if value.type not in int8_layers]
-    last_conv_indexes = find_last_conv_layers(top_blobs_map, bottom_blobs_map, convolution_layers, non_int8_layers)
-    
-    # TODO: support last convolution without consumer
-    for index in last_conv_indexes:
-        new_net.layer[index].quantization_param.bw_layer_out = 32
-        new_net.layer[index].quantization_param.scale_out[:] = [1.0]
-
     with open(model_path, 'w') as f:
         f.write(str(new_net))
 
@@ -314,8 +297,8 @@ def generate_sample_bak(sample_path, input_model, weights,
     os.system(cmd)
 
 
-def generate_sample(input_model, weights, quantized_model, scaling_mode, calibration_algo, conv_algo, iterations=10, enable_1st_conv=False):
-    (blobs, params, top_blobs_map, bottom_blobs_map, conv_top_blob_layer_map, conv_bottom_blob_layer_map, winograd_bottoms, winograd_convolutions) = sampling.sample(input_model, weights, conv_algo, iterations, enable_1st_conv)
+def generate_sample(input_model, weights, quantized_model, scaling_mode, calibration_algo, conv_algo, iterations=10, enable_1st_conv=False, sampling_single=False):
+    (blobs, params, top_blobs_map, bottom_blobs_map, conv_top_blob_layer_map, conv_bottom_blob_layer_map, winograd_bottoms, winograd_convolutions) = sampling.sample(input_model, weights, conv_algo, iterations, enable_1st_conv, sampling_single)
 
     (inputs_max, outputs_max, inputs_min) = sampling.calibrate_activations(blobs, conv_top_blob_layer_map, conv_bottom_blob_layer_map, winograd_bottoms, calibration_algo, "SINGLE", conv_algo)
     params_max = sampling.calibrate_parameters(params, winograd_convolutions, "DIRECT", scaling_mode.upper(), conv_algo)
@@ -464,6 +447,125 @@ def generate_dummy_model(model_path, dummy):
     with open(dummy, 'w') as f:
         f.write(str(net))
 
+def force_fp32_opt(quantized_prototxt):
+    net = caffe_pb2.NetParameter()
+    with open(quantized_prototxt) as f:
+        s = f.read()
+        txtf.Merge(s, net)
+    base_net = caffe_pb2.NetParameter()
+    compiled_net_str = caffe.compile_net(quantized_prototxt, caffe.TEST, "MKLDNN")
+    txtf.Merge(compiled_net_str, base_net)
+    new_net = copy.deepcopy(net)
+    quantize_layers_indexes = [index for index, value in enumerate(base_net.layer) if value.type in quantize_layers]
+    layer_infos = [(value, index) for index, value in enumerate(new_net.layer)]
+    layer_bottom_name_map={}
+    for index,layer in enumerate(base_net.layer):
+        for bottom in layer.bottom:
+               if bottom not in layer_bottom_name_map.keys():
+                  layer_bottom_name_map[bottom]=[index]
+               else:
+                  layer_bottom_name_map[bottom].append(index)
+    for index in quantize_layers_indexes:
+        if int(base_net.layer[index].quantization_param.bw_layer_out) != 32: 
+            force_fp32 = True
+            if base_net.layer[index].top[0] in layer_bottom_name_map.keys():
+                bottom_layer_indexes=layer_bottom_name_map[base_net.layer[index].top[0]]
+                for bottom_layer_index in bottom_layer_indexes:
+                    if base_net.layer[bottom_layer_index].type in int8_layers:
+                        force_fp32 = False
+            if force_fp32 or index == np.max(quantize_layers_indexes):
+                new_net_index=find_index_by_name(base_net.layer[index].name, layer_infos)
+                new_net.layer[new_net_index].quantization_param.scale_out[:]=[1.0]
+                new_net.layer[new_net_index].quantization_param.bw_layer_out=32
+                print(new_net.layer[new_net_index].name)
+    with open(quantized_prototxt, 'w') as f:
+         f.write(str(new_net))
+    print('force_fp32 done')
+
+def find_next_layers(net, index):
+    layer = net.layer[index]
+    next_layers = []
+    for i in range(index + 1, len(net.layer)):
+        for top in layer.top:
+            if top in net.layer[i].bottom:
+                next_layers.append(i)
+    return next_layers
+
+def find_previous_layers(net, index):
+    layer = net.layer[index]
+    previous_layers = []
+    for i in range(index):
+        for bottom in layer.bottom:
+            if bottom in net.layer[i].top:
+                previous_layers.append(i)
+    return previous_layers
+
+def find_down_quantize(net, index):
+    next_layers = find_next_layers(net, index)
+    if len(next_layers) == 0:
+        return None
+    elif len(next_layers) == 1:
+        next_layer = net.layer[next_layers[0]]
+        if next_layer.type in quantize_layers and int(next_layer.quantization_param.bw_layer_in) == 8:
+            return next_layers[0]
+        elif next_layer.type in memory_layers:
+            return find_down_quantize(net, next_layers[0])
+        else:
+            return None
+    else: # just consider one branch 
+        return None
+
+def find_up_quantize(net, index):
+    previous_layers = find_previous_layers(net, index)
+    has_concat = False
+    if len(previous_layers) == 0:
+        return None, has_concat
+    elif len(previous_layers) == 1:
+        previous_layer = net.layer[previous_layers[0]]
+        if previous_layer.type in quantize_layers and int(previous_layer.quantization_param.bw_layer_out) == 8:
+            return previous_layers[0], has_concat
+        elif previous_layer.type in memory_layers:
+            return find_up_quantize(net, previous_layers[0])
+        else:
+            return None, has_concat
+    else:
+        if net.layer[index].type == 'Concat':
+            has_concat = True
+            concat_output_layers = find_next_layers(net, index)
+            for concat_output in concat_output_layers:
+                if net.layer[concat_output].type in quantize_layers and int(net.layer[concat_output].quantization_param.bw_layer_in) == 8:
+                    return concat_output, has_concat
+            return None, has_concat
+        else:
+            return None, has_concat
+
+def cac_opt(quantized_prototxt):
+    net = caffe_pb2.NetParameter()
+    with open(quantized_prototxt) as f:
+        s = f.read()
+        txtf.Merge(s,net)
+    base_net = caffe_pb2.NetParameter()
+    compiled_net_str = caffe.compile_net(quantized_prototxt, caffe.TEST, "MKLDNN")
+    txtf.Merge(compiled_net_str, base_net)
+    new_net = copy.deepcopy(net)
+    avg_pool_layers = [index for index, value in enumerate(base_net.layer) if value.type == 'Pooling' and value.pooling_param.pool == 1] #max=0 ave=1
+    layer_infos = [(value, index) for index, value in enumerate(new_net.layer)]
+    for index in avg_pool_layers:
+        up_quantize, has_concat = find_up_quantize(base_net, index)
+        down_quantize = find_down_quantize(base_net, index)
+        if up_quantize and down_quantize:
+            new_net_up_index = find_index_by_name(base_net.layer[up_quantize].name, layer_infos)
+            new_net_down_index = find_index_by_name(base_net.layer[down_quantize].name, layer_infos)
+            if not has_concat:
+                new_net.layer[new_net_down_index].quantization_param.scale_in[:]=new_net.layer[new_net_up_index].quantization_param.scale_out[:]
+            else:
+                new_net.layer[new_net_down_index].quantization_param.scale_in[:]=new_net.layer[new_net_up_index].quantization_param.scale_in[:]
+            print([new_net.layer[new_net_up_index].name,new_net.layer[new_net_down_index].name])
+    with open(quantized_prototxt, 'w') as f:
+         f.write(str(new_net))
+    print('cac opt done')
+
+
 if __name__ == '__main__':
     usage_string = 'Usage: 1.Build the caffe\n ' \
                     '2.cd /path/to/caffe/scripts\n ' \
@@ -505,9 +607,12 @@ if __name__ == '__main__':
 
     parser.add_argument('-c', '--weights_channel', action='store', dest='scaling_mode', default='single',
                         help='the scaling mode for weights')
-    
+
     parser.add_argument('-s', '--sampling_iterations', action='store', dest='sampling_iterations', default=10,
                         help='iteration number of sampling, the default value is 10.')
+
+    parser.add_argument('-ss', '--sampling_single', action='store_true', dest='sampling_single', default=False,
+                        help='sampling single batch')
 
     parser.add_argument('-p', '--performance_model', dest='performance_model', action="store_true", default=False,
                         help='to generate model to measure performance only')
@@ -532,7 +637,22 @@ if __name__ == '__main__':
 
     parser.add_argument('-1st', '--enable_1st_conv', dest='enable_1st_conv', action="store_true", default=False,
                         help='to enable 1st conv quantization')
-    
+
+    parser.add_argument('-uff', '--disable_force_fp32', dest='disable_force_fp32', action="store_true", default=False,
+                        help='to disable force fp32 output in conv/fc + fp32')
+
+    parser.add_argument('-ucac', '--disable_cac_unify', dest='disable_cac_unify', action="store_true", default=False,
+                        help='to disable scale unify in conv/fc + avg pooling + conv/fc')
+
+    parser.add_argument('-fc', '--fc_int8', dest='fc_int8', action="store_true", default=False,
+                        help='to enable int8 fc in quantized model')
+
+    parser.add_argument('-fu', '--first_conv_force_u8', dest='first_conv_force_u8', action="store_true", default=False,
+                        help='to enable 1st conv force u8 input')
+
+    parser.add_argument('-clx', '--is_clx', dest='is_clx', action="store_true", default=False,
+                        help='just work with -fu, means test machine is a clx')
+
     params = parser.parse_args()
     
     if not check_existence(params.root):
@@ -581,7 +701,7 @@ if __name__ == '__main__':
     else:
         user_scaling_mode = params.scaling_mode
 
-    if params.calibration_algos != 'DIRECT' and params.calibration_algos != "KL" and params.calibration_algos != "MAXP":
+    if params.calibration_algos != 'DIRECT' and params.calibration_algos != "KL" and params.calibration_algos != "MAXP" and params.calibration_algos != "MA":
         user_calibration_algos = 'DIRECT'
     else:
         user_calibration_algos = params.calibration_algos
@@ -590,6 +710,10 @@ if __name__ == '__main__':
         user_conv_algo = False
     else:
         user_conv_algo = params.conv_algo 
+
+    if params.fc_int8:
+        quantize_layers.append("InnerProduct")
+        int8_layers.append("InnerProduct")
 
     try:
         toleration = float(params.loss)
@@ -634,7 +758,7 @@ if __name__ == '__main__':
 
     quantized_prototxt = model.rsplit('.')[0] + '_quantized.prototxt'
     print 'Sampling...'
-    (top_blobs_map, bottom_blobs_map) = generate_sample(model, user_input_weights, quantized_prototxt, user_scaling_mode, user_calibration_algos, user_conv_algo, user_sampling_iteration, user_enable_1st_conv)
+    (top_blobs_map, bottom_blobs_map) = generate_sample(model, user_input_weights, quantized_prototxt, user_scaling_mode, user_calibration_algos, user_conv_algo, user_sampling_iteration, user_enable_1st_conv, params.sampling_single)
     print 'Sampling done'
     top_1 = None
     if not params.quantize_model:
@@ -646,5 +770,11 @@ if __name__ == '__main__':
     tuning_quantized_topology(top_1, quantized_prototxt, caffe_bin_path, user_input_weights, top_blobs_map, bottom_blobs_map, user_input_iterations,
                               toleration, detection_flag, target_blob_name, params.quantize_model, params.unsigned_range,
                               params.concat_use_fp32, params.unify_concat_scales, params.conv_algo, user_enable_1st_conv)
-
+    if not params.disable_force_fp32:
+        force_fp32_opt(quantized_prototxt)
+    if not params.disable_cac_unify:
+        cac_opt(quantized_prototxt)
     print 'Updated prototxt {} is generated.'.format(quantized_prototxt)
+    if params.first_conv_force_u8:
+        fu.first_conv_u8_input(quantized_prototxt, user_input_weights, params.is_clx)
+

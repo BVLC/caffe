@@ -15,22 +15,17 @@ set(GLOG_ROOT_DIR "" CACHE PATH "Folder contains Google glog")
 
 if(WIN32)
     find_path(GLOG_INCLUDE_DIR glog/logging.h
-        PATHS ${GLOG_ROOT_DIR}/src/windows)
+        PATHS ${GLOG_ROOT_DIR}/include)
 else()
     find_path(GLOG_INCLUDE_DIR glog/logging.h
         PATHS ${GLOG_ROOT_DIR})
 endif()
 
 if(MSVC)
-    find_library(GLOG_LIBRARY_RELEASE libglog_static
+    find_library(GLOG_LIBRARY
+        NAMES glog
         PATHS ${GLOG_ROOT_DIR}
-        PATH_SUFFIXES Release)
-
-    find_library(GLOG_LIBRARY_DEBUG libglog_static
-        PATHS ${GLOG_ROOT_DIR}
-        PATH_SUFFIXES Debug)
-
-    set(GLOG_LIBRARY optimized ${GLOG_LIBRARY_RELEASE} debug ${GLOG_LIBRARY_DEBUG})
+        PATH_SUFFIXES lib)
 else()
     find_library(GLOG_LIBRARY glog
         PATHS ${GLOG_ROOT_DIR}
@@ -43,6 +38,5 @@ if(GLOG_FOUND)
   set(GLOG_INCLUDE_DIRS ${GLOG_INCLUDE_DIR})
   set(GLOG_LIBRARIES ${GLOG_LIBRARY})
   message(STATUS "Found glog    (include: ${GLOG_INCLUDE_DIR}, library: ${GLOG_LIBRARY})")
-  mark_as_advanced(GLOG_ROOT_DIR GLOG_LIBRARY_RELEASE GLOG_LIBRARY_DEBUG
-                                 GLOG_LIBRARY GLOG_INCLUDE_DIR)
+  mark_as_advanced(GLOG_ROOT_DIR GLOG_LIBRARY GLOG_INCLUDE_DIR)
 endif()

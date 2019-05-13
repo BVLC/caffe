@@ -41,6 +41,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cstdio>
 #include <ctime>
 
+#if defined(_MSC_EXTENSIONS)
+#include <process.h>
+#define getpid() _getpid()
+#endif
+
 #include "caffe/common.hpp"
 #include "caffe/util/rng.hpp"
 

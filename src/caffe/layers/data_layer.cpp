@@ -143,7 +143,9 @@ void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
 #ifdef _OPENMP
     PreclcRandomNumbers precalculated_rand_numbers;
     this->data_transformer_->GenerateRandNumbers(precalculated_rand_numbers);
+  #if !defined(_MSC_EXTENSIONS)
     #pragma omp task firstprivate(offset, precalculated_rand_numbers, data, item_id)
+  #endif
 #endif
     {
       Datum datum;

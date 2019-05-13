@@ -42,6 +42,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <string>
 
+#if defined(_MSC_EXTENSIONS)
+#include <direct.h>
+#define mkdir(str, ...) _mkdir(str)
+#endif
+
 namespace caffe { namespace db {
 
 void LMDB::Open(const string& source, Mode mode) {

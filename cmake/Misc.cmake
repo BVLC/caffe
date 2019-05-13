@@ -35,6 +35,12 @@ if(DISABLE_SPARSE)
 	message(STATUS "sparse is disabled!")
 	add_definitions("-DDISABLE_SPARSE")
 endif()
+
+if(DISABLE_FC_RELU_FUSION)
+	message(STATUS "fc/relu fusion is disabled!")
+	add_definitions("-DDISABLE_FC_RELU_FUSION")
+endif()
+
 # --[ If user doesn't specify build type then assume release
 if("${CMAKE_BUILD_TYPE}" STREQUAL "")
   set(CMAKE_BUILD_TYPE Release)

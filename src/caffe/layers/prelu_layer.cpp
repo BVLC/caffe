@@ -158,7 +158,7 @@ void PReLULayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   // openmp array reduction is supported from openmp 4.5. GCC 6.1 and later
   // fully support this feature. ICC less than 19.01 has bug on openmp array
   // reduction support, that's why we have ICC version check here.
-#if !defined(__INTEL_COMPILER) || __INTEL_COMPILER >= 1900
+#if !defined(__INTEL_COMPILER) || __INTEL_COMPILER >= 1901
 #if defined(_OPENMP) && _OPENMP >= 201511
     long reduce = channel_shared_ ? 1 : channels;
 #pragma omp parallel for private(i) reduction(+: slope_diff[:reduce])

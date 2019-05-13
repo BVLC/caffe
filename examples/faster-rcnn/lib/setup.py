@@ -78,7 +78,7 @@ def customize_compiler_for_nvcc(self):
     self.src_extensions.append('.cu')
 
     # save references to the default compiler_so and _comple methods
-    default_compiler_so = self.compiler_so
+    #default_compiler_so = self.compiler_so
     super = self._compile
 
     # now redefine the _compile method. This gets executed for each
@@ -96,7 +96,7 @@ def customize_compiler_for_nvcc(self):
 
         super(obj, src, ext, cc_args, postargs, pp_opts)
         # reset the default compiler_so, which we might have changed for cuda
-        self.compiler_so = default_compiler_so
+        #self.compiler_so = default_compiler_so
 
     # inject our redefined _compile method into the class
     self._compile = _compile
