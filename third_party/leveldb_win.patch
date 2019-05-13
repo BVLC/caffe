@@ -1,0 +1,1815 @@
+From 7462829e7e53eea7e55c9a40d264f2ad819cd95c Mon Sep 17 00:00:00 2001
+From: Andre <andre.netzeband@hm.edu>
+Date: Wed, 31 May 2017 17:26:57 +0200
+Subject: [PATCH] leveldb v0.12 windows patch, supported by cmake.
+
+---
+ CMakeLists.txt             | 283 +++++++++++++++++
+ db/c.cc                    |   6 +-
+ db/{c_test.c => c_test.cc} |  15 +-
+ db/corruption_test.cc      |  33 +-
+ db/db_impl.cc              |   2 +-
+ db/recovery_test.cc        |   1 +
+ db/skiplist.h              |   2 +-
+ db/version_set.h           |   4 +-
+ port/port.h                |   4 +-
+ port/port_win.cc           | 188 +++++++++++
+ port/port_win.h            | 170 ++++++++++
+ util/env_boost.cc          | 753 +++++++++++++++++++++++++++++++++++++++++++++
+ util/win_logger.cc         |  79 +++++
+ util/win_logger.h          |  28 ++
+ 14 files changed, 1553 insertions(+), 15 deletions(-)
+ create mode 100644 CMakeLists.txt
+ rename db/{c_test.c => c_test.cc} (98%)
+ create mode 100644 port/port_win.cc
+ create mode 100644 port/port_win.h
+ create mode 100644 util/env_boost.cc
+ create mode 100644 util/win_logger.cc
+ create mode 100644 util/win_logger.h
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+new file mode 100644
+index 0000000..1ab6332
+--- /dev/null
++++ b/CMakeLists.txt
+@@ -0,0 +1,283 @@
++###########################################################################################
++# This file was taken from https://github.com/bureau14/leveldb/blob/master
++#
++# Keep the original copyright and license of this repository in mind.
++#
++# It was adapted by Andre Netzeband to work with LevelDB version 1.20.
++#
++########################################################################################### 
++
++cmake_minimum_required(VERSION 3.0.2 FATAL_ERROR)
++
++project(leveldb CXX)    
++
++include(CTest)
++
++set(CMAKE_DEBUG_POSTFIX "d")
++
++set(Boost_USE_STATIC_LIBS ON)
++set(Boost_USE_MULTITHREAD ON)
++set(Boost_USE_STATIC_RUNTIME OFF)
++
++find_package(Boost COMPONENTS 
++    date_time
++    filesystem
++    system
++	thread
++    REQUIRED)
++
++set(SNAPPY_LIBRARY "")
++
++string(REGEX MATCH "clang" CLANG ${CMAKE_CXX_COMPILER})
++
++if(CMAKE_COMPILER_IS_GNUCXX OR CLANG)
++    find_library(Pthread_LIBRARY pthread)
++    find_library(Realtime_LIBRARY rt)
++    # find library can be problematic with stdc++ which is why we hardwire the link
++    set(Stdcpp_LIBRARY stdc++)
++else(CMAKE_COMPILER_IS_GNUCXX OR CLANG)
++    set(Pthread_LIBRARY "")
++    set(Realtime_LIBRARY "")
++    set(Stdcpp_LIBRARY "")
++endif(CMAKE_COMPILER_IS_GNUCXX OR CLANG)
++
++include_directories(${Boost_INCLUDE_DIRS}
++    ${CMAKE_CURRENT_SOURCE_DIR}
++    include)
++
++if(MSVC)
++    add_compile_options(
++        /D_CRT_SECURE_NO_WARNINGS
++        /wd4389 # signed/unsigned mismatch
++        /wd4800 # constructor never returns, potential memory leak because of a singleton pattern
++        /wd4722 # unreachable code because of singleton pattern
++        /wd4702 # bool cast performance warning
++    )
++else()
++    add_compile_options(
++        -Wno-sign-compare
++        -std=c++11
++    )
++endif()
++
++add_definitions(
++    -DLEVELDB_ATOMIC_PRESENT
++)
++
++set(LEVEL_DB_FILES
++    include/leveldb/c.h
++    include/leveldb/cache.h
++    include/leveldb/comparator.h
++    include/leveldb/db.h
++    include/leveldb/dumpfile.h
++    include/leveldb/env.h
++    include/leveldb/iterator.h
++    include/leveldb/filter_policy.h
++    include/leveldb/iterator.h
++    include/leveldb/options.h
++    include/leveldb/slice.h
++    include/leveldb/status.h
++    include/leveldb/table.h
++    include/leveldb/table_builder.h
++    include/leveldb/write_batch.h	
++	
++	db/builder.cc
++    db/builder.h
++	db/c.cc
++	db/db_impl.cc
++    db/db_impl.h
++	db/db_iter.cc
++    db/db_iter.h
++    db/dbformat.cc
++    db/dbformat.h
++    db/dumpfile.cc
++	db/filename.cc
++    db/filename.h
++    db/log_format.h
++	db/log_reader.cc
++    db/log_reader.h
++	db/log_writer.cc
++    db/log_writer.h
++	db/memtable.cc
++	db/memtable.h
++	db/repair.cc	
++    db/skiplist.h
++	db/snapshot.h
++	db/table_cache.cc
++    db/table_cache.h
++	db/version_edit.cc
++    db/version_edit.h
++	db/version_set.cc
++    db/version_set.h
++	db/write_batch.cc
++	db/write_batch_internal.h
++	
++	table/block.cc
++    table/block.h
++	table/block_builder.cc
++    table/block_builder.h
++    table/filter_block.cc
++    table/filter_block.h
++	table/format.cc
++    table/format.h
++	table/iterator.cc
++    table/iterator_wrapper.h
++	table/merger.cc
++    table/merger.h
++	table/table.cc
++	table/table_builder.cc	
++	table/two_level_iterator.cc
++    table/two_level_iterator.h
++	
++	util/arena.cc
++    util/arena.h
++    util/bloom.cc
++	util/cache.cc
++	util/coding.cc
++    util/coding.h
++	util/comparator.cc
++	util/crc32c.cc
++    util/crc32c.h
++	util/env.cc
++    util/filter_policy.cc
++	util/hash.cc
++    util/hash.h
++	util/histogram.cc
++    util/histogram.h
++	util/logging.cc
++    util/logging.h
++    util/mutexlock.h
++	util/options.cc
++    util/random.h
++	util/status.cc
++	
++    port/port.h
++	)
++
++if(WIN32)
++	MESSAGE(STATUS "Enable Win32 port...")
++    list(APPEND LEVEL_DB_FILES
++        port/port_win.h
++        port/port_win.cc
++        util/win_logger.h
++        util/win_logger.cc
++        util/env_boost.cc)
++else()
++	MESSAGE(STATUS "Enable Posix port...")
++    list(APPEND LEVEL_DB_FILES
++        port/port_posix.h
++        port/port_posix.cc
++        util/posix_logger.h
++        util/env_posix.cc)
++endif()
++
++add_library(leveldb ${LEVEL_DB_FILES})
++
++target_include_directories(leveldb 
++    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
++    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} 
++)
++
++target_link_libraries(leveldb 
++    PRIVATE
++    ${Boost_LIBRARIES}
++    ${Pthread_LIBRARY}
++)
++
++add_executable(leveldbutil
++    db/leveldbutil.cc)
++
++target_link_libraries(leveldbutil
++    leveldb)
++
++set_target_properties(leveldbutil PROPERTIES
++    DEBUG_POSTFIX ${CMAKE_DEBUG_POSTFIX})
++
++# we distribute the leveldbutil as it might be useful
++install(TARGETS leveldbutil leveldb
++    RUNTIME DESTINATION bin
++    LIBRARY DESTINATION lib
++    ARCHIVE DESTINATION lib)
++
++install(DIRECTORY include/leveldb DESTINATION include)
++
++##################################### TESTS #######################################
++# Every leveldb test file has to be compiled as an independant binary
++# because of the test framework used by leveldb.
++add_library(leveldb_test_rt STATIC
++    util/testutil.h
++    util/testutil.cc
++    util/testharness.h
++    util/testharness.cc)
++
++target_include_directories(leveldb_test_rt
++    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/include
++)
++
++if(BUILD_SHARED_LIBS)
++  set_target_properties(leveldb_test_rt PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
++  set_target_properties(leveldb PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
++endif(BUILD_SHARED_LIBS)
++
++add_custom_target(RUN_LEVELDB_UNIT_TESTS
++    COMMAND ${CMAKE_CTEST_COMMAND}
++        --build-config ${CMAKE_CFG_INTDIR}
++        --output-log LevelDB_test_${CMAKE_CFG_INTDIR}.log
++        --output-on-failure
++        --tests-regex leveldb
++    COMMENT "Running all LevelDB unit tests"
++)
++
++function(LEVELDB_ADD_TEST TESTNAME TESTFILE)
++    if(NOT TESTNAME)
++        message(SEND_ERROR "Error: LEVELDB_ADD_TEST called without test name")
++        return()
++    endif(NOT TESTNAME)
++
++    if(NOT TESTFILE)
++        message(SEND_ERROR "Error: LEVELDB_ADD_TEST called without test file")
++        return()
++    endif(NOT TESTFILE)
++
++    add_executable(leveldb_${TESTNAME}_test
++        ${TESTFILE})
++
++    target_link_libraries(leveldb_${TESTNAME}_test
++        leveldb_test_rt
++        leveldb)
++
++    set_target_properties(leveldb_${TESTNAME}_test PROPERTIES
++        DEBUG_POSTFIX ${CMAKE_DEBUG_POSTFIX})
++
++    add_test(NAME leveldb_${TESTNAME}_test COMMAND leveldb_${TESTNAME}_test)
++
++    add_dependencies(RUN_LEVELDB_UNIT_TESTS leveldb_${TESTNAME}_test)
++endfunction(LEVELDB_ADD_TEST)
++
++# IMPORTANT: Commented a test that fails randomly.
++LEVELDB_ADD_TEST(autocompact      db/autocompact_test.cc)
++LEVELDB_ADD_TEST(c  		      db/c_test.cc)
++LEVELDB_ADD_TEST(corruption       db/corruption_test.cc)
++LEVELDB_ADD_TEST(db_bench         db/db_bench.cc)
++LEVELDB_ADD_TEST(db 		      db/db_test.cc)
++LEVELDB_ADD_TEST(dbformat         db/dbformat_test.cc)
++LEVELDB_ADD_TEST(ddfaultinjection db/fault_injection_test.cc)
++LEVELDB_ADD_TEST(filename         db/filename_test.cc)
++LEVELDB_ADD_TEST(log              db/log_test.cc)
++LEVELDB_ADD_TEST(dbrecovery       db/recovery_test.cc)
++LEVELDB_ADD_TEST(skiplist         db/skiplist_test.cc)
++LEVELDB_ADD_TEST(version_edit     db/version_edit_test.cc)
++LEVELDB_ADD_TEST(version_set      db/version_set_test.cc)
++LEVELDB_ADD_TEST(write_batch      db/write_batch_test.cc)
++
++LEVELDB_ADD_TEST(filter_block     table/filter_block_test.cc)
++LEVELDB_ADD_TEST(table            table/table_test.cc)
++
++LEVELDB_ADD_TEST(arena            util/arena_test.cc)
++LEVELDB_ADD_TEST(bloom            util/bloom_test.cc)
++LEVELDB_ADD_TEST(cache            util/cache_test.cc)
++LEVELDB_ADD_TEST(coding           util/coding_test.cc)
++LEVELDB_ADD_TEST(crc32            util/crc32c_test.cc)
++LEVELDB_ADD_TEST(env              util/env_test.cc)
++LEVELDB_ADD_TEST(hash             util/hash_test.cc)
++
+diff --git a/db/c.cc b/db/c.cc
+index 08ff0ad..4cc6b25 100644
+--- a/db/c.cc
++++ b/db/c.cc
+@@ -5,7 +5,11 @@
+ #include "leveldb/c.h"
+ 
+ #include <stdlib.h>
+-#include <unistd.h>
++
++#ifndef WIN32
++#    include <unistd.h>
++#endif
++
+ #include "leveldb/cache.h"
+ #include "leveldb/comparator.h"
+ #include "leveldb/db.h"
+diff --git a/db/c_test.c b/db/c_test.cc
+similarity index 98%
+rename from db/c_test.c
+rename to db/c_test.cc
+index 7cd5ee0..5365728 100644
+--- a/db/c_test.c
++++ b/db/c_test.cc
+@@ -9,7 +9,12 @@
+ #include <stdlib.h>
+ #include <string.h>
+ #include <sys/types.h>
+-#include <unistd.h>
++
++#ifndef WIN32
++#    include <unistd.h>
++#else
++	 uint32_t geteuid(void) { return 0; }
++#endif
+ 
+ const char* phase = "";
+ static char dbname[200];
+@@ -22,7 +27,13 @@ static void StartPhase(const char* name) {
+ static const char* GetTempDir(void) {
+     const char* ret = getenv("TEST_TMPDIR");
+     if (ret == NULL || ret[0] == '\0')
++	{	
++#ifndef WIN32
+         ret = "/tmp";
++#else
++        ret = ".";
++#endif
++	}
+     return ret;
+ }
+ 
+@@ -141,7 +152,7 @@ static char* FilterCreate(
+     int num_keys,
+     size_t* filter_length) {
+   *filter_length = 4;
+-  char* result = malloc(4);
++  char* result = (char*)malloc(4);
+   memcpy(result, "fake", 4);
+   return result;
+ }
+diff --git a/db/corruption_test.cc b/db/corruption_test.cc
+index 37a484d..086310f 100644
+--- a/db/corruption_test.cc
++++ b/db/corruption_test.cc
+@@ -46,14 +46,22 @@ class CorruptionTest {
+   }
+ 
+   ~CorruptionTest() {
+-     delete db_;
++     Close();
+      DestroyDB(dbname_, Options());
+      delete tiny_cache_;
+   }
++  
++  void Close()
++  {
++    if (db_ != NULL)
++	{
++	  delete(db_);
++	  db_ = NULL;
++	}
++  }
+ 
+   Status TryReopen() {
+-    delete db_;
+-    db_ = NULL;
++    Close();
+     return DB::Open(options_, dbname_, &db_);
+   }
+ 
+@@ -62,8 +70,7 @@ class CorruptionTest {
+   }
+ 
+   void RepairDB() {
+-    delete db_;
+-    db_ = NULL;
++    Close();
+     ASSERT_OK(::leveldb::RepairDB(dbname_, options_));
+   }
+ 
+@@ -170,7 +177,7 @@ class CorruptionTest {
+       contents[i + offset] ^= 0x80;
+     }
+     s = WriteStringToFile(Env::Default(), contents, fname);
+-    ASSERT_TRUE(s.ok()) << s.ToString();
++    ASSERT_TRUE(s.ok()) << s.ToString();	
+   }
+ 
+   int Property(const std::string& name) {
+@@ -240,7 +247,9 @@ TEST(CorruptionTest, TableFile) {
+   dbi->TEST_CompactRange(0, NULL, NULL);
+   dbi->TEST_CompactRange(1, NULL, NULL);
+ 
++  Close();
+   Corrupt(kTableFile, 100, 1);
++  Reopen();
+   Check(90, 99);
+ }
+ 
+@@ -254,6 +263,7 @@ TEST(CorruptionTest, TableFileRepair) {
+   dbi->TEST_CompactRange(0, NULL, NULL);
+   dbi->TEST_CompactRange(1, NULL, NULL);
+ 
++  Close();
+   Corrupt(kTableFile, 100, 1);
+   RepairDB();
+   Reopen();
+@@ -265,6 +275,7 @@ TEST(CorruptionTest, TableFileIndexData) {
+   DBImpl* dbi = reinterpret_cast<DBImpl*>(db_);
+   dbi->TEST_CompactMemTable();
+ 
++  Close();
+   Corrupt(kTableFile, -2000, 500);
+   Reopen();
+   Check(5000, 9999);
+@@ -322,7 +333,9 @@ TEST(CorruptionTest, CompactionInputError) {
+   const int last = config::kMaxMemCompactLevel;
+   ASSERT_EQ(1, Property("leveldb.num-files-at-level" + NumberToString(last)));
+ 
++  Close();
+   Corrupt(kTableFile, 100, 1);
++  Reopen();
+   Check(5, 9);
+ 
+   // Force compactions by writing lots of values
+@@ -340,7 +353,10 @@ TEST(CorruptionTest, CompactionInputErrorParanoid) {
+   for (int i = 0; i < 2; i++) {
+     Build(10);
+     dbi->TEST_CompactMemTable();
++	Close();
+     Corrupt(kTableFile, 100, 1);
++	Reopen();
++	dbi = reinterpret_cast<DBImpl*>(db_);
+     env_.SleepForMicroseconds(100000);
+   }
+   dbi->CompactRange(NULL, NULL);
+@@ -355,8 +371,11 @@ TEST(CorruptionTest, UnrelatedKeys) {
+   Build(10);
+   DBImpl* dbi = reinterpret_cast<DBImpl*>(db_);
+   dbi->TEST_CompactMemTable();
++  Close();
+   Corrupt(kTableFile, 100, 1);
+-
++  Reopen();
++  dbi = reinterpret_cast<DBImpl*>(db_);
++  
+   std::string tmp1, tmp2;
+   ASSERT_OK(db_->Put(WriteOptions(), Key(1000, &tmp1), Value(1000, &tmp2)));
+   std::string v;
+diff --git a/db/db_impl.cc b/db/db_impl.cc
+index f43ad76..6b326d2 100644
+--- a/db/db_impl.cc
++++ b/db/db_impl.cc
+@@ -1081,7 +1081,7 @@ Iterator* DBImpl::NewInternalIterator(const ReadOptions& options,
+   }
+   versions_->current()->AddIterators(options, &list);
+   Iterator* internal_iter =
+-      NewMergingIterator(&internal_comparator_, &list[0], list.size());
++      NewMergingIterator(&internal_comparator_, &list[0], (int)list.size());
+   versions_->current()->Ref();
+ 
+   cleanup->mu = &mutex_;
+diff --git a/db/recovery_test.cc b/db/recovery_test.cc
+index 9596f42..027300f 100644
+--- a/db/recovery_test.cc
++++ b/db/recovery_test.cc
+@@ -205,6 +205,7 @@ TEST(RecoveryTest, LargeManifestCompacted) {
+ 
+ TEST(RecoveryTest, NoLogFiles) {
+   ASSERT_OK(Put("foo", "bar"));
++  Close();
+   ASSERT_EQ(1, DeleteLogFiles());
+   Open();
+   ASSERT_EQ("NOT_FOUND", Get("foo"));
+diff --git a/db/skiplist.h b/db/skiplist.h
+index 8bd7776..9e61ead 100644
+--- a/db/skiplist.h
++++ b/db/skiplist.h
+@@ -357,7 +357,7 @@ void SkipList<Key,Comparator>::Insert(const Key& key) {
+     // the loop below.  In the former case the reader will
+     // immediately drop to the next level since NULL sorts after all
+     // keys.  In the latter case the reader will use the new node.
+-    max_height_.NoBarrier_Store(reinterpret_cast<void*>(height));
++    max_height_.NoBarrier_Store(reinterpret_cast<void*>(height)); // Todo: Is this cast right on 64bit systems?
+   }
+ 
+   x = NewNode(key, height);
+diff --git a/db/version_set.h b/db/version_set.h
+index c4e7ac3..7560262 100644
+--- a/db/version_set.h
++++ b/db/version_set.h
+@@ -108,7 +108,7 @@ class Version {
+   int PickLevelForMemTableOutput(const Slice& smallest_user_key,
+                                  const Slice& largest_user_key);
+ 
+-  int NumFiles(int level) const { return files_[level].size(); }
++  int NumFiles(int level) const { return (int)files_[level].size(); }
+ 
+   // Return a human readable string that describes this version's contents.
+   std::string DebugString() const;
+@@ -334,7 +334,7 @@ class Compaction {
+   VersionEdit* edit() { return &edit_; }
+ 
+   // "which" must be either 0 or 1
+-  int num_input_files(int which) const { return inputs_[which].size(); }
++  int num_input_files(int which) const { return (int)inputs_[which].size(); }
+ 
+   // Return the ith input file at "level()+which" ("which" must be 0 or 1).
+   FileMetaData* input(int which, int i) const { return inputs_[which][i]; }
+diff --git a/port/port.h b/port/port.h
+index e667db4..0649c7a 100644
+--- a/port/port.h
++++ b/port/port.h
+@@ -10,7 +10,9 @@
+ // Include the appropriate platform specific file below.  If you are
+ // porting to a new platform, see "port_example.h" for documentation
+ // of what the new port_<platform>.h file must provide.
+-#if defined(LEVELDB_PLATFORM_POSIX)
++#if defined(WIN32)
++#  include "port/port_win.h"
++#elif defined(LEVELDB_PLATFORM_POSIX)
+ #  include "port/port_posix.h"
+ #elif defined(LEVELDB_PLATFORM_CHROMIUM)
+ #  include "port/port_chromium.h"
+diff --git a/port/port_win.cc b/port/port_win.cc
+new file mode 100644
+index 0000000..f5edc84
+--- /dev/null
++++ b/port/port_win.cc
+@@ -0,0 +1,188 @@
++// LevelDB Copyright (c) 2011 The LevelDB Authors. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file. See the AUTHORS file for names of contributors.
++//
++// See port_example.h for documentation for the following types/functions.
++
++// Redistribution and use in source and binary forms, with or without
++// modification, are permitted provided that the following conditions are met:
++// 
++//  * Redistributions of source code must retain the above copyright
++//    notice, this list of conditions and the following disclaimer.
++//  * Redistributions in binary form must reproduce the above copyright
++//    notice, this list of conditions and the following disclaimer in the
++//    documentation and/or other materials provided with the distribution.
++//  * Neither the name of the University of California, Berkeley nor the
++//    names of its contributors may be used to endorse or promote products
++//    derived from this software without specific prior written permission.
++// 
++// THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND ANY
++// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
++// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
++// DISCLAIMED. IN NO EVENT SHALL THE REGENTS AND CONTRIBUTORS BE LIABLE FOR ANY
++// DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
++// (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
++// LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
++// ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
++// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++//
++
++#include "port/port_win.h"
++
++#include <windows.h>
++#include <cassert>
++
++namespace leveldb {
++namespace port {
++
++Mutex::Mutex() :
++    mutex_(::CreateMutex(NULL, FALSE, NULL)) {
++  assert(mutex_);
++}
++
++Mutex::~Mutex() {
++  assert(mutex_);
++  ::CloseHandle(mutex_);
++}
++
++void Mutex::Lock() {
++  assert(mutex_);
++  ::WaitForSingleObject(mutex_, INFINITE);
++}
++
++void Mutex::Unlock() {
++  assert(mutex_);
++  ::ReleaseMutex(mutex_);
++}
++
++void Mutex::AssertHeld() {
++  assert(mutex_);
++  assert(1);
++}
++
++CondVar::CondVar(Mutex* mu) :
++    waiting_(0), 
++    mu_(mu), 
++    sema_(::CreateSemaphore(NULL, 0, 0x7fffffff, NULL)), 
++    event_(::CreateEvent(NULL, FALSE, FALSE, NULL)),
++    broadcasted_(false){
++  assert(mu_);
++}
++
++CondVar::~CondVar() {
++  ::CloseHandle(sema_);
++  ::CloseHandle(event_);
++}
++
++void CondVar::Wait() {
++  wait_mtx_.Lock();
++  ++waiting_;
++  assert(waiting_ > 0);
++  wait_mtx_.Unlock();
++
++  ::SignalObjectAndWait(mu_->mutex_, sema_, INFINITE, FALSE);
++
++  wait_mtx_.Lock();
++  bool last = broadcasted_ && (--waiting_ == 0);
++  assert(waiting_ >= 0);
++  wait_mtx_.Unlock();
++
++  // we leave this function with the mutex held
++  if (last)
++  {
++    ::SignalObjectAndWait(event_, mu_->mutex_, INFINITE, FALSE);
++  }
++  else
++  {
++    ::WaitForSingleObject(mu_->mutex_, INFINITE);
++  }
++}
++
++void CondVar::Signal() {
++  wait_mtx_.Lock();
++  bool waiters = waiting_ > 0;
++  wait_mtx_.Unlock();
++
++  if (waiters)
++  {
++    ::ReleaseSemaphore(sema_, 1, 0);
++  }
++}
++
++void CondVar::SignalAll() {
++  wait_mtx_.Lock();
++
++  broadcasted_ = (waiting_ > 0);
++
++  if (broadcasted_)
++  {
++      // release all
++    ::ReleaseSemaphore(sema_, waiting_, 0);
++    wait_mtx_.Unlock();
++    ::WaitForSingleObject(event_, INFINITE);
++    broadcasted_ = false;
++  }
++  else
++  {
++    wait_mtx_.Unlock();
++  }
++}
++
++AtomicPointer::AtomicPointer(void* v) {
++  Release_Store(v);
++}
++
++void* AtomicPointer::Acquire_Load() const {
++  void * p = nullptr;
++  InterlockedExchangePointer(&p, rep_);
++  return p;
++}
++
++void AtomicPointer::Release_Store(void* v) {
++  InterlockedExchangePointer(&rep_, v);
++}
++
++void* AtomicPointer::NoBarrier_Load() const {
++  return rep_;
++}
++
++void AtomicPointer::NoBarrier_Store(void* v) {
++  rep_ = v;
++}
++
++enum InitializationState
++{
++    Uninitialized = 0,
++    Running = 1,
++    Initialized = 2
++};
++
++void InitOnce(OnceType* once, void (*initializer)()) {
++
++  static_assert(Uninitialized == LEVELDB_ONCE_INIT, "Invalid uninitialized state value");
++
++  InitializationState state = static_cast<InitializationState>(InterlockedCompareExchange(once, Running, Uninitialized));
++
++  if (state == Uninitialized) {
++      initializer();
++      *once = Initialized;
++  }
++
++  if (state == Running) {
++      while(*once != Initialized) {
++          Sleep(0); // yield
++      }
++  }
++
++  assert(*once == Initialized);
++}
++
++// ToDo: For sure we can also accelerate CRC32 calculation on many windows systems.
++// But this is not the most important feature for now.
++uint32_t AcceleratedCRC32C(uint32_t crc, const char* buf, size_t size) {
++	return 0;
++}
++
++}
++}
+diff --git a/port/port_win.h b/port/port_win.h
+new file mode 100644
+index 0000000..ea9a487
+--- /dev/null
++++ b/port/port_win.h
+@@ -0,0 +1,170 @@
++// LevelDB Copyright (c) 2011 The LevelDB Authors. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file. See the AUTHORS file for names of contributors.
++//
++// See port_example.h for documentation for the following types/functions.
++
++// Redistribution and use in source and binary forms, with or without
++// modification, are permitted provided that the following conditions are met:
++//
++//  * Redistributions of source code must retain the above copyright
++//    notice, this list of conditions and the following disclaimer.
++//  * Redistributions in binary form must reproduce the above copyright
++//    notice, this list of conditions and the following disclaimer in the
++//    documentation and/or other materials provided with the distribution.
++//  * Neither the name of the University of California, Berkeley nor the
++//    names of its contributors may be used to endorse or promote products
++//    derived from this software without specific prior written permission.
++//
++// THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND ANY
++// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
++// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
++// DISCLAIMED. IN NO EVENT SHALL THE REGENTS AND CONTRIBUTORS BE LIABLE FOR ANY
++// DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
++// (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
++// LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
++// ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
++// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++//
++
++#ifndef STORAGE_LEVELDB_PORT_PORT_WIN_H_
++#define STORAGE_LEVELDB_PORT_PORT_WIN_H_
++
++#if _MSC_VER < 1900
++#define snprintf _snprintf
++#endif
++#define close _close
++#define fread_unlocked _fread_nolock
++
++#ifdef SNAPPY
++#include <snappy.h>
++#endif
++
++#include <string>
++
++#include <stdint.h>
++
++#include <BaseTsd.h>
++typedef SSIZE_T ssize_t;
++
++namespace leveldb {
++namespace port {
++
++// Windows is little endian (for now :p)
++static const bool kLittleEndian = true;
++
++class CondVar;
++
++class Mutex {
++ public:
++  Mutex();
++  ~Mutex();
++
++  void Lock();
++  void Unlock();
++  void AssertHeld();
++
++ private:
++  friend class CondVar;
++  // critical sections are more efficient than mutexes
++  // but they are not recursive and can only be used to synchronize threads
++  // within the same process
++  // additionnaly they cannot be used with SignalObjectAndWait that we use for
++  // CondVar
++  // we use opaque void * to avoid including windows.h in port_win.h
++  void* mutex_;
++
++  // No copying
++  Mutex(const Mutex&);
++  void operator=(const Mutex&);
++};
++
++// the Win32 API offers a dependable condition variable mechanism, but only
++// starting with
++// Windows 2008 and Vista
++// no matter what we will implement our own condition variable with a semaphore
++// implementation as described in a paper written by Douglas C. Schmidt and
++// Irfan Pyarali
++class CondVar {
++ public:
++  explicit CondVar(Mutex* mu);
++  ~CondVar();
++  void Wait();
++  void Signal();
++  void SignalAll();
++
++ private:
++  Mutex* mu_;
++
++  Mutex wait_mtx_;
++  long waiting_;
++
++  void* sema_;
++  void* event_;
++
++  bool broadcasted_;
++};
++
++// Storage for a lock-free pointer
++class AtomicPointer {
++ private:
++  void* rep_;
++
++ public:
++  AtomicPointer() : rep_(nullptr) {}
++  explicit AtomicPointer(void* v);
++  void* Acquire_Load() const;
++
++  void Release_Store(void* v);
++
++  void* NoBarrier_Load() const;
++
++  void NoBarrier_Store(void* v);
++};
++
++typedef volatile long OnceType;
++#define LEVELDB_ONCE_INIT (0)
++
++extern void InitOnce(OnceType* once, void (*initializer)());
++
++inline bool Snappy_Compress(const char* input, size_t length,
++                            ::std::string* output) {
++#ifdef SNAPPY
++  output->resize(snappy::MaxCompressedLength(length));
++  size_t outlen;
++  snappy::RawCompress(input, length, &(*output)[0], &outlen);
++  output->resize(outlen);
++  return true;
++#endif
++
++  return false;
++}
++
++inline bool Snappy_GetUncompressedLength(const char* input, size_t length,
++                                         size_t* result) {
++#ifdef SNAPPY
++  return snappy::GetUncompressedLength(input, length, result);
++#else
++  return false;
++#endif
++}
++
++inline bool Snappy_Uncompress(const char* input, size_t length, char* output) {
++#ifdef SNAPPY
++  return snappy::RawUncompress(input, length, output);
++#else
++  return false;
++#endif
++}
++
++inline bool GetHeapProfile(void (*func)(void*, const char*, int), void* arg) {
++  return false;
++}
++
++uint32_t AcceleratedCRC32C(uint32_t crc, const char* buf, size_t size);
++
++}
++}
++
++#endif  // STORAGE_LEVELDB_PORT_PORT_WIN_H_
+diff --git a/util/env_boost.cc b/util/env_boost.cc
+new file mode 100644
+index 0000000..76c2cb4
+--- /dev/null
++++ b/util/env_boost.cc
+@@ -0,0 +1,753 @@
++// Copyright (c) 2011 The LevelDB Authors. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file. See the AUTHORS file for names of contributors.
++
++#include <atomic>
++#include <chrono>
++#include <cstdint>
++#include <deque>
++#include <set>
++#include <thread>
++#include <functional>
++#include <memory>
++#include <condition_variable>
++#include <mutex>
++
++#ifdef WIN32
++#include <windows.h>
++#include <errno.h>
++#include <fcntl.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include <sys/stat.h>
++#include <sys/types.h>
++#include <time.h>
++#include <io.h>
++#else
++#include <dirent.h>
++#include <errno.h>
++#include <fcntl.h>
++#include <pthread.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++#include <sys/mman.h>
++#include <sys/stat.h>
++#include <sys/time.h>
++#include <sys/types.h>
++#include <sys/param.h>
++#include <time.h>
++#include <unistd.h>
++#endif
++#if defined(LEVELDB_PLATFORM_ANDROID)
++#include <sys/stat.h>
++#endif
++#include "leveldb/env.h"
++#include "leveldb/slice.h"
++
++#ifdef WIN32
++#include "util/win_logger.h"
++#else
++#include "util/posix_logger.h"
++#endif
++#include "port/port.h"
++#include "util/logging.h"
++
++#ifdef __linux
++#include <sys/sysinfo.h>
++#include <linux/unistd.h>
++#endif
++
++#include <fstream>
++
++// Boost includes - see WINDOWS file to see which modules to install
++#include <boost/filesystem/convenience.hpp>
++#include <boost/interprocess/sync/file_lock.hpp>
++#include <boost/lexical_cast.hpp>
++#include <boost/thread.hpp>
++
++namespace leveldb {
++namespace {
++
++static Status IOError(const std::string& context, int err_number) {
++  return Status::IOError(context, strerror(err_number));
++}
++
++static Status WinIOError(const std::string & context, DWORD err)
++{
++    std::string err_mess;
++    LPTSTR lpErrorText = NULL;
++	if (!::FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER, 
++		0, 
++        err, 
++        0, 
++        (LPTSTR)&lpErrorText, 
++        32000, 
++        0))
++    {
++        err_mess = "unknown error";
++    }
++    else
++    {
++    	err_mess = lpErrorText;
++	    ::LocalFree(lpErrorText);
++    }
++    return Status::IOError(context, err_mess);
++}
++
++// returns the ID of the current process
++static std::uint32_t current_process_id(void) {
++#ifdef _WIN32
++  return static_cast<std::uint32_t>(::GetCurrentProcessId());
++#else
++  return static_cast<std::uint32_t>(::getpid());
++#endif
++}
++
++// returns the ID of the current thread
++static std::uint32_t current_thread_id(void) {
++#ifdef _WIN32
++  return static_cast<std::uint32_t>(::GetCurrentThreadId());
++#else
++#ifdef __linux
++  return static_cast<std::uint32_t>(::syscall(__NR_gettid));
++#else
++  // just return the pid
++  return current_process_id();
++#endif
++#endif
++}
++
++class WindowsSequentialFile: public SequentialFile {
++ private:
++  std::string filename_;
++  HANDLE handle_;
++
++ public:
++  WindowsSequentialFile(const std::string& fname, HANDLE h)
++    : filename_(fname), handle_(h) { }
++  virtual ~WindowsSequentialFile() { CloseHandle(handle_); }
++
++  virtual Status Read(size_t n, Slice* result, char* scratch) {
++    size_t r = 0;
++
++    if (!::ReadFile(handle_, scratch, static_cast<DWORD>(n), reinterpret_cast<DWORD *>(&r), NULL))
++    {
++        return WinIOError(filename_, GetLastError());
++    }
++   *result = Slice(scratch, r);
++   return Status::OK();
++  }
++
++  virtual Status Skip(uint64_t n) {
++    const LONG lo = static_cast<LONG>(n & 0xffffffff);
++    LONG hi = static_cast<LONG>(n >> 32);
++    if (SetFilePointer(handle_, lo, &hi, FILE_BEGIN) == INVALID_SET_FILE_POINTER)
++    {
++        return WinIOError(filename_, GetLastError());
++    }
++    return Status::OK();
++  }
++};
++
++class WindowsRandomAccessFile: public RandomAccessFile {
++ private:
++  std::string filename_;
++  const void * region_;
++  uint64_t length_;
++  HANDLE handle_;
++
++ public:
++  WindowsRandomAccessFile(const std::string& fname, const void * base, uint64_t l, HANDLE h)
++    : filename_(fname), region_(base), length_(l), handle_(h) { }
++  virtual ~WindowsRandomAccessFile() 
++  { 
++      if (region_)
++      {
++          UnmapViewOfFile(region_);
++      }
++      CloseHandle(handle_); 
++  }
++
++  virtual Status Read(uint64_t offset, size_t n, Slice* result,
++            char* scratch) const {
++    Status s;
++    if (offset + static_cast<uint64_t>(n) > length_) {
++      *result = Slice();
++      s = IOError(filename_, EINVAL);
++    } else {
++      *result = Slice(reinterpret_cast<const char*>(region_) + offset, n);
++    }
++    return s;
++  }
++};
++
++class WindowsWritableFile : public WritableFile {
++
++private:
++  boost::filesystem::path filename_;
++  HANDLE handle_;
++
++public:
++  WindowsWritableFile(const std::string& fname, HANDLE h)
++      : filename_(fname), handle_(h) { }
++
++  ~WindowsWritableFile() { CloseHandle(handle_); }
++
++public:
++  virtual Status Append(const Slice& data) {
++
++    DWORD written = 0;
++
++    if (!::WriteFile(handle_, data.data(), static_cast<DWORD>(data.size()), &written, NULL))
++    {
++        return WinIOError(filename_.string(), ::GetLastError());
++    }
++
++    if (static_cast<size_t>(written) != data.size())
++    {
++        return Status::IOError(filename_.string(), "could not write all bytes to disk");
++    }
++
++    return Status::OK();
++  }
++
++  virtual Status Close() {
++    ::CloseHandle(handle_);
++    handle_ = NULL;
++    return Status::OK();
++  }
++
++  virtual Status Flush() {
++    return Status::OK();
++  }
++
++  virtual Status Sync() {
++    return Status::OK();
++  }
++
++
++};
++
++class BoostFileLock : public FileLock {
++ public:
++  std::ofstream file_;
++  boost::interprocess::file_lock fl_;
++  std::string name_;
++};
++
++// Set of locked files.  We keep a separate set instead of just
++// relying on fcntrl(F_SETLK) since fcntl(F_SETLK) does not provide
++// any protection against multiple uses from the same process.
++class BoostLockTable {
++ private:
++  std::mutex mu_;
++  std::set<std::string> locked_files_;
++ public:
++  bool Insert(const std::string& fname) {
++    std::unique_lock<std::mutex> l(mu_);
++    return locked_files_.insert(fname).second;
++  }
++  void Remove(const std::string& fname) {
++    std::unique_lock<std::mutex> l(mu_);
++    locked_files_.erase(fname);
++  }
++};
++
++class PosixEnv : public Env {
++ public:
++  PosixEnv();
++  virtual ~PosixEnv() 
++  {      
++      bool expected = true;
++      if (run_bg_thread_.compare_exchange_strong(expected, false))
++      {
++          bgsignal_.notify_one();
++      }
++
++      std::thread * t = nullptr;
++
++      {
++          std::unique_lock<std::mutex> lock(mu_);
++          t = bgthread_.get();
++      }
++
++      if (t)
++      {
++          t->join();
++      }
++
++      std::unique_lock<std::mutex> lock(mu_);
++      bgthread_.reset();
++
++      queue_.clear();
++  }
++  
++  virtual void StartThread(void (*function)(void* arg), void* arg)
++  {
++	boost::thread NewThread(function, arg);
++	NewThread.detach();
++  }
++
++  virtual Status NewSequentialFile(const std::string& fname,
++                   SequentialFile** result) {
++    HANDLE h = ::CreateFile(fname.c_str(), 
++        GENERIC_READ | GENERIC_WRITE, 
++        FILE_SHARE_READ | FILE_SHARE_WRITE, 
++        NULL, 
++        OPEN_EXISTING, 
++        FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN,
++        NULL);
++
++    if (h == INVALID_HANDLE_VALUE)
++    {
++        return WinIOError(fname, ::GetLastError());
++    }
++    *result = new WindowsSequentialFile(fname, h);
++    return Status::OK();
++  }
++
++  virtual Status NewAppendableFile(const std::string& fname,
++                                   WritableFile** result)
++  {
++    HANDLE h = ::CreateFile(fname.c_str(), 
++        FILE_APPEND_DATA, 
++        FILE_SHARE_READ | FILE_SHARE_WRITE, 
++        NULL, 
++        OPEN_EXISTING, 
++        FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN,
++        NULL);
++
++    if (h == INVALID_HANDLE_VALUE)
++    {
++        return WinIOError(fname, ::GetLastError());
++    }
++    *result = new WindowsWritableFile(fname, h);
++    return Status::OK();	  
++  }
++  
++  virtual Status NewRandomAccessFile(const std::string& fname,
++                   RandomAccessFile** result) {
++    HANDLE h = ::CreateFile(fname.c_str(), 
++        GENERIC_READ | GENERIC_WRITE, 
++        FILE_SHARE_READ | FILE_SHARE_WRITE,
++        NULL, 
++        OPEN_EXISTING, 
++        FILE_ATTRIBUTE_NORMAL,
++        NULL);
++
++    if (h == INVALID_HANDLE_VALUE)
++    {
++        return WinIOError(fname, ::GetLastError());
++    }
++
++    DWORD hi_size = 0;
++
++    const DWORD lo_size = ::GetFileSize(h, &hi_size);
++
++    Status s;
++
++    if (lo_size == INVALID_FILE_SIZE)
++    {
++        s = WinIOError(fname, ::GetLastError());
++    }
++
++    const uint64_t file_size = (static_cast<uint64_t>(hi_size) << 32uLL) + static_cast<uint64_t>(lo_size);
++
++    HANDLE map = NULL;
++    const void * base = nullptr;
++
++    if (s.ok())
++    {
++        map = ::CreateFileMapping(h, NULL, PAGE_READONLY, 0, 0, NULL);
++
++        if (map == NULL)
++        {
++            s = WinIOError(fname, ::GetLastError());
++        }
++
++        // handle of the file no longer needed whether we knew success or failure
++        ::CloseHandle(h);
++
++        if (map)
++        {
++            base = ::MapViewOfFile(map, FILE_MAP_READ, 0, 0, 0);
++            if (!base)
++            {
++                s = WinIOError(fname, ::GetLastError());
++                ::CloseHandle(map);
++            }
++        }
++    }
++
++    if (s.ok())
++    {
++        *result = new WindowsRandomAccessFile(fname, base, file_size, map);
++    }
++
++    return s;
++  }
++
++  virtual Status NewWritableFile(const std::string& fname,
++                 WritableFile** result) {
++
++    HANDLE h = ::CreateFile(fname.c_str(), 
++        GENERIC_READ | GENERIC_WRITE, 
++        FILE_SHARE_READ | FILE_SHARE_WRITE,
++        NULL, 
++        CREATE_ALWAYS, 
++        FILE_ATTRIBUTE_NORMAL,
++        NULL);
++
++    if (h == INVALID_HANDLE_VALUE)
++    {
++        return WinIOError(fname, ::GetLastError());
++    }
++
++    *result = new WindowsWritableFile(fname, h);
++    return Status::OK();
++  }
++
++  virtual bool FileExists(const std::string& fname) {
++    boost::system::error_code ec;
++    return boost::filesystem::exists(fname, ec);
++  }
++
++  virtual Status GetChildren(const std::string& dir,
++               std::vector<std::string>* result) {
++    result->clear();
++
++    boost::system::error_code ec;
++    boost::filesystem::directory_iterator current(dir, ec);
++    if (ec) {
++      return Status::IOError(dir, ec.message());
++    }
++
++    boost::filesystem::directory_iterator end;
++
++    for(; current != end; ++current) {
++      result->push_back(current->path().filename().generic_string());
++    }
++
++    return Status::OK();
++  }
++
++  virtual Status DeleteFile(const std::string& fname) {
++    boost::system::error_code ec;
++
++    boost::filesystem::remove(fname, ec);
++
++    Status result;
++
++    if (ec) {
++      result = Status::IOError(fname, ec.message());
++    }
++
++    return result;
++  }
++
++  virtual Status CreateDir(const std::string& name) {
++      Status result;
++
++      boost::system::error_code ec;
++
++      if (boost::filesystem::exists(name, ec) &&
++          boost::filesystem::is_directory(name, ec)) {
++        return result;
++      }
++      
++      if (!boost::filesystem::create_directories(name, ec)) {
++        result = Status::IOError(name, ec.message());
++      }
++
++      return result;
++    };
++
++    virtual Status DeleteDir(const std::string& name) {
++    Status result;
++
++    boost::system::error_code ec;
++    if (!boost::filesystem::remove_all(name, ec)) {
++      result = Status::IOError(name, ec.message());
++    }
++
++    return result;
++  };
++
++  virtual Status GetFileSize(const std::string& fname, uint64_t* size) {
++    boost::system::error_code ec;
++
++    Status result;
++
++    *size = static_cast<uint64_t>(boost::filesystem::file_size(fname, ec));
++    if (ec) {
++      *size = 0;
++       result = Status::IOError(fname, ec.message());
++    }
++
++    return result;
++  }
++
++  virtual Status RenameFile(const std::string& src, const std::string& target) {
++    boost::system::error_code ec;
++
++    boost::filesystem::rename(src, target, ec);
++
++    Status result;
++
++    if (ec) {
++      result = Status::IOError(src, ec.message());
++    }
++
++    return result;
++  }
++
++
++  virtual Status LockFile(const std::string& fname, FileLock** lock) {
++    *lock = nullptr;
++    std::ofstream of(fname.c_str(), std::ios_base::trunc | std::ios_base::out);
++    if (of.bad()) {
++        return Status::IOError("lock " + fname, "cannot create lock file");
++    }
++    if (!locks_.Insert(fname)) {
++        of.close();
++        return Status::IOError("lock " + fname, "already held by process");
++    }
++    boost::interprocess::file_lock fl(fname.c_str());
++    if (!fl.try_lock()) {
++        of.close();         
++        locks_.Remove(fname);
++        return Status::IOError("lock " + fname, "database already in use: could not acquire exclusive lock" );
++    }
++    BoostFileLock * my_lock = new BoostFileLock();
++    my_lock->name_ = fname;
++    my_lock->file_ = std::move(of);
++    my_lock->fl_ = std::move(fl);
++    *lock = my_lock;
++    return Status();
++  }
++
++
++
++  virtual Status UnlockFile(FileLock* lock) {
++    BoostFileLock * my_lock = static_cast<BoostFileLock *>(lock);
++    Status result;
++    try {      
++      my_lock->fl_.unlock();      
++    } catch (const std::exception & e) {
++      result = Status::IOError("unlock " + my_lock->name_, e.what());
++    }
++    locks_.Remove(my_lock->name_);
++    my_lock->file_.close();
++    delete my_lock;
++    return result;
++  }
++
++  virtual void Schedule(void (*function)(void*), void* arg);
++  
++  virtual Status GetTestDirectory(std::string* result) {
++    boost::system::error_code ec;
++    boost::filesystem::path temp_dir =  boost::filesystem::temp_directory_path(ec);
++    if (ec) {
++      temp_dir = "tmp";
++    }
++
++    temp_dir /= "leveldb_tests";
++    temp_dir /= boost::lexical_cast<std::string>(current_process_id());
++
++    // Directory may already exist
++    CreateDir(temp_dir.generic_string());
++
++    *result = temp_dir.generic_string();
++	
++    return Status::OK();
++  }
++
++#ifndef WIN32
++  static uint64_t gettid() {
++    pthread_t tid = pthread_self();
++    uint64_t thread_id = 0;
++    memcpy(&thread_id, &tid, std::min(sizeof(thread_id), sizeof(tid)));
++    return thread_id;
++  }
++#endif
++
++  virtual Status NewLogger(const std::string& fname, Logger** result) {
++  FILE* f = fopen(fname.c_str(), "wt");
++  if (f == NULL) {
++    *result = NULL;
++    return Status::IOError(fname, strerror(errno));
++  } else {
++#ifdef WIN32
++    *result = new WinLogger(f);
++#else
++    *result = new PosixLogger(f, &PosixEnv::gettid);
++#endif
++    return Status::OK();
++  }
++  }
++
++  virtual uint64_t NowMicros() {
++    return static_cast<uint64_t>(
++        std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count());
++  }
++
++  virtual void SleepForMicroseconds(int micros) {
++    std::this_thread::sleep_for(std::chrono::microseconds(micros));
++  }
++
++  public:
++  virtual std::thread::native_handle_type GetBackgroundThreadHandle() {
++    return bgthread_ ? bgthread_->native_handle() : std::thread::native_handle_type();
++  }
++
++  // BGThread() is the body of the background thread
++  void BGThread();
++
++  static void* BGThreadWrapper(void* arg) {
++    reinterpret_cast<PosixEnv*>(arg)->BGThread();
++    return NULL;
++  }
++
++  std::mutex mu_;
++  std::condition_variable bgsignal_;
++  std::unique_ptr<std::thread> bgthread_;
++
++  // Entry per Schedule() call
++  struct BGItem { void* arg; void (*function)(void*); };
++  typedef std::deque<BGItem> BGQueue;
++  BGQueue queue_;
++  std::atomic<bool> run_bg_thread_;
++
++  BoostLockTable locks_;
++};
++
++PosixEnv::PosixEnv() { }
++
++void PosixEnv::Schedule(void (*function)(void*), void* arg) {
++  std::unique_lock<std::mutex> lock(mu_);
++
++  // Start background thread if necessary
++  if (!bgthread_) {
++     run_bg_thread_ = true;
++     bgthread_.reset(new std::thread(std::bind(&PosixEnv::BGThreadWrapper, this)));
++  }
++
++  // Add to priority queue
++  queue_.push_back(BGItem());
++  queue_.back().function = function;
++  queue_.back().arg = arg;
++
++  lock.unlock();
++
++  bgsignal_.notify_one();
++
++}
++
++#ifdef _MSC_VER
++// we use SEH, we cannot have a destructor, therefore we pass a pure pointer
++static void name_this_thread(const char * thread_name)
++{
++    if (!::IsDebuggerPresent())
++    {
++        // no need to do this if no debugger is present, remember threads in Windows don't really have name
++        // this is just a secret handshake with Visual Studio to name threads and make debugging more pleasant
++        // on UNIXES however the name will appear in utilities such as htop
++        return;
++    }
++
++    static const DWORD MS_VC_EXCEPTION = 0x406D1388;
++
++#pragma pack(push,8)
++    struct THREADNAME_INFO
++    {
++        DWORD dwType; // Must be 0x1000.
++        LPCSTR szName; // Pointer to name (in user addr space).
++        DWORD dwThreadID; // Thread ID (-1=caller thread).
++        DWORD dwFlags; // Reserved for future use, must be zero.
++    };
++#pragma pack(pop)
++
++    THREADNAME_INFO info;
++    info.dwType = 0x1000;
++    info.szName = thread_name; 
++    info.dwThreadID = ::GetCurrentThreadId();
++    info.dwFlags = 0;
++
++    __try
++    {
++        RaiseException(MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(ULONG_PTR), (ULONG_PTR*)&info);
++    }
++    __except (EXCEPTION_EXECUTE_HANDLER)
++    {
++    }
++
++}
++#else
++
++// useful for debugging to name the thread, since we only use env_boost.cc for Windows
++// we have this macro
++// for env_posix.cc we also do the right thing for FreeBSD, Linux and MacOS
++
++static void name_this_thread(const char *) {}
++#endif
++
++void PosixEnv::BGThread() {
++    
++    name_this_thread("leveldb background");
++
++    try
++    {
++        while (run_bg_thread_) {
++            // Wait until there is an item that is ready to run
++            std::unique_lock<std::mutex> lock(mu_);
++
++            while (queue_.empty() && run_bg_thread_) {
++                bgsignal_.wait(lock);
++            }
++
++            if (!run_bg_thread_)
++            {
++                break;
++            }
++
++            void (*function)(void*) = queue_.front().function;
++            void* arg = queue_.front().arg;
++            queue_.pop_front();
++
++            lock.unlock();
++            (*function)(arg);
++        }
++    }
++    catch (...) {}
++
++}
++
++}
++
++static std::once_flag once;
++static Env* default_env = nullptr;
++static void InitDefaultEnv() { 
++  default_env = new PosixEnv();
++
++  // force background thread creation so that thread affinity can work 
++  default_env->Schedule([](void *) {}, nullptr);
++}
++
++Env* Env::Default() {
++  std::call_once(once, InitDefaultEnv);
++  return default_env;
++}
++
++/*
++void Env::UnsafeDeallocate() {
++    // will not be able to call again, but the purpose of this function is to get rid of fake alerts by analyzers
++    delete default_env;
++    default_env = nullptr;
++}
++*/
++
++
++
++}
+diff --git a/util/win_logger.cc b/util/win_logger.cc
+new file mode 100644
+index 0000000..47ffd8e
+--- /dev/null
++++ b/util/win_logger.cc
+@@ -0,0 +1,79 @@
++// Copyright (c) 2011 The LevelDB Authors. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file. See the AUTHORS file for names of contributors.
++
++#include "util/win_logger.h"
++
++#include <windows.h>
++
++namespace leveldb {
++
++void WinLogger::Logv(const char* format, va_list ap) {
++  const uint64_t thread_id = static_cast<uint64_t>(::GetCurrentThreadId());
++
++  // We try twice: the first time with a fixed-size stack allocated buffer,
++  // and the second time with a much larger dynamically allocated buffer.
++  char buffer[500];
++
++  for (int iter = 0; iter < 2; iter++) {
++    char* base;
++    int bufsize;
++    if (iter == 0) {
++      bufsize = sizeof(buffer);
++      base = buffer;
++    } else {
++      bufsize = 30000;
++      base = new char[bufsize];
++    }
++
++    char* p = base;
++    char* limit = base + bufsize;
++
++    SYSTEMTIME st;
++
++    // GetSystemTime returns UTC time, we want local time!
++    ::GetLocalTime(&st);
++
++    p += _snprintf_s(p, limit - p, _TRUNCATE,
++      "%04d/%02d/%02d-%02d:%02d:%02d.%03d %llx ",
++      st.wYear,
++      st.wMonth,
++      st.wDay,
++      st.wHour,
++      st.wMinute,
++      st.wSecond,
++      st.wMilliseconds,
++      static_cast<long long unsigned int>(thread_id));
++
++    // Print the message
++    if (p < limit) {
++      va_list backup_ap = ap;
++      p += vsnprintf(p, limit - p, format, backup_ap);
++      va_end(backup_ap);
++    }
++
++    // Truncate to available space if necessary
++    if (p >= limit) {
++      if (iter == 0) {
++        continue; // Try again with larger buffer
++      } else {
++        p = limit - 1;
++      }
++    }
++
++    // Add newline if necessary
++    if (p == base || p[-1] != '\n') {
++      *p++ = '\n';
++    }
++
++    assert(p <= limit);
++    fwrite(base, 1, p - base, file_);
++    fflush(file_);
++    if (base != buffer) {
++      delete[] base;
++    }
++    break;
++  }
++}
++
++}
+\ No newline at end of file
+diff --git a/util/win_logger.h b/util/win_logger.h
+new file mode 100644
+index 0000000..b155d5c
+--- /dev/null
++++ b/util/win_logger.h
+@@ -0,0 +1,28 @@
++// Copyright (c) 2011 The LevelDB Authors. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file. See the AUTHORS file for names of contributors.
++
++// Logger implementation for Windows
++
++#ifndef STORAGE_LEVELDB_UTIL_WIN_LOGGER_H_
++#define STORAGE_LEVELDB_UTIL_WIN_LOGGER_H_
++
++#include <stdio.h>
++#include "leveldb/env.h"
++
++namespace leveldb {
++
++class WinLogger : public Logger {
++ private:
++  FILE* file_;
++ public:
++  explicit WinLogger(FILE* f) : file_(f) { assert(file_); }
++  virtual ~WinLogger() {
++    fclose(file_);
++  }
++  virtual void Logv(const char* format, va_list ap);
++
++};
++
++}
++#endif  // STORAGE_LEVELDB_UTIL_WIN_LOGGER_H_
+-- 
+2.12.2.windows.2
+

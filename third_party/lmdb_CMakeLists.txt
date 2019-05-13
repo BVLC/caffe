@@ -1,0 +1,20 @@
+﻿cmake_minimum_required(VERSION 3.8)
+
+project(lmdb)
+
+set(SRCS lmdb mdb.c lmdb.h midl.c midl.h )
+add_library(lmdb ${SRCS})
+target_link_libraries(lmdb PRIVATE ntdll.lib)
+
+if (BUILD_SHARED_LIBS)
+  set_target_properties(lmdb PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
+endif()
+
+install(TARGETS lmdb DESTINATION lib
+        RUNTIME DESTINATION bin
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib
+        )
+
+install(FILES lmdb.h midl.h DESTINATION include)
+
