@@ -303,7 +303,7 @@ void MKLDNNInnerProductLayer<Dtype>::InitInnerProductFwd(const vector<Blob<Dtype
     std::vector<float> scale_top(1);
     scale_top[0] = 1.0f;
     if(this->need_quantize_) scale_top = this->scale_out_;
-    fwd_top_data.reset(new MKLDNNData<Dtype>(usr_top_data_memory_pd, prv_fwd_top_data_memory_pd, top[0], this));
+    fwd_top_data.reset(new MKLDNNData<Dtype>(usr_top_data_memory_pd, prv_fwd_top_data_memory_pd, top[0], this, scale_top));
     fwd_top_data    ->name = "fwd_top_data      @ " + this->layer_param_.name();
     fwd_top_data_memory = fwd_top_data->create_output_memory();
 

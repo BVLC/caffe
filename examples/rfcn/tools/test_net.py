@@ -82,8 +82,19 @@ def parse_args():
 
     parser.add_argument('-wi', '--conv_algo', dest='conv_algo', action="store_true", default=False,
                         help='to choose the convolution algorithm')
+
     parser.add_argument('-1st', '--enable_1st_conv_layer', dest='enable_1st_conv_layer', action="store_true", default=False,
                         help='enable 1st conv layer')
+
+    parser.add_argument('-fc', '--fc_int8', dest='fc_int8', action="store_true", default=False,
+                        help='enable int8 fc layer')
+
+    parser.add_argument('-uff', '--disable_force_fp32', dest='disable_force_fp32', action="store_true", default=False,
+                        help='to disable force fp32 output in conv/fc + fp32')
+
+    parser.add_argument('-ucac', '--disable_cac_unify', dest='disable_cac_unify', action="store_true", default=False,
+                        help='to disable scale unify in conv/fc + avg pooling + conv/fc')
+
     if len(sys.argv) == 1:
         parser.print_help()
         sys.exit(1)
@@ -126,6 +137,8 @@ if __name__ == '__main__':
     if args.quantized_prototxt == None:
 	test_net(net, imdb, max_per_image=args.max_per_image, vis=args.vis)
     else:
+        if args.fc_int8:
+            calibrator.enable_fc_int8()
         (blobs, params, top_blobs_map, bottom_blobs_map, conv_top_blob_layer_map, conv_bottom_blob_layer_map, winograd_bottoms, winograd_convolutions) = sample_net(args.prototxt, net, imdb, args.sample_iters, args.quant_mode, args.enable_1st_conv_layer)
         
         (inputs_max, outputs_max, inputs_min) = sampling.calibrate_activations(blobs, conv_top_blob_layer_map, conv_bottom_blob_layer_map, winograd_bottoms, args.calibration_algos, "SINGLE", args.conv_algo)
@@ -137,3 +150,7 @@ if __name__ == '__main__':
         with open(compile_net_path, "w") as f:
             f.write(compiled_net_str)
         calibrator.transform_convolutions(args.quantized_prototxt, compile_net_path, top_blobs_map, bottom_blobs_map, args.unsigned_range, args.concat_use_fp32, args.unify_concat_scales, args.conv_algo, args.enable_1st_conv_layer)
+        if not args.disable_force_fp32:
+            calibrator.force_fp32_opt(args.quantized_prototxt)
+        if not args.disable_cac_unify:
+            calibrator.cac_opt(args.quantized_prototxt)

@@ -471,7 +471,11 @@ def force_fp32_opt(quantized_prototxt):
             if base_net.layer[index].top[0] in layer_bottom_name_map.keys():
                 bottom_layer_indexes=layer_bottom_name_map[base_net.layer[index].top[0]]
                 for bottom_layer_index in bottom_layer_indexes:
-                    if base_net.layer[bottom_layer_index].type in int8_layers:
+                    next_layer = base_net.layer[bottom_layer_index]
+                    if next_layer.top == next_layer.bottom and next_layer.type not in int8_layers:
+                        force_fp32 = True
+                        break
+                    if next_layer.type in int8_layers:
                         force_fp32 = False
             if force_fp32 or index == np.max(quantize_layers_indexes):
                 new_net_index=find_index_by_name(base_net.layer[index].name, layer_infos)
@@ -564,6 +568,14 @@ def cac_opt(quantized_prototxt):
     with open(quantized_prototxt, 'w') as f:
          f.write(str(new_net))
     print('cac opt done')
+
+def enable_fc_int8():
+    local_q = quantize_layers + ["InnerProduct"]
+    local_i = int8_layers + ["InnerProduct"]
+    global quantize_layers
+    global int8_layers
+    quantize_layers = local_q
+    int8_layers = local_i
 
 
 if __name__ == '__main__':
@@ -712,8 +724,7 @@ if __name__ == '__main__':
         user_conv_algo = params.conv_algo 
 
     if params.fc_int8:
-        quantize_layers.append("InnerProduct")
-        int8_layers.append("InnerProduct")
+        enable_fc_int8()
 
     try:
         toleration = float(params.loss)

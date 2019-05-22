@@ -2267,22 +2267,12 @@ void GetMaxScoreIndex(const vector<float>& scores, const float threshold,
       const int top_k, vector<pair<float, int> >* score_index_vec) {
   // Generate index score pairs.
 #ifdef _OPENMP
-  #pragma omp parallel
+  #pragma omp parallel for
 #endif
-  {
-    vector<pair<float, int> > prv;
-#ifdef _OPENMP
-    #pragma omp for nowait
-#endif
-    for (int i = 0; i < scores.size(); ++i) {
-      if (scores[i] > threshold) {
-        prv.push_back(std::make_pair(scores[i], i));
-      }
+  for (int i = 0; i < scores.size(); ++i) {
+    if (scores[i] > threshold) {
+      score_index_vec->at(i) = std::make_pair(scores[i], i);
     }
-#ifdef _OPENMP
-    #pragma omp critical
-#endif
-    score_index_vec->insert(score_index_vec->end(), prv.begin(), prv.end());
   }
 
   // Sort the score pair according to the scores in descending order
@@ -2442,7 +2432,7 @@ void ApplyNMSFast(const vector<NormalizedBBox>& bboxes,
   CHECK_EQ(bboxes.size(), scores.size())
       << "bboxes and scores have different size.";
   // Get top_k scores (with corresponding indices).
-  vector<pair<float, int> > score_index_vec;
+  vector<pair<float, int> > score_index_vec(scores.size());
   GetMaxScoreIndex(scores, score_threshold, top_k, &score_index_vec);
   // Do nms.
   float adaptive_threshold = nms_threshold;
