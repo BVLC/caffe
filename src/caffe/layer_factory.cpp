@@ -163,7 +163,9 @@ shared_ptr<Layer<Dtype> > GetLRNLayer(const LayerParameter& param) {
   if (engine == LRNParameter_Engine_DEFAULT) {
 #ifdef USE_CUDNN
     if (Caffe::mode() == Caffe::GPU) {
-        engine = LRNParameter_Engine_CUDNN;
+      engine = LRNParameter_Engine_CUDNN;
+    } else {
+      engine = LRNParameter_Engine_CAFFE;
     }
 #else
     engine = LRNParameter_Engine_CAFFE;
