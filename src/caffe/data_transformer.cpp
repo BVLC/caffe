@@ -95,7 +95,7 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
 
   Dtype datum_element;
   // Optimize the case of no augmentation
-  if (!do_mirror && !has_mean_file && !crop_size) {
+  if (!do_mirror && !has_mean_file && !has_mean_values && !crop_size) {
     int size = datum_channels*height*width;
     if (has_uint8) {
       for (int i = 0; i < size; ++i) {
