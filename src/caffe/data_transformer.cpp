@@ -94,6 +94,21 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
   }
 
   Dtype datum_element;
+  // Optimize the case of having input size == output size so the copy can be done much faster
+  if (!do_mirror && !has_mean_file && !has_mean_values && height == datum_height && width == datum_width)
+  {
+    int size = datum_channels*height*width;
+    if (has_uint8) {
+      for (int i = 0; i < size; ++i) {
+        transformed_data[i] = static_cast<Dtype>(static_cast<uint8_t>(data[i])) * scale;
+      }
+    } else {
+      for (int i = 0; i < size; ++i) {
+        transformed_data[i] = static_cast<Dtype>(datum.float_data(i)) * scale;
+      }
+    }
+    return;
+  }
   int top_index, data_index;
   for (int c = 0; c < datum_channels; ++c) {
     for (int h = 0; h < height; ++h) {
