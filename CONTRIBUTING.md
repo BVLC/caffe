@@ -70,3 +70,7 @@ Briefly: read commit by commit, a PR should tell a clean, compelling story of _o
 * Similarly, each commit should be a small, atomic change representing one step in development. PRs should be made of many commits where appropriate.
 * Please do rewrite PR history to be clean rather than chronological. Within-PR bugfixes, style cleanups, reversions, etc. should be squashed and should not appear in merged PR history.
 * Anything nonobvious from the code should be explained in comments, commit messages, or the PR description, as appropriate.
+
+## Triage Issues [![Open Source Helpers](https://www.codetriage.com/bvlc/caffe/badges/users.svg)](https://www.codetriage.com/bvlc/caffe)
+
+You can triage issues which may include reproducing bug reports or asking for vital information, such as version numbers or reproduction instructions. If you would like to start triaging issues, one easy way to get started is to [subscribe to caffe on CodeTriage](https://www.codetriage.com/bvlc/caffe).
