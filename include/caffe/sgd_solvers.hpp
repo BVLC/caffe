@@ -32,6 +32,9 @@ class SGDSolver : public Solver<Dtype> {
   virtual void Regularize(int param_id);
   virtual void ComputeUpdateValue(int param_id, Dtype rate);
   virtual void ClipGradients();
+  virtual void CopyWeightsToSlow();
+  virtual void CopySlowToWeights();
+  virtual void UpdateSlowWeights();
   virtual void SnapshotSolverState(const string& model_filename);
   virtual void SnapshotSolverStateToBinaryProto(const string& model_filename);
   virtual void SnapshotSolverStateToHDF5(const string& model_filename);
@@ -41,7 +44,7 @@ class SGDSolver : public Solver<Dtype> {
   // update maintains update related data and is not needed in snapshots.
   // temp maintains other information that might be needed in computation
   //   of gradients/updates and is not needed in snapshots
-  vector<shared_ptr<Blob<Dtype> > > history_, update_, temp_;
+  vector<shared_ptr<Blob<Dtype> > > history_, update_, temp_, slow_weights_;
 
   // loss history for 'plateau' LR policy (should be stored in snapshots)
   Dtype minimum_loss_;
@@ -51,6 +54,7 @@ class SGDSolver : public Solver<Dtype> {
   float max_lr_;
   int period_;
   int date_next_restart_;
+  int lookahead_counter_;
 
   DISABLE_COPY_AND_ASSIGN(SGDSolver);
 };
