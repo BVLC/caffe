@@ -23,6 +23,7 @@ class SGDSolver : public Solver<Dtype> {
 
   const vector<shared_ptr<Blob<Dtype> > >& history() { return history_; }
 
+  Dtype GetWarmUpLR(int cur_iter, int warmup_iter, Dtype warmup_start_lr);
   Dtype GetLearningRate();
   
  protected:

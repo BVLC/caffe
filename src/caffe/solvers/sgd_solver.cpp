@@ -9,6 +9,17 @@
 
 namespace caffe {
 
+// return the warmup LR, taken from intel's caffe https://github.com/intel/caffe
+// linear function from warmup_start_lr to base_lr between iter=0 and iter=warmup_iter
+template <typename Dtype>
+Dtype SGDSolver<Dtype>::GetWarmUpLR(int cur_iter, int warmup_iter, Dtype warmup_start_lr) {
+  if (cur_iter < 0) {
+    cur_iter = 0;
+  }
+  return (cur_iter * this->param_.base_lr() +
+          (warmup_iter - cur_iter) * warmup_start_lr) / warmup_iter;
+}
+
 // Return the current learning rate. The currently implemented learning rate
 // policies are as follows:
 //    - fixed: always return base_lr.
@@ -28,7 +39,12 @@ template <typename Dtype>
 Dtype SGDSolver<Dtype>::GetLearningRate() {
   Dtype rate;
   const string& lr_policy = this->param_.lr_policy();
-  if (lr_policy == "fixed") {
+
+  if (this->param_.warmup_iter() > 0 &&
+      this->iter_ < this->param_.warmup_iter()) {
+    rate = GetWarmUpLR(this->iter_, this->param_.warmup_iter(),
+                       this->param_.warmup_start_lr());
+  } else if (lr_policy == "fixed") {
     rate = this->param_.base_lr();
   } else if (lr_policy == "step") {
     CHECK_GT(this->param_.stepsize(), 0);
@@ -169,6 +185,9 @@ void SGDSolver<Dtype>::ApplyUpdate(const bool &log) {
   Dtype rate = GetLearningRate();
   if (log && this->param_.display() && this->iter_ % this->param_.display() == 0) {
     LOG(INFO) << "Iteration " << this->iter_ << ", lr = " << rate;
+    if (this->param_.warmup_iter() > 0)
+      LOG(INFO) << "warmup  (start_lr : " << this->param_.warmup_start_lr()
+                << " , iter : " << this->param_.warmup_iter();
   }
   ClipGradients();
   for (int param_id = 0; param_id < this->net_->learnable_params().size();
