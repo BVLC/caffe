@@ -320,6 +320,8 @@ void SGDSolver<Dtype>::Regularize(int param_id) {
             local_decay,
             temp_[param_id]->cpu_data(),
             net_params[param_id]->mutable_cpu_diff());
+      } else if (regularization_type == "decoupled") {
+        // do nothing, decoupled weight decay will be performed later
       } else {
         LOG(FATAL) << "Unknown regularization type: " << regularization_type;
       }
@@ -343,6 +345,8 @@ void SGDSolver<Dtype>::Regularize(int param_id) {
             local_decay,
             temp_[param_id]->gpu_data(),
             net_params[param_id]->mutable_gpu_diff());
+      } else if (regularization_type == "decoupled") {
+        // do nothing, decoupled weight decay will be applied later
       } else {
         LOG(FATAL) << "Unknown regularization type: " << regularization_type;
       }
@@ -375,6 +379,15 @@ void SGDSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
     caffe_cpu_axpby(net_params[param_id]->count(), local_rate,
               net_params[param_id]->cpu_diff(), momentum,
               history_[param_id]->mutable_cpu_data());
+    if (this->param_.regularization_type() == "decoupled")
+      {
+        Dtype nu_lamba = local_rate * this->param_.weight_decay()
+          * this->net_->params_weight_decay()[param_id] / this->param_.base_lr();
+        caffe_axpy(net_params[param_id]->count(),
+                   nu_lamba,
+                   net_params[param_id]->cpu_data(),
+                   history_[param_id]->mutable_cpu_data());
+      }
     caffe_copy(net_params[param_id]->count(),
         history_[param_id]->cpu_data(),
         net_params[param_id]->mutable_cpu_diff());

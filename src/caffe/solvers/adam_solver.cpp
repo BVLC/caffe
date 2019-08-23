@@ -21,8 +21,9 @@ void AdamSolver<Dtype>::AdamPreSolve() {
 
 #ifndef CPU_ONLY
 template <typename Dtype>
-void adam_update_gpu(int N, Dtype* g, Dtype* m, Dtype* v, Dtype beta1,
-		     Dtype beta2, Dtype eps_hat, Dtype corrected_local_rate, bool amsgrad);
+void adam_update_gpu(int N, Dtype* g, Dtype* m, Dtype* v, const Dtype* param, Dtype beta1,
+                     Dtype beta2, Dtype eps_hat, Dtype corrected_local_rate, Dtype nu_lambda,
+                     bool amsgrad, bool decoupled_wd);
 #endif
 
 template <typename Dtype>
@@ -87,16 +88,33 @@ void AdamSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
         val_t->cpu_data(),
         val_t->mutable_cpu_data());
 
-    caffe_cpu_scale(N, local_rate*correction,
-        val_t->cpu_data(),
-        net_params[param_id]->mutable_cpu_diff());
+    if (this->param_.regularization_type() != "decoupled")
+      {
+        caffe_cpu_scale(N, local_rate*correction,
+                        val_t->cpu_data(),
+                        net_params[param_id]->mutable_cpu_diff());
+      }
+    else
+      {
+        caffe_cpu_scale(N, local_rate*correction,
+                        val_t->cpu_data(),
+                        net_params[param_id]->mutable_cpu_diff());
+        Dtype local_decay = this->param_.weight_decay()
+          * this->net_->params_weight_decay()[param_id] * local_rate / this->param_.base_lr();
+        caffe_axpy(N, local_decay, net_params[param_id]->cpu_data(),
+                       val_t->mutable_cpu_data());
+      }
     break;
   }
   case Caffe::GPU: {
 #ifndef CPU_ONLY
+    Dtype local_decay = this->param_.weight_decay()
+      * this->net_->params_weight_decay()[param_id] * local_rate / this->param_.base_lr();
     adam_update_gpu(N, net_params[param_id]->mutable_gpu_diff(),
-        val_m->mutable_gpu_data(), val_v->mutable_gpu_data(), beta1, beta2,
-		    eps_hat, local_rate*correction, amsgrad);
+                    val_m->mutable_gpu_data(), val_v->mutable_gpu_data(),
+                    net_params[param_id]->gpu_data(), beta1, beta2,
+                    eps_hat, local_rate * correction,  local_decay,
+                    amsgrad, this->param_.regularization_type() == "decoupled");
 #else
     NO_GPU;
 #endif
