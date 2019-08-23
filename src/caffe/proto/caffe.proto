@@ -400,6 +400,13 @@ message SolverParameter {
   optional float p_mult = 52 [default = 2.0];
   // period before putting back max_lr, -1 means after last iterations, same as putting max_iter
   optional int32 period = 53 [default = -1];
+
+  //below lookahead stuff  
+  optional bool lookahead = 54 [default = false];
+  // number of lookahead steps, 0 means no look ahead,
+  optional int32 lookahead_steps = 55 [default = 6];
+  // weight of lookahead jump
+  optional float lookahead_alpha = 56 [default = 0.5];
 }
 
 // A message that stores the solver snapshots

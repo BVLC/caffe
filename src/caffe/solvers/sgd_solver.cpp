@@ -139,6 +139,17 @@ void SGDSolver<Dtype>::PreSolve() {
     temp_.push_back(shared_ptr<Blob<Dtype> >(new Blob<Dtype>(shape)));
   }
 
+  if (this->param_.lookahead())
+    {
+      LOG(INFO) << "Using lookahead strategy with alpha=" << this->param_.lookahead_alpha()
+                <<  " and steps=" << this->param_.lookahead_steps();
+      for (int i = 0; i < net_params.size(); ++i) {
+        const vector<int>& shape = net_params[i]->shape();
+        slow_weights_.push_back(shared_ptr<Blob<Dtype> >(new Blob<Dtype>(shape)));
+        lookahead_counter_ = 0;
+      }
+    }
+
   this->minimum_loss_ = std::numeric_limits<float>::max();
 }
 
@@ -178,7 +189,66 @@ void SGDSolver<Dtype>::ApplyUpdate(const bool &log) {
     ComputeUpdateValue(param_id, rate);
   }
   this->net_->Update();
+
+  if (this->param_.lookahead())
+    {
+      if (lookahead_counter_ == 0)
+        CopyWeightsToSlow();
+
+      lookahead_counter_++;
+      if (lookahead_counter_ % this->param_.lookahead_steps() == 0)
+        {
+          UpdateSlowWeights();
+          CopySlowToWeights();
+        }
+    }
 }
+
+template <typename Dtype>
+void SGDSolver<Dtype>::CopyWeightsToSlow() {
+  const vector<Blob<Dtype>*>& net_params = this->net_->learnable_params();
+  for (int param_id = 0; param_id < net_params.size(); ++param_id) {
+    slow_weights_[param_id]->CopyFrom(*net_params[param_id]);
+  }
+}
+
+template <typename Dtype>
+void SGDSolver<Dtype>::CopySlowToWeights() {
+  const vector<Blob<Dtype>*>& net_params = this->net_->learnable_params();
+  for (int param_id = 0; param_id < net_params.size(); ++param_id) {
+    net_params[param_id]->CopyFrom(*slow_weights_[param_id]);
+  }
+}
+
+
+template <typename Dtype>
+void SGDSolver<Dtype>::UpdateSlowWeights() {
+  const vector<Blob<Dtype>*>& net_params = this->net_->learnable_params();
+  Dtype alpha = this->param_.lookahead_alpha();
+  for (int param_id = 0; param_id < net_params.size(); ++param_id) {
+    switch (Caffe::mode()) {
+    case Caffe::CPU:
+      caffe_cpu_axpby(net_params[param_id]->count(),
+                      alpha, net_params[param_id]->cpu_data(),
+                      Dtype(1.0)-alpha, slow_weights_[param_id]->mutable_cpu_data());
+      break;
+    case Caffe::GPU:
+#ifndef CPU_ONLY
+      caffe_gpu_axpby(net_params[param_id]->count(),
+                      alpha, net_params[param_id]->gpu_data(),
+                      Dtype(1.0)-alpha, slow_weights_[param_id]->mutable_gpu_data());
+#else
+      NO_GPU;
+#endif
+      break;
+    default:
+      LOG(ERROR) << "Unknown caffe mode.";
+      LOG(FATAL) << "fatal error";
+    }
+  }
+}
+
+
 
 template <typename Dtype>
 void SGDSolver<Dtype>::Normalize(int param_id) {
@@ -409,6 +479,8 @@ void SGDSolver<Dtype>::RestoreSolverStateFromBinaryProto(
   for (int i = 0; i < history_.size(); ++i) {
     history_[i]->FromProto(state.history(i));
   }
+  if (this->param_.lookahead())
+    lookahead_counter_ = 0;
 }
 
 template <typename Dtype>
@@ -454,6 +526,7 @@ void SGDSolver<Dtype>::RestoreSolverStateFromHDF5(const string& state_file) {
   LOG(FATAL) << "RestoreSolverStateFromHDF5 requires hdf5;"
              << " compile with USE_HDF5.";
 #endif  // USE_HDF5
+  lookahead_counter_ = 0;
 }
 
 INSTANTIATE_CLASS(SGDSolver);
