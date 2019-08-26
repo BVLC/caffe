@@ -367,6 +367,8 @@ message SolverParameter {
   optional float momentum2 = 39 [default = 0.999];
   // long-term memory of past gradients
   optional bool amsgrad = 45 [default = false];
+  // rectified adam : "auto warmup"
+  optional bool rectified = 46 [default = false];
 
   // RMSProp decay value
   // MeanSquare(t) = rms_decay*MeanSquare(t-1) + (1-rms_decay)*SquareGradient(t)
