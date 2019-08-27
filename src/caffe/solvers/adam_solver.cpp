@@ -21,9 +21,9 @@ void AdamSolver<Dtype>::AdamPreSolve() {
 
 #ifndef CPU_ONLY
 template <typename Dtype>
-void adam_update_gpu(int N, Dtype* g, Dtype* m, Dtype* v, const Dtype* param, Dtype beta1,
+void adam_update_gpu(int N, int t, Dtype* g, Dtype* m, Dtype* v, const Dtype* param, Dtype beta1,
                      Dtype beta2, Dtype eps_hat, Dtype corrected_local_rate, Dtype nu_lambda,
-                     bool amsgrad, bool decoupled_wd);
+                     bool amsgrad, bool decoupled_wd, bool rectified);
 #endif
 
 template <typename Dtype>
@@ -34,6 +34,7 @@ void AdamSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
   const Dtype beta1 = this->param_.momentum();
   const Dtype beta2 = this->param_.momentum2();
   const bool amsgrad = this->param_.amsgrad();
+  const bool rectified = this->param_.rectified();
 
   // we create aliases for convenience
   size_t update_history_offset = net_params.size();
@@ -83,10 +84,33 @@ void AdamSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
         val_v->cpu_data(), Dtype(0.5),
         val_t->mutable_cpu_data());
     caffe_add_scalar(N, eps_hat, val_t->mutable_cpu_data());
-    caffe_div(N,
-        val_m->cpu_data(),
-        val_t->cpu_data(),
-        val_t->mutable_cpu_data());
+
+    if (!rectified)
+      {
+        caffe_div(N,
+                  val_m->cpu_data(),
+                  val_t->cpu_data(),
+                  val_t->mutable_cpu_data());
+      }
+    else
+      {
+        Dtype rho_inf = 2.0/(1.0-beta2) - 1.0;
+        Dtype rho_t = rho_inf - 2.0 * t * pow(beta2,t)/(1-pow(beta2,t)) ;
+        if (rho_t > 4.0)
+          {
+            Dtype r_t = sqrt( (rho_t-4.0) * (rho_t-2.0) * rho_inf
+                             / (rho_inf-4.0) / (rho_inf-2.0) / rho_t);
+            caffe_div(N,
+                      val_m->cpu_data(),
+                      val_t->cpu_data(),
+                      val_t->mutable_cpu_data());
+            caffe_cpu_scale(N,r_t,val_t->cpu_data(),val_t->mutable_cpu_data());
+          }
+        else
+          {
+            caffe_copy(N, val_m->cpu_data(),val_t->mutable_cpu_data());
+          }
+      }
 
     if (this->param_.regularization_type() != "decoupled")
       {
@@ -110,11 +134,11 @@ void AdamSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
 #ifndef CPU_ONLY
     Dtype local_decay = this->param_.weight_decay()
       * this->net_->params_weight_decay()[param_id] * local_rate / this->param_.base_lr();
-    adam_update_gpu(N, net_params[param_id]->mutable_gpu_diff(),
+    adam_update_gpu(N, t, net_params[param_id]->mutable_gpu_diff(),
                     val_m->mutable_gpu_data(), val_v->mutable_gpu_data(),
                     net_params[param_id]->gpu_data(), beta1, beta2,
                     eps_hat, local_rate * correction,  local_decay,
-                    amsgrad, this->param_.regularization_type() == "decoupled");
+                    amsgrad, this->param_.regularization_type() == "decoupled", rectified);
 #else
     NO_GPU;
 #endif
