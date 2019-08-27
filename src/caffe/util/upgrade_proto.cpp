@@ -1037,9 +1037,6 @@ bool SolverNeedsTypeUpgrade(const SolverParameter& solver_param) {
 }
 
 bool UpgradeSolverType(SolverParameter* solver_param) {
-  CHECK(!solver_param->has_solver_type() || !solver_param->has_type())
-      << "Failed to upgrade solver: old solver_type field (enum) and new type "
-      << "field (string) cannot be both specified in solver proto text.";
   if (solver_param->has_solver_type()) {
     string type;
     switch (solver_param->solver_type()) {
@@ -1068,7 +1065,7 @@ bool UpgradeSolverType(SolverParameter* solver_param) {
     solver_param->set_type(type);
     solver_param->clear_solver_type();
   } else {
-    LOG(ERROR) << "Warning: solver type already up to date. ";
+    LOG(INFO) << "solver type already up to date. ";
     return false;
   }
   return true;
