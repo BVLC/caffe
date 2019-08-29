@@ -16,7 +16,12 @@ template <typename Dtype>
 class SGDSolver : public Solver<Dtype> {
  public:
   explicit SGDSolver(const SolverParameter& param)
-      : Solver<Dtype>(param) { PreSolve(); }
+      : Solver<Dtype>(param) {
+    PreSolve();
+    _dwd_ti =  param.decoupled_wd_t0();
+    _dwd_current_ti = 0;
+    _dwd_mult = param.decoupled_wd_mult();
+  }
   explicit SGDSolver(const string& param_file)
       : Solver<Dtype>(param_file) { PreSolve(); }
   virtual inline const char* type() const { return "SGD"; }
@@ -47,6 +52,8 @@ class SGDSolver : public Solver<Dtype> {
   //   of gradients/updates and is not needed in snapshots
   vector<shared_ptr<Blob<Dtype> > > history_, update_, temp_, slow_weights_;
 
+  Dtype decoupledWeightDecayScheduleMutiplier(int t);
+
   // loss history for 'plateau' LR policy (should be stored in snapshots)
   Dtype minimum_loss_;
 
@@ -56,6 +63,9 @@ class SGDSolver : public Solver<Dtype> {
   int period_;
   int date_next_restart_;
   int lookahead_counter_;
+  int _dwd_ti;
+  int _dwd_current_ti;
+  int _dwd_mult;
 
   DISABLE_COPY_AND_ASSIGN(SGDSolver);
 };
@@ -146,7 +156,9 @@ template <typename Dtype>
 class AdamSolver : public SGDSolver<Dtype> {
  public:
   explicit AdamSolver(const SolverParameter& param)
-      : SGDSolver<Dtype>(param) { AdamPreSolve();}
+      : SGDSolver<Dtype>(param) {
+    AdamPreSolve();
+  }
   explicit AdamSolver(const string& param_file)
       : SGDSolver<Dtype>(param_file) { AdamPreSolve(); }
   virtual inline const char* type() const { return "Adam"; }
@@ -154,7 +166,7 @@ class AdamSolver : public SGDSolver<Dtype> {
  protected:
   void AdamPreSolve();
   virtual void ComputeUpdateValue(int param_id, Dtype rate);
-  
+
   DISABLE_COPY_AND_ASSIGN(AdamSolver);
 };
 

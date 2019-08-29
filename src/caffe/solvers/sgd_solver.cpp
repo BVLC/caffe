@@ -363,9 +363,23 @@ void SGDSolver<Dtype>::Regularize(int param_id) {
 
 #ifndef CPU_ONLY
 template <typename Dtype>
-void sgd_update_gpu(int N, Dtype* g, Dtype* h, Dtype momentum,
-    Dtype local_rate);
+void sgd_update_gpu(int N, Dtype* g, Dtype* h, const Dtype* param, Dtype momentum,
+                    Dtype local_rate, Dtype lambda, Dtype mu, bool decoupled);
 #endif
+
+template <typename Dtype>
+Dtype SGDSolver<Dtype>::decoupledWeightDecayScheduleMutiplier(int t)
+{
+  if (t>= _dwd_current_ti + _dwd_ti)
+    {
+      _dwd_current_ti += _dwd_ti;
+      _dwd_ti *= _dwd_mult;
+      return Dtype(1.0);
+    }
+  float prop = ((float)(t-_dwd_current_ti))/((float)(_dwd_ti));
+  return Dtype(0.5)+Dtype(0.5)*cos(M_PI*prop);
+}
+
 
 template <typename Dtype>
 void SGDSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
@@ -376,18 +390,24 @@ void SGDSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
   // Compute the update to history, then copy it to the parameter diff.
   switch (Caffe::mode()) {
   case Caffe::CPU: {
-    caffe_cpu_axpby(net_params[param_id]->count(), local_rate,
-              net_params[param_id]->cpu_diff(), momentum,
-              history_[param_id]->mutable_cpu_data());
     if (this->param_.regularization_type() == "decoupled")
       {
-        Dtype nu_lamba = local_rate * this->param_.weight_decay()
-          * this->net_->params_weight_decay()[param_id] / this->param_.base_lr();
+        Dtype lambda = this->param_.weight_decay()
+          * this->net_->params_weight_decay()[param_id];
+        Dtype nu = decoupledWeightDecayScheduleMutiplier(this->iter_+1);
+        caffe_cpu_axpby(net_params[param_id]->count(), local_rate * nu,
+                        net_params[param_id]->cpu_diff(), momentum,
+                        history_[param_id]->mutable_cpu_data());
         caffe_axpy(net_params[param_id]->count(),
-                   nu_lamba,
+                   lambda * nu,
                    net_params[param_id]->cpu_data(),
                    history_[param_id]->mutable_cpu_data());
       }
+    else
+      caffe_cpu_axpby(net_params[param_id]->count(), local_rate,
+                      net_params[param_id]->cpu_diff(), momentum,
+                      history_[param_id]->mutable_cpu_data());
+
     caffe_copy(net_params[param_id]->count(),
         history_[param_id]->cpu_data(),
         net_params[param_id]->mutable_cpu_diff());
@@ -395,10 +415,18 @@ void SGDSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
   }
   case Caffe::GPU: {
 #ifndef CPU_ONLY
+    Dtype nu = 0.0;
+    Dtype lambda = 0.0;
+    if (this->param_.regularization_type() == "decoupled")
+      {
+        lambda = this->param_.weight_decay() * this->net_->params_weight_decay()[param_id];
+        nu = decoupledWeightDecayScheduleMutiplier(this->iter_+1);
+      }
     sgd_update_gpu(net_params[param_id]->count(),
-        net_params[param_id]->mutable_gpu_diff(),
-        history_[param_id]->mutable_gpu_data(),
-        momentum, local_rate);
+                   net_params[param_id]->mutable_gpu_diff(),
+                   history_[param_id]->mutable_gpu_data(),
+                   net_params[param_id]->gpu_data(),
+        momentum, local_rate, nu, lambda, this->param_.regularization_type() == "decoupled");
 #else
     NO_GPU;
 #endif

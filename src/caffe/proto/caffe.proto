@@ -317,7 +317,9 @@ message SolverParameter {
   optional float power = 10; // The parameter to compute the learning rate.
   optional float momentum = 11; // The momentum value.
   optional float weight_decay = 12; // The weight decay.
-  // regularization types supported: L1 and L2
+  optional int32 decoupled_wd_t0 = 60 [default = 1000]; // decoupled weight decay initial budget
+  optional float decoupled_wd_mult = 61 [default = 2]; // decoupled weight decay multiplier
+    // regularization types supported: L1 and L2
   // controlled by weight_decay
   optional string regularization_type = 29 [default = "L2"];
   // the stepsize for learning rate policy "step"
