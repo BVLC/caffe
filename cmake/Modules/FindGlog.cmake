@@ -18,7 +18,8 @@ if(WIN32)
         PATHS ${GLOG_ROOT_DIR}/src/windows)
 else()
     find_path(GLOG_INCLUDE_DIR glog/logging.h
-        PATHS ${GLOG_ROOT_DIR})
+        PATHS ${GLOG_ROOT_DIR}
+        PATH_SUFFIXES include)
 endif()
 
 if(MSVC)
