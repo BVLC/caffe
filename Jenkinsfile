@@ -4,7 +4,7 @@ pipeline {
     stage('Build GPU') {
       steps {
         sh '''ln -s Makefile.config.gpu.cudnn Makefile.config
-make -j24'''
+make OPENCV_VERSION=3 -j24'''
       }
     }
     stage('Build CPU') {
