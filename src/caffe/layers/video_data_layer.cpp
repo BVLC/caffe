@@ -54,12 +54,20 @@ void VideoDataLayer<Dtype>::DataLayerSetUp(
       LOG(ERROR) << "Failed to open video: " << video_file;
       LOG(FATAL) << "fatal error";
     }
+#if CV_MAJOR_VERSION >= 4
+    total_frames_ = cap_.get(cv::CAP_PROP_FRAME_COUNT);
+#else
     total_frames_ = cap_.get(CV_CAP_PROP_FRAME_COUNT);
+#endif
     processed_frames_ = 0;
     // Read image to infer shape.
     cap_ >> cv_img;
     // Set index back to the first frame.
-    cap_.set(CV_CAP_PROP_POS_FRAMES, 0);
+#if CV_MAJOR_VERSION >= 4
+    cap_.set(cv::CAP_PROP_POS_FRAMES, 0);
+#else
+    cap_.set(CV_CAP_PROP_POS_FRAMES,0);
+#endif
   } else {
     LOG(ERROR) << "Unknow video type!";
     LOG(FATAL) << "fatal error";
