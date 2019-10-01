@@ -10,7 +10,7 @@
 
 #include "caffe/util/bbox_util.hpp"
 
-#if CV_VERSION_MAJOR >= 3
+#if CV_MAJOR_VERSION >= 3
 #include <opencv2/imgcodecs/imgcodecs.hpp>
 #define CV_GRAY2BGR cv::COLOR_GRAY2BGR
 #define CV_BGR2GRAY cv::COLOR_BGR2GRAY
@@ -2708,7 +2708,7 @@ void VisualizeBBox(const vector<cv::Mat>& images, const Blob<Dtype>* detections,
     if (!save_file.empty()) {
       if (!cap_out.isOpened()) {
         cv::Size size(image.size().width, image.size().height);
-#if CV_VERSION_MAJOR == 4
+#if CV_MAJOR_VERSION == 4
 	cv::VideoWriter outputVideo(save_file, cap_out.fourcc('D', 'I', 'V', 'X'),
 #else
         cv::VideoWriter outputVideo(save_file, CV_FOURCC('D', 'I', 'V', 'X'),

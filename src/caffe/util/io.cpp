@@ -15,7 +15,7 @@
 #include <opencv2/highgui/highgui_c.h>
 #include <opencv2/imgproc/imgproc.hpp>
 
-#if CV_VERSION_MAJOR >= 4
+#if CV_MAJOR_VERSION >= 4
   #define CV_LOAD_IMAGE_COLOR cv::IMREAD_COLOR
   #define CV_LOAD_IMAGE_UNCHANGED cv::IMREAD_UNCHANGED
   #define CV_LOAD_IMAGE_GRAYSCALE cv::IMREAD_GRAYSCALE
