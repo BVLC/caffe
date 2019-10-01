@@ -216,6 +216,10 @@ ifeq ($(USE_OPENCV), 1)
 		LIBRARIES += opencv_imgcodecs opencv_videoio
 	endif
 
+	ifeq ($(OPENCV_VERSION), 4)
+		LIBRARIES += opencv_imgcodecs opencv_videoio
+	endif
+
 endif
 PYTHON_LIBRARIES ?= boost_python python2.7
 WARNINGS := -Wall -Wno-sign-compare

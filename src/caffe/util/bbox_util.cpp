@@ -8,9 +8,26 @@
 #include <utility>
 #include <vector>
 
-#include "boost/iterator/counting_iterator.hpp"
-
 #include "caffe/util/bbox_util.hpp"
+
+#if CV_VERSION_MAJOR >= 3
+#include <opencv2/imgcodecs/imgcodecs.hpp>
+#define CV_GRAY2BGR cv::COLOR_GRAY2BGR
+#define CV_BGR2GRAY cv::COLOR_BGR2GRAY
+#define CV_BGR2YCrCb cv::COLOR_BGR2YCrCb
+#define CV_YCrCb2BGR cv::COLOR_YCrCb2BGR
+#define CV_IMWRITE_JPEG_QUALITY cv::IMWRITE_JPEG_QUALITY
+#define CV_LOAD_IMAGE_COLOR cv::IMREAD_COLOR
+#define CV_THRESH_BINARY_INV cv::THRESH_BINARY_INV
+#define CV_THRESH_OTSU cv::THRESH_OTSU
+
+#define CV_FILLED cv::FILLED
+#define CV_BGR2HSV cv::COLOR_BGR2HSV
+#define CV_BGR2Lab cv::COLOR_BGR2Lab
+#define CV_HSV2BGR cv::COLOR_HSV2BGR
+#endif
+
+#include "boost/iterator/counting_iterator.hpp"
 
 namespace caffe {
 
@@ -2691,7 +2708,11 @@ void VisualizeBBox(const vector<cv::Mat>& images, const Blob<Dtype>* detections,
     if (!save_file.empty()) {
       if (!cap_out.isOpened()) {
         cv::Size size(image.size().width, image.size().height);
+#if CV_VERSION_MAJOR == 4
+	cv::VideoWriter outputVideo(save_file, cap_out.fourcc('D', 'I', 'V', 'X'),
+#else
         cv::VideoWriter outputVideo(save_file, CV_FOURCC('D', 'I', 'V', 'X'),
+#endif
             30, size, true);
         cap_out = outputVideo;
       }
