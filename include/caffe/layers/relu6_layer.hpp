@@ -1,5 +1,5 @@
-#ifndef CAFFE_RELU_LAYER_HPP_
-#define CAFFE_RELU_LAYER_HPP_
+#ifndef CAFFE_RELU6_LAYER_HPP_
+#define CAFFE_RELU6_LAYER_HPP_
 
 #include <vector>
 
