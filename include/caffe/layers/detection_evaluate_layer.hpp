@@ -32,6 +32,8 @@ class DetectionEvaluateLayer : public Layer<Dtype> {
   virtual inline int ExactBottomBlobs() const { return 2; }
   virtual inline int ExactNumTopBlobs() const { return 1; }
 
+  void set_overlap_threshold(float t) {overlap_threshold_ = t;}
+
  protected:
   /**
    * @brief Evaluate the detection output.
