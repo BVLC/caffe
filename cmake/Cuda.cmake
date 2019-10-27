@@ -109,8 +109,7 @@ function(caffe_select_nvcc_arch_flags out_variable)
   set(__nvcc_flags "")
   set(__nvcc_archs_readable "")
 
-  string(COMPARE LESS "${CUDA_VERSION}" "9.0" iscudaolderthan90)
-  if(NOT iscudaolderthan90)
+  if("${CUDA_VERSION}" VERSION_GREATER "8.0")
     string(REPLACE "21(20)" "" __cuda_arch_bin "${__cuda_arch_bin}")
     string(REPLACE "20" "" __cuda_arch_bin "${__cuda_arch_bin}")
   endif()
@@ -222,8 +221,7 @@ function(detect_cuDNN)
 
     message(STATUS "Found cuDNN: ver. ${CUDNN_VERSION} found (include: ${CUDNN_INCLUDE}, library: ${CUDNN_LIBRARY})")
 
-    string(COMPARE LESS "${CUDNN_VERSION_MAJOR}" 3 cuDNNVersionIncompatible)
-    if(cuDNNVersionIncompatible)
+    if("${CUDNN_VERSION_MAJOR}" VERSION_LESS "3")
       message(FATAL_ERROR "cuDNN version >3 is required.")
     endif()
 
