@@ -175,6 +175,7 @@ if(BUILD_python)
         list(APPEND Caffe_INCLUDE_DIRS PRIVATE ${Python_INCLUDE_DIRS} ${Python_NumPy_INCLUDE_DIRS} PUBLIC ${Boost_INCLUDE_DIRS})
         list(APPEND Caffe_LINKER_LIBS PRIVATE ${Python_LIBRARIES} PUBLIC ${Boost_LIBRARIES})
       endif()
+    endif()
 endif()
 
 # ---[ Matlab
