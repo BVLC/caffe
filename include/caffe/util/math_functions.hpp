@@ -93,6 +93,9 @@ template <typename Dtype>
 void caffe_rng_bernoulli(const int n, const Dtype p, int* r);
 
 template <typename Dtype>
+void caffe_rng_bernoulli_real(const int n, const Dtype p, Dtype* r);
+
+template <typename Dtype>
 void caffe_rng_bernoulli(const int n, const Dtype p, unsigned int* r);
 
 template <typename Dtype>
@@ -240,6 +243,9 @@ void caffe_gpu_rng_uniform(const int n, unsigned int* r);
 // appropriately after calling curandGenerateUniform.
 template <typename Dtype>
 void caffe_gpu_rng_uniform(const int n, const Dtype a, const Dtype b, Dtype* r);
+
+template <typename Dtype>
+void caffe_gpu_rng_uniform01(const int n, Dtype* r);
 
 template <typename Dtype>
 void caffe_gpu_rng_gaussian(const int n, const Dtype mu, const Dtype sigma,

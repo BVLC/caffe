@@ -399,6 +399,17 @@ void caffe_gpu_rng_uniform(const int n, unsigned int* r) {
 }
 
 template <>
+void caffe_gpu_rng_uniform01<float>(const int n, float* r) {
+    CAFFE1_CURAND_CHECK(curandGenerateUniform(Caffe::curand_generator(), r, n));
+}
+
+template <>
+void caffe_gpu_rng_uniform01<double>(const int n, double* r) {
+  CAFFE1_CURAND_CHECK(curandGenerateUniformDouble(Caffe::curand_generator(), r, n));
+}
+
+
+template <>
 void caffe_gpu_rng_uniform<float>(const int n, const float a, const float b,
                                   float* r) {
   CAFFE1_CURAND_CHECK(curandGenerateUniform(Caffe::curand_generator(), r, n));
