@@ -66,7 +66,7 @@ void AxpyLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       caffe_set(bottom[1]->count(), Dtype(0), x_diff);
     }
   }
-  if (propagate_down[0]) {
+  if (propagate_down[1]) {
     int channel_dim = bottom[1]->channels();
     int spatial_dim = bottom[1]->count(2);
     const Dtype* scale_data = bottom[0]->cpu_data();
