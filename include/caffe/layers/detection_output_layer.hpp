@@ -32,7 +32,11 @@ template <typename Dtype>
 class DetectionOutputLayer : public Layer<Dtype> {
  public:
   explicit DetectionOutputLayer(const LayerParameter& param)
-      : Layer<Dtype>(param) {}
+    : Layer<Dtype>(param)
+  {
+    output_logits_ = param.detection_output_param().output_logits();
+  }
+
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
@@ -40,8 +44,8 @@ class DetectionOutputLayer : public Layer<Dtype> {
 
   virtual inline const char* type() const { return "DetectionOutput"; }
   virtual inline int MinBottomBlobs() const { return 3; }
-  virtual inline int MaxBottomBlobs() const { return 5; }
-  virtual inline int ExactNumTopBlobs() const { return 1; }
+  virtual inline int MaxBottomBlobs() const { return output_logits_ ? 6 : 5; }
+  virtual inline int ExactNumTopBlobs() const { return output_logits_ ?  2 : 1; }
 
  protected:
   /**
@@ -86,6 +90,7 @@ class DetectionOutputLayer : public Layer<Dtype> {
   int num_;
   int num_priors_;
 
+  bool output_logits_ = false;
   bool soft_nms_ = false;
   float nms_threshold_;
   int top_k_;
@@ -114,6 +119,7 @@ class DetectionOutputLayer : public Layer<Dtype> {
   Blob<Dtype> bbox_preds_;
   Blob<Dtype> bbox_permute_;
   Blob<Dtype> conf_permute_;
+  Blob<Dtype> logit_permute_;
 };
 
 }  // namespace caffe

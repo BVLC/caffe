@@ -297,6 +297,14 @@ template <typename Dtype>
 void OSGetConfidenceScores(const Dtype* conf_data, const Dtype* arm_conf_data,
 	  const int num, const int num_preds_per_class, const int num_classes,
       vector<map<int, vector<float> > >* conf_scores, float objectness_score);
+
+
+// get raw logits, usefull for calibrating models
+template <typename Dtype>
+void GetLogits(const Dtype* logit_data, const int num,
+               const int num_preds_per_class, const int num_classes,
+               vector<map<int, vector<float> > >* logits);
+
   
 // Get confidence predictions from conf_data.
 //    conf_data: num x num_preds_per_class * num_classes blob.

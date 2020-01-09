@@ -72,7 +72,10 @@ void DetectionEvaluateLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   top_shape.push_back(num_pos_classes + num_valid_det);
   // Each row is a 5 dimension vector, which stores
   // [image_id, label, confidence, true_pos, false_pos]
-  top_shape.push_back(5);
+  if (output_logits_)
+    top_shape.push_back(5+num_classes_);
+  else
+    top_shape.push_back(5);
   top[0]->Reshape(top_shape);
 }
 
@@ -95,6 +98,10 @@ void DetectionEvaluateLayer<Dtype>::Forward_cpu(
   Dtype* top_data = top[0]->mutable_cpu_data();
   caffe_set(top[0]->count(), Dtype(0.), top_data);
   int num_det = 0;
+
+  int evalWidth = 5;
+  if (output_logits_)
+    evalWidth += num_classes_;
 
   // Insert number of ground truth for each label.
   map<int, int> num_pos;
@@ -124,15 +131,18 @@ void DetectionEvaluateLayer<Dtype>::Forward_cpu(
     if (c == background_label_id_) {
       continue;
     }
-    top_data[num_det * 5] = -1;
-    top_data[num_det * 5 + 1] = c;
+    top_data[num_det * evalWidth] = -1;
+    top_data[num_det * evalWidth + 1] = c;
     if (num_pos.find(c) == num_pos.end()) {
-      top_data[num_det * 5 + 2] = 0;
+      top_data[num_det * evalWidth + 2] = 0;
     } else {
-      top_data[num_det * 5 + 2] = num_pos.find(c)->second;
+      top_data[num_det * evalWidth + 2] = num_pos.find(c)->second;
     }
-    top_data[num_det * 5 + 3] = -1;
-    top_data[num_det * 5 + 4] = -1;
+    top_data[num_det * evalWidth + 3] = -1;
+    top_data[num_det * evalWidth + 4] = -1;
+    if (output_logits_)
+      for (int i = 0; i< num_classes_; ++i)
+        top_data[num_det * evalWidth + 5 + i] = -1;
     ++num_det;
   }
 
@@ -151,11 +161,15 @@ void DetectionEvaluateLayer<Dtype>::Forward_cpu(
         }
         const vector<NormalizedBBox>& bboxes = iit->second;
         for (int i = 0; i < bboxes.size(); ++i) {
-          top_data[num_det * 5] = image_id;
-          top_data[num_det * 5 + 1] = label;
-          top_data[num_det * 5 + 2] = bboxes[i].score();
-          top_data[num_det * 5 + 3] = 0;
-          top_data[num_det * 5 + 4] = 1;
+          top_data[num_det * evalWidth] = image_id;
+          top_data[num_det * evalWidth + 1] = label;
+          top_data[num_det * evalWidth + 2] = bboxes[i].score();
+          top_data[num_det * evalWidth + 3] = 0;
+          top_data[num_det * evalWidth + 4] = 1;
+          if (output_logits_)
+            for (int l=0; l< num_classes_; ++l)
+              top_data[num_det * evalWidth + 5 + l ] =
+                bottom[2]->cpu_data()[num_det*num_classes_ + l];
           ++num_det;
         }
       }
@@ -171,11 +185,15 @@ void DetectionEvaluateLayer<Dtype>::Forward_cpu(
         if (label_bboxes.find(label) == label_bboxes.end()) {
           // No ground truth for current label. All detections become false_pos.
           for (int i = 0; i < bboxes.size(); ++i) {
-            top_data[num_det * 5] = image_id;
-            top_data[num_det * 5 + 1] = label;
-            top_data[num_det * 5 + 2] = bboxes[i].score();
-            top_data[num_det * 5 + 3] = 0;
-            top_data[num_det * 5 + 4] = 1;
+            top_data[num_det * evalWidth] = image_id;
+            top_data[num_det * evalWidth + 1] = label;
+            top_data[num_det * evalWidth + 2] = bboxes[i].score();
+            top_data[num_det * evalWidth + 3] = 0;
+            top_data[num_det * evalWidth + 4] = 1;
+            if (output_logits_)
+              for (int l=0; l< num_classes_; ++l)
+                  top_data[num_det * evalWidth + 5 + l ] =
+                    bottom[2]->cpu_data()[num_det*num_classes_ + l];
             ++num_det;
           }
         } else {
@@ -192,9 +210,9 @@ void DetectionEvaluateLayer<Dtype>::Forward_cpu(
           // Sort detections in descend order based on scores.
           std::sort(bboxes.begin(), bboxes.end(), SortBBoxDescend);
           for (int i = 0; i < bboxes.size(); ++i) {
-            top_data[num_det * 5] = image_id;
-            top_data[num_det * 5 + 1] = label;
-            top_data[num_det * 5 + 2] = bboxes[i].score();
+            top_data[num_det * evalWidth] = image_id;
+            top_data[num_det * evalWidth + 1] = label;
+            top_data[num_det * evalWidth + 2] = bboxes[i].score();
             if (!use_normalized_bbox_) {
               OutputBBox(bboxes[i], sizes_[count_], has_resize_,
                          resize_param_, &(bboxes[i]));
@@ -215,20 +233,24 @@ void DetectionEvaluateLayer<Dtype>::Forward_cpu(
                   (!evaluate_difficult_gt_ && !gt_bboxes[jmax].difficult())) {
                 if (!visited[jmax]) {
                   // true positive.
-                  top_data[num_det * 5 + 3] = 1;
-                  top_data[num_det * 5 + 4] = 0;
+                  top_data[num_det * evalWidth + 3] = 1;
+                  top_data[num_det * evalWidth + 4] = 0;
                   visited[jmax] = true;
                 } else {
                   // false positive (multiple detection).
-                  top_data[num_det * 5 + 3] = 0;
-                  top_data[num_det * 5 + 4] = 1;
+                  top_data[num_det * evalWidth + 3] = 0;
+                  top_data[num_det * evalWidth + 4] = 1;
                 }
               }
             } else {
               // false positive.
-              top_data[num_det * 5 + 3] = 0;
-              top_data[num_det * 5 + 4] = 1;
+              top_data[num_det * evalWidth + 3] = 0;
+              top_data[num_det * evalWidth + 4] = 1;
             }
+            if (output_logits_)
+              for (int l=0; l< num_classes_; ++l)
+                top_data[num_det * evalWidth + 5 + l ] =
+                  bottom[2]->cpu_data()[num_det*num_classes_ + l];
             ++num_det;
           }
         }

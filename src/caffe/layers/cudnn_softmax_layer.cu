@@ -12,6 +12,14 @@ void CuDNNSoftmaxLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
   const Dtype* bottom_data = bottom[0]->gpu_data();
   Dtype* top_data = top[0]->mutable_gpu_data();
+  if (this->temperature_scaling_)
+    {
+      Dtype * cooled_bottom_data;
+      cooled_bottom_data = this->cooled_bottom_.mutable_gpu_data();
+      caffe_gpu_scale(bottom[0]->count(), (Dtype)1.0/this->temperature_, bottom_data, cooled_bottom_data);
+      bottom_data = cooled_bottom_data;
+    }
+
   CUDNN_CHECK(cudnnSoftmaxForward(handle_, CUDNN_SOFTMAX_ACCURATE,
         CUDNN_SOFTMAX_MODE_CHANNEL,
         cudnn::dataType<Dtype>::one,

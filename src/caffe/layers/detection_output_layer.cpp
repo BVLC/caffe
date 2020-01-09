@@ -27,6 +27,7 @@ void DetectionOutputLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   variance_encoded_in_target_ =
       detection_output_param.variance_encoded_in_target();
   keep_top_k_ = detection_output_param.keep_top_k();
+  output_logits_ = detection_output_param.output_logits();
   confidence_threshold_ = detection_output_param.has_confidence_threshold() ?
       detection_output_param.confidence_threshold() : -FLT_MAX;
   // Parameters used in nms.
@@ -124,7 +125,10 @@ void DetectionOutputLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
   if (!share_location_) {
     bbox_permute_.ReshapeLike(*(bottom[0]));
   }
+
   conf_permute_.ReshapeLike(*(bottom[1]));
+  if (output_logits_)
+    logit_permute_.ReshapeLike(*(bottom[1]));
 }
 
 template <typename Dtype>
@@ -187,9 +191,11 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
   const Dtype* prior_data = bottom[2]->cpu_data();
   const Dtype* arm_conf_data = NULL;
   const Dtype* arm_loc_data = NULL;
+  const Dtype* logit_data = NULL;
   const int num = bottom[0]->num();
   vector<LabelBBox> all_arm_loc_preds;
-  if (bottom.size() >= 4){
+
+  if ((output_logits_ && bottom.size() >= 5) || (!output_logits_ && bottom.size() >= 4)){
     arm_conf_data = bottom[3]->cpu_data();
   }
   if (bottom.size() >= 5) {
@@ -197,6 +203,9 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
     GetLocPredictions(arm_loc_data, num, num_priors_, num_loc_classes_,
 		      share_location_, &all_arm_loc_preds);
   }
+
+  if (output_logits_)
+    logit_data = bottom[bottom.size()-1]->cpu_data();
 
   // Retrieve all location predictions.
   vector<LabelBBox> all_loc_preds;
@@ -213,6 +222,12 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
     GetConfidenceScores(conf_data, num, num_priors_, num_classes_,
 			&all_conf_scores);
   }
+
+
+  vector<map<int, vector<float> > > all_logits;
+  if (output_logits_)
+    GetLogits(logit_data, num, num_priors_, num_classes_, &all_logits);
+
 
   // Retrieve all prior bboxes. It is same within a batch since we assume all
   // images in a batch are of same dimension.
@@ -308,6 +323,8 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
     }
   }
 
+
+
   vector<int> top_shape(2, 1);
   top_shape.push_back(num_kept);
   top_shape.push_back(7);
@@ -328,10 +345,38 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
     top_data = top[0]->mutable_cpu_data();
   }
 
+  Dtype* toplogit_data;
+  if (output_logits_)
+    {
+      vector<int> toplogit_shape(2, 1);
+      toplogit_shape.push_back(num_kept);
+      toplogit_shape.push_back(num_classes_);
+      if (num_kept == 0) {
+        toplogit_shape[2] = num;
+        top[1]->Reshape(toplogit_shape);
+        toplogit_data = top[1]->mutable_cpu_data();
+        caffe_set<Dtype>(top[1]->count(), -1, toplogit_data);
+        // Generate fake results per image.
+        for (int i = 0; i < num; ++i) {
+          toplogit_data[0] = i;
+          toplogit_data += num_classes_;
+        }
+      } else {
+        top[1]->Reshape(toplogit_shape);
+        toplogit_data = top[1]->mutable_cpu_data();
+      }
+    }
+
+
+
+
   int count = 0;
   boost::filesystem::path output_directory(output_directory_);
   for (int i = 0; i < num; ++i) {
     const map<int, vector<float> >& conf_scores = all_conf_scores[i];
+    map<int, vector<float> > logits_all_labels;
+    if (output_logits_)
+      logits_all_labels = all_logits[i];
     const LabelBBox& decode_bboxes = all_decode_bboxes[i];
     for (map<int, vector<int> >::iterator it = all_indices[i].begin();
          it != all_indices[i].end(); ++it) {
@@ -343,6 +388,10 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
         continue;
       }
       const vector<float>& scores = conf_scores.find(label)->second;
+      vector<float> logits;
+      if (output_logits_)
+        logits = logits_all_labels.find(label)->second;
+
       int loc_label = share_location_ ? -1 : label;
       if (decode_bboxes.find(loc_label) == decode_bboxes.end()) {
         // Something bad happened if there are no predictions for current label.
@@ -368,6 +417,13 @@ void DetectionOutputLayer<Dtype>::Forward_cpu(
         top_data[count * 7 + 4] = bbox.ymin();
         top_data[count * 7 + 5] = bbox.xmax();
         top_data[count * 7 + 6] = bbox.ymax();
+        if (output_logits_)
+          {
+            for (int ci=0; ci<num_classes_; ++ci)
+              {
+                toplogit_data[count*num_classes_ +ci] = logits[ci];
+              }
+          }
         if (need_save_) {
           NormalizedBBox out_bbox;
           OutputBBox(bbox, sizes_[name_count_], has_resize_, resize_param_,

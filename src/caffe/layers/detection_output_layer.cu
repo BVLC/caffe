@@ -54,15 +54,35 @@ void DetectionOutputLayer<Dtype>::Forward_gpu(
 
   // Retrieve all confidences.
   Dtype* conf_permute_data = conf_permute_.mutable_gpu_data();
-  if (bottom.size() >= 4) {
+
+  if ((output_logits_ && bottom.size() >= 5) || (!output_logits_ && bottom.size() >= 4)) {
     OSPermuteDataGPU<Dtype>(bottom[1]->count(), bottom[1]->gpu_data(), bottom[3]->gpu_data(),
-        num_classes_, num_priors_, 1, conf_permute_data, objectness_score_);
+                            num_classes_, num_priors_, 1, conf_permute_data, objectness_score_);
   }
   else {
     PermuteDataGPU<Dtype>(bottom[1]->count(), bottom[1]->gpu_data(),
        num_classes_, num_priors_, 1, conf_permute_data);
   }
   const Dtype* conf_cpu_data = conf_permute_.cpu_data();
+
+  const Dtype* logit_cpu_data;
+  if (output_logits_)
+    {
+      Dtype* logit_permute_data;
+      logit_permute_data = logit_permute_.mutable_gpu_data();
+       if (bottom.size() >= 5)
+         {
+           OSPermuteDataGPU<Dtype>(bottom[1]->count(),
+                                   bottom[bottom.size()-1]->gpu_data(), bottom[3]->gpu_data(),
+                                   num_classes_, num_priors_, 1, logit_permute_data,objectness_score_);
+         }
+       else
+         {
+          PermuteDataGPU<Dtype>(bottom[1]->count(), bottom[bottom.size()-1]->gpu_data(),
+                                num_classes_, num_priors_, 1, logit_permute_data);
+         }
+       logit_cpu_data = logit_permute_.cpu_data();
+    }
 
   int num_kept = 0;
   vector<map<int, vector<int> > > all_indices;
@@ -145,6 +165,31 @@ void DetectionOutputLayer<Dtype>::Forward_gpu(
     top_data = top[0]->mutable_cpu_data();
   }
 
+  Dtype* toplogit_data;
+
+  if (output_logits_)
+    {
+      vector<int> toplogit_shape(2, 1);
+      toplogit_shape.push_back(num_kept);
+      toplogit_shape.push_back(num_classes_);
+      if (num_kept == 0) {
+        LOG(INFO) << "Couldn't find any detections";
+        toplogit_shape[2] = num;
+        top[1]->Reshape(toplogit_shape);
+        toplogit_data = top[1]->mutable_cpu_data();
+        caffe_set<Dtype>(top[1]->count(), -1, toplogit_data);
+        // Generate fake results per image.
+        for (int i = 0; i < num; ++i) {
+          toplogit_data[0] = i;
+          toplogit_data += num_classes_;
+        }
+      } else {
+        top[1]->Reshape(toplogit_shape);
+        toplogit_data = top[1]->mutable_cpu_data();
+      }
+    }
+
+
   int count = 0;
   boost::filesystem::path output_directory(output_directory_);
   for (int i = 0; i < num; ++i) {
@@ -166,6 +211,9 @@ void DetectionOutputLayer<Dtype>::Forward_gpu(
       }
       const Dtype* cur_conf_data =
         conf_cpu_data + conf_idx + label * num_priors_;
+      const Dtype* cur_logit_data;
+      if (output_logits_)
+        cur_logit_data = logit_cpu_data + conf_idx + label * num_priors_;
       const Dtype* cur_bbox_data = bbox_cpu_data + bbox_idx;
       if (!share_location_) {
         cur_bbox_data += label * num_priors_ * 4;
@@ -178,6 +226,13 @@ void DetectionOutputLayer<Dtype>::Forward_gpu(
         for (int k = 0; k < 4; ++k) {
           top_data[count * 7 + 3 + k] = cur_bbox_data[idx * 4 + k];
         }
+        if (output_logits_)
+          {
+            for (int ci=0; ci<num_classes_; ++ci)
+              {
+                toplogit_data[count*num_classes_ +ci] = cur_logit_data[ci];
+              }
+          }
         if (need_save_) {
           // Generate output bbox.
           NormalizedBBox bbox;

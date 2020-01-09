@@ -22,14 +22,17 @@ template <typename Dtype>
 class DetectionEvaluateLayer : public Layer<Dtype> {
  public:
   explicit DetectionEvaluateLayer(const LayerParameter& param)
-      : Layer<Dtype>(param) {}
+      : Layer<Dtype>(param)
+  {
+    output_logits_ = param.detection_evaluate_param().output_logits();
+  }
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
   virtual inline const char* type() const { return "DetectionEvaluate"; }
-  virtual inline int ExactBottomBlobs() const { return 2; }
+  virtual inline int ExactBottomBlobs() const { return output_logits_ ? 3 : 2; }
   virtual inline int ExactNumTopBlobs() const { return 1; }
 
   void set_overlap_threshold(float t) {overlap_threshold_ = t;}
@@ -63,6 +66,7 @@ class DetectionEvaluateLayer : public Layer<Dtype> {
   vector<pair<int, int> > sizes_;
   int count_;
   bool use_normalized_bbox_;
+  bool output_logits_;
 
   bool has_resize_;
   ResizeParameter resize_param_;

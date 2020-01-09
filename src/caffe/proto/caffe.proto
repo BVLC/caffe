@@ -1118,6 +1118,9 @@ message DetectionEvaluateParameter {
   optional string name_size_file = 5;
   // The resize parameter used in converting NormalizedBBox to original image.
   optional ResizeParameter resize_param = 6;
+  // if true, output logits  +  ground truth 
+  // logits should be bottom[5] or bottom[3] (ie last) depending on ssd flavor, flattened exactly like confidences
+  optional bool output_logits = 7 [ default = false ] ;
 }
 
 message NonMaximumSuppressionParameter {
@@ -1191,6 +1194,9 @@ message DetectionOutputParameter {
   optional string save_file = 12;
   //the objectness score is used for the anchor refinement module to filter easy negative anchor.
   optional float objectness_score = 13 [default = 0.01];
+  // if true, output logits along with predictions
+  // logits should be bottom[5] or bottom[3] (ie last) depending on ssd flavor, flattened exactly like confidences
+  optional bool output_logits = 14 [default = false];
 }
 
 message DenseImageDataParameter {
