@@ -64,6 +64,8 @@ class ConvolutionLayer : public BaseConvolutionLayer<Dtype> {
   explicit ConvolutionLayer(const LayerParameter& param)
       : BaseConvolutionLayer<Dtype>(param) {}
 
+  virtual ~ConvolutionLayer() {};
+
   virtual inline const char* type() const { return "Convolution"; }
 
  protected:
