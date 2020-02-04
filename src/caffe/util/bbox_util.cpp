@@ -1700,11 +1700,38 @@ void GetConfidenceScores(const Dtype* conf_data, const int num,
 
 // Explicit initialization.
 template void GetConfidenceScores(const float* conf_data, const int num,
-      const int num_preds_per_class, const int num_classes,
-      vector<map<int, vector<float> > >* conf_preds);
+                                  const int num_preds_per_class, const int num_classes,
+                                  vector<map<int, vector<float> > >* conf_preds);
 template void GetConfidenceScores(const double* conf_data, const int num,
-      const int num_preds_per_class, const int num_classes,
-      vector<map<int, vector<float> > >* conf_preds);
+                                  const int num_preds_per_class, const int num_classes,
+                                  vector<map<int, vector<float> > >* conf_preds);
+
+
+template <typename Dtype>
+void GetLogits(const Dtype* logit_data, const int num,
+               const int num_preds_per_class, const int num_classes,
+               vector<map<int, vector<float> > >* logits) {
+    logits->clear();
+    logits->resize(num);
+    for (int i = 0; i < num; ++i) {
+      map<int, vector<float> >& label_logits = (*logits)[i];
+      for (int p = 0; p < num_preds_per_class; ++p) {
+        int start_idx = p * num_classes;
+        for (int c = 0; c < num_classes; ++c) {
+          label_logits[c].push_back(logit_data[start_idx + c]);
+        }
+      }
+      logit_data += num_preds_per_class * num_classes;
+    }
+  }
+
+// Explicit initialization.
+template void GetLogits(const float* logit_data, const int num,
+                        const int num_preds_per_class, const int num_classes,
+                        vector<map<int, vector<float> > >* logits);
+template void GetLogits(const double* logit_data, const int num,
+                        const int num_preds_per_class, const int num_classes,
+                        vector<map<int, vector<float> > >* logits);
 
 template <typename Dtype>
 void GetConfidenceScores(const Dtype* conf_data, const int num,
