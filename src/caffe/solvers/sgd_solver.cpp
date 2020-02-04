@@ -364,7 +364,8 @@ void SGDSolver<Dtype>::Regularize(int param_id) {
 #ifndef CPU_ONLY
 template <typename Dtype>
 void sgd_update_gpu(int N, Dtype* g, Dtype* h, const Dtype* param, Dtype momentum,
-                    Dtype local_rate, Dtype lambda, Dtype mu, bool decoupled);
+                    Dtype local_rate, Dtype lambda, Dtype mu, bool decoupled, Dtype lr_dropout,
+                    const Dtype*r);
 #endif
 
 template <typename Dtype>
@@ -408,6 +409,15 @@ void SGDSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
                       net_params[param_id]->cpu_diff(), momentum,
                       history_[param_id]->mutable_cpu_data());
 
+    if (this->param_.lr_dropout() != 1.0)
+      {
+        caffe_rng_bernoulli_real(net_params[param_id]->count(), (Dtype)this->param_.lr_dropout(),
+                            net_params[param_id]->mutable_cpu_diff());
+        caffe_mul(net_params[param_id]->count(), net_params[param_id]->cpu_diff(),
+                  history_[param_id]->cpu_data(),
+                  history_[param_id]->mutable_cpu_data());
+      }
+
     caffe_copy(net_params[param_id]->count(),
         history_[param_id]->cpu_data(),
         net_params[param_id]->mutable_cpu_diff());
@@ -422,11 +432,17 @@ void SGDSolver<Dtype>::ComputeUpdateValue(int param_id, Dtype rate) {
         lambda = this->param_.weight_decay() * this->net_->params_weight_decay()[param_id];
         nu = decoupledWeightDecayScheduleMutiplier(this->iter_+1);
       }
+
+    if (this->param_.lr_dropout() != 1.0)
+      caffe_gpu_rng_uniform01(net_params[param_id]->count(),
+                            history_[param_id]->mutable_gpu_diff());
     sgd_update_gpu(net_params[param_id]->count(),
                    net_params[param_id]->mutable_gpu_diff(),
                    history_[param_id]->mutable_gpu_data(),
                    net_params[param_id]->gpu_data(),
-        momentum, local_rate, nu, lambda, this->param_.regularization_type() == "decoupled");
+                   momentum, local_rate, nu, lambda,
+                   this->param_.regularization_type() == "decoupled",
+                   (Dtype)this->param_.lr_dropout(), history_[param_id]->gpu_diff());
 #else
     NO_GPU;
 #endif
