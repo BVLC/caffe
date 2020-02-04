@@ -37,6 +37,7 @@ CuDNNSigmoidLayer<Dtype>::~CuDNNSigmoidLayer() {
 
   cudnnDestroyTensorDescriptor(this->bottom_desc_);
   cudnnDestroyTensorDescriptor(this->top_desc_);
+  cudnnDestroyActivationDescriptor(this->activ_desc_);
   cudnnDestroy(this->handle_);
 }
 
