@@ -103,6 +103,12 @@ if DEFINED APPVEYOR (
 :: Use the exclamation mark ! below to delay the
 :: expansion of CMAKE_GENERATOR
 if %WITH_NINJA% EQU 0 (
+    if "%MSVC_VERSION%"=="14.2" (
+        set CMAKE_GENERATOR=Visual Studio 16 2019
+    )
+    if "%MSVC_VERSION%"=="14.1" (
+        set CMAKE_GENERATOR=Visual Studio 15 2017 Win64
+    )
     if "%MSVC_VERSION%"=="14" (
         set CMAKE_GENERATOR=Visual Studio 14 2015 Win64
     )

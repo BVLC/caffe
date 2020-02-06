@@ -12,6 +12,15 @@ set(DEPENDENCIES_SHA_1900_27 "17eecb095bd3b0774a87a38624a77ce35e497cd2")
 set(DEPENDENCIES_URL_1900_35 "${DEPENDENCIES_URL_BASE}/v${DEPENDENCIES_VERSION}/${DEPENDENCIES_NAME_1900_35}${DEPENDENCIES_FILE_EXT}")
 set(DEPENDENCIES_SHA_1900_35 "f060403fd1a7448d866d27c0e5b7dced39c0a607")
 
+# Dependencies for Visual Studio 2017 (we are using the same dependencies of Visual Studio 2015)
+set(DEPENDENCIES_NAME_1910_35 ${DEPENDENCIES_NAME_1900_35})
+set(DEPENDENCIES_URL_1910_35 ${DEPENDENCIES_URL_1900_35})
+set(DEPENDENCIES_SHA_1910_35 ${DEPENDENCIES_SHA_1900_35})
+# Dependencies for Visual Studio 2019 (we are using the same dependencies of Visual Studio 2015)
+set(DEPENDENCIES_NAME_1920_35 ${DEPENDENCIES_NAME_1900_35})
+set(DEPENDENCIES_URL_1920_35 ${DEPENDENCIES_URL_1900_35})
+set(DEPENDENCIES_SHA_1920_35 ${DEPENDENCIES_SHA_1900_35})
+
 caffe_option(USE_PREBUILT_DEPENDENCIES "Download and use the prebuilt dependencies" ON IF MSVC)
 if(MSVC)
   file(TO_CMAKE_PATH $ENV{USERPROFILE} USERPROFILE_DIR)
@@ -36,6 +45,15 @@ if(USE_PREBUILT_DEPENDENCIES)
         message(STATUS "Building without python. Prebuilt dependencies will default to Python 2.7")
         set(_pyver 27)
     endif()
+
+	# Visual Studio 2017 has MSVC Version between 1910 and 1919
+	if(${MSVC_VERSION} MATCHES "191[0-9]")
+		set(MSVC_VERSION 1910)
+	# Visual Studio 2019 has MSVC Version between 1920 and 1929
+	elseif(${MSVC_VERSION} MATCHES "192[0-9]")
+		set(MSVC_VERSION 1920)
+	endif()
+	
     if(NOT DEFINED DEPENDENCIES_URL_${MSVC_VERSION}_${_pyver})
         message(FATAL_ERROR "Could not find url for MSVC version = ${MSVC_VERSION} and Python version = ${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}.")
     endif()
