@@ -103,6 +103,12 @@ if DEFINED APPVEYOR (
 :: Use the exclamation mark ! below to delay the
 :: expansion of CMAKE_GENERATOR
 if %WITH_NINJA% EQU 0 (
+    if "%MSVC_VERSION%"=="16" (
+        set CMAKE_GENERATOR=Visual Studio 16 2019
+    )
+    if "%MSVC_VERSION%"=="15" (
+        set CMAKE_GENERATOR=Visual Studio 15 2017 Win64
+    )
     if "%MSVC_VERSION%"=="14" (
         set CMAKE_GENERATOR=Visual Studio 14 2015 Win64
     )
@@ -152,6 +158,14 @@ pushd build
 
 :: Setup the environement for VS x64
 set batch_file=!VS%MSVC_VERSION%0COMNTOOLS!..\..\VC\vcvarsall.bat
+if "%MSVC_VERSION%"=="15" (
+	:: 'vcvarsall.bat' path for Visual Studio 2017
+	set batch_file=!VS%MSVC_VERSION%0COMNTOOLS!..\..\VC\Auxiliary\Build\vcvarsall.bat
+)
+if "%MSVC_VERSION%"=="16" (
+	:: 'vcvarsall.bat' path for Visual Studio 2019
+	set batch_file=!VS%MSVC_VERSION%0COMNTOOLS!..\..\VC\Auxiliary\Build\vcvarsall.bat
+)
 call "%batch_file%" amd64
 
 :: Configure using cmake and using the caffe-builder dependencies
