@@ -309,6 +309,33 @@ def load_image(filename, color=True):
     return img
 
 
+def read_mean(filename):
+    """
+    Read image mean data from binaryproto or npy file.
+
+    Parameters
+    ----------
+    filename : string
+
+    Returns
+    -------
+    mean_pixel : ndarray with mean chansels (B, G, R)
+    """
+    if filename.endswith('.binaryproto'):
+        with open(filename, 'rb') as file:
+            mean_blob = caffe_pb2.BlobProto.FromString(file.read())
+        mean_image = blobproto_to_array(mean_blob)[0]
+    elif filename.endswith('.npy'):
+        mean_image = np.load(filename)
+    else:
+        raise Exception('File with mean image should have '
+                        '\'.binaryproto\' or \'.npy\' extension.')
+
+    # get mean pixel from image
+    mean_pixel = mean_image.mean(1).mean(1)
+
+    return mean_pixel
+
 def resize_image(im, new_dims, interp_order=1):
     """
     Resize an image array with interpolation.
