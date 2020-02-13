@@ -86,8 +86,8 @@ static BrewFunction GetBrewFunction(const caffe::string& name) {
 }
 
 // Parse GPU ids or use all available devices
-static void get_gpus(vector<int>* gpus) {
-  if (FLAGS_gpu == "all") {
+static void get_gpus(vector<int>* gpus, std::string gpus_to_use = FLAGS_gpu) {
+  if (gpus_to_use == "all") {
     int count = 0;
 #ifndef CPU_ONLY
     CUDA_CHECK(cudaGetDeviceCount(&count));
@@ -97,9 +97,9 @@ static void get_gpus(vector<int>* gpus) {
     for (int i = 0; i < count; ++i) {
       gpus->push_back(i);
     }
-  } else if (FLAGS_gpu.size()) {
+  } else if (gpus_to_use.size()) {
     vector<string> strings;
-    boost::split(strings, FLAGS_gpu, boost::is_any_of(","));
+    boost::split(strings, gpus_to_use, boost::is_any_of(","));
     for (int i = 0; i < strings.size(); ++i) {
       gpus->push_back(boost::lexical_cast<int>(strings[i]));
     }
@@ -137,6 +137,11 @@ vector<string> get_stages_from_flags() {
 int device_query() {
   LOG(INFO) << "Querying GPUs " << FLAGS_gpu;
   vector<int> gpus;
+  if (FLAGS_gpu.empty()) {
+    // Default to checking all GPUs even if the user didn't pass "-gpu" to
+    // caffe as this is probably what they wanted.
+    FLAGS_gpu = "all";
+  }
   get_gpus(&gpus);
   for (int i = 0; i < gpus.size(); ++i) {
     caffe::Caffe::SetDevice(gpus[i]);
