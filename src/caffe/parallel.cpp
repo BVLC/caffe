@@ -354,11 +354,12 @@ void NCCL<Dtype>::Run(const vector<int>& gpus, const char* restore) {
   // Run first solver on current thread
   Broadcast();
   solver_->Solve();
-  barrier.wait();  // Hangs without it when running tests
   // Wait for shutdown
   for (int i = 1; i < gpus.size(); ++i) {
     workers[i]->StopInternalThread();
   }
+  // Hangs without it when running tests or multi-gpu training.
+  barrier.wait();
 }
 
 INSTANTIATE_CLASS(Params);
