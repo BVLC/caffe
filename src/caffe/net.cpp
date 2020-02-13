@@ -7,6 +7,8 @@
 
 #ifdef USE_HDF5
 #include "hdf5.h"
+#else
+#define H5Fis_hdf5(x) false
 #endif  // USE_HDF5
 
 #include "caffe/common.hpp"
