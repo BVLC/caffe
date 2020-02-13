@@ -1,0 +1,22 @@
+# Ristretto SqueezeNet Example
+# Fine-tuning of 8-bit dynamic fixed point network
+
+test_iter: 2000
+test_interval: 100
+base_lr: 0.000001
+display: 10
+max_iter: 2000
+iter_size: 32 #global batch size = batch_size * iter_size
+lr_policy: "fixed"
+momentum: 0.9
+momentum2: 0.999
+delta: 0.00000001
+weight_decay: 0.0002
+snapshot: 100
+snapshot_prefix: "models/SqueezeNet/RistrettoDemo/squeezenet"
+solver_mode: GPU
+random_seed: 42
+net: "models/SqueezeNet/RistrettoDemo/quantized.prototxt"
+average_loss: 40
+test_initialization: true
+solver_type: ADAM
