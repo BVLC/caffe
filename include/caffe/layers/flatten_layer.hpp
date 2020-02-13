@@ -14,10 +14,9 @@ namespace caffe {
  *
  * Note: because this layer does not change the input values -- merely the
  * dimensions -- it can simply copy the input. The copy happens "virtually"
- * (thus taking effectively 0 real time) by setting, in Forward, the data
- * pointer of the top Blob to that of the bottom Blob (see Blob::ShareData),
- * and in Backward, the diff pointer of the bottom Blob to that of the top Blob
- * (see Blob::ShareDiff).
+ * (thus taking effectively 0 real time) by setting, in Reshape, the data
+ * and diff pointers of the top Blob to those of the bottom Blob
+ * (see Blob::ShareData and Blob::ShareDiff).
  */
 template <typename Dtype>
 class FlattenLayer : public Layer<Dtype> {
@@ -41,7 +40,7 @@ class FlattenLayer : public Layer<Dtype> {
    *      the outputs -- i.e., the (virtually) copied, flattened inputs
    */
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
+      const vector<Blob<Dtype>*>& top) {}
 
   /**
    * @brief Computes the error gradient w.r.t. the concatenate inputs.
@@ -53,7 +52,7 @@ class FlattenLayer : public Layer<Dtype> {
    *        gradient is (virtually) copied
    */
   virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
-      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom);
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {}
 };
 
 }  // namespace caffe
