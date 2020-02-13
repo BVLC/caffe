@@ -137,7 +137,7 @@ class ImagenetClassifier(object):
                 }
                 for l in f.readlines()
             ])
-        self.labels = labels_df.sort('synset_id')['name'].values
+        self.labels = labels_df.sort_values('synset_id')['name'].values
 
         self.bet = cPickle.load(open(bet_file))
         # A bias to prefer children nodes in single-chain paths
