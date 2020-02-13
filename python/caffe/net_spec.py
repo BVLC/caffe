@@ -18,11 +18,16 @@ for specifying nets. In particular, the automatically generated layer names
 are not guaranteed to be forward-compatible.
 """
 
-from collections import OrderedDict, Counter
+from collections import OrderedDict, Counter, defaultdict
 
+from ._caffe import layer_type_list
 from .proto import caffe_pb2
 from google import protobuf
 import six
+
+NAME_SCOPE_KEYS = list()
+ARG_SCOPE_KEYS = defaultdict(dict)
+
 
 
 def param_name_dict():
@@ -46,8 +51,9 @@ def to_proto(*tops):
 
     layers = OrderedDict()
     autonames = Counter()
+    layer_names = set()
     for top in tops:
-        top.fn._to_proto(layers, {}, autonames)
+        top.fn._to_proto(layers, {}, layer_names, autonames)
     net = caffe_pb2.NetParameter()
     net.layer.extend(layers.values())
     return net
@@ -93,8 +99,8 @@ class Top(object):
 
         return to_proto(self)
 
-    def _to_proto(self, layers, names, autonames):
-        return self.fn._to_proto(layers, names, autonames)
+    def _to_proto(self, layers, names, layer_names, autonames):
+        return self.fn._to_proto(layers, names, layer_names, autonames)
 
 
 class Function(object):
@@ -107,16 +113,29 @@ class Function(object):
             if not isinstance(input, Top):
                 raise TypeError('%s input %d is not a Top (type is %s)' %
                                 (type_name, index, type(input)))
+
+        self.scope = get_scope_name()
+        self.scope_arg = get_scope_arg(type_name)
+
         self.inputs = inputs
         self.params = params
         self.ntop = self.params.get('ntop', 1)
         # use del to make sure kwargs are not double-processed as layer params
         if 'ntop' in self.params:
             del self.params['ntop']
-        self.in_place = self.params.get('in_place', False)
+
+        self.in_place = False
+
+        if 'in_place' in self.scope_arg:
+            self.in_place = self.scope_arg['in_place']
+            del self.scope_arg['in_place']
+
         if 'in_place' in self.params:
+            self.in_place = self.params['in_place']
             del self.params['in_place']
+
         self.tops = tuple(Top(self, n) for n in range(self.ntop))
+
 
     def _get_name(self, names, autonames):
         if self not in names and self.ntop > 0:
@@ -132,12 +151,12 @@ class Function(object):
             names[top] = top.fn.type_name + str(autonames[top.fn.type_name])
         return names[top]
 
-    def _to_proto(self, layers, names, autonames):
+    def _to_proto(self, layers, names, layer_names, autonames):
         if self in layers:
             return
         bottom_names = []
         for inp in self.inputs:
-            inp._to_proto(layers, names, autonames)
+            inp._to_proto(layers, names, layer_names, autonames)
             bottom_names.append(layers[inp.fn].top[inp.n])
         layer = caffe_pb2.LayerParameter()
         layer.type = self.type_name
@@ -148,9 +167,26 @@ class Function(object):
         else:
             for top in self.tops:
                 layer.top.append(self._get_top_name(top, names, autonames))
-        layer.name = self._get_name(names, autonames)
+
+        layer.name = ''
+        if self.scope:
+            layer.name = self.scope.name
+        if 'name' in self.params:
+            if layer.name != '':
+                layer.name += self.scope.sep
+            layer.name += self.params['name']
+        if layer.name == '':
+            layer.name = self._get_name(names, autonames)
+        assert(layer.name not in layer_names), 'layer name {} has been defined'.format(layer.name)
+        layer_names.add(layer.name)
+
+        for k, v in six.iteritems(self.scope_arg):
+            if k not in self.params:
+                self.params[k] = v
 
         for k, v in six.iteritems(self.params):
+            if k == 'name':
+                continue
             # special case to handle generic *params
             if k.endswith('param'):
                 assign_proto(layer, k, v)
@@ -174,9 +210,24 @@ class NetSpec(object):
         super(NetSpec, self).__setattr__('tops', OrderedDict())
 
     def __setattr__(self, name, value):
+        scope = get_scope_name()
+        new_name = name
+        if scope:
+            new_name = scope.name + scope.sep + name
+        # if name is a dash, then we just replace with the scope name
+        if name == '_' and scope:
+            new_name = scope.name
+        name = new_name
         self.tops[name] = value
 
     def __getattr__(self, name):
+        scope = get_scope_name()
+        new_name = name
+        if scope:
+            new_name = scope.name + scope.sep + name
+        if name == '_' and scope:
+            new_name = scope.name
+        name = new_name
         return self.tops[name]
 
     def __setitem__(self, key, value):
@@ -189,8 +240,9 @@ class NetSpec(object):
         names = {v: k for k, v in six.iteritems(self.tops)}
         autonames = Counter()
         layers = OrderedDict()
+        layer_names = set()
         for name, top in six.iteritems(self.tops):
-            top._to_proto(layers, names, autonames)
+            top._to_proto(layers, names, layer_names, autonames)
         net = caffe_pb2.NetParameter()
         net.layer.extend(layers.values())
         return net
@@ -202,6 +254,7 @@ class Layers(object):
     specifying a 3x3 convolution applied to bottom."""
 
     def __getattr__(self, name):
+        assert(name in layer_type_list), '{} not a valid layer'.format(name)
         def layer_fn(*args, **kwargs):
             fn = Function(name, args, kwargs)
             if fn.ntop == 0:
@@ -224,7 +277,72 @@ class Parameters(object):
                 return getattr(getattr(caffe_pb2, name + 'Parameter'), param_name)
        return Param()
 
-
-_param_names = param_name_dict()
 layers = Layers()
 params = Parameters()
+
+class name_scope(object):
+    def __init__(self, name, sep='/'):
+        assert(name != '')
+        self.name = name
+        self.sep = sep
+    def __enter__(self):
+        global NAME_SCOPE_KEYS
+        if len(NAME_SCOPE_KEYS) > 0:
+            p_scope = NAME_SCOPE_KEYS[-1]
+            self.name = p_scope.name + p_scope.sep + self.name
+        NAME_SCOPE_KEYS.append(self)
+    def __exit__(self, *args):
+        global NAME_SCOPE_KEYS
+        NAME_SCOPE_KEYS = NAME_SCOPE_KEYS[0:-1]
+
+class arg_scope(object):
+    def __init__(self, layer_types, **kwargs):
+        assert (isinstance(layer_types, list))
+        self.layer_fns = []
+        for layer_type in layer_types:
+            self.layer_fns.append(getattr(layers, layer_type))
+        self.layer_types = layer_types
+        self.args = kwargs
+        self.old = {}
+
+    def __enter__(self):
+        global ARG_SCOPE_KEYS
+        for layer_type in self.layer_types:
+            # keep old args
+            self.old[layer_type] = ARG_SCOPE_KEYS[layer_type].copy()
+            for key, value in six.iteritems(self.args):
+                ARG_SCOPE_KEYS[layer_type][key] = value
+
+    def __exit__(self, *args):
+        global ARG_SCOPE_KEYS
+        for layer_type in self.layer_types:
+            layer_arg = ARG_SCOPE_KEYS[layer_type]
+            keys = self.args.keys()
+            for key in keys:
+                layer_arg.pop(key)
+            # restore old layer args if this is a nested arg scope
+            ARG_SCOPE_KEYS[layer_type] = self.old[layer_type]
+
+
+def get_scope_name():
+    global NAME_SCOPE_KEYS
+    if len(NAME_SCOPE_KEYS) > 0:
+        return NAME_SCOPE_KEYS[-1]
+    else:
+        return None
+
+def get_scope_arg(layer_type):
+    global ARG_SCOPE_KEYS
+    if layer_type in ARG_SCOPE_KEYS:
+        return ARG_SCOPE_KEYS[layer_type].copy()
+    else:
+        return dict()
+
+def get_value_from_arg_scope(layey_type, key):
+    global ARG_SCOPE_KEYS
+    arg = ARG_SCOPE_KEYS[layer_type]
+    assert(key in arg), '{} not in the arg scope {}'.fomrat(key, layer_type)
+
+
+_param_names = param_name_dict()
+layer_type_list = list(layer_type_list())

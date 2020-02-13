@@ -3,6 +3,7 @@ import tempfile
 import caffe
 from caffe import layers as L
 from caffe import params as P
+from caffe import name_scope, arg_scope
 
 def lenet(batch_size):
     n = caffe.NetSpec()
@@ -21,6 +22,40 @@ def lenet(batch_size):
     n.ip2 = L.InnerProduct(n.relu1, num_output=10,
         weight_filler=dict(type='xavier'))
     n.loss = L.SoftmaxWithLoss(n.ip2, n.label)
+    return n.to_proto()
+
+def scope_lenet(batch_size):
+    n = caffe.NetSpec()
+    n.data, n.label = L.DummyData(shape=[dict(dim=[batch_size, 1, 28, 28]),
+                                         dict(dim=[batch_size, 1, 1, 1])],
+                                  transform_param=dict(scale=1./255), ntop=2)
+    input_data = n.data
+    # a bit more complicated for testing purpose
+    with arg_scope(['Pooling'], kernel_size=2, stride=2, pool=P.Pooling.MAX):
+        # both InnerProduct and Convolution have identical weight_filler
+        with arg_scope(['InnerProduct', 'Convolution'], weight_filler=dict(type='xavier')):
+            # add additional config for Convolution
+            with arg_scope(['Convolution'], param=[dict(lr_mult=0.1, decay_mult=0.1)]):
+                with name_scope('block1'):
+                    n.conv = L.Convolution(input_data, kernel_size=5, num_output=20, name='conv')
+                    block1 = n.pool = L.Pooling(n.conv, name='pool')
+                # nested scope with different seperator
+                with name_scope('parent', sep='_'):
+                    with name_scope('block2'):
+                        # override the learning rate
+                        n.conv = L.Convolution(block1, kernel_size=5, num_output=50, name='conv', param=[dict(lr_mult=1, decay_mult=2)])
+                        # override the pooling method
+                        # sometimes we may want to let the top name equal to the scope name
+                        # this can be done by assigning the top name to a dash
+                        block2 = n._ = L.Pooling(n.conv, name='pool', pool=P.Pooling.AVE)
+
+            # nested arg scope
+            with arg_scope(['InnerProduct'], weight_filler=dict(type='msra')):
+                n.ip1 = L.InnerProduct(block2, num_output=500)
+            with arg_scope(['ReLU'], in_place=True):
+                n.relu = L.ReLU(n.ip1)
+            n.ip2 = L.InnerProduct(n.relu, num_output=10)
+            n.loss = L.SoftmaxWithLoss(n.ip2, n.label)
     return n.to_proto()
 
 def anon_lenet(batch_size):
@@ -54,6 +89,39 @@ class TestNetSpec(unittest.TestCase):
         f.write(str(net_proto))
         f.close()
         return caffe.Net(f.name, caffe.TEST)
+
+    def test_scope(self):
+        net = scope_lenet(50)
+        self.assertEqual(len(net.layer), 9)
+        # check name scope
+        # check layer name
+        self.assertEqual(net.layer[1].name, 'block1/conv')
+        self.assertEqual(net.layer[2].name, 'block1/pool')
+        self.assertEqual(net.layer[3].name, 'parent_block2/conv')
+        self.assertEqual(net.layer[4].name, 'parent_block2/pool')
+        # check top name
+        self.assertEqual(net.layer[1].top[0], 'block1/conv')
+        self.assertEqual(net.layer[2].top[0], 'block1/pool')
+        self.assertEqual(net.layer[3].top[0], 'parent_block2/conv')
+        # this should be eqaul to scope name
+        self.assertEqual(net.layer[4].top[0], 'parent_block2')
+        # check arg scope
+        self.assertEqual(net.layer[1].convolution_param.weight_filler.type, 'xavier')
+        self.assertEqual(round(net.layer[1].param[0].lr_mult, 2), 0.1)
+        self.assertEqual(round(net.layer[1].param[0].decay_mult, 2), 0.1)
+        self.assertEqual(net.layer[2].pooling_param.kernel_size, 2)
+        self.assertEqual(net.layer[2].pooling_param.stride, 2)
+        self.assertEqual(net.layer[2].pooling_param.pool, P.Pooling.MAX)
+        self.assertEqual(net.layer[3].convolution_param.weight_filler.type, 'xavier')
+        self.assertEqual(net.layer[3].param[0].lr_mult, 1)
+        self.assertEqual(net.layer[3].param[0].decay_mult, 2)
+        self.assertEqual(net.layer[4].pooling_param.kernel_size, 2)
+        self.assertEqual(net.layer[4].pooling_param.stride, 2)
+        self.assertEqual(net.layer[4].pooling_param.pool, P.Pooling.AVE)
+        self.assertEqual(net.layer[5].inner_product_param.weight_filler.type, 'msra')
+        self.assertEqual(net.layer[6].bottom, net.layer[6].top)
+        self.assertEqual(net.layer[7].inner_product_param.weight_filler.type, 'xavier')
+
 
     def test_lenet(self):
         """Construct and build the Caffe version of LeNet."""
