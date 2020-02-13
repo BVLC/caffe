@@ -42,6 +42,8 @@ DEFINE_bool(encoded, false,
     "When this option is on, the encoded image will be save in datum");
 DEFINE_string(encode_type, "",
     "Optional: What type should we encode the image as ('png','jpg',...).");
+DEFINE_bool(append, false,
+            "Append to existing lmdb/leveldb.");
 
 int main(int argc, char** argv) {
 #ifdef USE_OPENCV
@@ -70,6 +72,7 @@ int main(int argc, char** argv) {
   const bool check_size = FLAGS_check_size;
   const bool encoded = FLAGS_encoded;
   const string encode_type = FLAGS_encode_type;
+  const bool append = FLAGS_append;
 
   std::ifstream infile(argv[2]);
   std::vector<std::pair<std::string, int> > lines;
@@ -96,7 +99,23 @@ int main(int argc, char** argv) {
 
   // Create new DB
   scoped_ptr<db::DB> db(db::GetDB(FLAGS_backend));
-  db->Open(argv[3], db::NEW);
+
+  int start_line_id = 0;
+  if (append) {
+      db->Open(argv[3], db::WRITE);
+      scoped_ptr<db::Cursor> cursor(db->NewCursor());
+      while (cursor->valid()) {
+          start_line_id++;
+          cursor->Next();
+      }
+
+      // start from the next line_id
+      start_line_id++;
+      LOG(INFO) << "Append from line " << start_line_id << ".";
+  } else {
+    db->Open(argv[3], db::NEW);
+  }
+
   scoped_ptr<db::Transaction> txn(db->NewTransaction());
 
   // Storing to db
@@ -133,7 +152,8 @@ int main(int argc, char** argv) {
       }
     }
     // sequential
-    string key_str = caffe::format_int(line_id, 8) + "_" + lines[line_id].first;
+    string key_str = caffe::format_int(line_id + start_line_id, 8)
+            + "_" + lines[line_id].first;
 
     // Put in db
     string out;
