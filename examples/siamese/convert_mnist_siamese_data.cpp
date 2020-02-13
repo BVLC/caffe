@@ -2,7 +2,7 @@
 // This script converts the MNIST dataset to the leveldb format used
 // by caffe to train siamese network.
 // Usage:
-//    convert_mnist_data input_image_file input_label_file output_db_file
+//    convert_mnist_siamese_data input_image_file input_label_file output_db_file
 // The MNIST dataset could be downloaded at
 //    http://yann.lecun.com/exdb/mnist/
 #include <fstream>  // NOLINT(readability/streams)
@@ -111,7 +111,7 @@ int main(int argc, char** argv) {
     printf("This script converts the MNIST dataset to the leveldb format used\n"
            "by caffe to train a siamese network.\n"
            "Usage:\n"
-           "    convert_mnist_data input_image_file input_label_file "
+           "    convert_mnist_siamese_data input_image_file input_label_file "
            "output_db_file\n"
            "The MNIST dataset could be downloaded at\n"
            "    http://yann.lecun.com/exdb/mnist/\n"
