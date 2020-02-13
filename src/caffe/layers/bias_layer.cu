@@ -42,15 +42,14 @@ void BiasLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
   if ((!bias_param && propagate_down[1]) ||
       (bias_param && this->param_propagate_down_[0])) {
     const Dtype* top_diff = top[0]->gpu_diff();
+    Dtype* inner_sums = inner_sums_.mutable_gpu_data();
+    caffe_gpu_gemv(CblasNoTrans, inner_sums_.count(), inner_dim_, Dtype(1),
+        top_diff, bias_multiplier_.gpu_data(), Dtype(0), inner_sums);
     Dtype* bias_diff = (bias_param ? this->blobs_[0].get() : bottom[1])
         ->mutable_gpu_diff();
-    bool accum = bias_param;
-    for (int n = 0; n < outer_dim_; ++n) {
-      caffe_gpu_gemv(CblasNoTrans, bias_dim_, inner_dim_, Dtype(1),
-          top_diff, bias_multiplier_.gpu_data(), Dtype(accum), bias_diff);
-      top_diff += dim_;
-      accum = true;
-    }
+    caffe_gpu_gemv(CblasTrans, outer_dim_, bias_dim_, Dtype(1),
+        inner_sums, bias_multiplier_.gpu_data(), Dtype(bias_param),
+        bias_diff);
   }
 }
 

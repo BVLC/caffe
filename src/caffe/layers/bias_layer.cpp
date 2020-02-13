@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <vector>
 
 #include "caffe/filler.hpp"
@@ -62,10 +63,12 @@ void BiasLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   if (bottom[0] != top[0]) {
     top[0]->ReshapeLike(*bottom[0]);
   }
-  bias_multiplier_.Reshape(vector<int>(1, inner_dim_));
-  if (bias_multiplier_.cpu_data()[inner_dim_ - 1] != Dtype(1)) {
-    caffe_set(inner_dim_, Dtype(1), bias_multiplier_.mutable_cpu_data());
+  const int bias_mult_size = std::max(outer_dim_, inner_dim_);
+  bias_multiplier_.Reshape(vector<int>(1, bias_mult_size));
+  if (bias_multiplier_.cpu_data()[bias_mult_size - 1] != Dtype(1)) {
+    caffe_set(bias_mult_size, Dtype(1), bias_multiplier_.mutable_cpu_data());
   }
+  inner_sums_.Reshape(vector<int>(1, outer_dim_ * bias_dim_));
 }
 
 template <typename Dtype>
@@ -99,15 +102,14 @@ void BiasLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   if ((!bias_param && propagate_down[1]) ||
       (bias_param && this->param_propagate_down_[0])) {
     const Dtype* top_diff = top[0]->cpu_diff();
+    Dtype* inner_sums = inner_sums_.mutable_cpu_data();
+    caffe_cpu_gemv(CblasNoTrans, inner_sums_.count(), inner_dim_, Dtype(1),
+        top_diff, bias_multiplier_.cpu_data(), Dtype(0), inner_sums);
     Dtype* bias_diff = (bias_param ? this->blobs_[0].get() : bottom[1])
         ->mutable_cpu_diff();
-    bool accum = bias_param;
-    for (int n = 0; n < outer_dim_; ++n) {
-      caffe_cpu_gemv(CblasNoTrans, bias_dim_, inner_dim_, Dtype(1),
-          top_diff, bias_multiplier_.cpu_data(), Dtype(accum), bias_diff);
-      top_diff += dim_;
-      accum = true;
-    }
+    caffe_cpu_gemv(CblasTrans, outer_dim_, bias_dim_, Dtype(1),
+        inner_sums, bias_multiplier_.cpu_data(), Dtype(bias_param),
+        bias_diff);
   }
 }
 
