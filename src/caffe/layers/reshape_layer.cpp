@@ -86,9 +86,33 @@ void ReshapeLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
   top[0]->Reshape(top_shape);
   CHECK_EQ(top[0]->count(), bottom[0]->count())
       << "output count must match input count";
-  top[0]->ShareData(*bottom[0]);
-  top[0]->ShareDiff(*bottom[0]);
 }
+
+template <typename Dtype>
+void ReshapeLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  top[0]->ShareData(*bottom[0]);
+}
+
+template <typename Dtype>
+void ReshapeLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {
+  top[0]->ShareData(*bottom[0]);
+}
+
+template <typename Dtype>
+void ReshapeLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+  bottom[0]->ShareDiff(*top[0]);
+}
+
+template <typename Dtype>
+void ReshapeLayer<Dtype>::Backward_gpu(const vector<Blob<Dtype>*>& top,
+      const vector<bool>& propagate_down, const vector<Blob<Dtype>*>& bottom) {
+  bottom[0]->ShareDiff(*top[0]);
+}
+
+
 
 INSTANTIATE_CLASS(ReshapeLayer);
 REGISTER_LAYER_CLASS(Reshape);
