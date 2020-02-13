@@ -49,7 +49,7 @@ def to_proto(*tops):
     for top in tops:
         top.fn._to_proto(layers, {}, autonames)
     net = caffe_pb2.NetParameter()
-    net.layer.extend(layers.values())
+    net.layer.extend([l for l in layers.values() if l is not None])
     return net
 
 
@@ -192,7 +192,7 @@ class NetSpec(object):
         for name, top in six.iteritems(self.tops):
             top._to_proto(layers, names, autonames)
         net = caffe_pb2.NetParameter()
-        net.layer.extend(layers.values())
+        net.layer.extend([l for l in layers.values() if l is not None])
         return net
 
 
@@ -219,10 +219,61 @@ class Parameters(object):
     to specify max pooling."""
 
     def __getattr__(self, name):
-       class Param:
+        class Param:
             def __getattr__(self, param_name):
                 return getattr(getattr(caffe_pb2, name + 'Parameter'), param_name)
-       return Param()
+        return Param()
+
+
+class PhasedFunction(object):
+    """Implements a function that allows multiple tops to sync their names."""
+
+    def __init__(self, fn_train, fn_test, train, test):
+        self.train, self.test = train, test
+        self.fn_train, self.fn_test = fn_train, fn_test
+
+    def __getattr__(self, name):
+        return getattr(self.fn_train, name)
+
+    def _to_proto(self, layers, names, autonames):
+        if self in layers:
+            return
+        for tr, ts in zip(self.train, self.test):
+            name = self.fn_train._get_name(tr, names, autonames)
+            names[tr], names[ts] = name, name
+        self.fn_train._to_proto(layers, names, autonames)
+        self.fn_test._to_proto(layers, names, autonames)
+        layers[self] = None
+
+
+def setPhase(fn, phase):
+    if 'include' in fn.params:
+        for tt in fn.params['include']:
+            if 'phase' in tt:
+                assert tt['phase'] == phase, "2 different phases specified"
+            else:
+                tt['phase'] == phase
+    else:
+        fn.params['include'] = [{'phase': phase}]
+
+
+def phasedTop(train, test, all_train, all_test):
+    setPhase(train.fn, caffe_pb2.TRAIN)
+    setPhase(test.fn, caffe_pb2.TEST)
+    train.fn = PhasedFunction(train.fn, test.fn, all_train, all_test)
+    return train
+
+
+def phase(train=None, test=None):
+    if train is None:
+        return test
+    if test is None:
+        return train
+    if isinstance(train, Top) and isinstance(test, Top):
+        return phasedTop(train, test, [train], [test])
+    assert not isinstance(train, Top) and not isinstance(test, Top), "Same number of train and test arguments required"
+    assert len(train) == len(test), "Same number of train and test arguments required"
+    return [phasedTop(tr, ts, train, test) for tr, ts in zip(train, test)]
 
 
 _param_names = param_name_dict()
