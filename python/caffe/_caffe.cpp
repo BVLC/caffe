@@ -377,12 +377,14 @@ bp::object NCCL_New_Uid() {
 #endif
 
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(SolveOverloads, Solve, 0, 1);
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(RestoreOverloads, Restore, 1, 1);
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(SnapshotOverloads, Snapshot, 0, 0);
 
 BOOST_PYTHON_MODULE(_caffe) {
   // below, we prepend an underscore to methods that will be replaced
   // in Python
 
-  bp::scope().attr("__version__") = AS_STRING(CAFFE_VERSION);
+  bp::scope().attr("__version__") = CAFFE_AS_STRING(CAFFE_VERSION);
 
   // Caffe utility functions
   bp::def("init_log", &InitLog);
@@ -506,8 +508,10 @@ BOOST_PYTHON_MODULE(_caffe) {
     .def("solve", static_cast<void (Solver<Dtype>::*)(const char*)>(
           &Solver<Dtype>::Solve), SolveOverloads())
     .def("step", &Solver<Dtype>::Step)
-    .def("restore", &Solver<Dtype>::Restore)
-    .def("snapshot", &Solver<Dtype>::Snapshot)
+    .def("restore", static_cast<void (Solver<Dtype>::*)(const char*)>(
+          &Solver<Dtype>::Restore), RestoreOverloads())
+    .def("snapshot", static_cast<void (Solver<Dtype>::*)()>(
+          &Solver<Dtype>::Snapshot), SnapshotOverloads())
     .def("share_weights", &share_weights)
     .def("apply_update", &Solver<Dtype>::ApplyUpdate)
     .add_property("param", bp::make_function(&Solver<Dtype>::param,

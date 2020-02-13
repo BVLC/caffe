@@ -530,7 +530,7 @@ static void write_mean(MEX_ARGS) {
 static void version(MEX_ARGS) {
   mxCHECK(nrhs == 0, "Usage: caffe_('version')");
   // Return version string
-  plhs[0] = mxCreateString(AS_STRING(CAFFE_VERSION));
+  plhs[0] = mxCreateString(CAFFE_AS_STRING(CAFFE_VERSION));
 }
 
 /** -----------------------------------------------------------------

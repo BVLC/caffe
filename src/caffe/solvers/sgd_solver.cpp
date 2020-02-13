@@ -71,6 +71,7 @@ Dtype SGDSolver<Dtype>::GetLearningRate() {
 
 template <typename Dtype>
 void SGDSolver<Dtype>::PreSolve() {
+  learning_rate_ = 0;
   // Initialize the history
   const vector<Blob<Dtype>*>& net_params = this->net_->learnable_params();
   history_.clear();
@@ -108,6 +109,7 @@ void SGDSolver<Dtype>::ClipGradients() {
 template <typename Dtype>
 void SGDSolver<Dtype>::ApplyUpdate() {
   Dtype rate = GetLearningRate();
+  learning_rate_ = rate;
   if (this->param_.display() && this->iter_ % this->param_.display() == 0) {
     LOG_IF(INFO, Caffe::root_solver()) << "Iteration " << this->iter_
         << ", lr = " << rate;
@@ -271,15 +273,8 @@ template <typename Dtype>
 void SGDSolver<Dtype>::SnapshotSolverStateToBinaryProto(
     const string& model_filename) {
   SolverState state;
-  state.set_iter(this->iter_);
+  SnapshotSolverState(&state);
   state.set_learned_net(model_filename);
-  state.set_current_step(this->current_step_);
-  state.clear_history();
-  for (int i = 0; i < history_.size(); ++i) {
-    // Add history
-    BlobProto* history_blob = state.add_history();
-    history_[i]->ToProto(history_blob);
-  }
   string snapshot_filename = Solver<Dtype>::SnapshotFilename(".solverstate");
   LOG(INFO)
     << "Snapshotting solver state to binary proto file " << snapshot_filename;
@@ -320,23 +315,23 @@ void SGDSolver<Dtype>::SnapshotSolverStateToHDF5(
 }
 
 template <typename Dtype>
+void SGDSolver<Dtype>::SnapshotSolverState(SolverState* state) {
+  state->set_iter(this->iter_);
+  state->set_current_step(this->current_step_);
+  state->clear_history();
+  for (int i = 0; i < history_.size(); ++i) {
+    // Add history
+    BlobProto* history_blob = state->add_history();
+    history_[i]->ToProto(history_blob);
+  }
+}
+
+template <typename Dtype>
 void SGDSolver<Dtype>::RestoreSolverStateFromBinaryProto(
     const string& state_file) {
   SolverState state;
   ReadProtoFromBinaryFile(state_file, &state);
-  this->iter_ = state.iter();
-  if (state.has_learned_net()) {
-    NetParameter net_param;
-    ReadNetParamsFromBinaryFileOrDie(state.learned_net().c_str(), &net_param);
-    this->net_->CopyTrainedLayersFrom(net_param);
-  }
-  this->current_step_ = state.current_step();
-  CHECK_EQ(state.history_size(), history_.size())
-      << "Incorrect length of history blobs.";
-  LOG(INFO) << "SGDSolver: restoring history";
-  for (int i = 0; i < history_.size(); ++i) {
-    history_[i]->FromProto(state.history(i));
-  }
+  RestoreSolverState(state);
 }
 
 template <typename Dtype>
@@ -367,6 +362,23 @@ void SGDSolver<Dtype>::RestoreSolverStateFromHDF5(const string& state_file) {
   LOG(FATAL) << "RestoreSolverStateFromHDF5 requires hdf5;"
              << " compile with USE_HDF5.";
 #endif  // USE_HDF5
+}
+
+template <typename Dtype>
+void SGDSolver<Dtype>::RestoreSolverState(const SolverState& state) {
+  this->iter_ = state.iter();
+  if (state.has_learned_net()) {
+    NetParameter net_param;
+    ReadNetParamsFromBinaryFileOrDie(state.learned_net().c_str(), &net_param);
+    this->net_->CopyTrainedLayersFrom(net_param);
+  }
+  this->current_step_ = state.current_step();
+  CHECK_EQ(state.history_size(), history_.size())
+      << "Incorrect length of history blobs.";
+  LOG(INFO) << "SGDSolver: restoring history";
+  for (int i = 0; i < history_.size(); ++i) {
+    history_[i]->FromProto(state.history(i));
+  }
 }
 
 INSTANTIATE_CLASS(SGDSolver);

@@ -18,6 +18,11 @@ void Solver<Dtype>::SetActionFunction(ActionCallback func) {
 }
 
 template<typename Dtype>
+void Solver<Dtype>::SetSnapshotFunction(SnapshotCallback func) {
+  custom_snapshot_function_ = func;
+}
+
+template<typename Dtype>
 SolverAction::Enum Solver<Dtype>::GetRequestedAction() {
   if (action_request_function_) {
     // If the external request function has been set, call it.
@@ -195,6 +200,8 @@ void Solver<Dtype>::InitTestNets() {
       LoadNetWeights(test_nets_[i], param_.weights(w_idx));
     }
   }
+  test_mean_scores_.resize(num_test_net_instances);
+  test_output_blob_indices_.resize(num_test_net_instances);
 }
 
 template <typename Dtype>
@@ -204,6 +211,7 @@ void Solver<Dtype>::Step(int iters) {
   int average_loss = this->param_.average_loss();
   losses_.clear();
   smoothed_loss_ = 0;
+  learning_rate_ = 0;
   iteration_timer_.Start();
 
   while (iter_ < stop_iter) {
@@ -284,7 +292,9 @@ void Solver<Dtype>::Step(int iters) {
 }
 
 template <typename Dtype>
-void Solver<Dtype>::Solve(const char* resume_file) {
+void Solver<Dtype>::Solve(const char* resume_file,
+                          const NetParameter* net_param,
+                          const SolverState* state) {
   CHECK(Caffe::root_solver());
   LOG(INFO) << "Solving " << net_->name();
   LOG(INFO) << "Learning Rate Policy: " << param_.lr_policy();
@@ -293,8 +303,16 @@ void Solver<Dtype>::Solve(const char* resume_file) {
   requested_early_exit_ = false;
 
   if (resume_file) {
+    if (net_param || state) {
+      LOG(WARNING) << "Using resume_file. Ignoring net_param and state.";
+    }
     LOG(INFO) << "Restoring previous solver status from " << resume_file;
     Restore(resume_file);
+  } else if (net_param || state) {
+    LOG(INFO) << "Restoring previous solver status";
+    LOG_IF(FATAL, !net_param) << "Cannot proceed without net_param";
+    LOG_IF(FATAL, !state) << "Cannot proceed without state";
+    Restore(*net_param, *state);
   }
 
   // For a network that is trained by the solver, no bottom or top vecs
@@ -400,6 +418,8 @@ void Solver<Dtype>::Test(const int test_net_id) {
     loss /= param_.test_iter(test_net_id);
     LOG(INFO) << "Test loss: " << loss;
   }
+  test_mean_scores_[test_net_id].resize(test_score.size());
+  test_output_blob_indices_[test_net_id].resize(test_score.size());
   for (int i = 0; i < test_score.size(); ++i) {
     const int output_blob_index =
         test_net->output_blob_indices()[test_score_output_id[i]];
@@ -413,12 +433,24 @@ void Solver<Dtype>::Test(const int test_net_id) {
     }
     LOG(INFO) << "    Test net output #" << i << ": " << output_name << " = "
               << mean_score << loss_msg_stream.str();
+    test_mean_scores_[test_net_id][i] = mean_score;
+    test_output_blob_indices_[test_net_id][i] = output_blob_index;
   }
 }
 
 template <typename Dtype>
 void Solver<Dtype>::Snapshot() {
   CHECK(Caffe::root_solver());
+  if (custom_snapshot_function_) {
+    // If a custom function has been set, call it.
+    custom_snapshot_function_();
+    if (param_.snapshot_format() ==
+        caffe::SolverParameter_SnapshotFormat_NONE) {
+      // We are replacing standard snapshotting.
+      return;
+    }
+    // We are extending standard snapshotting.
+  }
   string model_filename;
   switch (param_.snapshot_format()) {
   case caffe::SolverParameter_SnapshotFormat_BINARYPROTO:
@@ -435,8 +467,18 @@ void Solver<Dtype>::Snapshot() {
 }
 
 template <typename Dtype>
+void Solver<Dtype>::Snapshot(NetParameter* net_param, SolverState* state) {
+  CHECK_NOTNULL(net_param);
+  net_->ToProto(net_param, param_.snapshot_diff());
+  if (state) {
+    SnapshotSolverState(state);
+  }
+}
+
+template <typename Dtype>
 void Solver<Dtype>::CheckSnapshotWritePermissions() {
-  if (Caffe::root_solver() && param_.snapshot()) {
+  if (Caffe::root_solver() && param_.snapshot() && param_.snapshot_format() !=
+      caffe::SolverParameter_SnapshotFormat_NONE) {
     CHECK(param_.has_snapshot_prefix())
         << "In solver params, snapshot is specified but snapshot_prefix is not";
     string probe_filename = SnapshotFilename(".tempfile");
@@ -453,7 +495,7 @@ void Solver<Dtype>::CheckSnapshotWritePermissions() {
 }
 
 template <typename Dtype>
-string Solver<Dtype>::SnapshotFilename(const string& extension) {
+string Solver<Dtype>::SnapshotFilename(const string& extension) const {
   return param_.snapshot_prefix() + "_iter_" + caffe::format_int(iter_)
     + extension;
 }
@@ -485,6 +527,13 @@ void Solver<Dtype>::Restore(const char* state_file) {
   } else {
     RestoreSolverStateFromBinaryProto(state_filename);
   }
+}
+
+template <typename Dtype>
+void Solver<Dtype>::Restore(const NetParameter& net_param,
+                            const SolverState& state) {
+  net_->CopyTrainedLayersFrom(net_param);
+  RestoreSolverState(state);
 }
 
 template <typename Dtype>
