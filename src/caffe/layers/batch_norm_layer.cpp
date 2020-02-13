@@ -136,12 +136,12 @@ void BatchNormLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 
     // compute and save moving average
     this->blobs_[2]->mutable_cpu_data()[0] *= moving_average_fraction_;
-    this->blobs_[2]->mutable_cpu_data()[0] += 1;
-    caffe_cpu_axpby(mean_.count(), Dtype(1), mean_.cpu_data(),
+    this->blobs_[2]->mutable_cpu_data()[0] += Dtype(num);
+    caffe_cpu_axpby(mean_.count(), Dtype(num), mean_.cpu_data(),
         moving_average_fraction_, this->blobs_[0]->mutable_cpu_data());
     int m = bottom[0]->count()/channels_;
     Dtype bias_correction_factor = m > 1 ? Dtype(m)/(m-1) : 1;
-    caffe_cpu_axpby(variance_.count(), bias_correction_factor,
+    caffe_cpu_axpby(variance_.count(), bias_correction_factor * Dtype(num),
         variance_.cpu_data(), moving_average_fraction_,
         this->blobs_[1]->mutable_cpu_data());
   }
