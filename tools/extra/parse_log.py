@@ -95,7 +95,12 @@ def parse_line_for_net_output(regex_obj, row, row_dict_list,
 
     output_match = regex_obj.search(line)
     if output_match:
-        if not row or row['NumIters'] != iteration:
+        # output_num is not used; may be used in the future
+        # output_num = output_match.group(1)
+        output_name = output_match.group(2)
+        output_val = output_match.group(3)
+
+        if not row or output_name in row:
             # Push the last row and start a new one
             if row:
                 # If we're on a new iteration, push the last row
@@ -110,10 +115,6 @@ def parse_line_for_net_output(regex_obj, row, row_dict_list,
                 ('LearningRate', learning_rate)
             ])
 
-        # output_num is not used; may be used in the future
-        # output_num = output_match.group(1)
-        output_name = output_match.group(2)
-        output_val = output_match.group(3)
         row[output_name] = float(output_val)
 
     if row and len(row_dict_list) >= 1 and len(row) == len(row_dict_list[0]):
