@@ -94,9 +94,12 @@ int main(int argc, char** argv) {
   int resize_height = std::max<int>(0, FLAGS_resize_height);
   int resize_width = std::max<int>(0, FLAGS_resize_width);
 
-  // Create new DB
+  // Create new DB or open an existing one
   scoped_ptr<db::DB> db(db::GetDB(FLAGS_backend));
-  db->Open(argv[3], db::NEW);
+  if (std::ifstream(argv[3]))
+    db->Open(argv[3], db::WRITE);
+  else
+    db->Open(argv[3], db::NEW);
   scoped_ptr<db::Transaction> txn(db->NewTransaction());
 
   // Storing to db
