@@ -7,7 +7,8 @@
 # CPU-only switch (uncomment to build without GPU support).
 # CPU_ONLY := 1
 
-# uncomment to disable IO dependencies and corresponding data layers
+# Uncomment to disable IO dependencies and corresponding data layers.
+# If "Attempt to free invalid pointer" problem happen on Mac OS X, try to re-build without LevelDB.
 # USE_OPENCV := 0
 # USE_LEVELDB := 0
 # USE_LMDB := 0
