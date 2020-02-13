@@ -12,8 +12,15 @@
 
 namespace caffe {
 
-// Caffe gemm provides a simpler interface to the gemm functions, with the
-// limitation that the data has to be contiguous in memory.
+/**
+ * @brief GEneral Matrix to Matrix Multiplication.
+ *        Caffe gemm provides a simpler interface to the gemm functions, with the
+ *        limitation that the data has to be contiguous in memory.
+ *
+ *
+ * C := alpha*op(A)*op(B) + beta*C
+ * See https://software.intel.com/en-us/node/468480
+ */
 template <typename Dtype>
 void caffe_cpu_gemm(const CBLAS_TRANSPOSE TransA,
     const CBLAS_TRANSPOSE TransB, const int M, const int N, const int K,
@@ -147,9 +154,19 @@ void caffe_cpu_scale(const int n, const Dtype alpha, const Dtype *x, Dtype* y);
 
 #ifndef CPU_ONLY  // GPU
 
-// Decaf gpu gemm provides an interface that is almost the same as the cpu
-// gemm function - following the c convention and calling the fortran-order
-// gpu code under the hood.
+/**
+ * @brief GEneral Matrix to Matrix Multiplication
+ *        Caffe gemm provides a simpler interface to the gemm functions, with the
+ *        limitation that the data has to be contiguous in memory.
+ *
+ *
+ * Decaf gpu gemm provides an interface that is almost the same as the cpu
+ * gemm function - following the c convention and calling the fortran-order
+ * gpu code under the hood.
+ *
+ *
+ * See https://software.intel.com/en-us/node/468480
+ */
 template <typename Dtype>
 void caffe_gpu_gemm(const CBLAS_TRANSPOSE TransA,
     const CBLAS_TRANSPOSE TransB, const int M, const int N, const int K,
@@ -171,9 +188,11 @@ void caffe_gpu_axpby(const int N, const Dtype alpha, const Dtype* X,
 
 void caffe_gpu_memcpy(const size_t N, const void *X, void *Y);
 
+/**
+ * See http://www.cplusplus.com/reference/cstring/memset/
+ */
 template <typename Dtype>
 void caffe_gpu_set(const int N, const Dtype alpha, Dtype *X);
-
 inline void caffe_gpu_memset(const size_t N, const int alpha, void* X) {
 #ifndef CPU_ONLY
   CUDA_CHECK(cudaMemset(X, alpha, N));  // NOLINT(caffe/alt_fn)
