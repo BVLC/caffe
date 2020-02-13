@@ -56,10 +56,7 @@ class SolverRegistry {
   typedef Solver<Dtype>* (*Creator)(const SolverParameter&);
   typedef std::map<string, Creator> CreatorRegistry;
 
-  static CreatorRegistry& Registry() {
-    static CreatorRegistry* g_registry_ = new CreatorRegistry();
-    return *g_registry_;
-  }
+  static CreatorRegistry& Registry();
 
   // Adds a creator.
   static void AddCreator(const string& type, Creator creator) {

@@ -58,10 +58,7 @@ class LayerRegistry {
   typedef shared_ptr<Layer<Dtype> > (*Creator)(const LayerParameter&);
   typedef std::map<string, Creator> CreatorRegistry;
 
-  static CreatorRegistry& Registry() {
-    static CreatorRegistry* g_registry_ = new CreatorRegistry();
-    return *g_registry_;
-  }
+  static CreatorRegistry& Registry();
 
   // Adds a creator.
   static void AddCreator(const string& type, Creator creator) {
