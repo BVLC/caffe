@@ -185,3 +185,62 @@ notebook:
 
     ipython notebook ./examples/siamese/mnist_siamese.ipynb
 
+
+# Creating siamese dataset from a set of images
+
+It is possible to create a siamese database from a set of images and a text 
+file with pairs.
+
+## creating imageset from mnist data file
+
+As an example a set of images can be made from the mnist data file by running 
+`./examples/siamese/create_siamese_images_from_mnist.sh`:
+
+    ./examples/siamese/create_siamese_images_from_mnist.sh
+
+This will make two folders test_images and train_images, both containing labeled 
+folders with images. Further a text file `siamese_set.txt`. This file contains 
+the pairs and the similarity label.
+
+## creating siamese database from an imageset
+
+To create a siamese database from an imageset one needs a text file describing 
+the image pairs line by line in this format:
+    [path_to_image_1] [path_to_image_2] [similarity_label]
+
+To convert this into a database run
+`./examples/siamese/create_siamese_from_imageset.sh`:
+
+    ./examples/siamese/create_siamese_from_imageset.sh
+
+This script takes the text files
+`./examples/siamese/train_image/siamese_set.txt` and 
+`./examples/siamese/test_images/siamese_set.txt` to create the databases.
+
+After running the script there should be two datasets,
+`./examples/siamese/imageset_siamese_train_leveldb` and
+`./examples/siamese/imageset_siamese_test_leveldb`.
+
+Note: be aware that for this to work on the mnist dataset, the images had to be 
+converted into unsigned values before storing. Threfore the executable 
+`convert_imageset_siamese_data.bin` takes in a third parameter describing whether
+the images have to be converted back into signed values. Set this to `0` for 
+natural (unsigned) images and `1` for images with signed values.
+
+# Running siamese database from an imageset
+
+## Define the Solver
+
+This has been coppied from the mnist solver and nothing special needs to be done 
+to the solver besides pointing it at the correct model file. The solver is defined in
+`./examples/siamese/imageset_siamese_solver.prototxt`.
+
+## Training and Testing the Model
+
+This has been coppied from the mnist solver and training the model is simple after 
+you have written the network definition protobuf and solver protobuf files. Simply run
+`./examples/siamese/train_imageset_siamese.sh`:
+
+    ./examples/siamese/train_imageset_siamese.sh
+
+
