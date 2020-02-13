@@ -67,6 +67,6 @@ elseif(build_using MATCHES "Octave")
 endif()
 
 # ---[ Install
-file(GLOB mfiles caffe/*.m)
-install(FILES ${mfiles} ${Matlab_caffe_mex} DESTINATION matlab)
+install(FILES ${Matlab_caffe_mex} DESTINATION matlab/+caffe/private)
 
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/ DESTINATION matlab/ FILES_MATCHING PATTERN "*.m")
