@@ -26,14 +26,21 @@ list(REMOVE_ITEM LINT_SOURCES ${EXCLUDED_FILES})
 
 execute_process(
     COMMAND ${LINT_COMMAND} ${LINT_SOURCES}
-    ERROR_VARIABLE LINT_OUTPUT
+    ERROR_VARIABLE LINT_OUTPUT_RAW
     ERROR_STRIP_TRAILING_WHITESPACE
 )
 
-string(REPLACE "\n" ";" LINT_OUTPUT ${LINT_OUTPUT})
+string(REPLACE "\n" ";" LINT_OUTPUT ${LINT_OUTPUT_RAW})
 
 list(GET LINT_OUTPUT -1 LINT_RESULT)
 list(REMOVE_AT LINT_OUTPUT -1)
+
+string(REGEX MATCH " *Total errors found: [0-9]+.*" LINT_RESULT ${LINT_RESULT})
+if("${LINT_RESULT}" STREQUAL "")
+    message(STATUS ${LINT_OUTPUT_RAW})
+    message(FATAL_ERROR "Failed to run Lint!")
+endif()
+
 string(REPLACE " " ";" LINT_RESULT ${LINT_RESULT})
 list(GET LINT_RESULT -1 NUM_ERRORS)
 if(NUM_ERRORS GREATER 0)
@@ -47,4 +54,3 @@ if(NUM_ERRORS GREATER 0)
 else()
     message(STATUS "Lint did not find any errors!")
 endif()
-
