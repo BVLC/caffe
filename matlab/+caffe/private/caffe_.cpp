@@ -56,8 +56,25 @@ enum WhichMemory { DATA, DIFF };
 // Copy matlab array to Blob data or diff
 static void mx_mat_to_blob(const mxArray* mx_mat, Blob<float>* blob,
     WhichMemory data_or_diff) {
-  mxCHECK(blob->count() == mxGetNumberOfElements(mx_mat),
-      "number of elements in target blob doesn't match that in input mxArray");
+  // Reshape blob dims to match matlab data if needed
+  if (mxGetNumberOfElements(mx_mat) != blob->count()) {
+    const mwSize* dims = mxGetDimensions(mx_mat);
+    const mwSize num_dims = mxGetNumberOfDimensions(mx_mat);
+    const int input_dims = blob->shape().size();
+    const int pad = input_dims - num_dims;
+    vector<int> shape(input_dims);
+    // In matlab, you cannot have trailing singleton dimensions
+    // So an input batch of size 1 (W x H x C x 1) will come in with 3 dims
+    // like (W x H x C). Therefore, we need to pad with singleton dims.
+    for (int d = 0; d < pad; ++d) {
+      shape[d] = 1;
+    }
+    for (int d = pad; d < input_dims; ++d) {
+      shape[d] = dims[num_dims - (d - pad) - 1];
+    }
+    blob->Reshape(shape);
+  }
+
   const float* mat_mem_ptr = reinterpret_cast<const float*>(mxGetData(mx_mat));
   float* blob_mem_ptr = NULL;
   switch (Caffe::mode()) {
