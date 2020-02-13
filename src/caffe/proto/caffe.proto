@@ -322,7 +322,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 149 (last added: clip_param)
+// LayerParameter next available layer-specific ID: 150 (last added: pad_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -402,6 +402,7 @@ message LayerParameter {
   optional LRNParameter lrn_param = 118;
   optional MemoryDataParameter memory_data_param = 119;
   optional MVNParameter mvn_param = 120;
+  optional PadParameter pad_param = 149;
   optional ParameterParameter parameter_param = 145;
   optional PoolingParameter pooling_param = 121;
   optional PowerParameter power_param = 122;
@@ -910,6 +911,28 @@ message MVNParameter {
 
   // Epsilon for not dividing by zero while normalizing variance
   optional float eps = 3 [default = 1e-9];
+}
+
+message PadParameter {
+  // To pad, the bottom blob is copied to the middle of the top blob, which is
+  // larger on all four sides (ignoring dimensions before the last two) by the
+  // pad width. Those surrounding elements are set to some value, determined by
+  // the padtype. The restriction to the last two dimensions was for simplicity.
+  // Lifting that is a future project. Another generalization would be to allow
+  // the pad width to depend on the side of the image.
+  // The pad is configured by
+  // - `padtype` to choose how the padding is done
+  // - `pad` to set the width of the padding. It's the same for all four sides.
+  enum PadType {
+    ZERO = 0;
+    REPLICATE = 1;
+    REFLECT = 2;
+    REFLECT_101 = 3;
+    // ODD = 4;
+    // ODD_101 = 5;
+  }
+  optional PadType type = 1 [default = ZERO]; // The padding method
+  optional uint32 pad = 2 [default = 0]; // Width of padding
 }
 
 message ParameterParameter {
