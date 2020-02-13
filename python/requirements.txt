@@ -9,6 +9,7 @@ leveldb>=0.191
 networkx>=1.8.1
 nose>=1.3.0
 pandas>=0.12.0
+pydot>=1.2.3
 python-dateutil>=1.4,<2
 protobuf>=2.5.0
 python-gflags>=2.0
