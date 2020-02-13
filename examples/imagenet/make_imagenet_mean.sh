@@ -4,7 +4,14 @@
 
 EXAMPLE=examples/imagenet
 DATA=data/ilsvrc12
-TOOLS=build/tools
+
+# Check if CAFFE_BIN is unset
+if [ -z "$CAFFE_BIN" ]; then
+  TOOLS=./build/tools
+else
+  TOOLS=$CAFFE_BIN
+fi
+
 
 $TOOLS/compute_image_mean $EXAMPLE/ilsvrc12_train_lmdb \
   $DATA/imagenet_mean.binaryproto
