@@ -11,7 +11,8 @@
 #include <Accelerate/Accelerate.h>
 #else
 extern "C" {
-#include <cblas.h>
+//#include <cblas.h>	// no cblas.h in latest MKL Linux release
+#include <mkl.h>	// include mkl.h, instead
 }
 #endif  // USE_ACCELERATE
 
