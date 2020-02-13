@@ -340,5 +340,42 @@ TYPED_TEST(DataTransformTest, TestMeanFile) {
   }
 }
 
+TYPED_TEST(DataTransformTest, TestScaleFile) {
+  TransformationParameter transform_param;
+  const bool unique_pixels = true;  // pixels are consecutive ints [0,size]
+  const int label = 0;
+  const int channels = 3;
+  const int height = 4;
+  const int width = 5;
+  const int size = channels * height * width;
+
+  // Create a scale file
+  string scale_file;
+  MakeTempFilename(&scale_file);
+  BlobProto blob_scale;
+  blob_scale.set_num(1);
+  blob_scale.set_channels(channels);
+  blob_scale.set_height(height);
+  blob_scale.set_width(width);
+
+  for (int j = 0; j < size; ++j) {
+      blob_scale.add_data(j);
+  }
+
+  LOG(INFO) << "Using temporary scale_file " << scale_file;
+  WriteProtoToBinaryFile(blob_scale, scale_file);
+
+  transform_param.set_scale_file(scale_file);
+  Datum datum;
+  FillDatum(label, channels, height, width, unique_pixels, &datum);
+  Blob<TypeParam> blob(1, channels, height, width);
+  DataTransformer<TypeParam> transformer(transform_param, TEST);
+  transformer.InitRand();
+  transformer.Transform(datum, &blob);
+  for (int j = 0; j < blob.count(); ++j) {
+    EXPECT_EQ(blob.cpu_data()[j], j * j);
+  }
+}
+
 }  // namespace caffe
 #endif  // USE_OPENCV

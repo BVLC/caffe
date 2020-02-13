@@ -430,6 +430,8 @@ message TransformationParameter {
   // data mean, if provided. Note that the mean subtraction is always carried
   // out before scaling.
   optional float scale = 1 [default = 1];
+  // scale_file and scale cannot be specified at the same time
+  optional string scale_file = 8;
   // Specify if we want to randomly mirror data.
   optional bool mirror = 2 [default = false];
   // Specify if we would like to randomly crop an image.

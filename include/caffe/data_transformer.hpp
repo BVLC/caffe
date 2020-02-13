@@ -146,6 +146,7 @@ class DataTransformer {
   shared_ptr<Caffe::RNG> rng_;
   Phase phase_;
   Blob<Dtype> data_mean_;
+  Blob<Dtype> data_scale_;
   vector<Dtype> mean_values_;
 };
 
