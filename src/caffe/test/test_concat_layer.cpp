@@ -21,6 +21,8 @@ class ConcatLayerTest : public MultiDeviceTest<TypeParam> {
       : blob_bottom_0_(new Blob<Dtype>(2, 3, 6, 5)),
         blob_bottom_1_(new Blob<Dtype>(2, 5, 6, 5)),
         blob_bottom_2_(new Blob<Dtype>(5, 3, 6, 5)),
+        blob_bottom_3_(new Blob<Dtype>(0, 3, 6, 5)),
+        blob_bottom_4_(new Blob<Dtype>(2, 0, 6, 5)),
         blob_top_(new Blob<Dtype>()) {}
   virtual void SetUp() {
     // fill the values
@@ -37,19 +39,26 @@ class ConcatLayerTest : public MultiDeviceTest<TypeParam> {
     filler->Fill(this->blob_bottom_2_);
     blob_bottom_vec_0_.push_back(blob_bottom_0_);
     blob_bottom_vec_0_.push_back(blob_bottom_1_);
+    blob_bottom_vec_0_.push_back(blob_bottom_4_);
+
     blob_bottom_vec_1_.push_back(blob_bottom_0_);
     blob_bottom_vec_1_.push_back(blob_bottom_2_);
+    blob_bottom_vec_1_.push_back(blob_bottom_3_);
+
     blob_top_vec_.push_back(blob_top_);
   }
 
   virtual ~ConcatLayerTest() {
     delete blob_bottom_0_; delete blob_bottom_1_;
     delete blob_bottom_2_; delete blob_top_;
+    delete blob_bottom_3_; delete blob_bottom_4_;
   }
 
   Blob<Dtype>* const blob_bottom_0_;
   Blob<Dtype>* const blob_bottom_1_;
   Blob<Dtype>* const blob_bottom_2_;
+  Blob<Dtype>* const blob_bottom_3_;
+  Blob<Dtype>* const blob_bottom_4_;
   Blob<Dtype>* const blob_top_;
   vector<Blob<Dtype>*> blob_bottom_vec_0_, blob_bottom_vec_1_;
   vector<Blob<Dtype>*> blob_top_vec_;
