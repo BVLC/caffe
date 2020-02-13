@@ -19,7 +19,7 @@
 #	possibility of simultaneous read and write
 # ALLOW_LMDB_NOLOCK := 1
 
-# Uncomment if you're using OpenCV 3
+# Uncomment and set accordingly if you're using OpenCV 3/4
 # OPENCV_VERSION := 3
 
 # To customize your choice of compiler, uncomment and set the following.
