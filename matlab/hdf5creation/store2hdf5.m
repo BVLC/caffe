@@ -30,17 +30,19 @@ function [curr_dat_sz, curr_lab_sz] = store2hdf5(filename, data, labels, create,
     end      
     h5create(filename, '/data', [dat_dims(1:end-1) Inf], 'Datatype', 'single', 'ChunkSize', [dat_dims(1:end-1) chunksz]); % width, height, channels, number 
     h5create(filename, '/label', [lab_dims(1:end-1) Inf], 'Datatype', 'single', 'ChunkSize', [lab_dims(1:end-1) chunksz]); % width, height, channels, number 
-    if ~exist('startloc','var') 
+    if exist('startloc','var')  %Removed ~
+      %%startloc=struct('dat',[],'lab',[]); %%suitable for 2015 and later 
       startloc.dat=[ones(1,length(dat_dims)-1), 1];
       startloc.lab=[ones(1,length(lab_dims)-1), 1];
     end 
   else  % append mode
-    if ~exist('startloc','var')
+    if exist('startloc','var')  %Removed ~
       info=h5info(filename);
       prev_dat_sz=info.Datasets(1).Dataspace.Size;
       prev_lab_sz=info.Datasets(2).Dataspace.Size;
       assert(all(prev_dat_sz(1:end-1)==dat_dims(1:end-1)), 'Data dimensions must match existing dimensions in dataset');
       assert(all(prev_lab_sz(1:end-1)==lab_dims(1:end-1)), 'Label dimensions must match existing dimensions in dataset');
+      %%startloc=struct('dat',[],'lab',[]); %%suitable for 2015 and later 
       startloc.dat=[ones(1,length(dat_dims)-1), prev_dat_sz(end)+1];
       startloc.lab=[ones(1,length(lab_dims)-1), prev_lab_sz(end)+1];
     end
