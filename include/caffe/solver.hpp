@@ -80,6 +80,10 @@ class Solver {
     virtual void on_start() = 0;
     virtual void on_gradients_ready() = 0;
 
+    virtual void on_test_start(int test_net_id) {}
+    virtual void on_test_end(int test_net_id) {}
+    virtual void on_test_iter_start(int test_net_id, int iter) {}
+
     template <typename T>
     friend class Solver;
   };
