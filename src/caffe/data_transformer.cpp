@@ -36,6 +36,30 @@ DataTransformer<Dtype>::DataTransformer(const TransformationParameter& param,
       mean_values_.push_back(param_.mean_value(c));
     }
   }
+  // check if we want to use sd_file
+  if (param_.has_sd_file()) {
+    CHECK_EQ(param_.sd_value_size(), 0)
+      << "Cannot specify sd_file and sd_value at the same time";
+    CHECK(param_.has_mean_file())
+      << "mean_file is required for standardization";
+    const string& sd_file = param.sd_file();
+    if (Caffe::root_solver()) {
+      LOG(INFO) << "Loading sd file from: " << sd_file;
+    }
+    BlobProto blob_proto;
+    ReadProtoFromBinaryFileOrDie(sd_file.c_str(), &blob_proto);
+    data_sd_.FromProto(blob_proto);
+  }
+  // check if we want to use sd_value
+  if (param_.sd_value_size() > 0) {
+    CHECK(param_.has_sd_file() == false)
+      << "Cannot specify sd_file and sd_value at the same time";
+    CHECK_GT(param_.mean_value_size(), 0)
+      << "mean_value is required for standardization";
+    for (int c = 0; c < param_.sd_value_size(); ++c) {
+      sd_values_.push_back(param_.sd_value(c));
+    }
+  }
 }
 
 template<typename Dtype>
@@ -52,6 +76,8 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
   const bool has_mean_file = param_.has_mean_file();
   const bool has_uint8 = data.size() > 0;
   const bool has_mean_values = mean_values_.size() > 0;
+  const bool has_sd_file = param_.has_sd_file();
+  const bool has_sd_values = sd_values_.size() > 0;
 
   CHECK_GT(datum_channels, 0);
   CHECK_GE(datum_height, crop_size);
@@ -71,6 +97,23 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
       // Replicate the mean_value for simplicity
       for (int c = 1; c < datum_channels; ++c) {
         mean_values_.push_back(mean_values_[0]);
+      }
+    }
+  }
+
+  const Dtype* sd = NULL;
+  if (has_sd_file) {
+    CHECK_EQ(datum_channels, data_sd_.channels());
+    CHECK_EQ(datum_height, data_sd_.height());
+    CHECK_EQ(datum_width, data_sd_.width());
+    sd = data_sd_.cpu_data();
+  }
+  if (has_sd_values) {
+    CHECK(sd_values_.size() == 1 || sd_values_.size() == datum_channels)
+      << "Specify either 1 sd_value or as many as channels: " << datum_channels;
+    if (datum_channels > 1 && sd_values_.size() == 1) {
+      for (int c = 1; c < datum_channels; ++c) {
+        sd_values_.push_back(sd_values_[0]);
       }
     }
   }
@@ -111,12 +154,22 @@ void DataTransformer<Dtype>::Transform(const Datum& datum,
           datum_element = datum.float_data(data_index);
         }
         if (has_mean_file) {
-          transformed_data[top_index] =
-            (datum_element - mean[data_index]) * scale;
+          if (has_sd_file) {
+            transformed_data[top_index] =
+              (datum_element - mean[data_index]) / sd[data_index] * scale;
+          } else {
+            transformed_data[top_index] =
+              (datum_element - mean[data_index]) * scale;
+          }
         } else {
           if (has_mean_values) {
-            transformed_data[top_index] =
-              (datum_element - mean_values_[c]) * scale;
+            if (has_sd_values) {
+              transformed_data[top_index] =
+                (datum_element - mean_values_[c]) / sd_values_[c] * scale;
+            } else {
+              transformed_data[top_index] =
+                (datum_element - mean_values_[c]) * scale;
+            }
           } else {
             transformed_data[top_index] = datum_element * scale;
           }
@@ -247,6 +300,8 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
   const bool do_mirror = param_.mirror() && Rand(2);
   const bool has_mean_file = param_.has_mean_file();
   const bool has_mean_values = mean_values_.size() > 0;
+  const bool has_sd_file = param_.has_sd_file();
+  const bool has_sd_values = sd_values_.size() > 0;
 
   CHECK_GT(img_channels, 0);
   CHECK_GE(img_height, crop_size);
@@ -266,6 +321,23 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
       // Replicate the mean_value for simplicity
       for (int c = 1; c < img_channels; ++c) {
         mean_values_.push_back(mean_values_[0]);
+      }
+    }
+  }
+
+  const Dtype* sd = NULL;
+  if (has_sd_file) {
+    CHECK_EQ(img_channels, data_sd_.channels());
+    CHECK_EQ(img_height, data_sd_.height());
+    CHECK_EQ(img_width, data_sd_.width());
+    sd = data_sd_.cpu_data();
+  }
+  if (has_sd_values) {
+    CHECK(sd_values_.size() == 1 || sd_values_.size() == img_channels)
+      << "Specify either 1 sd_value or as many as channels: " << img_channels;
+    if (img_channels > 1 && sd_values_.size() == 1) {
+      for (int c = 1; c < img_channels; ++c) {
+        sd_values_.push_back(sd_values_[0]);
       }
     }
   }
@@ -309,12 +381,22 @@ void DataTransformer<Dtype>::Transform(const cv::Mat& cv_img,
         Dtype pixel = static_cast<Dtype>(ptr[img_index++]);
         if (has_mean_file) {
           int mean_index = (c * img_height + h_off + h) * img_width + w_off + w;
-          transformed_data[top_index] =
-            (pixel - mean[mean_index]) * scale;
+          if (has_sd_file) {
+            transformed_data[top_index] =
+              (pixel - mean[mean_index]) / sd[mean_index] * scale;
+          } else {
+            transformed_data[top_index] =
+              (pixel - mean[mean_index]) * scale;
+          }
         } else {
           if (has_mean_values) {
-            transformed_data[top_index] =
-              (pixel - mean_values_[c]) * scale;
+            if (has_sd_values) {
+              transformed_data[top_index] =
+                (pixel - mean_values_[c]) / sd_values_[c] * scale;
+            } else {
+              transformed_data[top_index] =
+                (pixel - mean_values_[c]) * scale;
+            }
           } else {
             transformed_data[top_index] = pixel * scale;
           }
@@ -361,6 +443,8 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
   const bool do_mirror = param_.mirror() && Rand(2);
   const bool has_mean_file = param_.has_mean_file();
   const bool has_mean_values = mean_values_.size() > 0;
+  const bool has_sd_file = param_.has_sd_file();
+  const bool has_sd_values = sd_values_.size() > 0;
 
   int h_off = 0;
   int w_off = 0;
@@ -403,6 +487,32 @@ void DataTransformer<Dtype>::Transform(Blob<Dtype>* input_blob,
           int offset = input_blob->offset(n, c);
           caffe_add_scalar(input_height * input_width, -(mean_values_[c]),
             input_data + offset);
+        }
+      }
+    }
+  }
+
+  if (has_sd_file) {
+    CHECK_EQ(input_channels, data_sd_.channels());
+    CHECK_EQ(input_height, data_sd_.height());
+    CHECK_EQ(input_width, data_sd_.width());
+    for (int n = 0; n < input_num; ++n) {
+      int offset = input_blob->offset(n);
+      caffe_div(data_sd_.count(), input_data + offset,
+                data_sd_.cpu_data(), input_data + offset);
+    }
+  }
+  if (has_sd_values) {
+    CHECK(sd_values_.size() == 1 || sd_values_.size() == input_channels)
+      << "Specify either 1 sd_value or as many as channels: " << input_channels;
+    if (sd_values_.size() == 1) {
+      caffe_scal(input_blob->count(), Dtype(1.0 / sd_values_[0]), input_data);
+    } else {
+      for (int n = 0; n < input_num; ++n) {
+        for (int c = 0; c < input_channels; ++c) {
+          int offset = input_blob->offset(n, c);
+          caffe_scal(input_height * input_width, Dtype(1.0 / sd_values_[c]),
+                     input_data + offset);
         }
       }
     }

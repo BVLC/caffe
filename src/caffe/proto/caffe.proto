@@ -444,6 +444,14 @@ message TransformationParameter {
   optional bool force_color = 6 [default = false];
   // Force the decoded image to have 1 color channels.
   optional bool force_gray = 7 [default = false];
+  // sd_file is used to normalize the image by per pixel standard deviation after 
+  // subtraction of the mean_image
+  optional string sd_file = 8;
+  // if specified can be repeated once (would standardize all channels using 
+  // one standard deviation for all channels) or can be repeated the same 
+  // number of times as channels (each sd_value would be used to standardize
+  // the corresponding channel)
+  repeated float sd_value = 9;
 }
 
 // Message that stores parameters shared by loss layers
