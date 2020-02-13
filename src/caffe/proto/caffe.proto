@@ -247,7 +247,7 @@ message SolverParameter {
   optional bool layer_wise_reduce = 41 [default = true];
 
   // Path to caffemodel file(s) with pretrained weights to initialize finetuning.
-  // Tha same as command line --weights parameter for caffe train command.
+  // The same as command line --weights parameter for caffe train command.
   // If command line --weights parameter is specified, it has higher priority
   // and overwrites this one(s).
   // If --snapshot command line parameter is specified, this one(s) are ignored.
