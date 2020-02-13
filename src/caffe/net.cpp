@@ -690,7 +690,7 @@ void Net<Dtype>::ShareTrainedLayersWith(const Net* other) {
           << source_layer_name << "'; shape mismatch.  Source param shape is "
           << source_blob->shape_string() << "; target param shape is "
           << target_blobs[j]->shape_string();
-      target_blobs[j]->ShareData(*source_blob);
+      target_blobs[j]->CopyFrom(*source_blob, false, false);
     }
   }
 }
