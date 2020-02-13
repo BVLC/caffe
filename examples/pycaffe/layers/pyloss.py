@@ -34,4 +34,4 @@ class EuclideanLossLayer(caffe.Layer):
                 sign = 1
             else:
                 sign = -1
-            bottom[i].diff[...] = sign * self.diff / bottom[i].num
+            bottom[i].diff[...] = sign * top[0].diff[0] * self.diff / bottom[i].num
