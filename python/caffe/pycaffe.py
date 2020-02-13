@@ -102,6 +102,13 @@ def _Net_forward(self, blobs=None, start=None, end=None, **kwargs):
     Returns
     -------
     outs : {blob name: blob ndarray} dict.
+
+    Raises
+    ------
+    TypeError
+        - If the keyword arguments do not match the net's expected inputs.
+        - If the size of the provided input does not match the net's expected
+          batch size.
     """
     if blobs is None:
         blobs = []
@@ -119,8 +126,12 @@ def _Net_forward(self, blobs=None, start=None, end=None, **kwargs):
         outputs = set(self.outputs + blobs)
 
     if kwargs:
-        if set(kwargs.keys()) != set(self.inputs):
-            raise Exception('Input blob arguments do not match net inputs.')
+        expected_inputs = set(self.inputs)
+        received_inputs = set(kwargs.keys())
+        if expected_inputs != received_inputs:
+            raise TypeError(('Input blob arguments do not match net inputs. '
+                             'Expected: {}, Received: {}').format(
+                                 list(expected_inputs), list(received_inputs)))
         # Set input according to defined shapes and make arrays single and
         # C-contiguous as Caffe expects.
         for in_, blob in six.iteritems(kwargs):
