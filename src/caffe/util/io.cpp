@@ -131,6 +131,9 @@ bool ReadImageToDatum(const string& filename, const int label,
                       buf.size()));
       datum->set_label(label);
       datum->set_encoded(true);
+      datum->set_channels(cv_img.channels());
+      datum->set_height(cv_img.rows);
+      datum->set_width(cv_img.cols);
       return true;
     }
     CVMatToDatum(cv_img, datum);
