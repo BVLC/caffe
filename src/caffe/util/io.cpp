@@ -234,5 +234,80 @@ void CVMatToDatum(const cv::Mat& cv_img, Datum* datum) {
   }
   datum->set_data(buffer);
 }
+
+template<int channels>
+cv::Mat DatumToCVMat(const Datum& datum) {
+  if (datum.encoded()) {
+    bool is_color = datum.channels() == 3;
+    return DecodeDatumToCVMat(datum, is_color);
+  } else {
+    int datum_channels = datum.channels();
+    int datum_height = datum.height();
+    int datum_width = datum.width();
+    cv::Mat img = cv::Mat(datum_height, datum_width,
+                          CV_MAKETYPE(CV_8U, channels),
+                          cv::Scalar(-1));
+    int datum_index = 0;
+    for (int h = 0; h < datum_height; h++) {
+      for (int w = 0; w < datum_width; w++) {
+        for (int c = 0; c < datum_channels; c++) {
+          datum_index = (c * datum_height + h) * datum_width + w;
+          img.at<cv::Vec<uchar, channels> >(h, w)[c] =
+            static_cast<uchar>(datum.data().at(datum_index));
+        }
+      }
+    }
+    return img;
+  }
+}
+
+template cv::Mat DatumToCVMat<1>(const Datum& datum);
+template cv::Mat DatumToCVMat<3>(const Datum& datum);
+
+template <typename Dtype, int channels>
+cv::Mat BlobToCVMat(Blob<Dtype> *blob, int num) {
+  CHECK(blob->channels() == channels)
+      << "Blob does not have correct number of channels";
+  cv::Mat img = cv::Mat(blob->height(), blob->width(),
+      CV_MAKETYPE(cv::DataDepth<Dtype>::value, channels));
+  for (int y = 0; y < blob->height(); y++) {
+    for (int x = 0; x < blob->width(); x++) {
+      cv::Vec<Dtype, channels> val;
+      for (int c = 0; c < channels; c++) {
+        img.at<cv::Vec<Dtype, channels> >(y, x)[c] =
+          static_cast<Dtype>(*(blob->cpu_data()+blob->offset(num, c, y, x)));
+      }
+    }
+  }
+  return img;
+}
+
+template cv::Mat BlobToCVMat<float, 1>(Blob<float> *blob, int num);
+template cv::Mat BlobToCVMat<float, 3>(Blob<float> *blob, int num);
+template cv::Mat BlobToCVMat<double, 1>(Blob<double> *blob, int num);
+template cv::Mat BlobToCVMat<double, 3>(Blob<double> *blob, int num);
+
+template <typename Dtype, int channels>
+void CVMatToBlob(cv::Mat img, Blob<Dtype> *blob) {
+  CHECK(img.depth() == CV_MAKETYPE(cv::DataDepth<Dtype>::value, channels))
+    << "OpenCV matrix and Blob must have same type";
+  CHECK(img.channels() == channels)
+    << "OpenCV matrix does not have correct number of channels";
+  blob->Reshape(1, channels, img.rows, img.cols);
+
+  for (int y = 0; y < blob->height(); y++) {
+    for (int x = 0; x < blob->width(); x++) {
+      cv::Vec<Dtype, channels> val;
+      for (int c = 0; c < channels; c++) {
+        *(blob->mutable_cpu_data()+blob->offset(0, c, y, x)) =
+          img.at<cv::Vec<Dtype, channels> >(y, x)[c];
+      }
+    }
+  }
+}
+
+template void CVMatToBlob<float, 3>(cv::Mat img, Blob<float> *blob);
+template void CVMatToBlob<double, 3>(cv::Mat img, Blob<double> *blob);
 #endif  // USE_OPENCV
+
 }  // namespace caffe

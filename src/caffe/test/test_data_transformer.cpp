@@ -340,5 +340,41 @@ TYPED_TEST(DataTransformTest, TestMeanFile) {
   }
 }
 
+TYPED_TEST(DataTransformTest, TestResize) {
+  TransformationParameter transform_param;
+  const bool unique_pixels = true;  // pixels are consecutive ints [0,size]
+  const int label = 0;
+  const int channels = 3;
+  const int height = 8;
+  const int width = 8;
+  const int min_size = 20;
+  const int max_size = 30;
+  const int crop_size = 8;
+
+  transform_param.set_min_size(min_size);
+  transform_param.set_max_size(max_size);
+  transform_param.set_crop_size(crop_size);
+
+  Datum datum;
+  FillDatum(label, channels, height, width, unique_pixels, &datum);
+  Blob<TypeParam> blob(1, channels, height, width);
+  DataTransformer<TypeParam> transformer(transform_param, TRAIN);
+  transformer.InitRand();
+  transformer.Transform(datum, &blob);
+  EXPECT_EQ(blob.num(), 1);
+  EXPECT_EQ(blob.channels(), channels);
+  EXPECT_EQ(blob.height(), crop_size);
+  EXPECT_EQ(blob.height(), crop_size);
+
+  // the cropped out element must return a valid slice of the image
+  for (int c = 0; c < channels; ++c) {
+    for (int h = 0; h < height; ++h) {
+      for (int w = 0; w < width-1; ++w) {
+        EXPECT_LE(blob.data_at(0, c, h, w), blob.data_at(0, c, h, w+1));
+      }
+    }
+  }
+}
+
 }  // namespace caffe
 #endif  // USE_OPENCV

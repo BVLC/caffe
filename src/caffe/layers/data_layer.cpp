@@ -10,7 +10,6 @@
 #include "caffe/util/benchmark.hpp"
 
 namespace caffe {
-
 template <typename Dtype>
 DataLayer<Dtype>::DataLayer(const LayerParameter& param)
   : BasePrefetchingDataLayer<Dtype>(param),
