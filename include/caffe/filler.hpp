@@ -7,6 +7,10 @@
 
 #include <string>
 
+#ifdef USE_OPENCV
+#include <opencv2/core/core.hpp>
+#endif
+
 #include "caffe/blob.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/syncedmem.hpp"
@@ -268,6 +272,50 @@ class BilinearFiller : public Filler<Dtype> {
 };
 
 /**
+ * @brief Fills a Blob with orthogonal weights via applying SVD on top of
+ *        weights generated from a normal distribution.
+ *
+ * A filler based on the paper "Exact solutions to the nonlinear dynamics of
+ * learning in deep linear neural networks". Saxe, McClelland, and Ganguli 2013.
+ *
+ * The mean and standard deviation parameters will be used to set the initial
+ * distribution before SVD (default mean=0.0, std=1.0). The value parameter
+ * can optionally be set to an additional scaling factor for final weights.
+ * The input blob (num, a, b, c) will be reshaped to a (num, a * b * c) matrix
+ * before SVD, the output of which will be reshaped to the original blob size.
+ */
+template <typename Dtype>
+class OrthogonalFiller : public Filler<Dtype> {
+ public:
+  explicit OrthogonalFiller(const FillerParameter& param)
+      : Filler<Dtype>(param) {}
+
+  virtual void Fill(Blob<Dtype>* blob) {
+#ifdef USE_OPENCV
+    CHECK(blob->count());
+    caffe_rng_gaussian<Dtype>(blob->count(), Dtype(this->filler_param_.mean()),
+        Dtype(this->filler_param_.std()), blob->mutable_cpu_data());
+    cv::Mat svd_io(blob->shape(0), blob->count(1),
+                   CV_MAKETYPE(cv::DataDepth<Dtype>::value, 1),
+                   blob->mutable_cpu_data(),
+                   blob->count(1)*sizeof(Dtype));
+    cv::Mat w, u, v;
+    svd_.compute(svd_io, w, u, v);
+    (u.cols == svd_io.cols && u.rows == svd_io.rows ? u : v).copyTo(svd_io);
+    if (this->filler_param_.value() != 0) {
+      blob->scale_data(this->filler_param_.value());
+    }
+  }
+
+ protected:
+  cv::SVD svd_;
+#else
+    LOG(FATAL) << "A build with OpenCV is required to use Orthogonal filler";
+  }
+#endif
+};
+
+/**
  * @brief Get a specific filler from the specification given in FillerParameter.
  *
  * Ideally this would be replaced by a factory pattern, but we will leave it
@@ -290,6 +338,8 @@ Filler<Dtype>* GetFiller(const FillerParameter& param) {
     return new MSRAFiller<Dtype>(param);
   } else if (type == "bilinear") {
     return new BilinearFiller<Dtype>(param);
+  } else if (type == "orthogonal") {
+    return new OrthogonalFiller<Dtype>(param);
   } else {
     CHECK(false) << "Unknown filler name: " << param.type();
   }
