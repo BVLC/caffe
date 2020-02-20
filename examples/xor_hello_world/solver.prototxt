@@ -1,0 +1,29 @@
+net: "xor_net.pure.prototxt" # standard example (no concat layer)
+# net: "xor_net.minimal.prototxt" # euclidean loss -> no accuracy, but loss < 0.1 is fine (right?)
+# net: "xor_net.prototxt"    # hardcoded weights/bias to illustrate analogy with perceptron    
+# ^^^^ Mihkaels example currently broken ... why?
+
+test_iter: 1
+test_interval: 1
+
+base_lr: 0.09 
+  # Whenever your network does not converge to the desired output, try the following:
+  # Decrease learning rate by a factor of 10 a couple of times
+  # Shuffle your data
+  # Make sure that your problem is well-defined (i.e. try NOT to predict 10,000 classes with little training data)
+  # Check your data doesn it look like you expect?
+  # Check your network topology: Do all the convolutions etc. match or is one dimension collapsing to 0?
+  # Try different weight initializations: Xavier often works better than Guassian
+  # Start with simple examples (e.g. just two classes to predict) and then work your way up
+  # Think / Ask
+    
+lr_policy: "step"
+gamma: 0.1
+stepsize: 10
+display: 10
+max_iter: 30
+# snapshot: 10000
+snapshot_prefix: "snapshot"
+momentum: 0.9
+weight_decay: 0.0005
+solver_mode: CPU # or GPU
