@@ -43,6 +43,8 @@ CuDNNLRNLayer<Dtype>::~CuDNNLRNLayer() {
   cudnnDestroyTensorDescriptor(bottom_desc_);
   cudnnDestroyTensorDescriptor(top_desc_);
 
+  cudnnDestroyLRNDescriptor(norm_desc_);
+
   // destroy LRN handle
   cudnnDestroy(handle_);
 }
