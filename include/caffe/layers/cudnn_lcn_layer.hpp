@@ -36,9 +36,6 @@ class CuDNNLCNLayer : public LRNLayer<Dtype> {
   cudnnLRNDescriptor_t norm_desc_;
   cudnnTensorDescriptor_t bottom_desc_, top_desc_;
 
-  int size_, pre_pad_;
-  Dtype alpha_, beta_, k_;
-
   size_t tempDataSize;
   void *tempData1, *tempData2;
 };
