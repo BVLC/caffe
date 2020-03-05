@@ -253,7 +253,7 @@ void CuDNNDeconvolutionLayer<Dtype>::Reshape(
     workspaceSizeInBytes = total_max_workspace;
 
     // free the existing workspace and allocate a new (larger) one
-    cudaFree(this->workspaceData);
+    CUDA_CHECK(cudaFree(this->workspaceData));
 
     cudaError_t err = cudaMalloc(&(this->workspaceData), workspaceSizeInBytes);
     if (err != cudaSuccess) {
@@ -309,7 +309,7 @@ CuDNNDeconvolutionLayer<Dtype>::~CuDNNDeconvolutionLayer() {
     cudnnDestroy(handle_[g]);
   }
 
-  cudaFree(workspaceData);
+  CUDA_CHECK(cudaFree(workspaceData));
   delete [] workspace;
   delete [] stream_;
   delete [] handle_;
