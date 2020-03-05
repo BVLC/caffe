@@ -44,7 +44,7 @@ class TanHLayer : public NeuronLayer<Dtype> {
       const vector<Blob<Dtype>*>& top);
 
   /**
-   * @brief Computes the error gradient w.r.t. the sigmoid inputs.
+   * @brief Computes the error gradient w.r.t. the TanH inputs.
    *
    * @param top output Blob vector (length 1), providing the error gradient with
    *      respect to the outputs
