@@ -100,7 +100,7 @@ if $WITH_CUDA ; then
   apt-get install -y --no-install-recommends \
     cuda-core-$CUDA_PKG_VERSION \
     cuda-cudart-dev-$CUDA_PKG_VERSION \
-    cuda-cublas-dev-$CUDA_PKG_VERSION \
+    #cuda-cublas-dev-$CUDA_PKG_VERSION \
     cuda-curand-dev-$CUDA_PKG_VERSION
   # manually create CUDA symlink
   ln -s /usr/local/cuda-$CUDA_VERSION /usr/local/cuda

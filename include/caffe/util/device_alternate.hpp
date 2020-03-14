@@ -52,12 +52,12 @@ void classname<Dtype>::funcname##_##gpu(const vector<Blob<Dtype>*>& top, \
     CHECK_EQ(error, cudaSuccess) << " " << cudaGetErrorString(error); \
   } while (0)
 
-#define CUBLAS_CHECK(condition) \
-  do { \
-    cublasStatus_t status = condition; \
-    CHECK_EQ(status, CUBLAS_STATUS_SUCCESS) << " " \
-      << caffe::cublasGetErrorString(status); \
-  } while (0)
+//#define CUBLAS_CHECK(condition) \
+//  do { \
+//    cublasStatus_t status = condition; \
+//    CHECK_EQ(status, CUBLAS_STATUS_SUCCESS) << " " \
+//      << caffe::cublasGetErrorString(status); \
+//  } while (0)
 
 #define CURAND_CHECK(condition) \
   do { \
@@ -78,7 +78,7 @@ void classname<Dtype>::funcname##_##gpu(const vector<Blob<Dtype>*>& top, \
 namespace caffe {
 
 // CUDA: library error reporting.
-const char* cublasGetErrorString(cublasStatus_t error);
+//const char* cublasGetErrorString(cublasStatus_t error);
 const char* curandGetErrorString(curandStatus_t error);
 
 // CUDA: use 512 threads per block
