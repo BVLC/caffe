@@ -22,8 +22,8 @@ void caffe_gpu_gemm<float>(const CBLAS_TRANSPOSE TransA,
       (TransA == CblasNoTrans) ? CUBLAS_OP_N : CUBLAS_OP_T;
   cublasOperation_t cuTransB =
       (TransB == CblasNoTrans) ? CUBLAS_OP_N : CUBLAS_OP_T;
-  CUBLAS_CHECK(cublasSgemm(Caffe::cublas_handle(), cuTransB, cuTransA,
-      N, M, K, &alpha, B, ldb, A, lda, &beta, C, N));
+//  CUBLAS_CHECK(cublasSgemm(Caffe::cublas_handle(), cuTransB, cuTransA,
+//      N, M, K, &alpha, B, ldb, A, lda, &beta, C, N));
 }
 
 template <>
@@ -38,8 +38,8 @@ void caffe_gpu_gemm<double>(const CBLAS_TRANSPOSE TransA,
       (TransA == CblasNoTrans) ? CUBLAS_OP_N : CUBLAS_OP_T;
   cublasOperation_t cuTransB =
       (TransB == CblasNoTrans) ? CUBLAS_OP_N : CUBLAS_OP_T;
-  CUBLAS_CHECK(cublasDgemm(Caffe::cublas_handle(), cuTransB, cuTransA,
-      N, M, K, &alpha, B, ldb, A, lda, &beta, C, N));
+//  CUBLAS_CHECK(cublasDgemm(Caffe::cublas_handle(), cuTransB, cuTransA,
+//      N, M, K, &alpha, B, ldb, A, lda, &beta, C, N));
 }
 
 template <>
@@ -48,30 +48,30 @@ void caffe_gpu_gemv<float>(const CBLAS_TRANSPOSE TransA, const int M,
     const float beta, float* y) {
   cublasOperation_t cuTransA =
       (TransA == CblasNoTrans) ? CUBLAS_OP_T : CUBLAS_OP_N;
-  CUBLAS_CHECK(cublasSgemv(Caffe::cublas_handle(), cuTransA, N, M, &alpha,
-      A, N, x, 1, &beta, y, 1));
+//  CUBLAS_CHECK(cublasSgemv(Caffe::cublas_handle(), cuTransA, N, M, &alpha,
+//      A, N, x, 1, &beta, y, 1));
 }
 
 template <>
 void caffe_gpu_gemv<double>(const CBLAS_TRANSPOSE TransA, const int M,
     const int N, const double alpha, const double* A, const double* x,
     const double beta, double* y) {
-  cublasOperation_t cuTransA =
-      (TransA == CblasNoTrans) ? CUBLAS_OP_T : CUBLAS_OP_N;
-  CUBLAS_CHECK(cublasDgemv(Caffe::cublas_handle(), cuTransA, N, M, &alpha,
-      A, N, x, 1, &beta, y, 1));
+//  cublasOperation_t cuTransA =
+//      (TransA == CblasNoTrans) ? CUBLAS_OP_T : CUBLAS_OP_N;
+//  CUBLAS_CHECK(cublasDgemv(Caffe::cublas_handle(), cuTransA, N, M, &alpha,
+//      A, N, x, 1, &beta, y, 1));
 }
 
 template <>
 void caffe_gpu_axpy<float>(const int N, const float alpha, const float* X,
     float* Y) {
-  CUBLAS_CHECK(cublasSaxpy(Caffe::cublas_handle(), N, &alpha, X, 1, Y, 1));
+//  CUBLAS_CHECK(cublasSaxpy(Caffe::cublas_handle(), N, &alpha, X, 1, Y, 1));
 }
 
 template <>
 void caffe_gpu_axpy<double>(const int N, const double alpha, const double* X,
     double* Y) {
-  CUBLAS_CHECK(cublasDaxpy(Caffe::cublas_handle(), N, &alpha, X, 1, Y, 1));
+//  CUBLAS_CHECK(cublasDaxpy(Caffe::cublas_handle(), N, &alpha, X, 1, Y, 1));
 }
 
 void caffe_gpu_memcpy(const size_t N, const void* X, void* Y) {
@@ -82,32 +82,32 @@ void caffe_gpu_memcpy(const size_t N, const void* X, void* Y) {
 
 template <>
 void caffe_gpu_scal<float>(const int N, const float alpha, float *X) {
-  CUBLAS_CHECK(cublasSscal(Caffe::cublas_handle(), N, &alpha, X, 1));
+//  CUBLAS_CHECK(cublasSscal(Caffe::cublas_handle(), N, &alpha, X, 1));
 }
 
 template <>
 void caffe_gpu_scal<double>(const int N, const double alpha, double *X) {
-  CUBLAS_CHECK(cublasDscal(Caffe::cublas_handle(), N, &alpha, X, 1));
+//  CUBLAS_CHECK(cublasDscal(Caffe::cublas_handle(), N, &alpha, X, 1));
 }
 
 template <>
 void caffe_gpu_scal<float>(const int N, const float alpha, float* X,
                            cudaStream_t str) {
   cudaStream_t initial_stream;
-  CUBLAS_CHECK(cublasGetStream(Caffe::cublas_handle(), &initial_stream));
-  CUBLAS_CHECK(cublasSetStream(Caffe::cublas_handle(), str));
-  CUBLAS_CHECK(cublasSscal(Caffe::cublas_handle(), N, &alpha, X, 1));
-  CUBLAS_CHECK(cublasSetStream(Caffe::cublas_handle(), initial_stream));
+//  CUBLAS_CHECK(cublasGetStream(Caffe::cublas_handle(), &initial_stream));
+//  CUBLAS_CHECK(cublasSetStream(Caffe::cublas_handle(), str));
+//  CUBLAS_CHECK(cublasSscal(Caffe::cublas_handle(), N, &alpha, X, 1));
+//  CUBLAS_CHECK(cublasSetStream(Caffe::cublas_handle(), initial_stream));
 }
 
 template <>
 void caffe_gpu_scal<double>(const int N, const double alpha, double* X,
                             cudaStream_t str) {
   cudaStream_t initial_stream;
-  CUBLAS_CHECK(cublasGetStream(Caffe::cublas_handle(), &initial_stream));
-  CUBLAS_CHECK(cublasSetStream(Caffe::cublas_handle(), str));
-  CUBLAS_CHECK(cublasDscal(Caffe::cublas_handle(), N, &alpha, X, 1));
-  CUBLAS_CHECK(cublasSetStream(Caffe::cublas_handle(), initial_stream));
+//  CUBLAS_CHECK(cublasGetStream(Caffe::cublas_handle(), &initial_stream));
+//  CUBLAS_CHECK(cublasSetStream(Caffe::cublas_handle(), str));
+//  CUBLAS_CHECK(cublasDscal(Caffe::cublas_handle(), N, &alpha, X, 1));
+//  CUBLAS_CHECK(cublasSetStream(Caffe::cublas_handle(), initial_stream));
 }
 
 template <>
@@ -127,37 +127,37 @@ void caffe_gpu_axpby<double>(const int N, const double alpha, const double* X,
 template <>
 void caffe_gpu_dot<float>(const int n, const float* x, const float* y,
     float* out) {
-  CUBLAS_CHECK(cublasSdot(Caffe::cublas_handle(), n, x, 1, y, 1, out));
+//  CUBLAS_CHECK(cublasSdot(Caffe::cublas_handle(), n, x, 1, y, 1, out));
 }
 
 template <>
 void caffe_gpu_dot<double>(const int n, const double* x, const double* y,
     double * out) {
-  CUBLAS_CHECK(cublasDdot(Caffe::cublas_handle(), n, x, 1, y, 1, out));
+//  CUBLAS_CHECK(cublasDdot(Caffe::cublas_handle(), n, x, 1, y, 1, out));
 }
 
 template <>
 void caffe_gpu_asum<float>(const int n, const float* x, float* y) {
-  CUBLAS_CHECK(cublasSasum(Caffe::cublas_handle(), n, x, 1, y));
+//  CUBLAS_CHECK(cublasSasum(Caffe::cublas_handle(), n, x, 1, y));
 }
 
 template <>
 void caffe_gpu_asum<double>(const int n, const double* x, double* y) {
-  CUBLAS_CHECK(cublasDasum(Caffe::cublas_handle(), n, x, 1, y));
+//  CUBLAS_CHECK(cublasDasum(Caffe::cublas_handle(), n, x, 1, y));
 }
 
 template <>
 void caffe_gpu_scale<float>(const int n, const float alpha, const float *x,
                             float* y) {
-  CUBLAS_CHECK(cublasScopy(Caffe::cublas_handle(), n, x, 1, y, 1));
-  CUBLAS_CHECK(cublasSscal(Caffe::cublas_handle(), n, &alpha, y, 1));
+//  CUBLAS_CHECK(cublasScopy(Caffe::cublas_handle(), n, x, 1, y, 1));
+//  CUBLAS_CHECK(cublasSscal(Caffe::cublas_handle(), n, &alpha, y, 1));
 }
 
 template <>
 void caffe_gpu_scale<double>(const int n, const double alpha, const double *x,
                              double* y) {
-  CUBLAS_CHECK(cublasDcopy(Caffe::cublas_handle(), n, x, 1, y, 1));
-  CUBLAS_CHECK(cublasDscal(Caffe::cublas_handle(), n, &alpha, y, 1));
+//  CUBLAS_CHECK(cublasDcopy(Caffe::cublas_handle(), n, x, 1, y, 1));
+//  CUBLAS_CHECK(cublasDscal(Caffe::cublas_handle(), n, &alpha, y, 1));
 }
 
 template <typename Dtype>

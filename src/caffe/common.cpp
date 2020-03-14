@@ -105,14 +105,15 @@ void* Caffe::RNG::generator() {
 #else  // Normal GPU + CPU Caffe.
 
 Caffe::Caffe()
-    : cublas_handle_(NULL), curand_generator_(NULL), random_generator_(),
+    //: cublas_handle_(NULL), curand_generator_(NULL), random_generator_(),
+    : curand_generator_(NULL), random_generator_(),
     mode_(Caffe::CPU),
     solver_count_(1), solver_rank_(0), multiprocess_(false) {
   // Try to create a cublas handler, and report an error if failed (but we will
   // keep the program running as one might just want to run CPU code).
-  if (cublasCreate(&cublas_handle_) != CUBLAS_STATUS_SUCCESS) {
-    LOG(ERROR) << "Cannot create Cublas handle. Cublas won't be available.";
-  }
+  //if (cublasCreate(&cublas_handle_) != CUBLAS_STATUS_SUCCESS) {
+  //  LOG(ERROR) << "Cannot create Cublas handle. Cublas won't be available.";
+  //}
   // Try to create a curand handler.
   if (curandCreateGenerator(&curand_generator_, CURAND_RNG_PSEUDO_DEFAULT)
       != CURAND_STATUS_SUCCESS ||
@@ -123,7 +124,7 @@ Caffe::Caffe()
 }
 
 Caffe::~Caffe() {
-  if (cublas_handle_) CUBLAS_CHECK(cublasDestroy(cublas_handle_));
+  //if (cublas_handle_) CUBLAS_CHECK(cublasDestroy(cublas_handle_));
   if (curand_generator_) {
     CURAND_CHECK(curandDestroyGenerator(curand_generator_));
   }
@@ -156,11 +157,11 @@ void Caffe::SetDevice(const int device_id) {
   // The call to cudaSetDevice must come before any calls to Get, which
   // may perform initialization using the GPU.
   CUDA_CHECK(cudaSetDevice(device_id));
-  if (Get().cublas_handle_) CUBLAS_CHECK(cublasDestroy(Get().cublas_handle_));
+  //if (Get().cublas_handle_) CUBLAS_CHECK(cublasDestroy(Get().cublas_handle_));
   if (Get().curand_generator_) {
     CURAND_CHECK(curandDestroyGenerator(Get().curand_generator_));
   }
-  CUBLAS_CHECK(cublasCreate(&Get().cublas_handle_));
+  //CUBLAS_CHECK(cublasCreate(&Get().cublas_handle_));
   CURAND_CHECK(curandCreateGenerator(&Get().curand_generator_,
       CURAND_RNG_PSEUDO_DEFAULT));
   CURAND_CHECK(curandSetPseudoRandomGeneratorSeed(Get().curand_generator_,
@@ -258,6 +259,7 @@ void* Caffe::RNG::generator() {
   return static_cast<void*>(generator_->rng());
 }
 
+/*
 const char* cublasGetErrorString(cublasStatus_t error) {
   switch (error) {
   case CUBLAS_STATUS_SUCCESS:
@@ -287,6 +289,7 @@ const char* cublasGetErrorString(cublasStatus_t error) {
   }
   return "Unknown cublas status";
 }
+*/
 
 const char* curandGetErrorString(curandStatus_t error) {
   switch (error) {
