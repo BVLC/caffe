@@ -186,6 +186,7 @@ USE_LMDB ?= 1
 # This code is taken from https://github.com/sh1r0/caffe-android-lib
 USE_HDF5 ?= 1
 USE_OPENCV ?= 1
+USE_PKG_CONFIG ?= 0
 
 ifeq ($(USE_LEVELDB), 1)
 	LIBRARIES += leveldb snappy
@@ -200,12 +201,21 @@ endif
 ifeq ($(USE_OPENCV), 1)
 	LIBRARIES += opencv_core opencv_highgui opencv_imgproc
 
-	ifeq ($(OPENCV_VERSION), 3)
+	ifeq ($(OPENCV_VERSION), $(filter $(OPENCV_VERSION), 3 4))
 		LIBRARIES += opencv_imgcodecs
 	endif
 
+	ifeq ($(OPENCV_VERSION), 4)
+		ifeq ($(USE_PKG_CONFIG), 1)
+			INCLUDE_DIRS += $(shell pkg-config opencv4 --cflags-only-I | sed 's/-I//g')
+		else
+			INCLUDE_DIRS += /usr/include/opencv4 /usr/local/include/opencv4
+			INCLUDE_DIRS += /usr/include/opencv4/opencv /usr/local/include/opencv4/opencv
+		endif
+	endif
+
 endif
-PYTHON_LIBRARIES ?= boost_python python2.7
+PYTHON_LIBRARIES ?= boost_python python3.5
 WARNINGS := -Wall -Wno-sign-compare
 
 ##############################
@@ -427,9 +437,12 @@ NVCCFLAGS += -ccbin=$(CXX) -Xcompiler -fPIC $(COMMON_FLAGS)
 MATLAB_CXXFLAGS := $(CXXFLAGS) -Wno-uninitialized
 LINKFLAGS += -pthread -fPIC $(COMMON_FLAGS) $(WARNINGS)
 
-USE_PKG_CONFIG ?= 0
 ifeq ($(USE_PKG_CONFIG), 1)
-	PKG_CONFIG := $(shell pkg-config opencv --libs)
+	ifeq ($(OPENCV_VERSION), 4)
+		PKG_CONFIG := $(shell pkg-config opencv4 --libs)
+	else
+		PKG_CONFIG := $(shell pkg-config opencv --libs)
+	endif
 else
 	PKG_CONFIG :=
 endif
@@ -543,7 +556,7 @@ runtest: $(TEST_ALL_BIN)
 	$(TEST_ALL_BIN) $(TEST_GPUID) --gtest_shuffle $(TEST_FILTER)
 
 pytest: py
-	cd python; python -m unittest discover -s caffe/test
+	cd python; python3 -m unittest discover -s caffe/test
 
 mattest: mat
 	cd matlab; $(MATLAB_DIR)/bin/matlab -nodisplay -r 'caffe.run_tests(), exit()'

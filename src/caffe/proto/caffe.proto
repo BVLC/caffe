@@ -322,7 +322,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 149 (last added: clip_param)
+// LayerParameter next available layer-specific ID: 150 (last added: heatmaps_from_vec_layer)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -393,6 +393,7 @@ message LayerParameter {
   optional FlattenParameter flatten_param = 135;
   optional HDF5DataParameter hdf5_data_param = 112;
   optional HDF5OutputParameter hdf5_output_param = 113;
+  optional HeatmapsFromVecParameter heatmaps_from_vec_layer = 149;
   optional HingeLossParameter hinge_loss_param = 114;
   optional ImageDataParameter image_data_param = 115;
   optional InfogainLossParameter infogain_loss_param = 116;
@@ -507,6 +508,7 @@ message ArgMaxParameter {
 }
 
 // Message that stores parameters used by ClipLayer
+
 message ClipParameter {
   required float min = 1;
   required float max = 2;
@@ -1446,4 +1448,8 @@ message PReLUParameter {
   optional FillerParameter filler = 1;
   // Whether or not slope parameters are shared across channels.
   optional bool channel_shared = 2 [default = false];
+}
+
+message HeatmapsFromVecParameter {
+  optional uint32 heatmap_size = 1 [default = 32];
 }
