@@ -294,6 +294,8 @@ ifeq ($(OSX), 1)
 			endif
 		endif
 	endif
+	CXXFLAGS += -std=c++11
+	LINKFLAGS += -std=c++11
 	# gtest needs to use its own tuple to not conflict with clang
 	COMMON_FLAGS += -DGTEST_USE_OWN_TR1_TUPLE=1
 	# boost::thread is called boost_thread-mt to mark multithreading on OS X
