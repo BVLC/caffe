@@ -199,27 +199,6 @@ function(detect_cuDNN)
     set(CUDNN_FOUND TRUE PARENT_SCOPE)
 
     file(READ ${CUDNN_INCLUDE}/cudnn_version.h CUDNN_VERSION_FILE_CONTENTS)
-#    message(STATUS "CUDNN_VERSION_FILE_CONTENTS=${CUDNN_VERSION_FILE_CONTENTS}")
-    
-#    # cuDNN v3 and beyond
-#    string(REGEX MATCH "define CUDNN_MAJOR * +([0-9]+)"
-#           CUDNN_VERSION_MAJOR "${CUDNN_VERSION_FILE_CONTENTS}")
-#    string(REGEX REPLACE "define CUDNN_MAJOR * +([0-9]+)" "\\1"
-#           CUDNN_VERSION_MAJOR "${CUDNN_VERSION_MAJOR}")
-#    string(REGEX MATCH "define CUDNN_MINOR * +([0-9]+)"
-#           CUDNN_VERSION_MINOR "${CUDNN_VERSION_FILE_CONTENTS}")
-#    string(REGEX REPLACE "define CUDNN_MINOR * +([0-9]+)" "\\1"
-#           CUDNN_VERSION_MINOR "${CUDNN_VERSION_MINOR}")
-#    string(REGEX MATCH "define CUDNN_PATCHLEVEL * +([0-9]+)"
-#           CUDNN_VERSION_PATCH "${CUDNN_VERSION_FILE_CONTENTS}")
-#    string(REGEX REPLACE "define CUDNN_PATCHLEVEL * +([0-9]+)" "\\1"
-#           CUDNN_VERSION_PATCH "${CUDNN_VERSION_PATCH}")
-
-#    if(NOT CUDNN_VERSION_MAJOR)
-#      set(CUDNN_VERSION "???")
-#    else()
-#      set(CUDNN_VERSION "${CUDNN_VERSION_MAJOR}.${CUDNN_VERSION_MINOR}.${CUDNN_VERSION_PATCH}")
-#    endif()
 
 	# cuDNN v3 and beyond
     string(REGEX MATCH "define CUDNN_MAJOR +([0-9])"
@@ -229,11 +208,6 @@ function(detect_cuDNN)
     message(STATUS "CUDNN_VERSION_MAJOR=${CUDNN_VERSION_MAJOR}")
 
     message(STATUS "Found cuDNN: ver. ${CUDNN_VERSION} found (include: ${CUDNN_INCLUDE}, library: ${CUDNN_LIBRARY})")
-
-#    string(COMPARE LESS "${CUDNN_VERSION_MAJOR}" 3 cuDNNVersionIncompatible)
-#    if(cuDNNVersionIncompatible)
-#      message(FATAL_ERROR "cuDNN version >3 is required.")
-#    endif()
 
     set(CUDNN_VERSION "${CUDNN_VERSION}" PARENT_SCOPE)
     mark_as_advanced(CUDNN_INCLUDE CUDNN_LIBRARY CUDNN_ROOT)
