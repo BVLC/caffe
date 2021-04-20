@@ -3,6 +3,8 @@
 #ifdef USE_CUDNN
 
 #include <cudnn.h>
+#include <algorithm>
+#include <vector>
 
 #include "caffe/common.hpp"
 #include "caffe/proto/caffe.pb.h"
@@ -50,6 +52,10 @@ inline const char* cudnnGetErrorString(cudnnStatus_t status) {
       return "CUDNN_STATUS_RUNTIME_IN_PROGRESS";
     case CUDNN_STATUS_RUNTIME_FP_OVERFLOW:
       return "CUDNN_STATUS_RUNTIME_FP_OVERFLOW";
+#endif
+#if CUDNN_VERSION_MIN(8, 0, 0)
+    case CUDNN_STATUS_VERSION_MISMATCH:
+      return "CUDNN_STATUS_VERSION_MISMATCH";
 #endif
   }
   return "Unknown cudnn status";
@@ -160,6 +166,40 @@ inline void createActivationDescriptor(cudnnActivationDescriptor_t* activ_desc,
   CUDNN_CHECK(cudnnSetActivationDescriptor(*activ_desc, mode,
                                            CUDNN_PROPAGATE_NAN, Dtype(0)));
 }
+
+template<typename T>
+inline T findFirstSuitableAlgorithm(std::vector<T> const &v,
+                                    size_t count, size_t limit) {
+  count = std::min(count, v.size());
+  for (size_t i = 0; i < count; i++) {
+    if (v[i].memory <= limit) {
+      return v[i];
+    }
+  }
+  if (!v.empty()) {
+    return v[0];
+  }
+  return T();
+}
+
+/// Check that new shape identical to previous up to batch size
+/// that allowed to be smaller
+inline bool areConvShapesCompatible(std::vector<int> const &src,
+                                    std::vector<int> const &reshaped) {
+  if (src.size() != reshaped.size() || src.size() < 2) {
+    return false;
+  }
+  if (src[0] < reshaped[0]) {
+    return false;
+  }
+  for (size_t i = 1; i < src.size(); i++) {
+    if (src[i] != reshaped[i]) {
+        return false;
+    }
+  }
+  return true;
+}
+
 
 }  // namespace cudnn
 
