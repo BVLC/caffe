@@ -25,7 +25,9 @@ template <typename Dtype>
 class CuDNNDeconvolutionLayer : public DeconvolutionLayer<Dtype> {
  public:
   explicit CuDNNDeconvolutionLayer(const LayerParameter& param)
-    : DeconvolutionLayer<Dtype>(param), handles_setup_(false) {}
+    : DeconvolutionLayer<Dtype>(param),
+      handles_setup_(false),
+      shapes_ready_(false) {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
                           const vector<Blob<Dtype>*>& top);
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
@@ -39,7 +41,11 @@ class CuDNNDeconvolutionLayer : public DeconvolutionLayer<Dtype> {
                             const vector<bool>& propagate_down,
                             const vector<Blob<Dtype>*>& bottom);
 
+  void findOptimalAlgorithm(int index, size_t workspace_limit_bytes);
+  void getWorkSpaces(int index);
+
   bool handles_setup_;
+  bool shapes_ready_;
   cudnnHandle_t* handle_;
   cudaStream_t*  stream_;
 
@@ -53,6 +59,8 @@ class CuDNNDeconvolutionLayer : public DeconvolutionLayer<Dtype> {
   cudnnFilterDescriptor_t filter_desc_;
   vector<cudnnConvolutionDescriptor_t> conv_descs_;
   int bottom_offset_, top_offset_, bias_offset_;
+
+  std::vector<int> cudnn_shape_;
 
   size_t *workspace_fwd_sizes_;
   size_t *workspace_bwd_data_sizes_;
