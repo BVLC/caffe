@@ -187,7 +187,7 @@ message SolverParameter {
 
   optional int32 snapshot = 14 [default = 0]; // The snapshot interval
   // The prefix for the snapshot.
-  // If not set then is replaced by prototxt file path without extention.
+  // If not set then is replaced by prototxt file path without extension.
   // If is set to directory then is augmented by prototxt file name
   // without extention.
   optional string snapshot_prefix = 15;
@@ -248,8 +248,8 @@ message SolverParameter {
 
   // Path to caffemodel file(s) with pretrained weights to initialize finetuning.
   // Tha same as command line --weights parameter for caffe train command.
-  // If command line --weights parameter if specified, it has higher priority
-  // and owerwrites this one(s).
+  // If command line --weights parameter is specified, it has higher priority
+  // and overwrites this one(s).
   // If --snapshot command line parameter is specified, this one(s) are ignored.
   // If several model files are expected, they can be listed in a one 
   // weights parameter separated by ',' (like in a command string) or
@@ -322,7 +322,7 @@ message ParamSpec {
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
-// LayerParameter next available layer-specific ID: 148 (last added: swish_param)
+// LayerParameter next available layer-specific ID: 149 (last added: clip_param)
 message LayerParameter {
   optional string name = 1; // the layer name
   optional string type = 2; // the layer type
@@ -378,6 +378,7 @@ message LayerParameter {
   optional ArgMaxParameter argmax_param = 103;
   optional BatchNormParameter batch_norm_param = 139;
   optional BiasParameter bias_param = 141;
+  optional ClipParameter clip_param = 148;
   optional ConcatParameter concat_param = 104;
   optional ContrastiveLossParameter contrastive_loss_param = 105;
   optional ConvolutionParameter convolution_param = 106;
@@ -503,6 +504,12 @@ message ArgMaxParameter {
   // By default ArgMaxLayer maximizes over the flattened trailing dimensions
   // for each index of the first / num dimension.
   optional int32 axis = 3;
+}
+
+// Message that stores parameters used by ClipLayer
+message ClipParameter {
+  required float min = 1;
+  required float max = 2;
 }
 
 message ConcatParameter {
@@ -936,6 +943,12 @@ message PoolingParameter {
   // If global_pooling then it will pool over the size of the bottom by doing
   // kernel_h = bottom->height and kernel_w = bottom->width
   optional bool global_pooling = 12 [default = false];
+  // How to calculate the output size - using ceil (default) or floor rounding.
+  enum RoundMode {
+    CEIL = 0;
+    FLOOR = 1;
+  }
+  optional RoundMode round_mode = 13 [default = CEIL];
 }
 
 message PowerParameter {
