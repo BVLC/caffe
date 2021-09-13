@@ -276,6 +276,10 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
   size_t max_workspace = std::max(total_workspace_fwd,
                              total_workspace_bwd_data);
   max_workspace = std::max(max_workspace, total_workspace_bwd_filter);
+  // ensure alignment
+  const size_t aligmnent_workspace = 128;
+  max_workspace = (max_workspace + aligmnent_workspace - 1) 
+	  / aligmnent_workspace * aligmnent_workspace;
   // ensure all groups have enough workspace
   size_t total_max_workspace = max_workspace *
                                (this->group_ * CUDNN_STREAMS_PER_GROUP);
