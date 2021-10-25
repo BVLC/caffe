@@ -105,7 +105,7 @@ Please cite SSD in your publications if it helps your research:
   # It should reach 77.* mAP at 120k iterations.
   python examples/ssd/ssd_pascal.py
   ```
-  If you don't have time to train your model, you can download a pre-trained model at [here](https://drive.google.com/open?id=0BzKzrI_SkD1_WVVTSmQxU0dVRzA).
+  If you don't have time to train your model, you can download a pre-trained model at [here](https://drive.google.com/file/d/0BzKzrI_SkD1_WVVTSmQxU0dVRzA/view?resourcekey=0-VFoYwzlHsh486pZ5U4sA6w).
 
 2. Evaluate the most recent snapshot.
   ```Shell
@@ -118,7 +118,7 @@ Please cite SSD in your publications if it helps your research:
   # If you would like to attach a webcam to a model you trained, you can do:
   python examples/ssd/ssd_pascal_webcam.py
   ```
-  [Here](https://drive.google.com/file/d/0BzKzrI_SkD1_R09NcjM1eElLcWc/view) is a demo video of running a SSD500 model trained on [MSCOCO](http://mscoco.org) dataset.
+  [Here](https://drive.google.com/file/d/0BzKzrI_SkD1_R09NcjM1eElLcWc/view?resourcekey=0-Sx3DJK4udeqqVl7AZkfLlQ) is a demo video of running a SSD500 model trained on [MSCOCO](http://mscoco.org) dataset.
 
 4. Check out [`examples/ssd_detect.ipynb`](https://github.com/weiliu89/caffe/blob/ssd/examples/ssd_detect.ipynb) or [`examples/ssd/ssd_detect.cpp`](https://github.com/weiliu89/caffe/blob/ssd/examples/ssd/ssd_detect.cpp) on how to detect objects using a SSD model. Check out [`examples/ssd/plot_detections.py`](https://github.com/weiliu89/caffe/blob/ssd/examples/ssd/plot_detections.py) on how to plot detection results output by ssd_detect.cpp.
 
@@ -128,16 +128,16 @@ Please cite SSD in your publications if it helps your research:
 We have provided the latest models that are trained from different datasets. To help reproduce the results in [Table 6](https://arxiv.org/pdf/1512.02325v4.pdf), most models contain a pretrained `.caffemodel` file, many `.prototxt` files, and python scripts.
 
 1. PASCAL VOC models:
-   * 07+12: [SSD300*](https://drive.google.com/open?id=0BzKzrI_SkD1_WVVTSmQxU0dVRzA), [SSD512*](https://drive.google.com/open?id=0BzKzrI_SkD1_ZDIxVHBEcUNBb2s)
-   * 07++12: [SSD300*](https://drive.google.com/open?id=0BzKzrI_SkD1_WnR2T1BGVWlCZHM), [SSD512*](https://drive.google.com/open?id=0BzKzrI_SkD1_MjFjNTlnempHNWs)
-   * COCO<sup>[1]</sup>: [SSD300*](https://drive.google.com/open?id=0BzKzrI_SkD1_NDlVeFJDc2tIU1k), [SSD512*](https://drive.google.com/open?id=0BzKzrI_SkD1_TW4wTC14aDdCTDQ)
-   * 07+12+COCO: [SSD300*](https://drive.google.com/open?id=0BzKzrI_SkD1_UFpoU01yLS1SaG8), [SSD512*](https://drive.google.com/open?id=0BzKzrI_SkD1_X3ZXQUUtM0xNeEk)
-   * 07++12+COCO: [SSD300*](https://drive.google.com/open?id=0BzKzrI_SkD1_TkFPTEQ1Z091SUE), [SSD512*](https://drive.google.com/open?id=0BzKzrI_SkD1_NVVNdWdYNEh1WTA)
+   * 07+12: [SSD300*](https://drive.google.com/file/d/0BzKzrI_SkD1_WVVTSmQxU0dVRzA/view?usp=sharing&resourcekey=0-VFoYwzlHsh486pZ5U4sA6w), [SSD512*](https://drive.google.com/file/d/0BzKzrI_SkD1_ZDIxVHBEcUNBb2s/view?resourcekey=0-cK6N_2Rq6C5wHAo8RaKHFw)
+   * 07++12: [SSD300*](https://drive.google.com/file/d/0BzKzrI_SkD1_WnR2T1BGVWlCZHM/view?resourcekey=0-JuQ-1PI4gfEU5Y9hY6IXbg), [SSD512*](https://drive.google.com/file/d/0BzKzrI_SkD1_MjFjNTlnempHNWs/view?resourcekey=0-0K7EITSbE2Fae2pIMUrpSQ)
+   * COCO<sup>[1]</sup>: [SSD300*](https://drive.google.com/file/d/0BzKzrI_SkD1_NDlVeFJDc2tIU1k/view?resourcekey=0-VIwceFdQvGpMl31jHv5RpA), [SSD512*](https://drive.google.com/file/d/0BzKzrI_SkD1_TW4wTC14aDdCTDQ/view?resourcekey=0-KGdQFztFWQmhnOcIH6rHRg)
+   * 07+12+COCO: [SSD300*](https://drive.google.com/file/d/0BzKzrI_SkD1_UFpoU01yLS1SaG8/view?resourcekey=0-WTJQYLuiLBUlNJl8R8qLBQ), [SSD512*](https://drive.google.com/file/d/0BzKzrI_SkD1_X3ZXQUUtM0xNeEk/view?resourcekey=0-lE4MISx92j4QfcQB0IG8tQ)
+   * 07++12+COCO: [SSD300*](https://drive.google.com/file/d/0BzKzrI_SkD1_TkFPTEQ1Z091SUE/view?resourcekey=0-y2qRDQXEnu7vfOOVtOv4zQ), [SSD512*](https://drive.google.com/file/d/0BzKzrI_SkD1_NVVNdWdYNEh1WTA/view?resourcekey=0-w1KTy5Kf6iSXHc0Njd_btg)
 
 2. COCO models:
-   * trainval35k: [SSD300*](https://drive.google.com/open?id=0BzKzrI_SkD1_dUY1Ml9GRTFpUWc), [SSD512*](https://drive.google.com/open?id=0BzKzrI_SkD1_dlJpZHJzOXd3MTg)
+   * trainval35k: [SSD300*](https://drive.google.com/file/d/0BzKzrI_SkD1_dUY1Ml9GRTFpUWc/view?resourcekey=0-fJphZuOKnVT1Pkd89oXSlg), [SSD512*](https://drive.google.com/file/d/0BzKzrI_SkD1_dlJpZHJzOXd3MTg/view?resourcekey=0-RmOcjeeLhvcJYlQqLf-LJw)
 
 3. ILSVRC models:
-   * trainval1: [SSD300*](https://drive.google.com/open?id=0BzKzrI_SkD1_a2NKQ2d1d043VXM), [SSD500](https://drive.google.com/open?id=0BzKzrI_SkD1_X2ZCLVgwLTgzaTQ)
+   * trainval1: [SSD300*](https://drive.google.com/file/d/0BzKzrI_SkD1_a2NKQ2d1d043VXM/view?resourcekey=0-qLYN1paAkTpJYc91FOAqKw), [SSD500](https://drive.google.com/file/d/0BzKzrI_SkD1_X2ZCLVgwLTgzaTQ/view?resourcekey=0-GA44ga07kV8oB0rK7XEF0Q)
 
 <sup>[1]</sup>We use [`examples/convert_model.ipynb`](https://github.com/weiliu89/caffe/blob/ssd/examples/convert_model.ipynb) to extract a VOC model from a pretrained COCO model.
