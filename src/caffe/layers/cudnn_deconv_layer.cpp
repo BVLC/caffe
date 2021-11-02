@@ -120,7 +120,7 @@ void CuDNNDeconvolutionLayer<Dtype>::findOptimalAlgorithm(int index,
   cudnnConvolutionBwdDataAlgoPerf_t   bwd_data_perf;
   int count = 0;
   // choose forward and backward algorithms + workspace(s)
-  CUDNN_CHECK(cudnnFindConvolutionForwardAlgorithm(
+  CUDNN_CHECK(cudnnGetConvolutionForwardAlgorithm_v7(
       handle_[0],
       top_descs_[index],
       filter_desc_,
@@ -133,7 +133,7 @@ void CuDNNDeconvolutionLayer<Dtype>::findOptimalAlgorithm(int index,
   fwd_algo_[index] = fwd_perf.algo;
 
   // choose backward algorithm for filter
-  CUDNN_CHECK(cudnnFindConvolutionBackwardFilterAlgorithm(
+  CUDNN_CHECK(cudnnGetConvolutionBackwardFilterAlgorithm_v7(
       handle_[0],
       top_descs_[index],
       bottom_descs_[index],
@@ -146,7 +146,7 @@ void CuDNNDeconvolutionLayer<Dtype>::findOptimalAlgorithm(int index,
   bwd_filter_algo_[index] = bwd_filter_perf.algo;
 
   // choose backward algo for data
-  CUDNN_CHECK(cudnnFindConvolutionBackwardDataAlgorithm(
+  CUDNN_CHECK(cudnnGetConvolutionBackwardDataAlgorithm_v7(
       handle_[0],
       filter_desc_,
       bottom_descs_[index],
@@ -258,8 +258,7 @@ void CuDNNDeconvolutionLayer<Dtype>::Reshape(
   size_t workspace_limit_bytes = 8*1024*1024;
 
   bool select_algo = !shapes_ready_
-                     || !cudnn::areConvShapesCompatible(cudnn_shape_,
-                                                        bottom[0]->shape());
+	  	     || cudnn_shape_ != bottom[0]->shape();
 
   for (int i = 0; i < bottom.size(); i++) {
     cudnn::setTensor4dDesc<Dtype>(&bottom_descs_[i],

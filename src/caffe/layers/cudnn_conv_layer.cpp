@@ -93,6 +93,7 @@ void CuDNNConvolutionLayer<Dtype>::LayerSetUp(
 template <typename Dtype>
 void CuDNNConvolutionLayer<Dtype>::findOptimalAlgorithm(int index,
                                 size_t workspace_limit_bytes) {
+  
   int nfwd = 1, nbwd_filter = 1, nbwd_data = 1;
   CUDNN_CHECK(cudnnGetConvolutionForwardAlgorithmMaxCount(
                 handle_[0], &nfwd));
@@ -115,7 +116,7 @@ void CuDNNConvolutionLayer<Dtype>::findOptimalAlgorithm(int index,
   cudnnConvolutionBwdDataAlgoPerf_t   bwd_data_perf;
   int count = 0;
   // choose forward and backward algorithms + workspace(s)
-  CUDNN_CHECK(cudnnFindConvolutionForwardAlgorithm(handle_[0],
+  CUDNN_CHECK(cudnnGetConvolutionForwardAlgorithm_v7(handle_[0],
     bottom_descs_[index],
     filter_desc_,
     conv_descs_[index],
@@ -128,7 +129,7 @@ void CuDNNConvolutionLayer<Dtype>::findOptimalAlgorithm(int index,
   workspace_fwd_sizes_[index] = fwd_perf.memory;
 
   // choose backward algorithm for filter
-  CUDNN_CHECK(cudnnFindConvolutionBackwardFilterAlgorithm(handle_[0],
+  CUDNN_CHECK(cudnnGetConvolutionBackwardFilterAlgorithm_v7(handle_[0],
         bottom_descs_[index],
         top_descs_[index],
         conv_descs_[index],
@@ -143,7 +144,7 @@ void CuDNNConvolutionLayer<Dtype>::findOptimalAlgorithm(int index,
   workspace_bwd_filter_sizes_[index] = bwd_filter_perf.memory;
 
   // choose backward algo for data
-  CUDNN_CHECK(cudnnFindConvolutionBackwardDataAlgorithm(handle_[0],
+  CUDNN_CHECK(cudnnGetConvolutionBackwardDataAlgorithm_v7(handle_[0],
         filter_desc_, top_descs_[index], conv_descs_[index],
         bottom_descs_[index],
         bwd_data_v.size(), &count, &bwd_data_v[0]));
@@ -152,6 +153,7 @@ void CuDNNConvolutionLayer<Dtype>::findOptimalAlgorithm(int index,
                             count, workspace_limit_bytes);
   bwd_data_algo_[index] = bwd_data_perf.algo;
   workspace_bwd_data_sizes_[index] = bwd_data_perf.memory;
+
 }
 #else
 
@@ -231,10 +233,9 @@ void CuDNNConvolutionLayer<Dtype>::Reshape(
   // planning strategy and a rewrite of Caffe's GPU memory mangagement
   size_t workspace_limit_bytes = 8*1024*1024;
 
-  bool select_algo = !shapes_ready_
-                     || !cudnn::areConvShapesCompatible(
-                             cudnn_shape_, bottom[0]->shape());
-
+  bool select_algo = !shapes_ready_ 
+	  	     || cudnn_shape_ != bottom[0]->shape();
+   
   for (int i = 0; i < bottom.size(); i++) {
     cudnn::setTensor4dDesc<Dtype>(&bottom_descs_[i],
         this->num_,
