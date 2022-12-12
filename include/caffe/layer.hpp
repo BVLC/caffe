@@ -37,6 +37,7 @@ class Layer {
    * to SetUp(), where the dimensions of the bottom blobs are provided to the
    * layer.
    */
+  
   explicit Layer(const LayerParameter& param)
     : layer_param_(param) {
       // Set phase and copy blobs (if there are any).
@@ -48,7 +49,7 @@ class Layer {
           blobs_[i]->FromProto(layer_param_.blobs(i));
         }
       }
-    }
+    }  //用protobuf 传入的参数对blobs_ 做初始化，blobs_ 是一个vector 存放指向Blob类的智能指针
   virtual ~Layer() {}
 
   /**

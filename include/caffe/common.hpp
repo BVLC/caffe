@@ -32,6 +32,7 @@ namespace gflags = google;
 #endif  // GFLAGS_GFLAGS_H_
 
 // Disable the copy and assignment operator for a class.
+// 将赋值构造和声明构造私有
 #define DISABLE_COPY_AND_ASSIGN(classname) \
 private:\
   classname(const classname&);\

@@ -25,7 +25,11 @@ template <typename Dtype>
 Net<Dtype>::Net(const NetParameter& param) {
   Init(param);
 }
-
+/*
+功能：调用Init函数初始化网络
+输入：string& param_file
+输出：无
+*/
 template <typename Dtype>
 Net<Dtype>::Net(const string& param_file, Phase phase,
     const int level, const vector<string>* stages) {
@@ -42,6 +46,71 @@ Net<Dtype>::Net(const string& param_file, Phase phase,
   Init(param);
 }
 
+/*
+功能：初始化网络
+输入：NetParameter& in_param
+输出：无
+步骤：
+<1> 调用InsertSplits()函数从in_param读入新网络到param
+<2> 定义name_，blob_name_to_idx，available_blobs，num_layers
+<3> param.input_size()返回输入层blob的个数;
+    param.input(i)表示第i个blob的名字;
+    param.layers_size()返回网络的层数。
+<4> 对每一个输入层的blob：
+    产生一块和当前blob一样大的空间 e.g. imput_dim=[12 55 66 39 20 24 48 64]表示第一个blob的四个维数为 12 55 66 39，第二个为 20 24 48 64 接着blob_pointer指向这块空间
+    blob_pointer压到blobs_中 vector<shared_ptr<Blob<Dtype>>> blobs_
+    blob_name压到blob_names_中 vector<string> blob_names_
+    param.force_backward()压到blob_need_backward_中vector<bool> blob_need_backward_
+    i 压到 net_input_blob_indices_中 net_input_blob_indices_ -> vector
+    blob_pointer.get() 压到 net_input_blobs_中
+    注意与blobs_的区别
+    vector<shared_ptr<Blob<Dtype>>> blobs_
+    vector<Blob<Dtype>*> net_input_blobs_
+    shared_ptr类型的参数调用.get()则得到Blob*类型
+    map<string, int> blob_name_to_idx
+    初始化为输入层的每个blob的名字 set<string> available_blobs
+    计算所需内存 memory_used += blob_pointer->count()
+<5> 存每一层的输入blob指针 vector<vector<Blob<Dtype>*> > bottom_vecs_
+    存每一层输入(bottom)的id vector<vector<int> > bottom_id_vecs_
+    存每一层输出(top)的blob vector<vector<Blob<Dtype>*> > top_vecs_
+    用网络的层数param.layers_size()去初始化上面四个变量
+    vector<vector<int> > top_id_vecs_
+
+<6> 对第i层（很大的一个for循环）：
+    param.layers(i)返回的是关于第当前层的参数：
+    layer_param = param.layers(i)
+    把当前层的参数转换为shared_ptr<Layer<Dtype>>，并压入到layers_中
+    把当前层的名字压入到layer_names_：vector<string> layer_names_
+    判断当前层是否需要反馈 need_backward = param.force_backward()
+    下面开始产生当前层：分为处理bottom的blob和top的blob两个步骤
+    对第j个bottom的blob：
+        layer_param.bottom_size()存的是当前层的输入blob数量
+        layer_param.bottom(j)存的是第j个输入blob的名字
+        读取当前blob的id，其中blob_name_to_idx在输入层初始化过了
+        blob_name_to_idx[blob_name] = i
+        输出当前blob的名字
+        存入第j个输入blob的指针bottom_vecs_[i].push_back(blobs_[blob_id].get())
+        存入第j个输入blob的id bottom_id_vecs_[i].push_back(blob_id)
+        更新need_backward
+        从available_blobs中删除第j个blob的名字
+    对第j个top的blob：
+        layer_param.top_size()存的是当前层的输出blob数量
+        layer_param.top(j)存的是第j个输出blob的名字
+        判断是否进行同址计算
+        输出当前blob的名字
+        定义一块新的blob空间，用blob_pointer指向这块空间
+        把这个指针存入到blobs_中
+        把blob_name、force_backward、idx存入对应的容器中
+        向available_blobs插入当前blob的名字
+        top_vecs_[i]对于第i层，插入当前blob的指针
+        top_id_vecs_[i]对于第i层，插入当前blob的id
+    输出当前层位于top的blob的信息
+    计算所需内存
+    判断当前层i是否需要backward
+<7> 所有名字在available_blobs中的blob为当前层的输出blob，存入net_output_blobs_中
+<8> 建立每个blob的name和index的对应关系map：blob_names_index_
+<9> 建立每个层的name和index的对应关系map：layer_names_index_
+*/
 template <typename Dtype>
 void Net<Dtype>::Init(const NetParameter& in_param) {
   // Set phase from the state.
@@ -55,6 +124,10 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
       << filtered_param.DebugString();
   // Create a copy of filtered_param with splits added where necessary.
   NetParameter param;
+  /**
+   * 此函数作用是，对于底层一个输出blob对应多个上层的情况，则要在加入分裂层，形成新的网络。这么做的主要原因是多个层反传给该blob的梯度需要累加。
+   * 例如：LeNet网络中的数据层的top label blob对应两个输入层，分别是accuracy层和loss层，那么需要在数据层在插入一层。
+  */
   InsertSplits(filtered_param, &param);
   // Basically, build all the layers and set up their connections.
   name_ = param.name();
@@ -62,14 +135,15 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   set<string> available_blobs;
   memory_used_ = 0;
   // For each layer, set up its input and output
-  bottom_vecs_.resize(param.layer_size());
-  top_vecs_.resize(param.layer_size());
-  bottom_id_vecs_.resize(param.layer_size());
-  param_id_vecs_.resize(param.layer_size());
-  top_id_vecs_.resize(param.layer_size());
-  bottom_need_backward_.resize(param.layer_size());
+  bottom_vecs_.resize(param.layer_size()); //存每一层的输入(bottom)blob指针
+  top_vecs_.resize(param.layer_size()); //存每一层输出(top)的blob指针
+  bottom_id_vecs_.resize(param.layer_size()); //存每一层输入(bottom)blob的id
+  param_id_vecs_.resize(param.layer_size()); //存每一层参数blob的id
+  top_id_vecs_.resize(param.layer_size());  //存每一层输出(top)的blob的id
+  bottom_need_backward_.resize(param.layer_size()); //该blob是需要返回的bool值
   for (int layer_id = 0; layer_id < param.layer_size(); ++layer_id) {
     // Inherit phase from net if unset.
+    //如果当前层没有设置phase，则将当前层phase设置为网络net 的phase
     if (!param.layer(layer_id).has_phase()) {
       param.mutable_layer(layer_id)->set_phase(phase_);
     }
@@ -82,12 +156,15 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
           << "either 0 or bottom_size times ";
     }
     layers_.push_back(LayerRegistry<Dtype>::CreateLayer(layer_param));
+    // 把当前层的名字压入到layer_names_：vector<string> layer_names_
     layer_names_.push_back(layer_param.name());
     LOG_IF(INFO, Caffe::root_solver())
         << "Creating Layer " << layer_param.name();
     bool need_backward = false;
 
     // Figure out this layer's input and output
+    // 下面开始产生当前层：分别处理bottom的blob和top的blob两个步骤
+    // 输入bottom blob
     for (int bottom_id = 0; bottom_id < layer_param.bottom_size();
          ++bottom_id) {
       const int blob_id = AppendBottom(param, layer_id, bottom_id,
@@ -120,13 +197,20 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
       }
     }
     // After this layer is connected, set it up.
+    /**
+     * 前面创建了具体的层，并为层创建了输入bottom blob 和输出top blob。改行代码这是启动该层，
+     * setup()函数的功能是为创建的blob分配数据内存空间，如有必要还需要调整该层的输入bottom blob 和输出top blob的shape。
+    */
     layers_[layer_id]->SetUp(bottom_vecs_[layer_id], top_vecs_[layer_id]);
     LOG_IF(INFO, Caffe::root_solver())
         << "Setting up " << layer_names_[layer_id];
+    //每次循环，都会更新向量blob_loss_weights, 然后调用模板类layer的loss函数返回loss_weight 
     for (int top_id = 0; top_id < top_vecs_[layer_id].size(); ++top_id) {
+      // blob_loss_weights_,每次遍历一个layer的时候，都会resize blob_loss_weights_, 然后调用模板类layer的loss函数返回loss_weight
       if (blob_loss_weights_.size() <= top_id_vecs_[layer_id][top_id]) {
         blob_loss_weights_.resize(top_id_vecs_[layer_id][top_id] + 1, Dtype(0));
       }
+      //top_id_vecs_中存储的最基本元素是blob_id -> 每一个新的blob都会赋予其一个blob_id，
       blob_loss_weights_[top_id_vecs_[layer_id][top_id]] = layer->loss(top_id);
       LOG_IF(INFO, Caffe::root_solver())
           << "Top shape: " << top_vecs_[layer_id][top_id]->shape_string();
@@ -138,7 +222,10 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
     }
     LOG_IF(INFO, Caffe::root_solver())
         << "Memory required for data: " << memory_used_ * sizeof(Dtype);
+    // 层内blob_的数量，即该层有几个权重参数，每个blob内有一个参数，例如；cov层和IP层都有两个参数
+    // param_size是Layermeter类型对象layer_param中ParamSpec param成员的个数, 
     const int param_size = layer_param.param_size();
+    // num_param_blobs是一个Layer中learnable parameter blob的个数，param_size <= num_param_blobs
     const int num_param_blobs = layers_[layer_id]->blobs().size();
     CHECK_LE(param_size, num_param_blobs)
         << "Too many params specified for layer " << layer_param.name();
@@ -151,6 +238,12 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
       layers_[layer_id]->set_param_propagate_down(param_id,
                                                   param_need_backward);
     }
+    /*
+    *添加parameter blob,如果当前layer没有parameter blob(num_param_blobs==0),
+    *比如ReLU，那么就不进入循环，不添加parameter blob    
+    *AppendParam只是执行为当前layer添加parameter blob的相关工作，
+    *并不会修改与backward的相关属性 
+    */
     for (int param_id = 0; param_id < num_param_blobs; ++param_id) {
       AppendParam(param, layer_id, param_id);
     }
@@ -162,6 +255,9 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
       }
     }
   }
+  /**
+   * 至此上面部分各个层被创建并启动，下面部分是按后向顺序修正backward设置
+  */
   // Go through the net backwards to determine which blobs contribute to the
   // loss.  We can skip backward computation for blobs that don't contribute
   // to the loss.
@@ -173,7 +269,14 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
   for (int layer_id = layers_.size() - 1; layer_id >= 0; --layer_id) {
     bool layer_contributes_loss = false;
     bool layer_skip_propagate_down = true;
+    /*
+    *为true，则表示当前layer的bottom blob不需要backward computation
+    *即该层不需要backward computation。    
+    *这个局部变量所表示的意义与caffe.proto里
+    *message Layerparameter的propagate_down的定义恰好相反。
+    */
     for (int top_id = 0; top_id < top_vecs_[layer_id].size(); ++top_id) {
+      //blob_names_整个网络中，所有非参数blob的name
       const string& blob_name = blob_names_[top_id_vecs_[layer_id][top_id]];
       if (layers_[layer_id]->loss(top_id) ||
           (blobs_under_loss.find(blob_name) != blobs_under_loss.end())) {
@@ -182,6 +285,7 @@ void Net<Dtype>::Init(const NetParameter& in_param) {
       if (blobs_skip_backp.find(blob_name) == blobs_skip_backp.end()) {
         layer_skip_propagate_down = false;
       }
+      //一层layer有一个blob需要bp，就都需要
       if (layer_contributes_loss && !layer_skip_propagate_down)
         break;
     }
@@ -354,6 +458,9 @@ bool Net<Dtype>::StateMeetsRule(const NetState& state,
 }
 
 // Helper for Net::Init: add a new top blob to the net.
+/**
+ * 此函数为该层创建top blob，该函数真正的new的一个blob的对象。并将topblob 的指针压入到top_vecs_中
+*/
 template <typename Dtype>
 void Net<Dtype>::AppendTop(const NetParameter& param, const int layer_id,
                            const int top_id, set<string>* available_blobs,
@@ -394,6 +501,9 @@ void Net<Dtype>::AppendTop(const NetParameter& param, const int layer_id,
 }
 
 // Helper for Net::Init: add a new bottom blob to the net.
+/**
+ * 此函数为该层创建bottom blob，由于网络是堆叠而成，即：当前层的输出 bottom是前一层的输出top blob，因此此函数并没没有真正的创建blob，只是在将前一层的指针压入到了bottom_vecs_中。
+**/
 template <typename Dtype>
 int Net<Dtype>::AppendBottom(const NetParameter& param, const int layer_id,
     const int bottom_id, set<string>* available_blobs,
@@ -419,6 +529,11 @@ int Net<Dtype>::AppendBottom(const NetParameter& param, const int layer_id,
   return blob_id;
 }
 
+ /**
+  * AppendParam只是执行为当前layer添加parameter blob的相关工作，并不会修改与backward的相关属性
+  * 对于某些有参数的层，例如：卷基层、全连接层有weight和bias。
+  * 该函数主要是修改和参数有关的变量，实际的层参数的blob在上面提到的setup()函数中已经创建。如：将层参数blob的指针压入到params_。
+ **/ 
 template <typename Dtype>
 void Net<Dtype>::AppendParam(const NetParameter& param, const int layer_id,
                              const int param_id) {
@@ -440,6 +555,12 @@ void Net<Dtype>::AppendParam(const NetParameter& param, const int layer_id,
   ParamSpec default_param_spec;
   const ParamSpec* param_spec = (layer_param.param_size() > param_id) ?
       &layer_param.param(param_id) : &default_param_spec;
+/*param_owners_ 是一个存储parameter "onwer"的一个向量  ——> -1 表示当前Layer就是该parameter的"owner" ,
+如果param_name不为空，而且能够在param_names_index_中找到，说明这个parameter已经存在于之前的某个或者某
+些网络层里，说明这个parameter是共享于多个layer。 在caffe.proto的message ParamSpec里关于name的
+注释——>To share a parameter between two layers, give it a (non-empty) name, 可见，如果一个parameter是
+共享与多个网络层，那么它会有一个非空的name。
+*/
   if (!param_size || !param_name.size() || (param_name.size() &&
       param_names_index_.find(param_name) == param_names_index_.end())) {
     // This layer "owns" this parameter blob -- it is either anonymous
@@ -447,6 +568,11 @@ void Net<Dtype>::AppendParam(const NetParameter& param, const int layer_id,
     // haven't already seen.
     param_owners_.push_back(-1);
     if (param_name.size()) {
+/*
+map<string, int> param_names_index_是整个网络的参数non-empty name与index的映射。  注意，这个name是ParamSpec 类
+型中的name,而且，""To share a parameter between two layers, give it a (non-empty) name"",所以说这个map中存
+储的pair是<会被share的parameter_name, 其对应index> 
+*/
       param_names_index_[param_name] = net_param_id;
     }
     const int learnable_param_id = learnable_params_.size();
