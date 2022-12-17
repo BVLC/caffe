@@ -86,8 +86,9 @@ void BasePrefetchingDataLayer<Dtype>::InternalThreadEntry() {
 
   try {
     while (!must_stop()) {
-      Batch<Dtype>* batch = prefetch_free_.pop();
-      load_batch(batch);
+      Batch<Dtype>* batch = prefetch_free_.pop(); // batch是指针
+      //load_batch(Batch<Dtype>* batch)方法Reshape了其中的data_ Blob，为其重新分配所需的内存。做到这一点已经足够，因为prefetch_free_中存储的也只是指针
+      load_batch(batch); //实际上会调用DataLayer的load_batch方法，因为它是个纯虚函数
 #ifndef CPU_ONLY
       if (Caffe::mode() == Caffe::GPU) {
         batch->data_.data().get()->async_gpu_push(stream);
@@ -109,6 +110,7 @@ void BasePrefetchingDataLayer<Dtype>::InternalThreadEntry() {
 #endif
 }
 
+//数据层作为网络的最底层，其forward功能只需要将设置top[0] top[1]的数据，即拷贝。
 template <typename Dtype>
 void BasePrefetchingDataLayer<Dtype>::Forward_cpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {

@@ -32,7 +32,7 @@ namespace gflags = google;
 #endif  // GFLAGS_GFLAGS_H_
 
 // Disable the copy and assignment operator for a class.
-// 将赋值构造和声明构造私有
+// 禁止某个类通过构造函数直接初始化另一个类
 #define DISABLE_COPY_AND_ASSIGN(classname) \
 private:\
   classname(const classname&);\
@@ -44,6 +44,7 @@ private:\
   template class classname<float>; \
   template class classname<double>
 
+// 初始化GPU的前向传播函数
 #define INSTANTIATE_LAYER_GPU_FORWARD(classname) \
   template void classname<float>::Forward_gpu( \
       const std::vector<Blob<float>*>& bottom, \
@@ -62,6 +63,8 @@ private:\
       const std::vector<bool>& propagate_down, \
       const std::vector<Blob<double>*>& bottom)
 
+
+// 初始化GPU的前向反向传播函数
 #define INSTANTIATE_LAYER_GPU_FUNCS(classname) \
   INSTANTIATE_LAYER_GPU_FORWARD(classname); \
   INSTANTIATE_LAYER_GPU_BACKWARD(classname)

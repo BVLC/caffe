@@ -36,15 +36,17 @@ class InternalThread {
  protected:
   /* Implement this method in your subclass
       with the code you want your thread to run. */
+  // 定义了一个虚函数，要求继承该类的必须要实现
   virtual void InternalThreadEntry() {}
 
   /* Should be tested when running loops to exit when requested. */
+  // 在当请求退出的时候应该调用该函数
   bool must_stop();
 
  private:
   void entry(int device, Caffe::Brew mode, int rand_seed,
       int solver_count, int solver_rank, bool multiprocess);
-
+  // 内部的成员变量
   shared_ptr<boost::thread> thread_;
 };
 

@@ -13,6 +13,7 @@
 
 namespace caffe {
 
+// DataLayer才是主角，继承自BasePrefetchingDataLayer
 template <typename Dtype>
 class DataLayer : public BasePrefetchingDataLayer<Dtype> {
  public:

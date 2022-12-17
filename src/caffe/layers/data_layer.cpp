@@ -34,11 +34,13 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
   datum.ParseFromString(cursor_->value());
 
   // Use data_transformer to infer the expected blob shape from datum.
+  // 用数据来推断blob的形状存放到top_shape// 用数据来推断blob的形状存放到top_shape
   vector<int> top_shape = this->data_transformer_->InferBlobShape(datum);
   this->transformed_data_.Reshape(top_shape);
   // Reshape top[0] and prefetch_data according to the batch_size.
   top_shape[0] = batch_size;
   top[0]->Reshape(top_shape);
+  // 设置预取数据的形状
   for (int i = 0; i < this->prefetch_.size(); ++i) {
     this->prefetch_[i]->data_.Reshape(top_shape);
   }
@@ -47,6 +49,7 @@ void DataLayer<Dtype>::DataLayerSetUp(const vector<Blob<Dtype>*>& bottom,
       << top[0]->channels() << "," << top[0]->height() << ","
       << top[0]->width();
   // label
+  // 如果输出类标的话则把top[1]的形状也弄一下
   if (this->output_labels_) {
     vector<int> label_shape(1, batch_size);
     top[1]->Reshape(label_shape);
@@ -78,6 +81,7 @@ void DataLayer<Dtype>::Next() {
 }
 
 // This function is called on prefetch thread
+// 这个函数是在自己定义的线程执行函数内部执行的
 template<typename Dtype>
 void DataLayer<Dtype>::load_batch(Batch<Dtype>* batch) {
   CPUTimer batch_timer;

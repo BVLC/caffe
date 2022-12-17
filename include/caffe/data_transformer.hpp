@@ -35,6 +35,7 @@ class DataTransformer {
    *    This is destination blob. It can be part of top blob's data if
    *    set_cpu_data() is used. See data_layer.cpp for an example.
    */
+  // 对Datum的数据进行变换，放入到transformed_blob中
   void Transform(const Datum& datum, Blob<Dtype>* transformed_blob);
 
   /**
@@ -47,6 +48,7 @@ class DataTransformer {
    *    This is destination blob. It can be part of top blob's data if
    *    set_cpu_data() is used. See memory_layer.cpp for an example.
    */
+  // 对Datum容器的数据进行变换翻入到transformed_blob
   void Transform(const vector<Datum> & datum_vector,
                 Blob<Dtype>* transformed_blob);
 

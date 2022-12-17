@@ -10,6 +10,7 @@
 namespace caffe {
 
 // Make sure each thread can have different values.
+// boost::thread_specific_ptr是线程局部存储机制，一开始的值是null
 static boost::thread_specific_ptr<Caffe> thread_instance_;
 
 Caffe& Caffe::Get() {
@@ -20,6 +21,7 @@ Caffe& Caffe::Get() {
 }
 
 // random seeding
+// linux下的熵池下获取随机数的种子
 int64_t cluster_seedgen(void) {
   int64_t s, seed, pid;
   FILE* f = fopen("/dev/urandom", "rb");
@@ -56,7 +58,7 @@ Caffe::Caffe()
       solver_count_(1), solver_rank_(0), multiprocess_(false) { }
 
 Caffe::~Caffe() { }
-
+//  手动设定随机数生成器的种子
 void Caffe::set_random_seed(const unsigned int seed) {
   // RNG seed
   Get().random_generator_.reset(new RNG(seed));
@@ -79,20 +81,19 @@ int Caffe::FindDevice(const int start_id) {
   NO_GPU;
   return -1;
 }
-
+// 定义RNG内部的Generator类
 class Caffe::RNG::Generator {
  public:
-  Generator() : rng_(new caffe::rng_t(cluster_seedgen())) {}
-  explicit Generator(unsigned int seed) : rng_(new caffe::rng_t(seed)) {}
-  caffe::rng_t* rng() { return rng_.get(); }
+  Generator() : rng_(new caffe::rng_t(cluster_seedgen())) {} //linux下的熵池生成随机数种子，注意typedef boost::mt19937 rng_t;这个在utils/rng.hpp头文件里面
+  explicit Generator(unsigned int seed) : rng_(new caffe::rng_t(seed)) {} //采用给定的种子初始化
+  caffe::rng_t* rng() { return rng_.get(); } //属性
  private:
-  shared_ptr<caffe::rng_t> rng_;
+  shared_ptr<caffe::rng_t> rng_; //内部变量
 };
-
+// 实现RNG内部的构造函数
 Caffe::RNG::RNG() : generator_(new Generator()) { }
-
 Caffe::RNG::RNG(unsigned int seed) : generator_(new Generator(seed)) { }
-
+// 实现RNG内部的运算符重载
 Caffe::RNG& Caffe::RNG::operator=(const RNG& other) {
   generator_ = other.generator_;
   return *this;
@@ -101,15 +102,15 @@ Caffe::RNG& Caffe::RNG::operator=(const RNG& other) {
 void* Caffe::RNG::generator() {
   return static_cast<void*>(generator_->rng());
 }
-
 #else  // Normal GPU + CPU Caffe.
-
+// 构造函数，初始化cublas和curand库的句柄
 Caffe::Caffe()
     : cublas_handle_(NULL), curand_generator_(NULL), random_generator_(),
     mode_(Caffe::CPU),
     solver_count_(1), solver_rank_(0), multiprocess_(false) {
   // Try to create a cublas handler, and report an error if failed (but we will
   // keep the program running as one might just want to run CPU code).
+  // 初始化cublas并获得句柄
   if (cublasCreate(&cublas_handle_) != CUBLAS_STATUS_SUCCESS) {
     LOG(ERROR) << "Cannot create Cublas handle. Cublas won't be available.";
   }
@@ -128,7 +129,7 @@ Caffe::~Caffe() {
     CURAND_CHECK(curandDestroyGenerator(curand_generator_));
   }
 }
-
+// 初始化CUDA的随机数种子以及cpu的随机数种子
 void Caffe::set_random_seed(const unsigned int seed) {
   // Curand seed
   static bool g_curand_availability_logged = false;
@@ -146,15 +147,16 @@ void Caffe::set_random_seed(const unsigned int seed) {
   // RNG seed
   Get().random_generator_.reset(new RNG(seed));
 }
-
+// 设置GPU设备并初始化句柄以及随机数种子
 void Caffe::SetDevice(const int device_id) {
   int current_device;
-  CUDA_CHECK(cudaGetDevice(&current_device));
+  CUDA_CHECK(cudaGetDevice(&current_device)); //获取当前设备id
   if (current_device == device_id) {
     return;
   }
   // The call to cudaSetDevice must come before any calls to Get, which
   // may perform initialization using the GPU.
+  // 在Get之前必须先执行cudasetDevice函数
   CUDA_CHECK(cudaSetDevice(device_id));
   if (Get().cublas_handle_) CUBLAS_CHECK(cublasDestroy(Get().cublas_handle_));
   if (Get().curand_generator_) {
@@ -167,6 +169,7 @@ void Caffe::SetDevice(const int device_id) {
       cluster_seedgen()));
 }
 
+// 获取设备信息
 void Caffe::DeviceQuery() {
   cudaDeviceProp prop;
   int device;

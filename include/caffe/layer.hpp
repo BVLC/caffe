@@ -12,6 +12,16 @@
 #include "caffe/util/math_functions.hpp"
 
 /**
+ * 相关的类包括：
+ * layer.hpp 抽象的基类
+ * common_layers.hpp
+ * data_layers.hpp
+ * loss_layers.hpp
+ * neuron_layers.hpp
+ * vision_layers.hpp
+*/
+
+/**
  Forward declare boost::thread instead of including boost/thread.hpp
  to avoid a boost/NVCC issues (#1009, #1010) on OSX.
  */
@@ -68,9 +78,9 @@ class Layer {
   void SetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
     CheckBlobCounts(bottom, top);
-    LayerSetUp(bottom, top);
-    Reshape(bottom, top);
-    SetLossWeights(top);
+    LayerSetUp(bottom, top); 
+    Reshape(bottom, top); // 调用Reshape函数为top blob分配合适大小的存储空间 
+    SetLossWeights(top); //为每个top blob设置损失权重乘子，非LossLayer为的top blob其值为零 
   }
 
   /**
@@ -89,6 +99,8 @@ class Layer {
    * <code>Reshape</code>, which will be called before the forward pass to
    * adjust the top blob sizes.
    */
+
+  // 网络构建时初始化层和层的连接
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {}
 
@@ -124,6 +136,7 @@ class Layer {
    *
    * Your layer should implement Forward_cpu and (optionally) Forward_gpu.
    */
+  // 网络数据前向传递，给定bottom输入数据，计算输出到top
   inline Dtype Forward(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top);
 
@@ -148,6 +161,7 @@ class Layer {
    *
    * Your layer should implement Backward_cpu and (optionally) Backward_gpu.
    */
+  // 网络误差反向传递，给定top的梯度，计算bottom的梯度并存储到bottom blob
   inline void Backward(const vector<Blob<Dtype>*>& top,
       const vector<bool>& propagate_down,
       const vector<Blob<Dtype>*>& bottom);
