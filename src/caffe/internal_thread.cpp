@@ -5,11 +5,12 @@
 #include "caffe/util/math_functions.hpp"
 
 namespace caffe {
-
+// 析构函数，调用停止内部线程函数
 InternalThread::~InternalThread() {
   StopInternalThread();
 }
 
+// 测试线程是否起来
 bool InternalThread::is_started() const {
   return thread_ && thread_->joinable();
 }
@@ -32,6 +33,8 @@ void InternalThread::StartInternalThread() {
   bool multiprocess = Caffe::multiprocess();
 
   try {
+    // 然后重新实例化一个thread对象给thread_指针，该线程的执行的是entry函数
+    // boost::thread输入依次为函数名和传入的参数
     thread_.reset(new boost::thread(&InternalThread::entry, this, device, mode,
           rand_seed, solver_count, solver_rank, multiprocess));
   } catch (std::exception& e) {
@@ -39,6 +42,7 @@ void InternalThread::StartInternalThread() {
   }
 }
 
+//  
 void InternalThread::entry(int device, Caffe::Brew mode, int rand_seed,
     int solver_count, int solver_rank, bool multiprocess) {
 #ifndef CPU_ONLY
@@ -55,10 +59,10 @@ void InternalThread::entry(int device, Caffe::Brew mode, int rand_seed,
 
 void InternalThread::StopInternalThread() {
   if (is_started()) {
-    thread_->interrupt();
+    thread_->interrupt(); // 打断线程
     try {
-      thread_->join();
-    } catch (boost::thread_interrupted&) {
+      thread_->join(); //等待线程结束
+    } catch (boost::thread_interrupted&) { //如果被打断，啥也不干，因为是自己要打断的^
     } catch (std::exception& e) {
       LOG(FATAL) << "Thread exception: " << e.what();
     }

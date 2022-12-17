@@ -52,10 +52,15 @@ namespace caffe {
 template <typename Dtype>
 class Layer;
 
+/**
+ * 主要负责Layer的注册，已经注册完的Layer在运行时可以通过传递一个LayerParameter给CreaterLayer函数的方式来调用
+*/
 template <typename Dtype>
 class LayerRegistry {
  public:
+  // 函数指针Creator，返回的是Layer<Dtype>类型的指针
   typedef shared_ptr<Layer<Dtype> > (*Creator)(const LayerParameter&);
+  // CreatorRegistry是字符串与对应的Creator的映射
   typedef std::map<string, Creator> CreatorRegistry;
 
   static CreatorRegistry& Registry() {
@@ -64,6 +69,7 @@ class LayerRegistry {
   }
 
   // Adds a creator.
+  // 给定类型，以及函数指针，加入一个Creator到注册表
   static void AddCreator(const string& type, Creator creator) {
     CreatorRegistry& registry = Registry();
     CHECK_EQ(registry.count(type), 0)
@@ -72,6 +78,7 @@ class LayerRegistry {
   }
 
   // Get a layer using a LayerParameter.
+  //给定层的类型，创建层
   static shared_ptr<Layer<Dtype> > CreateLayer(const LayerParameter& param) {
     if (Caffe::root_solver()) {
       LOG(INFO) << "Creating layer " << param.name();
@@ -80,6 +87,7 @@ class LayerRegistry {
     CreatorRegistry& registry = Registry();
     CHECK_EQ(registry.count(type), 1) << "Unknown layer type: " << type
         << " (known types: " << LayerTypeListString() << ")";
+    // 调用对应的层的Creator函数
     return registry[type](param);
   }
 
@@ -96,6 +104,7 @@ class LayerRegistry {
  private:
   // Layer registry should never be instantiated - everything is done with its
   // static variables.
+  // 禁止实例化，因为该类都是静态函数，所以是私有的
   LayerRegistry() {}
 
   static string LayerTypeListString() {
@@ -112,13 +121,15 @@ class LayerRegistry {
   }
 };
 
-
+// 自己定义层的注册器，以供后面的宏进行使用
 template <typename Dtype>
 class LayerRegisterer {
  public:
+  // 层的注册器的构造函数
   LayerRegisterer(const string& type,
                   shared_ptr<Layer<Dtype> > (*creator)(const LayerParameter&)) {
-    // LOG(INFO) << "Registering layer type: " << type;
+    LOG(INFO) << "Registering layer type: " << type;
+    // 还是调用的层注册表中的加入Creator函数加入注册表
     LayerRegistry<Dtype>::AddCreator(type, creator);
   }
 };

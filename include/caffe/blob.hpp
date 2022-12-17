@@ -11,6 +11,7 @@
 
 const int kMaxBlobAxes = 32;
 
+
 namespace caffe {
 
 /**
@@ -20,6 +21,8 @@ namespace caffe {
  *
  * TODO(dox): more thorough description.
  */
+
+//存储基础数据结构的模板类 
 template <typename Dtype>
 class Blob {
  public:
@@ -49,9 +52,9 @@ class Blob {
    * propagate the new input shape to higher layers.
    */
   void Reshape(const vector<int>& shape);
-  void Reshape(const BlobShape& shape);
-  void ReshapeLike(const Blob& other);
-  inline string shape_string() const {
+  void Reshape(const BlobShape& shape); // NCHW
+  void ReshapeLike(const Blob& other);  
+  inline string shape_string() const { 
     ostringstream stream;
     for (int i = 0; i < shape_.size(); ++i) {
       stream << shape_[i] << " ";
@@ -267,12 +270,12 @@ class Blob {
   bool ShapeEquals(const BlobProto& other);
 
  protected:
-  shared_ptr<SyncedMemory> data_;
-  shared_ptr<SyncedMemory> diff_;
-  shared_ptr<SyncedMemory> shape_data_;
+  shared_ptr<SyncedMemory> data_; //参数
+  shared_ptr<SyncedMemory> diff_; //梯度
+  shared_ptr<SyncedMemory> shape_data_; //shape(NCHW)
   vector<int> shape_;
-  int count_;
-  int capacity_;
+  int count_;    //reshape后的数据块的大小
+  int capacity_; //当前数据块的大小
 
   DISABLE_COPY_AND_ASSIGN(Blob);
 };  // class Blob

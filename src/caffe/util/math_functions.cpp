@@ -9,6 +9,17 @@
 
 namespace caffe {
 
+/*
+ *功能： C=alpha*A*B+beta*C
+ *A,B,C 是输入矩阵（一维数组格式）
+ *CblasRowMajor :数据是行主序的（二维数据也是用一维数组储存的）
+ *TransA, TransB：是否要对A和B做转置操作（CblasTrans CblasNoTrans）
+ *M： A、C 的行数
+ *N： B、C 的列数
+ *K： A 的列数， B 的行数
+ *lda ： A的列数（不做转置）行数（做转置）
+ *ldb： B的列数（不做转置）行数（做转置）
+*/
 template<>
 void caffe_cpu_gemm<float>(const CBLAS_TRANSPOSE TransA,
     const CBLAS_TRANSPOSE TransB, const int M, const int N, const int K,
@@ -31,6 +42,13 @@ void caffe_cpu_gemm<double>(const CBLAS_TRANSPOSE TransA,
       ldb, beta, C, N);
 }
 
+/*
+功能： y=alpha*A*x+beta*y
+其中X和Y是向量，A 是矩阵
+M：A 的行数
+N：A 的列数
+cblas_sgemv 中的 参数1 表示对X和Y的每个元素都进行操作
+*/
 template <>
 void caffe_cpu_gemv<float>(const CBLAS_TRANSPOSE TransA, const int M,
     const int N, const float alpha, const float* A, const float* x,
@@ -45,6 +63,11 @@ void caffe_cpu_gemv<double>(const CBLAS_TRANSPOSE TransA, const int M,
   cblas_dgemv(CblasRowMajor, TransA, M, N, alpha, A, N, x, 1, beta, y, 1);
 }
 
+
+/*
+功能： Y=alpha*X+Y
+N：为X和Y中element的个数
+*/
 template <>
 void caffe_axpy<float>(const int N, const float alpha, const float* X,
     float* Y) { cblas_saxpy(N, alpha, X, 1, Y, 1); }
@@ -53,6 +76,12 @@ template <>
 void caffe_axpy<double>(const int N, const double alpha, const double* X,
     double* Y) { cblas_daxpy(N, alpha, X, 1, Y, 1); }
 
+/*
+功能：用常数 alpha 对 Y 进行初始化
+函数 void *memset(void *buffer, char c, unsigned count) 一般为新申请的内存做初始化，
+功能是将buffer所指向内存中的每个字节的内容全部设置为c指定的ASCII值, count为块的大小,
+使用memset函数来初始化数组或者结构体比其他初始化方法更快一点
+*/
 template <typename Dtype>
 void caffe_set(const int N, const Dtype alpha, Dtype* Y) {
   if (alpha == 0) {
@@ -82,6 +111,12 @@ void caffe_add_scalar(const int N, const double alpha, double* Y) {
   }
 }
 
+/*
+函数 void *memcpy(void *dest, void *src, unsigned int count) 把src所指向
+的内存区域 copy到dest所指向的内存区域, count为块的大小
+函数说明: memcpy()用来拷贝src所指的内存内容前n个字节到dest所指的内存地址上。与strcpy()不同的是,memcpy()会完整的复制n个字节,不会因为遇到字符串结束'\0'而结束
+返回值:   返回指向dest的指针
+*/
 template <typename Dtype>
 void caffe_copy(const int N, const Dtype* X, Dtype* Y) {
   if (X != Y) {
@@ -99,11 +134,14 @@ void caffe_copy(const int N, const Dtype* X, Dtype* Y) {
 }
 
 template void caffe_copy<int>(const int N, const int* X, int* Y);
-template void caffe_copy<unsigned int>(const int N, const unsigned int* X,
-    unsigned int* Y);
+template void caffe_copy<unsigned int>(const int N, const unsigned int* X, unsigned int* Y);
 template void caffe_copy<float>(const int N, const float* X, float* Y);
 template void caffe_copy<double>(const int N, const double* X, double* Y);
 
+/*
+功能：X = alpha*X
+N： X中element的个数
+*/
 template <>
 void caffe_scal<float>(const int N, const float alpha, float *X) {
   cblas_sscal(N, alpha, X, 1);
@@ -114,6 +152,9 @@ void caffe_scal<double>(const int N, const double alpha, double *X) {
   cblas_dscal(N, alpha, X, 1);
 }
 
+/*
+功能：Y= alpha*X+beta*Y
+*/
 template <>
 void caffe_cpu_axpby<float>(const int N, const float alpha, const float* X,
                             const float beta, float* Y) {
@@ -126,6 +167,9 @@ void caffe_cpu_axpby<double>(const int N, const double alpha, const double* X,
   cblas_daxpby(N, alpha, X, 1, beta, Y, 1);
 }
 
+/*
+功能：这四个函数分别实现element-wise的加减乘除（y[i] = a[i] + - * \ b[i]）
+*/
 template <>
 void caffe_add<float>(const int n, const float* a, const float* b,
     float* y) {
@@ -174,6 +218,9 @@ void caffe_div<double>(const int n, const double* a, const double* b,
   vdDiv(n, a, b, y);
 }
 
+/*
+功能 : 同样是element-wise操作，分别是y[i] = a[i] ^ b， y[i] = a[i]^2，y[i] = exp(a[i] )，y[i] = |a[i] |
+*/
 template <>
 void caffe_powx<float>(const int n, const float* a, const float b,
     float* y) {
@@ -235,11 +282,15 @@ template <>
 void caffe_abs<double>(const int n, const double* a, double* y) {
     vdAbs(n, a, y);
 }
-
+/*
+功能：返回一个随机数
+*/
 unsigned int caffe_rng_rand() {
   return (*caffe_rng())();
 }
-
+/*
+功能 ： 返回 b 最大方向上可以表示的最接近的数值。
+*/
 template <typename Dtype>
 Dtype caffe_nextafter(const Dtype b) {
   return boost::math::nextafter<Dtype>(
@@ -335,6 +386,10 @@ void caffe_rng_bernoulli<double>(const int n, const double p, unsigned int* r);
 template
 void caffe_rng_bernoulli<float>(const int n, const float p, unsigned int* r);
 
+/*
+功能： 返回 vector X 和 vector Y 的内积。
+incx， incy ： 步长，即每隔incx 或 incy 个element 进行操作。
+*/
 template <>
 float caffe_cpu_strided_dot<float>(const int n, const float* x, const int incx,
     const float* y, const int incy) {
@@ -358,6 +413,9 @@ float caffe_cpu_dot<float>(const int n, const float* x, const float* y);
 template
 double caffe_cpu_dot<double>(const int n, const double* x, const double* y);
 
+/*
+功能：计算 vector x 的所有element的绝对值之和。
+*/
 template <>
 float caffe_cpu_asum<float>(const int n, const float* x) {
   return cblas_sasum(n, x, 1);

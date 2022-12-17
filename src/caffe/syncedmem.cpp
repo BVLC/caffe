@@ -96,6 +96,8 @@ const void* SyncedMemory::cpu_data() {
   return (const void*)cpu_ptr_;
 }
 
+// set_cpu_data释放了当前的cpu内存，把指针指向data所指的内存中，own_cpu_data_ 设置为了false，表明当前使用的是宿主(data)的内存,
+//  我们对own_cpu_data_ 进行标记是有必要的，因为当使用的是宿主的内存的时候，当这个类被释放而调用析构函数时，需要检查共享标记，不能释放宿主的内存，这样可以保证自己申请的内存只能由自己释放。
 void SyncedMemory::set_cpu_data(void* data) {
   check_device();
   CHECK(data);

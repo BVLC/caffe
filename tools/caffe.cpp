@@ -26,6 +26,7 @@ using caffe::Timer;
 using caffe::vector;
 using std::ostringstream;
 
+// gflags params 
 DEFINE_string(gpu, "",
     "Optional; run in GPU mode on given device IDs separated by ','."
     "Use '-gpu all' to run on all available GPUs. The effective training "
@@ -56,10 +57,13 @@ DEFINE_string(sighup_effect, "snapshot",
              "snapshot, stop or none.");
 
 // A simple registry for caffe commands.
+// 函数指针：可用于处理一些参数和返回值一致，但是功能不一样一组函数。本示例：定义了一组函数指针，函数参数为(),但是返回值为int这样一组函数指针族。
 typedef int (*BrewFunction)();
+// 定义BrewMap为一个map，key为string，value为函数指针(参数为(),返回为int)。
 typedef std::map<caffe::string, BrewFunction> BrewMap;
 BrewMap g_brew_map;
 
+//该宏命令完成一次注册的初始化操作； 其中在宏中#和##符号表示的意思如下： #：用来把参数转换成字符串； ##：用来连接前后两个参数。
 #define RegisterBrewFunction(func) \
 namespace { \
 class __Registerer_##func { \
@@ -69,8 +73,14 @@ class __Registerer_##func { \
   } \
 }; \
 __Registerer_##func g_registerer_##func; \
-}
+}  // 完成了全局变量的初始化操作
 
+/** 
+ * 以train函数为例子，如果我们在Command Line中输入了caffe train <args>，经过Google Flags的解析argv[1]=train，
+ * 因此，在GetBrewFunction中会通过g_brew_map返回一个指向train函数的函数指针，
+ * 最后在main函数中就通过这个返回的函数指针完成了对train函数的调用;
+ * 具体可以是 train()，test()，device_query()，time() 这四个函数指针的其中一个。。
+**/
 static BrewFunction GetBrewFunction(const caffe::string& name) {
   if (g_brew_map.count(name)) {
     return g_brew_map[name];
@@ -110,7 +120,7 @@ static void get_gpus(vector<int>* gpus) {
 
 // Parse phase from flags
 caffe::Phase get_phase_from_flags(caffe::Phase default_value) {
-  if (FLAGS_phase == "")
+  if (FLAGS_phase == "") // 默认train
     return default_value;
   if (FLAGS_phase == "TRAIN")
     return caffe::TRAIN;
@@ -144,7 +154,7 @@ int device_query() {
   }
   return 0;
 }
-RegisterBrewFunction(device_query);
+RegisterBrewFunction(device_query); /*这里通过预编译阶段的宏替换，将定义的device_query函数指针赋值到map容器中*/
 
 // Translate the signal effect the user specified on the command-line to the
 // corresponding enumeration.
@@ -164,14 +174,14 @@ caffe::SolverAction::Enum GetRequestedAction(
 
 // Train / Finetune a model.
 int train() {
-  CHECK_GT(FLAGS_solver.size(), 0) << "Need a solver definition to train.";
+  CHECK_GT(FLAGS_solver.size(), 0) << "Need a solver definition to train."; //必须传入solver文件
   CHECK(!FLAGS_snapshot.size() || !FLAGS_weights.size())
       << "Give a snapshot to resume training or weights to finetune "
-      "but not both.";
+      "but not both.";  // snapshot和weight只能有一个
   vector<string> stages = get_stages_from_flags();
 
-  caffe::SolverParameter solver_param;
-  caffe::ReadSolverParamsFromTextFileOrDie(FLAGS_solver, &solver_param);
+  caffe::SolverParameter solver_param; // solver定义在src/proto/caffe.proto下面
+  caffe::ReadSolverParamsFromTextFileOrDie(FLAGS_solver, &solver_param); //读取传入的solver.prototxt文件
 
   solver_param.mutable_train_state()->set_level(FLAGS_level);
   for (int i = 0; i < stages.size(); i++) {
@@ -227,7 +237,7 @@ int train() {
   }
 
   shared_ptr<caffe::Solver<float> >
-      solver(caffe::SolverRegistry<float>::CreateSolver(solver_param));
+      solver(caffe::SolverRegistry<float>::CreateSolver(solver_param)); /*这里初始化网络*/
 
   solver->SetActionFunction(signal_handler.GetActionFunction());
 
@@ -276,20 +286,20 @@ int test() {
     Caffe::set_mode(Caffe::CPU);
   }
   // Instantiate the caffe net.
-  Net<float> caffe_net(FLAGS_model, caffe::TEST, FLAGS_level, &stages);
-  caffe_net.CopyTrainedLayersFrom(FLAGS_weights);
+  Net<float> caffe_net(FLAGS_model, caffe::TEST, FLAGS_level, &stages); /*创建一个网络对象*/
+  caffe_net.CopyTrainedLayersFrom(FLAGS_weights);   /*加载模型*/
   LOG(INFO) << "Running for " << FLAGS_iterations << " iterations.";
 
   vector<int> test_score_output_id;
   vector<float> test_score;
   float loss = 0;
-  for (int i = 0; i < FLAGS_iterations; ++i) {
+  for (int i = 0; i < FLAGS_iterations; ++i) {   /*FLAGS_iterations：：：传入的迭代次数，一次迭代一个batch*/
     float iter_loss;
     const vector<Blob<float>*>& result =
         caffe_net.Forward(&iter_loss);
     loss += iter_loss;
     int idx = 0;
-    for (int j = 0; j < result.size(); ++j) {
+    for (int j = 0; j < result.size(); ++j) {   
       const float* result_vec = result[j]->cpu_data();
       for (int k = 0; k < result[j]->count(); ++k, ++idx) {
         const float score = result_vec[k];
@@ -305,8 +315,8 @@ int test() {
       }
     }
   }
-  loss /= FLAGS_iterations;
-  LOG(INFO) << "Loss: " << loss;
+  loss /= FLAGS_iterations;  //所有迭代次数的总损失/迭代次数=平均每次迭代的损失
+  LOG(INFO) << "Loss: " << loss;  //*打印测试的结果总的平均的accuracy与loss信息*/
   for (int i = 0; i < test_score.size(); ++i) {
     const std::string& output_name = caffe_net.blob_names()[
         caffe_net.output_blob_indices()[test_score_output_id[i]]];
@@ -436,7 +446,7 @@ int main(int argc, char** argv) {
 #ifdef WITH_PYTHON_LAYER
     try {
 #endif
-      return GetBrewFunction(caffe::string(argv[1]))();
+      return GetBrewFunction(caffe::string(argv[1]))(); //通过函数指针调用执行的阶段&&功能
 #ifdef WITH_PYTHON_LAYER
     } catch (bp::error_already_set) {
       PyErr_Print();
