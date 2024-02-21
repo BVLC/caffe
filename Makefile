@@ -262,7 +262,7 @@ endif
 ifeq ($(LINUX), 1)
 	CXX ?= /usr/bin/g++
 	GCCVERSION := $(shell $(CXX) -dumpversion | cut -f1,2 -d.)
-	# older versions of gcc are too dumb to build boost with -Wuninitalized
+	# older versions of gcc are too dumb to build boost with -Wuninitialized
 	ifeq ($(shell echo | awk '{exit $(GCCVERSION) < 4.6;}'), 1)
 		WARNINGS += -Wno-uninitialized
 	endif
@@ -423,7 +423,7 @@ CXXFLAGS += -MMD -MP
 COMMON_FLAGS += $(foreach includedir,$(INCLUDE_DIRS),-I$(includedir))
 CXXFLAGS += -pthread -fPIC $(COMMON_FLAGS) $(WARNINGS)
 NVCCFLAGS += -ccbin=$(CXX) -Xcompiler -fPIC $(COMMON_FLAGS)
-# mex may invoke an older gcc that is too liberal with -Wuninitalized
+# mex may invoke an older gcc that is too liberal with -Wuninitialized
 MATLAB_CXXFLAGS := $(CXXFLAGS) -Wno-uninitialized
 LINKFLAGS += -pthread -fPIC $(COMMON_FLAGS) $(WARNINGS)
 
