@@ -53,7 +53,7 @@ void LRNLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
     power_layer_.reset(new PowerLayer<Dtype>(power_param));
     power_layer_->SetUp(pool_top_vec_, power_top_vec_);
     // Set up a product_layer_ to compute outputs by multiplying inputs by the
-    // inverse demoninator computed by the power layer.
+    // inverse denominator computed by the power layer.
     product_bottom_vec_.clear();
     product_bottom_vec_.push_back(&product_input_);
     product_bottom_vec_.push_back(&power_output_);
