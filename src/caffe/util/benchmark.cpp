@@ -6,7 +6,7 @@
 namespace caffe {
 
 Timer::Timer()
-    : initted_(false),
+    : inited_(false),
       running_(false),
       has_run_at_least_once_(false) {
   Init();
@@ -106,7 +106,7 @@ float Timer::Seconds() {
 }
 
 void Timer::Init() {
-  if (!initted()) {
+  if (!inited()) {
     if (Caffe::mode() == Caffe::GPU) {
 #ifndef CPU_ONLY
       CUDA_CHECK(cudaEventCreate(&start_gpu_));
@@ -115,12 +115,12 @@ void Timer::Init() {
       NO_GPU;
 #endif
     }
-    initted_ = true;
+    inited_ = true;
   }
 }
 
 CPUTimer::CPUTimer() {
-  this->initted_ = true;
+  this->inited_ = true;
   this->running_ = false;
   this->has_run_at_least_once_ = false;
 }
