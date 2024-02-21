@@ -66,7 +66,7 @@ class BatchNormLayer : public Layer<Dtype> {
   int channels_;
   Dtype eps_;
 
-  // extra temporarary variables is used to carry out sums/broadcasting
+  // extra temporary variables is used to carry out sums/broadcasting
   // using BLAS
   Blob<Dtype> batch_sum_multiplier_;
   Blob<Dtype> num_by_chans_;
