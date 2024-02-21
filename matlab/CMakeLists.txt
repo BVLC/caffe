@@ -1,5 +1,5 @@
 # Builds Matlab (or Octave) interface. In case of Matlab caffe must be
-# compield as shared library. Octave can link static or shared caffe library
+# compiled as shared library. Octave can link static or shared caffe library
 # To install octave run: sudo apt-get install liboctave-dev
 
 if(NOT BUILD_matlab)
