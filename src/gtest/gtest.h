@@ -15453,7 +15453,7 @@ internal::ParamGenerator<T> Range(T start, T end) {
 // each with C-string values of "foo", "bar", and "baz":
 //
 // const char* strings[] = {"foo", "bar", "baz"};
-// INSTANTIATE_TEST_CASE_P(StringSequence, SrtingTest, ValuesIn(strings));
+// INSTANTIATE_TEST_CASE_P(StringSequence, StringTest, ValuesIn(strings));
 //
 // This instantiates tests from test case StlStringTest
 // each with STL strings with values "a" and "b":
