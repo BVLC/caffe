@@ -180,5 +180,5 @@ if __name__ == '__main__':
             if not path_to_log.endswith(get_log_file_suffix()):
                 print 'Log file must end in %s.' % get_log_file_suffix()
                 print_help()
-        ## plot_chart accpets multiple path_to_logs
+        ## plot_chart accepts multiple path_to_logs
         plot_chart(chart_type, path_to_png, path_to_logs)
