@@ -168,7 +168,7 @@ function(caffe_print_configuration_summary)
     caffe_status("")
   endif()
   if(BUILD_docs)
-    caffe_status("Documentaion:")
+    caffe_status("Documentation:")
     caffe_status("  Doxygen           :" DOXYGEN_FOUND THEN "${DOXYGEN_EXECUTABLE} (${DOXYGEN_VERSION})" ELSE "No")
     caffe_status("  config_file       :   ${DOXYGEN_config_file}")
 
