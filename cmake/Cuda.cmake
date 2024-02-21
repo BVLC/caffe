@@ -2,7 +2,7 @@ if(CPU_ONLY)
   return()
 endif()
 
-# Known NVIDIA GPU achitectures Caffe can be compiled for.
+# Known NVIDIA GPU architectures Caffe can be compiled for.
 # This list will be used for CUDA_ARCH_NAME = All option
 set(Caffe_known_gpu_archs "20 21(20) 30 35 50 60 61")
 
@@ -37,7 +37,7 @@ function(caffe_detect_installed_gpus out_variable)
 
     if(__nvcc_res EQUAL 0)
       string(REPLACE "2.1" "2.1(2.0)" __nvcc_out "${__nvcc_out}")
-      set(CUDA_gpu_detect_output ${__nvcc_out} CACHE INTERNAL "Returned GPU architetures from caffe_detect_gpus tool" FORCE)
+      set(CUDA_gpu_detect_output ${__nvcc_out} CACHE INTERNAL "Returned GPU architectures from caffe_detect_gpus tool" FORCE)
     endif()
   endif()
 
@@ -64,14 +64,14 @@ function(caffe_select_nvcc_arch_flags out_variable)
   endif()
 
   # set CUDA_ARCH_NAME strings (so it will be seen as dropbox in CMake-Gui)
-  set(CUDA_ARCH_NAME ${__archs_name_default} CACHE STRING "Select target NVIDIA GPU achitecture.")
+  set(CUDA_ARCH_NAME ${__archs_name_default} CACHE STRING "Select target NVIDIA GPU architecture.")
   set_property( CACHE CUDA_ARCH_NAME PROPERTY STRINGS "" ${__archs_names} )
   mark_as_advanced(CUDA_ARCH_NAME)
 
   # verify CUDA_ARCH_NAME value
   if(NOT ";${__archs_names};" MATCHES ";${CUDA_ARCH_NAME};")
     string(REPLACE ";" ", " __archs_names "${__archs_names}")
-    message(FATAL_ERROR "Only ${__archs_names} architeture names are supported.")
+    message(FATAL_ERROR "Only ${__archs_names} architecture names are supported.")
   endif()
 
   if(${CUDA_ARCH_NAME} STREQUAL "Manual")
