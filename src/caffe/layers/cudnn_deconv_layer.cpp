@@ -111,7 +111,7 @@ void CuDNNDeconvolutionLayer<Dtype>::Reshape(
   const int stride_w = stride_data[1];
 
   // Specify workspace limit for kernels directly until we have a
-  // planning strategy and a rewrite of Caffe's GPU memory mangagement
+  // planning strategy and a rewrite of Caffe's GPU memory management
   size_t workspace_limit_bytes = 8*1024*1024;
 
   for (int i = 0; i < bottom.size(); i++) {
