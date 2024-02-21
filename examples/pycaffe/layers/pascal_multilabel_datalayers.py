@@ -83,7 +83,7 @@ class BatchLoader(object):
     """
     This class abstracts away the loading of images.
     Images can either be loaded singly, or in a batch. The latter is used for
-    the asyncronous data layer to preload batches while other processing is
+    the asynchronous data layer to preload batches while other processing is
     performed.
     """
 
