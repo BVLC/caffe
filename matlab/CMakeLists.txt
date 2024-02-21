@@ -43,7 +43,7 @@ string(REPLACE ";" ";-L" link_folders "-L${folders}")
 string(REPLACE ";" ":"  rpath_folders   "${folders}")
 
 if(build_using MATCHES "Matlab")
-  set(libflags -lcaffe${Caffe_POSTFIX} ${libflags}) # Matlab R2014a complans for -Wl,--whole-archive
+  set(libflags -lcaffe${Caffe_POSTFIX} ${libflags}) # Matlab R2014a complains for -Wl,--whole-archive
 
   caffe_fetch_and_set_proper_mexext(Matlab_caffe_mex)
   add_custom_command(OUTPUT ${Matlab_caffe_mex} COMMAND ${Matlab_mex}
