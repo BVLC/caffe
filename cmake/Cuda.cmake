@@ -273,7 +273,7 @@ if(Boost_VERSION EQUAL 105500)
   set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} \"-DBOOST_NOINLINE=__attribute__((noinline))\" ")
 endif()
 
-# disable some nvcc diagnostic that apears in boost, glog, glags, opencv, etc.
+# disable some nvcc diagnostic that appears in boost, glog, glags, opencv, etc.
 foreach(diag cc_clobber_ignored integer_sign_change useless_using_declaration set_but_not_used)
   list(APPEND CUDA_NVCC_FLAGS -Xcudafe --diag_suppress=${diag})
 endforeach()
