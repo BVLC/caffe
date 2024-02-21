@@ -7,7 +7,7 @@ from PIL import Image
 
 # gflags
 gflags.DEFINE_string('image_lib', 'opencv',
-                     'OpenCV or PIL, case insensitive. The default value is the faster OpenCV.')
+                     'OpenCV or PIL, case-insensitive. The default value is the faster OpenCV.')
 gflags.DEFINE_string('input_folder', '',
                      'The folder that contains all input images, organized in synsets.')
 gflags.DEFINE_integer('output_side_length', 256,
