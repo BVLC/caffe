@@ -2469,7 +2469,7 @@ TYPED_TEST(NetTest, TestSkipPropagateDown) {
           << "layer_need_backward for " << layer_name << " should be True";
     }
   }
-  // check bottom_need_backward if propagat_down is false
+  // check bottom_need_backward if propagate_down is false
   this->InitSkipPropNet(true);
   vec_layer_need_backward.clear();
   vec_layer_need_backward = this->net_->layer_need_backward();
