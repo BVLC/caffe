@@ -17,7 +17,7 @@ else()
 endif()
 
 if(NOT BUILD_SHARED_LIBS AND build_using MATCHES Matlab)
-  message(FATAL_ERROR "Matlab MEX interface (with default mex options file) can only be built if caffe is compiled as shared library. Please enable 'BUILD_SHARED_LIBS' in CMake. Aternativelly you can switch to Octave compiler.")
+  message(FATAL_ERROR "Matlab MEX interface (with default mex options file) can only be built if caffe is compiled as shared library. Please enable 'BUILD_SHARED_LIBS' in CMake. Alternatively you can switch to Octave compiler.")
 endif()
 
 # helper function to set proper mex file extension
