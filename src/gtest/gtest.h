@@ -6879,7 +6879,7 @@ String StreamableToString(const T& streamable);
 // correct overload of FormatForComparisonFailureMessage (see below)
 // unless we pass the first argument by reference.  If we do that,
 // however, Visual Age C++ 10.1 generates a compiler error.  Therefore
-// we only apply the work-around for Symbian.
+// we only apply the workaround for Symbian.
 #if defined(__SYMBIAN32__)
 # define GTEST_CREF_WORKAROUND_ const&
 #else
