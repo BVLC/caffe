@@ -2914,7 +2914,7 @@ bool String::CaseInsensitiveCStringEquals(const char * lhs, const char * rhs) {
   // On windows, this method uses _wcsicmp which compares according to LC_CTYPE
   // environment variable. On GNU platform this method uses wcscasecmp
   // which compares according to LC_CTYPE category of the current locale.
-  // On MacOS X, it uses towlower, which also uses LC_CTYPE category of the
+  // On macOS, it uses towlower, which also uses LC_CTYPE category of the
   // current locale.
 bool String::CaseInsensitiveWideCStringEquals(const wchar_t* lhs,
                                               const wchar_t* rhs) {
@@ -7078,7 +7078,7 @@ struct ExecDeathTestArgs {
 
 #  if GTEST_OS_MAC
 inline char** GetEnviron() {
-  // When Google Test is built as a framework on MacOS X, the environ variable
+  // When Google Test is built as a framework on macOS, the environ variable
   // is unavailable. Apple's documentation (man environ) recommends using
   // _NSGetEnviron() instead.
   return *_NSGetEnviron();
