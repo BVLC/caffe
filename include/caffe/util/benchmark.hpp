@@ -17,14 +17,14 @@ class Timer {
   virtual float MicroSeconds();
   virtual float Seconds();
 
-  inline bool initted() { return initted_; }
+  inline bool inited() { return inited_; }
   inline bool running() { return running_; }
   inline bool has_run_at_least_once() { return has_run_at_least_once_; }
 
  protected:
   void Init();
 
-  bool initted_;
+  bool inited_;
   bool running_;
   bool has_run_at_least_once_;
 #ifndef CPU_ONLY

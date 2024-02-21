@@ -7,7 +7,7 @@
 #  Atlas_FOUND
 #  Atlas_INCLUDE_DIRS
 #  Atlas_LIBRARIES
-#  Atlas_LIBRARYRARY_DIRS
+#  Atlas_LIBRARY_DIRS
 
 set(Atlas_INCLUDE_SEARCH_PATHS
   /usr/include/atlas

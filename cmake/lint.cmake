@@ -2,7 +2,7 @@
 set(CMAKE_SOURCE_DIR ..)
 set(LINT_COMMAND ${CMAKE_SOURCE_DIR}/scripts/cpp_lint.py)
 set(SRC_FILE_EXTENSIONS h hpp hu c cpp cu cc)
-set(EXCLUDE_FILE_EXTENSTIONS pb.h pb.cc)
+set(EXCLUDE_FILE_EXTENSIONS pb.h pb.cc)
 set(LINT_DIRS include src/caffe examples tools python matlab)
 
 cmake_policy(SET CMP0009 NEW)  # suppress cmake warning
@@ -16,7 +16,7 @@ foreach(ext ${SRC_FILE_EXTENSIONS})
 endforeach()
 
 # find all files that should be excluded
-foreach(ext ${EXCLUDE_FILE_EXTENSTIONS})
+foreach(ext ${EXCLUDE_FILE_EXTENSIONS})
     file(GLOB_RECURSE FOUND_FILES ${CMAKE_SOURCE_DIR}/*.${ext})
     set(EXCLUDED_FILES ${EXCLUDED_FILES} ${FOUND_FILES})
 endforeach()

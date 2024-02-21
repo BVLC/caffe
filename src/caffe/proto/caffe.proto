@@ -189,7 +189,7 @@ message SolverParameter {
   // The prefix for the snapshot.
   // If not set then is replaced by prototxt file path without extension.
   // If is set to directory then is augmented by prototxt file name
-  // without extention.
+  // without extension.
   optional string snapshot_prefix = 15;
   // whether to snapshot diff in the results or not. Snapshotting diff will help
   // debugging but the final protocol buffer size will be much larger.

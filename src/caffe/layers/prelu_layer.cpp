@@ -108,9 +108,9 @@ void PReLULayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   // always zero.
   const int div_factor = channel_shared_ ? channels : 1;
 
-  // Propagte to param
+  // Propagate to param
   // Since to write bottom diff will affect top diff if top and bottom blobs
-  // are identical (in-place computaion), we first compute param backward to
+  // are identical (in-place computation), we first compute param backward to
   // keep top_diff unchanged.
   if (this->param_propagate_down_[0]) {
     Dtype* slope_diff = this->blobs_[0]->mutable_cpu_diff();

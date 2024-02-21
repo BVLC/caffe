@@ -3,7 +3,7 @@
 #include <vector>
 
 #include "caffe/layers/infogain_loss_layer.hpp"
-#include "caffe/util/io.hpp"  // for bolb reading of matrix H
+#include "caffe/util/io.hpp"  // for blob reading of matrix H
 #include "caffe/util/math_functions.hpp"
 
 namespace caffe {

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-classify.py is an out-of-the-box image classifer callable from the command line.
+classify.py is an out-of-the-box image classifier callable from the command line.
 
 By default it configures and runs the Caffe reference ImageNet model.
 """

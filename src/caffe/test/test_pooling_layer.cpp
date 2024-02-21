@@ -1044,7 +1044,7 @@ TYPED_TEST(CuDNNPoolingLayerTest, TestGradientMaxCuDNN) {
       pooling_param->set_kernel_h(kernel_h);
       pooling_param->set_kernel_w(kernel_w);
       pooling_param->set_stride(2);
-      // currenty, cuDNN pooling does not support padding
+      // currently, cuDNN pooling does not support padding
       pooling_param->set_pad(0);
       pooling_param->set_pool(PoolingParameter_PoolMethod_MAX);
       CuDNNPoolingLayer<TypeParam> layer(layer_param);

@@ -9,7 +9,7 @@ These models are learned and applied for problems ranging from simple regression
 To help share these models, we introduce the model zoo framework:
 
 - A standard format for packaging Caffe model info.
-- Tools to upload/download model info to/from Github Gists, and to download trained `.caffemodel` binaries.
+- Tools to upload/download model info to/from GitHub Gists, and to download trained `.caffemodel` binaries.
 - A central wiki page for sharing model info Gists.
 
 ## Where to get trained models
@@ -46,9 +46,9 @@ This simple format can be handled through bundled scripts or manually if need be
 
 ### Hosting model info
 
-Github Gist is a good format for model info distribution because it can contain multiple files, is versionable, and has in-browser syntax highlighting and markdown rendering.
+GitHub Gist is a good format for model info distribution because it can contain multiple files, is versionable, and has in-browser syntax highlighting and markdown rendering.
 
-`scripts/upload_model_to_gist.sh <dirname>` uploads non-binary files in the model directory as a Github Gist and prints the Gist ID. If `gist_id` is already part of the `<dirname>/readme.md` frontmatter, then updates existing Gist.
+`scripts/upload_model_to_gist.sh <dirname>` uploads non-binary files in the model directory as a GitHub Gist and prints the Gist ID. If `gist_id` is already part of the `<dirname>/readme.md` frontmatter, then updates existing Gist.
 
 Try doing `scripts/upload_model_to_gist.sh models/bvlc_alexnet` to test the uploading (don't forget to delete the uploaded gist afterward).
 

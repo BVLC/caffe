@@ -1784,7 +1784,7 @@ struct CompileAssert {
 //   expr is a compile-time constant.  (Template arguments must be
 //   determined at compile-time.)
 //
-// - The outter parentheses in CompileAssert<(bool(expr))> are necessary
+// - The outer parentheses in CompileAssert<(bool(expr))> are necessary
 //   to work around a bug in gcc 3.4.4 and 4.0.1.  If we had written
 //
 //     CompileAssert<bool(expr)>
@@ -3020,7 +3020,7 @@ class GTEST_API_ String {
   // On windows, this method uses _wcsicmp which compares according to LC_CTYPE
   // environment variable. On GNU platform this method uses wcscasecmp
   // which compares according to LC_CTYPE category of the current locale.
-  // On MacOS X, it uses towlower, which also uses LC_CTYPE category of the
+  // On macOS, it uses towlower, which also uses LC_CTYPE category of the
   // current locale.
   static bool CaseInsensitiveWideCStringEquals(const wchar_t* lhs,
                                                const wchar_t* rhs);
@@ -6879,7 +6879,7 @@ String StreamableToString(const T& streamable);
 // correct overload of FormatForComparisonFailureMessage (see below)
 // unless we pass the first argument by reference.  If we do that,
 // however, Visual Age C++ 10.1 generates a compiler error.  Therefore
-// we only apply the work-around for Symbian.
+// we only apply the workaround for Symbian.
 #if defined(__SYMBIAN32__)
 # define GTEST_CREF_WORKAROUND_ const&
 #else
@@ -7201,7 +7201,7 @@ class TestFactoryBase {
   GTEST_DISALLOW_COPY_AND_ASSIGN_(TestFactoryBase);
 };
 
-// This class provides implementation of TeastFactoryBase interface.
+// This class provides implementation of TestFactoryBase interface.
 // It is used in TEST and TEST_F macros.
 template <class TestClass>
 class TestFactoryImpl : public TestFactoryBase {
@@ -7852,7 +7852,7 @@ class NativeArray {
 
 // Implements Boolean test assertions such as EXPECT_TRUE. expression can be
 // either a boolean expression or an AssertionResult. text is a textual
-// represenation of expression as it was passed into the EXPECT_TRUE.
+// representation of expression as it was passed into the EXPECT_TRUE.
 #define GTEST_TEST_BOOLEAN_(expression, text, actual, expected, fail) \
   GTEST_AMBIGUOUS_ELSE_BLOCKER_ \
   if (const ::testing::AssertionResult gtest_ar_ = \
@@ -15453,7 +15453,7 @@ internal::ParamGenerator<T> Range(T start, T end) {
 // each with C-string values of "foo", "bar", and "baz":
 //
 // const char* strings[] = {"foo", "bar", "baz"};
-// INSTANTIATE_TEST_CASE_P(StringSequence, SrtingTest, ValuesIn(strings));
+// INSTANTIATE_TEST_CASE_P(StringSequence, StringTest, ValuesIn(strings));
 //
 // This instantiates tests from test case StlStringTest
 // each with STL strings with values "a" and "b":
@@ -17621,7 +17621,7 @@ class GTEST_API_ TestResult {
 
   // Protects mutable state of the property vector and of owned
   // properties, whose values may be updated.
-  internal::Mutex test_properites_mutex_;
+  internal::Mutex test_properties_mutex_;
 
   // The vector of TestPartResults
   std::vector<TestPartResult> test_part_results_;
@@ -18229,7 +18229,7 @@ class GTEST_API_ UnitTest {
   internal::UnitTestImpl* impl() { return impl_; }
   const internal::UnitTestImpl* impl() const { return impl_; }
 
-  // These classes and funcions are friends as they need to access private
+  // These classes and functions are friends as they need to access private
   // members of UnitTest.
   friend class Test;
   friend class internal::AssertHelper;

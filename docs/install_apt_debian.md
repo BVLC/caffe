@@ -98,7 +98,7 @@ Note, this requires a `deb-src` entry in your `/etc/apt/sources.list`.
 
 #### Compiler Combinations
 
-Some users may find their favorate compiler doesn't work with CUDA.
+Some users may find their favorite compiler doesn't work with CUDA.
 
 ```
 CXX compiler |  CUDA 7.5  |  CUDA 8.0  |  CUDA 9.0  |

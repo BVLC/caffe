@@ -122,7 +122,7 @@ class LSTMUnitLayer : public Layer<Dtype> {
    * @param propagate_down see Layer::Backward.
    * @param bottom input Blob vector (length 3), into which the error gradients
    *        with respect to the LSTMUnit inputs @f$ c_{t-1} @f$ and the gate
-   *        inputs are computed.  Computatation of the error gradients w.r.t.
+   *        inputs are computed.  Computation of the error gradients w.r.t.
    *        the sequence indicators is not implemented.
    *   -# @f$ (1 \times N \times D) @f$
    *      the error gradient w.r.t. the previous timestep cell state

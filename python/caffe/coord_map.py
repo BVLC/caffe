@@ -114,7 +114,7 @@ def inverse(coord_map):
 
 def coord_map_from_to(top_from, top_to):
     """
-    Determine the coordinate mapping betweeen a top (from) and a top (to).
+    Determine the coordinate mapping between a top (from) and a top (to).
     Walk the graph to find a common ancestor while composing the coord maps for
     from and to until they meet. As a last step the from map is inverted.
     """

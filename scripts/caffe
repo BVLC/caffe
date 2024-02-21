@@ -1,7 +1,7 @@
 # bash completion for Caffe's command line utility       -*- shell-script -*-
 # COPYRIGHT (C) 2015,2016 Zhou Mo <cdluminate@gmail.com>
 # License: BSD-2-Clause
-# Originally appeard at https://github.com/BVLC/caffe/issues/3149
+# Originally appeared at https://github.com/BVLC/caffe/issues/3149
 
 # Updated for caffe (1.0.0~rc3+20160715-g42cd785)
 _caffe()

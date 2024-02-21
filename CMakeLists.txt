@@ -73,12 +73,12 @@ include_directories(${PROJECT_BINARY_DIR})
 
 # ---[ Includes & defines for CUDA
 
-# cuda_compile() does not have per-call dependencies or include pathes
+# cuda_compile() does not have per-call dependencies or include paths
 # (cuda_compile() has per-call flags, but we set them here too for clarity)
 #
-# list(REMOVE_ITEM ...) invocations remove PRIVATE and PUBLIC keywords from collected definitions and include pathes
+# list(REMOVE_ITEM ...) invocations remove PRIVATE and PUBLIC keywords from collected definitions and include paths
 if(HAVE_CUDA)
-  # pass include pathes to cuda_include_directories()
+  # pass include paths to cuda_include_directories()
   set(Caffe_ALL_INCLUDE_DIRS ${Caffe_INCLUDE_DIRS})
   list(REMOVE_ITEM Caffe_ALL_INCLUDE_DIRS PRIVATE PUBLIC)
   cuda_include_directories(${Caffe_INCLUDE_DIR} ${Caffe_SRC_DIR} ${Caffe_ALL_INCLUDE_DIRS})

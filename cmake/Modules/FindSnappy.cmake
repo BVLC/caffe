@@ -22,7 +22,7 @@ if(SNAPPY_FOUND)
   mark_as_advanced(Snappy_INCLUDE_DIR Snappy_LIBRARIES)
 
   caffe_parse_header(${Snappy_INCLUDE_DIR}/snappy-stubs-public.h
-                     SNAPPY_VERION_LINES SNAPPY_MAJOR SNAPPY_MINOR SNAPPY_PATCHLEVEL)
+                     SNAPPY_VERSION_LINES SNAPPY_MAJOR SNAPPY_MINOR SNAPPY_PATCHLEVEL)
   set(Snappy_VERSION "${SNAPPY_MAJOR}.${SNAPPY_MINOR}.${SNAPPY_PATCHLEVEL}")
 endif()
 

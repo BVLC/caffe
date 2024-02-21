@@ -2453,7 +2453,7 @@ TYPED_TEST(NetTest, TestSkipPropagateDown) {
   for (int layer_id = 0; layer_id < this->net_->layers().size(); ++layer_id) {
     string layer_name = this->net_->layer_names()[layer_id];
     if (layer_name == "loss") {
-      // access to bottom_need_backward coresponding to label's blob
+      // access to bottom_need_backward corresponding to label's blob
       bool need_back = this->net_->bottom_need_backward()[layer_id][1];
       // if propagate_down is true, the loss layer will try to
       // backpropagate on labels
@@ -2469,14 +2469,14 @@ TYPED_TEST(NetTest, TestSkipPropagateDown) {
           << "layer_need_backward for " << layer_name << " should be True";
     }
   }
-  // check bottom_need_backward if propagat_down is false
+  // check bottom_need_backward if propagate_down is false
   this->InitSkipPropNet(true);
   vec_layer_need_backward.clear();
   vec_layer_need_backward = this->net_->layer_need_backward();
   for (int layer_id = 0; layer_id < this->net_->layers().size(); ++layer_id) {
     string layer_name = this->net_->layer_names()[layer_id];
     if (layer_name == "loss") {
-      // access to bottom_need_backward coresponding to label's blob
+      // access to bottom_need_backward corresponding to label's blob
       bool need_back = this->net_->bottom_need_backward()[layer_id][1];
       // if propagate_down is false, the loss layer will not try to
       // backpropagate on labels

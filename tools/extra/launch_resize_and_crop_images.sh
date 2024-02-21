@@ -14,7 +14,7 @@
 
 ## Launch your Mapreduce locally
 # num_clients: number of processes
-# image_lib: OpenCV or PIL, case insensitive. The default value is the faster OpenCV.
+# image_lib: OpenCV or PIL, case-insensitive. The default value is the faster OpenCV.
 # input: the file containing one image path relative to input_folder each line
 # input_folder: where are the original images
 # output_folder: where to save the resized and cropped images

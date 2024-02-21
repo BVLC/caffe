@@ -27,7 +27,7 @@ That's 1 ms/image for inference and 4 ms/image for learning and more recent libr
 We believe that Caffe is among the fastest convnet implementations available.
 
 **Community**: Caffe already powers academic research projects, startup prototypes, and even large-scale industrial applications in vision, speech, and multimedia.
-Join our community of brewers on the [caffe-users group](https://groups.google.com/forum/#!forum/caffe-users) and [Github](https://github.com/BVLC/caffe/).
+Join our community of brewers on the [caffe-users group](https://groups.google.com/forum/#!forum/caffe-users) and [GitHub](https://github.com/BVLC/caffe/).
 
 <p class="footnote" markdown="1">
 \* With the ILSVRC2012-winning [SuperVision](http://www.image-net.org/challenges/LSVRC/2012/supervision.pdf) model and prefetching IO.
@@ -93,7 +93,7 @@ The BAIR members who have contributed to Caffe are (alphabetical by first name):
 [Carl Doersch](http://www.carldoersch.com/), [Eric Tzeng](https://github.com/erictzeng), [Evan Shelhamer](http://imaginarynumber.net/), [Jeff Donahue](http://jeffdonahue.com/), [Jon Long](https://github.com/longjon), [Philipp Krähenbühl](http://www.philkr.net/), [Ronghang Hu](http://ronghanghu.com/), [Ross Girshick](http://www.cs.berkeley.edu/~rbg/), [Sergey Karayev](http://sergeykarayev.com/), [Sergio Guadarrama](http://www.eecs.berkeley.edu/~sguada/), [Takuya Narihira](https://github.com/tnarihi), and [Yangqing Jia](http://daggerfs.com/).
 
 The open-source community plays an important and growing role in Caffe's development.
-Check out the Github [project pulse](https://github.com/BVLC/caffe/pulse) for recent activity and the [contributors](https://github.com/BVLC/caffe/graphs/contributors) for the full list.
+Check out the GitHub [project pulse](https://github.com/BVLC/caffe/pulse) for recent activity and the [contributors](https://github.com/BVLC/caffe/graphs/contributors) for the full list.
 
 We sincerely appreciate your interest and contributions!
 If you'd like to contribute, please read the [developing & contributing](development.html) guide.

@@ -50,7 +50,7 @@ class PhaseLayer(caffe.Layer):
     def setup(self, bottom, top):
         pass
 
-    def reshape(self, bootom, top):
+    def reshape(self, bottom, top):
         top[0].reshape()
 
     def forward(self, bottom, top):

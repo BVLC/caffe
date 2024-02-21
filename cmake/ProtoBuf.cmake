@@ -15,7 +15,7 @@ endif()
 
 if(PROTOBUF_FOUND)
   # fetches protobuf version
-  caffe_parse_header(${PROTOBUF_INCLUDE_DIR}/google/protobuf/stubs/common.h VERION_LINE GOOGLE_PROTOBUF_VERSION)
+  caffe_parse_header(${PROTOBUF_INCLUDE_DIR}/google/protobuf/stubs/common.h VERSION_LINE GOOGLE_PROTOBUF_VERSION)
   string(REGEX MATCH "([0-9])00([0-9])00([0-9])" PROTOBUF_VERSION ${GOOGLE_PROTOBUF_VERSION})
   set(PROTOBUF_VERSION "${CMAKE_MATCH_1}.${CMAKE_MATCH_2}.${CMAKE_MATCH_3}")
   unset(GOOGLE_PROTOBUF_VERSION)

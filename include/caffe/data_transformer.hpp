@@ -11,7 +11,7 @@ namespace caffe {
 
 /**
  * @brief Applies common transformations to the input data, such as
- * scaling, mirroring, substracting the image mean...
+ * scaling, mirroring, subtracting the image mean...
  */
 template <typename Dtype>
 class DataTransformer {
@@ -139,7 +139,7 @@ class DataTransformer {
   virtual int Rand(int n);
 
   void Transform(const Datum& datum, Dtype* transformed_data);
-  // Tranformation parameters
+  // Transformation parameters
   TransformationParameter param_;
 
 

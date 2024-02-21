@@ -118,7 +118,7 @@ Syntax: cpp_lint.py [--verbose=#] [--output=vs7] [--filter=-x,+y,...]
       ignored.
 
       Examples:
-        Assuing that src/.git exists, the header guard CPP variables for
+        Assuming that src/.git exists, the header guard CPP variables for
         src/chrome/browser/ui/browser.h are:
 
         No flag => CHROME_BROWSER_UI_BROWSER_H_
@@ -2821,7 +2821,7 @@ def CheckSpacing(filename, clean_lines, linenum, nesting_state, error):
 
     # Look for < that is not surrounded by spaces.  This is only
     # triggered if both sides are missing spaces, even though
-    # technically should should flag if at least one side is missing a
+    # technically should flag if at least one side is missing a
     # space.  This is done to avoid some false positives with shifts.
     match = Search(r'[^\s<]<([^\s=<].*)', reduced_line)
     if (match and
@@ -3759,7 +3759,7 @@ def _GetTextInside(text, start_pattern):
   Given a string of lines and a regular expression string, retrieve all the text
   following the expression and between opening punctuation symbols like
   (, [, or {, and the matching close-punctuation symbol. This properly nested
-  occurrences of the punctuations, so for the text like
+  occurrences of the punctuation, so for the text like
     printf(a(), b(c()));
   a call to _GetTextInside(text, r'printf\(') will return 'a(), b(c())'.
   start_pattern must match string having an open punctuation symbol at the end.
@@ -3776,7 +3776,7 @@ def _GetTextInside(text, start_pattern):
   # TODO(sugawarayu): Audit cpplint.py to see what places could be profitably
   # rewritten to use _GetTextInside (and use inferior regexp matching today).
 
-  # Give opening punctuations to get the matching close-punctuations.
+  # Give opening punctuation to get the matching close-punctuation.
   matching_punctuation = {'(': ')', '{': '}', '[': ']'}
   closing_punctuation = set(itervalues(matching_punctuation))
 
@@ -3790,22 +3790,22 @@ def _GetTextInside(text, start_pattern):
       'start_pattern must ends with an opening punctuation.')
   assert text[start_position - 1] in matching_punctuation, (
       'start_pattern must ends with an opening punctuation.')
-  # Stack of closing punctuations we expect to have in text after position.
+  # Stack of closing punctuation we expect to have in text after position.
   punctuation_stack = [matching_punctuation[text[start_position - 1]]]
   position = start_position
   while punctuation_stack and position < len(text):
     if text[position] == punctuation_stack[-1]:
       punctuation_stack.pop()
     elif text[position] in closing_punctuation:
-      # A closing punctuation without matching opening punctuations.
+      # A closing punctuation without matching opening punctuation.
       return None
     elif text[position] in matching_punctuation:
       punctuation_stack.append(matching_punctuation[text[position]])
     position += 1
   if punctuation_stack:
-    # Opening punctuations left without matching close-punctuations.
+    # Opening punctuation left without matching close-punctuation.
     return None
-  # punctuations match.
+  # punctuation match.
   return text[start_position:position - 1]
 
 

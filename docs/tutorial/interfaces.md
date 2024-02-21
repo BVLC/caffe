@@ -32,7 +32,7 @@ For a full example of fine-tuning, see examples/finetuning_on_flickr_style, but 
 **Testing**: `caffe test` scores models by running them in the test phase and reports the net output as its score. The net architecture must be properly defined to output an accuracy measure or loss as its output. The per-batch score is reported and then the grand average is reported last.
 
     # score the learned LeNet model on the validation set as defined in the
-    # model architeture lenet_train_test.prototxt
+    # model architecture lenet_train_test.prototxt
     caffe test -model examples/mnist/lenet_train_test.prototxt -weights examples/mnist/lenet_iter_10000.caffemodel -gpu 0 -iterations 100
 
 **Benchmarking**: `caffe time` benchmarks model execution layer-by-layer through timing and synchronization. This is useful to check system performance and measure relative execution times for models.

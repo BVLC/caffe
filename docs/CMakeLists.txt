@@ -40,7 +40,7 @@ function(gather_notebooks_as_prebuild_cmd target gathered_dir root)
   set(full_gathered_dir ${root}/${gathered_dir})
 
   if(NOT PYTHON_EXECUTABLE)
-    message(STATUS "Python interpeter is not found. Can't include *.ipynb files in docs. Skipping...")
+    message(STATUS "Python interpreter is not found. Can't include *.ipynb files in docs. Skipping...")
     return()
   endif()
 
