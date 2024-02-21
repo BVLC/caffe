@@ -173,7 +173,7 @@ $$
 (W_t)_i - \alpha \frac{\sqrt{1-(\beta_2)_i^t}}{1-(\beta_1)_i^t}\frac{(m_t)_i}{\sqrt{(v_t)_i}+\varepsilon}.
 $$
 
-Kingma et al. [1] proposed to use $$\beta_1 = 0.9, \beta_2 = 0.999, \varepsilon = 10^{-8}$$ as default values. Caffe uses the values of `momemtum, momentum2, delta` for $$\beta_1, \beta_2, \varepsilon$$, respectively.
+Kingma et al. [1] proposed to use $$\beta_1 = 0.9, \beta_2 = 0.999, \varepsilon = 10^{-8}$$ as default values. Caffe uses the values of `momentum, momentum2, delta` for $$\beta_1, \beta_2, \varepsilon$$, respectively.
 
 [1] D. Kingma, J. Ba.
     [Adam: A Method for Stochastic Optimization](http://arxiv.org/abs/1412.6980).
