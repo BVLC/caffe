@@ -494,7 +494,7 @@ INTERNAL_DOCS          = NO
 # If the CASE_SENSE_NAMES tag is set to NO then doxygen will only generate file
 # names in lower-case letters. If set to YES upper-case letters are also
 # allowed. This is useful if you have classes or files whose names only differ
-# in case and if your file system supports case sensitive file names. Windows
+# in case and if your file system supports case-sensitive file names. Windows
 # and Mac users are advised to set this option to NO.
 # The default value is: system dependent.
 
