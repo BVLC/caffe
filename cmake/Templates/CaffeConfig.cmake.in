@@ -46,7 +46,7 @@ if(NOT TARGET caffe AND NOT caffe_BINARY_DIR)
 endif()
 
 # List of IMPORTED libs created by CaffeTargets.cmake
-# These targets already specify all needed definitions and include pathes
+# These targets already specify all needed definitions and include paths
 set(Caffe_LIBRARIES caffe)
 
 # Cuda support variables
