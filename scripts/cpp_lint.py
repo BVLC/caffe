@@ -2821,7 +2821,7 @@ def CheckSpacing(filename, clean_lines, linenum, nesting_state, error):
 
     # Look for < that is not surrounded by spaces.  This is only
     # triggered if both sides are missing spaces, even though
-    # technically should should flag if at least one side is missing a
+    # technically should flag if at least one side is missing a
     # space.  This is done to avoid some false positives with shifts.
     match = Search(r'[^\s<]<([^\s=<].*)', reduced_line)
     if (match and
