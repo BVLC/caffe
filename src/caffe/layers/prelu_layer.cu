@@ -6,7 +6,7 @@
 
 namespace caffe {
 
-// CUDA kernele for forward
+// CUDA kernel for forward
 template <typename Dtype>
 __global__ void PReLUForward(const int n, const int channels, const int dim,
     const Dtype* in, Dtype* out, const Dtype* slope_data,
