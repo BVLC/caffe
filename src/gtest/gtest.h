@@ -7201,7 +7201,7 @@ class TestFactoryBase {
   GTEST_DISALLOW_COPY_AND_ASSIGN_(TestFactoryBase);
 };
 
-// This class provides implementation of TeastFactoryBase interface.
+// This class provides implementation of TestFactoryBase interface.
 // It is used in TEST and TEST_F macros.
 template <class TestClass>
 class TestFactoryImpl : public TestFactoryBase {
