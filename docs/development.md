@@ -45,7 +45,7 @@ Post [Issues](https://github.com/BVLC/caffe/issues) to propose features, report 
 Large-scale development work is guided by [milestones], which are sets of Issues selected for bundling as releases.
 
 Please note that since the core developers are largely researchers, we may work on a feature in isolation for some time before releasing it to the community, so as to claim honest academic contribution.
-We do release things as soon as a reasonable technical report may be written, and we still aim to inform the community of ongoing development through Github Issues.
+We do release things as soon as a reasonable technical report may be written, and we still aim to inform the community of ongoing development through GitHub Issues.
 
 **When you are ready to develop a feature or fixing a bug, follow this protocol**:
 
