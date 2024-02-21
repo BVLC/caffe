@@ -897,9 +897,9 @@ class GTEST_API_ UnitTestImpl {
   virtual ~UnitTestImpl();
 
   // There are two different ways to register your own TestPartResultReporter.
-  // You can register your own repoter to listen either only for test results
+  // You can register your own reporter to listen either only for test results
   // from the current thread or for results from all threads.
-  // By default, each per-thread test result repoter just passes a new
+  // By default, each per-thread test result reporter just passes a new
   // TestPartResult to the global test result reporter, which registers the
   // test part result for the currently running test.
 
@@ -1201,7 +1201,7 @@ class GTEST_API_ UnitTestImpl {
       default_per_thread_test_part_result_reporter_;
 
   // Points to (but doesn't own) the global test part result reporter.
-  TestPartResultReporterInterface* global_test_part_result_repoter_;
+  TestPartResultReporterInterface* global_test_part_result_reporter_;
 
   // Protects read and write access to global_test_part_result_reporter_.
   internal::Mutex global_test_part_result_reporter_mutex_;
@@ -1981,14 +1981,14 @@ void DefaultPerThreadTestPartResultReporter::ReportTestPartResult(
 TestPartResultReporterInterface*
 UnitTestImpl::GetGlobalTestPartResultReporter() {
   internal::MutexLock lock(&global_test_part_result_reporter_mutex_);
-  return global_test_part_result_repoter_;
+  return global_test_part_result_reporter_;
 }
 
 // Sets the global test part result reporter.
 void UnitTestImpl::SetGlobalTestPartResultReporter(
     TestPartResultReporterInterface* reporter) {
   internal::MutexLock lock(&global_test_part_result_reporter_mutex_);
-  global_test_part_result_repoter_ = reporter;
+  global_test_part_result_reporter_ = reporter;
 }
 
 // Returns the test part result reporter for the current thread.
@@ -5252,7 +5252,7 @@ UnitTestImpl::UnitTestImpl(UnitTest* parent)
       default_global_test_part_result_reporter_(this),
       default_per_thread_test_part_result_reporter_(this),
 #endif  // _MSC_VER
-      global_test_part_result_repoter_(
+      global_test_part_result_reporter_(
           &default_global_test_part_result_reporter_),
       per_thread_test_part_result_reporter_(
           &default_per_thread_test_part_result_reporter_),
