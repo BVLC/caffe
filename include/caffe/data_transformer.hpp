@@ -139,7 +139,7 @@ class DataTransformer {
   virtual int Rand(int n);
 
   void Transform(const Datum& datum, Dtype* transformed_data);
-  // Tranformation parameters
+  // Transformation parameters
   TransformationParameter param_;
 
 
