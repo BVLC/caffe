@@ -268,7 +268,7 @@ OPTIMIZE_OUTPUT_VHDL   = NO
 # parses. With this tag you can assign which parser to use for a given
 # extension. Doxygen has a built-in mapping, but you can override or extend it
 # using this tag. The format is ext=language, where ext is a file extension, and
-# language is one of the parsers supported by doxygen: IDL, Java, Javascript,
+# language is one of the parsers supported by doxygen: IDL, Java, JavaScript,
 # C#, C, C++, D, PHP, Objective-C, Python, Fortran (fixed format Fortran:
 # FortranFixed, free formatted Fortran: FortranFree, unknown formatted Fortran:
 # Fortran. In the later case the parser tries to guess whether the code is fixed
@@ -1414,7 +1414,7 @@ FORMULA_FONTSIZE       = 10
 FORMULA_TRANSPARENT    = YES
 
 # Enable the USE_MATHJAX option to render LaTeX formulas using MathJax (see
-# http://www.mathjax.org) which uses client side Javascript for the rendering
+# http://www.mathjax.org) which uses client side JavaScript for the rendering
 # instead of using prerendered bitmaps. Use this if you do not have LaTeX
 # installed or if you want to formulas look prettier in the HTML output. When
 # enabled you may also need to install MathJax separately and configure the path
@@ -1484,7 +1484,7 @@ MATHJAX_CODEFILE       =
 SEARCHENGINE           = YES
 
 # When the SERVER_BASED_SEARCH tag is enabled the search engine will be
-# implemented using a web server instead of a web client using Javascript. There
+# implemented using a web server instead of a web client using JavaScript. There
 # are two flavors of web server based searching depending on the EXTERNAL_SEARCH
 # setting. When disabled, doxygen will generate a PHP script for searching and
 # an index file used by the script. When EXTERNAL_SEARCH is enabled the indexing
