@@ -170,11 +170,15 @@ void Caffe::SetDevice(const int device_id) {
 void Caffe::DeviceQuery() {
   cudaDeviceProp prop;
   int device;
+  int clockRate = 0;
+  int kernelExecTimeout = 0;
   if (cudaSuccess != cudaGetDevice(&device)) {
     printf("No cuda device present.\n");
     return;
   }
   CUDA_CHECK(cudaGetDeviceProperties(&prop, device));
+  cudaDeviceGetAttribute(&clockRate, cudaDevAttrClockRate, device);
+  cudaDeviceGetAttribute(&kernelExecTimeout, cudaDevAttrKernelExecTimeout, device);
   LOG(INFO) << "Device id:                     " << device;
   LOG(INFO) << "Major revision number:         " << prop.major;
   LOG(INFO) << "Minor revision number:         " << prop.minor;
@@ -191,14 +195,14 @@ void Caffe::DeviceQuery() {
   LOG(INFO) << "Maximum dimension of grid:     "
       << prop.maxGridSize[0] << ", " << prop.maxGridSize[1] << ", "
       << prop.maxGridSize[2];
-  LOG(INFO) << "Clock rate:                    " << prop.clockRate;
+  LOG(INFO) << "Clock rate:                    " << clockRate;
   LOG(INFO) << "Total constant memory:         " << prop.totalConstMem;
   LOG(INFO) << "Texture alignment:             " << prop.textureAlignment;
   LOG(INFO) << "Concurrent copy and execution: "
-      << (prop.deviceOverlap ? "Yes" : "No");
+      << (prop.asyncEngineCount ? "Yes" : "No");
   LOG(INFO) << "Number of multiprocessors:     " << prop.multiProcessorCount;
   LOG(INFO) << "Kernel execution timeout:      "
-      << (prop.kernelExecTimeoutEnabled ? "Yes" : "No");
+      << (kernelExecTimeout ? "Yes" : "No");
   return;
 }
 
