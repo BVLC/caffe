@@ -1,45 +1,59 @@
-# Caffe
+# Ristretto
 
-[![Build Status](https://travis-ci.org/BVLC/caffe.svg?branch=master)](https://travis-ci.org/BVLC/caffe)
-[![License](https://img.shields.io/badge/license-BSD-blue.svg)](LICENSE)
+Ristretto is an automated framework for the **quantization and compression** of Convolutional Neural Networks (CNNs).
 
-Caffe is a deep learning framework made with expression, speed, and modularity in mind.
-It is developed by Berkeley AI Research ([BAIR](http://bair.berkeley.edu))/The Berkeley Vision and Learning Center (BVLC) and community contributors.
+The primary goal of this project is to enable **fast and energy-efficient inference** of artificial intelligence models on resource-constrained hardware platforms, such as FPGAs and custom accelerators. By reducing the bit-width of network parameters and activations, Ristretto significantly lowers the memory footprint and computational requirements of deep learning models with minimal impact on accuracy.
 
-Check out the [project site](http://caffe.berkeleyvision.org) for all the details like
+## Key Features
 
-- [DIY Deep Learning for Vision with Caffe](https://docs.google.com/presentation/d/1UeKXVgRvvxg9OUdh_UiC5G71UMscNPlvArsWER41PsU/edit#slide=id.p)
-- [Tutorial Documentation](http://caffe.berkeleyvision.org/tutorial/)
-- [BAIR reference models](http://caffe.berkeleyvision.org/model_zoo.html) and the [community model zoo](https://github.com/BVLC/caffe/wiki/Model-Zoo)
-- [Installation instructions](http://caffe.berkeleyvision.org/installation.html)
+* **Hardware-Oriented Approximation:** Automatically simulates the effects of reduced precision on CNN performance.
+* **Mixed-Precision Quantization:** Supports different bit-widths for different layers to optimize the trade-off between speed and accuracy.
+* **Dynamic Fixed-Point:** Uses a flexible fixed-point format that adapts to the dynamic range of different network components.
+* **Automated Fine-Tuning:** Provides tools to retrain quantized networks to recover accuracy lost during the approximation process.
 
-and step-by-step examples.
+## Framework Origin
 
-## Custom distributions
+Ristretto was developed by [Philipp Gysel](https://www.linkedin.com/in/pgysel/) during his Master's thesis at UC Davis. The open-source project was introduced alongside a workshop paper at ICLR titled [Hardware-oriented Approximation of Convolutional Neural Networks](https://arxiv.org/pdf/1604.03168).
 
- - [Intel Caffe](https://github.com/BVLC/caffe/tree/intel) (Optimized for CPU and support for multi-node), in particular Intel® Xeon processors.
-- [OpenCL Caffe](https://github.com/BVLC/caffe/tree/opencl) e.g. for AMD or Intel devices.
-- [Windows Caffe](https://github.com/BVLC/caffe/tree/windows)
+Ristretto is a fork of the [Caffe deep learning framework](https://caffe.berkeleyvision.org/). It extends the original Caffe implementation by introducing specialized layers and scoring functions designed for network approximation and hardware-friendly deployment.
 
-## Community
+## Cite this Research
 
-[![Join the chat at https://gitter.im/BVLC/caffe](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/BVLC/caffe?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+If you find this open-source project useful for your own research, please consider citing this paper:
 
-Please join the [caffe-users group](https://groups.google.com/forum/#!forum/caffe-users) or [gitter chat](https://gitter.im/BVLC/caffe) to ask questions and talk about methods and models.
-Framework development discussions and thorough bug reports are collected on [Issues](https://github.com/BVLC/caffe/issues).
+```bibtex
+@article{gysel2018ristretto,
+  title={Ristretto: A Framework for Empirical Study of Resource-Efficient Inference in Convolutional Neural Networks},
+  author={Gysel, Philipp and Pimentel, Jon and Motamedi, Mohammad and Ghiasi, Soheil},
+  journal={IEEE Transactions on Neural Networks and Learning Systems},
+  volume={29},
+  number={11},
+  pages={5784--5789},
+  year={2018},
+  publisher={IEEE},
+  doi={10.1109/TNNLS.2018.2808319}
+}
+```
 
-Happy brewing!
+## Other Resources
 
-## License and Citation
+* **Ristretto webpage**: Please check out the [official Ristretto webpage](https://leps.sf.ucdavis.edu/ristretto-cnn-approximation) for more information. The official webpage contains usage examples and comprehensive walkthrough guides.
+
+* **Ristretto forum**: If you have any technical questions about Ristretto, please use the [Google Group](https://groups.google.com/g/ristretto-users).
+
+## Notes on Caffe
+
+As mentioned, Ristretto is based on [Caffe](https://caffe.berkeleyvision.org/), a deep learning framework created by Berkeley AI Research ([BAIR](https://bair.berkeley.edu/)) and community contributors. Its original author is [Yangqing Jia](https://daggerfs.com/). Below you can find the licensing and citation instructions from Caffe.
 
 Caffe is released under the [BSD 2-Clause license](https://github.com/BVLC/caffe/blob/master/LICENSE).
-The BAIR/BVLC reference models are released for unrestricted use.
 
 Please cite Caffe in your publications if it helps your research:
 
-    @article{jia2014caffe,
-      Author = {Jia, Yangqing and Shelhamer, Evan and Donahue, Jeff and Karayev, Sergey and Long, Jonathan and Girshick, Ross and Guadarrama, Sergio and Darrell, Trevor},
-      Journal = {arXiv preprint arXiv:1408.5093},
-      Title = {Caffe: Convolutional Architecture for Fast Feature Embedding},
-      Year = {2014}
-    }
+```bibtex
+@article{jia2014caffe,
+  Author = {Jia, Yangqing and Shelhamer, Evan and Donahue, Jeff and Karayev, Sergey and Long, Jonathan and Girshick, Ross and Guadarrama, Sergio and Darrell, Trevor},
+  Journal = {arXiv preprint arXiv:1408.5093},
+  Title = {Caffe: Convolutional Architecture for Fast Feature Embedding},
+  Year = {2014}
+}
+```
