@@ -42,6 +42,9 @@ TYPED_TEST(LayerFactoryTest, TestCreateLayer) {
       continue;
 #endif  // USE_LEVELDB
     }
+    if (iter->first == "LRNRistretto") {
+      layer_param.mutable_quantization_param()->set_precision(caffe::QuantizationParameter_Precision_MINIFLOAT);
+    }
     layer_param.set_type(iter->first);
     layer = LayerRegistry<Dtype>::CreateLayer(layer_param);
     EXPECT_EQ(iter->first, layer->type());
