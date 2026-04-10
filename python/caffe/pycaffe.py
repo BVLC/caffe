@@ -38,7 +38,7 @@ def _Net_blob_loss_weights(self):
     An OrderedDict (bottom to top, i.e., input to output) of network
     blob loss weights indexed by name
     """
-    if not hasattr(self, '_blobs_loss_weights_dict'):
+    if not hasattr(self, '_blob_loss_weights_dict'):
         self._blob_loss_weights_dict = OrderedDict(zip(self._blob_names,
                                                        self._blob_loss_weights))
     return self._blob_loss_weights_dict
