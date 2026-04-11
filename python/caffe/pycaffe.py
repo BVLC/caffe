@@ -246,15 +246,15 @@ def _Net_forward_backward_all(self, blobs=None, diffs=None, **kwargs):
         for diff, out_diffs in six.iteritems(batch_diffs):
             all_diffs[diff].extend(out_diffs.copy())
     # Package in ndarray.
-    for out, diff in zip(all_outs, all_diffs):
-        all_outs[out] = np.asarray(all_outs[out])
-        all_diffs[diff] = np.asarray(all_diffs[diff])
+    for d in (all_outs, all_diffs):
+        for k in d:
+            d[k] = np.asarray(d[k])
     # Discard padding at the end and package in ndarray.
     pad = len(six.next(six.itervalues(all_outs))) - len(six.next(six.itervalues(kwargs)))
     if pad:
-        for out, diff in zip(all_outs, all_diffs):
-            all_outs[out] = all_outs[out][:-pad]
-            all_diffs[diff] = all_diffs[diff][:-pad]
+        for d in (all_outs, all_diffs):
+            for k in d:
+                d[k] = d[k][:-pad]
     return all_outs, all_diffs
 
 
