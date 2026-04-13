@@ -51,7 +51,7 @@ void BatchNormLayer<Dtype>::LayerSetUp(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void BatchNormLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
-  if (bottom[0]->num_axes() >= 1)
+  if (bottom[0]->num_axes() >= 2)
     CHECK_EQ(bottom[0]->shape(1), channels_);
   top[0]->ReshapeLike(*bottom[0]);
 
