@@ -154,11 +154,11 @@ class Blob {
       const int w = 0) const {
     CHECK_GE(n, 0);
     CHECK_LE(n, num());
-    CHECK_GE(channels(), 0);
+    CHECK_GE(c, 0);
     CHECK_LE(c, channels());
-    CHECK_GE(height(), 0);
+    CHECK_GE(h, 0);
     CHECK_LE(h, height());
-    CHECK_GE(width(), 0);
+    CHECK_GE(w, 0);
     CHECK_LE(w, width());
     return ((n * channels() + c) * height() + h) * width() + w;
   }
