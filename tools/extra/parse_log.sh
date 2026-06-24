@@ -38,9 +38,9 @@ rm aux.txt aux0.txt aux1.txt aux2.txt aux3.txt aux4.txt
 # For extraction of time since this line contains the start time
 grep '] Solving ' $1 > aux.txt
 grep ', loss = ' $1 >> aux.txt
-grep 'Iteration ' aux.txt | sed  's/.*Iteration \([[:digit:]]*\).*/\1/g' > aux0.txt
-grep ', loss = ' $1 | awk -F = '{print $2}' > aux1.txt
-grep ', lr = ' $1 | awk '{print $9}' > aux2.txt
+grep ', loss = ' $1 | sed 's/.*Iteration \([[:digit:]]*\).*/\1/g' > aux0.txt
+grep ', loss = ' $1 | sed 's/.*loss = //' > aux1.txt
+grep ', lr = ' $1 | awk '{print $NF}' > aux2.txt
 
 # Extracting elapsed seconds
 $DIR/extract_seconds.py aux.txt aux3.txt
