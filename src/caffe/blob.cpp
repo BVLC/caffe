@@ -156,12 +156,14 @@ template <typename Dtype>
 void Blob<Dtype>::ShareData(const Blob& other) {
   CHECK_EQ(count_, other.count());
   data_ = other.data();
+  capacity_ = 0;
 }
 
 template <typename Dtype>
 void Blob<Dtype>::ShareDiff(const Blob& other) {
   CHECK_EQ(count_, other.count());
   diff_ = other.diff();
+  capacity_ = 0;
 }
 
 // The "update" method is used for parameter blobs in a Net, which are stored
