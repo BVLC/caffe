@@ -1147,7 +1147,7 @@ message SigmoidParameter {
 message SliceParameter {
   // The axis along which to slice -- may be negative to index from the end
   // (e.g., -1 for the last axis).
-  // By default, SliceLayer concatenates blobs along the "channels" axis (1).
+  // By default, SliceLayer slices an input blob along the "channels" axis (1).
   optional int32 axis = 3 [default = 1];
   repeated uint32 slice_point = 2;
 
